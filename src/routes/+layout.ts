@@ -27,7 +27,7 @@ export const load = async ({ fetch }) => {
 
 	ws.addEventListener('message', (event) => {
 		const data = JSON.parse(event.data) as GameEvent;
-		console.log(data);
+
 		switch (data.type) {
 			case 'GAME:LAUNCHED':
 				console.log(data.type);

@@ -155,24 +155,29 @@ export class Twitch extends Module {
 	 * Logs an error if the access token is missing.
 	 */
 	async init() {
-		const authProvider = new StaticAuthProvider(this.clientId, this.settings.accessToken!);
+		try {
+			const authProvider = new StaticAuthProvider(this.clientId, this.settings.accessToken!);
 
-		this.client = new ApiClient({ authProvider });
-		this.user = (await this.client.getTokenInfo()) ?? undefined;
+			this.client = new ApiClient({ authProvider });
+			this.user = (await this.client.getTokenInfo()) ?? undefined;
 
-		this.chatClient = new ChatClient({
-			authProvider,
-			channels: [this.user.userName!] // ['summit1g']
-		});
-		this.eventSub = new EventSubWsListener({ apiClient: this.client });
+			this.chatClient = new ChatClient({
+				authProvider,
+				channels: [this.user.userName!] // ['summit1g']
+			});
+			this.eventSub = new EventSubWsListener({ apiClient: this.client });
 
-		this.eventSub.start();
-		this.chatClient.connect();
+			this.eventSub.start();
+			this.chatClient.connect();
 
-		app.on('boot', () => {
-			this.elevenlabs = new ElevenLabs();
-			this.tts = new TTS();
-		});
+			app.on('boot', () => {
+				this.elevenlabs = new ElevenLabs();
+				this.tts = new TTS();
+			});
+		} catch (error) {
+			this.disconnect();
+			console.error('Failed to initialize Twitch client:', error);
+		}
 	}
 
 	async disconnect() {
@@ -185,5 +190,7 @@ export class Twitch extends Module {
 		this.isConnected = false;
 	}
 
-	destroy() {}
+	destroy() {
+		this.disconnect();
+	}
 }

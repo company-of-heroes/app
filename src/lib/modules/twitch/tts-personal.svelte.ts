@@ -5,7 +5,7 @@ import { Module } from '../module.svelte';
 import type { Twitch } from './twitch.svelte';
 
 export class TTSPersonal {
-	voices = $derived(app.settings.tts.personalVoices);
+	voices = $derived(app.settings.twitch?.personalVoices ?? []);
 
 	rewards: HelixCustomReward[] = $state([]);
 
@@ -13,11 +13,7 @@ export class TTSPersonal {
 
 	activeVoices: Record<string, string> = $state({});
 
-	twitch: Twitch;
-
-	constructor() {
-		this.twitch = app.getModule('twitch');
-	}
+	twitch: Twitch = $derived(app.activeModules.get('twitch') as Twitch);
 
 	async init() {
 		if (!this.twitch.user?.userId) {
@@ -32,6 +28,8 @@ export class TTSPersonal {
 		//await app.store.set('activeVoices', {});
 		this.activeVoices = (await app.store.get('activeVoices')) ?? {};
 
+		console.log(this.activeVoices);
+
 		this.updateChannelRewards();
 		this.listenForRewardRedemption();
 
@@ -41,6 +39,8 @@ export class TTSPersonal {
 				this.updateChannelRewards();
 			});
 		});
+
+		return this;
 	}
 
 	private async updateChannelRewards() {
@@ -62,10 +62,12 @@ export class TTSPersonal {
 		for (const voice of this.voices) {
 			this.twitch.client!.channelPoints.createCustomReward(this.twitch.user!.userId!, {
 				title: `[PERSONALITY] ${voice}`,
-				cost: 50000,
+				cost: 20000,
 				backgroundColor: '#c10000',
 				prompt: `${voice} will be your personality during live streams. All messages you send will be read in this voice. Preview voices at https://fknoobs.com/`,
-				autoFulfill: true
+				autoFulfill: true,
+				maxRedemptionsPerStream: 1,
+				maxRedemptionsPerUserPerStream: 1
 			});
 		}
 	}
@@ -79,7 +81,6 @@ export class TTSPersonal {
 
 					this.activeVoices[reward.userName] = voice;
 					app.store.set('activeVoices', this.activeVoices);
-					console.log(this.activeVoices);
 				}
 			}
 		);

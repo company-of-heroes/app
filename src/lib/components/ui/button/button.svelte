@@ -14,12 +14,12 @@
 <button
 	{...restProps}
 	class={cn(
-		'flex items-center gap-2 font-bold',
-		'shadow-primary-800 cursor-pointer px-8 py-1.5 shadow-xs',
+		'flex items-center gap-2 rounded-md font-bold',
+		'cursor-pointer px-8 py-1.5',
 		'transition-all duration-100 hover:opacity-70',
 		'disabled:cursor-not-allowed disabled:opacity-60',
 		variant === 'primary' && 'bg-primary',
-		variant === 'secondary' && 'bg-secondary-950 text-white',
+		variant === 'secondary' && 'bg-secondary-800 text-white',
 		restProps.class
 	)}
 	disabled={loading || restProps.disabled}

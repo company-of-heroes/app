@@ -120,50 +120,46 @@
 				bind:value={module.settings.elevenlabsApiKey}
 			/>
 		</div>
-		<div class={cn('mb-4 flex flex-col gap-2')}>
-			<!-- {#if module.elevenlabs!.voices.length > 0}
-				{@const items = module.elevenlabs!.voices.map((voice) => ({
-					value: voice.name!,
-					label: voice.name!,
-					disabled: false
-				}))} -->
-			<Label>Voice character</Label>
-			<Select
-				items={module.elevenlabs!.voices.map((voice) => ({
-					value: voice.name!,
-					label: voice.name!,
-					disabled: false
-				}))}
-				type="single"
-				placeholder="Select voice"
-				name="voiceName"
-				bind:value={module.settings.voiceName}
-			/>
-			<!-- {/if} -->
-		</div>
-		<div class="mb-4 flex flex-col gap-2">
-			<Label>Enable personal voices?</Label>
-			<Checkbox
-				label="Enabled"
-				name="personalVoicesEnabled"
-				bind:checked={module.settings.personalVoicesEnabled}
-			/>
-		</div>
-		<div class={cn(module.settings.personalVoicesEnabled === false && 'hidden')}>
-			<div class="mb-4 flex flex-col gap-2">
-				<Label>Select voices</Label>
+		{#if module.elevenlabs}
+			<div class={cn('mb-4 flex flex-col gap-2')}>
+				<Label>Voice character</Label>
 				<Select
 					items={module.elevenlabs!.voices.map((voice) => ({
 						value: voice.name!,
 						label: voice.name!,
 						disabled: false
 					}))}
-					type="multiple"
+					type="single"
 					placeholder="Select voice"
-					name="personalVoices"
-					bind:value={module.settings.personalVoices}
+					name="voiceName"
+					bind:value={module.settings.voiceName}
+				/>
+				<!-- {/if} -->
+			</div>
+			<div class="mb-4 flex flex-col gap-2">
+				<Label>Enable personal voices?</Label>
+				<Checkbox
+					label="Enabled"
+					name="personalVoicesEnabled"
+					bind:checked={module.settings.personalVoicesEnabled}
 				/>
 			</div>
-		</div>
+			<div class={cn(module.settings.personalVoicesEnabled === false && 'hidden')}>
+				<div class="mb-4 flex flex-col gap-2">
+					<Label>Select voices</Label>
+					<Select
+						items={module.elevenlabs!.voices.map((voice) => ({
+							value: voice.name!,
+							label: voice.name!,
+							disabled: false
+						}))}
+						type="multiple"
+						placeholder="Select voice"
+						name="personalVoices"
+						bind:value={module.settings.personalVoices}
+					/>
+				</div>
+			</div>
+		{/if}
 	</div>
 </form>

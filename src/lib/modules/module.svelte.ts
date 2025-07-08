@@ -94,6 +94,12 @@ export abstract class Module extends Emittery<ModuleEvents> implements ModuleInt
 				});
 
 				$effect(() => {
+					// @ts-ignore
+					if (!app.settings[this.name]) {
+						// @ts-ignore
+						app.settings[this.name] = this.settings;
+					}
+
 					for (const [key, value] of Object.entries(this.settings ?? {})) {
 						// @ts-ignore
 						app.settings[this.name][key] = value;

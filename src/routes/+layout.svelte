@@ -3,6 +3,7 @@
 	import { app } from '$lib/state/app.svelte';
 	import { H } from '$lib/components/ui/h';
 	import { Toaster } from 'svelte-sonner';
+	import GearIcon from 'phosphor-svelte/lib/Gear';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -17,10 +18,14 @@
 
 <div class="flex h-screen overflow-hidden">
 	<aside class="bg-secondary-800 w-74 px-4 py-6">
-		<Nav.Root>
+		<Nav.Root class="h-full">
 			{#each app.routes as { href, title, component }}
 				<Nav.Link {href} {component}>{title}</Nav.Link>
 			{/each}
+			<a href="/settings" class="mt-auto flex items-center">
+				<GearIcon />
+				<span class="ml-2">Settings</span>
+			</a>
 		</Nav.Root>
 	</aside>
 	<main class="bg-secondary-950 flex-1 overflow-auto p-8">

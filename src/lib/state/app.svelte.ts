@@ -156,7 +156,7 @@ class App extends Emittery<AppEvents> {
 			});
 		}
 
-		await this.emit('boot', this);
+		this.emit('boot', this);
 	}
 
 	getModule<K extends keyof Modules>(name: K): InstanceType<Modules[K]> {

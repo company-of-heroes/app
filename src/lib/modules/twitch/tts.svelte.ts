@@ -97,7 +97,7 @@ export class TTS {
 	 * @readonly
 	 * @type {TTSPersonal}
 	 */
-	readonly personal?: TTSPersonal;
+	public personal?: TTSPersonal;
 
 	constructor() {
 		$effect.root(() => {
@@ -116,12 +116,12 @@ export class TTS {
 		app.on('boot', () => this.init());
 	}
 
-	init() {
+	async init() {
 		if (!this.enabled || !this.twitch) {
 			return;
 		}
 
-		//this.personal = new TTSPersonal();
+		this.personal = await new TTSPersonal().init();
 		this.startPlaybackLoop();
 
 		this.chatListener = this.twitch.chatClient?.onMessage((channel, users, text, msg) =>

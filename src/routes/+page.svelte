@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
 	import { app } from '$lib/state/app.svelte';
 	import { cn } from '$lib/utils';
+
+	console.log(app.game.lobby);
 </script>
 
 <div class="flex items-start gap-6">
