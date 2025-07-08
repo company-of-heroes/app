@@ -120,6 +120,17 @@
 				bind:value={module.settings.elevenlabsApiKey}
 			/>
 		</div>
+		<div class={cn('bg-primary-100/5 mb-4 p-4')}>
+			<div>
+				<Label>Tier:</Label>
+				{module.elevenlabs?.user?.subscription.tier}
+			</div>
+			<div>
+				<Label>Usage:</Label>
+				{module.elevenlabs?.user?.subscription.character_count} / {module.elevenlabs?.user
+					?.subscription.character_limit}
+			</div>
+		</div>
 		{#if module.elevenlabs}
 			<div class={cn('mb-4 flex flex-col gap-2')}>
 				<Label>Voice character</Label>

@@ -5,6 +5,10 @@ description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
 
+[target.x86_64-pc-windows-msvc]
+linker = "/mnt/c/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/link.exe"
+ar = "/mnt/c/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lib.exe"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]

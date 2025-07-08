@@ -87,7 +87,12 @@ export abstract class Module extends Emittery<ModuleEvents> implements ModuleInt
 			$effect.root(() => {
 				$effect(() => {
 					if (this.enabled) {
-						(async () => resolve(await this.init()))();
+						try {
+							(async () => resolve(await this.init()))();
+						} catch (error) {
+							console.error(`Error initializing module ${this.name}:`, error);
+							(async () => resolve(await this.destroy()))();
+						}
 					} else {
 						(async () => resolve(await this.destroy()))();
 					}
