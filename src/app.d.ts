@@ -16,6 +16,7 @@ declare module '@fknoobs/app' {
 		level: number;
 		leaderboardregion_id: number;
 		country: string;
+		leaderboardStats?: LeaderboardStat[];
 	};
 
 	type Result = {
@@ -61,7 +62,9 @@ declare module '@fknoobs/app' {
 		type: number;
 		team: number;
 		race: number;
-		profile?: RelicProfile;
+		ranking: number;
+		steamId: string;
+		profile?: RelicProfile; // Computers dont have profiles
 	};
 }
 
@@ -84,6 +87,7 @@ declare module '@fknoobs/app/ws' {
 				map: string;
 				outcome: 'PS_WON' | 'PS_LOST' | 'PS_ABORTED';
 				players: LobbyPlayer[];
+				matchType: number;
 			}
 		>;
 		'LOBBY:ENDED': Message<
@@ -93,6 +97,14 @@ declare module '@fknoobs/app/ws' {
 				map: string;
 				outcome: 'PS_WON' | 'PS_LOST' | 'PS_ABORTED';
 				players: LobbyPlayer[];
+			}
+		>;
+		'GAME:CLOSED': Message<
+			'GAME:CLOSED',
+			{
+				isRunning: boolean;
+				steamId: string | null;
+				profile: RelicProfile | null;
 			}
 		>;
 	};

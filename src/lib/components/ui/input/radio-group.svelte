@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { RadioGroup, Label, type WithoutChildrenOrChild, useId } from 'bits-ui';
 	import { cn } from '$lib/utils';
-	import { ElevenLabs } from 'elevenlabs';
 
 	type Item = {
 		value: string;

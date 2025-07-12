@@ -1,7 +1,6 @@
 import { app } from '$lib/state/app.svelte';
 import type { HelixCustomReward } from '@twurple/api';
 import type { EventSubSubscription } from '@twurple/eventsub';
-import { Module } from '../module.svelte';
 import type { Twitch } from './twitch.svelte';
 
 export class TTSPersonal {
@@ -16,7 +15,7 @@ export class TTSPersonal {
 	twitch: Twitch = $derived(app.activeModules.get('twitch') as Twitch);
 
 	async init() {
-		if (!this.twitch.user?.userId) {
+		if (!this.twitch.user?.userId || this.twitch.settings.personalVoicesEnabled === false) {
 			return;
 		}
 
@@ -27,8 +26,6 @@ export class TTSPersonal {
 
 		//await app.store.set('activeVoices', {});
 		this.activeVoices = (await app.store.get('activeVoices')) ?? {};
-
-		console.log(this.activeVoices);
 
 		this.updateChannelRewards();
 		this.listenForRewardRedemption();
@@ -59,9 +56,13 @@ export class TTSPersonal {
 			);
 		}
 
-		for (const voice of this.voices) {
+		for (let voice of this.voices) {
+			if (voice === 'Ika') {
+				voice = 'DexN';
+			}
+
 			this.twitch.client!.channelPoints.createCustomReward(this.twitch.user!.userId!, {
-				title: `[PERSONALITY] ${voice}`,
+				title: `[PERSONALITY] ${voice.length > 25 ? voice.substring(0, 25) + '...' : voice}`,
 				cost: 20000,
 				backgroundColor: '#c10000',
 				prompt: `${voice} will be your personality during live streams. All messages you send will be read in this voice. Preview voices at https://fknoobs.com/`,

@@ -1,6 +1,6 @@
+import type { Voice, User } from '@elevenlabs/elevenlabs-js/api';
 import { app } from '$lib/state/app.svelte';
-import { ElevenLabsClient } from 'elevenlabs';
-import type { Voice, User } from 'elevenlabs/api';
+import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { watch } from 'runed';
 import { Bootable } from '../bootable.svelte';
 
@@ -16,8 +16,8 @@ export class ElevenLabs extends Bootable {
 	async init() {
 		this.client = new ElevenLabsClient({ apiKey: app.settings.twitch?.elevenlabsApiKey });
 
-		const response = await this.client?.voices.getAll();
-		this.voices = response?.voices ?? [];
+		const voicesResponse = await this.client?.voices.getAll();
+		this.voices = voicesResponse?.voices ?? [];
 		this.user = await this.client?.user.get();
 	}
 

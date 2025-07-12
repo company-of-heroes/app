@@ -25,7 +25,7 @@ export const load = async ({ fetch }) => {
 		ws.send(JSON.stringify({ type: 'INIT', data: app.settings.pathToWarnings }));
 	});
 
-	ws.addEventListener('message', (event) => {
+	ws.addEventListener('message', async (event) => {
 		const data = JSON.parse(event.data) as GameEvent;
 
 		switch (data.type) {
@@ -34,14 +34,16 @@ export const load = async ({ fetch }) => {
 				app.game.isRunning = data.data.isRunning;
 				app.game.steamId = data.data.steamId;
 				app.game.profile = data.data.profile;
-				console.log(app.game);
+
 				break;
 			case 'LOBBY:STARTED':
+				console.log(data.data);
 				app.game.lobby = new Lobby();
 				app.game.lobby.isStarted = data.data.isStarted;
 				app.game.lobby.map = data.data.map;
 				app.game.lobby.outcome = data.data.outcome;
 				app.game.lobby.players = data.data.players;
+				app.game.lobby.matchType = data.data.matchType;
 
 				break;
 			case 'LOBBY:ENDED':
@@ -50,12 +52,19 @@ export const load = async ({ fetch }) => {
 					return;
 				}
 
-				app.game.lobby.isStarted = data.data.isStarted;
+				app.game.didNotify = false;
+				app.game.lobby.isStarted = false;
 				app.game.lobby.map = data.data.map;
 				app.game.lobby.outcome = data.data.outcome;
 				app.game.lobby.players = data.data.players;
 
 				break;
+			// case 'GAME:CLOSED':
+			// 	app.game.isRunning = false;
+			// 	app.game.steamId = undefined;
+			// 	app.game.profile = undefined;
+			// 	app.game.lobby = undefined;
+			// 	break;
 		}
 	});
 };

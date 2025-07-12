@@ -159,6 +159,13 @@ class App extends Emittery<AppEvents> {
 		this.emit('boot', this);
 	}
 
+	/**
+	 * Gets an instance of a module by its name.
+	 *
+	 * @param name
+	 * @returns {InstanceType<Modules[K]>}
+	 * @throws {Error} If the module with the specified name is not found.
+	 */
 	getModule<K extends keyof Modules>(name: K): InstanceType<Modules[K]> {
 		const module = this.activeModules.get(name);
 

@@ -20,7 +20,7 @@ export const server = Bun.serve({
 			ws.subscribe('game');
 		},
 		close(ws, code, message) {
-			ws.unsubscribe('the-group-chat');
+			ws.unsubscribe('game');
 		}
 	}
 });

@@ -9,7 +9,7 @@
 <a
 	{...restProps}
 	class={cn(
-		'bg-secondary-700 rounded-md px-4 py-3 font-bold text-white transition-all',
+		'bg-secondary-700 px-4 py-3 font-bold text-white transition-all',
 		restProps.href === app.currentRoute?.href && 'bg-primary text-black',
 		restProps.class
 	)}

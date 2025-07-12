@@ -1,17 +1,25 @@
 import { CoH } from './src/coh/coh';
 import { relic } from './src/relic';
 
-const coh = new CoH('/home/codeit/fknoobscoh/bun-sidecar/warnings.log');
+const coh = new CoH(
+	'C:\\Users\\Richa\\OneDrive\\Documenten\\My Games\\Company of Heroes Relaunch\\warnings.log'
+);
+
+coh.start();
+
+coh.game.on('LOBBY:STARTED', (lobby) => {
+	console.log('Lobby started:', lobby.getPlayers());
+});
 
 //import './parser.js';
 
 // import { lobby, config, coh } from './src/parser';
 
-// //coh.on('GAME:CLOSED', () => console.log('Game started'));
+//coh.on('LOG:ENDED', () => console.log('Game closed'));
 
 // config.pathToWarnings = '/home/codeit/fknoobscoh/bun-sidecar/warnings.log';
 
-// lobby.on('LOBBY:STARTED', (lobby) => {
+// coh.on('LOG:LOBBY:STARTED', (lobby) => {
 // 	console.log(lobby);
 // });
 // lobby.on('LOBBY:GAMEOVER', () => console.log('Lobby ended'));

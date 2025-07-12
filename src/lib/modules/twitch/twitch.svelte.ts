@@ -148,6 +148,12 @@ export class Twitch extends Module {
 	 */
 	public isConnected = $derived(this.enabled);
 
+	/**
+	 * The TTS (Text-to-Speech) instance for handling voice synthesis.
+	 *
+	 * @public
+	 * @type {TTS | undefined}
+	 */
 	public tts: TTS | undefined = undefined;
 
 	/**

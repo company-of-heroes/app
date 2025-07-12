@@ -1,11 +1,11 @@
 import type { ChatMessage } from '@twurple/chat';
-import type { VoiceSettings } from 'elevenlabs/api';
 import type { Listener } from '@d-fischer/typed-event-emitter';
+import type { VoiceSettings } from '@elevenlabs/elevenlabs-js/api';
+import type { Twitch } from './twitch.svelte';
 import { app } from '$lib/state/app.svelte';
 import { Module } from '../module.svelte';
 import { translate } from 'google-translate-api-x';
 import { fetch } from '@tauri-apps/plugin-http';
-import type { Twitch } from './twitch.svelte';
 import { TTSPersonal } from './tts-personal.svelte';
 import { watch } from 'runed';
 
@@ -165,32 +165,47 @@ export class TTS {
 	 * @private
 	 */
 	private async elevenlabs(message: string, user: string) {
-		let voice_settings: VoiceSettings = {
-			stability: 0.3,
-			similarity_boost: 0.8,
-			style: 1
+		let voiceSettings: VoiceSettings = {
+			stability: 0.8,
+			similarityBoost: 0.8,
+			style: 0.3
 		};
 
 		const voice = this.personal?.activeVoices[user] || this.twitch.settings.voiceName;
+		const voicesResponse = await this.twitch.elevenlabs?.client?.voices.getAll();
+		const voiceId =
+			voicesResponse?.voices?.find((v) => v.name === voice)?.voiceId ||
+			voicesResponse?.voices?.find((v) => v.name === 'George')?.voiceId;
+
+		if (!voiceId) {
+			console.error('No valid voice found. Cannot proceed with TTS.');
+			return;
+		}
 
 		if (voice === 'Adolf') {
-			const response = await translate(message, { to: 'de', requestFunction: fetch });
-			message = response.text;
+			try {
+				const response = await translate(message, {
+					to: 'de',
+					requestFunction: fetch,
+					requestOptions: { method: 'GET' }
+				});
+				message = response.text;
+			} catch (error) {
+				console.error('Error translating message to German:', error);
+			}
 		}
 
 		try {
-			const audioStream = (await this.twitch.elevenlabs?.client?.generate({
-				voice,
+			const audioStream = (await this.twitch.elevenlabs?.client?.textToSpeech.stream(voiceId, {
 				text: message,
-				model_id: 'eleven_multilingual_v2',
-				enable_logging: false,
-				output_format: 'mp3_44100_192',
-				voice_settings
-			})) as unknown as { reader: ReadableStreamDefaultReader<Uint8Array> };
-
+				modelId: 'eleven_multilingual_v2',
+				enableLogging: false,
+				outputFormat: 'mp3_44100_192',
+				voiceSettings
+			})) as unknown as ReadableStream;
 			// Create a Blob from the audio stream
 			const chunks: Uint8Array[] = [];
-			const reader = audioStream.reader; // Get the reader once
+			const reader = audioStream.getReader();
 
 			while (true) {
 				const { done, value } = await reader.read();
@@ -208,8 +223,8 @@ export class TTS {
 					 * We dont wanna keep the history items around, so we delete it right after playback.
 					 */
 					try {
-						this.twitch.elevenlabs?.client?.history.getAll().then(({ history }) => {
-							this.twitch.elevenlabs?.client?.history.delete(history[0].history_item_id);
+						this.twitch.elevenlabs?.client?.history.list().then(({ history }) => {
+							this.twitch.elevenlabs?.client?.history.delete(history[0].historyItemId);
 						});
 					} catch (_) {}
 

@@ -17,7 +17,7 @@ export type LogEvents = {
 	};
 	'LOG:LOBBY:POPULATING:PLAYER:COUNT': { count: number };
 	'LOG:LOBBY:POPULATING:PLAYER:STEAM': { steamId: bigint; slot: number; ranking: number };
-	'LOG:LOBBY:POPULATING:MATCH:TYPE': { type: 'BASIC_MATCH' | 'SKRIMISH' | 'AUTOMATCH' }; // Note: Parsing logic needs to map the regex capture to these values
+	'LOG:LOBBY:POPULATING:MATCH:TYPE': { type: number };
 	'LOG:LOBBY:POPULATING:COMPLETE': undefined;
 	'LOG:LOBBY:PLAYER:RESULT': { playerId: number; result: 'PS_WON' | 'PS_KILLED' };
 	'LOG:LOBBY:GAMEOVER': undefined;
@@ -37,7 +37,7 @@ export const triggers: Record<keyof LogEvents, RegExp> = {
 		oneOrMore(digit).after('Found 1 profiles for account /steam/').as('steamId')
 	),
 	'LOG:LOBBY:JOINED': createRegExp(exactly('RLINK -- JoinAsync: AsyncJob Complete')),
-	'LOG:LOBBY:POPULATING': createRegExp(exactly('Form - Starting game')),
+	'LOG:LOBBY:POPULATING': createRegExp(exactly('RLINK -- starting online hosting')),
 	'LOG:LOBBY:POPULATING:MAP': createRegExp(
 		exactly('GAME -- *** Beginning mission ').and(oneOrMore(char).before(' (').groupedAs('map'))
 	),
@@ -69,12 +69,11 @@ export const triggers: Record<keyof LogEvents, RegExp> = {
 				oneOrMore(digit).or('-1').groupedAs('ranking')
 			)
 	),
-	// Note: The consuming code will need to map the captured string ('AutoMatchForm - Starting game' or 'GameSetupForm - Starting game')
-	// to the 'BASIC_MATCH' | 'SKRIMISH' | 'AUTOMATCH' type when emitting the event.
 	'LOG:LOBBY:POPULATING:MATCH:TYPE': createRegExp(
-		exactly('AutoMatchForm - Starting game')
-			.or(exactly('GameSetupForm - Starting game'))
-			.groupedAs('type') // Captures the raw string
+		exactly(
+			'RLINK -- GetRequestInfoBySearchID - matchType ',
+			oneOrMore(digit).groupedAs('type')
+		).or(exactly('Setting match type to ', oneOrMore(digit).groupedAs('type')))
 	),
 	'LOG:LOBBY:POPULATING:COMPLETE': createRegExp(exactly('GAME -- *** Beginning mission')),
 	'LOG:LOBBY:PLAYER:RESULT': createRegExp(

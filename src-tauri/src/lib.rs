@@ -12,6 +12,25 @@ async fn start_server(window: Window) -> Result<u16, String> {
     .map_err(|err| err.to_string())
 }
 
+#[tauri::command]
+async fn get_active_window_title() -> Result<String, String> {
+    use windows::{
+        Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowTextW},
+        Win32::Foundation::HWND,
+    };
+
+    unsafe {
+        let hwnd: HWND = GetForegroundWindow();
+        let mut buffer = [0u16; 512];
+        let length = GetWindowTextW(hwnd, &mut buffer);
+        if length > 0 {
+            Ok(String::from_utf16_lossy(&buffer[..length as usize]))
+        } else {
+            Err("Kan venstertitel niet ophalen".into())
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -30,7 +49,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_oauth::init())
-        .invoke_handler(tauri::generate_handler![start_server])
+        .invoke_handler(tauri::generate_handler![start_server, get_active_window_title])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

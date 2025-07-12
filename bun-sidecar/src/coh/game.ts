@@ -3,6 +3,10 @@ import { RelicProfile } from '../types';
 import { server } from '../server';
 import { Lobby } from './lobby';
 
+/**
+ * Union type representing all available Company of Heroes maps.
+ * Includes 2-player, 4-player, 6-player, and 8-player maps.
+ */
 export type CoHMaps =
 	| '2p_angoville farms'
 	| '2p_beach_assault'
@@ -57,6 +61,10 @@ export type CoHMaps =
 	| '8p_route_n13'
 	| '8p_steel_pact';
 
+/**
+ * Event types that can be emitted by the Game class.
+ * Used for notifying listeners about game state changes.
+ */
 export type GameEvents = {
 	'GAME:LAUNCHED': (game: Game) => void;
 	'GAME:CLOSED': () => void;
@@ -64,15 +72,47 @@ export type GameEvents = {
 	'LOBBY:ENDED': (lobby: Lobby) => void;
 };
 
+/**
+ * Represents a Company of Heroes game instance and manages game state.
+ * Extends EventEmitter to emit game-related events.
+ */
 export class Game extends EventEmitter<GameEvents> {
+	/**
+	 * Whether the game is currently running.
+	 *
+	 * @type {boolean}
+	 * @private
+	 */
 	private isRunning: boolean = false;
 
+	/**
+	 * The Steam ID of the current player.
+	 *
+	 * @type {string | BigInt | null}
+	 * @private
+	 */
 	private steamId: string | BigInt | null = null;
 
+	/**
+	 * The Relic profile of the current player.
+	 *
+	 * @type {RelicProfile | null}
+	 * @private
+	 */
 	private profile: RelicProfile | null = null;
 
+	/**
+	 * The current lobby instance.
+	 *
+	 * @type {Lobby}
+	 * @private
+	 */
 	private lobby: Lobby = new Lobby();
 
+	/**
+	 * Game constructor.
+	 * Sets up event listeners for game and lobby events.
+	 */
 	constructor() {
 		super();
 
@@ -87,16 +127,37 @@ export class Game extends EventEmitter<GameEvents> {
 		this.addListener('LOBBY:ENDED', () => {
 			server.publish('game', JSON.stringify({ type: 'LOBBY:ENDED', data: this.lobby.toJSON() }));
 		});
+
+		this.addListener('GAME:CLOSED', () => {
+			server.publish('game', JSON.stringify({ type: 'GAME:CLOSED', data: this.toJSON() }));
+		});
 	}
 
+	/**
+	 * Sets the Relic profile for the current player.
+	 *
+	 * @param {RelicProfile} profile - The Relic profile to set
+	 */
 	setProfile(profile: RelicProfile) {
 		this.profile = profile;
 	}
 
+	/**
+	 * Gets the current Relic profile.
+	 *
+	 * @returns {RelicProfile | null} The current profile or null if not set
+	 */
 	getProfile(): RelicProfile | null {
 		return this.profile;
 	}
 
+	/**
+	 * Gets a specific property from the current Relic profile.
+	 *
+	 * @template K - The key type from RelicProfile
+	 * @param {K} key - The property key to retrieve
+	 * @returns {RelicProfile[K] | null} The property value or null if profile not set
+	 */
 	getProfileProperty<K extends keyof RelicProfile>(key: K): RelicProfile[K] | null {
 		if (!this.profile) {
 			return null;
@@ -105,30 +166,66 @@ export class Game extends EventEmitter<GameEvents> {
 		return this.profile[key];
 	}
 
+	/**
+	 * Sets the running state of the game.
+	 *
+	 * @param {boolean} isRunning - Whether the game is running
+	 */
 	setIsRunning(isRunning: boolean) {
 		this.isRunning = isRunning;
 	}
 
+	/**
+	 * Gets the running state of the game.
+	 *
+	 * @returns {boolean} Whether the game is currently running
+	 */
 	getIsRunning(): boolean {
 		return this.isRunning;
 	}
 
+	/**
+	 * Sets the Steam ID for the current player.
+	 *
+	 * @param {string | BigInt} steamId - The Steam ID to set
+	 */
 	setSteamId(steamId: string | BigInt) {
 		this.steamId = steamId;
 	}
 
+	/**
+	 * Gets the Steam ID of the current player.
+	 *
+	 * @returns {string | BigInt | null} The Steam ID or null if not set
+	 */
 	getSteamId(): string | BigInt | null {
 		return this.steamId;
 	}
 
+	/**
+	 * Sets the current lobby instance.
+	 *
+	 * @param {Lobby} lobby - The lobby instance to set
+	 */
 	setLobby(lobby: Lobby) {
 		this.lobby = lobby;
 	}
 
+	/**
+	 * Gets the current lobby instance.
+	 *
+	 * @returns {Lobby} The current lobby
+	 */
 	getLobby(): Lobby {
 		return this.lobby;
 	}
 
+	/**
+	 * Converts the game instance to a JSON representation.
+	 * Includes running state, profile, and Steam ID.
+	 *
+	 * @returns {object} JSON representation of the game state
+	 */
 	toJSON() {
 		return {
 			isRunning: this.isRunning,

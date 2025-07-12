@@ -17,12 +17,12 @@
 </script>
 
 <div class="flex h-screen overflow-hidden">
-	<aside class="bg-secondary-800 w-74 px-4 py-6">
+	<aside class="bg-secondary-800 w-62 p-2">
 		<Nav.Root class="h-full">
 			{#each app.routes as { href, title, component }}
 				<Nav.Link {href} {component}>{title}</Nav.Link>
 			{/each}
-			<a href="/settings" class="mt-auto flex items-center">
+			<a href="/settings" class="bg-secondary-950 mt-auto flex items-center px-4 py-3">
 				<GearIcon />
 				<span class="ml-2">Settings</span>
 			</a>
@@ -32,7 +32,7 @@
 		<div class="border-secondary-700 mb-6 border-b-2">
 			<H level="1">{app.currentRoute?.title}</H>
 		</div>
-		{#if app.currentRoute?.component}
+		{#if Component}
 			<Component />
 		{:else}
 			{@render children()}

@@ -27,7 +27,7 @@ export class RelicClient {
 	 * @returns The matching StatMember or null if not found
 	 */
 	async getProfileBySteamId(steamId: string | bigint): Promise<RelicProfile | null> {
-		const result = await this.request<PersonalStat>(
+		const { leaderboardStats, statGroups } = await this.request<PersonalStat>(
 			['community', 'leaderboard', 'getpersonalstat'],
 			{
 				title: 'coh1',
@@ -35,8 +35,16 @@ export class RelicClient {
 			}
 		);
 
-		const members = result.statGroups?.[0]?.members ?? [];
-		return members.find((m) => m.name === `/steam/${steamId}`) || null;
+		const members = statGroups?.[0]?.members ?? [];
+		const member = members.find((m) => m.name === `/steam/${steamId}`);
+
+		if (!member) {
+			return null;
+		}
+
+		member.leaderboardStats = leaderboardStats;
+
+		return member;
 	}
 
 	/**
@@ -46,7 +54,7 @@ export class RelicClient {
 	 * @returns The matching StatMember or null if not found
 	 */
 	async getProfileById(id: number): Promise<RelicProfile | null> {
-		const result = await this.request<PersonalStat>(
+		const { leaderboardStats, statGroups } = await this.request<PersonalStat>(
 			['community', 'leaderboard', 'getpersonalstat'],
 			{
 				title: 'coh1',
@@ -54,8 +62,16 @@ export class RelicClient {
 			}
 		);
 
-		const members = result.statGroups?.[0]?.members ?? [];
-		return members.find((m) => m.profile_id === id) || null;
+		const members = statGroups?.[0]?.members ?? [];
+		const member = members.find((m) => m.profile_id === id);
+
+		if (!member) {
+			return null;
+		}
+
+		member.leaderboardStats = leaderboardStats;
+
+		return member;
 	}
 
 	/**
@@ -74,7 +90,14 @@ export class RelicClient {
 		);
 
 		const members = result.statGroups?.map((statGroup) => statGroup.members.at(0)!) ?? [];
-		return members.filter((m) => ids.includes(m.profile_id));
+		const filteredMembers = members.filter((m) => ids.includes(m.profile_id));
+
+		// Add leaderboardStats to each member
+		filteredMembers.forEach((member) => {
+			member.leaderboardStats = result.leaderboardStats;
+		});
+
+		return filteredMembers;
 	}
 
 	/**

@@ -6,6 +6,7 @@ export type RelicProfile = {
 	level: number;
 	leaderboardregion_id: number;
 	country: string;
+	leaderboardStats?: LeaderboardStat[];
 };
 
 export type Result = {

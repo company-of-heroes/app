@@ -10,56 +10,26 @@
 	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
 	import { cn } from '$lib/utils';
 	import Select from '$lib/components/ui/input/select.svelte';
+	import * as Tabs from '$lib/components/ui/tabs';
+	import TwitchTab from './tabs/twitch-tab.svelte';
+	import TtsTab from './tabs/tts-tab.svelte';
 
-	const module = $derived(app.activeModules.get('twitch') as Twitch);
-
-	const startOAuthFlow = async () => {
-		cancel(8001);
-		const port = await start({ ports: [8001, 8002, 8003, 8004, 8005] });
-		const url = new URL('https://id.twitch.tv/oauth2/authorize');
-		const state = Math.random().toString(36).substring(2, 15);
-
-		console.log(`OAuth server listening on http://localhost:${port}`);
-
-		url.searchParams.set('response_type', 'token');
-		url.searchParams.set('redirect_uri', `http://localhost:${port}`);
-		url.searchParams.set(
-			'scope',
-			'user:read:email chat:read chat:edit channel:read:redemptions channel:manage:redemptions'
-		);
-		url.searchParams.set('client_id', module.clientId);
-		url.searchParams.set('state', state);
-
-		openUrl(url.toString());
-
-		onUrl((u) => {
-			const url = new URL(u);
-			const hash = url.hash.substring(1); // remove the '#'
-			const params = new URLSearchParams(hash);
-
-			const { access_token } = Object.fromEntries(params.entries());
-
-			if (!access_token) {
-				toast.error('Failed to get access token');
-				return;
-			}
-
-			toast.success('Successfully connected to Twitch');
-			module.settings.accessToken = access_token as string;
-			app.store.set('settings', app.settings);
-
-			cancel(port);
-		});
-	};
-
-	const disconnect = () => {
-		module.settings.accessToken = undefined;
-		app.store.set('settings', app.settings);
-		toast.success('Successfully disconnected from Twitch');
-	};
+	const module = app.activeModules.get('twitch') as Twitch;
 </script>
 
-<form class="max-w-lg">
+<Tabs.Root value="twitch">
+	<Tabs.List>
+		<Tabs.Trigger value="twitch">Twitch</Tabs.Trigger>
+		<Tabs.Trigger value="tts">TTS</Tabs.Trigger>
+	</Tabs.List>
+	<Tabs.Content value="twitch">
+		<TwitchTab />
+	</Tabs.Content>
+	<Tabs.Content value="tts">
+		<TtsTab />
+	</Tabs.Content>
+</Tabs.Root>
+<!-- <form class="max-w-lg">
 	<div class="mb-4 flex flex-col gap-2">
 		<Label>TTS everything</Label>
 		<Checkbox label="Enabled" name="enabled" bind:checked={module.settings.enabled} />
@@ -127,8 +97,8 @@
 			</div>
 			<div>
 				<Label>Usage:</Label>
-				{module.elevenlabs?.user?.subscription.character_count} / {module.elevenlabs?.user
-					?.subscription.character_limit}
+				{module.elevenlabs?.user?.subscription.characterCount} / {module.elevenlabs?.user
+					?.subscription.characterLimit}
 			</div>
 		</div>
 		{#if module.elevenlabs}
@@ -145,7 +115,6 @@
 					name="voiceName"
 					bind:value={module.settings.voiceName}
 				/>
-				<!-- {/if} -->
 			</div>
 			<div class="mb-4 flex flex-col gap-2">
 				<Label>Enable personal voices?</Label>
@@ -173,4 +142,4 @@
 			</div>
 		{/if}
 	</div>
-</form>
+</form> -->

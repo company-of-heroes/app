@@ -54,7 +54,6 @@ export class CoH extends emittery<LogEvents> {
 		this.onAny(async (event, data) => {
 			switch (event) {
 				case 'LOG:FOUND:PROFILE': {
-					console.log('GAME:LAUNCHED');
 					const { steamId } = data as LogEvents['LOG:FOUND:PROFILE'];
 					const profile = await this.relic.getProfileBySteamId(steamId);
 
@@ -75,6 +74,14 @@ export class CoH extends emittery<LogEvents> {
 					break;
 				}
 
+				case 'LOG:LOBBY:POPULATING:MATCH:TYPE': {
+					const { type } = data as LogEvents['LOG:LOBBY:POPULATING:MATCH:TYPE'];
+					const lobby = this.game.getLobby();
+
+					lobby.setMatchType(type);
+					break;
+				}
+
 				case 'LOG:LOBBY:POPULATING:PLAYER': {
 					const { index, playerId, type, team, race } =
 						data as LogEvents['LOG:LOBBY:POPULATING:PLAYER'];
@@ -90,6 +97,19 @@ export class CoH extends emittery<LogEvents> {
 					} else {
 						console.error('Attempted to add player before lobby was created.');
 					}
+					break;
+				}
+
+				case 'LOG:LOBBY:POPULATING:PLAYER:STEAM': {
+					const { steamId, slot, ranking } = data as LogEvents['LOG:LOBBY:POPULATING:PLAYER:STEAM'];
+					const lobby = this.game.getLobby();
+					const player = lobby.getPlayerBySlot(slot);
+
+					if (player) {
+						player.ranking = ranking;
+						player.steamId = steamId.toString();
+					}
+
 					break;
 				}
 
@@ -158,6 +178,11 @@ export class CoH extends emittery<LogEvents> {
 						console.error('Attempted to end lobby before it was created.');
 					}
 					break;
+				}
+
+				case 'LOG:ENDED': {
+					this.game.setIsRunning(false);
+					this.game.emit('GAME:CLOSED');
 				}
 			}
 		});

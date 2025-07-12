@@ -42,12 +42,29 @@
 		{
 			"identifier": "http:default",
 			"allow": [
-				{ "url": "https://*.your-objectstorage.com" },
-				{ "url": "https://*.google.com" },
-				{ "url": "https://*.google.nl" },
-				{ "url": "https://*.elevenlabs.io" },
-				{ "url": "https://*.twitch.tv" }
+				{
+					"url": "https://*.tauri.app"
+				},
+				{
+					"url": "https://*.your-objectstorage.com"
+				},
+				{
+					"url": "https://*.google.com"
+				},
+				{
+					"url": "https://*.google.nl"
+				},
+				{
+					"url": "https://*.elevenlabs.io"
+				},
+				{
+					"url": "https://*.twitch.tv"
+				},
+				{
+					"url": "https://*.streamelements.com"
+				}
 			]
-		}
+		},
+		"http:default"
 	]
 }
