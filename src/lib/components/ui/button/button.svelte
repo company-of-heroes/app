@@ -18,7 +18,7 @@
 		'cursor-pointer px-8 py-2',
 		'transition-all duration-100 hover:opacity-70',
 		'disabled:cursor-not-allowed disabled:opacity-60',
-		variant === 'primary' && 'bg-primary',
+		variant === 'primary' && 'bg-primary text-black',
 		variant === 'secondary' && 'bg-secondary-800 text-white',
 		variant === 'destructive' && 'text-secondary-900 bg-red-400',
 		restProps.class

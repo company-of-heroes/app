@@ -4,6 +4,7 @@
 	import { cn, getFactionFlagFromRace, getMapImageFromName, getSteamIdFromName } from '$lib/utils';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import CoHIconFile from '$lib/files/coh-ico.png';
+	import PredictionWidget from '$lib/components/predictions/prediction-widget.svelte';
 
 	// $effect(() => {
 	// 	console.log(app.game.lobby);
@@ -31,9 +32,9 @@
 	</span>
 	<div class="flex gap-4">
 		<div>
-			<div class="bg-secondary-900 relative w-44">
+			<div class="bg-secondary-900 w-44">
 				{#await getMapImageFromName(app.game.lobby.map!) then image}
-					<img src={image} alt="Map" class="absolute z-10 mr-4 w-full" />
+					<img src={image} alt="Map" class="mr-4 w-full" />
 				{/await}
 			</div>
 		</div>
@@ -102,3 +103,5 @@
 		</div>
 	</div>
 {/if}
+
+<PredictionWidget />

@@ -70,6 +70,7 @@ export class CoH extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:POPULATING': {
+					console.log('Lobby is populating');
 					this.game.setLobby(new Lobby());
 					break;
 				}

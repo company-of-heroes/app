@@ -3,13 +3,36 @@ import { invoke } from '@tauri-apps/api/core';
 import { watch } from 'runed';
 import { groupBy } from 'lodash-es';
 import { getRacePrefix, Race } from '$lib/utils';
+import Emittery from 'emittery';
+
+export type GameEvents = {
+	'GAME:LAUNCHED': {
+		isRunning: boolean;
+		steamId: string;
+		profile: RelicProfile;
+	};
+	'GAME:CLOSED': void;
+	'LOBBY:STARTED': {
+		isStarted: boolean;
+		map: string;
+		outcome: 'PS_WON' | 'PS_LOST' | 'PS_ABORTED';
+		players: LobbyPlayer[];
+		matchType: number;
+	};
+	'LOBBY:FINISHED': {
+		isStarted: boolean;
+		map: string;
+		outcome: 'PS_WON' | 'PS_LOST' | 'PS_ABORTED';
+		players: LobbyPlayer[];
+	};
+};
 
 /**
  * Represents a Company of Heroes game instance and manages game state.
  * Tracks game running status, player profile, lobby information, and window focus.
  * Provides reactive state management using Svelte 5 runes.
  */
-export class Game {
+export class Game extends Emittery<GameEvents> {
 	/**
 	 * Private interval timer for tracking window focus.
 	 * Uses NodeJS.Timeout for proper cleanup on component destruction.
@@ -44,7 +67,7 @@ export class Game {
 	 * @public
 	 * @type {RelicProfile | undefined}
 	 */
-	profile = $state<RelicProfile>();
+	profile = $state.raw<RelicProfile>();
 
 	/**
 	 * Current lobby instance if a game lobby is active.
@@ -53,7 +76,7 @@ export class Game {
 	 * @public
 	 * @type {Lobby | undefined}
 	 */
-	lobby = $state<Lobby>();
+	lobby = $state.raw<Lobby>();
 
 	/**
 	 * Reactive state indicating whether the game window has focus.
@@ -80,17 +103,35 @@ export class Game {
 	 * @constructor
 	 */
 	constructor() {
-		$effect.root(() => {
-			watch(
-				() => this.isRunning,
-				() => {
-					if (this.isRunning) {
-						this.trackWindowFocus();
-					} else {
-						this.stopTrackingWindowFocus();
-					}
-				}
-			);
+		super();
+
+		this.on('GAME:LAUNCHED', (data) => {
+			this.isRunning = data.isRunning;
+			this.steamId = data.steamId;
+			this.profile = data.profile;
+
+			this.trackWindowFocus();
+		});
+
+		this.on('GAME:CLOSED', () => {
+			this.isRunning = false;
+			this.steamId = undefined;
+			this.profile = undefined;
+			this.lobby = undefined;
+
+			this.stopTrackingWindowFocus();
+		});
+
+		this.on('LOBBY:STARTED', (data) => {
+			this.lobby = new Lobby(data.map, data.players, data.matchType);
+		});
+
+		this.on('LOBBY:FINISHED', (data) => {
+			if (!this.lobby) {
+				return;
+			}
+
+			this.lobby.outcome = data.outcome;
 		});
 	}
 
@@ -213,22 +254,13 @@ export class Lobby {
 	map = $state<string>();
 
 	/**
-	 * Reactive state indicating whether the lobby/match has started.
-	 * Transitions from false to true when the game begins.
-	 *
-	 * @public
-	 * @type {boolean}
-	 */
-	isStarted = $state(false);
-
-	/**
 	 * Array of players currently in the lobby.
 	 * Includes player information, teams, races, and profile data.
 	 *
 	 * @public
 	 * @type {LobbyPlayer[]}
 	 */
-	players = $state<LobbyPlayer[]>([]);
+	players = $state.raw<LobbyPlayer[]>([]);
 
 	/**
 	 * Match outcome when the game ends.
@@ -281,7 +313,7 @@ export class Lobby {
 	 * @readonly
 	 * @type {string}
 	 */
-	type = $derived(MATCH_TYPES[this.matchType as MatchTypeId] ?? 'Unknown');
+	type = $derived(MATCH_TYPES[this.matchType as MatchTypeId] ?? 'Custom Game');
 
 	/**
 	 * Derived state providing formatted map name with player count.
@@ -306,6 +338,12 @@ export class Lobby {
 
 		return `${formattedName} (${playerCount})`;
 	});
+
+	constructor(map: string, players: LobbyPlayer[], matchType: number) {
+		this.map = map;
+		this.players = players;
+		this.matchType = matchType;
+	}
 
 	/**
 	 * Retrieves the appropriate rank image for a given player.

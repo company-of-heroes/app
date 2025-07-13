@@ -37,7 +37,7 @@ export const triggers: Record<keyof LogEvents, RegExp> = {
 		oneOrMore(digit).after('Found 1 profiles for account /steam/').as('steamId')
 	),
 	'LOG:LOBBY:JOINED': createRegExp(exactly('RLINK -- JoinAsync: AsyncJob Complete')),
-	'LOG:LOBBY:POPULATING': createRegExp(exactly('RLINK -- starting online hosting')),
+	'LOG:LOBBY:POPULATING': createRegExp(exactly('Form - Starting game')),
 	'LOG:LOBBY:POPULATING:MAP': createRegExp(
 		exactly('GAME -- *** Beginning mission ').and(oneOrMore(char).before(' (').groupedAs('map'))
 	),

@@ -7,7 +7,8 @@ import { Module } from '../module.svelte';
 import TwitchView from './twitch-view.svelte';
 import { ElevenLabs } from './elevenlabs.svelte';
 import { TTS } from './tts.svelte';
-import { watch } from 'runed';
+import { merge } from 'lodash-es';
+import { Preditctions } from './predictions.svelte';
 
 export type TwitchSettings = {
 	enabled: boolean;
@@ -18,6 +19,9 @@ export type TwitchSettings = {
 	voiceName: string;
 	personalVoicesEnabled: boolean;
 	personalVoices: string[];
+	predictionsEnabled: boolean;
+	predictionsTitle: string;
+	predictionsOptions: string[];
 };
 
 export const defaultTwitchSettings: TwitchSettings = {
@@ -28,7 +32,10 @@ export const defaultTwitchSettings: TwitchSettings = {
 	provider: 'brian',
 	voiceName: 'Roger',
 	personalVoicesEnabled: false,
-	personalVoices: []
+	personalVoices: [],
+	predictionsEnabled: false,
+	predictionsTitle: 'Lose or Win',
+	predictionsOptions: ['Win', 'Lose']
 };
 
 /**
@@ -154,7 +161,16 @@ export class Twitch extends Module {
 	 * @public
 	 * @type {TTS | undefined}
 	 */
-	public tts: TTS | undefined = undefined;
+	public tts: TTS | undefined = $state(undefined);
+
+	/**
+	 * The Predictions module instance for handling Twitch predictions.
+	 * This is initialized when the Twitch module is booted.
+	 *
+	 * @public
+	 * @type {Preditctions | undefined}
+	 */
+	public predictions: Preditctions | undefined = $state(undefined);
 
 	/**
 	 * Initializes the Twurple ApiClient with the provided credentials.
@@ -179,6 +195,7 @@ export class Twitch extends Module {
 			app.on('boot', () => {
 				this.elevenlabs = new ElevenLabs();
 				this.tts = new TTS();
+				this.predictions = new Preditctions();
 			});
 		} catch (error) {
 			this.disconnect();

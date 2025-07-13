@@ -8,12 +8,13 @@ import { translate } from 'google-translate-api-x';
 import { fetch } from '@tauri-apps/plugin-http';
 import { TTSPersonal } from './tts-personal.svelte';
 import { watch } from 'runed';
+import { Bootable } from '../bootable.svelte';
 
 /**
  * Represents the Text-to-Speech (TTS) module.
  * Handles TTS initialization and potentially interaction with TTS services.
  */
-export class TTS {
+export class TTS extends Bootable {
 	/**
 	 * Indicates whether the TTS module is enabled.
 	 *
@@ -21,7 +22,7 @@ export class TTS {
 	 * @type {boolean}
 	 */
 	enabled = $derived(
-		app.settings.twitch?.enabled &&
+		!!app.settings.twitch?.enabled &&
 			!!app.settings.twitch?.provider &&
 			!!app.settings.twitch.voiceName
 	);
@@ -99,23 +100,6 @@ export class TTS {
 	 */
 	public personal?: TTSPersonal;
 
-	constructor() {
-		$effect.root(() => {
-			watch(
-				() => this.enabled,
-				() => {
-					if (this.enabled) {
-						this.init();
-					} else {
-						this.destroy();
-					}
-				}
-			);
-		});
-
-		app.on('boot', () => this.init());
-	}
-
 	async init() {
 		if (!this.enabled || !this.twitch) {
 			return;
@@ -141,6 +125,7 @@ export class TTS {
 	 * @private
 	 */
 	private async message(channel: string, user: string, message: string, msg: ChatMessage) {
+		console.log(msg);
 		if (message.length < 1 && message.startsWith('!')) {
 			return;
 		}

@@ -1,7 +1,6 @@
 import type { Voice, User } from '@elevenlabs/elevenlabs-js/api';
 import { app } from '$lib/state/app.svelte';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
-import { watch } from 'runed';
 import { Bootable } from '../bootable.svelte';
 
 export class ElevenLabs extends Bootable {

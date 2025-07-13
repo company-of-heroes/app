@@ -1,4 +1,5 @@
 export type RelicProfile = {
+	alias: string;
 	profile_id: number;
 	name: string;
 	personal_statgroup_id: number;

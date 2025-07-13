@@ -30,33 +30,15 @@ export const load = async ({ fetch }) => {
 
 		switch (data.type) {
 			case 'GAME:LAUNCHED':
-				console.log(data.type);
-				app.game.isRunning = data.data.isRunning;
-				app.game.steamId = data.data.steamId;
-				app.game.profile = data.data.profile;
+				app.game.emit('GAME:LAUNCHED', data.data);
 
 				break;
 			case 'LOBBY:STARTED':
-				console.log(data.data);
-				app.game.lobby = new Lobby();
-				app.game.lobby.isStarted = data.data.isStarted;
-				app.game.lobby.map = data.data.map;
-				app.game.lobby.outcome = data.data.outcome;
-				app.game.lobby.players = data.data.players;
-				app.game.lobby.matchType = data.data.matchType;
+				app.game.emit('LOBBY:STARTED', data.data);
 
 				break;
 			case 'LOBBY:ENDED':
-				if (!app.game.lobby) {
-					console.error('Lobby not initialized');
-					return;
-				}
-
-				app.game.didNotify = false;
-				app.game.lobby.isStarted = false;
-				app.game.lobby.map = data.data.map;
-				app.game.lobby.outcome = data.data.outcome;
-				app.game.lobby.players = data.data.players;
+				app.game.emit('LOBBY:FINISHED', data.data);
 
 				break;
 			// case 'GAME:CLOSED':

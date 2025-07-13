@@ -7,10 +7,6 @@ const coh = new CoH(
 
 coh.start();
 
-coh.game.on('LOBBY:STARTED', (lobby) => {
-	console.log('Lobby started:', lobby.getPlayers());
-});
-
 //import './parser.js';
 
 // import { lobby, config, coh } from './src/parser';

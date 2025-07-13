@@ -167,9 +167,20 @@ class App extends Emittery<AppEvents> {
 	 * @throws {Error} If the module with the specified name is not found.
 	 */
 	getModule<K extends keyof Modules>(name: K): InstanceType<Modules[K]> {
-		const module = this.activeModules.get(name);
+		let module = this.activeModules.get(name);
 
 		if (!module) {
+			if (import.meta.env.DEV && window) {
+				window.location.reload();
+				module = this.activeModules.get(name);
+
+				if (!module) {
+					throw new Error(`Module ${name} not found after reload`);
+				} else {
+					return module as InstanceType<Modules[K]>;
+				}
+			}
+
 			throw new Error(`Module ${name} not found`);
 		}
 

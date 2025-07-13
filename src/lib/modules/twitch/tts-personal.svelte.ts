@@ -15,29 +15,34 @@ export class TTSPersonal {
 	twitch: Twitch = $derived(app.activeModules.get('twitch') as Twitch);
 
 	async init() {
-		if (!this.twitch.user?.userId || this.twitch.settings.personalVoicesEnabled === false) {
-			return;
-		}
+		try {
+			if (!this.twitch.user?.userId || this.twitch.settings.personalVoicesEnabled === false) {
+				return this;
+			}
 
-		this.rewards = await this.twitch.client!.channelPoints.getCustomRewards(
-			this.twitch.user.userId,
-			true
-		);
+			this.rewards = await this.twitch.client!.channelPoints.getCustomRewards(
+				this.twitch.user.userId,
+				true
+			);
 
-		//await app.store.set('activeVoices', {});
-		this.activeVoices = (await app.store.get('activeVoices')) ?? {};
+			//await app.store.set('activeVoices', {});
+			this.activeVoices = (await app.store.get('activeVoices')) ?? {};
 
-		this.updateChannelRewards();
-		this.listenForRewardRedemption();
+			this.updateChannelRewards();
+			this.listenForRewardRedemption();
 
-		$effect.root(() => {
-			$effect(() => {
-				this.activeVoices;
-				this.updateChannelRewards();
+			$effect.root(() => {
+				$effect(() => {
+					this.activeVoices;
+					this.updateChannelRewards();
+				});
 			});
-		});
 
-		return this;
+			return this;
+		} catch (error) {
+			console.error('Error initializing TTSPersonal:', error);
+			return this;
+		}
 	}
 
 	private async updateChannelRewards() {

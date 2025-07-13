@@ -1,19 +1,11 @@
 <script lang="ts">
-	import type { Twitch } from '../twitch.svelte';
-	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { app } from '$lib/state/app.svelte';
-	import { cancel, onUrl, start } from '@fabianlars/tauri-plugin-oauth';
-	import { openUrl } from '@tauri-apps/plugin-opener';
-	import { toast } from 'svelte-sonner';
-	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
-	import ArrowIcon from 'phosphor-svelte/lib/ArrowRight';
-	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils';
 	import { Checkbox, Input, RadioGroup, Select } from '$lib/components/ui/input';
 	import { Meter } from '$lib/components/ui/meter';
 
-	let module = $derived(app.activeModules.get('twitch') as Twitch);
+	const module = app.getModule('twitch');
 </script>
 
 <div class="mb-4 flex flex-col gap-2">

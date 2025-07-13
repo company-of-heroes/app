@@ -11,7 +11,7 @@
 	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils';
 
-	let module = $derived(app.activeModules.get('twitch') as Twitch);
+	let module = app.getModule('twitch');
 	let isStreamOnline = $state(false);
 
 	onMount(() => {
@@ -44,7 +44,7 @@
 		url.searchParams.set('redirect_uri', `http://localhost:${port}`);
 		url.searchParams.set(
 			'scope',
-			'user:read:email chat:read chat:edit channel:read:redemptions channel:manage:redemptions'
+			'user:read:email chat:read chat:edit channel:read:redemptions channel:manage:redemptions channel:manage:predictions channel:read:predictions'
 		);
 		url.searchParams.set('client_id', module.clientId);
 		url.searchParams.set('state', state);

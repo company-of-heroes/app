@@ -11,18 +11,19 @@
 	import '@fontsource/bebas-neue';
 
 	import '../app.css';
+	import { Dialog } from '$lib/components/ui/dialog';
 
 	let { children } = $props();
 	let Component = $derived(app.currentRoute?.component);
 </script>
 
 <div class="flex h-screen overflow-hidden">
-	<aside class="bg-secondary-800 w-62 p-2">
+	<aside class="bg-secondary-800 w-62 p-1">
 		<Nav.Root class="h-full">
 			{#each app.routes as { href, title, component }}
 				<Nav.Link {href} {component}>{title}</Nav.Link>
 			{/each}
-			<a href="/settings" class="bg-secondary-950 mt-auto flex items-center px-4 py-3">
+			<a href="/settings" class="bg-secondary-800 mt-auto flex items-center px-4 py-3">
 				<GearIcon />
 				<span class="ml-2">Settings</span>
 			</a>
@@ -55,3 +56,5 @@
 		}
 	}}
 />
+
+<Dialog />
