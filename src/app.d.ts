@@ -50,11 +50,19 @@ declare module '@fknoobs/app' {
 		highestranklevel: number;
 	};
 
+	type LeaderboardStatWithMember = LeaderboardStat & {
+		member: RelicProfile;
+	};
+
 	type PersonalStat = {
 		result: Result;
 		statGroups: StatGroup[];
 		leaderboardStats: LeaderboardStat[];
 	};
+
+	type LeaderBoardResponse = {
+		rankTotal: number;
+	} & PersonalStat;
 
 	type LobbyPlayer = {
 		index: number;
@@ -90,15 +98,17 @@ declare module '@fknoobs/app/ws' {
 				matchType: number;
 			}
 		>;
-		'LOBBY:ENDED': Message<
-			'LOBBY:ENDED',
+		'LOBBY:GAMEOVER': Message<
+			'LOBBY:GAMEOVER',
 			{
+				sessionId: number;
 				isStarted: boolean;
 				map: string;
 				outcome: 'PS_WON' | 'PS_LOST' | 'PS_ABORTED';
 				players: LobbyPlayer[];
 			}
 		>;
+		'LOBBY:DESTROYED': Message<'LOBBY:DESTROYED'>;
 		'GAME:CLOSED': Message<
 			'GAME:CLOSED',
 			{

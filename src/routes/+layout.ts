@@ -37,10 +37,15 @@ export const load = async ({ fetch }) => {
 				app.game.emit('LOBBY:STARTED', data.data);
 
 				break;
-			case 'LOBBY:ENDED':
-				app.game.emit('LOBBY:FINISHED', data.data);
+			case 'LOBBY:GAMEOVER':
+				app.game.emit('LOBBY:GAMEOVER', data.data);
 
 				break;
+			case 'LOBBY:DESTROYED':
+				app.game.emit('LOBBY:DESTROYED');
+
+				break;
+
 			// case 'GAME:CLOSED':
 			// 	app.game.isRunning = false;
 			// 	app.game.steamId = undefined;

@@ -68,6 +68,10 @@ export class Watcher extends EventEmitter {
 					this.size.prev = 0; // Reset might be needed depending on error type
 					this.size.current = 0;
 				});
+			} else if (this.size.current < this.size.prev) {
+				console.log('Hi');
+				this.stop();
+				this.start();
 			}
 		} catch (e: any) {
 			if (e.code !== 'ENOENT') {

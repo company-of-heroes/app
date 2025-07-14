@@ -49,6 +49,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_oauth::init())
+        .plugin(tauri_plugin_cors_fetch::init())
         .invoke_handler(tauri::generate_handler![start_server, get_active_window_title])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

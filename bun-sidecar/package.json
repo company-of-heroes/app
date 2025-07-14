@@ -4,7 +4,7 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"build:windows": "bun build --compile --target=bun-windows-x64 index.ts --outfile=fknoobs && bun build.js",
+		"build:windows": "bun build --compile --target=bun-windows-x64 src/server.ts --outfile=fknoobs && bun build.js",
 		"build:linux": "bun build --compile src/index.ts --outfile=fknoobs"
 	},
 	"dependencies": {

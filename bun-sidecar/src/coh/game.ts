@@ -69,7 +69,8 @@ export type GameEvents = {
 	'GAME:LAUNCHED': (game: Game) => void;
 	'GAME:CLOSED': () => void;
 	'LOBBY:STARTED': (lobby: Lobby) => void;
-	'LOBBY:ENDED': (lobby: Lobby) => void;
+	'LOBBY:GAMEOVER': (lobby: Lobby) => void;
+	'LOBBY:DESTROYED': () => void;
 };
 
 /**
@@ -124,8 +125,12 @@ export class Game extends EventEmitter<GameEvents> {
 			server.publish('game', JSON.stringify({ type: 'LOBBY:STARTED', data: this.lobby.toJSON() }));
 		});
 
-		this.addListener('LOBBY:ENDED', () => {
-			server.publish('game', JSON.stringify({ type: 'LOBBY:ENDED', data: this.lobby.toJSON() }));
+		this.addListener('LOBBY:GAMEOVER', () => {
+			server.publish('game', JSON.stringify({ type: 'LOBBY:GAMEOVER', data: this.lobby.toJSON() }));
+		});
+
+		this.addListener('LOBBY:DESTROYED', () => {
+			server.publish('game', JSON.stringify({ type: 'LOBBY:DESTROYED' }));
 		});
 
 		this.addListener('GAME:CLOSED', () => {

@@ -4,6 +4,7 @@ import { watch } from 'runed';
 import { groupBy } from 'lodash-es';
 import { getRacePrefix, Race } from '$lib/utils';
 import Emittery from 'emittery';
+import { app } from './app.svelte';
 
 export type GameEvents = {
 	'GAME:LAUNCHED': {
@@ -11,7 +12,7 @@ export type GameEvents = {
 		steamId: string;
 		profile: RelicProfile;
 	};
-	'GAME:CLOSED': void;
+	'GAME:CLOSED': never;
 	'LOBBY:STARTED': {
 		isStarted: boolean;
 		map: string;
@@ -19,12 +20,13 @@ export type GameEvents = {
 		players: LobbyPlayer[];
 		matchType: number;
 	};
-	'LOBBY:FINISHED': {
+	'LOBBY:GAMEOVER': {
 		isStarted: boolean;
 		map: string;
 		outcome: 'PS_WON' | 'PS_LOST' | 'PS_ABORTED';
 		players: LobbyPlayer[];
 	};
+	'LOBBY:DESTROYED': never;
 };
 
 /**
@@ -52,6 +54,15 @@ export class Game extends Emittery<GameEvents> {
 	isRunning = $state(false);
 
 	/**
+	 * Reactive state indicating whether the game is currently in an ingame state.
+	 * This is used to determine if the game is actively being played.
+	 *
+	 * @public
+	 * @type {boolean}
+	 */
+	isIngame = $state(false);
+
+	/**
 	 * Steam ID of the current player.
 	 * Set when the game is launched and a profile is loaded.
 	 *
@@ -77,6 +88,14 @@ export class Game extends Emittery<GameEvents> {
 	 * @type {Lobby | undefined}
 	 */
 	lobby = $state.raw<Lobby>();
+
+	/**
+	 * All lobbies that have been created during the game session.
+	 *
+	 * @public
+	 * @type {Lobby[]}
+	 */
+	playedLobbies = $state<Lobby[]>([]);
 
 	/**
 	 * Reactive state indicating whether the game window has focus.
@@ -124,14 +143,21 @@ export class Game extends Emittery<GameEvents> {
 
 		this.on('LOBBY:STARTED', (data) => {
 			this.lobby = new Lobby(data.map, data.players, data.matchType);
+			this.isIngame = true;
 		});
 
-		this.on('LOBBY:FINISHED', (data) => {
+		this.on('LOBBY:GAMEOVER', (data) => {
 			if (!this.lobby) {
 				return;
 			}
 
 			this.lobby.outcome = data.outcome;
+			this.playedLobbies.push(this.lobby);
+		});
+
+		this.on('LOBBY:DESTROYED', () => {
+			this.lobby = undefined;
+			this.isIngame = false;
 		});
 	}
 
@@ -239,6 +265,12 @@ type LeaderboardKey = keyof typeof LEADERBOARD_IDS;
 type MatchTypeId = keyof typeof MATCH_TYPES;
 
 /**
+ * Cache for storing map image imports to avoid repeated dynamic imports
+ * Maps map name to the imported image path
+ */
+const mapCache = new Map<string, string>();
+
+/**
  * Represents a Company of Heroes lobby instance.
  * Manages lobby state, player information, match details, and ranking data.
  * Provides reactive state management and derived computations using Svelte 5 runes.
@@ -270,6 +302,29 @@ export class Lobby {
 	 * @type {string | undefined}
 	 */
 	outcome = $state<string>();
+
+	/**
+	 * Derived state providing a human-readable outcome string.
+	 * Converts match outcome codes to descriptive text.
+	 *
+	 * @public
+	 * @readonly
+	 * @type {string}
+	 */
+	outcomeFormatted = $derived.by(() => {
+		if (!this.outcome) return 'Unknown';
+
+		switch (this.outcome) {
+			case 'PS_WON':
+				return 'Won';
+			case 'PS_LOST':
+				return 'Lost';
+			case 'PS_ABORTED':
+				return 'Aborted';
+			default:
+				return 'Unknown';
+		}
+	});
 
 	/**
 	 * Numeric identifier for the match type.
@@ -337,6 +392,20 @@ export class Lobby {
 			.replace(/\b\w/g, (c) => c.toUpperCase());
 
 		return `${formattedName} (${playerCount})`;
+	});
+
+	/**
+	 * Derived state to find the current player in the lobby.
+	 * Searches for the player with the same Steam ID as the app's current game.
+	 *
+	 * @public
+	 * @readonly
+	 * @type {LobbyPlayer | undefined}
+	 */
+	me = $derived.by(() => {
+		if (!this.players || this.players.length === 0) return undefined;
+
+		return this.players.find((player) => player.steamId === app.game.steamId);
 	});
 
 	constructor(map: string, players: LobbyPlayer[], matchType: number) {
@@ -408,6 +477,40 @@ export class Lobby {
 				console.error('Critical error: Could not load default rank image:', fallbackError);
 				return ''; // Last resort fallback
 			}
+		}
+	}
+
+	async getMapImage(map: string): Promise<string> {
+		// Return cached result if available
+		if (mapCache.has(map)) {
+			return mapCache.get(map)!;
+		}
+
+		// Handle empty or invalid map name
+		if (!map || typeof map !== 'string') {
+			const defaultMap = await import(`$lib/files/maps/mp_nobattlemap.png`);
+			const result = defaultMap.default;
+
+			mapCache.set('', result);
+			return result;
+		}
+
+		try {
+			const mapImage = await import(`$lib/files/maps/${map}_map_base.png`);
+			const result = mapImage.default;
+
+			if (result) {
+				mapCache.set(map, result);
+				return result;
+			}
+
+			throw new Error('Map image not found');
+		} catch (error) {
+			const defaultMap = await import(`$lib/files/maps/mp_nobattlemap.png`);
+			const result = defaultMap.default;
+
+			mapCache.set(map, result);
+			return result;
 		}
 	}
 }

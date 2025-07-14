@@ -70,7 +70,6 @@ export class CoH extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:POPULATING': {
-					console.log('Lobby is populating');
 					this.game.setLobby(new Lobby());
 					break;
 				}
@@ -134,8 +133,6 @@ export class CoH extends emittery<LogEvents> {
 
 					const profileIds = lobby.getPlayerIds();
 					if (profileIds.length === 0) {
-						lobby.setIsStarted(true);
-						this.game.emit('LOBBY:STARTED', lobby);
 						return;
 					}
 
@@ -174,10 +171,28 @@ export class CoH extends emittery<LogEvents> {
 				case 'LOG:LOBBY:GAMEOVER': {
 					const lobby = this.game.getLobby();
 					if (lobby) {
-						this.game.emit('LOBBY:ENDED', lobby);
+						this.game.emit('LOBBY:GAMEOVER', lobby);
 					} else {
 						console.error('Attempted to end lobby before it was created.');
 					}
+					break;
+				}
+
+				case 'LOG:LOBBY:SESSIONID': {
+					const { sessionId } = data as LogEvents['LOG:LOBBY:SESSIONID'];
+					const lobby = this.game.getLobby();
+
+					if (lobby) {
+						lobby.setSessionId(sessionId);
+					} else {
+						console.error('Attempted to set session ID before lobby was created.');
+					}
+
+					break;
+				}
+
+				case 'LOG:LOBBY:DESTROYED': {
+					this.game.emit('LOBBY:DESTROYED');
 					break;
 				}
 

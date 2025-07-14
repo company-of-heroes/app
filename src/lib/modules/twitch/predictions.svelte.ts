@@ -80,6 +80,10 @@ export class Preditctions extends Bootable {
 		 * Prevents multiple rapid calls when a game starts.
 		 */
 		const debouncedStartPrediction = debounce(() => {
+			if (!app.game.isIngame) {
+				return;
+			}
+
 			const title = this.twitch.settings.predictionsTitle;
 			const outcomes = this.twitch.settings.predictionsOptions;
 
@@ -108,7 +112,7 @@ export class Preditctions extends Bootable {
 		}, 1500);
 
 		app.game.on('LOBBY:STARTED', () => debouncedStartPrediction());
-		app.game.on('LOBBY:FINISHED', () => debouncedEndPrediction());
+		app.game.on('LOBBY:GAMEOVER', () => debouncedEndPrediction());
 	}
 
 	/**

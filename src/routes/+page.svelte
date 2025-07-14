@@ -5,6 +5,7 @@
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import CoHIconFile from '$lib/files/coh-ico.png';
 	import PredictionWidget from '$lib/components/predictions/prediction-widget.svelte';
+	import { LobbyHistoryWidget } from '$lib/components/lobby';
 
 	// $effect(() => {
 	// 	console.log(app.game.lobby);
@@ -104,4 +105,7 @@
 	</div>
 {/if}
 
-<PredictionWidget />
+<div class="mt-12 flex flex-col gap-4">
+	<LobbyHistoryWidget />
+	<PredictionWidget />
+</div>

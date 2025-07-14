@@ -7,6 +7,10 @@ const coh = new CoH(
 
 coh.start();
 
+coh.on('LOG:LOBBY:SESSIONID', (sessionId) => {
+	console.log('Session ID:', sessionId);
+});
+
 //import './parser.js';
 
 // import { lobby, config, coh } from './src/parser';

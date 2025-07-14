@@ -47,6 +47,10 @@ class App extends Emittery<AppEvents> {
 		{
 			href: '/',
 			title: 'Dashboard'
+		},
+		{
+			href: '/leaderboards/4',
+			title: 'Leaderboards'
 		}
 	]);
 

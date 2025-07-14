@@ -5,6 +5,7 @@
 	"windows": ["main"],
 	"permissions": [
 		"core:default",
+		"cors-fetch:default",
 		"opener:default",
 		"store:default",
 		"oauth:allow-start",
@@ -62,6 +63,12 @@
 				},
 				{
 					"url": "https://*.streamelements.com"
+				},
+				{
+					"url": "https://*.reliclink.com"
+				},
+				{
+					"url": "http://*.reliclink.com"
 				}
 			]
 		},

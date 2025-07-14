@@ -20,6 +20,7 @@ export type LogEvents = {
 	'LOG:LOBBY:POPULATING:MATCH:TYPE': { type: number };
 	'LOG:LOBBY:POPULATING:COMPLETE': undefined;
 	'LOG:LOBBY:PLAYER:RESULT': { playerId: number; result: 'PS_WON' | 'PS_KILLED' };
+	'LOG:LOBBY:SESSIONID': { sessionId: number };
 	'LOG:LOBBY:GAMEOVER': undefined;
 	'LOG:LOBBY:DESTROYED': undefined;
 	'LOG:LOBBY:STARTED': undefined;
@@ -83,6 +84,14 @@ export const triggers: Record<keyof LogEvents, RegExp> = {
 		oneOrMore(digit).groupedAs('playerId'),
 		exactly(', ', 'result:', oneOrMore(digit), ':'),
 		exactly(word).groupedAs('result') // Captures 'PS_WON' or 'PS_KILLED'
+	),
+	'LOG:LOBBY:SESSIONID': createRegExp(
+		exactly(
+			'ReportMatchResults - reporting normal game results for match ',
+			oneOrMore(digit),
+			exactly(':'),
+			oneOrMore(digit).groupedAs('sessionId')
+		)
 	),
 	'LOG:LOBBY:STARTED': createRegExp(exactly('GAME -- Starting mission')),
 	'LOG:LOBBY:GAMEOVER': createRegExp(exactly('GameObj::DoGameOverPopup')),

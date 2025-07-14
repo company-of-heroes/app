@@ -12,6 +12,7 @@ export type Player = {
 };
 
 export class Lobby {
+	private sessionId: number | null = null;
 	private isStarted = false;
 	private map: string | null = null;
 	private players: Player[] = [];
@@ -24,6 +25,14 @@ export class Lobby {
 		}
 
 		this.players.push(player);
+	}
+
+	setSessionId(sessionId: number) {
+		this.sessionId = sessionId;
+	}
+
+	getSessionId(): number | null {
+		return this.sessionId;
 	}
 
 	setMatchType(type: number) {
@@ -91,6 +100,7 @@ export class Lobby {
 
 	toJSON() {
 		return {
+			sessionId: this.sessionId,
 			isStarted: this.isStarted,
 			map: this.map,
 			players: this.players,
