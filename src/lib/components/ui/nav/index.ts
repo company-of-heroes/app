@@ -6,6 +6,7 @@ import Nav from './nav.svelte';
 export type LinkProps = {
 	children: Snippet;
 	component?: Component;
+	path?: string;
 } & HTMLAnchorAttributes;
 
 export type NavProps = {

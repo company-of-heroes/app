@@ -12,7 +12,7 @@
 	// });
 </script>
 
-<div class="flex items-start gap-2">
+<div class="flex items-start gap-[2px]">
 	<div class="bg-primary-50/10 flex items-center gap-2 px-4 py-2">
 		<span>Status:</span>
 		<span class={cn('font-bold', app.game.isRunning ? 'text-green-600' : 'text-red-600')}>
@@ -40,15 +40,15 @@
 			</div>
 		</div>
 		<div>
-			<div class="flex gap-0.5">
+			<div class="flex gap-[1px]">
 				{#each app.game.lobby.teams as team}
 					<div class="w-74">
 						<span class="text-secondary-400 bg-secondary-800 mb-0.5 block px-4 py-2 font-bold">
 							Team {team.teamId + 1}
 						</span>
-						<div class="flex flex-col gap-0.5">
+						<div class="flex flex-col gap-[1px]">
 							{#each team.players as player}
-								<span class={cn('bg-primary-50/10 flex items-center gap-2 px-4 py-2')}>
+								<span class={cn('bg-primary-50/5 flex items-center gap-2 px-4 py-2')}>
 									<small>
 										{player.ranking}
 									</small>

@@ -6,6 +6,7 @@ import { Replays } from '$lib/modules/replay-manager/replays.svelte';
 import { load, type Store } from '@tauri-apps/plugin-store';
 import Emittery from 'emittery';
 import { Game } from './coh.svelte';
+import { PathMatcher } from '$lib/utils/path-matcher';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -13,6 +14,7 @@ import { Game } from './coh.svelte';
 export type Route = {
 	title: string;
 	href: string;
+	path?: string;
 	page?: {
 		title: string;
 		description: string;
@@ -46,10 +48,12 @@ class App extends Emittery<AppEvents> {
 	routes: Route[] = $state([
 		{
 			href: '/',
+			path: '/',
 			title: 'Dashboard'
 		},
 		{
-			href: '/leaderboards/4',
+			href: '/leaderboards',
+			path: '/leaderboards',
 			title: 'Leaderboards'
 		}
 	]);
@@ -61,13 +65,13 @@ class App extends Emittery<AppEvents> {
 	 * @type {Route | undefined}
 	 */
 	currentRoute = $derived.by(() => {
-		return this.routes.find((route) => {
-			if (page.url.hash !== '') {
-				return page.url.hash !== '' && page.url.hash === route.href;
-			}
+		if (page.url.hash) {
+			return this.routes.find((route) => route.href === page.url.hash);
+		}
 
-			return route.href === page.url.pathname;
-		});
+		return this.routes.find((route) =>
+			PathMatcher.isMatch(route.path ?? route.href, page.url.pathname)
+		);
 	});
 
 	/**
@@ -159,6 +163,8 @@ class App extends Emittery<AppEvents> {
 				href: `#${mod.name}`
 			});
 		}
+
+		console.log(this.modules);
 
 		this.emit('boot', this);
 	}

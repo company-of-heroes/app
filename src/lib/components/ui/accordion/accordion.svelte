@@ -10,6 +10,11 @@
 	let { value = $bindable(), type = 'single', children, ...restProps }: Props = $props();
 </script>
 
-<Accordion.Root bind:value {type} {...restProps} class={cn('flex flex-col gap-1', restProps.class)}>
+<Accordion.Root
+	bind:value
+	{type}
+	{...restProps}
+	class={cn('flex flex-col gap-[2px]', restProps.class)}
+>
 	{@render children?.()}
 </Accordion.Root>

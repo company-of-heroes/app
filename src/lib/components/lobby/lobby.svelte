@@ -12,7 +12,7 @@
 
 <div
 	class={cn(
-		' flex items-center gap-1',
+		' flex items-center gap-[1px]',
 		'[&>span]:bg-primary/5 [&>span]:flex [&>span]:h-10 [&>span]:items-center [&>span]:px-4'
 	)}
 >
@@ -24,7 +24,7 @@
 	<span>
 		<img src={getFactionFlagFromRace(lobby.me!.race)} alt="Faction" class="relative w-5" />
 	</span>
-	<span class="w-64 truncate font-bold">
+	<span class="w-64 truncate font-medium">
 		{lobby.mapName}
 	</span>
 	<span class="text-secondary-400 w-34">{lobby.type}</span>
@@ -37,5 +37,5 @@
 	>
 		{lobby.outcomeFormatted}
 	</span>
-	<span class="me-1 flex-grow"></span>
+	<span class="me-[1px] flex-grow"></span>
 </div>

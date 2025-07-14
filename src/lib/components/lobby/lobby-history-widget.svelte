@@ -5,15 +5,13 @@
 </script>
 
 <h3 class="text-2xl font-bold">Games played today</h3>
-<div class="flex flex-col gap-2">
-	<Accordion.Root>
-		{#each app.game.playedLobbies as lobby, index}
-			<Accordion.Item value={`${lobby.mapName}-${index}`}>
-				{#snippet header()}
-					<Lobby {lobby} />
-				{/snippet}
-				Dis is content
-			</Accordion.Item>
-		{/each}
-	</Accordion.Root>
-</div>
+<Accordion.Root>
+	{#each app.game.playedLobbies as lobby, index}
+		<Accordion.Item value={`${lobby.mapName}-${index}`}>
+			{#snippet header()}
+				<Lobby {lobby} />
+			{/snippet}
+			Dis is content
+		</Accordion.Item>
+	{/each}
+</Accordion.Root>

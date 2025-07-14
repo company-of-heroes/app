@@ -50,8 +50,8 @@ declare module '@fknoobs/app' {
 		highestranklevel: number;
 	};
 
-	type LeaderboardStatWithMember = LeaderboardStat & {
-		member: RelicProfile;
+	type LeaderboardStatWithProfile = LeaderboardStat & {
+		profile: RelicProfile;
 	};
 
 	type PersonalStat = {

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Twitch } from '../twitch.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { app } from '$lib/state/app.svelte';

@@ -1,0 +1,111 @@
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons ExtraLight.otf') format('opentype');
+	font-weight: 200;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons ExtraLight Italic.otf') format('opentype');
+	font-weight: 200;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Light.otf') format('opentype');
+	font-weight: 300;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Light Italic.otf') format('opentype');
+	font-weight: 300;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Regular.otf') format('opentype');
+	font-weight: 400;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Italic.otf') format('opentype');
+	font-weight: 400;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Medium.otf') format('opentype');
+	font-weight: 500;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Medium Italic.otf') format('opentype');
+	font-weight: 500;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons DemiBold.otf') format('opentype');
+	font-weight: 600;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons DemiBold Italic.otf') format('opentype');
+	font-weight: 600;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Bold.otf') format('opentype');
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Bold Italic.otf') format('opentype');
+	font-weight: 700;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons ExtraBold.otf') format('opentype');
+	font-weight: 800;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons ExtraBold Italic.otf') format('opentype');
+	font-weight: 800;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Black.otf') format('opentype');
+	font-weight: 900;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Wellingtons';
+	src: url('./TT Wellingtons Black Italic.otf') format('opentype');
+	font-weight: 900;
+	font-style: italic;
+}

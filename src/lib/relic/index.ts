@@ -1,4 +1,9 @@
-import type { LeaderBoardResponse, PersonalStat, RelicProfile } from '@fknoobs/app';
+import type {
+	LeaderBoardResponse,
+	LeaderboardStatWithProfile,
+	PersonalStat,
+	RelicProfile
+} from '@fknoobs/app';
 import { fetch } from '@tauri-apps/plugin-http';
 import { pick } from 'lodash-es';
 
@@ -105,7 +110,7 @@ export class RelicClient {
 	 * @param leaderboardId - The ID of the leaderboard to fetch
 	 * @returns An array of LeaderboardStatWithMember objects
 	 */
-	async getLeaderboard(leaderboardId: number) {
+	async getLeaderboard(leaderboardId: number): Promise<LeaderboardStatWithProfile[]> {
 		const result = await this.request<LeaderBoardResponse>(
 			['community', 'leaderboard', 'getleaderboard2'],
 			{
@@ -125,7 +130,7 @@ export class RelicClient {
 
 			return {
 				...leaderboardStat,
-				profile
+				profile: profile!
 			};
 		});
 

@@ -1,0 +1,197 @@
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-Black.woff2') format('woff2'),
+		url('TTMussels-Black.woff') format('woff');
+	font-weight: 900;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-BoldItalic.woff2') format('woff2'),
+		url('TTMussels-BoldItalic.woff') format('woff');
+	font-weight: bold;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-ExtraBold.woff2') format('woff2'),
+		url('TTMussels-ExtraBold.woff') format('woff');
+	font-weight: bold;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-Bold.woff2') format('woff2'),
+		url('TTMussels-Bold.woff') format('woff');
+	font-weight: bold;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-Italic.woff2') format('woff2'),
+		url('TTMussels-Italic.woff') format('woff');
+	font-weight: normal;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-ExtraBoldItalic.woff2') format('woff2'),
+		url('TTMussels-ExtraBoldItalic.woff') format('woff');
+	font-weight: bold;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-Light.woff2') format('woff2'),
+		url('TTMussels-Light.woff') format('woff');
+	font-weight: 300;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-Regular.woff2') format('woff2'),
+		url('TTMussels-Regular.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-DemiBoldItalic.woff2') format('woff2'),
+		url('TTMussels-DemiBoldItalic.woff') format('woff');
+	font-weight: 600;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-MediumItalic.woff2') format('woff2'),
+		url('TTMussels-MediumItalic.woff') format('woff');
+	font-weight: 500;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-Medium.woff2') format('woff2'),
+		url('TTMussels-Medium.woff') format('woff');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-ExtraLight.woff2') format('woff2'),
+		url('TTMussels-ExtraLight.woff') format('woff');
+	font-weight: 200;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-Thin.woff2') format('woff2'),
+		url('TTMussels-Thin.woff') format('woff');
+	font-weight: 100;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-DemiBold.woff2') format('woff2'),
+		url('TTMussels-DemiBold.woff') format('woff');
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-LightItalic.woff2') format('woff2'),
+		url('TTMussels-LightItalic.woff') format('woff');
+	font-weight: 300;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-ExtraLightItalic.woff2') format('woff2'),
+		url('TTMussels-ExtraLightItalic.woff') format('woff');
+	font-weight: 200;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-ThinItalic.woff2') format('woff2'),
+		url('TTMussels-ThinItalic.woff') format('woff');
+	font-weight: 100;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
+
+@font-face {
+	font-family: 'TT Mussels';
+	src:
+		url('TTMussels-BlackItalic.woff2') format('woff2'),
+		url('TTMussels-BlackItalic.woff') format('woff');
+	font-weight: 900;
+	font-style: italic;
+	font-display: swap;
+	ascent-override: 100%;
+}
