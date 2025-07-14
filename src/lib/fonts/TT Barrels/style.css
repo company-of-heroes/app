@@ -1,0 +1,83 @@
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels Light.otf') format('opentype');
+	font-weight: 300;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels Light Italic.otf') format('opentype');
+	font-weight: 300;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels Regular.otf') format('opentype');
+	font-weight: 400;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels Italic.otf') format('opentype');
+	font-weight: 400;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels DemiBold.otf') format('opentype');
+	font-weight: 600;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels DemiBold Italic.otf') format('opentype');
+	font-weight: 600;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels Bold.otf') format('opentype');
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels Bold Italic.otf') format('opentype');
+	font-weight: 700;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels ExtraBold.otf') format('opentype');
+	font-weight: 800;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels ExtraBold Italic.otf') format('opentype');
+	font-weight: 800;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels Black.otf') format('opentype');
+	font-weight: 900;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Barrels';
+	src: url('./TT Barrels Black Italic.otf') format('opentype');
+	font-weight: 900;
+	font-style: italic;
+}

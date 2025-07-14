@@ -12,14 +12,15 @@
 	"app": {
 		"windows": [
 			{
-				"title": "secret-scanner",
+				"title": "Fknoobs - app",
 				"width": 1800,
 				"height": 1000
 			}
 		],
 		"security": {
 			"csp": null
-		}
+		},
+		"withGlobalTauri": true
 	},
 	"bundle": {
 		"active": true,
@@ -32,5 +33,13 @@
 			"icons/icon.ico"
 		],
 		"externalBin": ["binaries/fknoobs"]
+	},
+	"plugins": {
+		"tauri-plugin-http": {
+			"dangerousDisableDnsLookup": true,
+			"dangerousDisableHostValidation": true,
+			"dangerousAllowHttpOnProduction": true,
+			"dangerousAcceptInvalidCerts": true
+		}
 	}
 }

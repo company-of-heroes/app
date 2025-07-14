@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
 @theme {
-	--default-font-family: 'Futura PT Book';
-	--font-heading: 'League Gothic';
+	--default-font-family: 'TT Mussels';
+	--font-heading: 'TT Barrels';
 
 	/* Primary Color Shades (Base derived from #fcf58b -> oklch(approx 97% 0.19 106.5)) */
 	/* Using a mid-tone base with the same hue */
@@ -41,9 +41,19 @@
 
 @utility bg-dark {
 	background-color: var(--color-secondary-700);
-	color: var(--color-secondary-900);
+	color: var(--color-secondary-200);
 }
 
 html {
 	font-size: 18px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-heading);
+	font-weight: 700;
 }

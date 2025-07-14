@@ -15,8 +15,6 @@
 	let { value = $bindable(), items, contentProps, placeholder, ...restProps }: Props = $props();
 
 	const selectedLabel = $derived(items.find((item) => item.value === value)?.label);
-
-	$inspect(value);
 </script>
 
 <!--
@@ -27,12 +25,12 @@ from the perspective of the consumer of this component, it will be typed appropr
 <Select.Root bind:value={value as never} {...restProps}>
 	<Select.Trigger
 		class={cn(
-			'group py-3 text-left',
-			'border-secondary-200 flex max-w-3xs items-center justify-between border-b-2'
+			'group bg-secondary-800 h-10 min-w-28 cursor-pointer truncate px-4 text-left',
+			'border-secondary-600 flex max-w-3xs items-center justify-between border'
 		)}
 	>
 		{selectedLabel ? selectedLabel : placeholder}
-		<CaretDownIcon class="group-data-[state=open]:rotate-180" />
+		<CaretDownIcon class="ms-4 group-data-[state=open]:rotate-180" />
 	</Select.Trigger>
 	<Select.Portal>
 		<Select.Content
@@ -40,7 +38,7 @@ from the perspective of the consumer of this component, it will be typed appropr
 			side="bottom"
 			sideOffset={6}
 			{...contentProps}
-			class={cn('bg-secondary-50 max-h-64 max-w-3xs shadow-xs')}
+			class={cn('bg-secondary-800 max-h-64 max-w-3xs shadow-xs')}
 		>
 			<Select.ScrollUpButton class="flex items-center justify-center py-1">
 				<CaretUpIcon />
@@ -51,12 +49,12 @@ from the perspective of the consumer of this component, it will be typed appropr
 						{value}
 						{label}
 						{disabled}
-						class="hover:bg-secondary-100 flex items-center px-4 py-2"
+						class="hover:bg-secondary-900 flex min-w-32 items-center px-4 py-2 hover:cursor-pointer"
 					>
 						{#snippet children({ selected })}
 							{label}
 							{#if selected}
-								<CheckIcon class="ms-auto" />
+								<CheckIcon class="ms-auto" weight="bold" />
 							{/if}
 						{/snippet}
 					</Select.Item>

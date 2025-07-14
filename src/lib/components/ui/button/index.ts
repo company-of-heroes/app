@@ -3,7 +3,7 @@ import type { HTMLButtonAttributes } from 'svelte/elements';
 import Button from './button.svelte';
 
 export type ButtonProps = {
-	variant?: 'primary' | 'secondary' | 'ghost';
+	variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
 	children: Snippet;
 	loading?: boolean;
 } & HTMLButtonAttributes;

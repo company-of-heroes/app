@@ -41,15 +41,16 @@
 				value={item.value}
 				disabled={item.disabled}
 				class={cn(
-					'border-secondary-900 flex size-7 items-center justify-center overflow-clip rounded-full border-1 p-1', // Changed rounded-full to rounded-md
-					item.disabled && 'cursor-not-allowed opacity-50'
+					'border-secondary-900 flex size-5 shrink-0 items-center justify-center overflow-clip rounded-full border-2', // Changed rounded-full to rounded-md
+					item.disabled && 'cursor-not-allowed opacity-50',
+					value === item.value && 'border-secondary-100'
 				)}
 			>
 				{#snippet children({ checked })}
 					{#if checked}
-						<span class="bg-secondary-900 h-full w-full rounded-full"></span>
+						<span class="bg-secondary-100 size-3 shrink-0 rounded-full"></span>
 					{:else}
-						<span class="bg-secondary-100 h-full w-full rounded-full"></span>
+						<span class="bg-dark size-3 shrink-0 rounded-full"></span>
 					{/if}
 				{/snippet}
 			</RadioGroup.Item>

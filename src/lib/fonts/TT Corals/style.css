@@ -1,0 +1,83 @@
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-Thin.otf') format('opentype');
+	font-weight: 100;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-ThinItalic.otf') format('opentype');
+	font-weight: 100;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-ThinBoldItalic.otf') format('opentype');
+	font-weight: 100;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-Light.otf') format('opentype');
+	font-weight: 300;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-Regular.otf') format('opentype');
+	font-weight: 400;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-Italic.otf') format('opentype');
+	font-weight: 400;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-Bold.otf') format('opentype');
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-BoldItalic.otf') format('opentype');
+	font-weight: 700;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-ExtraBold.otf') format('opentype');
+	font-weight: 800;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-ExtraBoldItalic.otf') format('opentype');
+	font-weight: 800;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-ExtraBoldBoldItalic.otf') format('opentype');
+	font-weight: 800;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'TT Corals';
+	src: url('./TTCorals-Black.otf') format('opentype');
+	font-weight: 900;
+	font-style: normal;
+}

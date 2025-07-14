@@ -5,6 +5,7 @@
 	"windows": ["main"],
 	"permissions": [
 		"core:default",
+		"cors-fetch:default",
 		"opener:default",
 		"store:default",
 		"oauth:allow-start",
@@ -42,12 +43,35 @@
 		{
 			"identifier": "http:default",
 			"allow": [
-				{ "url": "https://*.your-objectstorage.com" },
-				{ "url": "https://*.google.com" },
-				{ "url": "https://*.google.nl" },
-				{ "url": "https://*.elevenlabs.io" },
-				{ "url": "https://*.twitch.tv" }
+				{
+					"url": "https://*.tauri.app"
+				},
+				{
+					"url": "https://*.your-objectstorage.com"
+				},
+				{
+					"url": "https://*.google.com"
+				},
+				{
+					"url": "https://*.google.nl"
+				},
+				{
+					"url": "https://*.elevenlabs.io"
+				},
+				{
+					"url": "https://*.twitch.tv"
+				},
+				{
+					"url": "https://*.streamelements.com"
+				},
+				{
+					"url": "https://*.reliclink.com"
+				},
+				{
+					"url": "http://*.reliclink.com"
+				}
 			]
-		}
+		},
+		"http:default"
 	]
 }

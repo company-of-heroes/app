@@ -1,33 +1,54 @@
 <script lang="ts">
 	import * as Nav from '$lib/components/ui/nav';
 	import { app } from '$lib/state/app.svelte';
-	import { H } from '$lib/components/ui/h';
 	import { Toaster } from 'svelte-sonner';
+	import { page } from '$app/state';
+	import GearIcon from 'phosphor-svelte/lib/Gear';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
+	import '$lib/fonts/TT Firs Neue/style.css';
+	import '$lib/fonts/TT Corals/style.css';
+	import '$lib/fonts/TT Mussels/style.css';
+	import '$lib/fonts/TT Barrels/style.css';
 	import '@fontsource/league-gothic';
 	import '@fontsource/bebas-neue';
 
 	import '../app.css';
+	import { Dialog } from '$lib/components/ui/dialog';
 
 	let { children } = $props();
+	let Component = $derived(app.currentRoute?.component);
+
+	$effect(() => {
+		console.log(page.url.hash);
+	});
 </script>
 
-<div class="flex h-screen overflow-hidden">
-	<aside class="bg-secondary-800 w-74 px-4 py-6">
-		<Nav.Root>
-			{#each app.routes as { href, title }}
-				<Nav.Link {href}>{title}</Nav.Link>
+<div class="bg-secondary-950 flex h-screen overflow-hidden">
+	<aside class="bg-primary/2 border-secondary-700 w-62 border-r p-[4px]">
+		<Nav.Root class="bg-secondary-900 h-full">
+			{#each app.routes as { href, title, path, component }}
+				<Nav.Link {href} {component} {path}>{title}</Nav.Link>
 			{/each}
+			<a href="/settings" class="bg-secondary-800 mt-auto flex items-center px-4 py-3">
+				<GearIcon />
+				<span class="ml-2">Settings</span>
+			</a>
 		</Nav.Root>
 	</aside>
-	<main class="flex-1 overflow-auto bg-white p-8">
-		<div class="border-secondary-700 mb-6 border-b-2">
-			<H level="1">{app.currentRoute?.title}</H>
+	<div class="bg-secondary-950 flex flex-1 flex-col overflow-auto">
+		<div class="border-secondary-700 bg-primary/2 border-b p-[4px]">
+			<h1 class="bg-secondary-900 px-8 py-6 text-3xl font-bold">{app.currentRoute?.title}</h1>
 		</div>
-		{@render children()}
-	</main>
+		<main class="flex-1 p-8">
+			{#if Component}
+				<Component />
+			{:else}
+				{@render children()}
+			{/if}
+		</main>
+	</div>
 </div>
 
 <Toaster
@@ -45,3 +66,5 @@
 		}
 	}}
 />
+
+<Dialog />

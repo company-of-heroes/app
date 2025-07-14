@@ -1,23 +1,29 @@
+import type { Component } from 'svelte';
+import { app } from '$lib/state/app.svelte';
+import Emittery from 'emittery';
+import { watch } from 'runed';
+import { createSubscriber } from 'svelte/reactivity';
+import { on } from 'svelte/events';
+
 export type ModuleInterface = {
-	/**
-	 * Indicates whether the module is enabled.
-	 * This is reactive and will update when the settings change.
-	 *
-	 * @readonly
-	 * @type {boolean}
-	 */
-	enabled: boolean;
+	isForStreamer?: boolean;
+	settings?: Record<string, unknown>;
 };
 
-export abstract class Module implements ModuleInterface {
+export type ModuleEvents = {
+	beforeInit: void;
+	afterInit: { app: typeof app; module: Module };
+};
+
+export abstract class Module extends Emittery<ModuleEvents> implements ModuleInterface {
 	/**
-	 * Indicates whether the module is enabled.
-	 * This is reactive and will update when the settings change.
+	 * Indicates whether the module is for streamers.
 	 *
 	 * @readonly
 	 * @type {boolean}
+	 * @default false
 	 */
-	enabled = $derived(false);
+	isForStreamer = $state(false);
 
 	/**
 	 * Indicates whether the module is initialized.
@@ -25,26 +31,90 @@ export abstract class Module implements ModuleInterface {
 	 * @readonly
 	 * @type {boolean}
 	 */
-	isInitialized = $state(false);
+	abstract isInitialized?: boolean;
 
 	/**
-	 * The constructor for the Module class.
-	 * Sets up a reactive effect to initialize the module when enabled.
-	 * The effect is cleaned up when the module is destroyed.
+	 * Indicates whether the module is enabled.
+	 * This is reactive and will update when the settings change.
+	 *
+	 * @readonly
+	 * @type {boolean}
 	 */
-	constructor() {
-		$effect.root(() => {
-			$effect(() => {
-				if (this.enabled && !this.isInitialized) {
-					this.init();
-				}
+	abstract enabled: boolean;
 
-				if (this.enabled === false) {
-					this.destroy();
-				}
+	/**
+	 * The name of the module.
+	 * This is used for internal identification and should be unique.
+	 *
+	 * @readonly
+	 * @type {string}
+	 */
+	abstract name: string;
+
+	/**
+	 * The name of the module as it appears in the menu.
+	 *
+	 * @readonly
+	 * @type {string}
+	 */
+	abstract menuItemName: string;
+
+	/**
+	 * The Svelte component associated with this module.
+	 *
+	 * @readonly
+	 * @type {Component}
+	 */
+	abstract component: Component;
+
+	/**
+	 * Settings for the module.
+	 * These should be configurable in the UI.
+	 *
+	 * @readonly
+	 * @type {Record<string, unknown>}
+	 */
+	readonly settings?: Record<string, unknown> | undefined = $derived({});
+
+	/**
+	 * Registers the module within the app.
+	 * This method sets up a reactive effect to initialize the module when enabled.
+	 *
+	 * @returns {Promise<void>} A promise that resolves when the module is registered.
+	 */
+	register() {
+		return new Promise((resolve) => {
+			$effect.root(() => {
+				$effect(() => {
+					if (this.enabled) {
+						try {
+							(async () => resolve(await this.init()))();
+						} catch (error) {
+							console.error(`Error initializing module ${this.name}:`, error);
+							(async () => resolve(await this.destroy()))();
+						}
+					} else {
+						(async () => resolve(await this.destroy()))();
+					}
+				});
+
+				$effect(() => {
+					// @ts-ignore
+					if (!app.settings[this.name]) {
+						// @ts-ignore
+						app.settings[this.name] = this.settings;
+					}
+
+					for (const [key, value] of Object.entries(this.settings ?? {})) {
+						// @ts-ignore
+						app.settings[this.name][key] = value;
+					}
+
+					app.store.set('settings', app.settings);
+				});
+
+				return () => this.destroy();
 			});
-
-			return () => this.destroy();
 		});
 	}
 
@@ -55,9 +125,10 @@ export abstract class Module implements ModuleInterface {
 	 *
 	 * @abstract
 	 * @public
-	 * @returns {void}
+	 * @returns {this}
 	 */
 	abstract init(): void;
+
 	/**
 	 * Cleans up the module.
 	 * This method should be overridden in subclasses to provide specific cleanup logic.
