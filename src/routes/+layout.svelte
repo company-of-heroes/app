@@ -21,7 +21,7 @@
 	let Component = $derived(app.currentRoute?.component);
 
 	$effect(() => {
-		console.log(page.url.hash);
+		console.log(app.game.playedLobbies);
 	});
 </script>
 

@@ -1,0 +1,20 @@
+{
+	"name": "coh-replay-parser",
+	"version": "1.0.0",
+	"description": "Company of Heroes replay parser in Node.js",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"start": "node --max-old-space-size=8192 index.js",
+		"test": "node --max-old-space-size=8192 test.js",
+		"debug": "node --max-old-space-size=8192 --inspect index.js"
+	},
+	"keywords": [
+		"coh",
+		"replay",
+		"parser",
+		"company-of-heroes"
+	],
+	"author": "",
+	"license": "ISC"
+}

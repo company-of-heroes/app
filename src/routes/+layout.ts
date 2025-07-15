@@ -42,7 +42,7 @@ export const load = async ({ fetch }) => {
 
 				break;
 			case 'LOBBY:DESTROYED':
-				//app.game.emit('LOBBY:DESTROYED');
+				app.game.emit('LOBBY:DESTROYED');
 
 				break;
 

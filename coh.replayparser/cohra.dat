@@ -1,0 +1,52 @@
+// This file defines actions for the replay parser.
+// Format: TypeID;ActionID;"Description";HasLocationFlag
+
+//--- Global Commands ---
+16;1;"Attack";1
+16;2;"Stop";0
+16;3;"Move";1
+16;4;"Build";1
+16;5;"Capture";0
+16;6;"Reinforce";0
+16;7;"Cancel Construction";0
+16;10;"Upgrade";0
+16;11;"Ability";1
+16;13;"Retreat";0
+16;14;"Set Rally Point";1
+16;16;"Repair";0
+16;18;"Attack Move";1
+16;21;"Face";1
+
+//--- American Upgrades & Abilities ---
+10;201;"Sticky Bomb";1
+10;202;"M1 Garand Rifle";0
+10;203;"BAR (Browning Automatic Rifle)";0
+10;204;"M1919A6 Machine Gun";0
+10;205;"M9 Bazooka";0
+10;206;"Pineapple Grenade";1
+10;207;"Supply Yard Upgrade";0
+10;208;"Motor Pool Upgrade";0
+10;209;"Tank Depot Upgrade";0
+10;210;"M10 Tank Destroyer";0
+10;211;"M4 Sherman Crocodile";0
+10;212;"Calliope Rocket Barrage";1
+10;213;"105mm Howitzer Barrage";1
+10;214;"White Phosphorous Barrage";1
+10;215;"Airborne Drop";1
+
+//--- Wehrmacht Upgrades & Abilities ---
+9;225;"Panzerfaust";1
+9;226;"Gewehr 43 Package";0
+9;227;"MP40 Submachine Gun";0
+9;228;"MG42 Machine Gun";0
+9;229;"Panzerschreck";0
+9;230;"Stielhandgranate (Model 24)";1
+9;231;"Kampfkraft Center";0
+9;232;"Sturm Armory";0
+9;233;"Panzer Kommand";0
+9;234;"Propaganda War";0
+9;235;"Zeal";0
+9;236;"For the Fatherland";1
+9;237;"Registered Artillery";1
+9;238;"V1 Rocket Strike";1
+9;239;"Sector Artillery";1
