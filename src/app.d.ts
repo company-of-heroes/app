@@ -4,7 +4,6 @@ declare module '@fknoobs/app' {
 
 	interface Modules {
 		twitch: typeof Twitch;
-		replays: typeof Replays;
 	}
 
 	type RelicProfile = {

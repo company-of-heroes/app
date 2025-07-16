@@ -2,7 +2,6 @@ import type { Modules } from '@fknoobs/app';
 import type { Component } from 'svelte';
 import { page } from '$app/state';
 import { Twitch } from '$lib/modules/twitch/twitch.svelte';
-import { Replays } from '$lib/modules/replay-manager/replays.svelte';
 import { load, type Store } from '@tauri-apps/plugin-store';
 import { documentDir } from '@tauri-apps/api/path';
 import Emittery from 'emittery';
@@ -29,7 +28,7 @@ export type Route = {
  */
 export type Settings = {
 	isStreamer: boolean;
-	pathToWarnings: string;
+	companyOfHeroesConfigPath: string;
 	//[key: string]: any;
 } & Partial<{ [K in keyof Modules]: InstanceType<Modules[K]>['settings'] }>;
 
@@ -57,6 +56,11 @@ class App extends Emittery<AppEvents> {
 			href: '/leaderboards',
 			path: '/leaderboards',
 			title: 'Leaderboards'
+		},
+		{
+			href: '/replays',
+			path: '/replays',
+			title: 'Replays'
 		}
 	]);
 
@@ -99,9 +103,10 @@ class App extends Emittery<AppEvents> {
 		 */
 		isStreamer: false,
 		/**
-		 * Path to the Company of Heroes warnings log file.
+		 * Path to the Company of Heroes configuration folder.
+		 * This is used to retrieve game settings, configurations and logs.
 		 */
-		pathToWarnings: ''
+		companyOfHeroesConfigPath: ''
 		/**
 		 * Twitch module settings.
 		 * This includes the Twitch API client ID and other related settings.
@@ -119,8 +124,7 @@ class App extends Emittery<AppEvents> {
 	 * @type {Record<string, new () => Module>}
 	 */
 	modules: Modules = {
-		twitch: Twitch,
-		replays: Replays
+		twitch: Twitch
 	};
 
 	/**
@@ -152,10 +156,9 @@ class App extends Emittery<AppEvents> {
 		this.store = await load('app.json');
 		this.settings = (await this.store.get('settings')) ?? this.settings;
 
-		if (!this.settings.pathToWarnings) {
-			this.settings.pathToWarnings =
-				(await documentDir()).replaceAll('\\', '/') +
-				'/My Games/Company of Heroes Relaunch/warnings.log';
+		if (!this.settings.companyOfHeroesConfigPath) {
+			this.settings.companyOfHeroesConfigPath =
+				(await documentDir()).replaceAll('\\', '/') + '/My Games/Company of Heroes Relaunch';
 		}
 
 		for await (const moduleConstructor of Object.values(this.modules)) {

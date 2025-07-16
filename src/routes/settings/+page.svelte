@@ -6,18 +6,18 @@
 	import { documentDir } from '@tauri-apps/api/path';
 	import { open } from '@tauri-apps/plugin-dialog';
 
-	const selectWarningsLog = async () => {
+	const selectConfigDir = async () => {
 		const selectedPath = await open({
 			defaultPath: (await documentDir()) + '/My Games/Company of Heroes Relaunch',
-			filters: [{ name: 'Log files', extensions: ['log'] }],
-			multiple: false
+			multiple: false,
+			directory: true
 		});
 
 		if (!selectedPath) {
 			return;
 		}
 
-		app.settings.pathToWarnings = selectedPath;
+		app.settings.companyOfHeroesConfigPath = selectedPath;
 	};
 
 	$effect(() => {
@@ -27,10 +27,10 @@
 
 <form class="max-w-lg">
 	<div class="mb-4 flex flex-col gap-2">
-		<Label>Path to warnings.log</Label>
+		<Label>Company of Heroes config folder</Label>
 		<div class="flex items-center gap-[1px]">
-			<Input name="pathToWarnings" bind:value={app.settings.pathToWarnings} />
-			<Button variant="secondary" type="button" onclick={selectWarningsLog}>Select file</Button>
+			<Input name="pathToConfig" bind:value={app.settings.companyOfHeroesConfigPath} />
+			<Button variant="secondary" type="button" onclick={selectConfigDir}>Select directory</Button>
 		</div>
 	</div>
 	<div class="mb-4">
