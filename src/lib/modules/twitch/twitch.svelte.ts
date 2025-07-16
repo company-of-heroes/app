@@ -1,4 +1,4 @@
-import { app } from '$lib/state/app.svelte';
+import { app } from '$core/app';
 import { StaticAuthProvider, TokenInfo } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
 import { ChatClient } from '@twurple/chat';

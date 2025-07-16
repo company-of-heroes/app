@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LinkProps } from '.';
 	import { cn } from '$lib/utils';
-	import { app } from '$lib/state/app.svelte';
+	import { app } from '$core/app';
 
 	let { path, component, children, ...restProps }: LinkProps = $props();
 </script>

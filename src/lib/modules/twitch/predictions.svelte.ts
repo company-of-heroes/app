@@ -1,5 +1,5 @@
 import type { HelixPrediction } from '@twurple/api';
-import { app } from '$lib/state/app.svelte';
+import { app } from '$core/app';
 import { Bootable } from '../bootable.svelte';
 import { debounce } from 'lodash-es';
 

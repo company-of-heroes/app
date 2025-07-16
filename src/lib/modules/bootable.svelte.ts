@@ -1,4 +1,4 @@
-import { app } from '$lib/state/app.svelte';
+import { app } from '$core/app';
 import { watch } from 'runed';
 
 export abstract class Bootable {

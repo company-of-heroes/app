@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
-	import { app } from '$lib/state/app.svelte';
+	import { app } from '$core/app';
 	import { cancel, onUrl, start } from '@fabianlars/tauri-plugin-oauth';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import { toast } from 'svelte-sonner';

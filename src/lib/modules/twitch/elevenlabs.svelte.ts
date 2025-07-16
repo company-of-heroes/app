@@ -1,5 +1,5 @@
 import type { Voice, User } from '@elevenlabs/elevenlabs-js/api';
-import { app } from '$lib/state/app.svelte';
+import { app } from '$core/app';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { Bootable } from '../bootable.svelte';
 

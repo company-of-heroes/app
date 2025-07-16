@@ -1,15 +1,10 @@
 <script lang="ts">
-	import { H } from '$lib/components/ui/h';
-	import { app } from '$lib/state/app.svelte';
+	import { app } from '$core/app';
 	import { cn, getFactionFlagFromRace, getMapImageFromName, getSteamIdFromName } from '$lib/utils';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import CoHIconFile from '$lib/files/coh-ico.png';
 	import PredictionWidget from '$lib/components/predictions/prediction-widget.svelte';
 	import { LobbyHistoryWidget } from '$lib/components/lobby';
-
-	// $effect(() => {
-	// 	console.log(app.game.lobby);
-	// });
 </script>
 
 <div class="flex items-start gap-[2px]">
@@ -42,7 +37,7 @@
 		<div>
 			<div class="flex gap-[1px]">
 				{#each app.game.lobby.teams as team}
-					<div class="w-74">
+					<div class="w-96">
 						<span class="text-secondary-400 bg-secondary-800 mb-0.5 block px-4 py-2 font-bold">
 							Team {team.teamId + 1}
 						</span>
@@ -64,8 +59,17 @@
 											class="w-6"
 										/>
 									</span>
-									<span class="w-44 truncate">{player.profile?.alias}</span>
-									<span class="ml-auto flex items-center gap-2">
+									<span class="max-w-44 truncate">
+										{player.profile?.alias}
+									</span>
+									{#if player.profile}
+										<img
+											src={`https://flagcdn.com/${player.profile.country}.svg`}
+											alt={player.profile.country}
+											class="ml-auto w-6"
+										/>
+									{/if}
+									<span class="flex items-center gap-2">
 										<button
 											onclick={() =>
 												openUrl(

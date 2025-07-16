@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Label } from '$lib/components/ui/label';
-	import { app } from '$lib/state/app.svelte';
+	import { app } from '$core/app';
 	import { cn } from '$lib/utils';
 	import { Checkbox, Input, RadioGroup, Select } from '$lib/components/ui/input';
 	import { Meter } from '$lib/components/ui/meter';

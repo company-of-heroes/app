@@ -4,6 +4,7 @@ import WMFlag from '$lib/files/wm.png';
 import PEFlag from '$lib/files/pe.png';
 import CWFlag from '$lib/files/cw.png';
 import USFlag from '$lib/files/us.png';
+import { isBoolean, isString } from 'lodash-es';
 
 /**
  * Race enum for Company of Heroes factions
@@ -184,3 +185,193 @@ export function getRacePrefix(race: Race | number): string {
 			return 'us';
 	}
 }
+
+/**
+ * Checks if a value is a BigInt
+ *
+ * @param value - any value to check
+ * @returns {boolean} True if the value is a BigInt, false otherwise
+ */
+export function isBigInt(value: any): value is bigint {
+	try {
+		return BigInt(parseInt(value, 10)) !== BigInt(value);
+	} catch (e) {
+		return false;
+	}
+}
+
+/**
+ * Checks if a value is a boolean
+ *
+ * @param value - any value to check
+ * @returns {boolean} True if the value is a boolean, false otherwise
+ */
+export function isNumeric(str: any) {
+	return !isNaN(parseFloat(str)) && isFinite(str);
+}
+
+/**
+ * Checks if a value is a string
+ *
+ * @param value - any value to check
+ * @returns {boolean} True if the value is a string, false otherwise
+ */
+export function convertToType(value: any) {
+	if (isBigInt(value)) return BigInt(value);
+	if (isNumeric(value)) return Number(value);
+	if (isBoolean(value)) return Boolean(value);
+	if (isString(value)) return String(value);
+	return value;
+}
+
+/**
+ * Infers types from an object, converting values to appropriate types
+ *
+ * @param data - Object with values to infer types from
+ * @returns {object} New object with values converted to inferred types
+ */
+export function inferTypes(data: object) {
+	return Object.keys(data).reduce(
+		(acc, key) => ({
+			...acc,
+			// @ts-ignore
+			[key]: convertToType(data[key])
+		}),
+		{}
+	);
+}
+
+/**
+ * Generates a MD5 hash for a given input string
+ *
+ * @param {string} input - The input string to hash
+ * @returns {string} MD5 hash of the input string in lowercase
+ */
+export const md5 = (input: string): string => {
+	function rotateLeft(x: number, c: number): number {
+		return (x << c) | (x >>> (32 - c));
+	}
+
+	function addUnsigned(x: number, y: number): number {
+		const lsw = (x & 0xffff) + (y & 0xffff);
+		const msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+		return (msw << 16) | (lsw & 0xffff);
+	}
+
+	function F(x: number, y: number, z: number): number {
+		return (x & y) | (~x & z);
+	}
+
+	function G(x: number, y: number, z: number): number {
+		return (x & z) | (y & ~z);
+	}
+
+	function H(x: number, y: number, z: number): number {
+		return x ^ y ^ z;
+	}
+
+	function I(x: number, y: number, z: number): number {
+		return y ^ (x | ~z);
+	}
+
+	function transform(
+		func: (x: number, y: number, z: number) => number,
+		a: number,
+		b: number,
+		c: number,
+		d: number,
+		x: number,
+		s: number,
+		ac: number
+	): number {
+		a = addUnsigned(a, addUnsigned(func(b, c, d), addUnsigned(x, ac)));
+		return addUnsigned(rotateLeft(a, s), b);
+	}
+
+	function toWordArray(str: string): number[] {
+		const msg = unescape(encodeURIComponent(str));
+		const len = msg.length;
+		const words: number[] = [];
+
+		for (let i = 0; i < len; i++) {
+			const wordIndex = i >> 2;
+			words[wordIndex] = words[wordIndex] || 0;
+			words[wordIndex] |= msg.charCodeAt(i) << ((i % 4) * 8);
+		}
+
+		// padding
+		const wordIndex = len >> 2;
+		words[wordIndex] = words[wordIndex] || 0;
+		words[wordIndex] |= 0x80 << ((len % 4) * 8);
+		words[((len + 8) >> 6) * 16 + 14] = len * 8;
+
+		return words;
+	}
+
+	function toHex(val: number): string {
+		let hex = '';
+		for (let i = 0; i <= 3; i++) {
+			const byte = (val >>> (i * 8)) & 255;
+			hex += ('0' + byte.toString(16)).slice(-2);
+		}
+		return hex;
+	}
+
+	const x = toWordArray(input);
+
+	let a = 0x67452301;
+	let b = 0xefcdab89;
+	let c = 0x98badcfe;
+	let d = 0x10325476;
+
+	const S = {
+		FF: [7, 12, 17, 22],
+		GG: [5, 9, 14, 20],
+		HH: [4, 11, 16, 23],
+		II: [6, 10, 15, 21]
+	};
+
+	const T = new Array(64).fill(0).map((_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 2 ** 32));
+
+	for (let i = 0; i < x.length; i += 16) {
+		const [aa, bb, cc, dd] = [a, b, c, d];
+
+		// Round 1
+		for (let j = 0; j < 16; j++) {
+			const s = S.FF[j % 4];
+			a = transform(F, a, b, c, d, x[i + j], s, T[j]);
+			[a, b, c, d] = [d, a, b, c];
+		}
+
+		// Round 2
+		for (let j = 0; j < 16; j++) {
+			const s = S.GG[j % 4];
+			const k = (1 + 5 * j) % 16;
+			a = transform(G, a, b, c, d, x[i + k], s, T[16 + j]);
+			[a, b, c, d] = [d, a, b, c];
+		}
+
+		// Round 3
+		for (let j = 0; j < 16; j++) {
+			const s = S.HH[j % 4];
+			const k = (5 + 3 * j) % 16;
+			a = transform(H, a, b, c, d, x[i + k], s, T[32 + j]);
+			[a, b, c, d] = [d, a, b, c];
+		}
+
+		// Round 4
+		for (let j = 0; j < 16; j++) {
+			const s = S.II[j % 4];
+			const k = (7 * j) % 16;
+			a = transform(I, a, b, c, d, x[i + k], s, T[48 + j]);
+			[a, b, c, d] = [d, a, b, c];
+		}
+
+		a = addUnsigned(a, aa);
+		b = addUnsigned(b, bb);
+		c = addUnsigned(c, cc);
+		d = addUnsigned(d, dd);
+	}
+
+	return (toHex(a) + toHex(b) + toHex(c) + toHex(d)).toLowerCase();
+};

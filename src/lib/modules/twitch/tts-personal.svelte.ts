@@ -1,4 +1,4 @@
-import { app } from '$lib/state/app.svelte';
+import { app } from '$core/app';
 import type { HelixCustomReward } from '@twurple/api';
 import type { EventSubSubscription } from '@twurple/eventsub';
 import type { Twitch } from './twitch.svelte';

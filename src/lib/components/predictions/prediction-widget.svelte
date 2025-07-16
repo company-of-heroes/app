@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { app } from '$lib/state/app.svelte';
+	import { app } from '$core/app';
 	import { onMount } from 'svelte';
 	import CheckIcon from 'phosphor-svelte/lib/Check';
 	import SpinnerIcon from 'phosphor-svelte/lib/Spinner';

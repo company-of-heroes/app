@@ -1,5 +1,5 @@
 import type { Component } from 'svelte';
-import { app } from '$lib/state/app.svelte';
+import { app } from '$core/app';
 import Emittery from 'emittery';
 import { watch } from 'runed';
 import { createSubscriber } from 'svelte/reactivity';

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import * as Nav from '$lib/components/ui/nav';
-	import { app } from '$lib/state/app.svelte';
+	import { app } from '$core/app';
 	import { Toaster } from 'svelte-sonner';
-	import { page } from '$app/state';
+	import { ReplayParser } from '$core/replay-analyzer';
 	import GearIcon from 'phosphor-svelte/lib/Gear';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
@@ -20,9 +20,17 @@
 	let { children } = $props();
 	let Component = $derived(app.currentRoute?.component);
 
-	$effect(() => {
-		console.log(app.game.playedLobbies);
-	});
+	// $effect(() => {
+	// 	(async () => {
+	// 		console.time('Replay Parsing');
+	// 		const replay = await ReplayParser.parse(
+	// 			'C:/Users/Richa/OneDrive/Documenten/My Games/Company of Heroes Relaunch/playback/temp.rec'
+	// 		);
+
+	// 		console.timeEnd('Replay Parsing');
+	// 		console.log('Parsed Replay:', replay);
+	// 	})();
+	// });
 </script>
 
 <div class="bg-secondary-950 flex h-screen overflow-hidden">

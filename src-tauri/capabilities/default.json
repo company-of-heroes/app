@@ -21,6 +21,16 @@
 		"fs:allow-write-text-file",
 		"fs:scope-download-recursive",
 		"fs:scope-resource-recursive",
+		"fs:read-all",
+		"fs:allow-watch",
+		{
+			"identifier": "fs:scope-document-recursive",
+			"allow": [
+				{
+					"path": "$DOCUMENT/**"
+				}
+			]
+		},
 		{
 			"identifier": "fs:scope-appdata-recursive",
 			"allow": [
@@ -72,6 +82,7 @@
 				}
 			]
 		},
-		"http:default"
+		"http:default",
+		"dialog:default"
 	]
 }

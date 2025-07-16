@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Checkbox, Input, Options } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { app } from '$lib/state/app.svelte';
+	import { app } from '$core/app';
 	import { cn } from '$lib/utils';
 
 	const module = app.getModule('twitch');

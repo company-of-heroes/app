@@ -2,7 +2,7 @@ import type { ChatMessage } from '@twurple/chat';
 import type { Listener } from '@d-fischer/typed-event-emitter';
 import type { VoiceSettings } from '@elevenlabs/elevenlabs-js/api';
 import type { Twitch } from './twitch.svelte';
-import { app } from '$lib/state/app.svelte';
+import { app } from '$core/app';
 import { Module } from '../module.svelte';
 import { translate } from 'google-translate-api-x';
 import { fetch } from '@tauri-apps/plugin-http';

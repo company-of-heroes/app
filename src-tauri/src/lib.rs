@@ -15,8 +15,8 @@ async fn start_server(window: Window) -> Result<u16, String> {
 #[tauri::command]
 async fn get_active_window_title() -> Result<String, String> {
     use windows::{
-        Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowTextW},
         Win32::Foundation::HWND,
+        Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowTextW},
     };
 
     unsafe {
@@ -34,6 +34,7 @@ async fn get_active_window_title() -> Result<String, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
@@ -50,7 +51,10 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_oauth::init())
         .plugin(tauri_plugin_cors_fetch::init())
-        .invoke_handler(tauri::generate_handler![start_server, get_active_window_title])
+        .invoke_handler(tauri::generate_handler![
+            start_server,
+            get_active_window_title
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
