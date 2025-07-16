@@ -40,11 +40,6 @@ jobs:
         with:
           version: 8
 
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -52,12 +47,6 @@ jobs:
 
       - name: Install frontend dependencies
         run: pnpm install
-
-      - name: Build bun-sidecar
-        run: |
-          cd bun-sidecar
-          bun install
-          bun build:windows
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
