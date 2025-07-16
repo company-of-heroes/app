@@ -11,4 +11,4 @@ This is still a work in progress, this app will be pretty advanced, some feature
 You can download the beta by going to the (https://github.com/fknoobs/app/releases)[releases] tab and download the latest release.
 Download the .exe file, eg _fknoobscoh_0.1.0_x64-setup.exe_ not the Source Code
 
-![FknoobsCoH - Screen](static/screenshot 2025-07-17 011807.png?raw=true)
+![FknoobsCoH - Screen](static/screenshot.png)
