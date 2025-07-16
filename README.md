@@ -1,7 +1,12 @@
-# Tauri + SvelteKit + TypeScript
+# FkNoobsCoH - Company of Heroes companion app
 
-This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
+This is still a work in progress, this app will be very advanced, some features include
 
-## Recommended IDE Setup
+1. Replay analyzer
+2. Current ingame statistics of players
+3. Twitch integration
+4. Twitch overlays
+5. View replays of other players
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+You can download the beta by going to the (https://github.com/fknoobs/app/releases)[releases] tab and download the latest release.
+Download the .exe file, eg _fknoobscoh_0.1.0_x64-setup.exe_ not the Source Code
