@@ -10,7 +10,13 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		alias: {
-			'$core/*': 'src/lib/core/*'
+			'$core/*': 'src/lib/core/*',
+			'$workers/*': 'src/lib/workers'
+		}
+	},
+	compilerOptions: {
+		experimental: {
+			async: true
 		}
 	}
 };

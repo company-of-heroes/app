@@ -168,7 +168,17 @@ export async function getRankImage(race: Race | number, rank?: number): Promise<
 }
 
 export function normalizeMapName(mapName: string): string {
-	return mapName.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+	const match = mapName.match(/^(\d+)p_(.+)$/);
+	if (!match) {
+		return mapName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+	}
+
+	const [, playerCount, mapNameWithoutPrefix] = match;
+	const formattedName = mapNameWithoutPrefix
+		.replace(/_/g, ' ')
+		.replace(/\b\w/g, (c) => c.toUpperCase());
+
+	return `${formattedName} (${playerCount})`;
 }
 
 export function getRacePrefix(race: Race | number): string {

@@ -1,3 +1,4 @@
+import { normalizeMapName } from '$lib/utils';
 import type { ActionDefinitions } from './action-definitions';
 import { Replay, Tick } from './replay';
 
@@ -170,16 +171,16 @@ export default class ReplayParser {
 
 		if (chunkType === 'DATASDSC' && chunkVersion === 0x7d4) {
 			this.replay!.replayStream!.skip(4);
-			this.replay!.replayStream!.skip(12 + 2 * this.replay!.replayStream!.readUInt32());
+
+			const skipCount = this.replay!.replayStream!.readUInt32();
+
+			const skipBytes = 12 + 2 * skipCount;
+			this.replay!.replayStream!.skip(skipBytes);
+
 			this.replay!.modName = this.replay!.replayStream!.readASCIIStr();
 			this.replay!.mapFileName = this.replay!.replayStream!.readASCIIStr();
 			this.replay!.replayStream!.skip(20);
-			this.replay!.mapName = this.replay!.replayStream!.readUnicodeStr();
-			this.replay!.replayStream!.skip(4);
-			this.replay!.mapDescription = this.replay!.replayStream!.readUnicodeStr();
-			this.replay!.replayStream!.skip(4);
-			this.replay!.mapWidth = this.replay!.replayStream!.readUInt32();
-			this.replay!.mapHeight = this.replay!.replayStream!.readUInt32();
+			this.replay!.mapName = normalizeMapName(this.replay!.mapFileName.split('\\').pop()!);
 		}
 
 		if (chunkType === 'DATABASE' && chunkVersion === 0xb) {

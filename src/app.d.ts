@@ -74,9 +74,6 @@ declare module '@fknoobs/app' {
 		profile?: RelicProfile; // Computers dont have profiles
 	};
 
-	/**
-	 * Union type representing all available Company of Heroes maps.
-	 */
 	export type CoHMaps =
 		| '2p_angoville farms'
 		| '2p_beach_assault'

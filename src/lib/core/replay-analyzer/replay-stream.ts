@@ -7,14 +7,14 @@ export default class ReplayStream {
 	position: number;
 	length: number;
 
-	private constructor(fileContent: Uint8Array, fileName: string = 'buffer') {
+	private constructor(filename: string, fileContent: Uint8Array) {
 		this.uint8array = fileContent;
 		this.dataView = new DataView(
 			this.uint8array.buffer,
 			this.uint8array.byteOffset,
 			this.uint8array.byteLength
 		);
-		this.fileName = fileName;
+		this.fileName = filename;
 		this.position = 0;
 		this.length = this.uint8array.length;
 
@@ -23,7 +23,9 @@ export default class ReplayStream {
 
 	static async load(path: string): Promise<ReplayStream> {
 		const file = await readFile(path);
-		return new ReplayStream(file, path.split('/').pop() || 'buffer');
+		const fileName = path.split('/').pop() || 'unknown.rec';
+
+		return new ReplayStream(fileName, file);
 	}
 
 	close() {
@@ -46,40 +48,19 @@ export default class ReplayStream {
 		return value;
 	}
 
-	readInt32() {
-		this.checkBounds(4);
-		const value = this.dataView!.getInt32(this.position, true); // true for little-endian
-		this.position += 4;
-		return value;
-	}
-
-	readInt() {
-		let result = 0;
-		let shift = 0;
-		while (this.position < this.length) {
-			const byte = this.dataView!.getUint8(this.position);
-			this.position += 1;
-			result |= (byte & 0x7f) << shift;
-			if ((byte & 0x80) === 0) {
-				return result;
-			}
-			shift += 7;
-		}
-		throw new Error('ReplayStream: Malformed variable-length integer.');
-	}
-
 	readASCIIStr(length?: number) {
 		if (typeof length === 'undefined') {
-			length = this.readInt();
-		}
+			const readLength = this.readUInt32();
 
-		if (length < 0) {
-			// Negative length indicates a Unicode string
-			return this.readUnicodeStr(length * -1);
-		}
+			// Add a more reasonable sanity check
+			const MAX_REASONABLE_STRING_LENGTH = 65536;
+			if (readLength > MAX_REASONABLE_STRING_LENGTH || readLength > this.remainingBytes()) {
+				throw new Error(
+					`Invalid ASCII string length: ${readLength}, remaining bytes: ${this.remainingBytes()}`
+				);
+			}
 
-		if (length === 0) {
-			return '';
+			length = readLength;
 		}
 
 		this.checkBounds(length);
@@ -90,11 +71,25 @@ export default class ReplayStream {
 	}
 
 	readUnicodeStr(length?: number) {
+		let byteLength: number;
+
 		if (typeof length === 'undefined') {
-			length = this.readInt();
+			const readLength = this.readUInt32();
+
+			// Add a more reasonable sanity check
+			const MAX_REASONABLE_STRING_LENGTH = 65536;
+			if (readLength > MAX_REASONABLE_STRING_LENGTH || readLength > this.remainingBytes()) {
+				throw new Error(
+					`Invalid Unicode string length: ${readLength}, remaining bytes: ${this.remainingBytes()}`
+				);
+			}
+
+			// FIXED: When reading from stream, the value is character count, not byte count
+			byteLength = readLength * 2;
+		} else {
+			byteLength = length * 2;
 		}
 
-		const byteLength = length * 2;
 		this.checkBounds(byteLength);
 		const bytes = this.uint8array!.subarray(this.position, this.position + byteLength);
 		const str = new TextDecoder('utf-16le').decode(bytes);
@@ -131,7 +126,7 @@ export default class ReplayStream {
 	checkBounds(bytesNeeded: number) {
 		if (this.position + bytesNeeded > this.length) {
 			throw new Error(
-				`ReplayStream: Attempt to read ${bytesNeeded} bytes at position ${this.position}, but only ${this.length - this.position} bytes available, file: ${this.fileName}`
+				`ReplayStream: Attempt to read ${bytesNeeded} bytes at position ${this.position}, but only ${this.length - this.position} bytes available`
 			);
 		}
 	}

@@ -1,3 +1,4 @@
+import { md5 } from '$lib/utils.js';
 import type { ActionDefinitions } from './action-definitions.js';
 import ReplayStream from './replay-stream.js';
 
@@ -210,6 +211,9 @@ export class Replay {
 
 	constructor(replayStream: ReplayStream, actionDefinitions?: ActionDefinitions) {
 		this.header = new Header();
+		this.header.MD5Hash = md5(
+			Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+		);
 		this.players = [];
 		this.messages = [];
 		this.actions = [];
@@ -217,10 +221,10 @@ export class Replay {
 		this.actionDefinitions = actionDefinitions;
 
 		this.replayStream = replayStream;
-		this.fileName = replayStream.fileName;
+		this.fileName = replayStream.fileName.split('/').pop() || 'unknown.rec';
 	}
 
-	static async load(fileName = '', actionDefinitions?: ActionDefinitions) {
+	static async load(fileName: string, actionDefinitions?: ActionDefinitions) {
 		const replayStream = await ReplayStream.load(fileName);
 		return new Replay(replayStream, actionDefinitions);
 	}
@@ -306,6 +310,7 @@ export class Replay {
 	get MD5Hash() {
 		return this.header.MD5Hash;
 	}
+
 	set MD5Hash(value) {
 		this.header.MD5Hash = value;
 	}
@@ -354,6 +359,21 @@ export class Replay {
 	}
 	get actionCount() {
 		return this.actions.length;
+	}
+
+	get teams() {
+		const allies: Player[] = [];
+		const axis: Player[] = [];
+
+		this.players.forEach((player) => {
+			if (player.faction.startsWith('allies')) {
+				allies.push(player);
+			} else {
+				axis.push(player);
+			}
+		});
+
+		return [allies, axis];
 	}
 
 	addPlayer(name: string, faction: string, id = 0, doctrine = 0) {
