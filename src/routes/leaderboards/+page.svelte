@@ -68,7 +68,7 @@
 				{
 					label: createRawSnippet(() => ({
 						render: () =>
-							`<img src="${getFactionFlagFromRace(4)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
+							`<img src="${getFactionFlagFromRace(3)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
 					})),
 					value: '11'
 				}
@@ -102,7 +102,7 @@
 				{
 					label: createRawSnippet(() => ({
 						render: () =>
-							`<img src="${getFactionFlagFromRace(4)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
+							`<img src="${getFactionFlagFromRace(3)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
 					})),
 					value: '15'
 				}
@@ -136,7 +136,7 @@
 				{
 					label: createRawSnippet(() => ({
 						render: () =>
-							`<img src="${getFactionFlagFromRace(4)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
+							`<img src="${getFactionFlagFromRace(3)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
 					})),
 					value: '19'
 				}
@@ -222,9 +222,9 @@
 			>
 				<span class="flex w-12 justify-center">{stat.rank}</span>
 				<span class="relative flex w-24 items-center gap-4">
-					{#await getRankImage(0, stat.ranklevel) then rankImage}
+					<!-- {#await getRankImage(0, stat.ranklevel) then rankImage}
 						<img src={rankImage} alt={`${stat.ranklevel}`} class="relative w-6" />
-					{/await}
+					{/await} -->
 					<span class="relative top-[1px] font-medium text-white">{stat.ranklevel}</span>
 				</span>
 				<span class="text-primary-50 flex-grow">{stat.profile?.alias}</span>
