@@ -7,24 +7,25 @@ export default class ReplayStream {
 	position: number;
 	length: number;
 
-	private constructor(fileContent: Uint8Array) {
+	private constructor(filename: string, fileContent: Uint8Array) {
 		this.uint8array = fileContent;
 		this.dataView = new DataView(
 			this.uint8array.buffer,
 			this.uint8array.byteOffset,
 			this.uint8array.byteLength
 		);
-		this.fileName = 'buffer';
+		this.fileName = filename;
 		this.position = 0;
 		this.length = this.uint8array.length;
 
-		console.log(`ReplayStream created: ${this.fileName} (${this.length} bytes)`);
 		this.seek(0);
 	}
 
 	static async load(path: string): Promise<ReplayStream> {
 		const file = await readFile(path);
-		return new ReplayStream(file);
+		const fileName = path.split('/').pop() || 'unknown.rec';
+
+		return new ReplayStream(fileName, file);
 	}
 
 	close() {
@@ -49,7 +50,17 @@ export default class ReplayStream {
 
 	readASCIIStr(length?: number) {
 		if (typeof length === 'undefined') {
-			length = this.readUInt32();
+			const readLength = this.readUInt32();
+
+			// Add a more reasonable sanity check
+			const MAX_REASONABLE_STRING_LENGTH = 65536;
+			if (readLength > MAX_REASONABLE_STRING_LENGTH || readLength > this.remainingBytes()) {
+				throw new Error(
+					`Invalid ASCII string length: ${readLength}, remaining bytes: ${this.remainingBytes()}`
+				);
+			}
+
+			length = readLength;
 		}
 
 		this.checkBounds(length);
@@ -60,11 +71,25 @@ export default class ReplayStream {
 	}
 
 	readUnicodeStr(length?: number) {
+		let byteLength: number;
+
 		if (typeof length === 'undefined') {
-			length = this.readUInt32();
+			const readLength = this.readUInt32();
+
+			// Add a more reasonable sanity check
+			const MAX_REASONABLE_STRING_LENGTH = 65536;
+			if (readLength > MAX_REASONABLE_STRING_LENGTH || readLength > this.remainingBytes()) {
+				throw new Error(
+					`Invalid Unicode string length: ${readLength}, remaining bytes: ${this.remainingBytes()}`
+				);
+			}
+
+			// FIXED: When reading from stream, the value is character count, not byte count
+			byteLength = readLength * 2;
+		} else {
+			byteLength = length * 2;
 		}
 
-		const byteLength = length * 2;
 		this.checkBounds(byteLength);
 		const bytes = this.uint8array!.subarray(this.position, this.position + byteLength);
 		const str = new TextDecoder('utf-16le').decode(bytes);

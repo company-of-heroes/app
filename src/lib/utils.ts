@@ -51,15 +51,21 @@ export function getSteamIdFromName(name: string): string {
  * @param race - Race enum value or number (0-3)
  * @returns Flag image asset path
  */
-export function getFactionFlagFromRace(race: Race | number): string {
+export function getFactionFlagFromRace(
+	race: Race | number | 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
+): string {
 	switch (race) {
 		case Race.US:
+		case 'allies':
 			return USFlag;
 		case Race.Wehrmacht:
+		case 'axis':
 			return WMFlag;
 		case Race.Commonwealth:
+		case 'allies_commonwealth':
 			return CWFlag;
 		case Race.PanzerElite:
+		case 'axis_panzer_elite':
 			return PEFlag;
 		default:
 			return USFlag; // Default fallback
@@ -168,7 +174,17 @@ export async function getRankImage(race: Race | number, rank?: number): Promise<
 }
 
 export function normalizeMapName(mapName: string): string {
-	return mapName.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+	const match = mapName.match(/^(\d+)p_(.+)$/);
+	if (!match) {
+		return mapName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+	}
+
+	const [, playerCount, mapNameWithoutPrefix] = match;
+	const formattedName = mapNameWithoutPrefix
+		.replace(/_/g, ' ')
+		.replace(/\b\w/g, (c) => c.toUpperCase());
+
+	return `${formattedName} (${playerCount})`;
 }
 
 export function getRacePrefix(race: Race | number): string {
@@ -375,3 +391,27 @@ export const md5 = (input: string): string => {
 
 	return (toHex(a) + toHex(b) + toHex(c) + toHex(d)).toLowerCase();
 };
+
+/**
+ * Converts seconds to a formatted timestamp string (mm:ss or hh:mm:ss)
+ *
+ * @param seconds - Number of seconds to convert
+ * @returns Formatted timestamp string in mm:ss format (or hh:mm:ss if >= 1 hour)
+ */
+export function secondsToTimestamp(seconds: number): string {
+	if (!isNumeric(seconds) || seconds < 0) {
+		return '00:00';
+	}
+
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const remainingSeconds = Math.floor(seconds % 60);
+
+	if (hours > 0) {
+		return [hours, minutes, remainingSeconds]
+			.map((num) => num.toString().padStart(2, '0'))
+			.join(':');
+	}
+
+	return [minutes, remainingSeconds].map((num) => num.toString().padStart(2, '0')).join(':');
+}

@@ -164,14 +164,14 @@ export class Log extends emittery<LogEvents> {
 	}
 
 	async start() {
-		if (!app.settings.pathToWarnings) {
+		if (!app.settings.companyOfHeroesConfigPath) {
 			return;
 		}
 
 		$effect.root(() => {
 			$effect(() => {
 				track(
-					() => app.settings.pathToWarnings,
+					() => app.settings.companyOfHeroesConfigPath,
 					() => {
 						if (this.interval) {
 							clearInterval(this.interval);
@@ -190,7 +190,9 @@ export class Log extends emittery<LogEvents> {
 
 	private async createWatcher() {
 		this.interval = window.setInterval(async () => {
-			const contents = await readTextFile(app.settings.pathToWarnings);
+			const contents = await readTextFile(
+				app.settings.companyOfHeroesConfigPath + '/warnings - kopie.log'
+			);
 			const lines = contents.split(/\r\n|\r|\n/).filter((line) => line.trim() !== '');
 
 			this.oldLength = this.newLength;

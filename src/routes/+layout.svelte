@@ -2,7 +2,6 @@
 	import * as Nav from '$lib/components/ui/nav';
 	import { app } from '$core/app';
 	import { Toaster } from 'svelte-sonner';
-	import { ReplayParser } from '$core/replay-analyzer';
 	import GearIcon from 'phosphor-svelte/lib/Gear';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
@@ -16,48 +15,42 @@
 
 	import '../app.css';
 	import { Dialog } from '$lib/components/ui/dialog';
+	import { ScrollArea } from '$lib/components/scroll-area';
 
 	let { children } = $props();
-	let Component = $derived(app.currentRoute?.component);
-
-	// $effect(() => {
-	// 	(async () => {
-	// 		console.time('Replay Parsing');
-	// 		const replay = await ReplayParser.parse(
-	// 			'C:/Users/Richa/OneDrive/Documenten/My Games/Company of Heroes Relaunch/playback/temp.rec'
-	// 		);
-
-	// 		console.timeEnd('Replay Parsing');
-	// 		console.log('Parsed Replay:', replay);
-	// 	})();
-	// });
+	let Component = $derived(app.route?.component);
 </script>
 
-<div class="bg-secondary-950 flex h-screen overflow-hidden">
-	<aside class="bg-primary/2 border-secondary-700 w-62 border-r p-[4px]">
-		<Nav.Root class="bg-secondary-900 h-full">
-			{#each app.routes as { href, title, path, component }}
-				<Nav.Link {href} {component} {path}>{title}</Nav.Link>
-			{/each}
-			<a href="/settings" class="bg-secondary-800 mt-auto flex items-center px-4 py-3">
-				<GearIcon />
-				<span class="ml-2">Settings</span>
-			</a>
-		</Nav.Root>
-	</aside>
-	<div class="bg-secondary-950 flex flex-1 flex-col overflow-auto">
-		<div class="border-secondary-700 bg-primary/2 border-b p-[4px]">
-			<h1 class="bg-secondary-900 px-8 py-6 text-3xl font-bold">{app.currentRoute?.title}</h1>
+<svelte:boundary>
+	{#snippet pending()}{/snippet}
+	<div class="bg-secondary-950 flex h-screen overflow-hidden">
+		<aside class="bg-primary/2 border-secondary-700 w-62 border-r p-[4px]">
+			<Nav.Root class="bg-secondary-900 h-full">
+				{#each app.routes as { href, title, path, component } (href)}
+					<Nav.Link {href} {component} {path}>{title}</Nav.Link>
+				{/each}
+				<a href="/settings" class="bg-secondary-800 mt-auto flex items-center px-4 py-3">
+					<GearIcon />
+					<span class="ml-2">Settings</span>
+				</a>
+			</Nav.Root>
+		</aside>
+		<div class="bg-secondary-950 flex flex-1 flex-col">
+			<div class="border-secondary-700 bg-primary/2 border-b p-[4px]">
+				<h1 class="bg-secondary-900 px-8 py-6 text-3xl font-bold">{app.route?.title}</h1>
+			</div>
+			<div class="flex-grow overflow-auto">
+				<main class="flex-1 p-8">
+					{#if Component}
+						<Component />
+					{:else}
+						{@render children()}
+					{/if}
+				</main>
+			</div>
 		</div>
-		<main class="flex-1 p-8">
-			{#if Component}
-				<Component />
-			{:else}
-				{@render children()}
-			{/if}
-		</main>
 	</div>
-</div>
+</svelte:boundary>
 
 <Toaster
 	expand={true}

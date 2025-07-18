@@ -1,3 +1,4 @@
+import { normalizeMapName } from '$lib/utils';
 import type { ActionDefinitions } from './action-definitions';
 import { Replay, Tick } from './replay';
 
@@ -49,19 +50,42 @@ export default class ReplayParser {
 	}
 
 	private parseData() {
-		let tickIndex = 1;
+		let currentTick = 0;
 		let tick;
+		let tickCount = 0;
+		let firstTickTime = 0;
+		let lastTickTime = 0;
+
 		while (this.replay!.replayStream!.position < this.replay!.replayStream!.length) {
 			if (this.replay!.replayStream!.readUInt32() === 1) {
-				this.parseMessage(tickIndex);
+				this.parseMessage(currentTick);
 			} else {
 				tick = new Tick(
 					this.replay!.replayStream!.readBytes(this.replay!.replayStream!.readUInt32())
 				);
 				this.parseTick(tick);
-				tickIndex = tick.index;
+
+				// Update currentTick to the actual tick time
+				currentTick = tick.tick;
+
+				// Use tick.tick instead of tick.index for the actual game time
+				const currentTickTime = tick.tick;
+
+				if (tickCount === 0) {
+					firstTickTime = currentTickTime;
+				}
+				lastTickTime = currentTickTime;
+
+				tickCount++;
 			}
 		}
+
+		// Calculate duration using the actual tick times
+		const tickDuration = lastTickTime - firstTickTime;
+
+		// Use tick duration instead of tick index for duration calculation
+		this.replay!.duration = tickDuration / 8;
+
 		this.findPlayerIDs();
 		this.findDoctrines();
 	}
@@ -170,16 +194,16 @@ export default class ReplayParser {
 
 		if (chunkType === 'DATASDSC' && chunkVersion === 0x7d4) {
 			this.replay!.replayStream!.skip(4);
-			this.replay!.replayStream!.skip(12 + 2 * this.replay!.replayStream!.readUInt32());
+
+			const skipCount = this.replay!.replayStream!.readUInt32();
+
+			const skipBytes = 12 + 2 * skipCount;
+			this.replay!.replayStream!.skip(skipBytes);
+
 			this.replay!.modName = this.replay!.replayStream!.readASCIIStr();
 			this.replay!.mapFileName = this.replay!.replayStream!.readASCIIStr();
 			this.replay!.replayStream!.skip(20);
-			this.replay!.mapName = this.replay!.replayStream!.readUnicodeStr();
-			this.replay!.replayStream!.skip(4);
-			this.replay!.mapDescription = this.replay!.replayStream!.readUnicodeStr();
-			this.replay!.replayStream!.skip(4);
-			this.replay!.mapWidth = this.replay!.replayStream!.readUInt32();
-			this.replay!.mapHeight = this.replay!.replayStream!.readUInt32();
+			this.replay!.mapName = this.replay!.mapFileName.split('\\').pop()!;
 		}
 
 		if (chunkType === 'DATABASE' && chunkVersion === 0xb) {
