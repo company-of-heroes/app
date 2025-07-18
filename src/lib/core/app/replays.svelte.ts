@@ -51,7 +51,7 @@ export class Replays {
 		const entries = await readDir(this.path);
 		const replayFiles = entries
 			.filter((file) => file.isFile && !file.isSymlink && file.name.endsWith('.rec'))
-			.slice(0, 25);
+			.slice(0, 100);
 
 		this.files = await Promise.all(
 			replayFiles.map(async (file) => {

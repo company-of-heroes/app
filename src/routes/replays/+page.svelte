@@ -3,6 +3,9 @@
 	import { replays } from '$core/app/replays.svelte';
 </script>
 
+<span class="mb-4 block text-lg font-medium text-red-400">
+	For now only shows the last 100 replays, in a later version all replays will be parsed.
+</span>
 <div class="grid grid-cols-23 gap-[1px]">
 	<span class="bg-secondary-800 col-start-1 col-end-7 h-10 px-4 leading-10 font-bold">Name</span>
 	<span class="bg-secondary-800 col-start-7 col-end-11 h-10 px-4 leading-10 font-bold">Map</span>
