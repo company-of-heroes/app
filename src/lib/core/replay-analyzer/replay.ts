@@ -72,11 +72,11 @@ export class Message {
 
 export class Player {
 	name: string;
-	faction: string;
+	faction: 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite';
 	id: number;
 	doctrine: number;
 
-	constructor(name = '', faction = '', id = 0, doctrine = 0) {
+	constructor(name = '', faction: Player['faction'] = 'allies', id = 0, doctrine = 0) {
 		this.name = name;
 		this.faction = faction;
 		this.id = id;
@@ -418,7 +418,7 @@ export class Replay {
 		return [axis, allies];
 	}
 
-	addPlayer(name: string, faction: string, id = 0, doctrine = 0) {
+	addPlayer(name: string, faction: Player['faction'], id = 0, doctrine = 0) {
 		const player = new Player(name, faction, id, doctrine);
 		this.players.push(player);
 		return player;

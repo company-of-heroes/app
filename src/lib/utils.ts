@@ -51,15 +51,21 @@ export function getSteamIdFromName(name: string): string {
  * @param race - Race enum value or number (0-3)
  * @returns Flag image asset path
  */
-export function getFactionFlagFromRace(race: Race | number): string {
+export function getFactionFlagFromRace(
+	race: Race | number | 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
+): string {
 	switch (race) {
 		case Race.US:
+		case 'allies':
 			return USFlag;
 		case Race.Wehrmacht:
+		case 'axis':
 			return WMFlag;
 		case Race.Commonwealth:
+		case 'allies_commonwealth':
 			return CWFlag;
 		case Race.PanzerElite:
+		case 'axis_panzer_elite':
 			return PEFlag;
 		default:
 			return USFlag; // Default fallback
