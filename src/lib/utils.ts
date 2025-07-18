@@ -385,3 +385,27 @@ export const md5 = (input: string): string => {
 
 	return (toHex(a) + toHex(b) + toHex(c) + toHex(d)).toLowerCase();
 };
+
+/**
+ * Converts seconds to a formatted timestamp string (mm:ss or hh:mm:ss)
+ *
+ * @param seconds - Number of seconds to convert
+ * @returns Formatted timestamp string in mm:ss format (or hh:mm:ss if >= 1 hour)
+ */
+export function secondsToTimestamp(seconds: number): string {
+	if (!isNumeric(seconds) || seconds < 0) {
+		return '00:00';
+	}
+
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const remainingSeconds = Math.floor(seconds % 60);
+
+	if (hours > 0) {
+		return [hours, minutes, remainingSeconds]
+			.map((num) => num.toString().padStart(2, '0'))
+			.join(':');
+	}
+
+	return [minutes, remainingSeconds].map((num) => num.toString().padStart(2, '0')).join(':');
+}

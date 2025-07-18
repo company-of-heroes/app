@@ -1,4 +1,4 @@
-import { md5 } from '$lib/utils.js';
+import { md5, normalizeMapName } from '$lib/utils.js';
 import type { ActionDefinitions } from './action-definitions.js';
 import ReplayStream from './replay-stream.js';
 
@@ -113,8 +113,14 @@ export class Action {
 	coordinate1: Coordinate;
 	coordinate2: Coordinate;
 	actionDefinitions?: ActionDefinitions;
+	replay?: Replay; // Reference to the replay for validation
 
-	constructor(tick = 0, data: Uint8Array | null = null, actionDefinitions?: ActionDefinitions) {
+	constructor(
+		tick = 0,
+		data: Uint8Array | null = null,
+		actionDefinitions?: ActionDefinitions,
+		replay?: Replay
+	) {
 		this.tick = tick;
 		this.length = 0;
 		this.actionType = 0;
@@ -127,6 +133,7 @@ export class Action {
 		this.coordinate1 = new Coordinate();
 		this.coordinate2 = new Coordinate();
 		this.actionDefinitions = actionDefinitions;
+		this.replay = replay;
 
 		if (data && this.dataView) {
 			this.length = data.length;
@@ -134,7 +141,36 @@ export class Action {
 			if (this.length > 16) {
 				this.actionType = data[2];
 				this.baseLocation = data[3];
-				this.playerID = this.dataView.getUint16(4, true); // true for little-endian
+
+				// Read the raw uint16 at offset 4
+				const rawPlayerID = this.dataView.getUint16(4, true);
+
+				// Determine the maximum valid player ID based on actual player count
+				const maxValidPlayerID = this.replay ? 1000 + this.replay.playerCount - 1 : 1007;
+
+				// Check if the raw value is already in the valid range
+				if (rawPlayerID >= 1000 && rawPlayerID <= maxValidPlayerID) {
+					this.playerID = rawPlayerID;
+				} else if (rawPlayerID === 0) {
+					this.playerID = 0; // System
+				} else {
+					// Try different strategies to extract valid player ID
+					// Strategy 1: Check offset 6 instead
+					const altPlayerID = this.dataView.getUint16(6, true);
+					if (altPlayerID >= 1000 && altPlayerID <= maxValidPlayerID) {
+						this.playerID = altPlayerID;
+					} else {
+						// Strategy 2: Extract lower byte and validate against player count
+						const bytePlayerID = data[4];
+						if (this.replay && bytePlayerID >= 0 && bytePlayerID < this.replay.playerCount) {
+							this.playerID = 1000 + bytePlayerID;
+						} else {
+							// Fallback: set to 0 (system) for invalid values
+							this.playerID = 0;
+						}
+					}
+				}
+
 				this.unitID = this.dataView.getUint16(10, true);
 				this.action = this.dataView.getUint16(14, true);
 
@@ -208,6 +244,7 @@ export class Replay {
 	headerParsed: boolean;
 	actionDefinitions?: ActionDefinitions;
 	replayStream?: ReplayStream;
+	duration: number;
 
 	constructor(replayStream: ReplayStream, actionDefinitions?: ActionDefinitions) {
 		this.header = new Header();
@@ -219,6 +256,7 @@ export class Replay {
 		this.actions = [];
 		this.headerParsed = false;
 		this.actionDefinitions = actionDefinitions;
+		this.duration = 0;
 
 		this.replayStream = replayStream;
 		this.fileName = replayStream.fileName.split('/').pop() || 'unknown.rec';
@@ -277,6 +315,10 @@ export class Replay {
 	}
 	set mapName(value) {
 		this.header.mapName = value;
+	}
+
+	get mapNameFormatted() {
+		return normalizeMapName(this!.mapFileName.split('\\').pop()!);
 	}
 
 	get mapDescription() {
@@ -373,7 +415,7 @@ export class Replay {
 			}
 		});
 
-		return [allies, axis];
+		return [axis, allies];
 	}
 
 	addPlayer(name: string, faction: string, id = 0, doctrine = 0) {
@@ -395,7 +437,7 @@ export class Replay {
 	}
 
 	addAction(tick: number, data: Uint8Array) {
-		const action = new Action(tick, data, this.actionDefinitions);
+		const action = new Action(tick, data, this.actionDefinitions, this);
 		this.actions.push(action);
 		return action;
 	}

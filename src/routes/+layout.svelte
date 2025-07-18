@@ -17,7 +17,7 @@
 	import { Dialog } from '$lib/components/ui/dialog';
 
 	let { children } = $props();
-	let Component = $derived(app.currentRoute?.component);
+	let Component = $derived(app.route?.component);
 
 	// $effect(() => {
 	// 	(async () => {
@@ -48,7 +48,7 @@
 		</aside>
 		<div class="bg-secondary-950 flex flex-1 flex-col overflow-auto">
 			<div class="border-secondary-700 bg-primary/2 border-b p-[4px]">
-				<h1 class="bg-secondary-900 px-8 py-6 text-3xl font-bold">{app.currentRoute?.title}</h1>
+				<h1 class="bg-secondary-900 px-8 py-6 text-3xl font-bold">{app.route?.title}</h1>
 			</div>
 			<main class="flex-1 p-8">
 				{#if Component}

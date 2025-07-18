@@ -8,6 +8,7 @@ import Emittery from 'emittery';
 import { game, type Game } from '$core/company-of-heroes';
 import { PathMatcher } from '$lib/utils/path-matcher';
 import { Log } from '$lib/core/log-parser';
+import { replays, type Replays } from './replays.svelte';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -70,7 +71,7 @@ class App extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Route | undefined}
 	 */
-	currentRoute = $derived.by(() => {
+	route = $derived.by(() => {
 		if (page.url.hash) {
 			return this.routes.find((route) => route.href === page.url.hash);
 		}
@@ -144,6 +145,15 @@ class App extends Emittery<AppEvents> {
 	game: Game = game;
 
 	/**
+	 * Instance of the Replays class, which manages replay files and their data.
+	 * This is initialized in the `boot` method.
+	 *
+	 * @public
+	 * @type {Replays}
+	 */
+	replays: Replays = replays;
+
+	/**
 	 * Asynchronously initializes the application state.
 	 * Loads the persistent store, retrieves settings, and initializes modules (TTS, Twitch).
 	 * Sets up a listener for changes in the store to keep the `settings` state updated.
@@ -173,7 +183,9 @@ class App extends Emittery<AppEvents> {
 			});
 		}
 
-		new Log().start();
+		await new Log().start();
+		await this.replays.load();
+
 		this.emit('boot', this);
 	}
 
