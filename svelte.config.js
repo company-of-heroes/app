@@ -12,6 +12,9 @@ const config = {
 		alias: {
 			'$core/*': 'src/lib/core/*',
 			'$workers/*': 'src/lib/workers'
+		},
+		prerender: {
+			entries: ['*', '/replays/[fileName]']
 		}
 	},
 	compilerOptions: {
