@@ -84,7 +84,7 @@
 								{#await getFactionFlagFromRace(player.faction) then factionFlag}
 									<img src={factionFlag} alt={player.faction} class="w-6" />
 								{/await}
-								<span>{player.name}</span>
+								<span class="truncate">{player.name}</span>
 							</span>
 						{/each}
 					</div>
