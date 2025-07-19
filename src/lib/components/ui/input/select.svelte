@@ -4,6 +4,7 @@
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDown';
 	import CaretUpIcon from 'phosphor-svelte/lib/CaretUp';
 	import CheckIcon from 'phosphor-svelte/lib/Check';
+	import { isArray } from 'lodash-es';
 
 	type Props = WithoutChildren<Select.RootProps> & {
 		placeholder?: string;
@@ -29,7 +30,11 @@ from the perspective of the consumer of this component, it will be typed appropr
 			'border-secondary-600 flex max-w-3xs items-center justify-between border'
 		)}
 	>
-		{selectedLabel ? selectedLabel : placeholder}
+		{isArray(value) && value.length
+			? `${value.length} items`
+			: selectedLabel
+				? selectedLabel
+				: placeholder}
 		<CaretDownIcon class="ms-4 group-data-[state=open]:rotate-180" />
 	</Select.Trigger>
 	<Select.Portal>

@@ -4,7 +4,7 @@
 	import { Lobby } from '.';
 </script>
 
-<span class="text-3xl font-bold">Games played today</span>
+<span class="text-2xl font-bold">Games played today</span>
 {#if app.game.playedLobbies.length}
 	<div class="mt-4">
 		<Accordion.Root>

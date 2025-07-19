@@ -73,7 +73,7 @@ class App extends Emittery<AppEvents> {
 	 */
 	route = $derived.by(() => {
 		if (page.url.hash) {
-			return this.routes.find((route) => route.href === page.url.hash);
+			return this.routes.find((route) => route.href === '/' + page.url.hash);
 		}
 
 		return this.routes.find((route) =>
@@ -179,7 +179,7 @@ class App extends Emittery<AppEvents> {
 			this.routes.push({
 				component: mod.component,
 				title: mod.menuItemName,
-				href: `#${mod.name}`
+				href: `/#${mod.name}`
 			});
 		}
 

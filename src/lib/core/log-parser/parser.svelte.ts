@@ -1,14 +1,12 @@
-import type { CoHMaps, RelicProfile } from '@fknoobs/app';
+import type { CoHMaps } from '@fknoobs/app';
 import emittery, { type DatalessEventNames } from 'emittery';
 import { createRegExp, digit, exactly, oneOrMore, char, whitespace, word } from 'magic-regexp';
-import { watch, readTextFile, type UnwatchFn } from '@tauri-apps/plugin-fs';
+import { readTextFile } from '@tauri-apps/plugin-fs';
 import { watch as track } from 'runed';
 import { inferTypes } from '$lib/utils';
 import { app } from '$core/app';
 import { game, Lobby } from '$core/company-of-heroes';
 import { relic } from '$lib/relic';
-
-type TAction<T extends keyof LogEvents> = LogEvents[T] extends never ? never : LogEvents[T];
 
 let lobby: Lobby | undefined;
 
@@ -37,6 +35,8 @@ export class Log extends emittery<LogEvents> {
 					game.isRunning = true;
 					game.steamId = steamId.toString();
 					game.profile = profile;
+
+					game.emit('GAME:LAUNCHED');
 
 					break;
 				}
@@ -108,7 +108,11 @@ export class Log extends emittery<LogEvents> {
 						lobby.players.forEach((player) => {
 							player.profile = profiles.find((profile) => profile.profile_id === player.playerId);
 						});
+
 						game.lobby = lobby;
+						game.isIngame = true;
+
+						game.emit('LOBBY:STARTED');
 					}
 
 					break;
@@ -143,10 +147,19 @@ export class Log extends emittery<LogEvents> {
 					break;
 				}
 
+				case 'LOG:LOBBY:GAMEOVER': {
+					game.isIngame = false;
+					game.emit('LOBBY:GAMEOVER');
+
+					break;
+				}
+
 				case 'LOG:LOBBY:DESTROYED': {
 					if (lobby) {
 						game.playedLobbies.push(lobby);
 					}
+
+					game.emit('LOBBY:DESTROYED');
 
 					// game.lobby = undefined;
 					// lobby = undefined;
@@ -156,6 +169,8 @@ export class Log extends emittery<LogEvents> {
 
 				// case 'LOG:ENDED': {
 				// 	game.isRunning = false;
+
+				// 	game.emit('GAME:CLOSED');
 
 				// 	break;
 				// }

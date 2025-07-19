@@ -26,9 +26,14 @@
 
 {#if twitch?.predictions?.activePrediction}
 	<div class="mt-8">
-		<h3 class="mb-4 text-2xl font-bold">Active prediction</h3>
+		<div class="mb-4">
+			<span class="block text-2xl font-bold">Active prediction</span>
+			<p class="text-secondary-400">
+				If you left the lobby before the game ended, please select the outcome manually.
+			</p>
+		</div>
 		<div class="flex gap-0.5">
-			<span class="bg-secondary-800 text-secondary-400 w-42 truncate px-4 py-2 font-black">
+			<span class="bg-secondary-800 text-secondary-400 w-42 truncate px-4 py-2">
 				{twitch.predictions.activePrediction.title}
 			</span>
 			{#each twitch.predictions.activePrediction.outcomes as outcome}
