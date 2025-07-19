@@ -19,7 +19,7 @@ export class Replays {
 	 * @public
 	 * @type {string}
 	 */
-	path = $derived(app.settings.companyOfHeroesConfigPath + '/playback');
+	path = $derived(app?.settings.companyOfHeroesConfigPath + '/playback');
 
 	/**
 	 * Reactive array holding the parsed replay data.
@@ -28,6 +28,14 @@ export class Replays {
 	 * @type {Replay[]}
 	 */
 	replays: Replay[] = $state([]);
+
+	/**
+	 * Reactive array holding the filtered replays based on user selections.
+	 *
+	 * @public
+	 * @type {Replay[]}
+	 */
+	filtered: Replay[] = $state([]);
 
 	/**
 	 * Reactive property that holds the currently selected replay.
@@ -49,9 +57,9 @@ export class Replays {
 	 */
 	async load() {
 		const entries = await readDir(this.path);
-		const replayFiles = entries
-			.filter((file) => file.isFile && !file.isSymlink && file.name.endsWith('.rec'))
-			.slice(0, 10);
+		const replayFiles = entries.filter(
+			(file) => file.isFile && !file.isSymlink && file.name.endsWith('.rec')
+		);
 
 		this.files = await Promise.all(
 			replayFiles.map(async (file) => {
@@ -59,14 +67,18 @@ export class Replays {
 				return { ...file, ...fileStat };
 			})
 		);
+		this.files = orderBy(this.files, ['birthtime'], ['desc']);
 
-		this.replays = await Promise.all(
-			this.files.map(async (file) => {
+		this.files.forEach(async (file) => {
+			try {
 				const replay = await ReplayParser.parse(`${this.path}/${file.name}`);
-				return replay;
-			})
-		);
-		this.replays = orderBy(this.replays, ['birthtime'], ['desc']);
+
+				this.replays.push(replay);
+				this.filtered.push(replay);
+			} catch (error) {
+				console.warn(`Skipped ${file.name}:`, error);
+			}
+		});
 	}
 }
 

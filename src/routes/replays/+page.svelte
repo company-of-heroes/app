@@ -2,27 +2,27 @@
 	import { format } from 'date-fns';
 	import { replays } from '$core/app/replays.svelte';
 	import { uniq } from 'lodash-es';
-	import { Label } from '$lib/components/ui/label';
 	import { Input, Select } from '$lib/components/ui/input';
 	import { useDebounce, watch } from 'runed';
 	import XIcon from 'phosphor-svelte/lib/X';
 
-	const players = uniq(
-		replays.replays.flatMap((replay) => replay.players.map((player) => player.name))
+	const players = $derived(
+		uniq(replays.replays.flatMap((replay) => replay.players.map((player) => player.name)))
 	);
+	const maps = $derived(uniq(replays.replays.map((replay) => replay.mapName)));
 
-	let allReplays = $derived(replays.replays);
 	let selectedPlayers: string[] = $state([]);
+	let selectedMaps: string[] = $state([]);
 	let searchQuery: string = $state('');
 
 	const search = useDebounce(
 		() => {
 			if (searchQuery.trim() === '') {
-				allReplays = replays.replays;
+				replays.filtered = replays.replays;
 				return;
 			}
 
-			allReplays = replays.replays.filter((replay) => {
+			replays.filtered = replays.replays.filter((replay) => {
 				return (
 					replay.replayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
 					replay.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -39,7 +39,7 @@
 	watch(
 		() => selectedPlayers,
 		() => {
-			allReplays = replays.replays.filter((replay) => {
+			replays.filtered = replays.replays.filter((replay) => {
 				return (
 					selectedPlayers.length === 0 ||
 					replay.players.some((player) => selectedPlayers.includes(player.name))
@@ -63,16 +63,43 @@
 				placeholder="Select Players"
 			/>
 		</div>
+		<div>
+			<Select
+				items={maps.map((map) => ({ label: map, value: map }))}
+				bind:value={selectedMaps}
+				type="multiple"
+				placeholder="Select Maps"
+			/>
+		</div>
 	</form>
 	{#if selectedPlayers.length}
-		<div class="mt-4 flex gap-1">
+		<div class="item-center mt-4 flex gap-1">
+			<span class="text-secondary-400 me-2 leading-8">Players:</span>
 			{#each selectedPlayers as player}
 				<span class="bg-secondary-700 flex items-center">
 					<span class="px-3">{player}</span>
 					<button
-						class="bg-secondary-800 cursor-pointer p-2 text-red-300"
+						class="bg-secondary-800 cursor-pointer p-2 text-red-200"
 						onclick={() => {
 							selectedPlayers = selectedPlayers.filter((p) => p !== player);
+						}}
+					>
+						<XIcon class="relative top-[1px]" weight="bold" />
+					</button>
+				</span>
+			{/each}
+		</div>
+	{/if}
+	{#if selectedMaps.length}
+		<div class="item-center mt-2 flex gap-1">
+			<span class="text-secondary-400 me-2 leading-8">Maps:</span>
+			{#each selectedMaps as map}
+				<span class="bg-secondary-700 flex items-center">
+					<span class="px-3">{map}</span>
+					<button
+						class="bg-secondary-800 cursor-pointer p-2 text-red-200"
+						onclick={() => {
+							selectedMaps = selectedMaps.filter((p) => p !== map);
 						}}
 					>
 						<XIcon class="relative top-[1px]" weight="bold" />
@@ -95,7 +122,7 @@
 	<span class="bg-secondary-800 col-start-1 col-end-24 my-1 h-[2px]"></span>
 </div>
 <div class="grid gap-[1px]">
-	{#each allReplays as replay (replay.MD5Hash)}
+	{#each replays.filtered as replay (replay.MD5Hash)}
 		{@const axisPlayers = replay.teams[0]
 			.map((player) => player.name)
 			.join(

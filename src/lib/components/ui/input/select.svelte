@@ -54,7 +54,7 @@ from the perspective of the consumer of this component, it will be typed appropr
 						{value}
 						{label}
 						{disabled}
-						class="hover:bg-secondary-900 flex min-w-32 items-center px-4 py-2 hover:cursor-pointer"
+						class="hover:bg-secondary-900 flex min-w-32 items-center gap-4 px-4 py-2 hover:cursor-pointer"
 					>
 						{#snippet children({ selected })}
 							{label}
