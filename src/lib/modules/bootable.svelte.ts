@@ -6,10 +6,18 @@ export abstract class Bootable {
 	 * Indicates whether the module is initialized.
 	 * This is used to determine if the module should be loaded.
 	 *
-	 * @readonly
+	 * @abstract
 	 * @type {boolean}
 	 */
 	abstract enabled: boolean;
+
+	/**
+	 * Whether the module is loaded.
+	 * This is used to track the loading state of the module.
+	 *
+	 * @type {boolean | undefined}
+	 */
+	isLoaded?: boolean = $state(undefined);
 
 	/**
 	 * Constructor for the Bootable class.
@@ -17,8 +25,8 @@ export abstract class Bootable {
 	 * If the module is enabled, it will call the init method.
 	 * If the module is disabled, it will call the destroy method.
 	 *
-	 * @constructor
 	 * @abstract
+	 * @constructor
 	 */
 	constructor() {
 		$effect.root(() => {

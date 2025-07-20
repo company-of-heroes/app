@@ -1,16 +1,15 @@
-import type { DirEntry } from '@tauri-apps/plugin-fs';
-import { ReplayParser } from '$core/replay-analyzer';
+import { parseReplay } from '$core/replay-analyzer';
+import { readFile } from '@tauri-apps/plugin-fs';
+// import type { DirEntry, FileInfo } from '@tauri-apps/plugin-fs';
 
-onmessage = async ({ data }: MessageEvent<{ files: DirEntry[]; pathToReplays: string }>) => {
-	const files = data.files.filter(
-		(file) => file.isFile && file.isSymlink === false && file.name.endsWith('.rec')
-	);
-
-	const replaysParsed = await Promise.all(
-		files.map(async (file) => ReplayParser.parse(data.pathToReplays + '/' + file.name, true))
-	);
-
-	console.log(replaysParsed);
+onmessage = async ({ data }: MessageEvent<{ name: string; fileName: string; path: string }>) => {
+	console.log(__TAURI__);
+	//readFile(`${data.path}/${data.fileName}`);
+	// try {
+	// 	postMessage({ replay: parseReplay(data.replayData, data.fileName) });
+	// } catch (error) {
+	// 	console.error('Failed to parse replay in worker:', error);
+	// }
 };
 
 export {};

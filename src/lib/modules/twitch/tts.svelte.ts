@@ -98,14 +98,29 @@ export class TTS extends Bootable {
 	 * @readonly
 	 * @type {TTSPersonal}
 	 */
-	public personal?: TTSPersonal;
+	public personal: TTSPersonal = new TTSPersonal();
 
+	/**
+	 * The last user who sent a message.
+	 * This is used to track the last user for TTS purposes.
+	 *
+	 * @private
+	 * @type {string | null}
+	 */
+	private lastMessageUser: string | null = null;
+
+	/**
+	 * Initializes the TTS module.
+	 * This method sets up the necessary listeners and starts the playback loop.
+	 *
+	 * @public
+	 * @returns {Promise<void>}
+	 */
 	async init() {
 		if (!this.enabled || !this.twitch) {
 			return;
 		}
 
-		this.personal = await new TTSPersonal().init();
 		this.startPlaybackLoop();
 
 		this.chatListener = this.twitch.chatClient?.onMessage((channel, users, text, msg) =>
@@ -125,13 +140,16 @@ export class TTS extends Bootable {
 	 * @private
 	 */
 	private async message(channel: string, user: string, message: string, msg: ChatMessage) {
-		console.log(msg);
 		if (message.length < 1 && message.startsWith('!')) {
 			return;
 		}
 
 		if (user.endsWith('bot') || user.startsWith('bot')) {
 			return;
+		}
+
+		if (user !== this.lastMessageUser) {
+			message = `${user} said, ${message}`;
 		}
 
 		if (this.twitch.settings.provider === 'elevenlabs') {
@@ -141,6 +159,8 @@ export class TTS extends Bootable {
 		if (this.twitch.settings.provider === 'brian') {
 			await this.brian(message);
 		}
+
+		this.lastMessageUser = user;
 	}
 
 	/**

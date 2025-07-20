@@ -122,7 +122,7 @@
 	<span class="bg-secondary-800 col-start-1 col-end-24 my-1 h-[2px]"></span>
 </div>
 <div class="grid gap-[1px]">
-	{#each replays.filtered as replay (replay.MD5Hash)}
+	{#each replays.filtered as replay (replay)}
 		{@const axisPlayers = replay.teams[0]
 			.map((player) => player.name)
 			.join(

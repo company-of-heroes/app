@@ -5,8 +5,6 @@
 	import { page } from '$app/state';
 
 	let { path, component, children, ...restProps }: LinkProps = $props();
-
-	console.log(restProps.href, page.url);
 </script>
 
 <a

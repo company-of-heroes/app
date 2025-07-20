@@ -2,10 +2,14 @@
 	import { Label } from '$lib/components/ui/label';
 	import { app } from '$core/app';
 	import { cn } from '$lib/utils';
-	import { Checkbox, Input, RadioGroup, Select } from '$lib/components/ui/input';
+	import { Checkbox, Input, Options, RadioGroup, Select } from '$lib/components/ui/input';
 	import { Meter } from '$lib/components/ui/meter';
 
 	const module = app.getModule('twitch');
+
+	$effect(() => {
+		console.log(module.tts!.personal.activeVoices);
+	});
 </script>
 
 <div class="mb-4 flex flex-col gap-2">
@@ -90,6 +94,10 @@
 						name="personalVoices"
 						bind:value={module.settings.personalVoices}
 					/>
+				</div>
+				<div class="mb-4 flex flex-col gap-2">
+					<Label>Rewarded voices</Label>
+					<Options bind:value={module.tts!.personal.activeVoices} />
 				</div>
 			</div>
 		{/if}

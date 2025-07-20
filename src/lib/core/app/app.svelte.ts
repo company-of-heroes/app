@@ -151,7 +151,7 @@ class App extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Replays}
 	 */
-	replays: Replays = replays;
+	replays: Replays = $derived(replays);
 
 	/**
 	 * Asynchronously initializes the application state.
