@@ -140,7 +140,8 @@ export class TTS extends Bootable {
 	 * @private
 	 */
 	private async message(channel: string, user: string, message: string, msg: ChatMessage) {
-		if (message.length < 1 && message.startsWith('!')) {
+		console.log(msg);
+		if (message.length < 1 || message.startsWith('!')) {
 			return;
 		}
 
@@ -171,9 +172,9 @@ export class TTS extends Bootable {
 	 */
 	private async elevenlabs(message: string, user: string) {
 		let voiceSettings: VoiceSettings = {
-			stability: 0.8,
-			similarityBoost: 0.8,
-			style: 0.3
+			stability: 0.6,
+			similarityBoost: 0.4,
+			style: 0.1
 		};
 
 		const voice = this.personal?.activeVoices[user] || this.twitch.settings.voiceName;
@@ -181,7 +182,7 @@ export class TTS extends Bootable {
 		const voiceId =
 			voicesResponse?.voices?.find((v) => v.name === voice)?.voiceId ||
 			voicesResponse?.voices?.find((v) => v.name === 'George')?.voiceId;
-
+		console.log(this.personal?.activeVoices[user]);
 		if (!voiceId) {
 			console.error('No valid voice found. Cannot proceed with TTS.');
 			return;
@@ -200,10 +201,41 @@ export class TTS extends Bootable {
 			}
 		}
 
+		if (voice === 'Simply') {
+			try {
+				const words = message.split(' ');
+				const wordsToTranslate = words.filter((word) => word.length === 2);
+
+				if (wordsToTranslate.length > 0) {
+					// Join words to translate with newlines to get individual translations
+					const textToTranslate = wordsToTranslate.join('\n');
+					const response = await translate(textToTranslate, {
+						to: 'de',
+						requestFunction: fetch,
+						requestOptions: { method: 'GET' }
+					});
+
+					const translatedWords = response.text.split('\n');
+					const translationMap = new Map();
+
+					wordsToTranslate.forEach((word, index) => {
+						if (translatedWords[index]) {
+							translationMap.set(word, translatedWords[index]);
+						}
+					});
+
+					// Replace the original words with their translations
+					message = words.map((word) => translationMap.get(word) || word).join(' ');
+				}
+			} catch (error) {
+				console.error('Error translating words to German for Simply voice:', error);
+			}
+		}
+
 		try {
 			const audioStream = (await this.twitch.elevenlabs?.client?.textToSpeech.stream(voiceId, {
 				text: message,
-				modelId: 'eleven_multilingual_v2',
+				modelId: 'eleven_flash_v2_5',
 				enableLogging: false,
 				outputFormat: 'mp3_44100_192',
 				voiceSettings

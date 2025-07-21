@@ -6,10 +6,10 @@
 	import { useDebounce, watch } from 'runed';
 	import XIcon from 'phosphor-svelte/lib/X';
 
-	const players = $derived(
+	let players = $derived(
 		uniq(replays.replays.flatMap((replay) => replay.players.map((player) => player.name)))
 	);
-	const maps = $derived(uniq(replays.replays.map((replay) => replay.mapName)));
+	let maps = $derived(uniq(replays.replays.map((replay) => replay.mapName)));
 
 	let selectedPlayers: string[] = $state([]);
 	let selectedMaps: string[] = $state([]);
@@ -47,6 +47,8 @@
 			});
 		}
 	);
+
+	$inspect(players);
 </script>
 
 <div class="border-secondary-700 -m-8 mb-6 border-b px-8 py-6">
@@ -55,14 +57,14 @@
 		<div>
 			<Input placeholder="Search replay" bind:value={searchQuery} oninput={search} />
 		</div>
-		<div>
+		<!-- <div>
 			<Select
 				items={players.map((player) => ({ label: player, value: player }))}
 				bind:value={selectedPlayers}
 				type="multiple"
 				placeholder="Select Players"
 			/>
-		</div>
+		</div> -->
 		<div>
 			<Select
 				items={maps.map((map) => ({ label: map, value: map }))}
