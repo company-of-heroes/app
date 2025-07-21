@@ -9,6 +9,7 @@ import { game, type Game } from '$core/company-of-heroes';
 import { PathMatcher } from '$lib/utils/path-matcher';
 import { Log } from '$lib/core/log-parser';
 import { replays, type Replays } from './replays.svelte';
+import { socket } from './socket.svelte';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -62,6 +63,11 @@ class App extends Emittery<AppEvents> {
 			href: '/replays',
 			path: '/replays',
 			title: 'Replays'
+		},
+		{
+			href: '/websocket',
+			path: '/websocket',
+			title: 'WebSocket Server'
 		}
 	]);
 
@@ -154,6 +160,14 @@ class App extends Emittery<AppEvents> {
 	replays: Replays = $derived(replays);
 
 	/**
+	 * Instance of the Socket class, to ineract with the WebSocket server.
+	 *
+	 * @public
+	 * @type {Socket}
+	 */
+	socket = socket;
+
+	/**
 	 * Asynchronously initializes the application state.
 	 * Loads the persistent store, retrieves settings, and initializes modules (TTS, Twitch).
 	 * Sets up a listener for changes in the store to keep the `settings` state updated.
@@ -183,10 +197,10 @@ class App extends Emittery<AppEvents> {
 			});
 		}
 
-		const log = await new Log();
-
+		const log = new Log();
 		log.start();
-		log.on('ISREADY', () => this.replays.load());
+		socket.start();
+		//log.on('ISREADY', () => this.replays.load());
 
 		this.emit('boot', this);
 	}
