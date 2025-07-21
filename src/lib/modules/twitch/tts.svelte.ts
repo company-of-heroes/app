@@ -3,11 +3,9 @@ import type { Listener } from '@d-fischer/typed-event-emitter';
 import type { VoiceSettings } from '@elevenlabs/elevenlabs-js/api';
 import type { Twitch } from './twitch.svelte';
 import { app } from '$core/app';
-import { Module } from '../module.svelte';
 import { translate } from 'google-translate-api-x';
 import { fetch } from '@tauri-apps/plugin-http';
 import { TTSPersonal } from './tts-personal.svelte';
-import { watch } from 'runed';
 import { Bootable } from '../bootable.svelte';
 
 /**
@@ -110,6 +108,15 @@ export class TTS extends Bootable {
 	private lastMessageUser: string | null = null;
 
 	/**
+	 * Timeout for the last message user.
+	 * This is used to reset the last message user after a certain period.
+	 *
+	 * @private
+	 * @type {NodeJS.Timeout | null}
+	 */
+	private lastMessageUserTimeout: NodeJS.Timeout | null = null;
+
+	/**
 	 * Initializes the TTS module.
 	 * This method sets up the necessary listeners and starts the playback loop.
 	 *
@@ -140,28 +147,32 @@ export class TTS extends Bootable {
 	 * @private
 	 */
 	private async message(channel: string, user: string, message: string, msg: ChatMessage) {
-		console.log(msg);
-		if (message.length < 1 || message.startsWith('!')) {
+		if (message.length < 1 || message.startsWith('!') || user.includes('bot')) {
 			return;
 		}
 
-		if (user.endsWith('bot') || user.startsWith('bot')) {
-			return;
+		// Clear existing timeout
+		if (this.lastMessageUserTimeout) {
+			clearTimeout(this.lastMessageUserTimeout);
 		}
 
-		if (user !== this.lastMessageUser) {
-			message = `${user} said, ${message}`;
+		// Format message if new user or use default format
+		const shouldFormatMessage = user !== this.lastMessageUser;
+		if (shouldFormatMessage) {
+			const format = this.twitch.settings.ttsMessageFormat || '{user} said, {message}';
+			message = format.replace(/\{(username|user)\}/g, user).replace(/\{(message|msg)\}/g, message);
 		}
 
-		if (this.twitch.settings.provider === 'elevenlabs') {
-			await this.elevenlabs(message, user);
-		}
+		console.log(message);
 
-		if (this.twitch.settings.provider === 'brian') {
-			await this.brian(message);
-		}
+		// Generate TTS based on provider
+		const provider = this.twitch.settings.provider;
+		if (provider === 'elevenlabs') await this.elevenlabs(message, user);
+		if (provider === 'brian') await this.brian(message);
 
+		// Update last user and set timeout
 		this.lastMessageUser = user;
+		this.lastMessageUserTimeout = setTimeout(() => (this.lastMessageUser = null), 15000);
 	}
 
 	/**
@@ -182,7 +193,7 @@ export class TTS extends Bootable {
 		const voiceId =
 			voicesResponse?.voices?.find((v) => v.name === voice)?.voiceId ||
 			voicesResponse?.voices?.find((v) => v.name === 'George')?.voiceId;
-		console.log(this.personal?.activeVoices[user]);
+
 		if (!voiceId) {
 			console.error('No valid voice found. Cannot proceed with TTS.');
 			return;
@@ -299,11 +310,10 @@ export class TTS extends Bootable {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			const arrayBuffer = await response.arrayBuffer();
-			const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' }); // Create a Blob
+			const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
 
-			this.queue.push(audioBlob); // Add the Blob to the queue
+			this.queue.push(audioBlob);
 
-			// Trigger playback check if not currently playing
 			if (!this.isPlaying) {
 				this.playNext();
 			}

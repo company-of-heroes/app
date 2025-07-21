@@ -37,6 +37,19 @@
 			/>
 		</div>
 	</div>
+	<div class="mb-4 flex flex-col">
+		<Label>TTS message format</Label>
+		<small class="text-secondary-400 mb-4 block">
+			Available variables: <code>{`{username}`}</code>
+			<code>{`{message}`}</code>
+		</small>
+		<Input
+			placeholder={`{username} said, {message}`}
+			name="ttsMessageFormat"
+			type="text"
+			bind:value={module.settings.ttsMessageFormat}
+		/>
+	</div>
 	<div class={cn(module.settings.provider === 'brian' && 'hidden')}>
 		<div class={cn('mb-4 flex flex-col gap-2')}>
 			<Label>Elevenlabs API key</Label>

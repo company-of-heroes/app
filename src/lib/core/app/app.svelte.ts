@@ -186,7 +186,7 @@ class App extends Emittery<AppEvents> {
 		const log = await new Log();
 
 		log.start();
-		//log.on('ISREADY', () => this.replays.load());
+		log.on('ISREADY', () => this.replays.load());
 
 		this.emit('boot', this);
 	}
