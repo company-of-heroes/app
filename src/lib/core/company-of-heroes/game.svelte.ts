@@ -4,25 +4,10 @@ import Emittery from 'emittery';
 import { Lobby } from './lobby.svelte';
 
 export type GameEvents = {
-	'GAME:LAUNCHED': {
-		isRunning: boolean;
-		steamId: string;
-		profile: RelicProfile;
-	};
+	'GAME:LAUNCHED': never;
 	'GAME:CLOSED': never;
-	'LOBBY:STARTED': {
-		isStarted: boolean;
-		map: string;
-		outcome: 'PS_WON' | 'PS_LOST' | 'PS_ABORTED';
-		players: LobbyPlayer[];
-		matchType: number;
-	};
-	'LOBBY:GAMEOVER': {
-		isStarted: boolean;
-		map: string;
-		outcome: 'PS_WON' | 'PS_LOST' | 'PS_ABORTED';
-		players: LobbyPlayer[];
-	};
+	'LOBBY:STARTED': never;
+	'LOBBY:GAMEOVER': never;
 	'LOBBY:DESTROYED': never;
 };
 

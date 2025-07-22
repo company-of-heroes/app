@@ -73,7 +73,7 @@ class App extends Emittery<AppEvents> {
 	 */
 	route = $derived.by(() => {
 		if (page.url.hash) {
-			return this.routes.find((route) => route.href === page.url.hash);
+			return this.routes.find((route) => route.href === '/' + page.url.hash);
 		}
 
 		return this.routes.find((route) =>
@@ -151,7 +151,7 @@ class App extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Replays}
 	 */
-	replays: Replays = replays;
+	replays: Replays = $derived(replays);
 
 	/**
 	 * Asynchronously initializes the application state.
@@ -179,12 +179,14 @@ class App extends Emittery<AppEvents> {
 			this.routes.push({
 				component: mod.component,
 				title: mod.menuItemName,
-				href: `#${mod.name}`
+				href: `/#${mod.name}`
 			});
 		}
 
-		await new Log().start();
-		await this.replays.load();
+		const log = await new Log();
+
+		log.start();
+		log.on('ISREADY', () => this.replays.load());
 
 		this.emit('boot', this);
 	}

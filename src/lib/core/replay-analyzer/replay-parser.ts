@@ -1,6 +1,6 @@
 import { normalizeMapName } from '$lib/utils';
 import type { ActionDefinitions } from './action-definitions';
-import { Replay, Tick } from './replay';
+import { Player, Replay, Tick } from './replay';
 
 export default class ReplayParser {
 	replay: Replay;
@@ -236,7 +236,7 @@ export default class ReplayParser {
 			const player = this.replay!.replayStream!.readUnicodeStr();
 			const id = this.replay!.replayStream!.readUInt16();
 			this.replay!.replayStream!.skip(6);
-			const faction = this.replay!.replayStream!.readASCIIStr();
+			const faction = this.replay!.replayStream!.readASCIIStr() as Player['faction'];
 			this.replay!.addPlayer(player, faction);
 		}
 

@@ -1,6 +1,13 @@
+import Emittery from 'emittery';
+import { watch } from 'runed';
 import type { Snippet } from 'svelte';
 
-class Dialog {
+interface DialogEvents {
+	close: never;
+	open: never;
+}
+
+class Dialog extends Emittery<DialogEvents> {
 	open = $state(false);
 
 	title = $state<string | Snippet>('');
@@ -14,6 +21,25 @@ class Dialog {
 		this.title = '';
 		this.description = '';
 		this.component = undefined;
+
+		this.emit('close');
+	}
+
+	constructor() {
+		super();
+
+		$effect.root(() => {
+			watch(
+				() => this.open,
+				(open) => {
+					if (open) {
+						this.emit('open');
+					} else {
+						this.emit('close');
+					}
+				}
+			);
+		});
 	}
 }
 

@@ -5,7 +5,7 @@
 	import PredictionsTab from './tabs/predictions-tab.svelte';
 </script>
 
-<Tabs.Root value="predictions">
+<Tabs.Root value="tts">
 	<Tabs.List>
 		<Tabs.Trigger value="twitch">Twitch</Tabs.Trigger>
 		<Tabs.Trigger value="tts">TTS</Tabs.Trigger>

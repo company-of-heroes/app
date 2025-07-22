@@ -1,14 +1,12 @@
-import type { CoHMaps, RelicProfile } from '@fknoobs/app';
+import type { CoHMaps } from '@fknoobs/app';
 import emittery, { type DatalessEventNames } from 'emittery';
 import { createRegExp, digit, exactly, oneOrMore, char, whitespace, word } from 'magic-regexp';
-import { watch, readTextFile, type UnwatchFn } from '@tauri-apps/plugin-fs';
-import { watch as track } from 'runed';
+import { readTextFile } from '@tauri-apps/plugin-fs';
+import { watch as track, watchOnce as trackOnce } from 'runed';
 import { inferTypes } from '$lib/utils';
 import { app } from '$core/app';
 import { game, Lobby } from '$core/company-of-heroes';
 import { relic } from '$lib/relic';
-
-type TAction<T extends keyof LogEvents> = LogEvents[T] extends never ? never : LogEvents[T];
 
 let lobby: Lobby | undefined;
 
@@ -20,6 +18,8 @@ export class Log extends emittery<LogEvents> {
 	private newLength = 0;
 
 	private interval: number | null = null;
+
+	private isReady: boolean | undefined = $state(undefined);
 
 	constructor() {
 		super();
@@ -37,6 +37,8 @@ export class Log extends emittery<LogEvents> {
 					game.isRunning = true;
 					game.steamId = steamId.toString();
 					game.profile = profile;
+
+					game.emit('GAME:LAUNCHED');
 
 					break;
 				}
@@ -108,7 +110,11 @@ export class Log extends emittery<LogEvents> {
 						lobby.players.forEach((player) => {
 							player.profile = profiles.find((profile) => profile.profile_id === player.playerId);
 						});
+
 						game.lobby = lobby;
+						game.isIngame = true;
+
+						game.emit('LOBBY:STARTED');
 					}
 
 					break;
@@ -143,10 +149,19 @@ export class Log extends emittery<LogEvents> {
 					break;
 				}
 
+				case 'LOG:LOBBY:GAMEOVER': {
+					game.isIngame = false;
+					game.emit('LOBBY:GAMEOVER');
+
+					break;
+				}
+
 				case 'LOG:LOBBY:DESTROYED': {
 					if (lobby) {
 						game.playedLobbies.push(lobby);
 					}
+
+					game.emit('LOBBY:DESTROYED');
 
 					// game.lobby = undefined;
 					// lobby = undefined;
@@ -156,6 +171,8 @@ export class Log extends emittery<LogEvents> {
 
 				// case 'LOG:ENDED': {
 				// 	game.isRunning = false;
+
+				// 	game.emit('GAME:CLOSED');
 
 				// 	break;
 				// }
@@ -184,6 +201,10 @@ export class Log extends emittery<LogEvents> {
 						this.createWatcher();
 					}
 				);
+				trackOnce(
+					() => this.isReady,
+					() => this.emit('ISREADY') as never
+				);
 			});
 		});
 	}
@@ -204,6 +225,10 @@ export class Log extends emittery<LogEvents> {
 
 			for (const line of this.lines) {
 				await this.processLine(line);
+			}
+
+			if (this.isReady === undefined) {
+				this.isReady = true;
 			}
 		}, 500);
 	}
@@ -254,6 +279,7 @@ export type LogEvents = {
 	'LOG:LOBBY:GAMEOVER': undefined;
 	'LOG:LOBBY:DESTROYED': undefined;
 	'LOG:LOBBY:STARTED': undefined;
+	ISREADY: undefined;
 };
 
 /**
@@ -261,7 +287,7 @@ export type LogEvents = {
  * The keys match the event names defined in LogEventData.
  * Named capture groups in the regex should correspond to the properties in the LogEventData payload objects.
  */
-export const triggers: Record<keyof LogEvents, RegExp> = {
+export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
 	'LOG:STARTED': createRegExp(exactly('RELICCOH started')),
 	'LOG:ENDED': createRegExp(exactly('Application closed without errors')),
 	'LOG:FOUND:PROFILE': createRegExp(
@@ -334,6 +360,6 @@ export const triggers: Record<keyof LogEvents, RegExp> = {
  * @param name
  * @param matcher
  */
-export function addEvent(name: keyof LogEvents, matcher: RegExp) {
+export function addEvent(name: keyof Omit<LogEvents, 'ISREADY'>, matcher: RegExp) {
 	triggers[name] = matcher;
 }

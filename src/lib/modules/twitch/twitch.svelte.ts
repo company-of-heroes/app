@@ -17,6 +17,7 @@ export type TwitchSettings = {
 	accessToken: string | undefined;
 	provider: 'elevenlabs' | 'brian';
 	voiceName: string;
+	ttsMessageFormat: string;
 	personalVoicesEnabled: boolean;
 	personalVoices: string[];
 	predictionsEnabled: boolean;
@@ -31,6 +32,7 @@ export const defaultTwitchSettings: TwitchSettings = {
 	accessToken: undefined,
 	provider: 'brian',
 	voiceName: 'Roger',
+	ttsMessageFormat: '{user} said {message}',
 	personalVoicesEnabled: false,
 	personalVoices: [],
 	predictionsEnabled: false,

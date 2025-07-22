@@ -2,10 +2,14 @@
 	import { Label } from '$lib/components/ui/label';
 	import { app } from '$core/app';
 	import { cn } from '$lib/utils';
-	import { Checkbox, Input, RadioGroup, Select } from '$lib/components/ui/input';
+	import { Checkbox, Input, Options, RadioGroup, Select } from '$lib/components/ui/input';
 	import { Meter } from '$lib/components/ui/meter';
 
 	const module = app.getModule('twitch');
+
+	$effect(() => {
+		console.log(module.tts!.personal.activeVoices);
+	});
 </script>
 
 <div class="mb-4 flex flex-col gap-2">
@@ -32,6 +36,19 @@
 				bind:value={module.settings.provider}
 			/>
 		</div>
+	</div>
+	<div class="mb-4 flex flex-col">
+		<Label>TTS message format</Label>
+		<small class="text-secondary-400 mb-4 block">
+			Available variables: <code>{`{username}`}</code>
+			<code>{`{message}`}</code>
+		</small>
+		<Input
+			placeholder={`{username} said, {message}`}
+			name="ttsMessageFormat"
+			type="text"
+			bind:value={module.settings.ttsMessageFormat}
+		/>
 	</div>
 	<div class={cn(module.settings.provider === 'brian' && 'hidden')}>
 		<div class={cn('mb-4 flex flex-col gap-2')}>
@@ -90,6 +107,10 @@
 						name="personalVoices"
 						bind:value={module.settings.personalVoices}
 					/>
+				</div>
+				<div class="mb-4 flex flex-col gap-2">
+					<Label>Rewarded voices</Label>
+					<Options bind:value={module.tts!.personal.activeVoices} />
 				</div>
 			</div>
 		{/if}

@@ -11,7 +11,8 @@
 	{...restProps}
 	class={cn(
 		'text-secondary-200 px-4 py-3 font-bold transition-all',
-		app.currentRoute?.href === restProps.href && 'text-primary',
+		'hover:text-secondary-400',
+		app.route?.href === restProps.href && 'text-primary',
 		restProps.href &&
 			restProps.href !== '/' &&
 			page.url.pathname.startsWith(restProps.href) &&

@@ -3,11 +3,9 @@ import type { Listener } from '@d-fischer/typed-event-emitter';
 import type { VoiceSettings } from '@elevenlabs/elevenlabs-js/api';
 import type { Twitch } from './twitch.svelte';
 import { app } from '$core/app';
-import { Module } from '../module.svelte';
 import { translate } from 'google-translate-api-x';
 import { fetch } from '@tauri-apps/plugin-http';
 import { TTSPersonal } from './tts-personal.svelte';
-import { watch } from 'runed';
 import { Bootable } from '../bootable.svelte';
 
 /**
@@ -98,14 +96,38 @@ export class TTS extends Bootable {
 	 * @readonly
 	 * @type {TTSPersonal}
 	 */
-	public personal?: TTSPersonal;
+	public personal: TTSPersonal = new TTSPersonal();
 
+	/**
+	 * The last user who sent a message.
+	 * This is used to track the last user for TTS purposes.
+	 *
+	 * @private
+	 * @type {string | null}
+	 */
+	private lastMessageUser: string | null = null;
+
+	/**
+	 * Timeout for the last message user.
+	 * This is used to reset the last message user after a certain period.
+	 *
+	 * @private
+	 * @type {NodeJS.Timeout | null}
+	 */
+	private lastMessageUserTimeout: NodeJS.Timeout | null = null;
+
+	/**
+	 * Initializes the TTS module.
+	 * This method sets up the necessary listeners and starts the playback loop.
+	 *
+	 * @public
+	 * @returns {Promise<void>}
+	 */
 	async init() {
 		if (!this.enabled || !this.twitch) {
 			return;
 		}
 
-		this.personal = await new TTSPersonal().init();
 		this.startPlaybackLoop();
 
 		this.chatListener = this.twitch.chatClient?.onMessage((channel, users, text, msg) =>
@@ -125,22 +147,32 @@ export class TTS extends Bootable {
 	 * @private
 	 */
 	private async message(channel: string, user: string, message: string, msg: ChatMessage) {
-		console.log(msg);
-		if (message.length < 1 && message.startsWith('!')) {
+		if (message.length < 1 || message.startsWith('!') || user.includes('bot')) {
 			return;
 		}
 
-		if (user.endsWith('bot') || user.startsWith('bot')) {
-			return;
+		// Clear existing timeout
+		if (this.lastMessageUserTimeout) {
+			clearTimeout(this.lastMessageUserTimeout);
 		}
 
-		if (this.twitch.settings.provider === 'elevenlabs') {
-			await this.elevenlabs(message, user);
+		// Format message if new user or use default format
+		const shouldFormatMessage = user !== this.lastMessageUser;
+		if (shouldFormatMessage) {
+			const format = this.twitch.settings.ttsMessageFormat || '{user} said, {message}';
+			message = format.replace(/\{(username|user)\}/g, user).replace(/\{(message|msg)\}/g, message);
 		}
 
-		if (this.twitch.settings.provider === 'brian') {
-			await this.brian(message);
-		}
+		console.log(message);
+
+		// Generate TTS based on provider
+		const provider = this.twitch.settings.provider;
+		if (provider === 'elevenlabs') await this.elevenlabs(message, user);
+		if (provider === 'brian') await this.brian(message);
+
+		// Update last user and set timeout
+		this.lastMessageUser = user;
+		this.lastMessageUserTimeout = setTimeout(() => (this.lastMessageUser = null), 15000);
 	}
 
 	/**
@@ -151,9 +183,9 @@ export class TTS extends Bootable {
 	 */
 	private async elevenlabs(message: string, user: string) {
 		let voiceSettings: VoiceSettings = {
-			stability: 0.8,
-			similarityBoost: 0.8,
-			style: 0.3
+			stability: 0.6,
+			similarityBoost: 0.4,
+			style: 0.1
 		};
 
 		const voice = this.personal?.activeVoices[user] || this.twitch.settings.voiceName;
@@ -180,10 +212,41 @@ export class TTS extends Bootable {
 			}
 		}
 
+		if (voice === 'Simply') {
+			try {
+				const words = message.split(' ');
+				const wordsToTranslate = words.filter((word) => word.length === 2);
+
+				if (wordsToTranslate.length > 0) {
+					// Join words to translate with newlines to get individual translations
+					const textToTranslate = wordsToTranslate.join('\n');
+					const response = await translate(textToTranslate, {
+						to: 'de',
+						requestFunction: fetch,
+						requestOptions: { method: 'GET' }
+					});
+
+					const translatedWords = response.text.split('\n');
+					const translationMap = new Map();
+
+					wordsToTranslate.forEach((word, index) => {
+						if (translatedWords[index]) {
+							translationMap.set(word, translatedWords[index]);
+						}
+					});
+
+					// Replace the original words with their translations
+					message = words.map((word) => translationMap.get(word) || word).join(' ');
+				}
+			} catch (error) {
+				console.error('Error translating words to German for Simply voice:', error);
+			}
+		}
+
 		try {
 			const audioStream = (await this.twitch.elevenlabs?.client?.textToSpeech.stream(voiceId, {
 				text: message,
-				modelId: 'eleven_multilingual_v2',
+				modelId: 'eleven_flash_v2_5',
 				enableLogging: false,
 				outputFormat: 'mp3_44100_192',
 				voiceSettings
@@ -247,11 +310,10 @@ export class TTS extends Bootable {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			const arrayBuffer = await response.arrayBuffer();
-			const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' }); // Create a Blob
+			const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
 
-			this.queue.push(audioBlob); // Add the Blob to the queue
+			this.queue.push(audioBlob);
 
-			// Trigger playback check if not currently playing
 			if (!this.isPlaying) {
 				this.playNext();
 			}
