@@ -4,6 +4,6 @@
 	let { ...props }: TabsRootPropsWithoutHTML = $props();
 </script>
 
-<Tabs.Root {...props}>
+<Tabs.Root {...props} class="flex flex-1 flex-col">
 	{@render props.children?.()}
 </Tabs.Root>

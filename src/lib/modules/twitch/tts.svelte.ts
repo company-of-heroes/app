@@ -282,7 +282,9 @@ export class TTS extends Bootable {
 						this.twitch.elevenlabs?.client?.history.list().then(({ history }) => {
 							this.twitch.elevenlabs?.client?.history.delete(history[0].historyItemId);
 						});
-					} catch (_) {}
+					} catch (_) {
+						console.error('Failed to delete history item after playback', _);
+					}
 
 					break;
 				}
