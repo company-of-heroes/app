@@ -22,6 +22,7 @@ export type TwitchSettings = {
 	personalVoices: string[];
 	predictionsEnabled: boolean;
 	predictionsTitle: string;
+	predictionsTimer: number;
 	predictionsOptions: string[];
 };
 
@@ -36,6 +37,7 @@ export const defaultTwitchSettings: TwitchSettings = {
 	personalVoicesEnabled: false,
 	personalVoices: [],
 	predictionsEnabled: false,
+	predictionsTimer: 300,
 	predictionsTitle: 'Lose or Win',
 	predictionsOptions: ['Win', 'Lose']
 };
