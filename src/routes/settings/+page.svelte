@@ -21,7 +21,7 @@
 	};
 
 	$effect(() => {
-		console.log(app.currentRoute);
+		console.log(app.route);
 	});
 </script>
 

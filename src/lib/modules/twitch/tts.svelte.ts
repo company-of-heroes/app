@@ -191,15 +191,17 @@ export class TTS extends Bootable {
 	 */
 	private async elevenlabs(message: string, user: string) {
 		let voiceSettings: VoiceSettings = {
-			stability: 0.6,
-			similarityBoost: 0.4,
-			style: 0.1
+			stability: 0.3,
+			similarityBoost: 1,
+			style: 0.6,
+			speed: 1,
+			useSpeakerBoost: true
 		};
 
 		const voice = this.personal?.activeVoices[user] || this.twitch.settings.voiceName;
 		const voicesResponse = await this.twitch.elevenlabs?.client?.voices.getAll();
 		const voiceId =
-			voicesResponse?.voices?.find((v) => v.name === voice)?.voiceId ||
+			voicesResponse?.voices?.find((v) => v.name === `[PERSONALITY] ${voice}`)?.voiceId ||
 			voicesResponse?.voices?.find((v) => v.name === 'George')?.voiceId;
 
 		if (!voiceId) {
@@ -208,6 +210,14 @@ export class TTS extends Bootable {
 		}
 
 		if (voice === 'Adolf') {
+			voiceSettings = {
+				stability: 0.6,
+				similarityBoost: 1,
+				style: 0.3,
+				speed: 0.9,
+				useSpeakerBoost: true
+			};
+
 			try {
 				const response = await translate(message, {
 					to: 'de',
@@ -254,7 +264,7 @@ export class TTS extends Bootable {
 		try {
 			const audioStream = (await this.twitch.elevenlabs?.client?.textToSpeech.stream(voiceId, {
 				text: message,
-				modelId: 'eleven_flash_v2_5',
+				modelId: 'eleven_multilingual_v2',
 				enableLogging: false,
 				outputFormat: 'mp3_44100_192',
 				voiceSettings

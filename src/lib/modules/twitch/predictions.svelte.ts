@@ -138,7 +138,7 @@ export class Preditctions extends Bootable {
 			{
 				title,
 				outcomes,
-				autoLockAfter: 60
+				autoLockAfter: this.twitch.settings.predictionsTimer || 300 // Default to 5 minutes if not set
 			}
 		);
 	}
