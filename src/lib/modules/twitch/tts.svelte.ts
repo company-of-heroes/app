@@ -183,9 +183,9 @@ export class TTS extends Bootable {
 	 */
 	private async elevenlabs(message: string, user: string) {
 		let voiceSettings: VoiceSettings = {
-			stability: 0.1,
-			similarityBoost: 0.3,
-			style: 0.4,
+			stability: 0.3,
+			similarityBoost: 1,
+			style: 0.6,
 			speed: 1,
 			useSpeakerBoost: true
 		};
@@ -203,10 +203,11 @@ export class TTS extends Bootable {
 
 		if (voice === 'Adolf') {
 			voiceSettings = {
-				stability: 0.4,
-				similarityBoost: 0.6,
-				style: 0.1,
-				speed: 0.8
+				stability: 0.6,
+				similarityBoost: 1,
+				style: 0.3,
+				speed: 0.9,
+				useSpeakerBoost: true
 			};
 
 			try {
