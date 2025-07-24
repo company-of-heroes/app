@@ -1,91 +1,90 @@
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Capability for the main window",
-  "windows": [
-    "main"
-  ],
-  "permissions": [
-    "core:default",
-    "cors-fetch:default",
-    "opener:default",
-    "store:default",
-    "oauth:allow-start",
-    "oauth:allow-cancel",
-    "fs:allow-open",
-    "fs:allow-write",
-    "fs:allow-read",
-    "fs:allow-rename",
-    "fs:allow-mkdir",
-    "fs:allow-remove",
-    "fs:allow-exists",
-    "fs:allow-create",
-    "fs:allow-write-text-file",
-    "fs:scope-download-recursive",
-    "fs:scope-resource-recursive",
-    "fs:read-all",
-    "fs:allow-watch",
-    {
-      "identifier": "fs:scope-document-recursive",
-      "allow": [
-        {
-          "path": "$DOCUMENT/**"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:scope-appdata-recursive",
-      "allow": [
-        {
-          "path": "$APPDATA/**"
-        }
-      ]
-    },
-    "shell:default",
-    "shell:allow-open",
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "binaries/fknoobs",
-          "sidecar": true
-        }
-      ]
-    },
-    {
-      "identifier": "http:default",
-      "allow": [
-        {
-          "url": "https://*.tauri.app"
-        },
-        {
-          "url": "https://*.your-objectstorage.com"
-        },
-        {
-          "url": "https://*.google.com"
-        },
-        {
-          "url": "https://*.google.nl"
-        },
-        {
-          "url": "https://*.elevenlabs.io"
-        },
-        {
-          "url": "https://*.twitch.tv"
-        },
-        {
-          "url": "https://*.streamelements.com"
-        },
-        {
-          "url": "https://*.reliclink.com"
-        },
-        {
-          "url": "http://*.reliclink.com"
-        }
-      ]
-    },
-    "http:default",
-    "dialog:default",
-    "log:default"
-  ]
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "default",
+	"description": "Capability for the main window",
+	"windows": ["main"],
+	"permissions": [
+		"core:default",
+		"cors-fetch:default",
+		"opener:default",
+		"store:default",
+		"oauth:allow-start",
+		"oauth:allow-cancel",
+		"fs:allow-open",
+		"fs:allow-write",
+		"fs:allow-read",
+		"fs:allow-rename",
+		"fs:allow-mkdir",
+		"fs:allow-remove",
+		"fs:allow-exists",
+		"fs:allow-create",
+		"fs:allow-write-text-file",
+		"fs:scope-download-recursive",
+		"fs:scope-resource-recursive",
+		"fs:read-all",
+		"fs:allow-watch",
+		{
+			"identifier": "fs:scope-document-recursive",
+			"allow": [
+				{
+					"path": "$DOCUMENT/**"
+				}
+			]
+		},
+		{
+			"identifier": "fs:scope-appdata-recursive",
+			"allow": [
+				{
+					"path": "$APPDATA/**"
+				}
+			]
+		},
+		"shell:default",
+		"shell:allow-open",
+		{
+			"identifier": "shell:allow-execute",
+			"allow": [
+				{
+					"name": "binaries/fknoobs",
+					"sidecar": true
+				}
+			]
+		},
+		{
+			"identifier": "http:default",
+			"allow": [
+				{
+					"url": "https://*.tauri.app"
+				},
+				{
+					"url": "https://*.your-objectstorage.com"
+				},
+				{
+					"url": "https://*.google.com"
+				},
+				{
+					"url": "https://*.google.nl"
+				},
+				{
+					"url": "https://*.elevenlabs.io"
+				},
+				{
+					"url": "https://*.twitch.tv"
+				},
+				{
+					"url": "https://*.streamelements.com"
+				},
+				{
+					"url": "https://*.reliclink.com"
+				},
+				{
+					"url": "http://*.reliclink.com"
+				}
+			]
+		},
+		"websocket:allow-connect",
+		"websocket:allow-send",
+		"dialog:default",
+		"log:default"
+	]
 }

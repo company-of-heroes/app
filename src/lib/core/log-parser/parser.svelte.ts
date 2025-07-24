@@ -180,7 +180,7 @@ export class Log extends emittery<LogEvents> {
 		});
 	}
 
-	async start() {
+	start() {
 		if (!app.settings.companyOfHeroesConfigPath) {
 			return;
 		}

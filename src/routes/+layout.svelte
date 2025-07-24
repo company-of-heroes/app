@@ -39,8 +39,8 @@
 			<div class="border-secondary-700 bg-primary/2 border-b p-[4px]">
 				<h1 class="bg-secondary-900 px-8 py-6 text-3xl font-bold">{app.route?.title}</h1>
 			</div>
-			<div class="flex-grow overflow-auto">
-				<main class="flex-1 p-8">
+			<div class="flex flex-grow flex-col overflow-auto">
+				<main class="flex flex-1 flex-col p-8">
 					{#if Component}
 						<Component />
 					{:else}

@@ -4,6 +4,6 @@
 	let { ...props }: TabsContentPropsWithoutHTML = $props();
 </script>
 
-<Tabs.Content {...props}>
+<Tabs.Content {...props} class="flex h-full flex-col">
 	{@render props.children?.()}
 </Tabs.Content>

@@ -7,6 +7,7 @@ import { translate } from 'google-translate-api-x';
 import { fetch } from '@tauri-apps/plugin-http';
 import { TTSPersonal } from './tts-personal.svelte';
 import { Bootable } from '../bootable.svelte';
+import { Overlays } from './overlays.svelte';
 
 /**
  * Represents the Text-to-Speech (TTS) module.
@@ -91,12 +92,19 @@ export class TTS extends Bootable {
 
 	/**
 	 * Personal TTS module instance.
-	 * This is used to handle personal TTS functionality.
 	 *
 	 * @readonly
 	 * @type {TTSPersonal}
 	 */
-	public personal: TTSPersonal = new TTSPersonal();
+	readonly personal = new TTSPersonal();
+
+	/**
+	 * Overlays module instance.
+	 *
+	 * @readonly
+	 * @type {Overlays}
+	 */
+	readonly overlays = new Overlays();
 
 	/**
 	 * The last user who sent a message.
@@ -284,7 +292,9 @@ export class TTS extends Bootable {
 						this.twitch.elevenlabs?.client?.history.list().then(({ history }) => {
 							this.twitch.elevenlabs?.client?.history.delete(history[0].historyItemId);
 						});
-					} catch (_) {}
+					} catch (_) {
+						console.error('Failed to delete history item after playback', _);
+					}
 
 					break;
 				}
