@@ -14,7 +14,7 @@
 <button
 	{...restProps}
 	class={cn(
-		'flex items-center gap-2 font-bold',
+		'inline-flex items-center gap-2 font-bold',
 		'cursor-pointer px-8 py-2',
 		'transition-all duration-100 hover:opacity-70',
 		'disabled:cursor-not-allowed disabled:opacity-60',

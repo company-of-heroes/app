@@ -20,6 +20,7 @@ export type TwitchSettings = {
 	ttsMessageFormat: string;
 	personalVoicesEnabled: boolean;
 	personalVoices: string[];
+	personalVoiceClones: string[];
 	predictionsEnabled: boolean;
 	predictionsTitle: string;
 	predictionsTimer: number;
@@ -36,6 +37,7 @@ export const defaultTwitchSettings: TwitchSettings = {
 	ttsMessageFormat: '{user} said {message}',
 	personalVoicesEnabled: false,
 	personalVoices: [],
+	personalVoiceClones: [],
 	predictionsEnabled: false,
 	predictionsTimer: 300,
 	predictionsTitle: 'Lose or Win',

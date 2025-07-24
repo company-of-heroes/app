@@ -1,7 +1,7 @@
 import type { Modules } from '@fknoobs/app';
 import type { Component } from 'svelte';
 import { page } from '$app/state';
-import { Twitch } from '$lib/modules/twitch/twitch.svelte';
+import { defaultTwitchSettings, Twitch } from '$lib/modules/twitch/twitch.svelte';
 import { load, type Store } from '@tauri-apps/plugin-store';
 import { documentDir } from '@tauri-apps/api/path';
 import Emittery from 'emittery';
@@ -107,14 +107,14 @@ class App extends Emittery<AppEvents> {
 		 * Path to the Company of Heroes configuration folder.
 		 * This is used to retrieve game settings, configurations and logs.
 		 */
-		companyOfHeroesConfigPath: ''
+		companyOfHeroesConfigPath: '',
 		/**
 		 * Twitch module settings.
 		 * This includes the Twitch API client ID and other related settings.
 		 *
 		 * The default settings are defined in the Twitch module.
 		 */
-		//twitch: defaultTwitchSettings
+		twitch: defaultTwitchSettings
 	});
 
 	/**
