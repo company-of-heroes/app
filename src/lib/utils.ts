@@ -111,7 +111,7 @@ export async function getMapImageFromName(mapName: string): Promise<string> {
 		console.warn(`Failed to load map image for "${mapName}":`, error);
 		const defaultMap = await import(`$lib/files/maps/mp_nobattlemap.png`);
 		const result = defaultMap.default;
-		console.log(defaultMap);
+
 		mapCache.set(mapName, result);
 		return result;
 	}

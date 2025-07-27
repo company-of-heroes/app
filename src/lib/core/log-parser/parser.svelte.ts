@@ -163,8 +163,8 @@ export class Log extends emittery<LogEvents> {
 
 					game.emit('LOBBY:DESTROYED');
 
-					// game.lobby = undefined;
-					// lobby = undefined;
+					//game.lobby = undefined;
+					//lobby = undefined;
 
 					break;
 				}

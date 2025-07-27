@@ -41,8 +41,6 @@ export abstract class Bootable {
 				}
 			);
 		});
-
-		app.on('boot', () => this.init());
 	}
 
 	/**

@@ -1,13 +1,27 @@
+import type { Overlay } from './overlays/overlay.svelte';
 import { app } from '$core/app';
 import { Bootable } from '../bootable.svelte';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { ChatOverlay } from './overlays/chat..svelte';
+import { OppBotOverlay } from './overlays/opp-bot.svelte';
 
 export class Overlays extends Bootable {
 	enabled = $derived(true);
 
-	async init() {}
-	destroy(): Promise<void> | void {
-		//throw new Error('Method not implemented.');
+	overlays: Overlay[] = $state([]);
+
+	overlay: Overlay = $derived(this.overlays[1]);
+
+	async init() {
+		const overlays = [new ChatOverlay(), new OppBotOverlay()];
+
+		for await (const overlay of overlays) {
+			this.overlays.push(await overlay.install());
+		}
 	}
+
+	async load(overlay: Overlay) {
+		this.overlay = overlay;
+	}
+
+	destroy(): Promise<void> | void {}
 }

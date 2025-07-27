@@ -63,11 +63,6 @@ class App extends Emittery<AppEvents> {
 			href: '/replays',
 			path: '/replays',
 			title: 'Replays'
-		},
-		{
-			href: '/websocket',
-			path: '/websocket',
-			title: 'WebSocket Server'
 		}
 	]);
 

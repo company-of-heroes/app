@@ -7,7 +7,6 @@ import { translate } from 'google-translate-api-x';
 import { fetch } from '@tauri-apps/plugin-http';
 import { TTSPersonal } from './tts-personal.svelte';
 import { Bootable } from '../bootable.svelte';
-import { Overlays } from './overlays.svelte';
 
 /**
  * Represents the Text-to-Speech (TTS) module.
@@ -97,14 +96,6 @@ export class TTS extends Bootable {
 	 * @type {TTSPersonal}
 	 */
 	readonly personal = new TTSPersonal();
-
-	/**
-	 * Overlays module instance.
-	 *
-	 * @readonly
-	 * @type {Overlays}
-	 */
-	readonly overlays = new Overlays();
 
 	/**
 	 * The last user who sent a message.

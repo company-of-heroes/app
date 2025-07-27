@@ -4,30 +4,10 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Twitch - Chat Overlay</title>
-		<style>
-			body {
-				font-family: Arial, sans-serif;
-				margin: 0;
-				padding: 20px;
-			}
-		</style>
+		<link rel="stylesheet" href="chat.overlay.css" />
+		<script type="text/javascript" src="./chat.overlay.js"></script>
 	</head>
 	<body>
-		<h1>Chat Overlay</h1>
-		<div id="content">
-			<p>Welcome to the chat overlay!</p>
-		</div>
-
-		<script type="module">
-			const ws = new WebSocket('ws://localhost:49210');
-
-			ws.addEventListener('open', () => {
-				ws.send(JSON.stringify({ type: 'subscribe', topic: 'twitch-chat' }));
-
-				ws.addEventListener('message', (event) => {
-					console.log(event);
-				});
-			});
-		</script>
+		<div id="app"></div>
 	</body>
 </html>

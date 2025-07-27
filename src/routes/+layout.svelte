@@ -2,6 +2,7 @@
 	import * as Nav from '$lib/components/ui/nav';
 	import { app } from '$core/app';
 	import { Toaster } from 'svelte-sonner';
+	import { Dialog } from '$lib/components/ui/dialog';
 	import GearIcon from 'phosphor-svelte/lib/Gear';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
@@ -14,8 +15,6 @@
 	import '@fontsource/bebas-neue';
 
 	import '../app.css';
-	import { Dialog } from '$lib/components/ui/dialog';
-	import { ScrollArea } from '$lib/components/scroll-area';
 
 	let { children } = $props();
 	let Component = $derived(app.route?.component);
