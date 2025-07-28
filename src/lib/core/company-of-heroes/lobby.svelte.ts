@@ -396,4 +396,20 @@ export class Lobby {
 			return result;
 		}
 	}
+
+	toJSON() {
+		return {
+			sessionId: this.sessionId,
+			map: this.map,
+			players: this.players.map((player) => ({
+				...player
+			})),
+			outcome: this.outcome,
+			matchType: this.matchType,
+			teams: this.teams,
+			type: this.type,
+			mapName: this.mapName,
+			me: this.me ? { ...this.me } : undefined
+		};
+	}
 }

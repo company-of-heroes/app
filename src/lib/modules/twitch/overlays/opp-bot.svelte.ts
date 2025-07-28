@@ -35,19 +35,12 @@ export class OppBotOverlay extends Overlay {
 	]);
 
 	init() {
-		app.game.on('LOBBY:STARTED', () => {
-			app.socket.publish('game.lobby.started', {
-				isRanked: app.game.lobby!.isRanked,
-				map: app.game.lobby!.map,
-				mapName: app.game.lobby!.mapName,
-				matchType: app.game.lobby!.matchType,
-				sessionId: app.game.lobby!.sessionId,
-				teams: app.game.lobby!.teams,
-				type: app.game.lobby!.type,
-				players: app.game.lobby!.players.map((player: LobbyPlayer) => player)
-			});
+		this.on('overlay:installed', () => {
+			console.log(this.files);
+		});
 
-			console.log('Lobby started', app.game.lobby);
+		app.game.on('LOBBY:STARTED', async () => {
+			app.socket.publish('game.lobby.started', app.game.lobby?.toJSON());
 		});
 
 		app.game.on('LOBBY:DESTROYED', () => {

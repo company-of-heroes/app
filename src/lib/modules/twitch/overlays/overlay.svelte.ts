@@ -1,5 +1,13 @@
 import { app } from '$core/app';
-import { BaseDirectory, exists, mkdir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import {
+	BaseDirectory,
+	exists,
+	mkdir,
+	readTextFile,
+	writeTextFile,
+	readDir
+} from '@tauri-apps/plugin-fs';
+import Emittery from 'emittery';
 import { watch } from 'runed';
 import slugify from 'slugify';
 
@@ -15,7 +23,11 @@ export interface Overlay {
 	init?(): void;
 }
 
-export abstract class Overlay implements Overlay {
+export type OverlayEvents = {
+	'overlay:installed': never;
+};
+
+export abstract class Overlay extends Emittery<OverlayEvents> implements Overlay {
 	/**
 	 * The base directory where the overlay files will be stored.
 	 * This is set to the app's data directory.
@@ -43,16 +55,6 @@ export abstract class Overlay implements Overlay {
 	 */
 	abstract path: string;
 	/**
-	 * A map of file names to their content for the overlay.
-	 * This will be used to create the necessary files in the overlay directory.
-	 *
-	 * @type {Record<string, string>}
-	 * @abstract
-	 * @memberof Overlay
-	 */
-	abstract files: OverlayFile[];
-
-	/**
 	 * A derived property that indicates whether the overlay is currently active.
 	 * It checks if the current overlay instance is the one loaded in the app.
 	 *
@@ -63,30 +65,36 @@ export abstract class Overlay implements Overlay {
 		return this === app.getModule('twitch').overlays.overlay;
 	});
 
-	/**
-	 * A state variable to hold the currently selected file in the overlay.
-	 * This is used to display the content of the selected file in the UI.
-	 *
-	 * @type {OverlayFile}
-	 * @memberof Overlay
-	 */
-	file = $derived.by(() => this.files[0]);
-
 	constructor() {
-		$effect.root(() => {
-			watch(
-				() => this.file.content,
-				() => {
-					if (!this.file.content || this.file.content === '') {
-						return;
-					}
+		super();
 
-					writeTextFile(`${this.path}/${this.file.fileName}`, this.file.content || '', {
-						baseDir: this.baseDir
-					});
-				}
-			);
-		});
+		// $effect.root(() => {
+		// 	watch(
+		// 		() => this.file.content,
+		// 		() => {
+		// 			if (!this.file.content || this.file.content === '') {
+		// 				return;
+		// 			}
+
+		// 			writeTextFile(`${this.path}/${this.file.fileName}`, this.file.content || '', {
+		// 				baseDir: this.baseDir
+		// 			});
+		// 		}
+		// 	);
+		// });
+
+		app.on('boot', () => this.init?.());
+	}
+
+	/**
+	 * Initializes the overlay by reading the content of the files.
+	 * This is called when the app boots up.
+	 *
+	 * @memberof Overlay
+	 * @return {Promise<void>} A promise that resolves when the overlay is initialized.
+	 */
+	async activate() {
+		return this;
 	}
 
 	/**
@@ -101,31 +109,16 @@ export abstract class Overlay implements Overlay {
 			await mkdir(this.path, { baseDir: this.baseDir });
 		}
 
-		for await (const file of this.files) {
-			file.content = '';
-			const fileExists = await exists(`${this.path}/${file.fileName}`, {
-				baseDir: this.baseDir
-			});
-
-			if (!fileExists) {
-				await writeTextFile(`${this.path}/${file.fileName}`, file.content || '', {
-					baseDir: this.baseDir
-				});
-				await file.onInstall?.(file);
-			}
-
-			file.content = await readTextFile(`${this.path}/${file.fileName}`, {
-				baseDir: this.baseDir
-			});
-		}
-
-		app.on('boot', () => this.init?.());
-
+		this.emit('overlay:installed');
 		return this;
 	}
 
-	selectFile(file: OverlayFile) {
-		this.file = file;
+	getFiles() {
+		return readDir(this.path, { baseDir: this.baseDir });
+	}
+
+	isInstalled() {
+		return exists(this.path, { baseDir: this.baseDir });
 	}
 
 	get slug() {

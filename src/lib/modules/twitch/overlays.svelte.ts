@@ -15,7 +15,11 @@ export class Overlays extends Bootable {
 		const overlays = [new ChatOverlay(), new OppBotOverlay()];
 
 		for await (const overlay of overlays) {
-			this.overlays.push(await overlay.install());
+			if (!(await overlay.isInstalled())) {
+				await overlay.install();
+			}
+
+			this.overlays.push(await overlay.activate());
 		}
 	}
 
