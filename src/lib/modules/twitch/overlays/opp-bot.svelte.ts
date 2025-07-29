@@ -39,8 +39,9 @@ export class OppBotOverlay extends Overlay {
 			console.log(this.files);
 		});
 
-		app.game.on('LOBBY:STARTED', async () => {
-			app.socket.publish('game.lobby.started', app.game.lobby?.toJSON());
+		app.game.on('LOBBY:STARTED', (lobby) => {
+			app.socket.publish('game.lobby.started', lobby);
+			// setTimeout(() => app.socket.publish('game.lobby.started', app.game.lobby?.toJSON()));
 		});
 
 		app.game.on('LOBBY:DESTROYED', () => {

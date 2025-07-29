@@ -6,8 +6,15 @@
 	"permissions": [
 		"core:default",
 		"cors-fetch:default",
-		"opener:allow-open-path",
 		"opener:allow-reveal-item-in-dir",
+		{
+			"identifier": "opener:allow-open-path",
+			"allow": [
+				{
+					"path": "$APPDATA/**"
+				}
+			]
+		},
 		"store:default",
 		"oauth:allow-start",
 		"oauth:allow-cancel",

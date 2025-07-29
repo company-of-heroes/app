@@ -6,7 +6,7 @@ import { Lobby } from './lobby.svelte';
 export type GameEvents = {
 	'GAME:LAUNCHED': never;
 	'GAME:CLOSED': never;
-	'LOBBY:STARTED': never;
+	'LOBBY:STARTED': Lobby;
 	'LOBBY:GAMEOVER': never;
 	'LOBBY:DESTROYED': never;
 };

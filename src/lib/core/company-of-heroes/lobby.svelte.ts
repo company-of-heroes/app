@@ -40,24 +40,24 @@ const MATCH_TYPES = {
  * @private
  * @static
  */
-const LEADERBOARD_IDS = {
-	'1v1_us': 1,
-	'1v1_heer': 2,
-	'1v1_brit': 3,
-	'1v1_panzer': 4,
-	'2v2_us': 5,
-	'2v2_heer': 6,
-	'2v2_brit': 7,
-	'2v2_panzer': 8,
-	'3v3_us': 9,
-	'3v3_heer': 10,
-	'3v3_brit': 11,
-	'3v3_panzer': 12,
-	'4v4_us': 13,
-	'4v4_heer': 14,
-	'4v4_brit': 15,
-	'4v4_panzer': 16
-} as const;
+export const LEADERBOARD_IDS = {
+	'1v1_us': 4,
+	'1v1_heer': 5,
+	'1v1_brit': 6,
+	'1v1_panzer': 7,
+	'2v2_us': 8,
+	'2v2_heer': 9,
+	'2v2_brit': 10,
+	'2v2_panzer': 11,
+	'3v3_us': 12,
+	'3v3_heer': 13,
+	'3v3_brit': 14,
+	'3v3_panzer': 15,
+	'4v4_us': 16,
+	'4v4_heer': 17,
+	'4v4_brit': 18,
+	'4v4_panzer': 19
+};
 
 /**
  * Type for valid leaderboard keys combining match type and faction.
@@ -400,6 +400,7 @@ export class Lobby {
 	toJSON() {
 		return {
 			sessionId: this.sessionId,
+			isRanked: this.isRanked,
 			map: this.map,
 			players: this.players.map((player) => ({
 				...player
