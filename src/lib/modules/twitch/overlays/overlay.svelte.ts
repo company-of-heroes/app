@@ -1,5 +1,7 @@
 import { app, type App } from '$core/app';
-import { BaseDirectory, exists, mkdir, readDir } from '@tauri-apps/plugin-fs';
+import { appDataDir, basename, resolve } from '@tauri-apps/api/path';
+import { BaseDirectory, exists, mkdir, readDir, remove, writeFile } from '@tauri-apps/plugin-fs';
+import { Command } from '@tauri-apps/plugin-shell';
 import Emittery from 'emittery';
 import slugify from 'slugify';
 
@@ -48,6 +50,15 @@ export abstract class Overlay extends Emittery<OverlayEvents> implements Overlay
 	 */
 	abstract path: string;
 	/**
+	 * The URL to the zip file containing the overlay files.
+	 * This should point to the location where the overlay files are hosted.
+	 *
+	 * @type {string}
+	 * @abstract
+	 * @memberof Overlay
+	 */
+	abstract zipUrl: string;
+	/**
 	 * A derived property that indicates whether the overlay is currently active.
 	 * It checks if the current overlay instance is the one loaded in the app.
 	 *
@@ -81,11 +92,26 @@ export abstract class Overlay extends Emittery<OverlayEvents> implements Overlay
 	 * @return {Promise<Overlay>} A promise that resolves to the installed overlay instance.
 	 */
 	async install() {
+		console.log(`Installing overlay: ${this.name}`);
 		const exist = await exists(this.path, { baseDir: this.baseDir });
 
 		if (!exist) {
-			await mkdir(this.path, { baseDir: this.baseDir });
+			await mkdir(this.path, { baseDir: this.baseDir, recursive: true });
 		}
+
+		const request = await fetch(this.zipUrl);
+		const zipData = await request.arrayBuffer();
+		const filname = await basename(this.zipUrl);
+
+		await writeFile(`${this.path}/${filname}`, new Uint8Array(zipData), {
+			baseDir: this.baseDir
+		});
+
+		const path = await resolve(await appDataDir(), this.path);
+		const extractCommand = Command.create('tar', ['-xf', `${path}/${filname}`, '-C', path]);
+
+		await extractCommand.execute();
+		await remove(`${path}/${filname}`);
 
 		await this.emit('installing');
 		return this;
