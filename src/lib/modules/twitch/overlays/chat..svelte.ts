@@ -1,49 +1,32 @@
-import type { App } from '$core/app';
-import { Overlay, type OverlayFile } from './overlay.svelte';
-import { Command } from '@tauri-apps/plugin-shell';
-import ChatOverlayZip from '$lib/files/overlays/chat-overlay.zip?raw';
-import { dataDir } from '@tauri-apps/api/path';
-import { fetch } from '@tauri-apps/plugin-http';
+import { Overlay } from './overlay.svelte';
 
 export class ChatOverlay extends Overlay {
 	name = 'Chat Overlay';
 
 	path = 'overlays/chat';
 
+	zipUrl =
+		'https://github.com/fknoobs/app/raw/refs/heads/master/src/lib/files/overlays/chat-overlay.zip';
+
 	constructor() {
 		super();
 
 		this.on('init', async (app) => {
-			//const buffer = atob(ChatOverlayZip);
-			// await writeFile(`${this.path}/chat-overlay.zip`, zipData, { baseDir: this.baseDir });
-			// const extractCommand = Command.create(
-			// 	'tar',
-			// 	['-xf', `${this.path}/chat-overlay.zip`, '-C', this.path],
-			// 	{
-			// 		cwd: await dataDir()
-			// 	}
-			// );
-			// await extractCommand.execute();
-		});
-	}
+			const twitch = app.getModule('twitch');
 
-	init(app: App) {
-		const twitch = app.getModule('twitch');
-		console.log(app);
-		twitch.chatClient?.onMessage((channel, user, text, msg) => {
-			app.socket.publish('twitch.chat', {
-				type: 'message',
-				data: {
-					channel,
-					user,
-					text: this.replaceEmotesWithImages(text, msg.emoteOffsets),
-					msg
-				}
+			twitch.chatClient?.onMessage((channel, user, text, msg) => {
+				app.socket.publish('twitch.chat', {
+					type: 'message',
+					data: {
+						channel,
+						user,
+						text: this.replaceEmotesWithImages(text, msg.emoteOffsets),
+						msg
+					}
+				});
 			});
 		});
 	}
-
-	onInstall() {}
 
 	private replaceEmotesWithImages(text: string, emoteOffsets: Map<string, string[]>): string {
 		let result = text;

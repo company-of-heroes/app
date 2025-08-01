@@ -59,7 +59,17 @@
 				},
 				{
 					"name": "tar",
-					"cmd": "tar"
+					"cmd": "tar",
+					"args": [
+						"-xf",
+						{
+							"validator": "\\S+"
+						},
+						"-C",
+						{
+							"validator": "\\S+"
+						}
+					]
 				}
 			]
 		},
@@ -95,6 +105,9 @@
 				},
 				{
 					"url": "http://*.reliclink.com"
+				},
+				{
+					"url": "https://github.com/fknoobs/*"
 				}
 			]
 		},
