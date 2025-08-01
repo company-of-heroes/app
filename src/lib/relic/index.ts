@@ -46,7 +46,9 @@ export class RelicClient {
 			return null;
 		}
 
-		member.leaderboardStats = leaderboardStats;
+		member.leaderboardStats = leaderboardStats.filter(
+			(stat) => stat.statgroup_id === member.personal_statgroup_id
+		);
 
 		return member;
 	}
@@ -73,7 +75,9 @@ export class RelicClient {
 			return null;
 		}
 
-		member.leaderboardStats = leaderboardStats;
+		member.leaderboardStats = leaderboardStats.filter(
+			(stat) => stat.statgroup_id === member.personal_statgroup_id
+		);
 
 		return member;
 	}
@@ -98,7 +102,9 @@ export class RelicClient {
 
 		// Add leaderboardStats to each member
 		filteredMembers.forEach((member) => {
-			member.leaderboardStats = result.leaderboardStats;
+			member.leaderboardStats = result.leaderboardStats.filter(
+				(stat) => stat.statgroup_id === member.personal_statgroup_id
+			);
 		});
 
 		return filteredMembers;

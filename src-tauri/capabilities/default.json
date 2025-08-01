@@ -6,7 +6,15 @@
 	"permissions": [
 		"core:default",
 		"cors-fetch:default",
-		"opener:default",
+		"opener:allow-reveal-item-in-dir",
+		{
+			"identifier": "opener:allow-open-path",
+			"allow": [
+				{
+					"path": "$APPDATA/**"
+				}
+			]
+		},
 		"store:default",
 		"oauth:allow-start",
 		"oauth:allow-cancel",
@@ -19,6 +27,7 @@
 		"fs:allow-exists",
 		"fs:allow-create",
 		"fs:allow-write-text-file",
+		"fs:allow-write-file",
 		"fs:scope-download-recursive",
 		"fs:scope-resource-recursive",
 		"fs:read-all",
@@ -47,6 +56,10 @@
 				{
 					"name": "binaries/fknoobs",
 					"sidecar": true
+				},
+				{
+					"name": "tar",
+					"cmd": "tar"
 				}
 			]
 		},
@@ -76,6 +89,9 @@
 				},
 				{
 					"url": "https://*.reliclink.com"
+				},
+				{
+					"url": "http://*.reliclink.com"
 				},
 				{
 					"url": "http://*.reliclink.com"

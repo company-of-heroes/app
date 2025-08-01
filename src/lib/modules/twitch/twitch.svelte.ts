@@ -9,6 +9,7 @@ import { ElevenLabs } from './elevenlabs.svelte';
 import { TTS } from './tts.svelte';
 import { merge } from 'lodash-es';
 import { Preditctions } from './predictions.svelte';
+import { Overlays } from './overlays.svelte';
 
 export type TwitchSettings = {
 	enabled: boolean;
@@ -179,6 +180,14 @@ export class Twitch extends Module {
 	public predictions: Preditctions | undefined = $state(undefined);
 
 	/**
+	 * Overlays module instance.
+	 *
+	 * @readonly
+	 * @type {Overlays}
+	 */
+	readonly overlays = new Overlays();
+
+	/**
 	 * Initializes the Twurple ApiClient with the provided credentials.
 	 * Logs an error if the access token is missing.
 	 */
@@ -209,6 +218,13 @@ export class Twitch extends Module {
 		}
 	}
 
+	/**
+	 * Disconnects the Twitch client and clears the user and access token.
+	 * This is called when the user logs out or when the module is destroyed.
+	 *
+	 * @public
+	 * @returns {Promise<void>}
+	 */
 	async disconnect() {
 		await this.chatClient?.quit();
 
@@ -219,6 +235,13 @@ export class Twitch extends Module {
 		this.isConnected = false;
 	}
 
+	/**
+	 * Destroys the Twitch module instance.
+	 * This is called when the module is no longer needed.
+	 *
+	 * @public
+	 * @returns {void}
+	 */
 	destroy() {
 		this.disconnect();
 	}

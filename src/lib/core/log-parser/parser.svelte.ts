@@ -9,6 +9,7 @@ import { game, Lobby } from '$core/company-of-heroes';
 import { relic } from '$lib/relic';
 
 let lobby: Lobby | undefined;
+let matchType: number = 0;
 
 export class Log extends emittery<LogEvents> {
 	private lines: string[] = [];
@@ -79,10 +80,7 @@ export class Log extends emittery<LogEvents> {
 
 				case 'LOG:LOBBY:POPULATING:MATCH:TYPE': {
 					const { type } = data as LogEvents[typeof event];
-
-					if (lobby) {
-						lobby.matchType = type;
-					}
+					matchType = type;
 
 					break;
 				}
@@ -111,10 +109,10 @@ export class Log extends emittery<LogEvents> {
 							player.profile = profiles.find((profile) => profile.profile_id === player.playerId);
 						});
 
+						lobby.matchType = matchType;
 						game.lobby = lobby;
 						game.isIngame = true;
-
-						game.emit('LOBBY:STARTED');
+						game.emit('LOBBY:STARTED', lobby);
 					}
 
 					break;
@@ -153,6 +151,8 @@ export class Log extends emittery<LogEvents> {
 					game.isIngame = false;
 					game.emit('LOBBY:GAMEOVER');
 
+					matchType = 0;
+
 					break;
 				}
 
@@ -163,8 +163,9 @@ export class Log extends emittery<LogEvents> {
 
 					game.emit('LOBBY:DESTROYED');
 
-					// game.lobby = undefined;
-					// lobby = undefined;
+					game.lobby = undefined;
+					lobby = undefined;
+					matchType = 0;
 
 					break;
 				}
@@ -211,7 +212,9 @@ export class Log extends emittery<LogEvents> {
 
 	private async createWatcher() {
 		this.interval = window.setInterval(async () => {
-			const contents = await readTextFile(app.settings.companyOfHeroesConfigPath + '/warnings.log');
+			const contents = await readTextFile(
+				app.settings.companyOfHeroesConfigPath + '/warnings - kopie (2).log'
+			);
 			const lines = contents.split(/\r\n|\r|\n/).filter((line) => line.trim() !== '');
 
 			this.oldLength = this.newLength;
