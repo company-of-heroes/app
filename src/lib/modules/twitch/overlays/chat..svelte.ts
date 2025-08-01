@@ -1,59 +1,35 @@
-import HTML from '$lib/overlays/chat/chat.overlay.html?raw';
-import JS from '$lib/overlays/chat/chat.overlay.js?raw';
-import CSS from '$lib/overlays/chat/chat.overlay.css?raw';
+import type { App } from '$core/app';
 import { Overlay, type OverlayFile } from './overlay.svelte';
-import { BaseDirectory, writeTextFile } from '@tauri-apps/plugin-fs';
-import { app } from '$core/app';
+import { Command } from '@tauri-apps/plugin-shell';
+import ChatOverlayZip from '$lib/files/overlays/chat-overlay.zip?raw';
+import { dataDir } from '@tauri-apps/api/path';
+import { fetch } from '@tauri-apps/plugin-http';
 
 export class ChatOverlay extends Overlay {
 	name = 'Chat Overlay';
 
 	path = 'overlays/chat';
 
-	files: OverlayFile[] = $state([
-		{
-			fileName: 'chat.overlay.html',
-			language: 'html',
-			icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6.77842 8.51894L3 12.2974L6.77842 16.0758" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M17.2216 8.51894L21 12.2974L17.2216 16.0758" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M9.27113 18.5947L14.7289 6" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`,
-			onInstall: async (files) => {
-				await writeTextFile(`${this.path}/${files.fileName}`, HTML, {
-					baseDir: BaseDirectory.AppData
-				});
-			}
-		},
-		{
-			fileName: 'chat.overlay.js',
-			language: 'javascript',
-			icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8.38255 7.31818H10.5104V14.4176C10.5104 15.0739 10.3629 15.6439 10.0679 16.1278C9.77625 16.6117 9.37024 16.9846 8.84988 17.2464C8.32952 17.5083 7.72464 17.6392 7.03525 17.6392C6.42208 17.6392 5.86526 17.5315 5.36479 17.3161C4.86763 17.0973 4.47322 16.7659 4.18155 16.3217C3.88989 15.8743 3.74571 15.3125 3.74902 14.6364H5.89178C5.89841 14.9048 5.9531 15.1352 6.05584 15.3274C6.1619 15.5163 6.30608 15.6622 6.48837 15.7649C6.67398 15.8643 6.89273 15.9141 7.14462 15.9141C7.40977 15.9141 7.63349 15.8577 7.81578 15.745C8.00139 15.629 8.14225 15.46 8.23837 15.2379C8.33449 15.0159 8.38255 14.7424 8.38255 14.4176V7.31818ZM17.8137 10.2464C17.7739 9.84541 17.6032 9.53385 17.3016 9.31179C17 9.08972 16.5906 8.97869 16.0736 8.97869C15.7223 8.97869 15.4256 9.02841 15.1837 9.12784C14.9417 9.22396 14.7561 9.35819 14.6269 9.53054C14.5009 9.70289 14.4379 9.89844 14.4379 10.1172C14.4313 10.2995 14.4694 10.4586 14.5523 10.5945C14.6385 10.7304 14.7561 10.848 14.9053 10.9474C15.0544 11.0436 15.2268 11.1281 15.4223 11.201C15.6179 11.2706 15.8267 11.3303 16.0487 11.38L16.9635 11.5987C17.4076 11.6982 17.8153 11.8307 18.1865 11.9964C18.5577 12.1622 18.8792 12.366 19.151 12.608C19.4228 12.8499 19.6333 13.1349 19.7824 13.4631C19.9349 13.7912 20.0128 14.1674 20.0161 14.5916C20.0128 15.2147 19.8537 15.755 19.5388 16.2124C19.2272 16.6664 18.7765 17.0194 18.1865 17.2713C17.5999 17.5199 16.8923 17.6442 16.0637 17.6442C15.2417 17.6442 14.5258 17.5182 13.9159 17.2663C13.3094 17.0144 12.8354 16.6416 12.4941 16.1477C12.156 15.6506 11.9787 15.0357 11.9621 14.3033H14.0452C14.0684 14.6446 14.1662 14.9297 14.3385 15.1584C14.5142 15.3838 14.7478 15.5545 15.0395 15.6705C15.3345 15.7831 15.6676 15.8395 16.0388 15.8395C16.4034 15.8395 16.7199 15.7865 16.9884 15.6804C17.2602 15.5743 17.4706 15.4268 17.6198 15.2379C17.7689 15.049 17.8435 14.8319 17.8435 14.5866C17.8435 14.358 17.7755 14.1657 17.6396 14.0099C17.5071 13.8542 17.3115 13.7216 17.053 13.6122C16.7978 13.5028 16.4846 13.4034 16.1134 13.3139L15.0047 13.0355C14.1463 12.8267 13.4685 12.5002 12.9713 12.0561C12.4742 11.612 12.2272 11.0137 12.2306 10.2614C12.2272 9.64489 12.3913 9.1063 12.7227 8.6456C13.0575 8.1849 13.5165 7.82528 14.0999 7.56676C14.6832 7.30824 15.3461 7.17898 16.0885 7.17898C16.8442 7.17898 17.5038 7.30824 18.0672 7.56676C18.634 7.82528 19.0748 8.1849 19.3896 8.6456C19.7045 9.1063 19.8669 9.63991 19.8769 10.2464H17.8137Z" fill="#F59E0B"/>
-            </svg>`,
-			onInstall: async (files) => {
-				await writeTextFile(`${this.path}/${files.fileName}`, JS, {
-					baseDir: BaseDirectory.AppData
-				});
-			}
-		},
-		{
-			fileName: 'chat.overlay.css',
-			language: 'css',
-			icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4.77778 6.66667C4.77778 5.19391 5.97169 4 7.44444 4C7.93536 4 8.33333 4.39797 8.33333 4.88889C8.33333 5.3798 7.93536 5.77778 7.44444 5.77778C6.95353 5.77778 6.55556 6.17575 6.55556 6.66667V10.1675C6.55556 10.8682 6.28251 11.5173 5.82622 12C6.28251 12.4827 6.55556 13.1318 6.55556 13.8325V17.3333C6.55556 17.8243 6.95353 18.2222 7.44444 18.2222C7.93536 18.2222 8.33333 18.6202 8.33333 19.1111C8.33333 19.602 7.93536 20 7.44444 20C5.97169 20 4.77778 18.8061 4.77778 17.3333V13.8325C4.77778 13.4246 4.50018 13.0691 4.10448 12.9701L3.6733 12.8623C3.2776 12.7635 3 12.4079 3 12C3 11.5921 3.2776 11.2365 3.6733 11.1377L4.10448 11.0299C4.50018 10.9309 4.77778 10.5754 4.77778 10.1675V6.66667ZM19 6.66667C19 5.19391 17.8061 4 16.3333 4C15.8424 4 15.4444 4.39797 15.4444 4.88889C15.4444 5.3798 15.8424 5.77778 16.3333 5.77778C16.8243 5.77778 17.2222 6.17575 17.2222 6.66667V10.1675C17.2222 10.8682 17.4953 11.5173 17.9516 12C17.4953 12.4827 17.2222 13.1318 17.2222 13.8325V17.3333C17.2222 17.8243 16.8243 18.2222 16.3333 18.2222C15.8424 18.2222 15.4444 18.6202 15.4444 19.1111C15.4444 19.602 15.8424 20 16.3333 20C17.8061 20 19 18.8061 19 17.3333V13.8325C19 13.4246 19.2776 13.0691 19.6733 12.9701L20.1044 12.8623C20.5002 12.7635 20.7778 12.4079 20.7778 12C20.7778 11.5921 20.5002 11.2365 20.1044 11.1377L19.6733 11.0299C19.2776 10.9309 19 10.5754 19 10.1675V6.66667Z" fill="#8B5CF6"/>
-            </svg>`,
-			onInstall: async (files) => {
-				await writeTextFile(`${this.path}/${files.fileName}`, CSS, {
-					baseDir: BaseDirectory.AppData
-				});
-			}
-		}
-	]);
+	constructor() {
+		super();
 
-	init() {
+		this.on('init', async (app) => {
+			//const buffer = atob(ChatOverlayZip);
+			// await writeFile(`${this.path}/chat-overlay.zip`, zipData, { baseDir: this.baseDir });
+			// const extractCommand = Command.create(
+			// 	'tar',
+			// 	['-xf', `${this.path}/chat-overlay.zip`, '-C', this.path],
+			// 	{
+			// 		cwd: await dataDir()
+			// 	}
+			// );
+			// await extractCommand.execute();
+		});
+	}
+
+	init(app: App) {
 		const twitch = app.getModule('twitch');
-
+		console.log(app);
 		twitch.chatClient?.onMessage((channel, user, text, msg) => {
 			app.socket.publish('twitch.chat', {
 				type: 'message',
@@ -67,11 +43,12 @@ export class ChatOverlay extends Overlay {
 		});
 	}
 
+	onInstall() {}
+
 	private replaceEmotesWithImages(text: string, emoteOffsets: Map<string, string[]>): string {
 		let result = text;
 		const replacements: Array<{ start: number; end: number; replacement: string }> = [];
 
-		// Collect all replacements
 		emoteOffsets.forEach((positions, emoteId) => {
 			positions.forEach((pos) => {
 				const [start, end] = pos.split('-').map(Number);
@@ -86,10 +63,8 @@ export class ChatOverlay extends Overlay {
 			});
 		});
 
-		// Sort replacements by position (descending) to avoid offset issues
 		replacements.sort((a, b) => b.start - a.start);
 
-		// Apply replacements
 		replacements.forEach(({ start, end, replacement }) => {
 			result = result.substring(0, start) + replacement + result.substring(end + 1);
 		});

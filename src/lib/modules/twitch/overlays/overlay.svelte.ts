@@ -1,14 +1,6 @@
-import { app } from '$core/app';
-import {
-	BaseDirectory,
-	exists,
-	mkdir,
-	readTextFile,
-	writeTextFile,
-	readDir
-} from '@tauri-apps/plugin-fs';
+import { app, type App } from '$core/app';
+import { BaseDirectory, exists, mkdir, readDir } from '@tauri-apps/plugin-fs';
 import Emittery from 'emittery';
-import { watch } from 'runed';
 import slugify from 'slugify';
 
 export type OverlayFile = {
@@ -20,11 +12,12 @@ export type OverlayFile = {
 };
 
 export interface Overlay {
-	init?(): void;
+	init?(app: App): void;
 }
 
 export type OverlayEvents = {
-	'overlay:installed': never;
+	installing: never;
+	init: App;
 };
 
 export abstract class Overlay extends Emittery<OverlayEvents> implements Overlay {
@@ -68,22 +61,7 @@ export abstract class Overlay extends Emittery<OverlayEvents> implements Overlay
 	constructor() {
 		super();
 
-		// $effect.root(() => {
-		// 	watch(
-		// 		() => this.file.content,
-		// 		() => {
-		// 			if (!this.file.content || this.file.content === '') {
-		// 				return;
-		// 			}
-
-		// 			writeTextFile(`${this.path}/${this.file.fileName}`, this.file.content || '', {
-		// 				baseDir: this.baseDir
-		// 			});
-		// 		}
-		// 	);
-		// });
-
-		app.on('boot', () => this.init?.());
+		app.on('boot', () => this.emit('init', app));
 	}
 
 	/**
@@ -109,7 +87,7 @@ export abstract class Overlay extends Emittery<OverlayEvents> implements Overlay
 			await mkdir(this.path, { baseDir: this.baseDir });
 		}
 
-		this.emit('overlay:installed');
+		await this.emit('installing');
 		return this;
 	}
 

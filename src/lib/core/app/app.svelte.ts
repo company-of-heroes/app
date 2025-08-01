@@ -41,7 +41,7 @@ export type AppEvents = {
 /**
  * Manages the global state and core functionalities of the application.
  */
-class App extends Emittery<AppEvents> {
+export class App extends Emittery<AppEvents> {
 	/**
 	 * Reactive array holding the application's navigation routes.
 	 *

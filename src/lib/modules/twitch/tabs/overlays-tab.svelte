@@ -82,10 +82,7 @@
 <OverlayNavigation overlays={twitch.overlays.overlays} onSelectOverlay={handleSelectOverlay} />
 
 <div class="mb-4 flex max-w-xl flex-col gap-2">
-	<Input
-		value={`http://localhost:49220/${twitch.overlays.overlay.path}/{your-overlay-entry}.html`}
-		disabled
-	/>
+	<Input value={`http://localhost:49220/${twitch.overlays.overlay.path}/index.html`} disabled />
 	<p class="text-secondary-400 mb-2">Use this page as a browser source in OBS Studio</p>
 </div>
 

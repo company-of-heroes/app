@@ -9,7 +9,7 @@ import { game, Lobby } from '$core/company-of-heroes';
 import { relic } from '$lib/relic';
 
 let lobby: Lobby | undefined;
-let matchType: number | undefined;
+let matchType: number = 0;
 
 export class Log extends emittery<LogEvents> {
 	private lines: string[] = [];
@@ -45,7 +45,6 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:POPULATING': {
-					console.log('LOBBY POPULATING');
 					lobby = new Lobby('', [], 0);
 
 					break;
@@ -105,7 +104,7 @@ export class Log extends emittery<LogEvents> {
 						}
 
 						const profiles = await relic.getProfileByIds(profileIds);
-						console.log(profiles);
+
 						lobby.players.forEach((player) => {
 							player.profile = profiles.find((profile) => profile.profile_id === player.playerId);
 						});
@@ -113,7 +112,6 @@ export class Log extends emittery<LogEvents> {
 						lobby.matchType = matchType;
 						game.lobby = lobby;
 						game.isIngame = true;
-
 						game.emit('LOBBY:STARTED', lobby);
 					}
 
@@ -153,6 +151,8 @@ export class Log extends emittery<LogEvents> {
 					game.isIngame = false;
 					game.emit('LOBBY:GAMEOVER');
 
+					matchType = 0;
+
 					break;
 				}
 
@@ -165,7 +165,7 @@ export class Log extends emittery<LogEvents> {
 
 					game.lobby = undefined;
 					lobby = undefined;
-					matchType = undefined;
+					matchType = 0;
 
 					break;
 				}

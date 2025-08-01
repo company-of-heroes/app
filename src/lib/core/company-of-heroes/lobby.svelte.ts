@@ -147,7 +147,29 @@ export class Lobby {
 	 * @public
 	 * @type {number | undefined}
 	 */
-	matchType = $state<number>();
+	matchType = $derived.by(() => {
+		if (!this.isRanked) {
+			return 0;
+		}
+
+		if (this.players.length === 2) {
+			return 1;
+		}
+
+		if (this.players.length === 4) {
+			return 2;
+		}
+
+		if (this.players.length === 6) {
+			return 3;
+		}
+
+		if (this.players.length === 8) {
+			return 4;
+		}
+
+		return 0;
+	});
 
 	/**
 	 * Derived state indicating whether this is a ranked match.
@@ -157,7 +179,15 @@ export class Lobby {
 	 * @readonly
 	 * @type {boolean}
 	 */
-	isRanked = $derived(this.matchType ? this.matchType >= 1 && this.matchType <= 7 : false);
+	isRanked = $derived.by(() => {
+		const hasRankedPlayers = this.players.some((player) => player.ranking && player.ranking > 0);
+
+		if (hasRankedPlayers) {
+			return true;
+		}
+
+		return false;
+	});
 
 	/**
 	 * Derived state organizing players into teams.
