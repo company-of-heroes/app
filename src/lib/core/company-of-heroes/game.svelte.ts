@@ -145,5 +145,3 @@ export class Game extends Emittery<GameEvents> {
 		this.didNotify = false;
 	}
 }
-
-export const game = new Game();

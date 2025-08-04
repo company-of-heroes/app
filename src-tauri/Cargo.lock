@@ -1183,6 +1183,7 @@ dependencies = [
  "futures-util",
  "serde",
  "serde_json",
+ "socket2",
  "tauri",
  "tauri-build",
  "tauri-plugin-cors-fetch",

@@ -5,7 +5,7 @@ import { readTextFile } from '@tauri-apps/plugin-fs';
 import { watch as track, watchOnce as trackOnce } from 'runed';
 import { inferTypes } from '$lib/utils';
 import { app } from '$core/app';
-import { game, Lobby } from '$core/company-of-heroes';
+import { Lobby } from '$core/company-of-heroes';
 import { relic } from '$lib/relic';
 
 let lobby: Lobby | undefined;
@@ -35,11 +35,11 @@ export class Log extends emittery<LogEvents> {
 						return;
 					}
 
-					game.isRunning = true;
-					game.steamId = steamId.toString();
-					game.profile = profile;
+					app.game.isRunning = true;
+					app.game.steamId = steamId.toString();
+					app.game.profile = profile;
 
-					game.emit('GAME:LAUNCHED');
+					app.game.emit('GAME:LAUNCHED');
 
 					break;
 				}
@@ -110,9 +110,9 @@ export class Log extends emittery<LogEvents> {
 						});
 
 						lobby.matchType = matchType;
-						game.lobby = lobby;
-						game.isIngame = true;
-						game.emit('LOBBY:STARTED', lobby);
+						app.game.lobby = lobby;
+						app.game.isIngame = true;
+						app.game.emit('LOBBY:STARTED', lobby);
 					}
 
 					break;
@@ -129,12 +129,12 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:PLAYER:RESULT': {
-					if (!game.profile || !lobby) {
+					if (!app.game.profile || !lobby) {
 						return;
 					}
 
 					const { playerId, result } = data as LogEvents[typeof event];
-					const player = lobby?.getPlayerById(game.profile.profile_id);
+					const player = lobby?.getPlayerById(app.game.profile.profile_id);
 
 					if (!player) {
 						return;
@@ -148,8 +148,8 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:GAMEOVER': {
-					game.isIngame = false;
-					game.emit('LOBBY:GAMEOVER');
+					app.game.isIngame = false;
+					app.game.emit('LOBBY:GAMEOVER');
 
 					matchType = 0;
 
@@ -158,12 +158,12 @@ export class Log extends emittery<LogEvents> {
 
 				case 'LOG:LOBBY:DESTROYED': {
 					if (lobby) {
-						game.playedLobbies.push(lobby);
+						app.game.playedLobbies.push(lobby);
 					}
 
-					game.emit('LOBBY:DESTROYED');
+					app.game.emit('LOBBY:DESTROYED');
 
-					game.lobby = undefined;
+					app.game.lobby = undefined;
 					lobby = undefined;
 					matchType = 0;
 
@@ -171,9 +171,9 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				// case 'LOG:ENDED': {
-				// 	game.isRunning = false;
+				// 	app.game.isRunning = false;
 
-				// 	game.emit('GAME:CLOSED');
+				// 	app.game.emit('GAME:CLOSED');
 
 				// 	break;
 				// }
@@ -198,7 +198,7 @@ export class Log extends emittery<LogEvents> {
 						this.oldLength = 0;
 						this.newLength = 0;
 
-						game.reset();
+						app.game.reset();
 						this.createWatcher();
 					}
 				);

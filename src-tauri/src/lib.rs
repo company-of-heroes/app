@@ -12,6 +12,7 @@ use tauri_plugin_oauth::start;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_tungstenite::accept_async;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use socket2::{Domain, Socket, Type};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -144,7 +145,7 @@ async fn handle_overlay_request(mut stream: TcpStream, app_handle: AppHandle) ->
 
 async fn start_overlay_http_server(app_handle: AppHandle) {
     let addr = "127.0.0.1:49220";
-    let listener = match TcpListener::bind(addr).await {
+    let listener = match create_tcp_listener(addr).await {
         Ok(listener) => listener,
         Err(e) => {
             eprintln!("Failed to bind overlay HTTP server to {}: {}", addr, e);
@@ -201,6 +202,49 @@ struct WebSocketState {
     server_handle: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
 }
 
+// Helper function to check if a port is available
+async fn is_port_available(port: u16) -> bool {
+    match TcpListener::bind(format!("127.0.0.1:{}", port)).await {
+        Ok(_) => true,
+        Err(_) => false,
+    }
+}
+
+// Helper function to create a TcpListener with socket options
+async fn create_tcp_listener(addr: &str) -> Result<TcpListener, std::io::Error> {
+    let socket_addr: SocketAddr = addr.parse().map_err(|_| {
+        std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid address")
+    })?;
+    
+    let socket = Socket::new(Domain::IPV4, Type::STREAM, None)?;
+    socket.set_reuse_address(true)?;
+    
+    #[cfg(not(windows))]
+    socket.set_reuse_port(true)?;
+    
+    socket.bind(&socket_addr.into())?;
+    socket.listen(128)?;
+    socket.set_nonblocking(true)?;
+    
+    let std_listener: std::net::TcpListener = socket.into();
+    TcpListener::from_std(std_listener)
+}
+
+#[command]
+async fn check_port_availability(port: u16) -> Result<bool, String> {
+    Ok(is_port_available(port).await)
+}
+
+#[command]
+async fn find_available_port(start_port: u16) -> Result<u16, String> {
+    for port in start_port..start_port + 100 {
+        if is_port_available(port).await {
+            return Ok(port);
+        }
+    }
+    Err("No available port found in range".to_string())
+}
+
 #[command]
 async fn start_websocket_server(
     port: u16,
@@ -214,21 +258,51 @@ async fn start_websocket_server(
             server_handle.abort();
 
             // Clear all connections
-            let mut connections = state.connections.lock().unwrap();
-            connections.clear();
-            let mut topics = state.topics.lock().unwrap();
-            topics.clear();
-            drop(connections); // Release the lock before continuing
-            drop(topics);
+            {
+                let mut connections = state.connections.lock().unwrap();
+                connections.clear();
+            }
+            {
+                let mut topics = state.topics.lock().unwrap();
+                topics.clear();
+            }
 
             println!("Stopped existing WebSocket server to restart on new port");
         }
     }
+    
+    // Give a small delay to ensure the socket is released
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
     let addr = format!("127.0.0.1:{}", port);
-    let listener = TcpListener::bind(&addr)
-        .await
-        .map_err(|e| format!("Failed to bind to {}: {}", addr, e))?;
+    
+    // First check if port is available (unless we're restarting)
+    let was_running = {
+        let handle = state.server_handle.lock().unwrap();
+        handle.is_some()
+    };
+    
+    if !was_running && !is_port_available(port).await {
+        return Err(format!("Port {} is already in use", port));
+    }
+    
+    // Try to bind with retries and better error handling
+    let listener = {
+        let mut attempts = 0;
+        let max_attempts = 5;
+        
+        loop {
+            match create_tcp_listener(&addr).await {
+                Ok(listener) => break listener,
+                Err(e) if attempts < max_attempts => {
+                    attempts += 1;
+                    println!("Failed to bind to {} (attempt {}): {}. Retrying...", addr, attempts, e);
+                    tokio::time::sleep(tokio::time::Duration::from_millis(200 * attempts)).await;
+                },
+                Err(e) => return Err(format!("Failed to bind to {} after {} attempts: {}", addr, max_attempts, e)),
+            }
+        }
+    };
 
     let addr_clone = addr.clone(); // Clone for the return message
     let connections = state.connections.clone();
@@ -260,16 +334,30 @@ async fn start_websocket_server(
 
 #[command]
 async fn stop_websocket_server(state: tauri::State<'_, WebSocketState>) -> Result<String, String> {
-    let mut handle = state.server_handle.lock().unwrap();
+    let server_handle = {
+        let mut handle = state.server_handle.lock().unwrap();
+        handle.take()
+    };
 
-    if let Some(server_handle) = handle.take() {
+    if let Some(server_handle) = server_handle {
         server_handle.abort();
 
-        // Clear all connections
-        let mut connections = state.connections.lock().unwrap();
-        connections.clear();
-        let mut topics = state.topics.lock().unwrap();
-        topics.clear();
+        // Clear all connections and close them gracefully
+        {
+            let mut connections = state.connections.lock().unwrap();
+            for (_, connection) in connections.drain() {
+                // Try to send a close message to each connection
+                let _ = connection.sender.send("Server shutting down".to_string());
+            }
+        }
+        
+        {
+            let mut topics = state.topics.lock().unwrap();
+            topics.clear();
+        }
+
+        // Give a moment for cleanup
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
         Ok("WebSocket server stopped".to_string())
     } else {
@@ -614,6 +702,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             start_server,
             get_active_window_title,
+            check_port_availability,
+            find_available_port,
             start_websocket_server,
             stop_websocket_server,
             broadcast_websocket_message,

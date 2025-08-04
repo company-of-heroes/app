@@ -74,6 +74,30 @@
 			]
 		},
 		{
+			"identifier": "shell:allow-spawn",
+			"allow": [
+				{
+					"args": [
+						"serve",
+						{
+							"validator": "\\S+"
+						},
+						{
+							"validator": "\\S+"
+						},
+						{
+							"validator": "\\S+"
+						},
+						{
+							"validator": "\\S+"
+						}
+					],
+					"name": "binaries/pocketbase",
+					"sidecar": true
+				}
+			]
+		},
+		{
 			"identifier": "http:default",
 			"allow": [
 				{

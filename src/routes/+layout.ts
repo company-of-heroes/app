@@ -13,5 +13,5 @@ export const load = async () => {
 		return;
 	}
 
-	await app.boot();
+	await app.start();
 };

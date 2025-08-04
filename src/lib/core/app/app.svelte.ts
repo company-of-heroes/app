@@ -3,13 +3,15 @@ import type { Component } from 'svelte';
 import { page } from '$app/state';
 import { defaultTwitchSettings, Twitch } from '$lib/modules/twitch/twitch.svelte';
 import { load, type Store } from '@tauri-apps/plugin-store';
-import { documentDir } from '@tauri-apps/api/path';
+import { appDataDir, documentDir } from '@tauri-apps/api/path';
 import Emittery from 'emittery';
-import { game, type Game } from '$core/company-of-heroes';
+import { Game } from '$core/company-of-heroes';
 import { PathMatcher } from '$lib/utils/path-matcher';
 import { Log } from '$lib/core/log-parser';
 import { replays, type Replays } from './replays.svelte';
-import { socket } from './socket.svelte';
+import { Socket } from './socket.svelte';
+import { Pocketbase } from './pocketbase.svelte';
+import { Settings } from './settings.svelte';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -28,20 +30,28 @@ export type Route = {
 /**
  * Defines the structure for application settings.
  */
-export type Settings = {
-	isStreamer: boolean;
-	companyOfHeroesConfigPath: string;
-	//[key: string]: any;
-} & Partial<{ [K in keyof Modules]: InstanceType<Modules[K]>['settings'] }>;
+// export type Settings = {
+// 	isStreamer: boolean;
+// 	companyOfHeroesConfigPath: string;
+// 	pocketbase: {
+// 		email: string;
+// 		password: string;
+// 		host: string;
+// 		port: number;
+// 	};
+// 	//[key: string]: any;
+// } & Partial<{ [K in keyof Modules]: InstanceType<Modules[K]>['settings'] }>;
 
 export type AppEvents = {
 	boot: App;
+	install: never;
 };
 
 /**
  * Manages the global state and core functionalities of the application.
  */
 export class App extends Emittery<AppEvents> {
+	isBooted: boolean = $state(false);
 	/**
 	 * Reactive array holding the application's navigation routes.
 	 *
@@ -98,25 +108,7 @@ export class App extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Settings}
 	 */
-	settings: Settings = $state({
-		/**
-		 * Indicates if the user is a streamer.
-		 * When enabled some more advanced features are available.
-		 */
-		isStreamer: false,
-		/**
-		 * Path to the Company of Heroes configuration folder.
-		 * This is used to retrieve game settings, configurations and logs.
-		 */
-		companyOfHeroesConfigPath: '',
-		/**
-		 * Twitch module settings.
-		 * This includes the Twitch API client ID and other related settings.
-		 *
-		 * The default settings are defined in the Twitch module.
-		 */
-		twitch: defaultTwitchSettings
-	});
+	settings!: Settings;
 
 	/**
 	 * A record mapping module names (strings) to their corresponding class constructors.
@@ -143,7 +135,7 @@ export class App extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Game}
 	 */
-	game: Game = game;
+	game!: Game;
 
 	/**
 	 * Instance of the Replays class, which manages replay files and their data.
@@ -160,7 +152,9 @@ export class App extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Socket}
 	 */
-	socket = socket;
+	socket!: Socket;
+
+	pocketbase!: Pocketbase;
 
 	/**
 	 * Asynchronously initializes the application state.
@@ -171,14 +165,24 @@ export class App extends Emittery<AppEvents> {
 	 * @async
 	 * @returns {Promise<void>} A promise that resolves when initialization is complete.
 	 */
-	async boot() {
-		this.store = await load('app.json');
-		this.settings = (await this.store.get('settings')) ?? this.settings;
+	async start() {
+		const rootDir = await appDataDir();
 
-		if (!this.settings.companyOfHeroesConfigPath) {
-			this.settings.companyOfHeroesConfigPath =
-				(await documentDir()).replaceAll('\\', '/') + '/My Games/Company of Heroes Relaunch';
+		if (!rootDir) {
+			await this.emit('install');
 		}
+
+		this.settings = await new Settings().boot();
+		this.pocketbase = await new Pocketbase().boot();
+		this.socket = await new Socket().boot();
+		this.game = await new Game();
+
+		console.log(this.pocketbase);
+
+		await this.emit('boot', this).then(() => {
+			console.log('App booted successfully');
+			this.isBooted = true;
+		});
 
 		for await (const moduleConstructor of Object.values(this.modules)) {
 			const mod = new moduleConstructor() as InstanceType<Modules[keyof Modules]>;
@@ -194,10 +198,9 @@ export class App extends Emittery<AppEvents> {
 
 		const log = new Log();
 		log.start();
-		socket.start();
 		//log.on('ISREADY', () => this.replays.load());
 
-		this.emit('boot', this);
+		//await this.emit('boot', this);
 	}
 
 	/**
@@ -212,8 +215,8 @@ export class App extends Emittery<AppEvents> {
 
 		if (!module) {
 			if (import.meta.env.DEV && window) {
-				window.location.reload();
-				module = this.activeModules.get(name);
+				//window.location.reload();
+				//module = this.activeModules.get(name);
 
 				if (!module) {
 					throw new Error(`Module ${name} not found after reload`);
@@ -229,7 +232,4 @@ export class App extends Emittery<AppEvents> {
 	}
 }
 
-/**
- * Singleton instance of the App class, providing global access to application state and methods.
- */
 export const app = new App();
