@@ -13,9 +13,10 @@
 <Tabs.Trigger
 	{...props}
 	class={cn(
-		'bg-secondary-800 px-4 py-1.5',
-		'hover:bg-secondary-900 hover:cursor-pointer',
-		'data-[state=active]:bg-primary data-[state=active]:text-black',
+		'rounded px-4 py-1.5',
+		'not-disabled:hover:bg-secondary-900 not-disabled:hover:cursor-pointer',
+		'not-disabled:data-[state=active]:text-primary not-disabled:data-[state=active]:bg-gray-700',
+		'disabled:text-gray-500',
 		variant === 'secondary' &&
 			'data-[state=active]:bg-primary/5 border-b-2 border-b-gray-500 bg-transparent data-[state=active]:text-white'
 	)}

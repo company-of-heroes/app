@@ -15,6 +15,17 @@
 				}
 			]
 		},
+		{
+			"identifier": "opener:allow-open-url",
+			"allow": [
+				{
+					"url": "https://tauri.app"
+				},
+				{
+					"url": "https://id.twitch.tv/*"
+				}
+			]
+		},
 		"store:default",
 		"oauth:allow-start",
 		"oauth:allow-cancel",

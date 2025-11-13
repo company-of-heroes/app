@@ -1,9 +1,6 @@
 <script lang="ts">
-	import * as Nav from '$lib/components/ui/nav';
 	import { app } from '$core/app';
-	import { Toaster } from 'svelte-sonner';
-	import { Dialog } from '$lib/components/ui/dialog';
-	import GearIcon from 'phosphor-svelte/lib/Gear';
+	import * as Nav from '$lib/components/ui/nav';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -17,54 +14,19 @@
 	import '../app.css';
 
 	let { children } = $props();
-	let Component = $derived(app.route?.component);
 </script>
 
 <svelte:boundary>
 	{#snippet pending()}{/snippet}
-	<div class="bg-secondary-950 flex h-screen overflow-hidden">
-		<aside class="bg-primary/2 border-secondary-700 w-62 border-r p-[4px]">
-			<Nav.Root class="bg-secondary-900 h-full">
-				{#each app.routes as { href, title, path, component } (href)}
-					<Nav.Link {href} {component} {path}>{title}</Nav.Link>
-				{/each}
-				<a href="/settings" class="bg-secondary-800 mt-auto flex items-center px-4 py-3">
-					<GearIcon />
-					<span class="ml-2">Settings</span>
-				</a>
+	<div class="flex h-screen w-screen overflow-hidden">
+		<div class="min-w-[300px] border-r-2 border-gray-500 bg-gray-700">
+			<Nav.Root>
+				<Nav.Link href="/dashboard">Dashboard</Nav.Link>
+				<Nav.Link href="/twitch">Twitch</Nav.Link>
 			</Nav.Root>
-		</aside>
-		<div class="bg-secondary-950 flex flex-1 flex-col">
-			<div class="border-secondary-700 bg-primary/2 border-b p-[4px]">
-				<h1 class="bg-secondary-900 px-8 py-6 text-3xl font-bold">{app.route?.title}</h1>
-			</div>
-			<div class="flex flex-grow flex-col overflow-auto">
-				<main class="flex flex-1 flex-col p-8">
-					{#if Component}
-						<Component />
-					{:else}
-						{@render children()}
-					{/if}
-				</main>
-			</div>
 		</div>
+		<main class="grow p-8">
+			{@render children()}
+		</main>
 	</div>
 </svelte:boundary>
-
-<Toaster
-	expand={true}
-	toastOptions={{
-		unstyled: true,
-		classes: {
-			toast: 'bottom-0 right-0 flex gap-2 items-center px-4 py-2 shadow',
-			title: 'text-secondary-900',
-			description: 'text-secondary-900',
-			actionButton: 'text-secondary-900',
-			cancelButton: 'text-secondary-900',
-			closeButton: 'text-secondary-900',
-			success: '[&_svg]:fill-black bg-primary'
-		}
-	}}
-/>
-
-<Dialog />
