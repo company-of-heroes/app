@@ -1,7 +1,7 @@
 import type { Listener } from '@d-fischer/typed-event-emitter';
 import { ApiClient } from '@twurple/api';
 import { StaticAuthProvider, TokenInfo } from '@twurple/auth';
-import { Plugin } from '../plugin.svelte';
+import { Plugin } from '$plugins/plugin.svelte';
 import { watch } from 'runed';
 import { ChatClient, ChatMessage } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';

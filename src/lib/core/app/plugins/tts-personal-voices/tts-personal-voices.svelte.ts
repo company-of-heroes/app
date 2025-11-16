@@ -1,10 +1,10 @@
 import type { HelixCustomReward } from '@twurple/api';
 import type { EventSubChannelRedemptionAddEvent, EventSubSubscription } from '@twurple/eventsub';
-import type { TTSVoice } from './tts/providers/provider.svelte';
+import type { TTSVoice } from '$plugins/twitch/tts/providers/provider.svelte';
 import { Plugin } from '../plugin.svelte';
-import { tts, twitch } from '.';
+import { tts, twitch } from '$plugins/twitch';
 import { watch } from 'runed';
-import { app } from '../app.svelte';
+import { app } from '$core/app';
 import { error } from '@tauri-apps/plugin-log';
 import { debounce } from 'lodash-es';
 

@@ -11,7 +11,8 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			'$core/*': 'src/lib/core/*',
-			'$workers/*': 'src/lib/workers'
+			'$workers/*': 'src/lib/workers',
+			'$plugins/*': 'src/lib/core/app/plugins/*'
 		},
 		prerender: {
 			entries: ['*', '/replays/[fileName]']

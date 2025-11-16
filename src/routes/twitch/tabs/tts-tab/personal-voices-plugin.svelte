@@ -39,7 +39,7 @@
 				};
 			}) || []}
 			placeholder="Select voices..."
-			bind:value={ttsPersonalVoices.settings.voices}
+			bind:value={ttsPersonalVoices.settings.providers[tts.settings.provider].voices}
 		>
 			{#snippet icon()}
 				<UserSoundIcon />
