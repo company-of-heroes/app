@@ -14,7 +14,6 @@
 	};
 
 	let { value = $bindable(), items, contentProps, placeholder, ...restProps }: Props = $props();
-
 	const selectedLabel = $derived(items.find((item) => item.value === value)?.label);
 </script>
 
@@ -26,6 +25,7 @@ from the perspective of the consumer of this component, it will be typed appropr
 <Select.Root bind:value={value as never} {...restProps}>
 	<Select.Trigger
 		class={cn(
+			'rounded-md',
 			'group bg-secondary-800 h-10 min-w-28 cursor-pointer truncate px-4 text-left',
 			'border-secondary-600 flex max-w-3xs items-center justify-between border'
 		)}

@@ -14,13 +14,13 @@
 	} = $props();
 </script>
 
-<div class="flex items-center gap-2">
+<div class="flex items-center gap-4">
 	<Checkbox.Root
 		bind:checked
 		bind:ref
 		{...restProps}
 		class={cn(
-			'border-secondary-900 flex size-7 items-center justify-center overflow-clip rounded-md border-1'
+			'border-secondary-900 flex size-7 items-center justify-center overflow-clip rounded-md border'
 		)}
 		{id}
 	>

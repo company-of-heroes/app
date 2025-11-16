@@ -5,6 +5,7 @@ import PEFlag from '$lib/files/pe.png';
 import CWFlag from '$lib/files/cw.png';
 import USFlag from '$lib/files/us.png';
 import { isBoolean, isString } from 'lodash-es';
+import type { ChatMessage } from '@twurple/chat';
 
 /**
  * Race enum for Company of Heroes factions
@@ -414,4 +415,52 @@ export function secondsToTimestamp(seconds: number): string {
 	}
 
 	return [minutes, remainingSeconds].map((num) => num.toString().padStart(2, '0')).join(':');
+}
+
+/**
+ * Strips emote substrings from a Twitch chat message based on emote tags
+ *
+ * @param text - Original chat message text
+ * @param msg - ChatMessage object containing emote tag information
+ * @returns Message text with emotes removed
+ */
+export function stripEmotes(text: string, msg: ChatMessage): string {
+	// Twurple exposes tags as a Map; use robust access in case of version diffs
+	const tagsMap: Map<string, string> | undefined = (msg as any)?.tags;
+	const emotesTag: string | undefined = tagsMap?.get?.('emotes');
+
+	if (!emotesTag) {
+		// No emotes tagged, return original text
+		return text;
+	}
+
+	// emotes tag format example: "28087:0-6/25:8-12,14-18"
+	const ranges: Array<[number, number]> = [];
+	for (const group of emotesTag.split('/')) {
+		const [, indices] = group.split(':');
+		if (!indices) continue;
+		for (const r of indices.split(',')) {
+			const [startStr, endStr] = r.split('-');
+			const start = Number(startStr);
+			const end = Number(endStr);
+			if (!Number.isNaN(start) && !Number.isNaN(end)) {
+				ranges.push([start, end]);
+			}
+		}
+	}
+
+	if (!ranges.length) {
+		return text;
+	}
+
+	// Remove from right to left to keep indices valid
+	ranges.sort((a, b) => b[0] - a[0]);
+	let result = text;
+	for (const [start, end] of ranges) {
+		result = result.slice(0, start) + result.slice(end + 1);
+	}
+
+	// Normalize whitespace and trim
+	result = result.replace(/\s{2,}/g, ' ').trim();
+	return result;
 }

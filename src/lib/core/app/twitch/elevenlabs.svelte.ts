@@ -1,63 +1,80 @@
-import type { Voice, User } from '@elevenlabs/elevenlabs-js/api';
-import { app } from '$core/app';
-import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
+import type { User, Voice as ElevenlabsVoice } from '@elevenlabs/elevenlabs-js/api';
 import { watch } from 'runed';
-import { Module } from '$lib/modules/module.svelte';
+import { Plugin } from '../plugin.svelte';
+import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 
-export type CustomVoice = {
-	files: string[];
-	name: string;
+export type ElevenLabsSettings = {
+	apiKey: string;
 	voiceId: string;
 };
 
-export class ElevenLabs extends Module {
-	enabled = $derived(
-		app.settings.twitch.tts.enabled && app.settings.twitch.tts.elevenlabsApiKey !== ''
-	);
+export type Voice = ElevenlabsVoice & {
+	isDeleting?: boolean;
+};
+
+export class ElevenLabs extends Plugin<ElevenLabsSettings> {
+	name = 'elevenlabs-tts-provider';
 
 	client: ElevenLabsClient | undefined = $state(undefined);
 
-	voices: Voice[] = $state([]);
-
-	customVoices: CustomVoice[] = $state([]);
-
 	user: User | undefined = $state(undefined);
 
-	async init() {
-		this.client = new ElevenLabsClient({ apiKey: app.settings.twitch.tts.elevenlabsApiKey });
+	voices: Voice[] = $state([]);
 
-		$effect.root(() => {
-			watch(
-				() => app.settings.twitch.tts.elevenlabsApiKey,
-				() => {
-					if (app.settings.twitch.tts.elevenlabsApiKey) {
-						this.client = new ElevenLabsClient({
-							apiKey: app.settings.twitch.tts.elevenlabsApiKey
-						});
-						this.getData();
-					} else {
-						this.client = undefined;
-					}
+	customVoices: Voice[] = $derived.by(
+		() => this.voices.filter((v) => v.labels?.isCustomVoice === 'true') || []
+	);
+
+	async enable() {
+		watch(
+			() => [this.enabled, this.settings.apiKey],
+			() => {
+				if (this.enabled && this.settings.apiKey) {
+					console.log('ElevenLabs TTS Provider enabled');
+					this.client = new ElevenLabsClient({ apiKey: this.settings.apiKey });
+
+					this.getUser();
+					this.getVoices();
+				} else {
+					this.disable();
 				}
-			);
-		});
+			}
+		);
 	}
 
-	async getData() {
-		const voicesResponse = await this.client?.voices.getAll();
-
-		this.voices = voicesResponse?.voices || [];
-		this.user = await this.client?.user.get();
-		this.customVoices = (await app.store.get<CustomVoice[]>('twitchCustomVoices')) || [];
-
-		// const voicesToRemove = this.voices.filter(
-		// 	(v) => v.name?.startsWith('Statement') || v.name?.startsWith('Xcom')
-		// );
-
-		// voicesToRemove.forEach((v) => {
-		// 	this.client?.voices.delete(v.voiceId);
-		// });
+	getUser() {
+		return this.client?.user.get().then((user) => (this.user = user));
 	}
 
-	async destroy() {}
+	getVoices() {
+		return this.client?.voices.getAll().then(({ voices }) => (this.voices = voices));
+	}
+
+	deleteVoice(voice: Voice) {
+		voice.isDeleting = true;
+
+		this.client?.voices
+			.delete(voice.voiceId)
+			.then(() => {
+				this.voices = this.voices.filter((v) => v.voiceId !== voice.voiceId);
+			})
+			.finally(() => {
+				voice.isDeleting = false;
+			});
+	}
+
+	async disable() {
+		this.client = undefined;
+		this.user = undefined;
+		this.voices = [];
+	}
+
+	defaultSettings(): ElevenLabsSettings {
+		return {
+			apiKey: '',
+			voiceId: ''
+		};
+	}
 }
+
+export const elevenlabs = new ElevenLabs();

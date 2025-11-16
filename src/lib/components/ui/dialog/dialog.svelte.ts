@@ -1,6 +1,6 @@
 import Emittery from 'emittery';
 import { watch } from 'runed';
-import type { Snippet } from 'svelte';
+import type { Component, Snippet } from 'svelte';
 
 interface DialogEvents {
 	close: never;
@@ -14,7 +14,7 @@ class Dialog extends Emittery<DialogEvents> {
 
 	description = $state<string | Snippet>('');
 
-	component = $state<Snippet | undefined>(undefined);
+	component = $state<Component | undefined>(undefined);
 
 	close() {
 		this.open = false;

@@ -1,23 +1,25 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 @theme {
 	--default-font-family: 'TT Mussels';
-	--font-heading: 'TT Barrels';
+	--font-heading: 'Nunito Sans';
 
 	/* Primary Color Shades (Base derived from #fcf58b -> oklch(approx 97% 0.19 106.5)) */
-	/* Using a mid-tone base with the same hue */
-	--color-primary: oklch(0.95 0.13 105.22); /* Base (500) */
-	--color-primary-50: oklch(99% 0.08 106.5);
-	--color-primary-100: oklch(96.8% 0.12 106.5); /* Close to #fcf58b */
-	--color-primary-200: oklch(92% 0.15 106.5);
-	--color-primary-300: oklch(86% 0.18 106.5);
-	--color-primary-400: oklch(80% 0.2 106.5);
-	--color-primary-500: oklch(74% 0.22 106.5);
-	--color-primary-600: oklch(68% 0.21 106.5);
-	--color-primary-700: oklch(62% 0.2 106.5);
-	--color-primary-800: oklch(55% 0.19 106.5);
-	--color-primary-900: oklch(48% 0.18 106.5);
-	--color-primary-950: oklch(40% 0.17 106.5);
+	/* Regenerated Primary Color Shades based on #F8C630 (golden yellow) */
+	/* Base (#F8C630) mapped to oklch(87% 0.15 80) ~ approximate; steps adjust lightness & chroma */
+	--color-primary: oklch(0.88 0.11 80);
+	--color-primary-50: oklch(0.99 0.03 80); /* Very light tint */
+	--color-primary-100: oklch(0.96 0.06 80);
+	--color-primary-200: oklch(0.92 0.09 80);
+	--color-primary-300: oklch(0.88 0.11 80); /* Base */
+	--color-primary-400: oklch(0.84 0.13 80);
+	--color-primary-500: oklch(0.87 0.15 80);
+	--color-primary-600: oklch(0.78 0.14 80);
+	--color-primary-700: oklch(0.7 0.13 80);
+	--color-primary-800: oklch(0.62 0.11 80);
+	--color-primary-900: oklch(0.54 0.1 80);
+	--color-primary-950: oklch(0.46 0.09 80);
 
 	/* Secondary Color Shades (Base: oklch(57% 0.006 285) - Mid-tone Gray) */
 	--color-secondary: oklch(57% 0.006 285); /* Base */

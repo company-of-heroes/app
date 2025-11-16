@@ -1,68 +1,111 @@
-import { Module } from '$lib/modules/module.svelte';
 import { ApiClient } from '@twurple/api';
-import { app } from '../app.svelte';
 import { StaticAuthProvider, TokenInfo } from '@twurple/auth';
-import { ChatClient } from '@twurple/chat';
-import { TTS } from './tts.svelte';
+import { Plugin } from '../plugin.svelte';
+import { watch } from 'runed';
+import { ChatClient, ChatMessage } from '@twurple/chat';
+import { EventSubWsListener } from '@twurple/eventsub-ws';
+import { error } from '@tauri-apps/plugin-log';
+import type { Listener } from '@d-fischer/typed-event-emitter';
 
-export class Twitch extends Module {
-	enabled = $derived(app.settings.twitch.enabled && app.settings.twitch.accessToken !== null);
+export type ValidatedTokenInfo = TokenInfo & { userId: string };
 
-	/**
-	 * The token information retrieved from Twitch.
-	 *
-	 * @public
-	 * @type {TokenInfo | undefined}
-	 */
-	public tokenInfo: TokenInfo | undefined = $state(undefined);
+export type TwitchSettings = {
+	accessToken: string | null;
+	clientId: string;
+};
 
-	/**
-	 * The Twurple API client instance.
-	 * Undefined until initialized.
-	 *
-	 * @public
-	 * @type {ApiClient | undefined}
-	 */
-	public client: ApiClient | undefined = $state(undefined);
+export interface TwitchEvents {
+	'chat-message': { channel: string; user: string; message: string; msg: ChatMessage };
+}
 
-	/**
-	 * The Twurple ChatClient instance.
-	 *
-	 * @public
-	 * @type {ChatClient | undefined}
-	 */
-	public chatClient: ChatClient | undefined = $state(undefined);
+export class Twitch extends Plugin<TwitchSettings, TwitchEvents> {
+	name = 'twitch';
 
-	/**
-	 * Personal TTS module instance.
-	 *
-	 * @public
-	 * @type {TTS | undefined}
-	 */
-	public tts: TTS | undefined = $state(undefined);
+	client: ApiClient | null = $state(null);
 
-	async init() {
-		const authProvider = new StaticAuthProvider(
-			app.settings.twitch.clientId,
-			app.settings.twitch.accessToken!
-		);
-		this.client = new ApiClient({ authProvider });
-		this.tokenInfo = await this.client.getTokenInfo();
+	token: ValidatedTokenInfo | null = $state(null);
 
-		this.chatClient = new ChatClient({
-			authProvider,
-			channels: [this.tokenInfo.userName!] // ['summit1g']
+	chatClient: ChatClient | null = $state(null);
+
+	eventSub: EventSubWsListener | undefined = $state(undefined);
+
+	private chatListener: Listener | null = null;
+
+	enable(): Promise<this> {
+		return new Promise((resolve) => {
+			watch(
+				() => this.settings.accessToken,
+				() => {
+					if (!this.settings.accessToken) {
+						this.disable();
+						resolve(this);
+						return;
+					}
+
+					const authProvider = new StaticAuthProvider(
+						this.settings.clientId,
+						this.settings.accessToken
+					);
+
+					this.client = new ApiClient({ authProvider });
+
+					this.eventSub = new EventSubWsListener({ apiClient: this.client });
+					this.eventSub.start();
+
+					this.chatClient = new ChatClient({ authProvider });
+					this.chatClient.connect();
+
+					this.chatListener = this.chatClient.onMessage((channel, user, message, msg) => {
+						this.emit('chat-message', { channel, user, message, msg });
+					});
+
+					this.client
+						.getTokenInfo()
+						.then((info) => {
+							this.token = info as ValidatedTokenInfo;
+						})
+						.catch((err) => {
+							error(`Failed to validate Twitch token: ${err}`);
+						})
+						.finally(() => {
+							resolve(this);
+						});
+				}
+			);
+
+			watch(
+				() => this.token?.userName,
+				(userName, prev) => {
+					if (!userName) {
+						return;
+					}
+
+					if (prev) {
+						this.chatClient?.part(prev);
+					}
+
+					this.chatClient?.join(userName).catch(console.error);
+				}
+			);
 		});
-		await this.chatClient.connect();
-
-		this.tts = await new TTS().register();
-
-		this.isInitialized = true;
 	}
 
-	destroy() {
-		this.isInitialized = false;
-		this.client = undefined;
-		this.tokenInfo = undefined;
+	async disable() {
+		if (this.chatListener) {
+			this.chatClient?.removeListener(this.chatListener);
+		}
+
+		this.client = null;
+		this.token = null;
+		this.chatClient = null;
+	}
+
+	defaultSettings() {
+		return {
+			accessToken: null,
+			clientId: 'kp4erttmb696osn4inqrlg6qmv5eaq'
+		};
 	}
 }
+
+export const twitch = new Twitch();

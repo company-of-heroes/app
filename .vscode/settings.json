@@ -5,5 +5,11 @@
         "typescript",
         "javascriptreact",
         "svelte"
+    ],
+    "tailwindCSS.experimental.classRegex": [
+        [
+            "classes:\\s*{\\s*\\w+:\\s*['\"]([^'\"]*)['\"]",
+            "([\\w-]+)"
+        ]
     ]
 }

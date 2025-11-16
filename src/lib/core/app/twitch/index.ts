@@ -1,4 +1,6 @@
-import { Twitch } from './twitch.svelte';
-import { TTS } from './tts.svelte';
+import { Twitch, twitch } from './twitch.svelte';
+import { TTS, tts } from './tts';
+import { ElevenLabs, elevenlabs } from './elevenlabs.svelte';
+import { TTSPersonalVoices, ttsPersonalVoices } from './tts-personal-voices.svelte';
 
-export { Twitch, TTS };
+export { Twitch, twitch, TTS, tts, ElevenLabs, elevenlabs, TTSPersonalVoices, ttsPersonalVoices };

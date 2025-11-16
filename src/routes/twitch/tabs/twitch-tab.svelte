@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
-	import { app } from '$core/app';
 	import { cancel, onUrl, start, onInvalidUrl } from '@fabianlars/tauri-plugin-oauth';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import { toast } from 'svelte-sonner';
 	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
 	import ArrowIcon from 'phosphor-svelte/lib/ArrowRight';
-	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils';
 	import { Checkbox, Input } from '$lib/components/ui/input';
+	import { twitch } from '$core/app/twitch';
 
-	let module = app.modules.get('twitch');
 	let isStreamOnline = $state(false);
 	let isStartingOAuth = $state(false);
 
@@ -30,7 +28,7 @@
 			'scope',
 			'user:read:email chat:read chat:edit channel:read:redemptions channel:manage:redemptions channel:manage:predictions channel:read:predictions'
 		);
-		url.searchParams.set('client_id', app.settings.twitch.clientId);
+		url.searchParams.set('client_id', twitch.settings.clientId);
 		url.searchParams.set('state', state);
 
 		openUrl(url.toString());
@@ -48,7 +46,7 @@
 			}
 
 			toast.success('Successfully connected to Twitch');
-			app.settings.twitch.accessToken = access_token as string;
+			twitch.settings.accessToken = access_token as string;
 
 			cancel(port);
 			isStartingOAuth = false;
@@ -61,7 +59,7 @@
 	};
 
 	const disconnect = () => {
-		app.settings.twitch.accessToken = null;
+		twitch.settings.accessToken = null;
 		toast.success('Successfully disconnected from Twitch');
 	};
 </script>
@@ -69,26 +67,26 @@
 <div class="mb-4 flex flex-col items-start gap-2">
 	<div class="mb-4 flex flex-col gap-2">
 		<Label>Enable twitch integration</Label>
-		<Checkbox bind:checked={app.settings.twitch.enabled} label="Enabled" />
+		<Checkbox bind:checked={twitch.settings.enabled} label="Enabled" />
 	</div>
 	<div class="mb-4 flex w-full flex-col gap-2">
 		<Label>Twitch Client ID</Label>
 		<Input
 			type="text"
-			bind:value={app.settings.twitch.clientId}
+			bind:value={twitch.settings.clientId}
 			placeholder="Enter your Twitch Client ID"
-			disabled={!app.settings.twitch.enabled}
+			disabled={!twitch.settings.enabled}
 		/>
 	</div>
-	{#if app.settings.twitch.enabled}
-		{#if module.tokenInfo}
+	{#if twitch.settings.enabled}
+		{#if twitch.token}
 			<span class="flex items-center gap-2">
 				<Button variant="destructive" onclick={disconnect} type="button">Disconnect</Button>
 				<ArrowIcon size="20" />
 				<Button
 					variant="secondary"
 					class="bg-secondary-900"
-					onclick={() => openUrl(`https://www.twitch.tv/${module.tokenInfo!.userName}`)}
+					onclick={() => openUrl(`https://www.twitch.tv/${twitch.token!.userId}`)}
 				>
 					<span
 						class={cn(
@@ -96,7 +94,7 @@
 							isStreamOnline && 'bg-green-500 ring-green-500/30'
 						)}
 					></span>
-					<span class="text-secondary-300">{module.tokenInfo!.userName}</span>
+					<span class="text-secondary-300">{twitch.token.userName}</span>
 				</Button>
 			</span>
 		{:else}
@@ -113,33 +111,4 @@
 			</Button>
 		{/if}
 	{/if}
-	<!-- {#if module?.isConnected}
-		<span class="flex items-center gap-2">
-			<Button variant="destructive" onclick={disconnect} type="button">Disconnect</Button>
-			<ArrowIcon size="20" />
-			<Button
-				variant="secondary"
-				class="bg-secondary-900"
-				onclick={() => openUrl(`https://www.twitch.tv/${module.user?.userName}`)}
-			>
-				<span
-					class={cn(
-						'me-2 h-2 w-2 rounded-full bg-red-500 ring-4 ring-red-500/30',
-						isStreamOnline && 'bg-green-500 ring-green-500/30'
-					)}
-				></span>
-				<span class="text-secondary-300">{module.user?.userName}</span>
-			</Button>
-		</span>
-	{:else}
-		<Button
-			variant="secondary"
-			type="button"
-			onclick={startOAuthFlow}
-			class="bg-[#6441a5] shadow-none"
-		>
-			<TwitchIcon size="22" weight="bold" />
-			Connect Twitch
-		</Button>
-	{/if} -->
 </div>

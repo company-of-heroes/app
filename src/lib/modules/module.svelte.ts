@@ -4,21 +4,22 @@ import Emittery from 'emittery';
 import { watch } from 'runed';
 import { error } from '@tauri-apps/plugin-log';
 
-export type ModuleInterface = {
-	isForStreamer?: boolean;
-	settings?: Record<string, unknown>;
-};
-
-export type ModuleEvents = {
+export type ModuleEvents<Settings extends Record<string, unknown> | undefined> = {
 	beforeInit: never;
-	afterInit: { app: typeof app; module: Module };
+	afterInit: { app: typeof app; module: Module<Settings> };
 };
 
-export abstract class Module extends Emittery<ModuleEvents> implements ModuleInterface {
+export interface Module<Settings extends Record<string, unknown> | undefined = undefined> {
+	defaultSettings(): Settings;
+}
+
+export abstract class Module<Settings extends Record<string, unknown> | undefined = undefined>
+	extends Emittery<ModuleEvents<Settings>>
+	implements Module<Settings>
+{
 	/**
 	 * Indicates whether the module is for streamers.
 	 *
-	 * @readonly
 	 * @type {boolean}
 	 * @default false
 	 */
@@ -27,28 +28,43 @@ export abstract class Module extends Emittery<ModuleEvents> implements ModuleInt
 	/**
 	 * Indicates whether the module is initialized.
 	 *
-	 * @readonly
 	 * @type {boolean}
+	 * @default false
 	 */
 	isInitialized: boolean = $state(false);
 
 	/**
-	 * Indicates whether the module is enabled.
-	 * This is reactive and will update when the settings change
+	 * The settings for the module.
 	 *
-	 * @readonly
-	 * @type {boolean}
+	 * @type {Settings}
+	 * @default undefined
 	 */
-	abstract enabled: boolean;
+	settings: Settings = $state(undefined) as Settings;
 
 	/**
-	 * Settings for the module.
-	 * These should be configurable in the UI.
+	 * Indicates whether the module is pluggable.
 	 *
-	 * @readonly
-	 * @type {Record<string, unknown>}
+	 * @type {boolean}
+	 * @default false
 	 */
-	readonly settings?: Record<string, unknown> | undefined = $derived({});
+	pluggable = false;
+
+	/**
+	 * Indicates whether the module is enabled.
+	 *
+	 * @type {boolean}
+	 */
+	enabled = $derived.by(
+		() => !!(this.pluggable && this.settings !== undefined && (this.settings as any).enabled)
+	);
+
+	/**
+	 * The name of the module.
+	 *
+	 * @abstract
+	 * @type {string}
+	 */
+	abstract name: string;
 
 	/**
 	 * Registers the module within the app.
@@ -57,7 +73,13 @@ export abstract class Module extends Emittery<ModuleEvents> implements ModuleInt
 	 * @returns {Promise<this>} A promise that resolves when the module is registered.
 	 */
 	register(): Promise<this> {
-		return new Promise((resolve) => {
+		return new Promise(async (resolve) => {
+			this.settings = (await app.store.get<Settings>(this.name)) as Settings;
+
+			if (!this.settings) {
+				this.settings = this.defaultSettings?.();
+			}
+
 			$effect.root(() => {
 				watch(
 					() => this.enabled,
@@ -74,6 +96,14 @@ export abstract class Module extends Emittery<ModuleEvents> implements ModuleInt
 						}
 
 						return resolve(this);
+					}
+				);
+
+				watch(
+					() => $state.snapshot(this.settings),
+					() => {
+						app.store.set(this.name, this.settings);
+						app.store.save();
 					}
 				);
 

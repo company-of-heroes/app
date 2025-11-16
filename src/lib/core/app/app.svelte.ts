@@ -6,9 +6,12 @@ import { PathMatcher } from '$lib/utils/path-matcher';
 import { Store } from '@tauri-apps/plugin-store';
 import { watch } from 'runed';
 import { Twitch } from './twitch';
+import { twitch } from './twitch/twitch.svelte';
 import { SvelteMap } from 'svelte/reactivity';
-import { Replays } from './replays.svelte';
 import { merge } from 'lodash-es';
+import { models } from '@elevenlabs/elevenlabs-js/api';
+import type { Plugins } from '@fknoobs/app';
+import { toast } from 'svelte-sonner';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -30,29 +33,12 @@ export type Route = {
 export type Settings = {
 	isStreamer: boolean;
 	companyOfHeroesConfigPath: string;
-	twitch: {
-		enabled: boolean;
-		accessToken: string | null;
-		clientId: string;
-		tts: {
-			enabled: boolean;
-			provider: 'brian' | 'elevenlabs';
-			messageFormat: string;
-			elevenlabsApiKey: string;
-			elevenlabs: {
-				voiceName: string | undefined;
-			};
-		};
-	};
+	[key: string]: any;
 };
 
 export type AppEvents = {
 	boot: App;
 	install: never;
-};
-
-export type Modules = {
-	twitch: Twitch;
 };
 
 /**
@@ -94,21 +80,7 @@ export class App extends Emittery<AppEvents> {
 	 */
 	settings: Settings = $state({
 		isStreamer: false,
-		companyOfHeroesConfigPath: '',
-		twitch: {
-			enabled: false,
-			accessToken: null,
-			clientId: 'kp4erttmb696osn4inqrlg6qmv5eaq',
-			tts: {
-				enabled: false,
-				provider: 'brian',
-				messageFormat: '{user} said, {message}',
-				elevenlabsApiKey: '',
-				elevenlabs: {
-					voiceName: undefined
-				}
-			}
-		}
+		companyOfHeroesConfigPath: ''
 	});
 
 	/**
@@ -120,15 +92,27 @@ export class App extends Emittery<AppEvents> {
 	store!: Store;
 
 	/**
+	 * Toast notification system.
+	 *
+	 * @public
+	 * @type {typeof toast}
+	 */
+	toast = toast;
+
+	/**
 	 * A reactive map holding instances of application modules.
 	 *
 	 * @public
-	 * @type {SvelteMap<keyof Modules, Modules[keyof Modules]>}
+	 * @type {SvelteMap<keyof Plugins, Plugins[keyof Plugins]>}
 	 */
-	private _modules = new SvelteMap<keyof Modules, Modules[keyof Modules]>();
+	private _plugins = new SvelteMap<keyof Plugins, Plugins[keyof Plugins]>();
 
-	constructor() {
-		super();
+	/**
+	 * Starts the application by loading settings and initializing plugins.
+	 */
+	async start() {
+		this.store = await Store.load('app.json');
+		this.settings = await this.loadSettings();
 
 		$effect.root(() => {
 			watch(
@@ -139,32 +123,45 @@ export class App extends Emittery<AppEvents> {
 				}
 			);
 		});
+
+		for await (const plugin of this._plugins.values()) {
+			await plugin.register();
+		}
 	}
 
-	async start() {
-		this.store = await Store.load('app.json');
-
+	/**
+	 * Loads the application settings from the persistent store.
+	 *
+	 * @returns {Promise<Settings>} A promise that resolves to the loaded settings.
+	 */
+	async loadSettings() {
 		const storedSettings = (await this.store.get('settings')) as Partial<Settings> | undefined;
 
 		if (storedSettings) {
-			this.settings = merge(this.settings, storedSettings);
+			return merge(this.settings, storedSettings);
 		}
 
-		this.modules.set('twitch', await new Twitch().register());
-
-		console.log();
-		//await this.emit('boot', this);
+		return this.settings;
 	}
 
-	get modules() {
-		return {
-			get: <K extends keyof Modules>(key: K): Modules[K] => {
-				return this._modules.get(key) as Modules[K];
-			},
-			set: <K extends keyof Modules>(key: K, value: Modules[K]): typeof this._modules => {
-				return this._modules.set(key, value);
-			}
-		};
+	/**
+	 * Registers a plugin with the application.
+	 *
+	 * @param name - The name of the plugin.
+	 * @param plugin - The plugin instance.
+	 */
+	register<K extends keyof Plugins>(name: K, plugin: Plugins[K]) {
+		this._plugins.set(name, plugin);
+	}
+
+	/**
+	 * Retrieves a registered plugin by its name.
+	 *
+	 * @param name - The name of the plugin to retrieve.
+	 * @returns The plugin instance if found, otherwise undefined.
+	 */
+	getPlugin<K extends keyof Plugins>(name: K): Plugins[K] | undefined {
+		return this._plugins.get(name) as Plugins[K] | undefined;
 	}
 }
 

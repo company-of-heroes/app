@@ -1,9 +1,15 @@
 declare module '@fknoobs/app' {
-	import type { Twitch } from '$lib/modules/twitch/twitch.svelte';
+	import type { Twitch, TTS, TTSPersonalVoices } from '$core/app/twitch';
 	import type { Replays } from '$lib/modules/replay-manager/replays.svelte';
 
-	interface Modules {
-		twitch: typeof Twitch;
+	interface Bootables {
+		twitch: Twitch;
+	}
+
+	interface Plugins {
+		twitch: Twitch;
+		'text-to-speech': TTS;
+		'text-to-speech-custom-characters': TTSPersonalVoices;
 	}
 
 	type RelicProfile = {
