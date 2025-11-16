@@ -1,5 +1,7 @@
 declare module '@fknoobs/app' {
-	import type { Twitch, TTS, TTSPersonalVoices } from '$core/app/twitch';
+	import type { Twitch, TTS } from '$plugins/twitch';
+	import type { TTSPersonalVoices } from '$plugins/tts-personal-voices';
+	import type { TwitchOverlays } from '$core/app/plugins/twitch-overlays';
 	import type { Replays } from '$lib/modules/replay-manager/replays.svelte';
 
 	interface Bootables {
@@ -8,6 +10,7 @@ declare module '@fknoobs/app' {
 
 	interface Plugins {
 		twitch: Twitch;
+		'twitch-overlays': TwitchOverlays;
 		'text-to-speech': TTS;
 		'text-to-speech-custom-characters': TTSPersonalVoices;
 	}

@@ -8,7 +8,7 @@
 	import ArrowIcon from 'phosphor-svelte/lib/ArrowRight';
 	import { cn } from '$lib/utils';
 	import { Checkbox, Input } from '$lib/components/ui/input';
-	import { twitch } from '$core/app/twitch';
+	import { twitch } from '$plugins/twitch';
 
 	let isStreamOnline = $state(false);
 	let isStartingOAuth = $state(false);

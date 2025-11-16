@@ -1,8 +1,9 @@
 import { error } from '@tauri-apps/plugin-log';
 import { watch } from 'runed';
-import { app } from './app.svelte';
+import { app } from '$core/app';
 import { mergeWith, isPlainObject, defaultsDeep } from 'lodash-es';
 import Emittery from 'emittery';
+import type { Component } from 'svelte';
 
 export interface Plugin<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean }
@@ -12,7 +13,8 @@ export interface Plugin<
 
 export abstract class Plugin<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean },
-	Events = {}
+	Events = {},
+	Props extends Record<string, any> = {}
 > extends Emittery<Events> {
 	/**
 	 * The name of the plugin.
@@ -38,9 +40,22 @@ export abstract class Plugin<
 	settings = $state({ enabled: true }) as Settings & { enabled: boolean };
 
 	/**
-	 * Optional cleanup function to be called when the plugin is disabled.
+	 * The components associated with the plugin.
+	 *
+	 * @type {{ component: Component<Props>; props?: Props }[]}
+	 * @default []
 	 */
-	private cleanup: (() => void) | undefined = undefined;
+	components: { component: Component<Props>; props?: Props }[] = $state([]);
+
+	/**
+	 * Adds a component to the plugin's component list.
+	 *
+	 * @param {Component<Props>} component - The Svelte component to add.
+	 * @param {Props} [props] - Optional props to pass to the component.
+	 */
+	addComponent(component: Component<Props>, props?: Props) {
+		this.components.push({ component, props });
+	}
 
 	/**
 	 * Registers the plugin with the application.
@@ -60,7 +75,7 @@ export abstract class Plugin<
 				);
 			}
 
-			this.cleanup = $effect.root(() => {
+			$effect.root(() => {
 				watch(
 					() => this.enabled,
 					() => {

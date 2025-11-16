@@ -1,4 +1,4 @@
-import { Game, type GameEvents } from './game.svelte';
+import { Game, game, type GameEvents } from './game.svelte';
 import { Lobby } from './lobby.svelte';
 
-export { Game, type GameEvents, Lobby };
+export { game, Game, type GameEvents, Lobby };

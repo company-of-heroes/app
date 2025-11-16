@@ -1,10 +1,11 @@
 import type { ChatMessage } from '@twurple/chat';
+import type { TTSVoice } from './providers/provider.svelte.js';
 import { Plugin } from '$plugins/plugin.svelte';
 import { twitch } from '$plugins/twitch';
 import { watch } from 'runed';
 import { stripEmotes } from '$lib/utils';
 import { StreamElementsProvider } from './providers/streamelements.svelte.js';
-import { ElevenlabsProvider } from './providers/elevenlabs.svelte.js';
+import { ElevenlabsProvider } from './providers/elevenlabs';
 
 export type TTSSettings = {
 	provider: string;
@@ -12,6 +13,9 @@ export type TTSSettings = {
 	messageFormat: string;
 	voiceId: string | null;
 	aliases: { username: string; alias: string }[];
+	providers: {
+		[key: string]: any;
+	};
 };
 
 export type TTSEvents = {
@@ -63,7 +67,7 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 		);
 
 		watch(
-			() => this.settings.provider,
+			() => [this.settings.provider, this.provider.defaultVoiceId],
 			() => {
 				this.settings.voiceId = this.provider.defaultVoiceId;
 			}
@@ -163,7 +167,14 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 			announceUser: 'onlyOnce',
 			messageFormat: '{message}',
 			voiceId: null,
-			aliases: []
+			aliases: [],
+			providers: this.providers.reduce(
+				(acc, provider) => {
+					acc[provider.name] = {};
+					return acc;
+				},
+				{} as Record<string, any>
+			)
 		};
 	}
 

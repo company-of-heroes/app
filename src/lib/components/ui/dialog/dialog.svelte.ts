@@ -14,13 +14,29 @@ class Dialog extends Emittery<DialogEvents> {
 
 	description = $state<string | Snippet>('');
 
-	component = $state<Component | undefined>(undefined);
+	component = $state<Component<any> | Snippet | undefined>(undefined);
+
+	props = $state<any>();
+
+	/**
+	 * Type-safe method to set a component with its required props.
+	 * For components without props, you can call it without the second argument.
+	 * For components with required props, TypeScript will enforce passing them.
+	 */
+	setComponent<Props extends Record<string, any>>(
+		component: Component<Props>,
+		...args: Props extends Record<string, never> ? [] : [props: Props]
+	) {
+		this.component = component;
+		this.props = args[0];
+	}
 
 	close() {
 		this.open = false;
 		this.title = '';
 		this.description = '';
 		this.component = undefined;
+		this.props = undefined;
 
 		this.emit('close');
 	}

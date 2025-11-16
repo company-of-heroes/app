@@ -1,11 +1,12 @@
 import { type ClassValue, clsx } from 'clsx';
+import type { ChatMessage } from '@twurple/chat';
 import { twMerge } from 'tailwind-merge';
+import { invoke } from '@tauri-apps/api/core';
 import WMFlag from '$lib/files/wm.png';
 import PEFlag from '$lib/files/pe.png';
 import CWFlag from '$lib/files/cw.png';
 import USFlag from '$lib/files/us.png';
 import { isBoolean, isString } from 'lodash-es';
-import type { ChatMessage } from '@twurple/chat';
 
 /**
  * Race enum for Company of Heroes factions
@@ -463,4 +464,47 @@ export function stripEmotes(text: string, msg: ChatMessage): string {
 	// Normalize whitespace and trim
 	result = result.replace(/\s{2,}/g, ' ').trim();
 	return result;
+}
+
+/**
+ * Unzips a file to a specified destination directory.
+ *
+ * @param zipPath - The absolute path to the zip file
+ * @param destination - The absolute path to the destination directory
+ * @returns A promise that resolves when the extraction is complete
+ * @throws An error if the extraction fails
+ *
+ * @example
+ * ```ts
+ * import { unzip } from '$lib/utils/unzip';
+ * import { appDataDir } from '@tauri-apps/api/path';
+ * import { join } from '@tauri-apps/api/path';
+ *
+ * const appData = await appDataDir();
+ * const zipPath = await join(appData, 'overlays', 'myoverlay.zip');
+ * const destPath = await join(appData, 'overlays', 'myoverlay');
+ *
+ * await unzip(zipPath, destPath);
+ * ```
+ */
+export async function unzip(zipPathOrUrl: string, destination: string): Promise<void> {
+	// Check if it's a URL (http://, https://, or starts with /)
+	const isUrl = /^(https?:\/\/|\/)/i.test(zipPathOrUrl);
+
+	if (isUrl) {
+		// Fetch the file as bytes
+		const response = await fetch(zipPathOrUrl);
+		if (!response.ok) {
+			throw new Error(`Failed to fetch zip file: ${response.status} ${response.statusText}`);
+		}
+
+		const arrayBuffer = await response.arrayBuffer();
+		const bytes = new Uint8Array(arrayBuffer);
+
+		// Use the bytes command
+		await invoke('unzip_bytes', { zipData: Array.from(bytes), destination });
+	} else {
+		// Use the file path command
+		await invoke('unzip_file', { zipPath: zipPathOrUrl, destination });
+	}
 }

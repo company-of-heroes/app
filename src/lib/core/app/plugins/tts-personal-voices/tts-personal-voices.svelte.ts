@@ -7,6 +7,7 @@ import { watch } from 'runed';
 import { app } from '$core/app';
 import { error } from '@tauri-apps/plugin-log';
 import { debounce } from 'lodash-es';
+import PersonalVoicesPlugin from './personal-voices-plugin.svelte';
 
 export type ProviderVoiceSettings = {
 	voices: string[];
@@ -36,6 +37,7 @@ export class TTSPersonalVoices extends Plugin<TTSPersonalVoicesSettings> {
 	private eventSubscription: EventSubSubscription | null = null;
 
 	async enable() {
+		tts.addComponent(PersonalVoicesPlugin);
 		// Intercept speak events from the TTS service and override the
 		// voiceId for a user if they have a personal voice assigned.
 		tts.on('speak', (options) => {
@@ -198,16 +200,18 @@ export class TTSPersonalVoices extends Plugin<TTSPersonalVoicesSettings> {
 		}
 	}
 
-	rewardVoiceToUser(voice: TTSVoice, user: string) {
+	rewardVoiceToUser(voice: TTSVoice, user: string, notify: boolean = true) {
 		// Persist the voice assignment for the user so all their future
 		// messages will be spoken with the personal voice.
 		this.settings.providers[tts.provider.name].rewardedVoices[user] = voice.voiceId;
 
 		// Announce the assignment in chat for user feedback.
-		twitch.chatClient?.say(
-			twitch.token!.userName!,
-			`@${user}, you unlocked ${voice.name}. Your messages will now be spoken using this voice!`
-		);
+		if (notify) {
+			twitch.chatClient?.say(
+				twitch.token!.userName!,
+				`@${user}, you unlocked ${voice.name}. Your messages will now be spoken using this voice!`
+			);
+		}
 	}
 
 	refundFailedReward(

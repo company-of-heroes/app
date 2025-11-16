@@ -183,6 +183,7 @@ export class Log extends emittery<LogEvents> {
 
 	start() {
 		if (!app.settings.companyOfHeroesConfigPath) {
+			app.toast.error('Company of Heroes config path is not set in settings.');
 			return;
 		}
 
@@ -256,6 +257,8 @@ export class Log extends emittery<LogEvents> {
 		}
 	}
 }
+
+export const log = new Log();
 
 export type LogEvents = {
 	'LOG:STARTED': undefined;

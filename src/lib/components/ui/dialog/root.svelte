@@ -1,6 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-	import { Dialog, type WithoutChild } from 'bits-ui';
+	import { Dialog } from 'bits-ui';
 	import { dialog } from './dialog.svelte';
 	import { cn } from '$lib/utils';
 	import CloseIcon from 'phosphor-svelte/lib/X';
@@ -48,7 +47,7 @@
 				</Dialog.Title>
 			{/if}
 			<div class="px-6 pb-6">
-				<svelte:component this={dialog.component} />
+				<svelte:component this={dialog.component} {...dialog.props} />
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>

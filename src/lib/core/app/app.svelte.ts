@@ -1,17 +1,17 @@
 import type { Component } from 'svelte';
-import type { Module } from '$lib/modules/module.svelte';
-import { page } from '$app/state';
+import type { Plugins } from '@fknoobs/app';
 import Emittery from 'emittery';
+import Websocket from '@tauri-apps/plugin-websocket';
+import { page } from '$app/state';
 import { PathMatcher } from '$lib/utils/path-matcher';
 import { Store } from '@tauri-apps/plugin-store';
 import { watch } from 'runed';
-import { Twitch } from './twitch';
-import { twitch } from './twitch/twitch.svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import { merge } from 'lodash-es';
-import { models } from '@elevenlabs/elevenlabs-js/api';
-import type { Plugins } from '@fknoobs/app';
 import { toast } from 'svelte-sonner';
+import { game } from '$core/company-of-heroes';
+import { log } from '$core/log-parser';
+import { Socket } from './socket.svelte';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -100,6 +100,22 @@ export class App extends Emittery<AppEvents> {
 	toast = toast;
 
 	/**
+	 * The game instance for managing game-related state and events.
+	 *
+	 * @public
+	 * @type {Game}
+	 */
+	game = game;
+
+	/**
+	 * The WebSocket connection for real-time communication.
+	 *
+	 * @public
+	 * @type {Socket}
+	 */
+	socket: Socket | null = $state(null);
+
+	/**
 	 * A reactive map holding instances of application modules.
 	 *
 	 * @public
@@ -113,6 +129,17 @@ export class App extends Emittery<AppEvents> {
 	async start() {
 		this.store = await Store.load('app.json');
 		this.settings = await this.loadSettings();
+		this.socket = await Socket.connect();
+
+		app.game.on('LOBBY:STARTED', (lobby) => {
+			this.socket?.publish('game.lobby.started', lobby);
+		});
+
+		app.game.on('LOBBY:DESTROYED', () => {
+			this.socket?.publish('game.lobby.destroyed', null);
+		});
+
+		log.start();
 
 		$effect.root(() => {
 			watch(

@@ -1,19 +1,11 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
-	import { Label } from '$lib/components/ui/label';
-	import { app } from '$core/app';
-	import { Checkbox, Input, RadioGroup, Selection } from '$lib/components/ui/input';
-	import { Meter } from '$lib/components/ui/meter';
-	import { dialog } from '$lib/components/ui/dialog';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Trash from 'phosphor-svelte/lib/Trash';
-	import FadersHorizontal from 'phosphor-svelte/lib/FadersHorizontal';
-	import { H } from '$lib/components/ui/h';
-	// import AddVoiceDialogContent from '../../../../lib/components/dialogs/add-voice.svelte';
-	// import PersonalVoicesRewards from '$lib/components/partials/tts/personal-voices-rewards.svelte';
-	import { tts } from '$core/app/twitch';
 	import UserSoundIcon from 'phosphor-svelte/lib/UserSound';
-	import { PersonalVoicesPlugin } from '.';
+	import { Label } from '$lib/components/ui/label';
+	import { Checkbox, Input, RadioGroup, Selection } from '$lib/components/ui/input';
+	import { tts } from '$plugins/twitch';
 </script>
 
 <Form.Root>
@@ -129,6 +121,8 @@
 	<!-- Provider specific settings -->
 	<svelte:component this={tts.provider.component} />
 
-	<!-- Personal Voices Plugin Settings -->
-	<PersonalVoicesPlugin />
+	<!-- Render additional components registered to the TTS plugin -->
+	{#each tts.components as { component, props }}
+		<svelte:component this={component} {...props} />
+	{/each}
 </Form.Root>

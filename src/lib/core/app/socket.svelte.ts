@@ -1,399 +1,295 @@
-import { invoke } from '@tauri-apps/api/core';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { Bootable } from './bootable.svelte';
+import Websocket from '@tauri-apps/plugin-websocket';
+import Emittery from 'emittery';
 
-export type SocketStatus = {
-	running: boolean;
-	connection_count: number;
-	connected_clients: string[];
-	topics: Record<string, number>;
+// Incoming message types from server
+export type SocketMessage =
+	| { type: 'message'; topic: string; data: unknown }
+	| { type: 'success'; message: string }
+	| { type: 'error'; message: string };
+
+// Outgoing message types to server
+type OutgoingMessage =
+	| { type: 'subscribe'; topic: string }
+	| { type: 'unsubscribe'; topic: string }
+	| { type: 'publish'; topic: string; data: unknown };
+
+export type SocketEvents = {
+	connected: undefined;
+	disconnected: undefined;
+	message: { topic: string; data: unknown };
+	error: string;
 };
 
-export type SocketMessage = {
-	topic: string;
-	data: any;
-};
+export enum SocketState {
+	Connecting = 'connecting',
+	Connected = 'connected',
+	Disconnected = 'disconnected',
+	Error = 'error'
+}
 
-export type WebSocketEvent = {
-	client_id: string;
-	topic: string;
-	message: any;
-};
+export class SocketError extends Error {
+	constructor(
+		message: string,
+		public readonly code?: string
+	) {
+		super(message);
+		this.name = 'SocketError';
+	}
+}
 
-export type SocketTopics = {
-	'twitch-chat': any;
-	// Add more topic types as needed
-};
+export class Socket extends Emittery<SocketEvents> {
+	private _state = $state<SocketState>(SocketState.Disconnected);
+	private messageListener?: () => void;
+	private subscribedTopics = new Set<string>();
 
-/**
- * WebSocket server manager for handling real-time communication.
- * Provides a reactive interface to the Tauri WebSocket server backend.
- *
- * @extends {Bootable}
- */
-export class Socket extends Bootable {
-	/**
-	 * Reactive state indicating whether the WebSocket server is running.
-	 *
-	 * @private
-	 * @type {boolean}
-	 */
-	private _running = $state(false);
-
-	/**
-	 * Reactive state tracking the number of connected clients.
-	 *
-	 * @private
-	 * @type {number}
-	 */
-	private _connectionCount = $state(0);
-
-	/**
-	 * Reactive state holding the list of connected client IDs.
-	 *
-	 * @private
-	 * @type {string[]}
-	 */
-	private _connectedClients = $state<string[]>([]);
-
-	/**
-	 * Reactive state mapping topic names to their subscriber counts.
-	 *
-	 * @private
-	 * @type {Map<string, number>}
-	 */
-	private _topics = $state<Map<string, number>>(new Map());
-
-	/**
-	 * Array of event listener cleanup functions for proper resource management.
-	 *
-	 * @private
-	 * @type {UnlistenFn[]}
-	 */
-	private eventUnlisteners: UnlistenFn[] = [];
-
-	/**
-	 * The port number on which the WebSocket server will listen.
-	 *
-	 * @private
-	 * @type {number}
-	 */
-	private port: number;
-
-	/**
-	 * Creates a new Socket instance.
-	 *
-	 * @constructor
-	 * @param {number} [port=49210] - The port number for the WebSocket server
-	 */
-	constructor(port: number = 49210) {
+	constructor(private ws: Websocket) {
 		super();
-		this.port = port;
+		this.setupListeners();
+	}
+
+	get state(): SocketState {
+		return this._state;
+	}
+
+	get isConnected(): boolean {
+		return this._state === SocketState.Connected;
+	}
+
+	get topics(): ReadonlySet<string> {
+		return this.subscribedTopics;
 	}
 
 	/**
-	 * Getter for the WebSocket server running state.
-	 *
-	 * @readonly
-	 * @type {boolean}
+	 * Creates a new WebSocket connection
+	 * @param url WebSocket URL (default: ws://localhost:9842/ws)
+	 * @throws {SocketError} If connection fails
 	 */
-	get running() {
-		return this._running;
-	}
-
-	/**
-	 * Getter for the number of connected clients.
-	 *
-	 * @readonly
-	 * @type {number}
-	 */
-	get connectionCount() {
-		return this._connectionCount;
-	}
-
-	/**
-	 * Getter for the list of connected client IDs.
-	 * Returns a copy to prevent external modification.
-	 *
-	 * @readonly
-	 * @type {string[]}
-	 */
-	get connectedClients() {
-		return [...this._connectedClients];
-	}
-
-	/**
-	 * Getter for the topics map.
-	 * Returns a copy to prevent external modification.
-	 *
-	 * @readonly
-	 * @type {Map<string, number>}
-	 */
-	get topics() {
-		return new Map(this._topics);
-	}
-
-	/**
-	 * Initializes and starts the WebSocket server.
-	 * Sets up event listeners for real-time updates from the Tauri backend.
-	 *
-	 * @public
-	 * @async
-	 * @returns {Promise<this>} The Socket instance for method chaining
-	 * @throws {Error} When server startup or initialization fails
-	 */
-	async boot(): Promise<this> {
+	static async connect(url = 'ws://localhost:9842/ws'): Promise<Socket> {
 		try {
-			// Start the WebSocket server
-			await invoke('start_websocket_server', { port: this.port });
-
-			// Get initial status
-			await this.refreshStatus();
-
-			// Set up event listeners for real-time updates
-			await this.setupEventListeners();
-
-			return this;
+			const connection = await Websocket.connect(url);
+			const socket = new Socket(connection);
+			socket._state = SocketState.Connected;
+			// Use setTimeout to emit after constructor completes
+			setTimeout(() => socket.emit('connected'), 0);
+			return socket;
 		} catch (error) {
-			console.error('Failed to boot WebSocket server:', error);
-			throw error;
+			throw new SocketError(
+				`Failed to connect to ${url}: ${error instanceof Error ? error.message : String(error)}`,
+				'CONNECTION_FAILED'
+			);
 		}
 	}
 
 	/**
-	 * Shuts down the WebSocket server and cleans up all resources.
-	 * Removes event listeners and resets internal state.
-	 *
-	 * @public
-	 * @async
-	 * @returns {Promise<void>}
-	 * @throws {Error} When server shutdown fails
+	 * Sets up listeners for incoming WebSocket messages
 	 */
-	async shutdown(): Promise<void> {
-		try {
-			// Clean up event listeners
-			await this.cleanupEventListeners();
-
-			// Stop the WebSocket server
-			await invoke('stop_websocket_server');
-
-			// Reset state
-			this.resetState();
-		} catch (error) {
-			console.error('Failed to shutdown WebSocket server:', error);
-			throw error;
-		}
-	}
-
-	/**
-	 * Alias for shutdown to match the Bootable interface.
-	 *
-	 * @public
-	 * @async
-	 * @returns {Promise<void>}
-	 */
-	async stop(): Promise<void> {
-		return this.shutdown();
-	}
-
-	/**
-	 * Publishes a message to a specific topic.
-	 * All clients subscribed to the topic will receive the message.
-	 *
-	 * @public
-	 * @async
-	 * @param {string} topic - The topic to publish the message to
-	 * @param {any} data - The data to send to subscribers
-	 *
-	 * @returns {Promise<void>}
-	 * @throws {Error} When message publishing fails
-	 */
-	async publish(topic: string, data: any): Promise<void> {
-		try {
-			await invoke('broadcast_to_topic', { topic, data });
-		} catch (error) {
-			console.error(`Failed to publish to topic '${topic}':`, error);
-			throw error;
-		}
-	}
-
-	/**
-	 * Broadcasts a message to all connected clients regardless of topic subscriptions.
-	 *
-	 * @public
-	 * @async
-	 * @param {string} message - The message to broadcast to all clients
-	 *
-	 * @returns {Promise<void>}
-	 * @throws {Error} When broadcasting fails
-	 */
-	async broadcast(message: string): Promise<void> {
-		try {
-			await invoke('broadcast_websocket_message', { message });
-		} catch (error) {
-			console.error('Failed to broadcast message:', error);
-			throw error;
-		}
-	}
-
-	/**
-	 * Retrieves the current server status from the Tauri backend and updates reactive state.
-	 * This includes connection count, connected clients, and topic information.
-	 *
-	 * @public
-	 * @async
-	 *
-	 * @returns {Promise<SocketStatus>} The current server status
-	 * @throws {Error} When status retrieval fails
-	 */
-	async refreshStatus(): Promise<SocketStatus> {
-		try {
-			const status = await invoke<SocketStatus>('get_websocket_server_status');
-
-			// Update reactive state
-			this._running = status.running;
-			this._connectionCount = status.connection_count;
-			this._connectedClients = [...status.connected_clients];
-			this._topics = new Map(Object.entries(status.topics));
-
-			return status;
-		} catch (error) {
-			console.error('Failed to get WebSocket server status:', error);
-			throw error;
-		}
-	}
-
-	/**
-	 * Checks if a specific topic has any subscribers.
-	 *
-	 * @public
-	 * @param {string} topic - The topic name to check
-	 *
-	 * @returns {boolean} True if the topic has subscribers, false otherwise
-	 */
-	/**
-	 * Checks if a specific topic has any subscribers.
-	 *
-	 * @public
-	 * @param {string} topic - The topic name to check
-	 *
-	 * @returns {boolean} True if the topic has subscribers, false otherwise
-	 */
-	hasSubscribers(topic: string): boolean {
-		return (this._topics.get(topic) ?? 0) > 0;
-	}
-
-	/**
-	 * Gets the number of subscribers for a specific topic.
-	 *
-	 * @public
-	 * @param {string} topic - The topic name to get subscriber count for
-	 *
-	 * @returns {number} The number of subscribers for the topic
-	 */
-	getSubscriberCount(topic: string): number {
-		return this._topics.get(topic) ?? 0;
-	}
-
-	/**
-	 * Sets up event listeners for real-time updates from the Tauri backend.
-	 * Listens for client connections, disconnections, and incoming messages.
-	 *
-	 * @private
-	 * @async
-	 *
-	 * @returns {Promise<void>}
-	 * @throws {Error} When event listener setup fails
-	 */
-	/**
-	 * Sets up event listeners for real-time updates from the Tauri backend.
-	 * Listens for client connections, disconnections, and incoming messages.
-	 *
-	 * @private
-	 * @async
-	 *
-	 * @returns {Promise<void>}
-	 * @throws {Error} When event listener setup fails
-	 */
-	private async setupEventListeners(): Promise<void> {
-		try {
-			// Listen for client connections
-			const connectionListener = await listen('websocket_client_connected', (event) => {
-				const clientId = event.payload as string;
-				if (!this._connectedClients.includes(clientId)) {
-					this._connectedClients = [...this._connectedClients, clientId];
-					this._connectionCount = this._connectedClients.length;
+	private setupListeners(): void {
+		this.messageListener = this.ws.addListener((msg) => {
+			try {
+				if (msg.type === 'Text') {
+					const parsed = this.parseMessage(msg.data);
+					if (parsed) {
+						this.handleMessage(parsed);
+					}
+				} else {
+					console.warn('Received non-string message:', msg);
 				}
-			});
+			} catch (error) {
+				console.error('Failed to process message:', error);
+				this.emit(
+					'error',
+					error instanceof Error ? error.message : 'Unknown error processing message'
+				);
+			}
+		});
+	}
 
-			// Listen for client disconnections
-			const disconnectionListener = await listen('websocket_client_disconnected', (event) => {
-				const clientId = event.payload as string;
-				this._connectedClients = this._connectedClients.filter((id) => id !== clientId);
-				this._connectionCount = this._connectedClients.length;
-			});
+	/**
+	 * Parses and validates incoming JSON messages
+	 */
+	private parseMessage(data: string): SocketMessage | null {
+		try {
+			const parsed = JSON.parse(data) as Record<string, unknown>;
 
-			// Listen for incoming messages
-			const messageListener = await listen('websocket_message_received', (event) => {
-				const message = event.payload as WebSocketEvent;
-				this.handleIncomingMessage(message);
-			});
+			// Validate message structure
+			if (typeof parsed !== 'object' || parsed === null || !('type' in parsed)) {
+				throw new Error('Invalid message format: missing type field');
+			}
 
-			this.eventUnlisteners = [connectionListener, disconnectionListener, messageListener];
+			const { type } = parsed;
+
+			switch (type) {
+				case 'message':
+					if (!('topic' in parsed) || typeof parsed.topic !== 'string') {
+						throw new Error('Invalid message format: missing or invalid topic');
+					}
+					if (!('data' in parsed)) {
+						throw new Error('Invalid message format: missing data');
+					}
+					return { type: 'message', topic: parsed.topic, data: parsed.data };
+
+				case 'success':
+					if (!('message' in parsed) || typeof parsed.message !== 'string') {
+						throw new Error('Invalid success format: missing or invalid message');
+					}
+					return { type: 'success', message: parsed.message };
+
+				case 'error':
+					if (!('message' in parsed) || typeof parsed.message !== 'string') {
+						throw new Error('Invalid error format: missing or invalid message');
+					}
+					return { type: 'error', message: parsed.message };
+
+				default:
+					console.warn('Unknown message type:', type);
+					return null;
+			}
 		} catch (error) {
-			console.error('Failed to setup event listeners:', error);
-			throw error;
+			console.error('Failed to parse message:', error);
+			this.emit('error', error instanceof Error ? error.message : 'Failed to parse message');
+			return null;
 		}
 	}
 
 	/**
-	 * Cleans up all event listeners to prevent memory leaks.
-	 *
-	 * @private
-	 * @async
-	 *
-	 * @returns {Promise<void>}
+	 * Handles validated incoming messages
 	 */
-	/**
-	 * Cleans up all event listeners to prevent memory leaks.
-	 *
-	 * @private
-	 * @async
-	 * @returns {Promise<void>}
-	 */
-	private async cleanupEventListeners(): Promise<void> {
-		for (const unlisten of this.eventUnlisteners) {
-			unlisten();
+	private handleMessage(message: SocketMessage): void {
+		switch (message.type) {
+			case 'message':
+				this.emit('message', { topic: message.topic, data: message.data });
+				break;
+			case 'success':
+				console.log('Socket success:', message.message);
+				break;
+			case 'error':
+				console.error('Socket error:', message.message);
+				this.emit('error', message.message);
+				break;
 		}
-		this.eventUnlisteners = [];
 	}
 
 	/**
-	 * Resets all internal state to default values.
-	 * Called during shutdown to ensure clean state.
-	 *
-	 * @private
-	 *
-	 * @returns {void}
+	 * Subscribes to a topic
+	 * @param topic Topic name to subscribe to
+	 * @throws {SocketError} If not connected
 	 */
-	private resetState(): void {
-		this._running = false;
-		this._connectionCount = 0;
-		this._connectedClients = [];
-		this._topics.clear();
+	subscribe(topic: string): void {
+		this.ensureConnected();
+
+		if (!topic || typeof topic !== 'string') {
+			throw new SocketError('Topic must be a non-empty string', 'INVALID_TOPIC');
+		}
+
+		const message: OutgoingMessage = {
+			type: 'subscribe',
+			topic
+		};
+
+		this.send(message);
+		this.subscribedTopics.add(topic);
 	}
 
 	/**
-	 * Handles incoming WebSocket messages from clients.
-	 * Override this method in subclasses or extend for custom message handling logic.
-	 *
-	 * @private
-	 * @param {WebSocketEvent} message - The incoming message event
-	 *
-	 * @returns {void}
+	 * Unsubscribes from a topic
+	 * @param topic Topic name to unsubscribe from
+	 * @throws {SocketError} If not connected
 	 */
-	private handleIncomingMessage(message: WebSocketEvent): void {
-		// Override this method in subclasses or add event handling logic
-		console.log('Received WebSocket message:', message);
+	unsubscribe(topic: string): void {
+		this.ensureConnected();
+
+		if (!topic || typeof topic !== 'string') {
+			throw new SocketError('Topic must be a non-empty string', 'INVALID_TOPIC');
+		}
+
+		const message: OutgoingMessage = {
+			type: 'unsubscribe',
+			topic
+		};
+
+		this.send(message);
+		this.subscribedTopics.delete(topic);
+	}
+
+	/**
+	 * Publishes data to a topic
+	 * @param topic Topic name to publish to
+	 * @param data Data to publish (must be JSON serializable)
+	 * @throws {SocketError} If not connected or data is not serializable
+	 */
+	publish<T = unknown>(topic: string, data: T): void {
+		this.ensureConnected();
+
+		if (!topic || typeof topic !== 'string') {
+			throw new SocketError('Topic must be a non-empty string', 'INVALID_TOPIC');
+		}
+
+		// Validate data is JSON serializable
+		try {
+			JSON.stringify(data);
+		} catch (error) {
+			throw new SocketError('Data must be JSON serializable', 'INVALID_DATA');
+		}
+
+		const message: OutgoingMessage = {
+			type: 'publish',
+			topic,
+			data
+		};
+
+		this.send(message);
+	}
+
+	/**
+	 * Sends a message to the WebSocket server
+	 */
+	private send(message: OutgoingMessage): void {
+		try {
+			const serialized = JSON.stringify(message);
+			this.ws.send(serialized);
+		} catch (error) {
+			throw new SocketError(
+				`Failed to send message: ${error instanceof Error ? error.message : String(error)}`,
+				'SEND_FAILED'
+			);
+		}
+	}
+
+	/**
+	 * Ensures the socket is connected before operations
+	 */
+	private ensureConnected(): void {
+		if (!this.isConnected) {
+			throw new SocketError('Socket is not connected', 'NOT_CONNECTED');
+		}
+	}
+
+	/**
+	 * Closes the WebSocket connection and cleans up
+	 */
+	async close(): Promise<void> {
+		try {
+			// Remove listener if it exists
+			if (this.messageListener !== undefined) {
+				this.messageListener();
+				this.messageListener = undefined;
+			}
+
+			await this.ws.disconnect();
+			this._state = SocketState.Disconnected;
+			this.subscribedTopics.clear();
+
+			// Emit in next tick to avoid issues during cleanup
+			setTimeout(() => {
+				this.emit('disconnected');
+				this.clearListeners();
+			}, 0);
+		} catch (error) {
+			this._state = SocketState.Error;
+			throw new SocketError(
+				`Failed to close connection: ${error instanceof Error ? error.message : String(error)}`,
+				'CLOSE_FAILED'
+			);
+		}
 	}
 }

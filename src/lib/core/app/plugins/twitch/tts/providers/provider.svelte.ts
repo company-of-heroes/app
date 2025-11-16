@@ -1,11 +1,11 @@
-import { fetch } from '@tauri-apps/plugin-http';
+import type { Component } from 'svelte';
 import { watch } from 'runed';
 import { tts } from '../tts.svelte';
-import type { Component } from 'svelte';
 
 export type TTSVoice = {
 	voiceId: string;
 	name: string;
+	isDeleting?: boolean;
 };
 
 export interface TTSProvider {
@@ -43,9 +43,7 @@ export abstract class TTSProvider {
 	 *
 	 * @type {string | null}
 	 */
-	defaultVoiceId = $derived.by(() => {
-		return this.voices.length > 0 ? this.voices[0].voiceId : null;
-	});
+	defaultVoiceId = $derived.by(() => tts.settings.voiceId || this.voices?.[0]?.voiceId);
 
 	constructor() {
 		$effect.root(() => {
