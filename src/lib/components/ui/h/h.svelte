@@ -9,8 +9,8 @@
 	this={`h${level}`}
 	{...restProps}
 	class={cn(
-		'font-heading font-[800]',
-		level == 1 && 'mb-6 text-4xl',
+		'font-heading font-bold',
+		level == 1 && 'mb-6 text-5xl',
 		level == 2 && 'text-3xl',
 		level == 3 && 'text-2xl',
 		level == 4 && 'text-xl',

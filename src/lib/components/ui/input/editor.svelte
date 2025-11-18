@@ -29,7 +29,10 @@
 				return;
 			}
 
-			monaco.editor.setModelLanguage(editor!.getModel()!, language);
+			const model = editor.getModel();
+			if (model) {
+				monaco.editor.setModelLanguage(model, language);
+			}
 		}
 	);
 
@@ -82,4 +85,4 @@
 	});
 </script>
 
-<div bind:this={container} class="w-full flex-grow"></div>
+<div bind:this={container} class="w-full grow"></div>

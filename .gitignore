@@ -16,3 +16,5 @@ src-tauri/binaries/fknoobs-x86_64-unknown-linux-gnu
 
 bun-sidebar/*
 coh.replayparser/*
+
+app.json

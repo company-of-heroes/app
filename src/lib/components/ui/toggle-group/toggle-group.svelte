@@ -18,15 +18,15 @@
 <ToggleGroup.Root
 	type="single"
 	bind:value
-	class={cn('border-secondary-700 flex items-center gap-[2px] border p-[2px]')}
+	class={cn('border-secondary-700 flex items-center gap-1 rounded-md border p-1')}
 >
 	{#each items as item}
 		<ToggleGroup.Item
 			value={item.value}
 			class={cn(
-				'bg-secondary-900 h-8 px-2.5',
-				'hover:bg-secondary-800 hover:cursor-pointer',
-				'data-[state=on]:bg-primary/15 data-[state=on]:text-white'
+				'h-8 rounded px-2.5',
+				'not-disabled:hover:bg-secondary-950 not-disabled:hover:cursor-pointer',
+				'data-[state=on]:text-primary data-[state=on]:bg-gray-600'
 			)}
 		>
 			{#if typeof item.label === 'string'}

@@ -1,15 +1,17 @@
-import type { Modules } from '@fknoobs/app';
 import type { Component } from 'svelte';
-import { page } from '$app/state';
-import { defaultTwitchSettings, Twitch } from '$lib/modules/twitch/twitch.svelte';
-import { load, type Store } from '@tauri-apps/plugin-store';
-import { documentDir } from '@tauri-apps/api/path';
+import type { Plugins } from '@fknoobs/app';
 import Emittery from 'emittery';
-import { game, type Game } from '$core/company-of-heroes';
+import Websocket from '@tauri-apps/plugin-websocket';
+import { page } from '$app/state';
 import { PathMatcher } from '$lib/utils/path-matcher';
-import { Log } from '$lib/core/log-parser';
-import { replays, type Replays } from './replays.svelte';
-import { socket } from './socket.svelte';
+import { Store } from '@tauri-apps/plugin-store';
+import { watch } from 'runed';
+import { SvelteMap } from 'svelte/reactivity';
+import { merge } from 'lodash-es';
+import { toast } from 'svelte-sonner';
+import { game } from '$core/company-of-heroes';
+import { log } from '$core/log-parser';
+import { Socket } from './socket.svelte';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -31,40 +33,27 @@ export type Route = {
 export type Settings = {
 	isStreamer: boolean;
 	companyOfHeroesConfigPath: string;
-	//[key: string]: any;
-} & Partial<{ [K in keyof Modules]: InstanceType<Modules[K]>['settings'] }>;
+	[key: string]: any;
+};
 
 export type AppEvents = {
 	boot: App;
+	install: never;
 };
 
 /**
  * Manages the global state and core functionalities of the application.
  */
 export class App extends Emittery<AppEvents> {
-	/**
+	isBooted: boolean = $state(false);
+
+	/*
 	 * Reactive array holding the application's navigation routes.
 	 *
 	 * @public
 	 * @type {Route[]}
 	 */
-	routes: Route[] = $state([
-		{
-			href: '/',
-			path: '/',
-			title: 'Dashboard'
-		},
-		{
-			href: '/leaderboards',
-			path: '/leaderboards',
-			title: 'Leaderboards'
-		},
-		{
-			href: '/replays',
-			path: '/replays',
-			title: 'Replays'
-		}
-	]);
+	routes: Route[] = $state([]);
 
 	/**
 	 * Reactive derived state representing the currently active route based on the browser's URL.
@@ -83,15 +72,6 @@ export class App extends Emittery<AppEvents> {
 	});
 
 	/**
-	 * Instance of the Tauri store plugin for persistent data storage.
-	 * Initialized in the `load` method. Undefined until initialization.
-	 *
-	 * @public
-	 * @type {Store | undefined}
-	 */
-	store!: Store;
-
-	/**
 	 * Reactive object holding the application's settings.
 	 * Loaded from the store or initialized with defaults.
 	 *
@@ -99,137 +79,120 @@ export class App extends Emittery<AppEvents> {
 	 * @type {Settings}
 	 */
 	settings: Settings = $state({
-		/**
-		 * Indicates if the user is a streamer.
-		 * When enabled some more advanced features are available.
-		 */
 		isStreamer: false,
-		/**
-		 * Path to the Company of Heroes configuration folder.
-		 * This is used to retrieve game settings, configurations and logs.
-		 */
-		companyOfHeroesConfigPath: '',
-		/**
-		 * Twitch module settings.
-		 * This includes the Twitch API client ID and other related settings.
-		 *
-		 * The default settings are defined in the Twitch module.
-		 */
-		twitch: defaultTwitchSettings
+		companyOfHeroesConfigPath: ''
 	});
 
 	/**
-	 * A record mapping module names (strings) to their corresponding class constructors.
-	 * This allows for dynamic instantiation or referencing of modules within the application.
+	 * The persistent store for application data.
 	 *
 	 * @public
-	 * @type {Record<string, new () => Module>}
+	 * @type {Store}
 	 */
-	modules: Modules = {
-		twitch: Twitch
-	};
+	store!: Store;
 
 	/**
-	 * Reactive array holding instances of the active modules.
+	 * Toast notification system.
 	 *
 	 * @public
-	 * @type {Map<string, InstanceType<Modules[keyof Modules]>>} // Store module instances keyed by name
+	 * @type {typeof toast}
 	 */
-	activeModules = $state(new Map<keyof Modules, InstanceType<Modules[keyof Modules]>>());
+	toast = toast;
 
 	/**
-	 * This is the main game object that holds the game's state, players, and other related data.
+	 * The game instance for managing game-related state and events.
 	 *
 	 * @public
 	 * @type {Game}
 	 */
-	game: Game = game;
+	game = game;
 
 	/**
-	 * Instance of the Replays class, which manages replay files and their data.
-	 * This is initialized in the `boot` method.
-	 *
-	 * @public
-	 * @type {Replays}
-	 */
-	replays: Replays = $derived(replays);
-
-	/**
-	 * Instance of the Socket class, to ineract with the WebSocket server.
+	 * The WebSocket connection for real-time communication.
 	 *
 	 * @public
 	 * @type {Socket}
 	 */
-	socket = socket;
+	socket: Socket | null = $state(null);
 
 	/**
-	 * Asynchronously initializes the application state.
-	 * Loads the persistent store, retrieves settings, and initializes modules (TTS, Twitch).
-	 * Sets up a listener for changes in the store to keep the `settings` state updated.
+	 * A reactive map holding instances of application modules.
 	 *
 	 * @public
-	 * @async
-	 * @returns {Promise<void>} A promise that resolves when initialization is complete.
+	 * @type {SvelteMap<keyof Plugins, Plugins[keyof Plugins]>}
 	 */
-	async boot() {
-		this.store = await load('app.json');
-		this.settings = (await this.store.get('settings')) ?? this.settings;
+	private _plugins = new SvelteMap<keyof Plugins, Plugins[keyof Plugins]>();
 
-		if (!this.settings.companyOfHeroesConfigPath) {
-			this.settings.companyOfHeroesConfigPath =
-				(await documentDir()).replaceAll('\\', '/') + '/My Games/Company of Heroes Relaunch';
-		}
+	/**
+	 * Starts the application by loading settings and initializing plugins.
+	 */
+	async start() {
+		this.store = await Store.load('app.json');
+		this.settings = await this.loadSettings();
+		this.socket = await Socket.connect();
 
-		for await (const moduleConstructor of Object.values(this.modules)) {
-			const mod = new moduleConstructor() as InstanceType<Modules[keyof Modules]>;
-			await mod.register();
+		this.socket.subscribe('game.lobby.started');
+		this.socket.subscribe('game.lobby.destroyed');
 
-			this.activeModules.set(mod.name as keyof Modules, mod);
-			this.routes.push({
-				component: mod.component,
-				title: mod.menuItemName,
-				href: `/#${mod.name}`
-			});
-		}
+		app.game.on('LOBBY:STARTED', (lobby) => {
+			this.socket?.publish('game.lobby.started', lobby);
+		});
 
-		const log = new Log();
+		app.game.on('LOBBY:DESTROYED', () => {
+			this.socket?.publish('game.lobby.destroyed', null);
+		});
+
 		log.start();
-		socket.start();
-		//log.on('ISREADY', () => this.replays.load());
 
-		this.emit('boot', this);
+		$effect.root(() => {
+			watch(
+				() => $state.snapshot(this.settings),
+				() => {
+					this.store?.set('settings', this.settings);
+					this.store?.save();
+				}
+			);
+		});
+
+		for await (const plugin of this._plugins.values()) {
+			await plugin.register();
+		}
 	}
 
 	/**
-	 * Gets an instance of a module by its name.
+	 * Loads the application settings from the persistent store.
 	 *
-	 * @param name
-	 * @returns {InstanceType<Modules[K]>}
-	 * @throws {Error} If the module with the specified name is not found.
+	 * @returns {Promise<Settings>} A promise that resolves to the loaded settings.
 	 */
-	getModule<K extends keyof Modules>(name: K): InstanceType<Modules[K]> {
-		let module = this.activeModules.get(name);
+	async loadSettings() {
+		const storedSettings = (await this.store.get('settings')) as Partial<Settings> | undefined;
 
-		if (!module) {
-			if (import.meta.env.DEV && window) {
-				window.location.reload();
-				module = this.activeModules.get(name);
-
-				if (!module) {
-					throw new Error(`Module ${name} not found after reload`);
-				} else {
-					return module as InstanceType<Modules[K]>;
-				}
-			}
-
-			throw new Error(`Module ${name} not found`);
+		if (storedSettings) {
+			return merge(this.settings, storedSettings);
 		}
 
-		return module as InstanceType<Modules[K]>;
+		return this.settings;
+	}
+
+	/**
+	 * Registers a plugin with the application.
+	 *
+	 * @param name - The name of the plugin.
+	 * @param plugin - The plugin instance.
+	 */
+	register<K extends keyof Plugins>(name: K, plugin: Plugins[K]) {
+		this._plugins.set(name, plugin);
+	}
+
+	/**
+	 * Retrieves a registered plugin by its name.
+	 *
+	 * @param name - The name of the plugin to retrieve.
+	 * @returns The plugin instance if found, otherwise undefined.
+	 */
+	getPlugin<K extends keyof Plugins>(name: K): Plugins[K] | undefined {
+		return this._plugins.get(name) as Plugins[K] | undefined;
 	}
 }
 
-/**
- * Singleton instance of the App class, providing global access to application state and methods.
- */
 export const app = new App();

@@ -1,0 +1,36 @@
+@font-face {
+	font-family: 'League Gothic';
+	font-style: normal;
+	font-weight: normal;
+	src:
+		local('League Gothic Regular'),
+		url('LeagueGothic-Regular.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'League Gothic Condensed';
+	font-style: normal;
+	font-weight: normal;
+	src:
+		local('League Gothic Condensed Regular'),
+		url('LeagueGothic_Condensed-Regular.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'League Gothic SemiCondensed';
+	font-style: normal;
+	font-weight: normal;
+	src:
+		local('League Gothic SemiCondensed Regular'),
+		url('LeagueGothic_SemiCondensed-Regular.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'League Gothic Variable';
+	font-style: normal;
+	font-weight: normal;
+	font-variation-settings: 'wdth' 100;
+	src:
+		local('League Gothic Variable'),
+		url('LeagueGothic-Regular-VariableFont_wdth.ttf') format('truetype');
+}

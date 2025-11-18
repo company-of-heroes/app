@@ -15,6 +15,23 @@
 				}
 			]
 		},
+		{
+			"identifier": "opener:allow-open-url",
+			"allow": [
+				{
+					"url": "https://tauri.app"
+				},
+				{
+					"url": "https://id.twitch.tv/*"
+				},
+				{
+					"url": "https://twitch.tv/*"
+				},
+				{
+					"url": "https://api.steampowered.com/*"
+				}
+			]
+		},
 		"store:default",
 		"oauth:allow-start",
 		"oauth:allow-cancel",
@@ -74,6 +91,30 @@
 			]
 		},
 		{
+			"identifier": "shell:allow-spawn",
+			"allow": [
+				{
+					"args": [
+						"serve",
+						{
+							"validator": "\\S+"
+						},
+						{
+							"validator": "\\S+"
+						},
+						{
+							"validator": "\\S+"
+						},
+						{
+							"validator": "\\S+"
+						}
+					],
+					"name": "binaries/pocketbase",
+					"sidecar": true
+				}
+			]
+		},
+		{
 			"identifier": "http:default",
 			"allow": [
 				{
@@ -104,7 +145,7 @@
 					"url": "http://*.reliclink.com"
 				},
 				{
-					"url": "http://*.reliclink.com"
+					"url": "https://api.steampowered.com"
 				},
 				{
 					"url": "https://github.com/fknoobs/*"
@@ -114,6 +155,7 @@
 		"websocket:allow-connect",
 		"websocket:allow-send",
 		"dialog:default",
-		"log:default"
+		"log:default",
+		"cache:default"
 	]
 }

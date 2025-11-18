@@ -1,5 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
+import type { ChatMessage } from '@twurple/chat';
 import { twMerge } from 'tailwind-merge';
+import { invoke } from '@tauri-apps/api/core';
 import WMFlag from '$lib/files/wm.png';
 import PEFlag from '$lib/files/pe.png';
 import CWFlag from '$lib/files/cw.png';
@@ -171,6 +173,31 @@ export async function getRankImage(race: Race | number, rank?: number): Promise<
 		rankCache.set(cacheKey, result);
 		return result;
 	}
+}
+
+export function getRankImageByLeaderboardId(leaderboardId: number, rank?: number): Promise<string> {
+	const leaderboardRaceMap: Record<number, Race> = {
+		4: Race.US,
+		8: Race.US,
+		12: Race.US,
+		16: Race.US,
+		5: Race.Wehrmacht,
+		9: Race.Wehrmacht,
+		13: Race.Wehrmacht,
+		17: Race.Wehrmacht,
+		6: Race.Commonwealth,
+		10: Race.Commonwealth,
+		14: Race.Commonwealth,
+		18: Race.Commonwealth,
+		7: Race.PanzerElite,
+		11: Race.PanzerElite,
+		15: Race.PanzerElite,
+		19: Race.PanzerElite
+	};
+
+	const race = leaderboardRaceMap[leaderboardId];
+	console.log(leaderboardId);
+	return getRankImage(race, rank);
 }
 
 export function normalizeMapName(mapName: string): string {
@@ -414,4 +441,95 @@ export function secondsToTimestamp(seconds: number): string {
 	}
 
 	return [minutes, remainingSeconds].map((num) => num.toString().padStart(2, '0')).join(':');
+}
+
+/**
+ * Strips emote substrings from a Twitch chat message based on emote tags
+ *
+ * @param text - Original chat message text
+ * @param msg - ChatMessage object containing emote tag information
+ * @returns Message text with emotes removed
+ */
+export function stripEmotes(text: string, msg: ChatMessage): string {
+	// Twurple exposes tags as a Map; use robust access in case of version diffs
+	const tagsMap: Map<string, string> | undefined = (msg as any)?.tags;
+	const emotesTag: string | undefined = tagsMap?.get?.('emotes');
+
+	if (!emotesTag) {
+		// No emotes tagged, return original text
+		return text;
+	}
+
+	// emotes tag format example: "28087:0-6/25:8-12,14-18"
+	const ranges: Array<[number, number]> = [];
+	for (const group of emotesTag.split('/')) {
+		const [, indices] = group.split(':');
+		if (!indices) continue;
+		for (const r of indices.split(',')) {
+			const [startStr, endStr] = r.split('-');
+			const start = Number(startStr);
+			const end = Number(endStr);
+			if (!Number.isNaN(start) && !Number.isNaN(end)) {
+				ranges.push([start, end]);
+			}
+		}
+	}
+
+	if (!ranges.length) {
+		return text;
+	}
+
+	// Remove from right to left to keep indices valid
+	ranges.sort((a, b) => b[0] - a[0]);
+	let result = text;
+	for (const [start, end] of ranges) {
+		result = result.slice(0, start) + result.slice(end + 1);
+	}
+
+	// Normalize whitespace and trim
+	result = result.replace(/\s{2,}/g, ' ').trim();
+	return result;
+}
+
+/**
+ * Unzips a file to a specified destination directory.
+ *
+ * @param zipPath - The absolute path to the zip file
+ * @param destination - The absolute path to the destination directory
+ * @returns A promise that resolves when the extraction is complete
+ * @throws An error if the extraction fails
+ *
+ * @example
+ * ```ts
+ * import { unzip } from '$lib/utils/unzip';
+ * import { appDataDir } from '@tauri-apps/api/path';
+ * import { join } from '@tauri-apps/api/path';
+ *
+ * const appData = await appDataDir();
+ * const zipPath = await join(appData, 'overlays', 'myoverlay.zip');
+ * const destPath = await join(appData, 'overlays', 'myoverlay');
+ *
+ * await unzip(zipPath, destPath);
+ * ```
+ */
+export async function unzip(zipPathOrUrl: string, destination: string): Promise<void> {
+	// Check if it's a URL (http://, https://, or starts with /)
+	const isUrl = /^(https?:\/\/|\/)/i.test(zipPathOrUrl);
+
+	if (isUrl) {
+		// Fetch the file as bytes
+		const response = await fetch(zipPathOrUrl);
+		if (!response.ok) {
+			throw new Error(`Failed to fetch zip file: ${response.status} ${response.statusText}`);
+		}
+
+		const arrayBuffer = await response.arrayBuffer();
+		const bytes = new Uint8Array(arrayBuffer);
+
+		// Use the bytes command
+		await invoke('unzip_bytes', { zipData: Array.from(bytes), destination });
+	} else {
+		// Use the file path command
+		await invoke('unzip_file', { zipPath: zipPathOrUrl, destination });
+	}
 }

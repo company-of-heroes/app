@@ -1,9 +1,14 @@
 <script lang="ts">
 	import * as Nav from '$lib/components/ui/nav';
-	import { app } from '$core/app';
 	import { Toaster } from 'svelte-sonner';
 	import { Dialog } from '$lib/components/ui/dialog';
-	import GearIcon from 'phosphor-svelte/lib/Gear';
+	import SuccesIcon from 'phosphor-svelte/lib/Check';
+	import ErrorIcon from 'phosphor-svelte/lib/ExclamationMark';
+	import InfoIcon from 'phosphor-svelte/lib/QuestionMark';
+	import DashboardIcon from 'phosphor-svelte/lib/SquaresFour';
+	import RankingIcon from 'phosphor-svelte/lib/Ranking';
+	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
+	import Logo from '$lib/files/logo-transparent-bg.png?url';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -11,60 +16,68 @@
 	import '$lib/fonts/TT Corals/style.css';
 	import '$lib/fonts/TT Mussels/style.css';
 	import '$lib/fonts/TT Barrels/style.css';
+	import '$lib/fonts/League_Gothic/style.css';
 	import '@fontsource/league-gothic';
 	import '@fontsource/bebas-neue';
+	import '@fontsource/nunito-sans/800.css';
 
 	import '../app.css';
+	import { Label } from '$lib/components/ui/label';
 
 	let { children } = $props();
-	let Component = $derived(app.route?.component);
 </script>
 
 <svelte:boundary>
 	{#snippet pending()}{/snippet}
-	<div class="bg-secondary-950 flex h-screen overflow-hidden">
-		<aside class="bg-primary/2 border-secondary-700 w-62 border-r p-[4px]">
-			<Nav.Root class="bg-secondary-900 h-full">
-				{#each app.routes as { href, title, path, component } (href)}
-					<Nav.Link {href} {component} {path}>{title}</Nav.Link>
-				{/each}
-				<a href="/settings" class="bg-secondary-800 mt-auto flex items-center px-4 py-3">
-					<GearIcon />
-					<span class="ml-2">Settings</span>
-				</a>
+	<div class="flex h-screen w-screen overflow-hidden">
+		<div class="flex min-w-[300px] flex-col gap-4 bg-gray-900/90 text-white">
+			<div class="mt-6 flex items-center gap-4 px-4">
+				<img src={Logo} alt="Fknoobscoh - CoH app" class="size-10" />
+				<span class="font-medium">Company of Heroes</span>
+			</div>
+			<Nav.Root>
+				<Label class="px-4 font-semibold text-gray-300">Menu</Label>
+				<Nav.Link href="/">
+					<DashboardIcon size={28} weight="duotone" />
+					Dashboard
+				</Nav.Link>
+				<Nav.Link href="/leaderboards">
+					<RankingIcon size={28} weight="duotone" />
+					Leaderboards
+				</Nav.Link>
+				<Nav.Link href="/twitch">
+					<TwitchIcon size={28} weight="duotone" />
+					Twitch
+				</Nav.Link>
 			</Nav.Root>
-		</aside>
-		<div class="bg-secondary-950 flex flex-1 flex-col">
-			<div class="border-secondary-700 bg-primary/2 border-b p-[4px]">
-				<h1 class="bg-secondary-900 px-8 py-6 text-3xl font-bold">{app.route?.title}</h1>
-			</div>
-			<div class="flex flex-grow flex-col overflow-auto">
-				<main class="flex flex-1 flex-col p-8">
-					{#if Component}
-						<Component />
-					{:else}
-						{@render children()}
-					{/if}
-				</main>
-			</div>
 		</div>
+		<main class="grow overflow-auto bg-gray-800/90 p-8 text-white">
+			{@render children()}
+		</main>
 	</div>
 </svelte:boundary>
 
+<Dialog />
 <Toaster
-	expand={true}
+	theme="dark"
 	toastOptions={{
 		unstyled: true,
+		class: 'gap-4 flex bg-black border rounded-md px-4 py-2 shadow-xl',
 		classes: {
-			toast: 'bottom-0 right-0 flex gap-2 items-center px-4 py-2 shadow',
-			title: 'text-secondary-900',
-			description: 'text-secondary-900',
-			actionButton: 'text-secondary-900',
-			cancelButton: 'text-secondary-900',
-			closeButton: 'text-secondary-900',
-			success: '[&_svg]:fill-black bg-primary'
+			success: 'bg-green-950 border-green-500 text-white',
+			error: 'bg-red-950 border-red-500 text-white',
+			info: 'bg-blue-950 border-blue-500 text-white',
+			icon: 'py-1'
 		}
 	}}
-/>
-
-<Dialog />
+>
+	{#snippet successIcon()}
+		<SuccesIcon size={28} class="rounded bg-green-900/50 p-1.5" />
+	{/snippet}
+	{#snippet errorIcon()}
+		<ErrorIcon size={28} class="rounded bg-red-900/50 p-1.5" />
+	{/snippet}
+	{#snippet infoIcon()}
+		<InfoIcon size={28} class="rounded bg-blue-900/50 p-1" />
+	{/snippet}
+</Toaster>
