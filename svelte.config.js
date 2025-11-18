@@ -13,6 +13,9 @@ const config = {
 			'$core/*': 'src/lib/core/*',
 			'$workers/*': 'src/lib/workers',
 			'$plugins/*': 'src/lib/core/app/plugins/*'
+		},
+		prerender: {
+			entries: ['*', '/leaderboards/profile/[profileId]']
 		}
 	},
 	compilerOptions: {
