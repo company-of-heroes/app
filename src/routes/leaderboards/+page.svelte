@@ -182,10 +182,10 @@
 	<ToggleGroup bind:value={leaderboardFactionId} items={leaderboardFactionsIds} />
 </form>
 
-<div class={cn('flex grow flex-col gap-1')}>
+<div class={cn('flex grow flex-col')}>
 	<div
 		class={cn(
-			'flex items-center gap-1 rounded-md border border-gray-600',
+			'flex items-center gap-1 rounded-md border border-gray-600 bg-gray-700 text-gray-300',
 			'text-gray-100 [&>span]:flex [&>span]:h-10 [&>span]:items-center [&>span]:px-4 [&>span]:font-semibold'
 		)}
 	>
@@ -218,7 +218,7 @@
 		{#each statsResource.current as stat}
 			<a
 				class={cn(
-					'flex items-center gap-1 rounded-md',
+					'flex items-center gap-1 rounded-md border-b border-gray-700 odd:bg-gray-800',
 					'[&>span]:flex [&>span]:h-10 [&>span]:items-center [&>span]:px-4',
 					'hover:bg-gray-700'
 				)}

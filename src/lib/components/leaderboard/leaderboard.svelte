@@ -58,11 +58,11 @@
 				</span>
 			{/await}
 			<span class="justify-center">{stat.rank}</span>
-			<span class="justify-center text-green-300">{stat.wins}</span>
-			<span class="justify-center text-red-300">{stat.losses}</span>
-			<span class={cn('justify-center', stat.streak < 0 ? 'text-red-300' : 'text-green-300')}
-				>{stat.streak}</span
-			>
+			<span class="justify-center text-green-200">{stat.wins}</span>
+			<span class="justify-center text-red-200">{stat.losses}</span>
+			<span class={cn('justify-center', stat.streak < 0 ? 'text-red-400' : 'text-green-400')}>
+				{stat.streak >= 0 ? '+' : ''}{stat.streak}
+			</span>
 		</div>
 	{/each}
 </div>
