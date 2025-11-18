@@ -11,7 +11,7 @@
 </script>
 
 {#if type === 'number'}
-	<span
+	<div
 		class={cn(
 			'flex items-center rounded-md',
 			'border-secondary-600 bg-secondary-800 focus:border-secondary-600 h-10 w-full border ps-4 pe-1.5 focus:outline-none',
@@ -24,7 +24,7 @@
 			bind:value
 			{...restProps}
 			type="text"
-			class="outline-none"
+			class="w-full outline-none"
 			oninput={() => {
 				value = value.replace(/[^0-9.-]/g, '');
 			}}
@@ -57,7 +57,7 @@
 		>
 			<MinusIcon />
 		</button>
-	</span>
+	</div>
 {:else}
 	<div class="relative flex flex-1 items-center">
 		<input

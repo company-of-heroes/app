@@ -24,8 +24,10 @@ export class TwitchOverlays extends Plugin {
 		);
 	}
 
-	disable(): Promise<void> {
-		throw new Error('Method not implemented.');
+	async disable() {}
+
+	defaultSettings() {
+		return { enabled: true };
 	}
 }
 

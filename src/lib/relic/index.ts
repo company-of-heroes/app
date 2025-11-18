@@ -5,7 +5,6 @@ import type {
 	RelicProfile
 } from '@fknoobs/app';
 import { fetch } from '@tauri-apps/plugin-http';
-import { pick } from 'lodash-es';
 
 export const RELIC_API_BASE = 'https://coh1-lobby.reliclink.com';
 
@@ -143,6 +142,18 @@ export class RelicClient {
 		return leaderboardStatsWithMembers;
 	}
 
+	public async getRecentMatchHistoryForProfile(profileId: number): Promise<any> {
+		const result = await this.request<any>(
+			['community', 'leaderboard', 'getrecentmatchhistorybyprofileid'],
+			{
+				title: 'coh1',
+				profile_id: profileId
+			}
+		);
+
+		return result;
+	}
+
 	/**
 	 * Performs a GET request against the API.
 	 *
@@ -158,6 +169,8 @@ export class RelicClient {
 		Object.entries(queryParams).forEach(([key, value]) =>
 			url.searchParams.set(key, value.toString())
 		);
+
+		console.log('Requesting URL:', url.toString());
 
 		let response: Response;
 		try {

@@ -17,11 +17,22 @@ struct Client {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 enum WsMessage {
-    Subscribe { topic: String },
-    Unsubscribe { topic: String },
-    Publish { topic: String, data: serde_json::Value },
-    Error { message: String },
-    Success { message: String },
+    Subscribe {
+        topic: String,
+    },
+    Unsubscribe {
+        topic: String,
+    },
+    Publish {
+        topic: String,
+        data: serde_json::Value,
+    },
+    Error {
+        message: String,
+    },
+    Success {
+        message: String,
+    },
 }
 
 /// Starts a lightweight WebSocket server on port 9842
@@ -52,9 +63,7 @@ pub async fn start_ws_server() -> Result<(), Box<dyn std::error::Error>> {
     let routes = ws_route.with(cors);
 
     // Start the server on port 9842
-    warp::serve(routes)
-        .run(([127, 0, 0, 1], 9842))
-        .await;
+    warp::serve(routes).run(([127, 0, 0, 1], 9842)).await;
 
     Ok(())
 }
@@ -85,14 +94,7 @@ async fn handle_client(ws: WebSocket, clients: Clients, topics: Topics) {
     while let Some(result) = ws_rx.next().await {
         match result {
             Ok(msg) => {
-                if let Err(e) = handle_message(
-                    msg,
-                    &client_id,
-                    &clients,
-                    &topics,
-                )
-                .await
-                {
+                if let Err(e) = handle_message(msg, &client_id, &clients, &topics).await {
                     eprintln!("Error handling message: {}", e);
                 }
             }
@@ -117,7 +119,9 @@ async fn handle_message(
     topics: &Topics,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if msg.is_text() {
-        let text = msg.to_str().map_err(|_| "Failed to convert message to string")?;
+        let text = msg
+            .to_str()
+            .map_err(|_| "Failed to convert message to string")?;
         match serde_json::from_str::<WsMessage>(text) {
             Ok(ws_msg) => match ws_msg {
                 WsMessage::Subscribe { topic } => {

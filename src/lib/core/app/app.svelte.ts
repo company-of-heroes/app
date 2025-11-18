@@ -131,6 +131,9 @@ export class App extends Emittery<AppEvents> {
 		this.settings = await this.loadSettings();
 		this.socket = await Socket.connect();
 
+		this.socket.subscribe('game.lobby.started');
+		this.socket.subscribe('game.lobby.destroyed');
+
 		app.game.on('LOBBY:STARTED', (lobby) => {
 			this.socket?.publish('game.lobby.started', lobby);
 		});

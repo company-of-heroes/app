@@ -175,6 +175,31 @@ export async function getRankImage(race: Race | number, rank?: number): Promise<
 	}
 }
 
+export function getRankImageByLeaderboardId(leaderboardId: number, rank?: number): Promise<string> {
+	const leaderboardRaceMap: Record<number, Race> = {
+		4: Race.US,
+		8: Race.US,
+		12: Race.US,
+		16: Race.US,
+		5: Race.Wehrmacht,
+		9: Race.Wehrmacht,
+		13: Race.Wehrmacht,
+		17: Race.Wehrmacht,
+		6: Race.Commonwealth,
+		10: Race.Commonwealth,
+		14: Race.Commonwealth,
+		18: Race.Commonwealth,
+		7: Race.PanzerElite,
+		11: Race.PanzerElite,
+		15: Race.PanzerElite,
+		19: Race.PanzerElite
+	};
+
+	const race = leaderboardRaceMap[leaderboardId];
+	console.log(leaderboardId);
+	return getRankImage(race, rank);
+}
+
 export function normalizeMapName(mapName: string): string {
 	const match = mapName.match(/^(\d+)p_(.+)$/);
 	if (!match) {

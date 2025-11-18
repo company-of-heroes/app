@@ -4,7 +4,7 @@ use warp::Filter;
 /// Starts a lightweight static file server on port 9842
 /// Serves files from the overlays directory in the app's data directory
 pub async fn start_server(overlays_path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Starting web server on http://localhost:9842");
+    println!("Starting web server on http://localhost:9000");
     println!("Serving files from: {}", overlays_path.display());
 
     // Create a filter that serves static files from the overlays directory
@@ -19,9 +19,7 @@ pub async fn start_server(overlays_path: PathBuf) -> Result<(), Box<dyn std::err
     let routes = static_files.with(cors);
 
     // Start the server on port 9842
-    warp::serve(routes)
-        .run(([127, 0, 0, 1], 9000))
-        .await;
+    warp::serve(routes).run(([127, 0, 0, 1], 9000)).await;
 
     Ok(())
 }

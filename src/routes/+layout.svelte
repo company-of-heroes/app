@@ -5,6 +5,10 @@
 	import SuccesIcon from 'phosphor-svelte/lib/Check';
 	import ErrorIcon from 'phosphor-svelte/lib/ExclamationMark';
 	import InfoIcon from 'phosphor-svelte/lib/QuestionMark';
+	import DashboardIcon from 'phosphor-svelte/lib/SquaresFour';
+	import RankingIcon from 'phosphor-svelte/lib/Ranking';
+	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
+	import Logo from '$lib/files/logo-transparent-bg.png?url';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -18,6 +22,7 @@
 	import '@fontsource/nunito-sans/800.css';
 
 	import '../app.css';
+	import { Label } from '$lib/components/ui/label';
 
 	let { children } = $props();
 </script>
@@ -25,13 +30,28 @@
 <svelte:boundary>
 	{#snippet pending()}{/snippet}
 	<div class="flex h-screen w-screen overflow-hidden">
-		<div class="min-w-[300px] border-r-2 border-gray-500 bg-gray-700">
+		<div class="flex min-w-[300px] flex-col gap-4 bg-gray-900/90 text-white">
+			<div class="mt-6 flex items-center gap-4 px-4">
+				<img src={Logo} alt="Fknoobscoh - CoH app" class="size-10" />
+				<span class="font-medium">Company of Heroes</span>
+			</div>
 			<Nav.Root>
-				<Nav.Link href="/">Dashboard</Nav.Link>
-				<Nav.Link href="/twitch">Twitch</Nav.Link>
+				<Label class="px-4 font-semibold text-gray-300">Menu</Label>
+				<Nav.Link href="/">
+					<DashboardIcon size={28} weight="duotone" />
+					Dashboard
+				</Nav.Link>
+				<Nav.Link href="/leaderboards">
+					<RankingIcon size={28} weight="duotone" />
+					Leaderboards
+				</Nav.Link>
+				<Nav.Link href="/twitch">
+					<TwitchIcon size={28} weight="duotone" />
+					Twitch
+				</Nav.Link>
 			</Nav.Root>
 		</div>
-		<main class="grow overflow-auto p-8">
+		<main class="grow overflow-auto bg-gray-800/90 p-8 text-white">
 			{@render children()}
 		</main>
 	</div>

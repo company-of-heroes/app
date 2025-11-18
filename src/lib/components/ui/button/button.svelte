@@ -22,7 +22,8 @@
 		variant === 'primary' && 'bg-primary-300 text-black',
 		variant === 'secondary' &&
 			'border-gray-700 bg-gray-800 text-white hover:border-gray-600 hover:bg-gray-700 hover:opacity-100',
-		variant === 'destructive' && 'text-secondary-900 bg-red-400',
+		variant === 'destructive' && 'text-secondary-100 border-red-500/30 bg-red-500/5',
+		variant === 'ghost' && 'focus:bg-gray-700',
 		restProps.class
 	)}
 	disabled={loading || restProps.disabled}

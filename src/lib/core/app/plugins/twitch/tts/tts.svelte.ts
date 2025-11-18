@@ -1,5 +1,4 @@
 import type { ChatMessage } from '@twurple/chat';
-import type { TTSVoice } from './providers/provider.svelte.js';
 import { Plugin } from '$plugins/plugin.svelte';
 import { twitch } from '$plugins/twitch';
 import { watch } from 'runed';
@@ -163,7 +162,7 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 
 	public defaultSettings(): TTSSettings {
 		return {
-			provider: 'brian',
+			provider: 'StreamElements',
 			announceUser: 'onlyOnce',
 			messageFormat: '{message}',
 			voiceId: null,

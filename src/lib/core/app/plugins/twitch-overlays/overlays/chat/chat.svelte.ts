@@ -1,5 +1,5 @@
 import { Overlay } from '../overlay.svelte';
-import zip from './chat-overlay.zip?url';
+import zip from './chat.zip?url';
 
 export class ChatOverlay extends Overlay {
 	path = 'overlays/chat';

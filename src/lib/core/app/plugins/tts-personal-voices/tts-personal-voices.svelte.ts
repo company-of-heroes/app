@@ -41,7 +41,9 @@ export class TTSPersonalVoices extends Plugin<TTSPersonalVoicesSettings> {
 		// Intercept speak events from the TTS service and override the
 		// voiceId for a user if they have a personal voice assigned.
 		tts.on('speak', (options) => {
+			console.log(options);
 			const userVoiceId = this.getUserVoice(options.user);
+			console.log(userVoiceId);
 			if (userVoiceId) {
 				options.voiceId = userVoiceId;
 			}
@@ -203,7 +205,7 @@ export class TTSPersonalVoices extends Plugin<TTSPersonalVoicesSettings> {
 	rewardVoiceToUser(voice: TTSVoice, user: string, notify: boolean = true) {
 		// Persist the voice assignment for the user so all their future
 		// messages will be spoken with the personal voice.
-		this.settings.providers[tts.provider.name].rewardedVoices[user] = voice.voiceId;
+		this.settings.providers[tts.provider.name].rewardedVoices[user.toLowerCase()] = voice.voiceId;
 
 		// Announce the assignment in chat for user feedback.
 		if (notify) {
@@ -249,7 +251,10 @@ export class TTSPersonalVoices extends Plugin<TTSPersonalVoicesSettings> {
 
 		// Clear any subscriptions and remove personal voice rewards on disable.
 		this.eventSubscription = null;
-		this.getChannelRewards().then(() => this.removeChannelRewards());
+
+		if (twitch.token) {
+			this.getChannelRewards().then(() => this.removeChannelRewards());
+		}
 	}
 
 	defaultSettings(): TTSPersonalVoicesSettings {

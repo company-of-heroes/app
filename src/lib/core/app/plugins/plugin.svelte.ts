@@ -35,9 +35,9 @@ export abstract class Plugin<
 	 * The settings for the plugin.
 	 *
 	 * @type {Settings}
-	 * @default undefined
+	 * @default { enabled: false }
 	 */
-	settings = $state({ enabled: true }) as Settings & { enabled: boolean };
+	settings = $state({ enabled: false }) as Settings & { enabled: boolean };
 
 	/**
 	 * The components associated with the plugin.
@@ -67,7 +67,8 @@ export abstract class Plugin<
 			let settings = await app.store.get<Settings>(`plugin.${this.name}`);
 
 			if (!settings) {
-				this.settings = { ...this.defaultSettings?.(), enabled: true };
+				const defaultSettings = this.defaultSettings?.();
+				this.settings = { ...defaultSettings, enabled: Boolean(defaultSettings?.enabled ?? false) };
 			} else {
 				this.settings = defaultsDeep(
 					settings as Settings & { enabled: boolean },

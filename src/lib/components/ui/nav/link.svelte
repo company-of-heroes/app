@@ -10,7 +10,8 @@
 <a
 	{...restProps}
 	class={cn(
-		'text-secondary-200 px-4 py-3 font-bold transition-all',
+		'flex items-center gap-3',
+		'px-4 py-3 font-bold transition-all',
 		'hover:text-secondary-400',
 		app.route?.href === restProps.href && 'text-primary',
 		restProps.href &&

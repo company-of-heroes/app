@@ -29,7 +29,10 @@
 				return;
 			}
 
-			monaco.editor.setModelLanguage(editor!.getModel()!, language);
+			const model = editor.getModel();
+			if (model) {
+				monaco.editor.setModelLanguage(model, language);
+			}
 		}
 	);
 
