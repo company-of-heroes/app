@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/public';
+import { PUBLIC_STEAM_API_KEY } from '$env/static/public';
 import { fetch } from '@tauri-apps/plugin-http';
 
 // Types
@@ -91,7 +91,7 @@ export class SteamAPI {
 	private readonly cacheDuration = 5 * 60 * 1000; // 5 minutes
 
 	private get apiKey(): string {
-		const key = env.PUBLIC_STEAM_API_KEY;
+		const key = PUBLIC_STEAM_API_KEY;
 		if (!key) {
 			throw new SteamAPIError('STEAM_API_KEY is not configured');
 		}
