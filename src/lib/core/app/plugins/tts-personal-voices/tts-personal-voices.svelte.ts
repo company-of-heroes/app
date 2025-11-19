@@ -36,8 +36,12 @@ export class TTSPersonalVoices extends Plugin<TTSPersonalVoicesSettings> {
 
 	private eventSubscription: EventSubSubscription | null = null;
 
-	async enable() {
+	constructor() {
+		super();
 		tts.addComponent(PersonalVoicesPlugin);
+	}
+
+	async enable() {
 		// Intercept speak events from the TTS service and override the
 		// voiceId for a user if they have a personal voice assigned.
 		tts.on('speak', (options) => {
@@ -257,7 +261,7 @@ export class TTSPersonalVoices extends Plugin<TTSPersonalVoicesSettings> {
 		}
 	}
 
-	defaultSettings(): TTSPersonalVoicesSettings {
+	defaultSettings() {
 		return {
 			cost: 15000,
 			providers: tts.providers.reduce(
