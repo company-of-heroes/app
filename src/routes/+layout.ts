@@ -9,6 +9,7 @@ import { twitchOverlays } from '$plugins/twitch-overlays';
 import { OppBotOverlay } from '$plugins/twitch-overlays/overlays/oppbot';
 import { ChatOverlay } from '$plugins/twitch-overlays/overlays/chat';
 import { twitchBot } from '$plugins/twitch-bot/twitch-bot.svelte';
+import { ViewerCountOverlay } from '$core/app/plugins/twitch-overlays/overlays/viewer-count';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;
@@ -27,6 +28,7 @@ export const load = async () => {
 
 	twitchOverlays.registerOverlay(new OppBotOverlay());
 	twitchOverlays.registerOverlay(new ChatOverlay());
+	twitchOverlays.registerOverlay(new ViewerCountOverlay());
 
 	await app.start();
 };

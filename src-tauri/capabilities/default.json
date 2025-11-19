@@ -25,7 +25,10 @@
 					"url": "https://id.twitch.tv/*"
 				},
 				{
-					"url": "https://twitch.tv"
+					"url": "https://twitch.tv/*"
+				},
+				{
+					"url": "https://www.twitch.tv/*"
 				},
 				{
 					"url": "https://api.steampowered.com"
