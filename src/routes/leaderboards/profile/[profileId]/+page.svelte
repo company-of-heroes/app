@@ -11,6 +11,9 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
 	import { MatchHistory } from '$lib/components/match-history';
+	import type { Snapshot } from '@sveltejs/kit';
+
+	let currentTab = $state('stats');
 
 	const profile = resource(
 		() => page.params.profileId,
@@ -42,6 +45,11 @@
 			};
 		}
 	);
+
+	export const snapshot: Snapshot<string> = {
+		capture: () => currentTab,
+		restore: (tab) => (currentTab = tab)
+	};
 </script>
 
 <button
@@ -49,7 +57,7 @@
 	class="mb-6 inline-flex cursor-pointer items-center gap-2 text-xl transition-transform hover:-translate-x-0.5"
 >
 	<ArrowLeft weight="duotone" />
-	Back to Leaderboards
+	Back to previous page
 </button>
 
 {#if profile.loading}
@@ -114,7 +122,7 @@
 			</div>
 		</div>
 		<div>
-			<Tabs.Root value="stats">
+			<Tabs.Root value={currentTab} onValueChange={(val) => (currentTab = val)}>
 				<Tabs.List>
 					<Tabs.Trigger value="stats">Stats</Tabs.Trigger>
 					<Tabs.Trigger value="match-history">Match history</Tabs.Trigger>

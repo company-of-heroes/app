@@ -22,7 +22,6 @@
 
 	let { matches }: Props = $props();
 	let orderedMatches = $derived(orderBy(matches, ['completiontime'], ['desc']));
-	console.log(orderedMatches);
 </script>
 
 <div class="grid gap-2">

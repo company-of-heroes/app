@@ -17,7 +17,7 @@
 		'flex items-center gap-3',
 		'px-4 py-3 font-bold transition-all',
 		'hover:text-secondary-400',
-		$state.eager(isActive) && 'text-primary hover:text-primary hover:pointer-events-none',
+		$state.eager(isActive) && 'text-primary hover:text-primary',
 		restProps.class
 	)}
 	data-active={isActive ? 'active' : undefined}
