@@ -1,149 +1,11 @@
 <script lang="ts">
-	import { cn, getFactionFlagFromRace, getRankImageByLeaderboardId } from '$lib/utils';
+	import type { Snapshot } from '@sveltejs/kit';
+	import { cn, getRankImageByLeaderboardId } from '$lib/utils';
 	import { relic } from '$lib/relic';
 	import { resource } from 'runed';
 	import { ToggleGroup } from '$lib/components/ui/toggle-group';
-	import { createRawSnippet } from 'svelte';
 	import { H } from '$lib/components/ui/h';
-
-	const leaderboards = [
-		{
-			label: '1v1',
-			value: '4',
-			leaderboardFationIds: [
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(0)}" alt="Allies" class="w-7 border-1 border-black" />`
-					})),
-					value: '4'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(2)}" alt="British" class="w-7 border-1 border-black" />`
-					})),
-					value: '6'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(1)}" alt="Wehrmacht" class="w-7 border-1 border-black" />`
-					})),
-					value: '5'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(3)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
-					})),
-					value: '7'
-				}
-			]
-		},
-		{
-			label: '2v2',
-			value: '8',
-			leaderboardFationIds: [
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(0)}" alt="Allies" class="w-7 border-1 border-black" />`
-					})),
-					value: '8'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(2)}" alt="British" class="w-7 border-1 border-black" />`
-					})),
-					value: '10'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(1)}" alt="Wehrmacht" class="w-7 border-1 border-black" />`
-					})),
-					value: '9'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(3)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
-					})),
-					value: '11'
-				}
-			]
-		},
-		{
-			label: '3v3',
-			value: '12',
-			leaderboardFationIds: [
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(0)}" alt="Allies" class="w-7 border-1 border-black" />`
-					})),
-					value: '12'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(2)}" alt="British" class="w-7 border-1 border-black" />`
-					})),
-					value: '14'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(1)}" alt="Wehrmacht" class="w-7 border-1 border-black" />`
-					})),
-					value: '13'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(3)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
-					})),
-					value: '15'
-				}
-			]
-		},
-		{
-			label: '4v4',
-			value: '16',
-			leaderboardFationIds: [
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(0)}" alt="Allies" class="w-7 border-1 border-black" />`
-					})),
-					value: '16'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(2)}" alt="British" class="w-7 border-1 border-black" />`
-					})),
-					value: '18'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(1)}" alt="Wehrmacht" class="w-7 border-1 border-black" />`
-					})),
-					value: '17'
-				},
-				{
-					label: createRawSnippet(() => ({
-						render: () =>
-							`<img src="${getFactionFlagFromRace(3)}" alt="Panzer Elite" class="w-7 border-1 border-black" />`
-					})),
-					value: '19'
-				}
-			]
-		}
-	];
+	import { leaderboards } from '$lib/utils/game';
 
 	let leaderboardId = $state(leaderboards[0].value);
 	let leaderboardFactionId = $derived<string>(
@@ -174,6 +36,14 @@
 			initialValue: []
 		}
 	);
+
+	export const snapshot: Snapshot<[string, string]> = {
+		capture: () => [leaderboardFactionId, leaderboardId],
+		restore: ([factionId, leaderboardId]) => {
+			leaderboardId = leaderboardId;
+			leaderboardFactionId = factionId;
+		}
+	};
 </script>
 
 <H level="1">Leaderboards</H>

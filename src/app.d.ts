@@ -85,6 +85,110 @@ declare module '@fknoobs/app' {
 		profile?: RelicProfile; // Computers dont have profiles
 	};
 
+	interface MatchHistoryPlayer {
+		// Profile data
+		profile_id: number;
+		name: string;
+		alias: string;
+		personal_statgroup_id: number;
+		xp: number;
+		level: number;
+		leaderboardregion_id: number;
+		country: string;
+		steamId: string;
+
+		// Report results
+		resulttype: number;
+		teamid: number;
+		race_id: number;
+		xpgained: number;
+		counters: string;
+		matchstartdate: number;
+
+		// Member data
+		statgroup_id: number;
+		wins: number;
+		losses: number;
+		streak: number;
+		arbitration: number;
+		outcome: number;
+		oldrating: number;
+		newrating: number;
+		reporttype: number;
+	}
+
+	interface TransformedMatch {
+		// Match basic info
+		id: number;
+		creator_profile_id: number;
+		mapname: string;
+		maxplayers: number;
+		matchtype_id: number;
+		options: string;
+		slotinfo: string;
+		description: string;
+		startgametime: number;
+		completiontime: number;
+		observertotal: number;
+		outcome: number;
+
+		// Combined player data
+		players: MatchHistoryPlayer[];
+	}
+
+	interface OriginalMatchHistory {
+		matchHistoryStats: Array<{
+			id: number;
+			creator_profile_id: number;
+			mapname: string;
+			maxplayers: number;
+			matchtype_id: number;
+			options: string;
+			slotinfo: string;
+			description: string;
+			startgametime: number;
+			completiontime: number;
+			observertotal: number;
+			matchhistoryreportresults: Array<{
+				matchhistory_id: number;
+				profile_id: number;
+				resulttype: number;
+				teamid: number;
+				race_id: number;
+				xpgained: number;
+				counters: string;
+				matchstartdate: number;
+			}>;
+			matchhistoryitems: any[];
+			matchurls: any[];
+			matchhistorymember: Array<{
+				matchhistory_id: number;
+				profile_id: number;
+				race_id: number;
+				statgroup_id: number;
+				teamid: number;
+				wins: number;
+				losses: number;
+				streak: number;
+				arbitration: number;
+				outcome: number;
+				oldrating: number;
+				newrating: number;
+				reporttype: number;
+			}>;
+		}>;
+		profiles: Array<{
+			profile_id: number;
+			name: string;
+			alias: string;
+			personal_statgroup_id: number;
+			xp: number;
+			level: number;
+			leaderboardregion_id: number;
+			country: string;
+		}>;
+	}
+
 	export type CoHMaps =
 		| '2p_angoville farms'
 		| '2p_beach_assault'

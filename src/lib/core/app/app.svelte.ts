@@ -7,11 +7,15 @@ import { PathMatcher } from '$lib/utils/path-matcher';
 import { Store } from '@tauri-apps/plugin-store';
 import { watch } from 'runed';
 import { SvelteMap } from 'svelte/reactivity';
-import { merge } from 'lodash-es';
+import { isEmpty, merge } from 'lodash-es';
 import { toast } from 'svelte-sonner';
 import { game } from '$core/company-of-heroes';
 import { log } from '$core/log-parser';
 import { Socket } from './socket.svelte';
+import { modal } from '$lib/components/ui/modal';
+import { SetupForm } from '$lib/components/setup';
+import { dirname, documentDir, sep } from '@tauri-apps/api/path';
+import { exists } from '@tauri-apps/plugin-fs';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -116,6 +120,14 @@ export class App extends Emittery<AppEvents> {
 	socket: Socket | null = $state(null);
 
 	/**
+	 * The modal manager for handling modal dialogs.
+	 *
+	 * @public
+	 * @type {typeof modal}
+	 */
+	modal = modal;
+
+	/**
 	 * A reactive map holding instances of application modules.
 	 *
 	 * @public
@@ -150,6 +162,38 @@ export class App extends Emittery<AppEvents> {
 				() => {
 					this.store?.set('settings', this.settings);
 					this.store?.save();
+				}
+			);
+
+			watch(
+				() => app.settings.companyOfHeroesConfigPath,
+				() => {
+					(async () => {
+						if (!isEmpty(app.settings.companyOfHeroesConfigPath)) {
+							try {
+								const pathExists = await exists(app.settings.companyOfHeroesConfigPath);
+								if (pathExists) {
+									return;
+								}
+							} catch {}
+						}
+
+						const dir = await documentDir();
+						const defaultPath = `${dir}${sep()}My Games${sep()}Company of Heroes Relaunch`;
+						app.settings.companyOfHeroesConfigPath = defaultPath;
+
+						modal.create({
+							title: 'Setup',
+							description: 'We need to set some things up before you can continue.',
+							component: SetupForm,
+							hideCloseButton: true,
+							contentProps: {
+								interactOutsideBehavior: 'ignore',
+								escapeKeydownBehavior: 'ignore'
+							}
+						});
+						modal.open();
+					})();
 				}
 			);
 		});

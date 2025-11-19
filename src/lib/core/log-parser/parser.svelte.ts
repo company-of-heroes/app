@@ -7,6 +7,7 @@ import { inferTypes } from '$lib/utils';
 import { app } from '$core/app';
 import { Lobby } from '$core/company-of-heroes';
 import { relic } from '$lib/relic';
+import { isEmpty } from 'lodash-es';
 
 let lobby: Lobby | undefined;
 let matchType: number = 0;
@@ -192,6 +193,10 @@ export class Log extends emittery<LogEvents> {
 				track(
 					() => app.settings.companyOfHeroesConfigPath,
 					() => {
+						if (isEmpty(app.settings.companyOfHeroesConfigPath)) {
+							return;
+						}
+
 						if (this.interval) {
 							clearInterval(this.interval);
 						}

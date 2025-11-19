@@ -65,6 +65,14 @@
 				}
 			]
 		},
+		{
+			"identifier": "fs:allow-exists",
+			"allow": [
+				{
+					"path": "$DOCUMENT/*"
+				}
+			]
+		},
 		"shell:default",
 		"shell:allow-open",
 		{

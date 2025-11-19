@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { LeaderboardStat } from '@fknoobs/app';
 	import { cn, getRankImage } from '$lib/utils';
-	import { StatGroup } from '.';
 	import {
 		getFactionFlagFromLeaderboardId,
 		getLeaderboardType,
@@ -33,7 +32,7 @@
 		<span class="justify-center">Losses</span>
 		<span class="justify-center">Streak</span>
 	</div>
-	{#each orderBy( sortBy( stats, (o) => (isRanked(o.leaderboard_id) ? 0 : 1) ), 'ranklevel', 'desc' ) as stat}
+	{#each sortBy( orderBy(stats, 'ranklevel', 'desc'), (o) => (isRanked(o.leaderboard_id) ? 0 : 1) ) as stat}
 		<div
 			class={cn(
 				'border-b border-gray-700 odd:bg-gray-800',
@@ -57,7 +56,14 @@
 					<img src={flag} alt="Faction Flag" class="w-6 ring ring-black" />
 				</span>
 			{/await}
-			<span class="justify-center">{stat.rank}</span>
+			<span class="items-center justify-center gap-2">
+				{#if stat.rank === 1}
+					<span class="relative -top-0.5">👑</span>
+				{/if}
+				<span class={cn(stat.rank === 1 && 'text-primary font-bold')}>
+					{stat.rank === -1 ? '-' : stat.rank}
+				</span>
+			</span>
 			<span class="justify-center text-green-200">{stat.wins}</span>
 			<span class="justify-center text-red-200">{stat.losses}</span>
 			<span class={cn('justify-center', stat.streak < 0 ? 'text-red-400' : 'text-green-400')}>

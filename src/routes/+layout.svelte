@@ -23,6 +23,7 @@
 
 	import '../app.css';
 	import { Label } from '$lib/components/ui/label';
+	import { Modal } from '$lib/components/ui/modal';
 
 	let { children } = $props();
 </script>
@@ -30,7 +31,7 @@
 <svelte:boundary>
 	{#snippet pending()}{/snippet}
 	<div class="flex h-screen w-screen overflow-hidden">
-		<div class="flex min-w-[300px] flex-col gap-4 bg-gray-900/90 text-white">
+		<div class="flex min-w-[300px] flex-col gap-8 bg-gray-900/90 text-white">
 			<div class="mt-6 flex items-center gap-4 px-4">
 				<img src={Logo} alt="Fknoobscoh - CoH app" class="size-10" />
 				<span class="font-medium">Company of Heroes</span>
@@ -58,6 +59,8 @@
 </svelte:boundary>
 
 <Dialog />
+<Modal />
+
 <Toaster
 	theme="dark"
 	toastOptions={{

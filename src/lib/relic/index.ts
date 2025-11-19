@@ -5,6 +5,7 @@ import type {
 	RelicProfile
 } from '@fknoobs/app';
 import { fetch } from '@tauri-apps/plugin-http';
+import { transformMatchHistory } from './transform-match-history';
 
 export const RELIC_API_BASE = 'https://coh1-lobby.reliclink.com';
 
@@ -151,7 +152,7 @@ export class RelicClient {
 			}
 		);
 
-		return result;
+		return transformMatchHistory(result, profileId);
 	}
 
 	/**
@@ -169,8 +170,6 @@ export class RelicClient {
 		Object.entries(queryParams).forEach(([key, value]) =>
 			url.searchParams.set(key, value.toString())
 		);
-
-		console.log('Requesting URL:', url.toString());
 
 		let response: Response;
 		try {

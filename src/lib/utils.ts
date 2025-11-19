@@ -75,51 +75,6 @@ export function getFactionFlagFromRace(
 }
 
 /**
- * Cache for storing map image imports to avoid repeated dynamic imports
- * Maps map name to the imported image path
- */
-const mapCache = new Map<string, string>();
-
-/**
- * Gets the map image based on map name with caching and fallback
- * Dynamically imports map images and provides error handling
- *
- * @param mapName - Name of the map to get image for
- * @returns Promise resolving to the map image asset path
- */
-export async function getMapImageFromName(mapName: string): Promise<string> {
-	// Return cached result if available
-	if (mapCache.has(mapName)) {
-		return mapCache.get(mapName)!;
-	}
-
-	// Handle empty or invalid map name
-	if (!mapName || typeof mapName !== 'string') {
-		const defaultMap = await import(`$lib/files/maps/mp_nobattlemap.png`);
-		const result = defaultMap.default;
-		mapCache.set('', result);
-		return result;
-	}
-
-	try {
-		const mapImage = await import(`$lib/files/maps/${mapName}_map_base.png`);
-		const result = mapImage.default;
-		if (result) {
-			mapCache.set(mapName, result);
-			return result;
-		}
-		throw new Error('Map image not found');
-	} catch (error) {
-		console.warn(`Failed to load map image for "${mapName}":`, error);
-		const defaultMap = await import(`$lib/files/maps/mp_nobattlemap.png`);
-		const result = defaultMap.default;
-
-		mapCache.set(mapName, result);
-		return result;
-	}
-}
-
-/**
  * Cache for storing rank image imports to avoid repeated dynamic imports
  * Maps race-rank combination to the imported image path
  */

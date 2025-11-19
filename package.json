@@ -52,7 +52,6 @@
 		"dayjs": "^1.11.19",
 		"emittery": "^1.2.0",
 		"google-translate-api-x": "^10.7.2",
-		"lemonadejs": "^5.3.2",
 		"lodash-es": "^4.17.21",
 		"magic-regexp": "^0.10.0",
 		"monaco-editor": "^0.52.2",
