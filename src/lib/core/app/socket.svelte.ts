@@ -62,9 +62,9 @@ export class Socket extends Emittery<SocketEvents> {
 	/**
 	 * Creates a new WebSocket connection
 	 * @param url WebSocket URL (default: ws://localhost:9842/ws)
-	 * @throws {SocketError} If connection fails
+	 * @throws {SocketError | null} If connection fails
 	 */
-	static async connect(url = 'ws://localhost:9842/ws'): Promise<Socket> {
+	static async connect(url = 'ws://localhost:9842/ws'): Promise<Socket | null> {
 		try {
 			const connection = await Websocket.connect(url);
 			const socket = new Socket(connection);
@@ -73,10 +73,7 @@ export class Socket extends Emittery<SocketEvents> {
 			setTimeout(() => socket.emit('connected'), 0);
 			return socket;
 		} catch (error) {
-			throw new SocketError(
-				`Failed to connect to ${url}: ${error instanceof Error ? error.message : String(error)}`,
-				'CONNECTION_FAILED'
-			);
+			return null;
 		}
 	}
 

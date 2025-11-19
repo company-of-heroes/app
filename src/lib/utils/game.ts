@@ -1,5 +1,16 @@
-import { getFactionFlagFromRace, Race } from '$lib/utils';
+import { getFactionFlagFromRace } from '$lib/utils';
 import { createRawSnippet } from 'svelte';
+
+/**
+ * Race enum for Company of Heroes factions
+ * Provides type safety and clear mapping for faction identifiers
+ */
+export enum Race {
+	US = 0,
+	Wehrmacht = 1,
+	Commonwealth = 2,
+	PanzerElite = 3
+}
 
 /**
  * Match type constants mapping numeric IDs to human-readable names.
@@ -9,25 +20,25 @@ import { createRawSnippet } from 'svelte';
  * @private
  * @static
  */
-const MATCH_TYPES = {
-	0: 'Custom Game',
-	1: '1v1',
-	2: '2v2',
-	3: '3v3',
-	4: '4v4',
-	5: '2v2 AT',
-	6: '3v3 AT',
-	7: '4v4 AT',
-	8: 'Assault 2v2',
-	9: 'Assault 2v2 AT',
-	10: 'Assault 3v3 AT',
-	11: 'Panzerkrieg 2v2',
-	12: 'Panzerkrieg 2v2 AT',
-	13: 'Panzerkrieg 3v3 AT',
-	14: 'Comp Stomp',
-	15: 'Assault',
-	16: 'Panzerkrieg',
-	17: 'Stonewall'
+export const MATCH_TYPES = {
+	0: 'Basic Match',
+	1: '1 VS. 1',
+	2: '2 VS. 2',
+	3: '3 VS. 3',
+	4: '4 VS. 4',
+	5: '2 VS. 2 AT',
+	6: '3 VS. 3 AT',
+	7: '4 VS. 4 AT',
+	8: 'Operation: Assault 2v2',
+	9: 'Operation: Assault 2v2 AT',
+	10: 'Operation: Assault 3v3 AT',
+	11: 'Operation: Panzerkrieg 2v2',
+	12: 'Operation: Panzerkrieg 2v2 AT',
+	13: 'Operation: Panzerkrieg 3v3 AT',
+	14: 'Skirmish',
+	15: 'Operation: Assault',
+	16: 'Operation: Panzerkrieg',
+	17: 'Operation: Stonewall'
 } as const;
 
 /**
@@ -69,7 +80,19 @@ export const LEADERBOARD_IDS = {
 	operation_assault_wehrmacht: 47,
 	operation_panzerkrieg_usa: 50,
 	operation_panzerkrieg_wehrmacht: 51
-};
+} as const;
+
+/**
+ * Type for valid leaderboard keys combining match type and faction.
+ * Ensures type safety when accessing leaderboard IDs.
+ */
+export type LeaderboardKey = keyof typeof LEADERBOARD_IDS;
+
+/**
+ * Type for valid match type IDs.
+ * Provides compile-time checking for match type assignments.
+ */
+export type MatchTypeId = keyof typeof MATCH_TYPES;
 
 export const isRanked = (leaderboardId: number): boolean => {
 	return leaderboardId >= 4 && leaderboardId <= 19;

@@ -11,8 +11,6 @@
 	import { AddRewardedVoiceUserForm } from '.';
 	import { tts } from '$plugins/twitch';
 	import { ttsPersonalVoices } from '$plugins/tts-personal-voices';
-
-	console.log(tts.settings);
 </script>
 
 <H level="4" class="mt-8">Personal voices settings</H>

@@ -138,8 +138,8 @@
 					<span class="relative font-medium text-white">{stat.ranklevel}</span>
 				</span>
 				<span class="text-primary-50 grow">{stat.profile?.alias}</span>
-				<span class="flex w-28 justify-center font-medium">{stat.wins}</span>
-				<span class="flex w-28 justify-center font-medium text-red-100">{stat.losses}</span>
+				<span class="flex w-28 justify-center font-medium text-green-200">{stat.wins}</span>
+				<span class="flex w-28 justify-center font-medium text-red-200">{stat.losses}</span>
 				<span
 					class={cn(
 						'flex w-28 justify-center',

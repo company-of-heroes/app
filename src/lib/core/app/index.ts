@@ -1,3 +1,3 @@
-import { app, App, type AppEvents, type Route } from './app.svelte';
+import { app, App, type AppEvents, type Route, type Status, type Statuses } from './app.svelte';
 
-export { app, App, type AppEvents, type Route };
+export { app, App, type AppEvents, type Route, type Status, type Statuses };

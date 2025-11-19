@@ -1,7 +1,7 @@
 import type { Component } from 'svelte';
 import type { Plugins } from '@fknoobs/app';
 import Emittery from 'emittery';
-import Websocket from '@tauri-apps/plugin-websocket';
+import { fetch } from '@tauri-apps/plugin-http';
 import { page } from '$app/state';
 import { PathMatcher } from '$lib/utils/path-matcher';
 import { Store } from '@tauri-apps/plugin-store';
@@ -11,10 +11,10 @@ import { isEmpty, merge } from 'lodash-es';
 import { toast } from 'svelte-sonner';
 import { game } from '$core/company-of-heroes';
 import { log } from '$core/log-parser';
-import { Socket } from './socket.svelte';
+import { Socket, SocketState } from './socket.svelte';
 import { modal } from '$lib/components/ui/modal';
 import { SetupForm } from '$lib/components/setup';
-import { dirname, documentDir, sep } from '@tauri-apps/api/path';
+import { documentDir, sep } from '@tauri-apps/api/path';
 import { exists } from '@tauri-apps/plugin-fs';
 import { dev } from '$app/environment';
 
@@ -44,6 +44,13 @@ export type Settings = {
 export type AppEvents = {
 	boot: App;
 	install: never;
+};
+
+export type Status = 'idle' | 'loading' | 'error' | 'success';
+export type Statuses = {
+	companyOfHeroes: Status;
+	webserver: Status;
+	websocketServer: Status;
 };
 
 /**
@@ -86,6 +93,17 @@ export class App extends Emittery<AppEvents> {
 	settings: Settings = $state({
 		isStreamer: false,
 		companyOfHeroesConfigPath: ''
+	});
+
+	/**
+	 * Reactive object tracking the loading statuses of various application components.
+	 *
+	 * @public
+	 */
+	statuses = $state<Statuses>({
+		companyOfHeroes: 'idle',
+		webserver: 'loading',
+		websocketServer: 'loading'
 	});
 
 	/**
@@ -144,20 +162,22 @@ export class App extends Emittery<AppEvents> {
 		this.settings = await this.loadSettings();
 		this.socket = await Socket.connect();
 
-		this.socket.subscribe('game.lobby.started');
-		this.socket.subscribe('game.lobby.destroyed');
+		this.socket?.subscribe('game.lobby.started');
+		this.socket?.subscribe('game.lobby.destroyed');
 
-		app.game.on('LOBBY:STARTED', (lobby) => {
+		this.game.on('LOBBY:STARTED', (lobby) => {
 			this.socket?.publish('game.lobby.started', lobby);
 		});
 
-		app.game.on('LOBBY:DESTROYED', () => {
+		this.game.on('LOBBY:DESTROYED', () => {
 			this.socket?.publish('game.lobby.destroyed', null);
 		});
 
 		log.start();
 
 		$effect.root(() => {
+			this.trackStatuses();
+
 			watch(
 				() => $state.snapshot(this.settings),
 				() => {
@@ -202,6 +222,40 @@ export class App extends Emittery<AppEvents> {
 		for await (const plugin of this._plugins.values()) {
 			await plugin.register();
 		}
+	}
+
+	trackStatuses() {
+		watch(
+			[() => this.socket?.state, () => this.socket, () => this.game.isRunning],
+			([state, socket, isRunning]) => {
+				// WebSocket status
+				if (!socket) {
+					this.statuses.websocketServer = 'error';
+				} else if (state === SocketState.Connected) {
+					this.statuses.websocketServer = 'success';
+				} else if (state === SocketState.Disconnected) {
+					this.statuses.websocketServer = 'error';
+				} else {
+					this.statuses.websocketServer = 'loading';
+				}
+
+				// Company of Heroes status
+				if (!isRunning) {
+					this.statuses.companyOfHeroes = 'idle';
+				} else {
+					this.statuses.companyOfHeroes = 'success';
+				}
+			}
+		);
+
+		fetch('http://localhost:9000')
+			.then(async (res) => {
+				this.statuses.webserver = 'success';
+			})
+			.catch((err) => {
+				console.log('Failed to fetch from webserver', err);
+				this.statuses.webserver = 'error';
+			});
 	}
 
 	/**

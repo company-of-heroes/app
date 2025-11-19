@@ -75,6 +75,7 @@ export class Log extends emittery<LogEvents> {
 
 					player.steamId = steamId.toString();
 					player.ranking = ranking;
+					player.slot = slot;
 
 					break;
 				}
@@ -171,13 +172,13 @@ export class Log extends emittery<LogEvents> {
 					break;
 				}
 
-				// case 'LOG:ENDED': {
-				// 	app.game.isRunning = false;
+				case 'LOG:ENDED': {
+					app.game.isRunning = false;
 
-				// 	app.game.emit('GAME:CLOSED');
+					app.game.emit('GAME:CLOSED');
 
-				// 	break;
-				// }
+					break;
+				}
 			}
 		});
 	}

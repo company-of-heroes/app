@@ -25,10 +25,10 @@
 					"url": "https://id.twitch.tv/*"
 				},
 				{
-					"url": "https://twitch.tv/*"
+					"url": "https://twitch.tv"
 				},
 				{
-					"url": "https://api.steampowered.com/*"
+					"url": "https://api.steampowered.com"
 				}
 			]
 		},
@@ -144,6 +144,9 @@
 					"url": "https://*.twitch.tv"
 				},
 				{
+					"url": "https://twitch.tv"
+				},
+				{
 					"url": "https://*.streamelements.com"
 				},
 				{
@@ -157,6 +160,9 @@
 				},
 				{
 					"url": "https://github.com/fknoobs/*"
+				},
+				{
+					"url": "http://localhost:9000"
 				}
 			]
 		},

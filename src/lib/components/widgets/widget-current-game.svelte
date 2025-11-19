@@ -1,0 +1,193 @@
+<script lang="ts">
+	import type { LobbyPlayer } from '@fknoobs/app';
+	import { game, Lobby } from '$core/company-of-heroes';
+	import {
+		cn,
+		getFactionFlagFromRace,
+		getRacePrefix,
+		getRankImageByLeaderboardId,
+		Race
+	} from '$lib/utils';
+	import {
+		getLeaderboardType,
+		getMapImageFromName,
+		getRaceFromLeaderboardId,
+		LEADERBOARD_IDS
+	} from '$lib/utils/game';
+	import { upperCase } from 'lodash-es';
+	import { H } from '../ui/h';
+	import { goto } from '$app/navigation';
+
+	let lobby = $state<Lobby>();
+
+	game.on('LOBBY:STARTED', (l) => {
+		lobby = l;
+	});
+
+	game.on('LOBBY:DESTROYED', () => {
+		lobby = undefined;
+	});
+
+	const getLeaderboardStats = (player: LobbyPlayer) => {
+		let leaderboardId: number | undefined;
+
+		if (!lobby) {
+			return undefined;
+		}
+
+		if (lobby.type === 'Basic Match') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['basic_usa'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['basic_wehrmacht'];
+			} else if (player.race === Race.Commonwealth) {
+				leaderboardId = LEADERBOARD_IDS['basic_british'];
+			} else if (player.race === Race.PanzerElite) {
+				leaderboardId = LEADERBOARD_IDS['basic_panzer_elite'];
+			}
+		} else if (lobby.type === '1 VS. 1') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['1v1_us'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['1v1_heer'];
+			} else if (player.race === Race.Commonwealth) {
+				leaderboardId = LEADERBOARD_IDS['1v1_brit'];
+			} else if (player.race === Race.PanzerElite) {
+				leaderboardId = LEADERBOARD_IDS['1v1_panzer'];
+			}
+		} else if (lobby.type === '2 VS. 2' || lobby.type === '2 VS. 2 AT') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['2v2_us'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['2v2_heer'];
+			} else if (player.race === Race.Commonwealth) {
+				leaderboardId = LEADERBOARD_IDS['2v2_brit'];
+			} else if (player.race === Race.PanzerElite) {
+				leaderboardId = LEADERBOARD_IDS['2v2_panzer'];
+			}
+		} else if (lobby.type === '3 VS. 3' || lobby.type === '3 VS. 3 AT') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['3v3_us'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['3v3_heer'];
+			} else if (player.race === Race.Commonwealth) {
+				leaderboardId = LEADERBOARD_IDS['3v3_brit'];
+			} else if (player.race === Race.PanzerElite) {
+				leaderboardId = LEADERBOARD_IDS['3v3_panzer'];
+			}
+		} else if (lobby.type === '4 VS. 4' || lobby.type === '4 VS. 4 AT') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['4v4_us'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['4v4_heer'];
+			} else if (player.race === Race.Commonwealth) {
+				leaderboardId = LEADERBOARD_IDS['4v4_brit'];
+			} else if (player.race === Race.PanzerElite) {
+				leaderboardId = LEADERBOARD_IDS['4v4_panzer'];
+			}
+		} else if (lobby.type === 'Skirmish') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['skirmish_usa'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['skirmish_wehrmacht'];
+			} else if (player.race === Race.Commonwealth) {
+				leaderboardId = LEADERBOARD_IDS['skirmish_british'];
+			} else if (player.race === Race.PanzerElite) {
+				leaderboardId = LEADERBOARD_IDS['skirmish_panzer_elite'];
+			}
+		} else if (lobby.type === 'Operation: Assault') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['operation_assault_usa'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['operation_assault_wehrmacht'];
+			}
+		} else if (lobby.type === 'Operation: Panzerkrieg') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['operation_panzerkrieg_usa'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['operation_panzerkrieg_wehrmacht'];
+			}
+		} else if (lobby.type === 'Operation: Stonewall') {
+			if (player.race === Race.US) {
+				leaderboardId = LEADERBOARD_IDS['operation_stonewall_usa'];
+			} else if (player.race === Race.Wehrmacht) {
+				leaderboardId = LEADERBOARD_IDS['operation_stonewall_wehrmacht'];
+			}
+		}
+
+		return player.profile?.leaderboardStats?.find((stat) => stat.leaderboard_id === leaderboardId);
+	};
+</script>
+
+{#if lobby}
+	<div class="grid grid-cols-[200px_auto] gap-6">
+		<div>
+			{#await getMapImageFromName(lobby.map!) then mapImage}
+				<img src={mapImage} alt={lobby.mapName} class="h-auto w-full rounded-lg bg-gray-900" />
+			{/await}
+		</div>
+		<div class="py-2">
+			<H level="3" class="mb-4">{lobby.mapName}</H>
+			<div class="grid grid-cols-2 gap-4">
+				{#each lobby.teams as team}
+					<div>
+						<span
+							class="block rounded-md border border-gray-600 bg-gray-700 px-4 py-2 font-bold text-gray-100"
+						>
+							Team {team.teamId + 1}
+						</span>
+						{#each team.players as player}
+							{@const stats = getLeaderboardStats(player)}
+							<button
+								class={cn(
+									'grid w-full grid-cols-[2rem_4rem_auto_3rem_3rem_3rem] items-center gap-2',
+									'cursor-pointer rounded-md px-4 py-2 transition-colors',
+									'not-last:border-b not-last:border-gray-700',
+									'odd:bg-gray-900/30',
+									'hover:text-primary hover:bg-gray-700/50',
+									player.playerId === lobby.me?.playerId &&
+										'border-primary-200/50! text-primary border!'
+								)}
+								onclick={() => goto(`/leaderboards/profile/${player.playerId}`)}
+							>
+								{#await getFactionFlagFromRace(player.race) then raceImg}
+									<img src={raceImg} alt={getRacePrefix(player.race)} class="w-6 ring ring-black" />
+								{/await}
+								<span class="flex items-center gap-2 text-blue-200">
+									{#if stats}
+										{#await getRankImageByLeaderboardId(stats.leaderboard_id, stats.ranklevel) then rankImg}
+											<img src={rankImg} alt="Rank" class="w-6" />
+										{/await}
+									{/if}
+									{player.ranking}
+								</span>
+								<span class="flex items-center gap-2">
+									{#if player.profile}
+										<img
+											class="w-6"
+											src="https://flagsapi.com/{upperCase(player.profile.country)}/shiny/64.png"
+											alt={player.profile.country}
+										/>
+										<span>{player.profile.alias}</span>
+									{/if}
+								</span>
+								{#if stats}
+									<span>{stats.wins}</span>
+									<span>{stats.losses}</span>
+									<span
+										class={cn(
+											'justify-center',
+											stats.streak < 0 ? 'text-red-300' : 'text-green-300'
+										)}
+									>
+										{stats.streak}
+									</span>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+{/if}

@@ -6,9 +6,11 @@
 
 	type Props = {
 		children: Snippet;
+		side?: Popover.ContentProps['side'];
+		size?: 'sm' | 'normal';
 	} & WithoutChildren<Popover.RootProps>;
 
-	let { children, ...restProps }: Props = $props();
+	let { children, side = 'right', size = 'normal', ...restProps }: Props = $props();
 </script>
 
 <Popover.Root {...restProps}>
@@ -19,10 +21,11 @@
 				class={cn(
 					'flex size-7 items-center justify-center rounded-full',
 					'cursor-pointer bg-gray-700 transition-colors',
-					'data-[state=open]:bg-primary/10'
+					'data-[state=open]:bg-primary/10',
+					size === 'sm' && 'size-5'
 				)}
 			>
-				<QuestionMark />
+				<QuestionMark size={size === 'sm' ? 14 : 20} />
 			</button>
 		{/snippet}
 	</Popover.Trigger>
@@ -31,8 +34,8 @@
 			class={cn(
 				'z-50 max-w-[420px] rounded-lg border border-gray-600 bg-gray-900 px-4 py-2 shadow-lg'
 			)}
-			side="right"
 			sideOffset={8}
+			{side}
 		>
 			{@render children()}
 		</Popover.Content>

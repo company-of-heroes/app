@@ -77,6 +77,7 @@ declare module '@fknoobs/app' {
 		team: number;
 		race: number;
 		ranking?: number;
+		slot?: number;
 		steamId?: string;
 		profile?: RelicProfile; // Computers dont have profiles
 	};

@@ -82,7 +82,6 @@ export abstract class Plugin<
 					() => {
 						(async () => {
 							this.settings.enabled = this.enabled;
-							console.log(this.enabled);
 
 							if (this.enabled) {
 								try {

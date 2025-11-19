@@ -2,74 +2,12 @@ import type { LobbyPlayer } from '@fknoobs/app';
 import { app } from '$core/app/app.svelte';
 import { getRacePrefix } from '$lib/utils';
 import { groupBy } from 'lodash-es';
-
-/**
- * Match type constants mapping numeric IDs to human-readable names.
- * Covers all available Company of Heroes match types including ranked and unranked modes.
- *
- * @readonly
- * @private
- * @static
- */
-const MATCH_TYPES = {
-	0: 'Custom Game',
-	1: '1v1',
-	2: '2v2',
-	3: '3v3',
-	4: '4v4',
-	5: '2v2 AT',
-	6: '3v3 AT',
-	7: '4v4 AT',
-	8: 'Assault 2v2',
-	9: 'Assault 2v2 AT',
-	10: 'Assault 3v3 AT',
-	11: 'Panzerkrieg 2v2',
-	12: 'Panzerkrieg 2v2 AT',
-	13: 'Panzerkrieg 3v3 AT',
-	14: 'Comp Stomp',
-	15: 'Assault',
-	16: 'Panzerkrieg',
-	17: 'Stonewall'
-} as const;
-
-/**
- * Leaderboard ID mapping for different game modes and factions.
- * Used to retrieve rank information for specific mode-faction combinations.
- *
- * @readonly
- * @private
- * @static
- */
-export const LEADERBOARD_IDS = {
-	'1v1_us': 4,
-	'1v1_heer': 5,
-	'1v1_brit': 6,
-	'1v1_panzer': 7,
-	'2v2_us': 8,
-	'2v2_heer': 9,
-	'2v2_brit': 10,
-	'2v2_panzer': 11,
-	'3v3_us': 12,
-	'3v3_heer': 13,
-	'3v3_brit': 14,
-	'3v3_panzer': 15,
-	'4v4_us': 16,
-	'4v4_heer': 17,
-	'4v4_brit': 18,
-	'4v4_panzer': 19
-};
-
-/**
- * Type for valid leaderboard keys combining match type and faction.
- * Ensures type safety when accessing leaderboard IDs.
- */
-type LeaderboardKey = keyof typeof LEADERBOARD_IDS;
-
-/**
- * Type for valid match type IDs.
- * Provides compile-time checking for match type assignments.
- */
-type MatchTypeId = keyof typeof MATCH_TYPES;
+import {
+	LEADERBOARD_IDS,
+	MATCH_TYPES,
+	type LeaderboardKey,
+	type MatchTypeId
+} from '$lib/utils/game';
 
 /**
  * Cache for storing map image imports to avoid repeated dynamic imports
@@ -90,6 +28,7 @@ export class Lobby {
 	 * @type {number | null}
 	 */
 	sessionId: number | null = null;
+
 	/**
 	 * Current map name for the lobby.
 	 * Set when a lobby is created or updated.
