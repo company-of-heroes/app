@@ -5,10 +5,6 @@ declare module '@fknoobs/app' {
 	import type { TwitchOverlays } from '$core/app/plugins/twitch-overlays';
 	import type { Replays } from '$lib/modules/replay-manager/replays.svelte';
 
-	interface Bootables {
-		twitch: Twitch;
-	}
-
 	interface Plugins {
 		twitch: Twitch;
 		'twitch-overlays': TwitchOverlays;

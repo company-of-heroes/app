@@ -16,6 +16,7 @@ import { modal } from '$lib/components/ui/modal';
 import { SetupForm } from '$lib/components/setup';
 import { dirname, documentDir, sep } from '@tauri-apps/api/path';
 import { exists } from '@tauri-apps/plugin-fs';
+import { dev } from '$app/environment';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -139,7 +140,7 @@ export class App extends Emittery<AppEvents> {
 	 * Starts the application by loading settings and initializing plugins.
 	 */
 	async start() {
-		this.store = await Store.load('app.json');
+		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
 		this.settings = await this.loadSettings();
 		this.socket = await Socket.connect();
 
