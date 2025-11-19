@@ -5,6 +5,7 @@ import { watch } from 'runed';
 import { stripEmotes } from '$lib/utils';
 import { StreamElementsProvider } from './providers/streamelements.svelte.js';
 import { ElevenlabsProvider } from './providers/elevenlabs';
+import type { UnsubscribeFunction } from 'emittery';
 
 export type TTSSettings = {
 	provider: string;
@@ -47,6 +48,8 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 
 	private playIntervalId: number | undefined;
 
+	private chatMessageSubscription: UnsubscribeFunction | null = null;
+
 	private readonly audioContext = new AudioContext();
 
 	public async enable() {
@@ -57,8 +60,7 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 					return;
 				}
 
-				twitch.on('chat-message', this.handleMessage.bind(this));
-
+				this.chatMessageSubscription = twitch.on('chat-message', this.handleMessage.bind(this));
 				this.startPlayback();
 			}
 		);
@@ -154,7 +156,10 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 	}
 
 	public async disable() {
-		twitch.off('chat-message', this.handleMessage.bind(this));
+		if (this.chatMessageSubscription) {
+			this.chatMessageSubscription();
+			this.chatMessageSubscription = null;
+		}
 
 		if (this.playIntervalId) {
 			clearTimeout(this.playIntervalId);
