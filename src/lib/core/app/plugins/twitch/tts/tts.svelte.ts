@@ -57,9 +57,7 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 					return;
 				}
 
-				twitch.on('chat-message', ({ user, message, msg }) =>
-					this.handleMessage(user, message, msg)
-				);
+				twitch.on('chat-message', this.handleMessage.bind(this));
 
 				this.startPlayback();
 			}
@@ -73,13 +71,18 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 		);
 	}
 
-	private async handleMessage(user: string, text: string, msg: ChatMessage) {
-		if (text.startsWith('!')) {
-			this.handleCommand(user, text);
+	private async handleMessage(data: {
+		channel: string;
+		user: string;
+		message: string;
+		msg: ChatMessage;
+	}) {
+		if (data.message.startsWith('!')) {
+			this.handleCommand(data.user, data.message);
 			return;
 		}
 
-		if (user.includes('bot')) {
+		if (data.user.includes('bot')) {
 			return;
 		}
 
@@ -89,20 +92,20 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 			format = '{username} said: ' + format;
 		}
 
-		if (this.settings.announceUser === 'onlyOnce' && this.lastMessageUser !== user) {
+		if (this.settings.announceUser === 'onlyOnce' && this.lastMessageUser !== data.user) {
 			format = '{username} said: ' + format;
 		}
 
-		const alias = this.getAliasedUser(user);
+		const alias = this.getAliasedUser(data.user);
 		const message = format
 			.replace(/\{(username|user)\}/g, alias)
-			.replace(/\{(message|msg)\}/g, stripEmotes(text, msg));
+			.replace(/\{(message|msg)\}/g, stripEmotes(data.message, data.msg));
 
-		this.lastMessageUser = user;
+		this.lastMessageUser = data.user;
 
 		const speakOptions: TTSOptions = {
 			message,
-			user,
+			user: data.user,
 			voiceId: this.settings.voiceId || undefined
 		};
 
@@ -151,6 +154,8 @@ export class TTS extends Plugin<TTSSettings, TTSEvents> {
 	}
 
 	public async disable() {
+		twitch.off('chat-message', this.handleMessage.bind(this));
+
 		if (this.playIntervalId) {
 			clearTimeout(this.playIntervalId);
 			this.playIntervalId = undefined;
