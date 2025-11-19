@@ -1,11 +1,14 @@
 <script lang="ts">
 	import type { Snapshot } from '@sveltejs/kit';
+	import * as Form from '$lib/components/ui/form';
 	import { cn, getRankImageByLeaderboardId } from '$lib/utils';
 	import { relic } from '$lib/relic';
-	import { resource } from 'runed';
+	import { resource, useDebounce } from 'runed';
 	import { ToggleGroup } from '$lib/components/ui/toggle-group';
 	import { H } from '$lib/components/ui/h';
 	import { leaderboards } from '$lib/utils/game';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import { isEmpty } from 'lodash-es';
 
 	let leaderboardId = $state(leaderboards[0].value);
 	let leaderboardFactionId = $derived<string>(
@@ -14,6 +17,8 @@
 	let leaderboardFactionsIds = $derived(
 		leaderboards.find((lb) => lb.value === leaderboardId)!.leaderboardFationIds!
 	);
+	let searchInput = $state<string | undefined>();
+	let filteredStats = $derived.by(() => statsResource.current);
 
 	function getRatioColor(wins: number, losses: number): string {
 		if (losses === 0) return wins > 0 ? 'text-green-600' : 'text-gray-400';
@@ -37,6 +42,26 @@
 		}
 	);
 
+	const searchPlayer = useDebounce(
+		() => {
+			const query = searchInput?.trim().toLowerCase();
+
+			if (!query || isEmpty(query)) {
+				filteredStats = statsResource.current;
+				return;
+			}
+
+			const results = statsResource.current.filter(
+				(stat) =>
+					stat.profile?.alias.toLowerCase().startsWith(query) ||
+					stat.profile?.alias.toLowerCase().includes(query)
+			);
+
+			filteredStats = results;
+		},
+		() => 250
+	);
+
 	export const snapshot: Snapshot<[string, string]> = {
 		capture: () => [leaderboardFactionId, leaderboardId],
 		restore: ([factionId, leaderboardId]) => {
@@ -47,9 +72,20 @@
 </script>
 
 <H level="1">Leaderboards</H>
-<form class="mb-4 flex items-center gap-2">
-	<ToggleGroup bind:value={leaderboardId} items={leaderboards} />
-	<ToggleGroup bind:value={leaderboardFactionId} items={leaderboardFactionsIds} />
+<form class="mb-4 flex items-center justify-between gap-2">
+	<div class="flex gap-4">
+		<ToggleGroup bind:value={leaderboardId} items={leaderboards} />
+		<ToggleGroup bind:value={leaderboardFactionId} items={leaderboardFactionsIds} />
+	</div>
+	<Form.Root>
+		<Input
+			type="text"
+			placeholder="Search player..."
+			class={cn('w-58')}
+			bind:value={searchInput}
+			oninput={() => searchPlayer()}
+		/>
+	</Form.Root>
 </form>
 
 <div class={cn('flex grow flex-col')}>
@@ -85,7 +121,7 @@
 			</div>
 		{/each}
 	{:else}
-		{#each statsResource.current as stat}
+		{#each filteredStats as stat}
 			<a
 				class={cn(
 					'flex items-center gap-1 rounded-md border-b border-gray-700 odd:bg-gray-800',
