@@ -1,14 +1,13 @@
 <script lang="ts">
 	import type { InputProps } from '.';
+	import CheckCircleIcon from 'phosphor-svelte/lib/CheckCircle';
+	import WarningCircleIcon from 'phosphor-svelte/lib/WarningCircle';
 	import { Button } from '../button';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { watch } from 'runed';
 	import Input from './input.svelte';
 	import { exists } from '@tauri-apps/plugin-fs';
 	import { cn } from '$lib/utils';
-	import CheckCircleIcon from 'phosphor-svelte/lib/CheckCircle';
-	import WarningCircleIcon from 'phosphor-svelte/lib/WarningCircle';
-	import { dirname } from '@tauri-apps/api/path';
 
 	let {
 		value = $bindable(),
@@ -40,7 +39,6 @@
 		() => {
 			exists(value)
 				.then((exists) => {
-					console.log(exists);
 					fileExists = exists;
 				})
 				.catch(() => {

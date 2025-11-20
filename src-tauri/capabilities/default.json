@@ -44,12 +44,19 @@
 		"fs:allow-rename",
 		"fs:allow-mkdir",
 		"fs:allow-remove",
-		"fs:allow-exists",
 		"fs:allow-create",
 		"fs:allow-write-text-file",
 		"fs:allow-write-file",
 		"fs:scope-download-recursive",
 		"fs:scope-resource-recursive",
+		{
+			"identifier": "fs:allow-exists",
+			"allow": [
+				{
+					"path": "**"
+				}
+			]
+		},
 		"fs:read-all",
 		"fs:allow-watch",
 		{
