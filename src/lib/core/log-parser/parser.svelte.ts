@@ -219,7 +219,7 @@ export class Log extends emittery<LogEvents> {
 
 	private async createWatcher() {
 		this.interval = window.setInterval(async () => {
-			const contents = await readTextFile(app.settings.companyOfHeroesConfigPath + '/warnings.log');
+			const contents = await readTextFile(app.settings.companyOfHeroesConfigPath);
 			const lines = contents.split(/\r\n|\r|\n/).filter((line) => line.trim() !== '');
 
 			this.oldLength = this.newLength;

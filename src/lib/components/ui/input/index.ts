@@ -6,8 +6,9 @@ import Select from './select.svelte';
 import Options from './options.svelte';
 import Editor from './editor.svelte';
 import Selection from './selection.svelte';
+import FileSelection from './file-selection.svelte';
 import Slider from './slider.svelte';
 
 export type InputProps = {} & HTMLInputAttributes;
 
-export { Input, Checkbox, RadioGroup, Select, Options, Editor, Selection, Slider };
+export { Input, Checkbox, RadioGroup, Select, Options, Editor, Selection, Slider, FileSelection };

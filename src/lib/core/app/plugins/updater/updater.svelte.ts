@@ -14,6 +14,8 @@ export class Updater extends Plugin {
 				const latestVersion = response.tag_name.replace('v', '');
 				const currentVersion = await getVersion();
 
+				console.log(latestVersion, currentVersion);
+
 				if (latestVersion !== currentVersion) {
 					app.modal.create({
 						component: Update,

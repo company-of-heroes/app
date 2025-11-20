@@ -9,6 +9,7 @@
 	import RankingIcon from 'phosphor-svelte/lib/Ranking';
 	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
 	import Logo from '$lib/files/logo-transparent-bg.png?url';
+	import SettingsIcon from 'phosphor-svelte/lib/GearSix';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -49,6 +50,10 @@
 				<Nav.Link href="/twitch">
 					<TwitchIcon size={28} weight="duotone" />
 					Twitch
+				</Nav.Link>
+				<Nav.Link href="/settings">
+					<SettingsIcon size={28} weight="duotone" />
+					Settings
 				</Nav.Link>
 			</Nav.Root>
 		</div>

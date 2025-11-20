@@ -15,8 +15,10 @@ import { Socket, SocketState } from './socket.svelte';
 import { modal } from '$lib/components/ui/modal';
 import { SetupForm } from '$lib/components/setup';
 import { documentDir, sep } from '@tauri-apps/api/path';
-import { exists } from '@tauri-apps/plugin-fs';
+import { exists, readFile, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { dev } from '$app/environment';
+import { invoke } from '@tauri-apps/api/core';
+import { save, open } from '@tauri-apps/plugin-dialog';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -92,7 +94,8 @@ export class App extends Emittery<AppEvents> {
 	 */
 	settings: Settings = $state({
 		isStreamer: false,
-		companyOfHeroesConfigPath: ''
+		companyOfHeroesConfigPath: '',
+		companyOfHeroesInstallationPath: ''
 	});
 
 	/**
@@ -161,6 +164,18 @@ export class App extends Emittery<AppEvents> {
 		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
 		this.settings = await this.loadSettings();
 		this.socket = await Socket.connect();
+
+		if (isEmpty(this.settings.companyOfHeroesConfigPath)) {
+			const documentsDir = await documentDir();
+			const defaultPath = `${documentsDir}${sep()}My Games${sep()}Company of Heroes Relaunch`;
+
+			this.settings.companyOfHeroesConfigPath = defaultPath;
+		}
+
+		if (isEmpty(this.settings.companyOfHeroesInstallationPath)) {
+			const path = 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Company of Heroes Relaunch';
+			this.settings.companyOfHeroesInstallationPath = path;
+		}
 
 		this.socket?.subscribe('game.lobby.started');
 		this.socket?.subscribe('game.lobby.destroyed');
@@ -271,6 +286,55 @@ export class App extends Emittery<AppEvents> {
 		}
 
 		return this.settings;
+	}
+
+	/**
+	 * Exports the current application settings to a JSON file.
+	 */
+	async exportSettings() {
+		try {
+			const path = await save({
+				defaultPath: (await documentDir()) + sep() + 'app-settings.json'
+			});
+
+			if (path) {
+				writeTextFile(path, JSON.stringify(this.settings, null, 2))
+					.then(() => {
+						this.toast.success('Settings exported successfully!');
+					})
+					.catch((err) => {
+						this.toast.error('Failed to export settings: ' + err);
+					});
+			}
+		} catch (err) {
+			this.toast.error('Failed to export settings: ' + err);
+		}
+	}
+
+	async importSettings() {
+		try {
+			const selected = await open({
+				multiple: false,
+				filters: [{ name: 'JSON', extensions: ['json'] }]
+			});
+			if (selected && typeof selected === 'string') {
+				const fileContent = await readTextFile(selected);
+				const importedSettings = JSON.parse(fileContent) as Settings;
+
+				if (
+					'companyOfHeroesConfigPath' in importedSettings === false ||
+					'companyOfHeroesInstallationPath' in importedSettings === false
+				) {
+					this.toast.error('Invalid settings file');
+					return;
+				}
+
+				this.settings = importedSettings;
+				this.toast.success('Settings imported successfully!');
+			}
+		} catch (err) {
+			this.toast.error('Failed to import settings: ' + err);
+		}
 	}
 
 	/**
