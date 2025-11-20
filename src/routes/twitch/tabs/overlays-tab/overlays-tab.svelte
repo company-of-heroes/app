@@ -34,7 +34,9 @@
 	);
 
 	function copyToClipboard() {
-		navigator.clipboard.writeText(`http://localhost:9000/${selectedOverlay.path}/index.html`);
+		navigator.clipboard.writeText(
+			`http://localhost:9000/${selectedOverlay.path.replace('overlays/', '')}/index.html`
+		);
 		copied = true;
 
 		app.toast.success('Overlay URL copied to clipboard!');
@@ -215,7 +217,10 @@
 			id="overlay-url"
 			readonly
 			value={`http://localhost:9000/${selectedOverlay.path.replace('overlays/', '')}/index.html`}
-			class="bg-secondary-800 border-secondary-600 w-full rounded-md border px-4 py-2 shadow-2xs outline-none"
+			class={cn(
+				'bg-secondary-800 border-secondary-600 w-full rounded-md border px-4 py-2 shadow-2xs outline-none',
+				copied && 'border-green-500 bg-green-500/5'
+			)}
 		/>
 		<button
 			class={cn(

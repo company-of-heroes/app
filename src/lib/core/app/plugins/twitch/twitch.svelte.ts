@@ -54,68 +54,6 @@ export class Twitch extends Plugin<TwitchSettings, TwitchEvents> {
 
 	private chatListener: Listener | null = null;
 
-	private parseEmotes(msg: ChatMessage): EmoteInfo[] {
-		const emotes: EmoteInfo[] = [];
-		const emoteOffsets = msg.emoteOffsets;
-
-		for (const [emoteId, positions] of emoteOffsets) {
-			for (const position of positions) {
-				// positions is an array of strings like "0-4" or "6-10"
-				const [start, end] = position.split('-').map(Number);
-				const emoteName = msg.text.substring(start, end + 1);
-				emotes.push({
-					id: emoteId,
-					name: emoteName,
-					url: `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/3.0`,
-					startIndex: start,
-					endIndex: end
-				});
-			}
-		}
-
-		// Sort by start index in descending order for replacement
-		return emotes.sort((a, b) => b.startIndex! - a.startIndex!);
-	}
-
-	private messageToHtml(msg: ChatMessage): string {
-		const emotes = this.parseEmotes(msg);
-		let html = msg.text;
-
-		// Replace emotes with img tags from end to start to preserve indices
-		for (const emote of emotes) {
-			const before = html.substring(0, emote.startIndex);
-			const after = html.substring(emote.endIndex! + 1);
-			html = `${before}<img src="${emote.url}" alt="${emote.name}" class="emote" />${after}`;
-		}
-
-		return html;
-	}
-
-	private parseChatMessage(
-		channel: string,
-		user: string,
-		message: string,
-		msg: ChatMessage
-	): ParsedMessage {
-		const emotes = this.parseEmotes(msg);
-		const badges: { [key: string]: string } = {};
-
-		// Parse badges
-		for (const [badgeName, badgeVersion] of msg.userInfo.badges) {
-			badges[badgeName] = badgeVersion;
-		}
-
-		return {
-			channel,
-			user,
-			message: this.messageToHtml(msg),
-			displayName: msg.userInfo.displayName,
-			color: msg.userInfo.color || '#FFFFFF',
-			emotes,
-			badges
-		};
-	}
-
 	enable(): Promise<this> {
 		return new Promise((resolve) => {
 			watch(
@@ -184,6 +122,68 @@ export class Twitch extends Plugin<TwitchSettings, TwitchEvents> {
 				}
 			);
 		});
+	}
+
+	private parseEmotes(msg: ChatMessage): EmoteInfo[] {
+		const emotes: EmoteInfo[] = [];
+		const emoteOffsets = msg.emoteOffsets;
+
+		for (const [emoteId, positions] of emoteOffsets) {
+			for (const position of positions) {
+				// positions is an array of strings like "0-4" or "6-10"
+				const [start, end] = position.split('-').map(Number);
+				const emoteName = msg.text.substring(start, end + 1);
+				emotes.push({
+					id: emoteId,
+					name: emoteName,
+					url: `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/3.0`,
+					startIndex: start,
+					endIndex: end
+				});
+			}
+		}
+
+		// Sort by start index in descending order for replacement
+		return emotes.sort((a, b) => b.startIndex! - a.startIndex!);
+	}
+
+	private messageToHtml(msg: ChatMessage): string {
+		const emotes = this.parseEmotes(msg);
+		let html = msg.text;
+
+		// Replace emotes with img tags from end to start to preserve indices
+		for (const emote of emotes) {
+			const before = html.substring(0, emote.startIndex);
+			const after = html.substring(emote.endIndex! + 1);
+			html = `${before}<img src="${emote.url}" alt="${emote.name}" class="emote" />${after}`;
+		}
+
+		return html;
+	}
+
+	private parseChatMessage(
+		channel: string,
+		user: string,
+		message: string,
+		msg: ChatMessage
+	): ParsedMessage {
+		const emotes = this.parseEmotes(msg);
+		const badges: { [key: string]: string } = {};
+
+		// Parse badges
+		for (const [badgeName, badgeVersion] of msg.userInfo.badges) {
+			badges[badgeName] = badgeVersion;
+		}
+
+		return {
+			channel,
+			user,
+			message: this.messageToHtml(msg),
+			displayName: msg.userInfo.displayName,
+			color: msg.userInfo.color || '#FFFFFF',
+			emotes,
+			badges
+		};
 	}
 
 	async disable() {
