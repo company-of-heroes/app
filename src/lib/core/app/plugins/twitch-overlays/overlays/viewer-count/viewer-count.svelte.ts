@@ -40,8 +40,16 @@ export class ViewerCountOverlay extends Overlay {
 
 		console.log('Fetching viewer count...');
 
-		twitch.client?.streams.getStreamByUserId(twitch.token.userId).then((stream) => {
-			app.socket?.publish('twitch.viewers', { count: stream ? stream.viewers : 0 });
-		});
+		twitch.client.streams
+			.getStreamByUserId(twitch.token.userId)
+			.then((stream) => {
+				const viewerCount = stream?.viewers ?? 0;
+				console.log('Viewer count:', viewerCount, 'Stream:', stream);
+				app.socket?.publish('twitch.viewers', { count: viewerCount });
+			})
+			.catch((err) => {
+				console.error('Error fetching stream data:', err);
+				app.socket?.publish('twitch.viewers', { count: 0 });
+			});
 	}
 }

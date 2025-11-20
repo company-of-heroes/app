@@ -8,6 +8,7 @@ mod ws_server;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_cache::init())
         // Keep only plugin initializations (all custom commands & state removed per user request)
         .plugin(tauri_plugin_websocket::init())

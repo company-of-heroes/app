@@ -9,6 +9,7 @@ export interface Plugin<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean }
 > {
 	defaultSettings(): Settings;
+	disable(): Promise<void> | this | void;
 }
 
 export abstract class Plugin<
@@ -152,13 +153,5 @@ export abstract class Plugin<
 	 * @abstract
 	 * @returns {Promise<void | this>} A promise that resolves when the feature is enabled.
 	 */
-	abstract enable(): Promise<void | this>;
-
-	/**
-	 * Disables the pluggable feature.
-	 *
-	 * @abstract
-	 * @returns {Promise<void>} A promise that resolves when the feature is disabled.
-	 */
-	abstract disable(): Promise<void>;
+	abstract enable(): Promise<void | this> | this | void;
 }

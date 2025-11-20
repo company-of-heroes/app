@@ -10,7 +10,7 @@
 	<Dialog.Portal>
 		<Dialog.Overlay
 			class={cn(
-				'fixed inset-0 z-50 bg-gray-950/70 backdrop-blur-lg',
+				'fixed inset-0 z-50 bg-gray-950/60 backdrop-blur-lg',
 				'data-[state=open]:animate-in data-[state=open]:fade-in-0',
 				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0'
 			)}

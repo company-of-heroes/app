@@ -8,8 +8,9 @@ import { ttsPersonalVoices } from '$plugins/tts-personal-voices';
 import { twitchOverlays } from '$plugins/twitch-overlays';
 import { OppBotOverlay } from '$plugins/twitch-overlays/overlays/oppbot';
 import { ChatOverlay } from '$plugins/twitch-overlays/overlays/chat';
-import { twitchBot } from '$plugins/twitch-bot/twitch-bot.svelte';
+import { twitchBot } from '$plugins/twitch-bot';
 import { ViewerCountOverlay } from '$core/app/plugins/twitch-overlays/overlays/viewer-count';
+import { updater } from '$core/app/plugins/updater';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;
@@ -25,6 +26,7 @@ export const load = async () => {
 	app.register('text-to-speech-custom-characters', ttsPersonalVoices);
 	app.register('twitch-overlays', twitchOverlays);
 	app.register('twitch-bot', twitchBot);
+	app.register('updater', updater);
 
 	twitchOverlays.registerOverlay(new OppBotOverlay());
 	twitchOverlays.registerOverlay(new ChatOverlay());

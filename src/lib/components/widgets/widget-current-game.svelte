@@ -8,12 +8,7 @@
 		getRankImageByLeaderboardId,
 		Race
 	} from '$lib/utils';
-	import {
-		getLeaderboardType,
-		getMapImageFromName,
-		getRaceFromLeaderboardId,
-		LEADERBOARD_IDS
-	} from '$lib/utils/game';
+	import { getMapImageFromName, LEADERBOARD_IDS } from '$lib/utils/game';
 	import { upperCase } from 'lodash-es';
 	import { H } from '../ui/h';
 	import { goto } from '$app/navigation';

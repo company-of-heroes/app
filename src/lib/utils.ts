@@ -151,7 +151,6 @@ export function getRankImageByLeaderboardId(leaderboardId: number, rank?: number
 	};
 
 	const race = leaderboardRaceMap[leaderboardId];
-	console.log(leaderboardId);
 	return getRankImage(race, rank);
 }
 

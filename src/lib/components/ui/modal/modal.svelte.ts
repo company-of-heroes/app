@@ -1,7 +1,7 @@
 import type { Dialog } from 'bits-ui';
+import type { Component, Snippet } from 'svelte';
 import Emittery from 'emittery';
 import { watch } from 'runed';
-import type { Component, Snippet } from 'svelte';
 
 interface ModalEvents {
 	close: never;
@@ -37,6 +37,10 @@ class Modal extends Emittery<ModalEvents> {
 
 	get isOpen() {
 		return this._open;
+	}
+
+	set isOpen(value: boolean) {
+		this._open = value;
 	}
 
 	get title() {
@@ -80,7 +84,7 @@ class Modal extends Emittery<ModalEvents> {
 		this._props = args[0];
 	}
 
-	create(options: ModalCreateOptions) {
+	create<Props extends Record<string, any>>(options: ModalCreateOptions<Props>) {
 		this._title = options.title;
 		this._description = options.description ?? undefined;
 		this._component = options.component;
