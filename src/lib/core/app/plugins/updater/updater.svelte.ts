@@ -3,32 +3,59 @@ import { fetch } from '@tauri-apps/plugin-http';
 import { getVersion } from '@tauri-apps/api/app';
 import { app } from '$core/app';
 import { Update } from '.';
+import { padEnd } from 'lodash-es';
 
 export class Updater extends Plugin {
 	name = 'updater';
+
+	hasUpdate = $state<boolean>(false);
+
+	currentVersion = $state<number>(0);
+
+	latestVersion = $state<number>(0);
+
+	downloadUrl = $state<string | undefined>(undefined);
+
+	get currentVersionFormatted() {
+		return padEnd(this.currentVersion.toString(), 6, '.0');
+	}
+
+	get latestVersionFormatted() {
+		return padEnd(this.latestVersion.toString(), 6, '.0');
+	}
 
 	enable() {
 		fetch('https://api.github.com/repos/fknoobs/app/releases/latest')
 			.then((res) => res.json())
 			.then(async (response) => {
-				const latestVersion = response.tag_name.replace('v', '');
-				const currentVersion = await getVersion();
+				this.latestVersion = parseFloat(response.tag_name.replace('v', ''));
+				this.currentVersion = parseFloat(await getVersion());
 
-				if (parseFloat(latestVersion) > parseFloat(currentVersion)) {
-					app.modal.create({
-						component: Update,
-						title: 'Update Available',
-						description: `A new version (${latestVersion}) is available. You are currently on version ${currentVersion}.`,
-						props: {
-							currentVersion,
-							latestVersion,
-							downloadUrl: response.assets.find((a: any) => a.name.endsWith('.exe'))
-								.browser_download_url
-						}
-					});
-					app.modal.open();
+				if (this.latestVersion > this.currentVersion) {
+					this.downloadUrl = response.assets[0]?.browser_download_url;
+					this.hasUpdate = true;
+
+					this.openDialog();
 				}
 			});
+	}
+
+	openDialog() {
+		if (!this.downloadUrl) {
+			return;
+		}
+
+		app.modal.create({
+			component: Update,
+			title: 'Update Available',
+			description: `A new version (${this.latestVersion}) is available. You are currently on version ${this.currentVersion}.`,
+			props: {
+				currentVersion: this.currentVersion,
+				latestVersion: this.latestVersion,
+				downloadUrl: this.downloadUrl
+			}
+		});
+		app.modal.open();
 	}
 
 	defaultSettings() {

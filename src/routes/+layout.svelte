@@ -10,6 +10,10 @@
 	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
 	import Logo from '$lib/files/logo-transparent-bg.png?url';
 	import SettingsIcon from 'phosphor-svelte/lib/GearSix';
+	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogo';
+	import TwitchLogoIcon from 'phosphor-svelte/lib/TwitchLogo';
+	import GithubLogoIcon from 'phosphor-svelte/lib/GithubLogo';
+	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRight';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -25,8 +29,14 @@
 	import '../app.css';
 	import { Label } from '$lib/components/ui/label';
 	import { Modal } from '$lib/components/ui/modal';
+	import { cn } from '$lib/utils';
+	import { openUrl } from '@tauri-apps/plugin-opener';
+	import { app } from '$core/app';
+	import { padEnd } from 'lodash-es';
 
 	let { children } = $props();
+
+	const updater = app.getPlugin('updater');
 </script>
 
 <svelte:boundary>
@@ -37,7 +47,7 @@
 				<img src={Logo} alt="Fknoobscoh - CoH app" class="size-10" />
 				<span class="font-medium">Company of Heroes</span>
 			</div>
-			<Nav.Root>
+			<Nav.Root class="grow">
 				<Label class="px-4 font-semibold text-gray-300">Menu</Label>
 				<Nav.Link href="/">
 					<DashboardIcon size={28} weight="duotone" />
@@ -55,6 +65,48 @@
 					<SettingsIcon size={28} weight="duotone" />
 					Settings
 				</Nav.Link>
+				<div class="mt-auto">
+					<span class="flex items-center gap-2 px-4 py-4">
+						<button
+							class={cn(
+								'cursor-pointer rounded-md bg-gray-800 p-1.5 text-gray-400',
+								'hover:text-primary transition-colors hover:bg-gray-700'
+							)}
+							onclick={() => openUrl('https://discord.gg/Cc69hbDnPD')}
+						>
+							<DiscordLogoIcon weight="duotone" />
+						</button>
+						<button
+							class={cn(
+								'cursor-pointer rounded-md bg-gray-800 p-1.5 text-gray-400',
+								'hover:text-primary transition-colors hover:bg-gray-700'
+							)}
+							onclick={() => openUrl('https://www.twitch.tv/fknoobscoh')}
+						>
+							<TwitchLogoIcon weight="duotone" />
+						</button>
+						<button
+							class={cn(
+								'cursor-pointer rounded-md bg-gray-800 p-1.5 text-gray-400',
+								'hover:text-primary transition-colors hover:bg-gray-700'
+							)}
+							onclick={() => openUrl('https://github.com/fknoobs/app')}
+						>
+							<GithubLogoIcon weight="duotone" />
+						</button>
+						{#if updater}
+							<span class="ms-auto flex items-center gap-2 text-sm text-gray-400">
+								<span>v{updater.currentVersionFormatted}</span>
+								{#if updater.hasUpdate}
+									<ArrowRightIcon />
+									<button class="text-primary cursor-pointer" onclick={() => updater.openDialog()}>
+										v{updater.latestVersionFormatted}
+									</button>
+								{/if}
+							</span>
+						{/if}
+					</span>
+				</div>
 			</Nav.Root>
 		</div>
 		<main class="grow overflow-auto bg-gray-800/90 p-8 text-white">
