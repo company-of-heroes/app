@@ -7,8 +7,8 @@ export type GameEvents = {
 	'GAME:LAUNCHED': never;
 	'GAME:CLOSED': never;
 	'LOBBY:STARTED': Lobby;
-	'LOBBY:GAMEOVER': never;
-	'LOBBY:DESTROYED': never;
+	'LOBBY:GAMEOVER': Lobby;
+	'LOBBY:DESTROYED': Lobby;
 };
 
 export class Game extends Emittery<GameEvents> {

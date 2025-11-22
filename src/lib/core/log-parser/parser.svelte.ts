@@ -11,6 +11,7 @@ import { isEmpty } from 'lodash-es';
 
 let lobby: Lobby | undefined;
 let matchType: number = 0;
+let sessionId: number | null = null;
 
 export class Log extends emittery<LogEvents> {
 	private lines: string[] = [];
@@ -111,7 +112,9 @@ export class Log extends emittery<LogEvents> {
 							player.profile = profiles.find((profile) => profile.profile_id === player.playerId);
 						});
 
+						lobby.sessionId = sessionId;
 						lobby.matchType = matchType;
+
 						app.game.lobby = lobby;
 						app.game.isIngame = true;
 						app.game.emit('LOBBY:STARTED', lobby);
@@ -121,11 +124,8 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:SESSIONID': {
-					const { sessionId } = data as LogEvents[typeof event];
-
-					if (lobby) {
-						lobby.sessionId = sessionId;
-					}
+					const result = data as LogEvents[typeof event];
+					sessionId = result.sessionId;
 
 					break;
 				}
@@ -151,7 +151,7 @@ export class Log extends emittery<LogEvents> {
 
 				case 'LOG:LOBBY:GAMEOVER': {
 					app.game.isIngame = false;
-					app.game.emit('LOBBY:GAMEOVER');
+					app.game.emit('LOBBY:GAMEOVER', lobby!);
 
 					matchType = 0;
 
@@ -159,11 +159,7 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:DESTROYED': {
-					if (lobby) {
-						app.game.playedLobbies.push(lobby);
-					}
-
-					app.game.emit('LOBBY:DESTROYED');
+					app.game.emit('LOBBY:DESTROYED', lobby!);
 
 					app.game.lobby = undefined;
 					lobby = undefined;
@@ -352,12 +348,7 @@ export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
 		exactly(word).groupedAs('result') // Captures 'PS_WON' or 'PS_KILLED'
 	),
 	'LOG:LOBBY:SESSIONID': createRegExp(
-		exactly(
-			'ReportMatchResults - reporting normal game results for match ',
-			oneOrMore(digit),
-			exactly(':'),
-			oneOrMore(digit).groupedAs('sessionId')
-		)
+		exactly('Created Matchinfo for sessionID ', oneOrMore(digit).groupedAs('sessionId'))
 	),
 	'LOG:LOBBY:STARTED': createRegExp(exactly('GAME -- Starting mission')),
 	'LOG:LOBBY:GAMEOVER': createRegExp(exactly('GameObj::DoGameOverPopup')),

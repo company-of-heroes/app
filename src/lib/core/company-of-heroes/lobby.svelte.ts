@@ -27,7 +27,7 @@ export class Lobby {
 	 * @public
 	 * @type {number | null}
 	 */
-	sessionId: number | null = null;
+	sessionId: number | null = $state(null);
 
 	/**
 	 * Current map name for the lobby.

@@ -14,6 +14,7 @@
 	import TwitchLogoIcon from 'phosphor-svelte/lib/TwitchLogo';
 	import GithubLogoIcon from 'phosphor-svelte/lib/GithubLogo';
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRight';
+	import HistoryIcon from 'phosphor-svelte/lib/ClockCounterClockwise';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -52,6 +53,10 @@
 				<Nav.Link href="/">
 					<DashboardIcon size={28} weight="duotone" />
 					Dashboard
+				</Nav.Link>
+				<Nav.Link href="/history">
+					<HistoryIcon size={28} weight="duotone" />
+					History
 				</Nav.Link>
 				<Nav.Link href="/leaderboards">
 					<RankingIcon size={28} weight="duotone" />

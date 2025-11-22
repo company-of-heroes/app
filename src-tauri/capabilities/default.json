@@ -55,14 +55,6 @@
 		"fs:allow-write-file",
 		"fs:scope-download-recursive",
 		"fs:scope-resource-recursive",
-		{
-			"identifier": "fs:allow-exists",
-			"allow": [
-				{
-					"path": "**"
-				}
-			]
-		},
 		"fs:read-all",
 		"fs:allow-watch",
 		{
@@ -85,59 +77,12 @@
 			"identifier": "fs:allow-exists",
 			"allow": [
 				{
-					"path": "$DOCUMENT/*"
+					"path": "**"
 				}
 			]
 		},
 		"shell:default",
 		"shell:allow-open",
-		{
-			"identifier": "shell:allow-execute",
-			"allow": [
-				{
-					"name": "binaries/fknoobs",
-					"sidecar": true
-				},
-				{
-					"name": "tar",
-					"cmd": "tar",
-					"args": [
-						"-xf",
-						{
-							"validator": "\\S+"
-						},
-						"-C",
-						{
-							"validator": "\\S+"
-						}
-					]
-				}
-			]
-		},
-		{
-			"identifier": "shell:allow-spawn",
-			"allow": [
-				{
-					"args": [
-						"serve",
-						{
-							"validator": "\\S+"
-						},
-						{
-							"validator": "\\S+"
-						},
-						{
-							"validator": "\\S+"
-						},
-						{
-							"validator": "\\S+"
-						}
-					],
-					"name": "binaries/pocketbase",
-					"sidecar": true
-				}
-			]
-		},
 		{
 			"identifier": "http:default",
 			"allow": [

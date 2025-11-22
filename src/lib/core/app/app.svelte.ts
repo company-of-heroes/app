@@ -13,12 +13,12 @@ import { game } from '$core/company-of-heroes';
 import { log } from '$core/log-parser';
 import { Socket, SocketState } from './socket.svelte';
 import { modal } from '$lib/components/ui/modal';
-import { SetupForm } from '$lib/components/setup';
 import { documentDir, sep } from '@tauri-apps/api/path';
-import { exists, readFile, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { exists, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { dev } from '$app/environment';
-import { invoke } from '@tauri-apps/api/core';
 import { save, open } from '@tauri-apps/plugin-dialog';
+import { Database } from './database';
+import { goto } from '$app/navigation';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -118,6 +118,14 @@ export class App extends Emittery<AppEvents> {
 	store!: Store;
 
 	/**
+	 * The database instance for managing data storage and retrieval.
+	 *
+	 * @public
+	 * @type {Database}
+	 */
+	database!: Database;
+
+	/**
 	 * Toast notification system.
 	 *
 	 * @public
@@ -164,72 +172,29 @@ export class App extends Emittery<AppEvents> {
 		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
 		this.settings = await this.loadSettings();
 		this.socket = await Socket.connect();
-
-		if (isEmpty(this.settings.companyOfHeroesConfigPath)) {
-			const documentsDir = await documentDir();
-			const defaultPath = `${documentsDir}${sep()}My Games${sep()}Company of Heroes Relaunch`;
-
-			this.settings.companyOfHeroesConfigPath = defaultPath;
-		}
-
-		if (isEmpty(this.settings.companyOfHeroesInstallationPath)) {
-			const path = 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Company of Heroes Relaunch';
-			this.settings.companyOfHeroesInstallationPath = path;
-		}
+		this.database = new Database();
 
 		this.socket?.subscribe('game.lobby.started');
 		this.socket?.subscribe('game.lobby.destroyed');
 
-		this.game.on('LOBBY:STARTED', (lobby) => {
+		this.game.on('LOBBY:STARTED', async (lobby) => {
 			this.socket?.publish('game.lobby.started', lobby);
 		});
 
-		this.game.on('LOBBY:DESTROYED', () => {
+		this.game.on('LOBBY:DESTROYED', async (lobby) => {
 			this.socket?.publish('game.lobby.destroyed', null);
 		});
 
-		log.start();
-
 		$effect.root(() => {
 			this.trackStatuses();
+			this.validateSettings();
+			log.start();
 
 			watch(
 				() => $state.snapshot(this.settings),
 				() => {
 					this.store?.set('settings', this.settings);
 					this.store?.save();
-				}
-			);
-
-			watch(
-				() => app.settings.companyOfHeroesConfigPath,
-				() => {
-					(async () => {
-						if (!isEmpty(app.settings.companyOfHeroesConfigPath)) {
-							try {
-								const pathExists = await exists(app.settings.companyOfHeroesConfigPath);
-								if (pathExists) {
-									return;
-								}
-							} catch {}
-						}
-
-						const dir = await documentDir();
-						const defaultPath = `${dir}${sep()}My Games${sep()}Company of Heroes Relaunch`;
-						app.settings.companyOfHeroesConfigPath = defaultPath;
-
-						modal.create({
-							title: 'Setup',
-							description: 'We need to set some things up before you can continue.',
-							component: SetupForm,
-							hideCloseButton: true,
-							contentProps: {
-								interactOutsideBehavior: 'ignore',
-								escapeKeydownBehavior: 'ignore'
-							}
-						});
-						modal.open();
-					})();
 				}
 			);
 		});
@@ -239,36 +204,50 @@ export class App extends Emittery<AppEvents> {
 		}
 	}
 
+	validateSettings() {
+		watch(
+			() => [app.settings.companyOfHeroesConfigPath, page.url],
+			() => {
+				setTimeout(() => {
+					if (
+						isEmpty(this.settings.companyOfHeroesConfigPath) &&
+						page.url.pathname !== '/settings'
+					) {
+						goto('/settings');
+					}
+
+					if (
+						isEmpty(this.settings.companyOfHeroesInstallationPath) &&
+						window.location.pathname !== '/settings'
+					) {
+						goto('/settings');
+					}
+				}, 100);
+			}
+		);
+	}
+
 	trackStatuses() {
+		const socketStatusMap: Record<SocketState, Status> = {
+			[SocketState.Connected]: 'success',
+			[SocketState.Disconnected]: 'error',
+			[SocketState.Connecting]: 'loading',
+			[SocketState.Error]: 'error'
+		};
+
 		watch(
 			[() => this.socket?.state, () => this.socket, () => this.game.isRunning],
 			([state, socket, isRunning]) => {
-				// WebSocket status
-				if (!socket) {
-					this.statuses.websocketServer = 'error';
-				} else if (state === SocketState.Connected) {
-					this.statuses.websocketServer = 'success';
-				} else if (state === SocketState.Disconnected) {
-					this.statuses.websocketServer = 'error';
-				} else {
-					this.statuses.websocketServer = 'loading';
-				}
-
-				// Company of Heroes status
-				if (!isRunning) {
-					this.statuses.companyOfHeroes = 'idle';
-				} else {
-					this.statuses.companyOfHeroes = 'success';
-				}
+				this.statuses.websocketServer = !socket ? 'error' : (socketStatusMap[state!] ?? 'loading');
+				this.statuses.companyOfHeroes = isRunning ? 'success' : 'idle';
 			}
 		);
 
 		fetch('http://localhost:9000')
-			.then(async (res) => {
+			.then(() => {
 				this.statuses.webserver = 'success';
 			})
-			.catch((err) => {
-				console.log('Failed to fetch from webserver', err);
+			.catch(() => {
 				this.statuses.webserver = 'error';
 			});
 	}
