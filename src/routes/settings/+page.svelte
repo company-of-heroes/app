@@ -10,20 +10,6 @@
 	import ImportIcon from 'phosphor-svelte/lib/DownloadSimple';
 	import ExportIcon from 'phosphor-svelte/lib/Export';
 
-	const selectConfigDir = async () => {
-		const selectedPath = await open({
-			defaultPath: (await documentDir()) + '/My Games/Company of Heroes Relaunch',
-			multiple: false,
-			directory: true
-		});
-
-		if (!selectedPath) {
-			return;
-		}
-
-		app.settings.companyOfHeroesConfigPath = selectedPath;
-	};
-
 	$effect(() => {
 		console.log(app.route);
 	});

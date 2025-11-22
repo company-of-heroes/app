@@ -61,6 +61,7 @@ export class Socket extends Emittery<SocketEvents> {
 
 	/**
 	 * Creates a new WebSocket connection
+	 *
 	 * @param url WebSocket URL (default: ws://localhost:9842/ws)
 	 * @throws {SocketError | null} If connection fails
 	 */

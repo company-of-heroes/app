@@ -1,5 +1,12 @@
-import { unzip } from '$lib/utils';
-import { BaseDirectory, exists, readDir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { unzip } from '$lib/utils/unzip';
+import {
+	BaseDirectory,
+	exists,
+	mkdir,
+	readDir,
+	readTextFile,
+	writeTextFile
+} from '@tauri-apps/plugin-fs';
 import { join, appDataDir } from '@tauri-apps/api/path';
 
 export abstract class Overlay {
@@ -18,6 +25,7 @@ export abstract class Overlay {
 
 	async install() {
 		const path = await join(await appDataDir(), this.path);
+		//await mkdir(path, { recursive: true });
 		await unzip(this.zipUrl, path);
 	}
 

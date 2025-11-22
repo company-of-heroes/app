@@ -44,6 +44,9 @@
 			"dangerousDisableHostValidation": true,
 			"dangerousAllowHttpOnProduction": true,
 			"dangerousAcceptInvalidCerts": true
+		},
+		"sql": {
+			"preload": ["sqlite:app.dev.db"]
 		}
 	}
 }

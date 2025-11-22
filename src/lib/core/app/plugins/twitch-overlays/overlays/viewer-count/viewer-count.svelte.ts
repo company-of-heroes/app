@@ -2,7 +2,7 @@ import { app } from '$core/app/app.svelte';
 import { twitch } from '$plugins/twitch';
 import { watch } from 'runed';
 import { Overlay } from '../overlay.svelte';
-import zip from './viewer-count.zip?url';
+import zip from './viewer-count.zip?base64';
 
 export class ViewerCountOverlay extends Overlay {
 	name = 'Viewer Count';

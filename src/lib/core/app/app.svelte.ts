@@ -19,6 +19,7 @@ import { dev } from '$app/environment';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { Database } from './database';
 import { goto } from '$app/navigation';
+import dayjs from 'dayjs';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -172,12 +173,20 @@ export class App extends Emittery<AppEvents> {
 		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
 		this.settings = await this.loadSettings();
 		this.socket = await Socket.connect();
-		this.database = new Database();
+		this.database = await Database.load();
 
 		this.socket?.subscribe('game.lobby.started');
 		this.socket?.subscribe('game.lobby.destroyed');
 
 		this.game.on('LOBBY:STARTED', async (lobby) => {
+			this.database.lobbies.createOrUpdate({
+				sessionId: lobby.sessionId!,
+				isRanked: lobby.isRanked,
+				map: lobby.map!,
+				outcome: lobby.outcome,
+				matchType: lobby.matchType,
+				players: JSON.stringify(lobby.players)
+			});
 			this.socket?.publish('game.lobby.started', lobby);
 		});
 
@@ -188,6 +197,7 @@ export class App extends Emittery<AppEvents> {
 		$effect.root(() => {
 			this.trackStatuses();
 			this.validateSettings();
+
 			log.start();
 
 			watch(
@@ -211,6 +221,7 @@ export class App extends Emittery<AppEvents> {
 				setTimeout(() => {
 					if (
 						isEmpty(this.settings.companyOfHeroesConfigPath) &&
+						false === this.settings.companyOfHeroesConfigPath.endsWith('warnings.log') &&
 						page.url.pathname !== '/settings'
 					) {
 						goto('/settings');

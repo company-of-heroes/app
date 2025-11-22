@@ -4,11 +4,21 @@ use window_vibrancy::{apply_acrylic, apply_vibrancy, NSVisualEffectMaterial};
 mod unzip;
 mod webserver;
 mod ws_server;
+mod migrations;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(debug_assertions)]
+    let db_url = "sqlite:app.dev.db";
+    
+    #[cfg(not(debug_assertions))]
+    let db_url = "sqlite:app.db";
+    
     tauri::Builder::default()
-        .plugin(tauri_plugin_sql::Builder::new().build())
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations(db_url, migrations::get_migrations())
+                .build())
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_cache::init())
         // Keep only plugin initializations (all custom commands & state removed per user request)
