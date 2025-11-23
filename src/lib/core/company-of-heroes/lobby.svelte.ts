@@ -84,7 +84,7 @@ export class Lobby {
 	 * Used to determine game mode and ranking eligibility.
 	 *
 	 * @public
-	 * @type {number | undefined}
+	 * @type {keyof typeof MATCH_TYPES | undefined}
 	 */
 	matchType = $derived.by(() => {
 		if (!this.isRanked) {
@@ -191,7 +191,7 @@ export class Lobby {
 		return this.players.find((player) => player.steamId === app.game.steamId);
 	});
 
-	constructor(map: string, players: LobbyPlayer[], matchType: number) {
+	constructor(map: string, players: LobbyPlayer[], matchType: keyof typeof MATCH_TYPES) {
 		this.map = map;
 		this.players = players;
 		this.matchType = matchType;

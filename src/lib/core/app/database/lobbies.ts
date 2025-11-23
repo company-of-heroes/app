@@ -1,3 +1,5 @@
+import type { MATCH_TYPES } from '$lib/utils/game';
+import type { LobbyPlayer } from '@fknoobs/app';
 import Sqlite from '@tauri-apps/plugin-sql';
 
 /**
@@ -12,7 +14,7 @@ interface LobbyRow {
 	isRanked: number; // SQLite stores boolean as 0 or 1
 	map: string;
 	outcome?: string;
-	matchType: number;
+	matchType: keyof typeof MATCH_TYPES;
 	players: string;
 	createdAt: string; // SQLite DATETIME stored as string
 	updatedAt: string; // SQLite DATETIME stored as string
@@ -32,8 +34,8 @@ export interface Lobby {
 	isRanked: boolean;
 	map: string;
 	outcome?: string;
-	matchType: number;
-	players: any;
+	matchType: keyof typeof MATCH_TYPES;
+	players: LobbyPlayer[];
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -298,7 +300,7 @@ export class Lobbies {
 	 * @param {PaginationOptions} [options] - Optional pagination and sorting parameters
 	 * @returns {Promise<Lobby[]>} Array of lobbies matching all filter criteria
 	 */
-	async filter(filters: LobbyFilters, options?: PaginationOptions): Promise<Lobby[]> {
+	async getList(filters: LobbyFilters, options?: PaginationOptions): Promise<Lobby[]> {
 		let query = 'SELECT * FROM lobbies';
 		const params: any[] = [];
 
@@ -309,11 +311,15 @@ export class Lobbies {
 
 		if (options?.sortBy) {
 			query += ` ORDER BY ${options.sortBy} ${options.sortOrder || 'ASC'}`;
+		} else {
+			query += ' ORDER BY createdAt DESC';
 		}
 
 		if (options?.limit) {
 			query += ' LIMIT ?';
 			params.push(options.limit);
+		} else {
+			query += ' LIMIT 25';
 		}
 
 		if (options?.offset) {
@@ -400,7 +406,7 @@ export class Lobbies {
 	 * @returns {Promise<Lobby[]>} Array of lobbies with matching map names
 	 */
 	async searchByMap(map: string, options?: PaginationOptions): Promise<Lobby[]> {
-		return this.filter({ map }, options);
+		return this.getList({ map }, options);
 	}
 
 	/**
@@ -414,7 +420,7 @@ export class Lobbies {
 	 * @returns {Promise<Lobby[]>} Array of lobbies containing the player
 	 */
 	async searchByPlayer(playerName: string, options?: PaginationOptions): Promise<Lobby[]> {
-		return this.filter({ playerName }, options);
+		return this.getList({ playerName }, options);
 	}
 
 	/**
@@ -428,7 +434,7 @@ export class Lobbies {
 	 * @returns {Promise<Lobby[]>} Array of lobbies matching the search term
 	 */
 	async search(searchTerm: string, options?: PaginationOptions): Promise<Lobby[]> {
-		return this.filter({ searchTerm }, options);
+		return this.getList({ searchTerm }, options);
 	}
 
 	/**
@@ -546,7 +552,7 @@ export class Lobbies {
 	 * @returns {Promise<Lobby[]>} Array of ranked lobbies
 	 */
 	async getRanked(options?: PaginationOptions): Promise<Lobby[]> {
-		return this.filter({ isRanked: true }, options);
+		return this.getList({ isRanked: true }, options);
 	}
 
 	/**
@@ -558,7 +564,7 @@ export class Lobbies {
 	 * @returns {Promise<Lobby[]>} Array of unranked lobbies
 	 */
 	async getUnranked(options?: PaginationOptions): Promise<Lobby[]> {
-		return this.filter({ isRanked: false }, options);
+		return this.getList({ isRanked: false }, options);
 	}
 
 	/**
@@ -571,7 +577,7 @@ export class Lobbies {
 	 * @returns {Promise<Lobby[]>} Array of lobbies with the specified match type
 	 */
 	async getByMatchType(matchType: number, options?: PaginationOptions): Promise<Lobby[]> {
-		return this.filter({ matchType }, options);
+		return this.getList({ matchType }, options);
 	}
 
 	/**
@@ -601,7 +607,7 @@ export class Lobbies {
 	 * await lobbies.getByDate('2025-01-01');
 	 */
 	async getByDate(date: string, options?: PaginationOptions): Promise<Lobby[]> {
-		return this.filter({ createdDate: date }, options);
+		return this.getList({ createdDate: date }, options);
 	}
 
 	/**
@@ -623,6 +629,6 @@ export class Lobbies {
 		endDate: string,
 		options?: PaginationOptions
 	): Promise<Lobby[]> {
-		return this.filter({ createdAfter: startDate, createdBefore: endDate }, options);
+		return this.getList({ createdAfter: startDate, createdBefore: endDate }, options);
 	}
 }

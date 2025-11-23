@@ -114,6 +114,7 @@ export class Log extends emittery<LogEvents> {
 
 						lobby.sessionId = sessionId;
 						lobby.matchType = matchType;
+						console.log(matchType, lobby.mapName);
 
 						app.game.lobby = lobby;
 						app.game.isIngame = true;
@@ -152,8 +153,6 @@ export class Log extends emittery<LogEvents> {
 				case 'LOG:LOBBY:GAMEOVER': {
 					app.game.isIngame = false;
 					app.game.emit('LOBBY:GAMEOVER', lobby!);
-
-					matchType = 0;
 
 					break;
 				}

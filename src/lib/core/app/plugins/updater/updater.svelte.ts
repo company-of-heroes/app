@@ -28,7 +28,9 @@ export class Updater extends Plugin {
 		fetch('https://api.github.com/repos/fknoobs/app/releases/latest')
 			.then((res) => res.json())
 			.then(async (response) => {
-				this.latestVersion = parseFloat(response.tag_name.replace('v', ''));
+				this.latestVersion = parseFloat(
+					response.tag_name ? response.tag_name.replace('v', '') : await getVersion()
+				);
 				this.currentVersion = parseFloat(await getVersion());
 
 				if (this.latestVersion > this.currentVersion) {

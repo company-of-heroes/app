@@ -25,7 +25,6 @@ export abstract class Overlay {
 
 	async install() {
 		const path = await join(await appDataDir(), this.path);
-		//await mkdir(path, { recursive: true });
 		await unzip(this.zipUrl, path);
 	}
 

@@ -13,7 +13,7 @@ import { game } from '$core/company-of-heroes';
 import { log } from '$core/log-parser';
 import { Socket, SocketState } from './socket.svelte';
 import { modal } from '$lib/components/ui/modal';
-import { documentDir, sep } from '@tauri-apps/api/path';
+import { documentDir, join, sep } from '@tauri-apps/api/path';
 import { exists, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { dev } from '$app/environment';
 import { save, open } from '@tauri-apps/plugin-dialog';
@@ -218,18 +218,40 @@ export class App extends Emittery<AppEvents> {
 		watch(
 			() => [app.settings.companyOfHeroesConfigPath, page.url],
 			() => {
-				setTimeout(() => {
+				setTimeout(async () => {
+					const defaultWarningsLogPath = await join(
+						await documentDir(),
+						'My Games',
+						'Company of Heroes Relaunch',
+						'warnings.log'
+					);
+					const defaultInstallationPath = await join(
+						'C:',
+						'Program Files (x86)',
+						'Steam',
+						'steamapps',
+						'common',
+						'Company of Heroes Relaunch'
+					);
+
 					if (
 						isEmpty(this.settings.companyOfHeroesConfigPath) &&
-						false === this.settings.companyOfHeroesConfigPath.endsWith('warnings.log') &&
-						page.url.pathname !== '/settings'
+						(await exists(defaultWarningsLogPath))
 					) {
-						goto('/settings');
+						this.settings.companyOfHeroesConfigPath = defaultWarningsLogPath;
 					}
 
 					if (
 						isEmpty(this.settings.companyOfHeroesInstallationPath) &&
-						window.location.pathname !== '/settings'
+						(await exists(defaultInstallationPath))
+					) {
+						this.settings.companyOfHeroesInstallationPath = defaultInstallationPath;
+					}
+
+					if (
+						(!(await exists(this.settings.companyOfHeroesInstallationPath)) ||
+							!(await exists(this.settings.companyOfHeroesConfigPath))) &&
+						page.url.pathname !== '/settings'
 					) {
 						goto('/settings');
 					}

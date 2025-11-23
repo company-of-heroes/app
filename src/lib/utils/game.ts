@@ -1,4 +1,5 @@
 import { getFactionFlagFromRace } from '$lib/utils';
+import type { LeaderboardStat, LobbyPlayer } from '@fknoobs/app';
 import { createRawSnippet } from 'svelte';
 
 /**
@@ -353,48 +354,148 @@ export const leaderboards = [
 ];
 
 /**
- * Cache for storing map image imports to avoid repeated dynamic imports
+ * Eagerly import all map images using Vite's glob import
+ * This loads all maps at once during build/initial load for instant access
+ */
+const mapModules = import.meta.glob<{ default: string }>('$lib/files/maps/*_map_base.png', {
+	eager: true
+});
+
+/**
+ * Cache for storing map image imports to avoid repeated lookups
  * Maps map name to the imported image path
  */
 const mapCache = new Map<string, string>();
 
 /**
- * Gets the map image based on map name with caching and fallback
- * Dynamically imports map images and provides error handling
+ * Default fallback map image
+ */
+let defaultMapImage: string | null = null;
+
+/**
+ * Initialize map cache from glob imports
+ */
+function initializeMapCache() {
+	if (mapCache.size > 0) return; // Already initialized
+
+	for (const [path, module] of Object.entries(mapModules)) {
+		// Extract map name from path: /src/lib/files/maps/4p_duclair_map_base.png -> 4p_duclair
+		const match = path.match(/\/maps\/(.+)_map_base\.png$/);
+		if (match) {
+			const mapName = match[1].toLowerCase();
+			mapCache.set(mapName, module.default);
+		}
+	}
+
+	// Load default map
+	import('$lib/files/maps/mp_nobattlemap.png').then((module) => {
+		defaultMapImage = module.default;
+	});
+}
+
+// Initialize on module load
+initializeMapCache();
+
+/**
+ * Gets the map image based on map name with instant lookup from pre-loaded cache
+ * No dynamic imports needed - all maps are loaded eagerly at startup
  *
  * @param mapName - Name of the map to get image for
- * @returns Promise resolving to the map image asset path
+ * @returns The map image asset path
  */
-export async function getMapImageFromName(mapName: string): Promise<string> {
-	mapName = mapName.toLowerCase();
-
-	// Return cached result if available
-	if (mapCache.has(mapName)) {
-		return mapCache.get(mapName)!;
-	}
-
-	// Handle empty or invalid map name
+export function getMapImageFromName(mapName: string): string {
+	console.time('getMapImageFromName ' + mapName);
 	if (!mapName || typeof mapName !== 'string') {
-		const defaultMap = await import(`$lib/files/maps/mp_nobattlemap.png`);
-		const result = defaultMap.default;
-		mapCache.set('', result);
-		return result;
+		return defaultMapImage || '';
 	}
 
-	try {
-		const mapImage = await import(`$lib/files/maps/${mapName}_map_base.png`);
-		const result = mapImage.default;
-		if (result) {
-			mapCache.set(mapName, result);
-			return result;
-		}
-		throw new Error('Map image not found');
-	} catch (error) {
-		console.warn(`Failed to load map image for "${mapName}":`, error);
-		const defaultMap = await import(`$lib/files/maps/mp_nobattlemap.png`);
-		const result = defaultMap.default;
+	const normalizedName = mapName.toLowerCase();
+	const cachedMap = mapCache.get(normalizedName);
 
-		mapCache.set(mapName, result);
-		return result;
+	if (cachedMap) {
+		return cachedMap;
 	}
+
+	console.warn(`Map image not found for "${mapName}"`);
+	return defaultMapImage || '';
 }
+
+/**
+ * Gets the leaderboard stats for a player based on match type
+ *
+ * @param matchType - The match type key
+ * @param player - The lobby player object
+ * @returns The leaderboard stats for the player
+ */
+export const getLeaderboardStatsForPlayerByMatchType = (
+	matchType: keyof typeof MATCH_TYPES,
+	player: LobbyPlayer
+): LeaderboardStat | undefined => {
+	const matchTypeName = MATCH_TYPES[matchType];
+	const { race } = player;
+
+	// Map of match types to their race-based leaderboard IDs
+	const matchTypeToLeaderboards: Record<string, Record<Race, number>> = {
+		'Basic Match': {
+			[Race.US]: LEADERBOARD_IDS.basic_usa,
+			[Race.Wehrmacht]: LEADERBOARD_IDS.basic_wehrmacht,
+			[Race.Commonwealth]: LEADERBOARD_IDS.basic_british,
+			[Race.PanzerElite]: LEADERBOARD_IDS.basic_panzer_elite
+		},
+		'1 VS. 1': {
+			[Race.US]: LEADERBOARD_IDS['1v1_us'],
+			[Race.Wehrmacht]: LEADERBOARD_IDS['1v1_heer'],
+			[Race.Commonwealth]: LEADERBOARD_IDS['1v1_brit'],
+			[Race.PanzerElite]: LEADERBOARD_IDS['1v1_panzer']
+		},
+		'2 VS. 2': {
+			[Race.US]: LEADERBOARD_IDS['2v2_us'],
+			[Race.Wehrmacht]: LEADERBOARD_IDS['2v2_heer'],
+			[Race.Commonwealth]: LEADERBOARD_IDS['2v2_brit'],
+			[Race.PanzerElite]: LEADERBOARD_IDS['2v2_panzer']
+		},
+		'3 VS. 3': {
+			[Race.US]: LEADERBOARD_IDS['3v3_us'],
+			[Race.Wehrmacht]: LEADERBOARD_IDS['3v3_heer'],
+			[Race.Commonwealth]: LEADERBOARD_IDS['3v3_brit'],
+			[Race.PanzerElite]: LEADERBOARD_IDS['3v3_panzer']
+		},
+		'4 VS. 4': {
+			[Race.US]: LEADERBOARD_IDS['4v4_us'],
+			[Race.Wehrmacht]: LEADERBOARD_IDS['4v4_heer'],
+			[Race.Commonwealth]: LEADERBOARD_IDS['4v4_brit'],
+			[Race.PanzerElite]: LEADERBOARD_IDS['4v4_panzer']
+		},
+		Skirmish: {
+			[Race.US]: LEADERBOARD_IDS.skirmish_usa,
+			[Race.Wehrmacht]: LEADERBOARD_IDS.skirmish_wehrmacht,
+			[Race.Commonwealth]: LEADERBOARD_IDS.skirmish_british,
+			[Race.PanzerElite]: LEADERBOARD_IDS.skirmish_panzer_elite
+		},
+		'Operation: Assault': {
+			[Race.US]: LEADERBOARD_IDS.operation_assault_usa,
+			[Race.Wehrmacht]: LEADERBOARD_IDS.operation_assault_wehrmacht,
+			[Race.Commonwealth]: LEADERBOARD_IDS.operation_assault_usa,
+			[Race.PanzerElite]: LEADERBOARD_IDS.operation_assault_wehrmacht
+		},
+		'Operation: Panzerkrieg': {
+			[Race.US]: LEADERBOARD_IDS.operation_panzerkrieg_usa,
+			[Race.Wehrmacht]: LEADERBOARD_IDS.operation_panzerkrieg_wehrmacht,
+			[Race.Commonwealth]: LEADERBOARD_IDS.operation_panzerkrieg_usa,
+			[Race.PanzerElite]: LEADERBOARD_IDS.operation_panzerkrieg_wehrmacht
+		},
+		'Operation: Stonewall': {
+			[Race.US]: LEADERBOARD_IDS.operation_stonewall_usa,
+			[Race.Wehrmacht]: LEADERBOARD_IDS.operation_stonewall_wehrmacht,
+			[Race.Commonwealth]: LEADERBOARD_IDS.operation_stonewall_usa,
+			[Race.PanzerElite]: LEADERBOARD_IDS.operation_stonewall_wehrmacht
+		}
+	};
+
+	// Handle AT (Arranged Team) variants by mapping to base match type
+	const normalizedMatchType = matchTypeName.replace(' AT', '');
+	const leaderboardMap = matchTypeToLeaderboards[normalizedMatchType];
+	const leaderboardId = leaderboardMap?.[race as Race];
+
+	return player.profile?.leaderboardStats?.find((stat) => stat.leaderboard_id === leaderboardId);
+};

@@ -59,7 +59,14 @@
 		"fs:allow-watch",
 		"fs:scope-document-recursive",
 		"fs:scope-appdata-recursive",
-		"fs:allow-exists",
+		{
+			"identifier": "fs:allow-exists",
+			"allow": [
+				{
+					"path": "**"
+				}
+			]
+		},
 		"shell:default",
 		"shell:allow-open",
 		{
