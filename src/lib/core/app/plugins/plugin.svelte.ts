@@ -88,7 +88,7 @@ export abstract class Plugin<
 								try {
 									await this.enable();
 								} catch (e) {
-									error(`Error initializing module ${this.constructor.name}: ${e}`);
+									console.error(`Error initializing module ${this.constructor.name}: ${e}`);
 									await this._disable();
 								}
 							} else {
@@ -144,7 +144,7 @@ export abstract class Plugin<
 	 * Disables the plugin internally.
 	 */
 	private async _disable() {
-		await this.disable();
+		await this.disable?.();
 	}
 
 	/**

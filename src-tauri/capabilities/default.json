@@ -41,6 +41,10 @@
 				}
 			]
 		},
+		{
+			"identifier": "http:default",
+			"allow": [{ "url": "https://*.fknoobs.com" }]
+		},
 		"store:default",
 		"oauth:allow-start",
 		"oauth:allow-cancel",

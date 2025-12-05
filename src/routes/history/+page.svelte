@@ -26,17 +26,17 @@
 
 	const lobbies = resource(
 		() => filters,
-		() => app.database.lobbies.getList(filters, { limit: 1 })
+		() => app.database.lobbies.getList(filters)
 	);
 
 	$inspect(lobbies.current?.[0]);
 </script>
 
-<!-- <H level="1">History</H>
+<H level="1">History</H>
 {#if lobbies.current}
 	<div class="grid gap-4">
 		{#each lobbies.current as l}
-			{@const lobby = new CoHLobby(l.map, l.players, l.matchType)}
+			{@const lobby = new CoHLobby(l.map, l.players, l.isRanked)}
 			<Lobby.Root
 				{lobby}
 				class="grid grid-cols-[200px_auto] gap-6 rounded-lg border border-gray-700 bg-gray-800 p-4"
@@ -53,8 +53,9 @@
 								{#each team.players as player}
 									<Player.Root
 										{player}
-										class="grid grid-cols-[30px_auto_50px_50px] items-center gap-2 px-4 *:py-2"
+										class="grid grid-cols-[30px_30px_30px_auto_50px_50px] items-center gap-2 px-4 *:py-2"
 									>
+										<Player.Faction />
 										<Player.Rank />
 										<Player.Country />
 										<Player.Alias />
@@ -69,4 +70,4 @@
 			</Lobby.Root>
 		{/each}
 	</div>
-{/if} -->
+{/if}

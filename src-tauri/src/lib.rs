@@ -5,6 +5,8 @@ mod unzip;
 mod webserver;
 mod ws_server;
 mod migrations;
+mod process_check;
+mod replay_parser;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -33,7 +35,9 @@ pub fn run() {
         .plugin(tauri_plugin_cors_fetch::init())
         .invoke_handler(tauri::generate_handler![
             unzip::unzip_file,
-            unzip::unzip_bytes
+            unzip::unzip_bytes,
+            process_check::is_running,
+            replay_parser::parse_replay
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();

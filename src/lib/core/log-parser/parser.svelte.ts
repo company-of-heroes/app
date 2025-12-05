@@ -8,6 +8,7 @@ import { app } from '$core/app';
 import { Lobby } from '$core/company-of-heroes';
 import { relic } from '$lib/relic';
 import { isEmpty } from 'lodash-es';
+import { steam } from '$core/steam';
 
 let lobby: Lobby | undefined;
 let matchType: number = 0;
@@ -22,7 +23,7 @@ export class Log extends emittery<LogEvents> {
 
 	private interval: number | null = null;
 
-	private isReady: boolean | undefined = $state(undefined);
+	public isReady: boolean | undefined = $state(undefined);
 
 	constructor() {
 		super();
@@ -31,15 +32,17 @@ export class Log extends emittery<LogEvents> {
 			switch (event) {
 				case 'LOG:FOUND:PROFILE': {
 					const { steamId } = data as LogEvents[typeof event];
-					const profile = await relic.getProfileBySteamId(steamId);
+					const [profile, steamProfile] = await Promise.all([
+						relic.getProfileBySteamId(steamId),
+						steam.getUserProfile(steamId.toString())
+					]);
 
-					if (!profile) {
+					if (!profile || !steamProfile) {
 						return;
 					}
 
-					app.game.isRunning = true;
 					app.game.steamId = steamId.toString();
-					app.game.profile = profile;
+					app.game.profile = { relic: profile, steam: steamProfile };
 
 					app.game.emit('GAME:LAUNCHED');
 
@@ -47,7 +50,9 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:POPULATING': {
-					lobby = new Lobby('', [], 0);
+					const { isRanked } = data as LogEvents[typeof event];
+
+					lobby = new Lobby('', [], isRanked === 'AutoMatchForm');
 
 					break;
 				}
@@ -113,8 +118,6 @@ export class Log extends emittery<LogEvents> {
 						});
 
 						lobby.sessionId = sessionId;
-						lobby.matchType = matchType;
-						console.log(matchType, lobby.mapName);
 
 						app.game.lobby = lobby;
 						app.game.isIngame = true;
@@ -137,7 +140,7 @@ export class Log extends emittery<LogEvents> {
 					}
 
 					const { playerId, result } = data as LogEvents[typeof event];
-					const player = lobby?.getPlayerById(app.game.profile.profile_id);
+					const player = lobby?.getPlayerById(app.game.profile.relic.profile_id);
 
 					if (!player) {
 						return;
@@ -168,8 +171,6 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:ENDED': {
-					app.game.isRunning = false;
-
 					app.game.emit('GAME:CLOSED');
 
 					break;
@@ -184,32 +185,32 @@ export class Log extends emittery<LogEvents> {
 			return;
 		}
 
-		$effect.root(() => {
-			$effect(() => {
-				track(
-					() => app.settings.companyOfHeroesConfigPath,
-					() => {
-						if (isEmpty(app.settings.companyOfHeroesConfigPath)) {
-							return;
-						}
+		track(
+			() => app.settings.companyOfHeroesConfigPath,
+			() => {
+				if (isEmpty(app.settings.companyOfHeroesConfigPath)) {
+					return;
+				}
 
-						if (this.interval) {
-							clearInterval(this.interval);
-						}
+				if (this.interval) {
+					clearInterval(this.interval);
+				}
 
-						this.oldLength = 0;
-						this.newLength = 0;
+				this.isReady = undefined;
+				this.oldLength = 0;
+				this.newLength = 0;
 
-						app.game.reset();
-						this.createWatcher();
-					}
-				);
-				trackOnce(
-					() => this.isReady,
-					() => this.emit('ISREADY') as never
-				);
-			});
-		});
+				this.createWatcher();
+			}
+		);
+		track(
+			() => this.isReady,
+			(isReady) => {
+				if (isReady) {
+					this.emit('ISREADY' as never);
+				}
+			}
+		);
 	}
 
 	private async createWatcher() {
@@ -266,7 +267,7 @@ export type LogEvents = {
 	'LOG:ENDED': undefined;
 	'LOG:FOUND:PROFILE': { steamId: bigint };
 	'LOG:LOBBY:JOINED': undefined;
-	'LOG:LOBBY:POPULATING': undefined;
+	'LOG:LOBBY:POPULATING': { isRanked: string };
 	'LOG:LOBBY:POPULATING:MAP': { map: CoHMaps };
 	'LOG:LOBBY:POPULATING:PLAYER': {
 		index: number;
@@ -299,7 +300,13 @@ export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
 		oneOrMore(digit).after('Found 1 profiles for account /steam/').as('steamId')
 	),
 	'LOG:LOBBY:JOINED': createRegExp(exactly('RLINK -- JoinAsync: AsyncJob Complete')),
-	'LOG:LOBBY:POPULATING': createRegExp(exactly('Form - Starting game')),
+	'LOG:LOBBY:POPULATING': createRegExp(
+		exactly('AutoMatchForm')
+			.or(exactly('GameSetupForm'))
+			.groupedAs('isRanked')
+			.and(exactly(' - Starting game'))
+	),
+	//'LOG:LOBBY:POPULATING': createRegExp(exactly('Form - Starting game')),
 	'LOG:LOBBY:POPULATING:MAP': createRegExp(
 		exactly('GAME -- *** Beginning mission ').and(oneOrMore(char).before(' (').groupedAs('map'))
 	),

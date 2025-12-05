@@ -6,6 +6,7 @@ import PlayerAlias from './player-alias.svelte';
 import PlayerWins from './player-wins.svelte';
 import PlayerLosses from './player-losses.svelte';
 import PlayerRank from './player-rank.svelte';
+import PlayerFaction from './player-faction.svelte';
 
 const context = new Context<LobbyPlayer>('<player />');
 
@@ -18,5 +19,6 @@ export {
 	PlayerAlias as Alias,
 	PlayerWins as Wins,
 	PlayerLosses as Losses,
-	PlayerRank as Rank
+	PlayerRank as Rank,
+	PlayerFaction as Faction
 };

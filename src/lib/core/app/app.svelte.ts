@@ -1,5 +1,6 @@
 import type { Component } from 'svelte';
 import type { Plugins } from '@fknoobs/app';
+import type { TypedPocketBase } from '$core/pocketbase/types';
 import Emittery from 'emittery';
 import { fetch } from '@tauri-apps/plugin-http';
 import { page } from '$app/state';
@@ -9,7 +10,7 @@ import { watch } from 'runed';
 import { SvelteMap } from 'svelte/reactivity';
 import { isEmpty, merge } from 'lodash-es';
 import { toast } from 'svelte-sonner';
-import { game } from '$core/company-of-heroes';
+import { game, type Game } from '$core/company-of-heroes';
 import { log } from '$core/log-parser';
 import { Socket, SocketState } from './socket.svelte';
 import { modal } from '$lib/components/ui/modal';
@@ -19,7 +20,7 @@ import { dev } from '$app/environment';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { Database } from './database';
 import { goto } from '$app/navigation';
-import dayjs from 'dayjs';
+import { pocketbase } from '$core/pocketbase';
 
 /**
  * Defines the structure for a navigation route within the application.
@@ -47,6 +48,7 @@ export type Settings = {
 export type AppEvents = {
 	boot: App;
 	install: never;
+	ready: never;
 };
 
 export type Status = 'idle' | 'loading' | 'error' | 'success';
@@ -61,6 +63,14 @@ export type Statuses = {
  */
 export class App extends Emittery<AppEvents> {
 	isBooted: boolean = $state(false);
+
+	/**
+	 * Indicates whether the app is booted and ready.
+	 *
+	 * @public
+	 * @type {boolean}
+	 */
+	isReady: boolean = $state(false);
 
 	/*
 	 * Reactive array holding the application's navigation routes.
@@ -140,7 +150,7 @@ export class App extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Game}
 	 */
-	game = game;
+	game: Game = game;
 
 	/**
 	 * The WebSocket connection for real-time communication.
@@ -159,6 +169,14 @@ export class App extends Emittery<AppEvents> {
 	modal = modal;
 
 	/**
+	 * The PocketBase instance for backend interactions.
+	 *
+	 * @public
+	 * @type {TypedPocketBase}
+	 */
+	pocketbase: TypedPocketBase = pocketbase;
+
+	/**
 	 * A reactive map holding instances of application modules.
 	 *
 	 * @public
@@ -175,18 +193,7 @@ export class App extends Emittery<AppEvents> {
 		this.socket = await Socket.connect();
 		this.database = await Database.load();
 
-		this.socket?.subscribe('game.lobby.started');
-		this.socket?.subscribe('game.lobby.destroyed');
-
 		this.game.on('LOBBY:STARTED', async (lobby) => {
-			this.database.lobbies.createOrUpdate({
-				sessionId: lobby.sessionId!,
-				isRanked: lobby.isRanked,
-				map: lobby.map!,
-				outcome: lobby.outcome,
-				matchType: lobby.matchType,
-				players: JSON.stringify(lobby.players)
-			});
 			this.socket?.publish('game.lobby.started', lobby);
 		});
 
@@ -198,13 +205,46 @@ export class App extends Emittery<AppEvents> {
 			this.trackStatuses();
 			this.validateSettings();
 
-			log.start();
+			watch(
+				() => this.game.isRunning,
+				(running) => {
+					if (running) {
+						log.start();
+					} else {
+						this.game.close();
+					}
+				}
+			);
+
+			watch(
+				() => log.isReady,
+				(isReady) => {
+					if (isReady) {
+						this.socket?.subscribe('game.lobby.started');
+						this.socket?.subscribe('game.lobby.destroyed');
+
+						this.emit('ready');
+					} else {
+						this.socket?.unsubscribe('game.lobby.started');
+						this.socket?.unsubscribe('game.lobby.destroyed');
+					}
+
+					this.isReady = !!isReady;
+				}
+			);
 
 			watch(
 				() => $state.snapshot(this.settings),
 				() => {
 					this.store?.set('settings', this.settings);
 					this.store?.save();
+				}
+			);
+
+			watch(
+				() => this.game.steamId,
+				(steamId) => {
+					if (!steamId) return;
 				}
 			);
 		});

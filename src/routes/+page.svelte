@@ -2,7 +2,9 @@
 	import { app } from '$core/app';
 	import { H } from '$lib/components/ui/h';
 	import { WidgetStatus } from '$lib/components/widgets';
+	import { Alert } from '$lib/components/ui/alert';
 	import WidgetCurrentGame from '$lib/components/widgets/widget-current-game.svelte';
+	import WidgetProfile from '$lib/components/widgets/widget-profile.svelte';
 </script>
 
 <H level="1">Dashboard</H>
@@ -22,6 +24,15 @@
 	</WidgetStatus>
 </div>
 
-<div class="mt-12">
-	<WidgetCurrentGame />
-</div>
+{#if app.game.isRunning}
+	<div class="mt-8 grid gap-8">
+		<div>
+			<WidgetProfile />
+		</div>
+		<div>
+			<WidgetCurrentGame />
+		</div>
+	</div>
+{:else}
+	<Alert variant="warning" class="mt-4">Company of Heroes is not running.</Alert>
+{/if}

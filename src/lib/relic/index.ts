@@ -2,7 +2,8 @@ import type {
 	LeaderBoardResponse,
 	LeaderboardStatWithProfile,
 	PersonalStat,
-	RelicProfile
+	RelicProfile,
+	TransformedMatch
 } from '@fknoobs/app';
 import { fetch } from '@tauri-apps/plugin-http';
 import { transformMatchHistory } from './transform-match-history';
@@ -143,7 +144,7 @@ export class RelicClient {
 		return leaderboardStatsWithMembers;
 	}
 
-	public async getRecentMatchHistoryForProfile(profileId: number): Promise<any> {
+	public async getRecentMatchHistoryForProfile(profileId: number): Promise<TransformedMatch[]> {
 		const result = await this.request<any>(
 			['community', 'leaderboard', 'getrecentmatchhistorybyprofileid'],
 			{

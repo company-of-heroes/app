@@ -1,53 +1,22 @@
-import ReplayParser from './replay-parser';
-import { Action, Coordinate, Message, Player, Replay, Tick } from './replay';
-import { ActionDefinition, ActionDefinitions } from './action-definitions';
-import { readFile } from '@tauri-apps/plugin-fs';
-import { parseReplay, type ParsedReplay } from './simple-replay-parser';
+import type { Action, Message, Player, Replay } from './replay';
+import { ReplayParser } from './replay-parser';
+import { invoke } from '@tauri-apps/api/core';
+import type { ParsedReplay } from './simple-replay-parser';
 
-/**
- * Adapter function that maintains compatibility with the existing API
- * while using the new simplified parser internally
- */
-export async function parseReplayFile(
-	filePath: string,
-	headerOnly: boolean = false
-): Promise<ParsedReplay> {
-	// Read the file as Uint8Array
-	const fileData = await readFile(filePath);
-
-	// Extract filename from path
-	const fileName = filePath.split(/[/\\]/).pop() || 'unknown.rec';
-
-	// Parse using the simplified parser
-	const result = parseReplay(fileData, fileName, headerOnly);
-
-	// If headerOnly is true, clear the actions and messages to save memory
-	if (headerOnly) {
-		result.actions = [];
-		result.messages = [];
-		result.actionCount = 0;
-		result.messageCount = 0;
-	}
-
-	return result;
-}
-
-/**
- * Direct parser function that takes Uint8Array as requested
- */
-export { parseReplay } from './simple-replay-parser';
+export { ReplayParser, type Replay, type Player, type Message, type Action };
 export type { ParsedReplay } from './simple-replay-parser';
 
-// Legacy exports for backward compatibility
-
-export {
-	ReplayParser,
-	Action,
-	Coordinate,
-	Message,
-	Player,
-	Replay,
-	Tick,
-	ActionDefinition,
-	ActionDefinitions
-};
+/**
+ * Parses a replay file using the optimized Rust backend.
+ *
+ * @param filePath - The absolute path to the .rec file
+ * @returns Promise resolving to the parsed replay data
+ */
+export async function parseReplayFile(filePath: string): Promise<ParsedReplay> {
+	try {
+		return await invoke<ParsedReplay>('parse_replay', { path: filePath });
+	} catch (error) {
+		console.error('Rust replay parser failed:', error);
+		throw error;
+	}
+}

@@ -2,18 +2,22 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { upperCase } from 'lodash-es';
 	import { usePlayer } from '.';
-	import { useLobby } from '../lobby';
+	import { getFactionFlagFromRace, getRacePrefix, getRankImage } from '$lib/utils';
 	import { getLeaderboardStatsForPlayerByMatchType } from '$lib/utils/game';
+	import { useLobby } from '../lobby';
 
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
 	const { ...restProps }: Props = $props();
-
-	const lobby = useLobby();
 	const player = usePlayer();
+	const lobby = useLobby();
 	const stats = getLeaderboardStatsForPlayerByMatchType(lobby.matchType, player);
 </script>
 
-{#if player.profile}
-	<span class="text-center" {...restProps}>{stats ? stats.wins : '-'}</span>
-{/if}
+<span>
+	<img
+		src={await getFactionFlagFromRace(player.race)}
+		alt={getRacePrefix(player.race)}
+		title={upperCase(getRacePrefix(player.race))}
+	/>
+</span>

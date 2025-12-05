@@ -3,13 +3,17 @@ declare module '@fknoobs/app' {
 	import type { TTSPersonalVoices } from '$plugins/tts-personal-voices';
 	import type { TwitchBot } from '$plugins/twitch-bot';
 	import type { Updater } from '$plugins/updater';
+	import type { History } from '$plugins/history';
+	import type { ReplayAnalyzer } from '$plugins/replay-analyzer';
 	import type { TwitchOverlays } from '$core/app/plugins/twitch-overlays';
 	import type { Replays } from '$lib/modules/replay-manager/replays.svelte';
 
 	interface Plugins {
 		twitch: Twitch;
 		updater: Updater;
+		history: History;
 		'twitch-overlays': TwitchOverlays;
+        'replay-analyzer': Replays;
 		'text-to-speech': TTS;
 		'twitch-bot': TwitchBot;
 		'text-to-speech-custom-characters': TTSPersonalVoices;
@@ -57,6 +61,30 @@ declare module '@fknoobs/app' {
 		highestrank: number;
 		highestranklevel: number;
 	};
+
+    type ReplayMessage = {
+        tick: number;
+        sender: string;
+        senderID: number;
+        content: string;
+        recipient: number;
+    }
+
+    type ReplayPlayer = {
+        name: string;
+        faction: string;
+        id: number;
+        doctrine: number;
+    }
+
+    type ReplayAction = {
+        tick: number;
+        data: Uint8Array;
+        rawHex: string;
+        playerID: number;
+        playerName: string;
+        timestamp: string;
+    }
 
 	type LeaderboardStatWithProfile = LeaderboardStat & {
 		profile: RelicProfile;

@@ -1,346 +1,282 @@
-import { normalizeMapName } from '$lib/utils';
-import type { ActionDefinitions } from './action-definitions';
-import { Player, Replay, Tick } from './replay';
+import { ReplayStream } from './replay-stream';
+import { Replay } from './replay';
 
-export default class ReplayParser {
-	replay: Replay;
+export class ReplayParser {
+    private stream: ReplayStream;
+    private replay: Replay;
 
-	private constructor(replay: Replay) {
-		this.replay = replay;
-	}
+    /**
+     * Creates a new ReplayParser instance.
+     * 
+     * @param input The input Uint8Array containing the replay data.
+     */
+    constructor(input: Uint8Array) {        
+        this.stream = new ReplayStream(input);
+        this.replay = new Replay();
+    }
 
-	static async parse(fileName: string, headerOnly = false, actionDefinitions?: ActionDefinitions) {
-		const replay = await Replay.load(fileName, actionDefinitions);
-		const replayParser = new ReplayParser(replay);
+    public parse(): Replay {
+        try {
+            this.parseHeader();
+            this.parseData();
+        } catch (e) {
+            console.error("Error parsing replay:", e);
+        }
+        return this.replay;
+    }
 
-		return replayParser.parseReplay(replay, headerOnly);
-	}
+    private parseHeader() {
+        this.replay.version = this.stream.readUInt32();
+        this.replay.gameType = this.stream.readASCIIStr(8);
 
-	private parseReplay(replay: Replay, headerOnly = false) {
-		this.replay = replay;
+        // Decode date: C# code scans for null terminator in uint16 steps
+        const startPos = this.stream.position;
+        let length = 0;
+        while (this.stream.readUInt16() !== 0) {
+            length++;
+        }
+        this.stream.seek(startPos);
+        this.replay.gameDate = this.stream.readUnicodeStr(length);
+        this.stream.readUInt16(); // Skip null terminator
 
-		if (!replay.headerParsed) {
-			this.parseHeader();
-		}
+        this.stream.seek(76); // Fixed offset from C# code
+        
+        this.parseChunky();
+        this.parseChunky();
+        
+        this.assignPlayerIDs();
 
-		if (!headerOnly) {
-			this.parseData();
-		}
+        this.replay.headerParsed = true;
+    }
 
-		this.replay!.replayStream!.close();
-		return replay;
-	}
+    private assignPlayerIDs() {
+        const playerCount = this.replay.players.length;
+        for (let i = 0; i < playerCount; i++) {
+            // Assuming reverse order: First parsed is highest ID
+            this.replay.players[i].id = 1000 + (playerCount - 1 - i);
+        }
+    }
 
-	private parseHeader() {
-		this.replay!.replayVersion = this.replay!.replayStream!.readUInt32();
-		this.replay!.gameType = this.replay!.replayStream!.readASCIIStr(8);
+    private parseChunky(): boolean {
+        const pos = this.stream.position;
+        if (pos + 12 > this.stream.length) return false;
+        const signature = this.stream.readASCIIStr(12);
+        if (signature !== "Relic Chunky") {
+            this.stream.seek(pos);
+            return false;
+        }
+        
+        this.stream.skip(4);
+        const version = this.stream.readUInt32();
+        if (version !== 3) return false;
+        
+        this.stream.skip(4);
+        const length = this.stream.readUInt32();
+        
+        this.stream.skip(length - 28);
+        
+        while (this.parseChunk());
+        
+        return true;
+    }
 
-		// Game date
-		let L = 0;
-		while (this.replay!.replayStream!.readUInt16() !== 0) ++L;
-		this.replay!.replayStream!.seek(12);
-		this.replay!.gameDate = this.decodeDate(this.replay!.replayStream!.readUnicodeStr(L));
+    private parseChunk(): boolean {
+        if (this.stream.position + 8 > this.stream.length) return false;
 
-		this.replay!.replayStream!.seek(76);
+        const chunkType = this.stream.readASCIIStr(8);
+        
+        if (!(chunkType.startsWith("FOLD") || chunkType.startsWith("DATA"))) {
+            this.stream.skip(-8);
+            return false;
+        }
 
-		this.parseChunky();
-		this.parseChunky();
+        const chunkVersion = this.stream.readUInt32();
+        const chunkLength = this.stream.readUInt32();
+        const chunkNameLength = this.stream.readUInt32();
+        
+        this.stream.skip(8);
 
-		this.replay!.headerParsed = true;
-	}
+        let chunkName = "";
+        if (chunkNameLength > 0) {
+            chunkName = this.stream.readASCIIStr(chunkNameLength);
+        }
 
-	private parseData() {
-		let currentTick = 0;
-		let tick;
-		let tickCount = 0;
-		let firstTickTime = 0;
-		let lastTickTime = 0;
+        const startPosition = this.stream.position;
 
-		while (this.replay!.replayStream!.position < this.replay!.replayStream!.length) {
-			if (this.replay!.replayStream!.readUInt32() === 1) {
-				this.parseMessage(currentTick);
-			} else {
-				tick = new Tick(
-					this.replay!.replayStream!.readBytes(this.replay!.replayStream!.readUInt32())
-				);
-				this.parseTick(tick);
+        if (chunkType.startsWith("FOLD")) {
+            while (this.stream.position < startPosition + chunkLength) {
+                if (!this.parseChunk()) break;
+            }
+        } else if (chunkType.startsWith("DATA")) {
+            this.processDataChunk(chunkType, chunkVersion);
+        }
 
-				// Update currentTick to the actual tick time
-				currentTick = tick.tick;
+        this.stream.seek(startPosition + chunkLength);
+        return true;
+    }
 
-				// Use tick.tick instead of tick.index for the actual game time
-				const currentTickTime = tick.tick;
+    private processDataChunk(type: string, version: number) {
+        if (type.startsWith("DATASDSC") && version === 0x7d4) {
+             this.stream.skip(4);
+             const len = this.stream.readUInt32();
+             this.stream.skip(12 + 2 * len);
+             
+             this.replay.modName = this.stream.readLengthPrefixedASCIIStr();
+             this.replay.mapFileName = this.stream.readLengthPrefixedASCIIStr();
+             this.stream.skip(20);
+             this.replay.mapName = this.stream.readLengthPrefixedUnicodeStr();
+             this.replay.mapDescription = this.stream.readLengthPrefixedUnicodeStr();
+             this.stream.skip(4);
+             this.replay.mapWidth = this.stream.readUInt32();
+             this.replay.mapHeight = this.stream.readUInt32();
+        }
+        else if (type.startsWith("DATABASE") && version === 0xb) {
+            this.stream.skip(8);
+            this.stream.skip(8);
+            this.replay.randomStart = (this.stream.readUInt32() === 0);
+            this.stream.skip(4);
+            this.replay.highResources = (this.stream.readUInt32() === 1);
+            this.stream.skip(4);
+            const vpVal = this.stream.readUInt32();
+            this.replay.vpCount = 250 * (1 << vpVal);
+            this.stream.skip(5);
+            this.replay.replayName = this.stream.readLengthPrefixedUnicodeStr();
+            this.stream.skip(8);
+            this.replay.vpGame = (this.stream.readUInt32() === 0x603872a3);
+            this.stream.skip(23);
+            this.stream.readLengthPrefixedASCIIStr(); // gameminorversion
+            this.stream.skip(4);
+            this.stream.readLengthPrefixedASCIIStr(); // gamemajorversion
+            this.stream.skip(8);
+            if (this.stream.readUInt32() === 2) {
+                this.stream.readLengthPrefixedASCIIStr(); // gameversion
+                this.stream.readLengthPrefixedASCIIStr(); // date
+            }
+            this.stream.readLengthPrefixedASCIIStr(); // matchname
+            this.replay.matchType = this.stream.readLengthPrefixedASCIIStr();
+        }
+        else if (type.startsWith("DATAINFO") && version === 6) {
+            const playerName = this.stream.readLengthPrefixedUnicodeStr();
+            const id = this.stream.readUInt16();
+            this.stream.skip(6);
+            const faction = this.stream.readLengthPrefixedASCIIStr();
+            this.replay.addPlayer(playerName, faction, id);
+        }
+    }
 
-				if (tickCount === 0) {
-					firstTickTime = currentTickTime;
-				}
-				lastTickTime = currentTickTime;
+    private parseData() {
+        let tickIndex = 0;
+        
+        while (this.stream.position < this.stream.length) {
+            if (this.stream.position + 4 > this.stream.length) break;
+            
+            const marker = this.stream.readUInt32();
 
-				tickCount++;
-			}
-		}
+            if (marker === 0) {
+                // Tick Data
+                const tickLength = this.stream.readUInt32();
+                if (tickLength === 0 || tickLength > 10000000) continue; // Safety
+                
+                const tickData = this.stream.readBytes(tickLength);
+                this.parseTick(tickData);
+                if (tickData.length >= 4) {
+                    const view = new DataView(tickData.buffer, tickData.byteOffset, tickData.byteLength);
+                    tickIndex = view.getUint32(0, true);
+                }
+            } else if (marker === 1) {
+                // Message
+                this.parseMessage(tickIndex);
+            } else {
+                // Old format fallback or unknown, skipping for safety in this port
+            }
+        }
 
-		// Calculate duration using the actual tick times
-		const tickDuration = lastTickTime - firstTickTime;
+        this.replay.duration = tickIndex / 8;
+    }
 
-		// Use tick duration instead of tick index for duration calculation
-		this.replay!.duration = tickDuration / 8;
+    private parseTick(data: Uint8Array) {
+        if (data.length < 16) return;
 
-		this.findPlayerIDs();
-		this.findDoctrines();
-	}
+        const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        const tickId = view.getUint32(0, true);
+        // Bytes 4-11 are timestamp
+        const bundleCount = view.getUint32(12, true);
+        
+        let offset = 16;
+        for (let i = 0; i < bundleCount; i++) {
+            if (offset + 12 > data.length) break;
+            
+            // Skip bundle header (12 bytes)
+            offset += 12;
 
-	private parseMessage(tick: number) {
-		try {
-			const pos = this.replay!.replayStream!.position;
-			const length = this.replay!.replayStream!.readUInt32();
+            if (offset + 4 > data.length) break;
 
-			if (this.replay!.replayStream!.readUInt32() > 0) {
-				this.replay!.replayStream!.skip(4);
+            const actionBlockSize = view.getUint32(offset, true);
+            offset += 4;
+            
+            if (actionBlockSize > 0 && actionBlockSize < 65536) {
+                offset += 1; // Skip duplicate byte
+                
+                const actionEnd = offset + actionBlockSize;
+                if (actionEnd > data.length) break;
 
-				let L;
-				let playerName;
-				let playerID;
+                this.parseActionsInBlock(tickId, data, offset, actionEnd);
+                offset = actionEnd;
+            } else {
+                offset += 1; // Skip zero byte
+            }
+        }
+    }
 
-				if ((L = this.replay!.replayStream!.readUInt32()) > 0) {
-					playerName = this.replay!.replayStream!.readUnicodeStr(L);
-					playerID = this.replay!.replayStream!.readUInt16();
-				} else {
-					playerName = 'System';
-					playerID = 0;
-					this.replay!.replayStream!.skip(2);
-				}
+    private parseActionsInBlock(tick: number, data: Uint8Array, startIndex: number, endIndex: number) {
+        let i = startIndex;
+        let actionCount = 0;
+        const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 
-				this.replay!.replayStream!.skip(6);
+        // Fixed loop condition: removed '&& actionCount' which prevented the loop from running initially
+        while (i + 2 <= endIndex) {
+            const actionLength = view.getUint16(i, true);
+            
+            if (actionLength <= 0 || actionLength > 1000) break;
 
-				const recipient = this.replay!.replayStream!.readUInt32();
-				const message = this.replay!.replayStream!.readUnicodeStr(
-					this.replay!.replayStream!.readUInt32()
-				);
-				this.replay!.addMessage(tick, playerName, playerID, message, recipient);
-			}
-			this.replay!.replayStream!.seek(pos + length + 4);
-		} catch (e) {
-			// Handle message exception
-			console.error('Error parsing message:', e);
-		}
-	}
+            // Capture up to 30 bytes for output matching, even if it overlaps next action
+            const captureLength = Math.max(actionLength, 30);
+            const safeCaptureLength = Math.min(captureLength, data.length - i);
 
-	private parseTick(tick: Tick) {
-		let i = 12;
-		for (let bundleCount = 0; bundleCount < tick.bundleCount; ++bundleCount) {
-			if (i >= tick.data.length) {
-				break; // Stop if we're at or past the end of the tick data
-			}
-			i += this.parseActions(tick, i);
-		}
-	}
+            const actionData = data.subarray(i, i + safeCaptureLength);
+            this.replay.addAction(tick, actionData);
+            actionCount++;
 
-	private parseActions(tick: Tick, index: number) {
-		// Check if we can read the bundle length
-		if (index + 13 > tick.data.length) {
-			// 9 for offset + 4 for uint32
-			return tick.data.length - index; // Consume rest of buffer to be safe
-		}
-		const bundleLength = tick.dataView.getUint32(index + 9, false); // false for big-endian
+            i += actionLength;
+        }
+    }
 
-		let i = 14;
-		// The loop should not go past the end of the bundle's data.
-		while (index + i + 2 <= tick.data.length) {
-			// +2 to ensure we can read the length (L)
-			const L = tick.dataView.getInt16(index + i, true); // true for little-endian
-			if (L <= 0) {
-				break; // Prevent infinite loop on zero-length action
-			}
-			// Check if the action data is fully contained within the buffer
-			if (index + i + L > tick.data.length) {
-				break;
-			}
-			const data = tick.data.subarray(index + i, index + i + L);
+    private parseMessage(tick: number) {
+        const pos = this.stream.position;
+        const length = this.stream.readUInt32();
 
-			this.replay!.addAction(tick.tick, data);
+        if (this.stream.readUInt32() > 0) {
+            this.stream.skip(4);
+            
+            const L = this.stream.readUInt32();
+            let playerName = "";
+            let playerID = 0;
 
-			i += L;
-		}
+            if (L > 0) {
+                playerName = this.stream.readUnicodeStr(L);
+                playerID = this.stream.readUInt16();
+            } else {
+                playerName = "System";
+                playerID = 0;
+                this.stream.skip(2);
+            }
 
-		return bundleLength + 13; // Return total size of the bundle structure
-	}
+            this.stream.skip(6);
+            const recipient = this.stream.readUInt32();
+            const message = this.stream.readLengthPrefixedUnicodeStr();
 
-	private parseChunk() {
-		const chunkType = this.replay!.replayStream!.readASCIIStr(8);
-		if (!(chunkType.substring(0, 4) === 'FOLD' || chunkType.substring(0, 4) === 'DATA')) {
-			this.replay!.replayStream!.skip(-8);
-			return false;
-		}
-
-		const chunkVersion = this.replay!.replayStream!.readUInt32();
-		const chunkLength = this.replay!.replayStream!.readUInt32();
-		const chunkNameLength = this.replay!.replayStream!.readUInt32();
-
-		this.replay!.replayStream!.skip(8);
-
-		let chunkName = '';
-		if (chunkNameLength > 0) {
-			chunkName = this.replay!.replayStream!.readASCIIStr(chunkNameLength);
-		}
-
-		const startPosition = this.replay!.replayStream!.position;
-
-		if (chunkType.substring(0, 4) === 'FOLD') {
-			while (this.replay!.replayStream!.position < startPosition + chunkLength) {
-				this.parseChunk();
-			}
-		}
-
-		if (chunkType === 'DATASDSC' && chunkVersion === 0x7d4) {
-			this.replay!.replayStream!.skip(4);
-
-			const skipCount = this.replay!.replayStream!.readUInt32();
-
-			const skipBytes = 12 + 2 * skipCount;
-			this.replay!.replayStream!.skip(skipBytes);
-
-			this.replay!.modName = this.replay!.replayStream!.readASCIIStr();
-			this.replay!.mapFileName = this.replay!.replayStream!.readASCIIStr();
-			this.replay!.replayStream!.skip(20);
-			this.replay!.mapName = this.replay!.mapFileName.split('\\').pop()!;
-		}
-
-		if (chunkType === 'DATABASE' && chunkVersion === 0xb) {
-			this.replay!.replayStream!.skip(8); // 02 00 00 00 02 00 00 00
-			this.replay!.replayStream!.skip(8); // ?
-			this.replay!.randomStart = this.replay!.replayStream!.readUInt32() === 0;
-			this.replay!.replayStream!.skip(4); // COLS
-			this.replay!.highResources = this.replay!.replayStream!.readUInt32() === 1;
-			this.replay!.replayStream!.skip(4); // TSSR
-			this.replay!.vpCount = 250 * (1 << this.replay!.replayStream!.readUInt32());
-			this.replay!.replayStream!.skip(5); // KTPV 00
-			this.replay!.replayName = this.replay!.replayStream!.readUnicodeStr();
-			this.replay!.replayStream!.skip(8);
-			this.replay!.VPgame = this.replay!.replayStream!.readUInt32() === 0x603872a3;
-			this.replay!.replayStream!.skip(23);
-
-			this.replay!.replayStream!.readASCIIStr(); // gameminorversion
-			this.replay!.replayStream!.skip(4);
-			this.replay!.replayStream!.readASCIIStr(); // gamemajorversion
-			this.replay!.replayStream!.skip(8);
-			if (this.replay!.replayStream!.readUInt32() === 2) {
-				this.replay!.replayStream!.readASCIIStr(); // gameversion
-				this.replay!.replayStream!.readASCIIStr(); // 199.117372 [04/27/11 09:18:18]
-			}
-			this.replay!.replayStream!.readASCIIStr(); // matchname
-			this.replay!.matchType = this.replay!.replayStream!.readASCIIStr();
-		}
-
-		if (chunkType === 'DATAINFO' && chunkVersion === 6) {
-			const player = this.replay!.replayStream!.readUnicodeStr();
-			const id = this.replay!.replayStream!.readUInt16();
-			this.replay!.replayStream!.skip(6);
-			const faction = this.replay!.replayStream!.readASCIIStr() as Player['faction'];
-			this.replay!.addPlayer(player, faction);
-		}
-
-		this.replay!.replayStream!.seek(startPosition + chunkLength);
-		return true;
-	}
-
-	private parseChunky() {
-		if (this.replay!.replayStream!.readASCIIStr(12) !== 'Relic Chunky') return false;
-
-		this.replay!.replayStream!.skip(4);
-
-		if (this.replay!.replayStream!.readUInt32() !== 3) return false;
-
-		this.replay!.replayStream!.skip(4);
-		this.replay!.replayStream!.skip(this.replay!.replayStream!.readUInt32() - 28);
-
-		while (this.parseChunk());
-
-		return true;
-	}
-
-	private decodeDate(s: string) {
-		// 24hr: DD-MM-YYYY HH:mm
-		const reEuro = /(\d\d).(\d\d).(\d\d\d\d)\s(\d\d).(\d\d)/;
-		if (reEuro.test(s)) {
-			const match = reEuro.exec(s);
-			if (match) {
-				return new Date(
-					parseInt(match[3]), // year
-					parseInt(match[2]) - 1, // month (0-based)
-					parseInt(match[1]), // day
-					parseInt(match[4]), // hour
-					parseInt(match[5]), // minute
-					0 // second
-				);
-			}
-		}
-
-		// 12hr: MM/DD/YYYY hh:mm XM *numbers are not 0-padded
-		const reUS = /(\d{1,2}).(\d{1,2}).(\d\d\d\d)\s(\d{1,2}).(\d{1,2}).*?(\w)M/;
-		if (reUS.test(s.toUpperCase())) {
-			const match = reUS.exec(s);
-			if (match) {
-				let retval = new Date(
-					parseInt(match[3]), // year
-					parseInt(match[1]) - 1, // month (0-based)
-					parseInt(match[2]), // day
-					parseInt(match[4]), // hour
-					parseInt(match[5]), // minute
-					0 // second
-				);
-
-				if (match[6].toLowerCase() === 'p' && parseInt(match[4]) < 12) {
-					retval.setHours(retval.getHours() + 12);
-				}
-				if (match[6].toLowerCase() === 'a' && parseInt(match[4]) === 12) {
-					retval.setHours(retval.getHours() - 12);
-					retval.setDate(retval.getDate() + 1);
-				}
-				return retval;
-			}
-		}
-
-		// YYYY/MM/DD HH:MM
-		const reAsian = /(\d\d\d\d).(\d\d).(\d\d)\s(\d\d).(\d\d)/;
-		if (reAsian.test(s)) {
-			const match = reAsian.exec(s);
-			if (match) {
-				return new Date(
-					parseInt(match[1]), // year
-					parseInt(match[2]) - 1, // month (0-based)
-					parseInt(match[3]), // day
-					parseInt(match[4]), // hour
-					parseInt(match[5]), // minute
-					0 // second
-				);
-			}
-		}
-
-		return new Date();
-	}
-
-	private findPlayerIDs() {
-		for (const player of this.replay!.playerIterator()) {
-			for (const message of this.replay!.messageIterator()) {
-				if (message.playerName === player.name) {
-					player.id = message.playerID;
-					break;
-				}
-			}
-		}
-	}
-
-	private findDoctrines() {
-		for (const player of this.replay!.playerIterator()) {
-			for (const action of this.replay!.actionIterator()) {
-				if (action.actionType === 0x62) {
-					if (player.doctrine === 0 && player.id === action.playerID) {
-						player.doctrine = action.action;
-						break;
-					}
-				}
-			}
-		}
-	}
+            this.replay.addMessage(tick, playerName, playerID, message, recipient);
+        }
+        this.stream.seek(pos + length + 4);
+    }
 }

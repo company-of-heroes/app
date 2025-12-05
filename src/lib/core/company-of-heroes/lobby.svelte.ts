@@ -84,9 +84,9 @@ export class Lobby {
 	 * Used to determine game mode and ranking eligibility.
 	 *
 	 * @public
-	 * @type {keyof typeof MATCH_TYPES | undefined}
+	 * @type {MatchTypeId | undefined}
 	 */
-	matchType = $derived.by(() => {
+	matchType: MatchTypeId = $derived.by(() => {
 		if (!this.isRanked) {
 			return 0;
 		}
@@ -118,15 +118,7 @@ export class Lobby {
 	 * @readonly
 	 * @type {boolean}
 	 */
-	isRanked = $derived.by(() => {
-		const hasRankedPlayers = this.players.some((player) => player.ranking && player.ranking > 0);
-
-		if (hasRankedPlayers) {
-			return true;
-		}
-
-		return false;
-	});
+	isRanked = $state(false);
 
 	/**
 	 * Derived state organizing players into teams.
@@ -191,10 +183,10 @@ export class Lobby {
 		return this.players.find((player) => player.steamId === app.game.steamId);
 	});
 
-	constructor(map: string, players: LobbyPlayer[], matchType: keyof typeof MATCH_TYPES) {
+	constructor(map: string, players: LobbyPlayer[], isRanked: boolean) {
 		this.map = map;
 		this.players = players;
-		this.matchType = matchType;
+		this.isRanked = isRanked;
 	}
 
 	/**

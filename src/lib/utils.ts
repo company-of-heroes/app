@@ -90,7 +90,6 @@ const rankCache = new Map<string, string>();
  */
 export async function getRankImage(race: Race | number, rank?: number): Promise<string> {
 	const cacheKey = `${race}-${rank}`;
-
 	// Return cached result if available
 	if (rankCache.has(cacheKey)) {
 		return rankCache.get(cacheKey)!;

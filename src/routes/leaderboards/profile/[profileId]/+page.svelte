@@ -99,6 +99,12 @@
 								<span>{dayjs.unix(profile.current.steam.timecreated).format('MMMM D, YYYY')}</span>
 							</span>
 						{/if}
+						{#if profile.current.steam.steamid}
+							<span class="text-secondary-300 grid grid-cols-[150px_auto]">
+								Steam ID:
+								<span>{profile.current.steam.steamid}</span>
+							</span>
+						{/if}
 						{#if profile.current.steam.lastlogoff}
 							<span class="text-secondary-300 grid grid-cols-[150px_auto]">
 								Last seen:

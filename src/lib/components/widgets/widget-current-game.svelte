@@ -12,6 +12,7 @@
 	import { H } from '../ui/h';
 	import { goto } from '$app/navigation';
 	import { app } from '$core/app';
+	import { Alert } from '../ui/alert';
 
 	const getLeaderboardStats = (player: LobbyPlayer) => {
 		let leaderboardId: number | undefined;
@@ -104,14 +105,20 @@
 	};
 </script>
 
-{#if app.game.lobby}
-	<div class="grid grid-cols-[250px_auto] gap-6">
+<H level="2" class="mb-4">Current game</H>
+{#if !app.game.lobby}
+	<Alert variant="warning">
+		You are currently not in a game lobby. When you join a lobby, the details will be displayed
+		here.
+	</Alert>
+{:else}
+	<div class="grid grid-cols-[200px_auto] gap-6">
 		<div>
 			{#await getMapImageFromName(app.game.lobby.map!) then mapImage}
 				<img
 					src={mapImage}
 					alt={app.game.lobby.mapName}
-					class="h-auto w-full rounded-lg bg-gray-900"
+					class="h-auto w-full rounded-lg border-3 border-blue-300 bg-gray-900"
 				/>
 			{/await}
 		</div>

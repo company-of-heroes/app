@@ -1,7 +1,9 @@
-import type { LobbyPlayer, RelicProfile } from '@fknoobs/app';
+import type { RelicProfile } from '@fknoobs/app';
+import type { SteamPlayerSummary } from '$core/steam';
 import { invoke } from '@tauri-apps/api/core';
 import Emittery from 'emittery';
 import { Lobby } from './lobby.svelte';
+import { isRunning } from './utils';
 
 export type GameEvents = {
 	'GAME:LAUNCHED': never;
@@ -55,7 +57,7 @@ export class Game extends Emittery<GameEvents> {
 	 * @public
 	 * @type {RelicProfile | undefined}
 	 */
-	profile = $state.raw<RelicProfile>();
+	profile = $state<{ relic: RelicProfile; steam: SteamPlayerSummary }>();
 
 	/**
 	 * Current lobby instance if a game lobby is active.
@@ -91,6 +93,26 @@ export class Game extends Emittery<GameEvents> {
 	 * @type {boolean}
 	 */
 	didNotify = $state<boolean>(false);
+
+	/**
+	 * Interval ID for checking the game status periodically.
+	 *
+	 * @private
+	 * @type {ReturnType<typeof setInterval> | null}
+	 */
+	private _checkGameInterval: ReturnType<typeof setInterval> | null = null;
+
+	constructor() {
+		super();
+
+		if (this._checkGameInterval) {
+			clearInterval(this._checkGameInterval);
+		}
+
+		this._checkGameInterval = setInterval(async () => {
+			this.isRunning = await isRunning('RelicCOH.exe');
+		}, 1000);
+	}
 
 	/**
 	 * Starts periodic tracking of window focus status.
@@ -134,7 +156,7 @@ export class Game extends Emittery<GameEvents> {
 	 * @public
 	 * @returns {void}
 	 */
-	reset(): void {
+	close(): void {
 		this.isRunning = false;
 		this.isIngame = false;
 		this.steamId = '';
