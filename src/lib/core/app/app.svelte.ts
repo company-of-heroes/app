@@ -240,13 +240,6 @@ export class App extends Emittery<AppEvents> {
 					this.store?.save();
 				}
 			);
-
-			watch(
-				() => this.game.steamId,
-				(steamId) => {
-					if (!steamId) return;
-				}
-			);
 		});
 
 		for await (const plugin of this._plugins.values()) {
