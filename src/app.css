@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@source inline('w-{1..24}/24');
+
 @theme {
 	--default-font-family: 'TT Mussels';
 	--font-heading: 'Nunito Sans';

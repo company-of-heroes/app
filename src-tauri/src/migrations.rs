@@ -30,6 +30,6 @@ pub fn get_migrations() -> Vec<Migration> {
                 UPDATE lobbies SET updatedAt = CURRENT_TIMESTAMP WHERE id = NEW.id;
             END;",
             kind: MigrationKind::Up,
-        }
+        },
     ]
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { H } from '$lib/components/ui/h';
-	import { twitch } from '$plugins/twitch';
+	import { twitch } from '$features/twitch';
 	import { TtsTab } from './tabs/tts-tab';
 	import TwitchTab from './tabs/twitch-tab/twitch-tab.svelte';
 	import { OverlaysTab } from './tabs/overlays-tab';

@@ -2,6 +2,11 @@
 	import * as Nav from '$lib/components/ui/nav';
 	import { Toaster } from 'svelte-sonner';
 	import { Dialog } from '$lib/components/ui/dialog';
+	import { Label } from '$lib/components/ui/label';
+	import { Modal } from '$lib/components/ui/modal';
+	import { cn } from '$lib/utils';
+	import { openUrl } from '@tauri-apps/plugin-opener';
+	import { app } from '$core/app';
 	import SuccesIcon from 'phosphor-svelte/lib/Check';
 	import ErrorIcon from 'phosphor-svelte/lib/ExclamationMark';
 	import InfoIcon from 'phosphor-svelte/lib/QuestionMark';
@@ -29,16 +34,10 @@
 	import '@fontsource/nunito-sans/800.css';
 
 	import '../app.css';
-	import { Label } from '$lib/components/ui/label';
-	import { Modal } from '$lib/components/ui/modal';
-	import { cn } from '$lib/utils';
-	import { openUrl } from '@tauri-apps/plugin-opener';
-	import { app } from '$core/app';
-	import { padEnd } from 'lodash-es';
 
 	let { children } = $props();
 
-	const updater = app.getPlugin('updater');
+	const updater = app.getFeature('updater');
 </script>
 
 <svelte:boundary>
@@ -119,7 +118,9 @@
 				</div>
 			</Nav.Root>
 		</div>
-		<main class="grow overflow-auto bg-gray-800/90 p-8 text-white">
+		<main
+			class="flex grow flex-col overflow-auto bg-gray-950/90 bg-linear-to-tl from-red-700/10 to-gray-950/80 p-8 text-white"
+		>
 			{@render children()}
 		</main>
 	</div>

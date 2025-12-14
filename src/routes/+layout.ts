@@ -3,16 +3,17 @@
 
 import { browser } from '$app/environment';
 import { app } from '$core/app';
-import { tts, twitch } from '$plugins/twitch';
-import { ttsPersonalVoices } from '$plugins/tts-personal-voices';
-import { twitchOverlays } from '$plugins/twitch-overlays';
-import { OppBotOverlay } from '$plugins/twitch-overlays/overlays/oppbot';
-import { ChatOverlay } from '$plugins/twitch-overlays/overlays/chat';
-import { twitchBot } from '$plugins/twitch-bot';
-import { ViewerCountOverlay } from '$plugins/twitch-overlays/overlays/viewer-count';
-import { updater } from '$plugins/updater';
-import { history } from '$core/app/plugins/history';
-import { replayAnalyzer } from '$plugins/replay-analyzer';
+import { tts, twitch } from '$features/twitch';
+import { ttsPersonalVoices } from '$features/tts-personal-voices';
+import { twitchOverlays } from '$features/twitch-overlays';
+import { OppBotOverlay } from '$features/twitch-overlays/overlays/oppbot';
+import { ChatOverlay } from '$features/twitch-overlays/overlays/chat';
+import { twitchBot } from '$features/twitch-bot';
+import { auth } from '$features/auth';
+import { ViewerCountOverlay } from '$features/twitch-overlays/overlays/viewer-count';
+import { updater } from '$features/updater';
+import { history } from '$core/app/features/history';
+import { replayAnalyzer } from '$features/replay-analyzer';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;
@@ -23,6 +24,7 @@ export const load = async () => {
 		return;
 	}
 
+	app.register('auth', auth);
 	app.register('twitch', twitch);
 	app.register('text-to-speech', tts);
 	app.register('text-to-speech-custom-characters', ttsPersonalVoices);
