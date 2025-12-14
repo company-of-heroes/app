@@ -8,10 +8,10 @@
 	import FloppyDiskIcon from 'phosphor-svelte/lib/FloppyDisk';
 	import { openPath } from '@tauri-apps/plugin-opener';
 	import { confirm } from '@tauri-apps/plugin-dialog';
-	import { twitchOverlays } from '$core/app/plugins/twitch-overlays';
+	import { twitchOverlays } from '$features/twitch-overlays';
 	import { cn } from '$lib/utils';
 	import { app } from '$core/app';
-	import type { Overlay } from '$core/app/plugins/twitch-overlays/overlays/overlay.svelte';
+	import type { Overlay } from '$features/twitch-overlays/overlays/overlay.svelte';
 
 	type OpenFile = {
 		path: string;

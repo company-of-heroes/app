@@ -12,10 +12,10 @@ const config = {
 		alias: {
 			'$core/*': 'src/lib/core/*',
 			'$workers/*': 'src/lib/workers',
-			'$plugins/*': 'src/lib/core/app/plugins/*'
+			'$features/*': 'src/lib/core/app/features/*'
 		},
 		prerender: {
-			entries: ['*', '/leaderboards/profile/[profileId]']
+			entries: ['*', '/leaderboards/profile/[profileId]', '/replays/[replayId]']
 		}
 	},
 	compilerOptions: {

@@ -5,7 +5,7 @@
 	import UserSoundIcon from 'phosphor-svelte/lib/UserSound';
 	import { Label } from '$lib/components/ui/label';
 	import { Checkbox, Input, RadioGroup, Selection } from '$lib/components/ui/input';
-	import { tts } from '$plugins/twitch';
+	import { tts } from '$features/twitch';
 </script>
 
 <Form.Root>

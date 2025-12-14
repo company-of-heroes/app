@@ -1,19 +1,21 @@
 declare module '@fknoobs/app' {
-	import type { Twitch, TTS } from '$plugins/twitch';
-	import type { TTSPersonalVoices } from '$plugins/tts-personal-voices';
-	import type { TwitchBot } from '$plugins/twitch-bot';
-	import type { Updater } from '$plugins/updater';
-	import type { History } from '$plugins/history';
-	import type { ReplayAnalyzer } from '$plugins/replay-analyzer';
-	import type { TwitchOverlays } from '$core/app/plugins/twitch-overlays';
+	import type { Auth } from '$features/auth';
+	import type { Twitch, TTS } from '$features/twitch';
+	import type { TTSPersonalVoices } from '$features/tts-personal-voices';
+	import type { TwitchBot } from '$features/twitch-bot';
+	import type { Updater } from '$features/updater';
+	import type { History } from '$features/history';
+	import type { ReplayAnalyzer } from '$features/replay-analyzer';
+	import type { TwitchOverlays } from '$core/app/features/twitch-overlays';
 	import type { Replays } from '$lib/modules/replay-manager/replays.svelte';
 
-	interface Plugins {
+	interface Features {
+		auth: Auth;
 		twitch: Twitch;
 		updater: Updater;
 		history: History;
 		'twitch-overlays': TwitchOverlays;
-        'replay-analyzer': Replays;
+		'replay-analyzer': Replays;
 		'text-to-speech': TTS;
 		'twitch-bot': TwitchBot;
 		'text-to-speech-custom-characters': TTSPersonalVoices;
@@ -62,29 +64,29 @@ declare module '@fknoobs/app' {
 		highestranklevel: number;
 	};
 
-    type ReplayMessage = {
-        tick: number;
-        sender: string;
-        senderID: number;
-        content: string;
-        recipient: number;
-    }
+	type ReplayMessage = {
+		tick: number;
+		sender: string;
+		senderID: number;
+		content: string;
+		recipient: number;
+	};
 
-    type ReplayPlayer = {
-        name: string;
-        faction: string;
-        id: number;
-        doctrine: number;
-    }
+	type ReplayPlayer = {
+		name: string;
+		faction: string;
+		id: number;
+		doctrine: number;
+	};
 
-    type ReplayAction = {
-        tick: number;
-        data: Uint8Array;
-        rawHex: string;
-        playerID: number;
-        playerName: string;
-        timestamp: string;
-    }
+	type ReplayAction = {
+		tick: number;
+		data: Uint8Array;
+		rawHex: string;
+		playerID: number;
+		playerName: string;
+		timestamp: string;
+	};
 
 	type LeaderboardStatWithProfile = LeaderboardStat & {
 		profile: RelicProfile;
@@ -269,6 +271,42 @@ declare module '@fknoobs/app' {
 		| '8p_montargis region'
 		| '8p_route_n13'
 		| '8p_steel_pact';
+
+	type ToCamelCase<S extends string> = S extends `${infer P1}_${infer P2}${infer P3}`
+		? `${P1}${Capitalize<ToCamelCase<`${P2}${P3}`>>}`
+		: S extends `${infer P1}-${infer P2}${infer P3}`
+			? `${P1}${Capitalize<ToCamelCase<`${P2}${P3}`>>}`
+			: S;
+
+	export type Expand<T> =
+		// First check if T has expand property with actual content
+		T extends { expand: infer E }
+			? E extends Record<string, any>
+				? {
+						// Keep non-expanded properties (excluding expand and relation keys)
+						[P in keyof T as P extends 'expand' ? never : P extends keyof E ? never : P]: T[P];
+					} & {
+						// Add expanded properties with camelCase keys, handling optional properties
+						[K in keyof E as ToCamelCase<string & K>]: undefined extends E[K]
+							? E[K] extends infer U | undefined
+								? U extends Array<infer ArrayItem>
+									? Array<Expand<ArrayItem>> | undefined
+									: U extends Record<string, any>
+										? Expand<U> | undefined
+										: E[K]
+								: never
+							: E[K] extends Array<infer U>
+								? Array<Expand<U>>
+								: E[K] extends Record<string, any>
+									? Expand<E[K]>
+									: E[K];
+					}
+				: T
+			: // Handle arrays
+				T extends Array<infer U>
+				? Array<Expand<U>>
+				: // Default case - return as is
+					T;
 }
 
 declare module '@fknoobs/app/ws' {

@@ -107,23 +107,22 @@ export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	updatedAt: IsoAutoDateString
 }
 
-export type ReplaysRecord<Tactions = unknown, Tmessages = unknown, Tplayers = unknown> = {
-	actions: null | Tactions
+export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
 	createdAt: IsoAutoDateString
+	createdBy?: RecordIdString
 	durationInSeconds: number
 	file: FileNameString
+	filename: string
 	gameDate?: IsoDateString
 	id: string
 	isHighResources?: boolean
 	isRandomStart?: boolean
 	isRanked?: boolean
 	isVpGame?: boolean
-	mapFileName: string
+	mapFilename: string
 	mapName: string
 	messages?: null | Tmessages
-	name: string
 	players: null | Tplayers
-	submittedBy: string
 	title: string
 	updatedAt: IsoAutoDateString
 	vpCount?: number
@@ -149,7 +148,7 @@ export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemF
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
-export type ReplaysResponse<Tactions = unknown, Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tactions, Tmessages, Tplayers>> & BaseSystemFields<Texpand>
+export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions

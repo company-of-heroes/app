@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { twitch } from '$plugins/twitch';
+	import { twitch } from '$features/twitch';
 	import * as Form from '$lib/components/ui/form';
 	import * as Dropdown from '$lib/components/ui/dropdown';
 	import { Label } from '$lib/components/ui/label';
 	import { H } from '$lib/components/ui/h';
 	import { Checkbox, Input } from '$lib/components/ui/input';
-	import { twitchBot } from '$core/app/plugins/twitch-bot';
+	import { twitchBot } from '$features/twitch-bot';
 	import { Button } from '$lib/components/ui/button';
 	import PlusIcon from 'phosphor-svelte/lib/Plus';
 	import Trash from 'phosphor-svelte/lib/Trash';

@@ -1,5 +1,5 @@
 import type { Component } from 'svelte';
-import type { Plugins } from '@fknoobs/app';
+import type { Features } from '@fknoobs/app';
 import type { TypedPocketBase } from '$core/pocketbase/types';
 import Emittery from 'emittery';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -180,12 +180,12 @@ export class App extends Emittery<AppEvents> {
 	 * A reactive map holding instances of application modules.
 	 *
 	 * @public
-	 * @type {SvelteMap<keyof Plugins, Plugins[keyof Plugins]>}
+	 * @type {SvelteMap<keyof Features, Features[keyof Features]>}
 	 */
-	private _plugins = new SvelteMap<keyof Plugins, Plugins[keyof Plugins]>();
+	private _features = new SvelteMap<keyof Features, Features[keyof Features]>();
 
 	/**
-	 * Starts the application by loading settings and initializing plugins.
+	 * Starts the application by loading settings and initializing features.
 	 */
 	async start() {
 		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
@@ -242,8 +242,8 @@ export class App extends Emittery<AppEvents> {
 			);
 		});
 
-		for await (const plugin of this._plugins.values()) {
-			await plugin.register();
+		for await (const feature of this._features.values()) {
+			await feature.register();
 		}
 	}
 
@@ -304,7 +304,7 @@ export class App extends Emittery<AppEvents> {
 		watch(
 			[() => this.socket?.state, () => this.socket, () => this.game.isRunning],
 			([state, socket, isRunning]) => {
-				this.statuses.websocketServer = !socket ? 'error' : (socketStatusMap[state!] ?? 'loading');
+				this.statuses.websocketServer = !socket ? 'error' : socketStatusMap[state!] ?? 'loading';
 				this.statuses.companyOfHeroes = isRunning ? 'success' : 'idle';
 			}
 		);
@@ -383,23 +383,23 @@ export class App extends Emittery<AppEvents> {
 	}
 
 	/**
-	 * Registers a plugin with the application.
+	 * Registers a feature with the application.
 	 *
-	 * @param name - The name of the plugin.
-	 * @param plugin - The plugin instance.
+	 * @param name - The name of the feature.
+	 * @param feature - The feature instance.
 	 */
-	register<K extends keyof Plugins>(name: K, plugin: Plugins[K]) {
-		this._plugins.set(name, plugin);
+	register<K extends keyof Features>(name: K, feature: Features[K]) {
+		this._features.set(name, feature);
 	}
 
 	/**
-	 * Retrieves a registered plugin by its name.
+	 * Retrieves a registered feature by its name.
 	 *
-	 * @param name - The name of the plugin to retrieve.
-	 * @returns The plugin instance if found, otherwise undefined.
+	 * @param name - The name of the feature to retrieve.
+	 * @returns The feature instance if found, otherwise undefined.
 	 */
-	getPlugin<K extends keyof Plugins>(name: K): Plugins[K] | undefined {
-		return this._plugins.get(name) as Plugins[K] | undefined;
+	getFeature<K extends keyof Features>(name: K): Features[K] | undefined {
+		return this._features.get(name) as Features[K] | undefined;
 	}
 }
 
