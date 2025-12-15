@@ -21,6 +21,7 @@
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRight';
 	import HistoryIcon from 'phosphor-svelte/lib/LineSegments';
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwise';
+	import CommandIcon from 'phosphor-svelte/lib/Command';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -61,6 +62,10 @@
 				<Nav.Link href="/history">
 					<HistoryIcon size={28} weight="duotone" />
 					History
+				</Nav.Link>
+				<Nav.Link href="/shortcuts">
+					<CommandIcon size={28} weight="duotone" />
+					Keybindings
 				</Nav.Link>
 				<Nav.Link href="/leaderboards">
 					<RankingIcon size={28} weight="duotone" />

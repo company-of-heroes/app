@@ -1,6 +1,7 @@
 declare module '@fknoobs/app' {
 	import type { Auth } from '$features/auth';
 	import type { Twitch, TTS } from '$features/twitch';
+	import type { Shortcuts } from '$features/shortcuts';
 	import type { TTSPersonalVoices } from '$features/tts-personal-voices';
 	import type { TwitchBot } from '$features/twitch-bot';
 	import type { Updater } from '$features/updater';
@@ -12,6 +13,7 @@ declare module '@fknoobs/app' {
 	interface Features {
 		auth: Auth;
 		twitch: Twitch;
+		shortcuts: Shortcuts;
 		updater: Updater;
 		history: History;
 		'twitch-overlays': TwitchOverlays;

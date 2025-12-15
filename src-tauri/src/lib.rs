@@ -7,6 +7,8 @@ mod replay_parser;
 mod unzip;
 mod webserver;
 mod ws_server;
+mod input;
+mod window;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -39,7 +41,9 @@ pub fn run() {
             unzip::unzip_file,
             unzip::unzip_bytes,
             process_check::is_running,
-            replay_parser::parse_replay
+            replay_parser::parse_replay,
+            input::send_keys,
+            window::get_active_window_title
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
