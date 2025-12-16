@@ -22,7 +22,7 @@
 	<Popover.Portal>
 		<Popover.Content
 			class={cn(
-				'z-50 max-w-[608px] rounded-lg border border-gray-600 bg-gray-900 px-4 py-2 shadow-lg'
+				'border-secondary-600 bg-secondary-900 z-50 max-w-[608px] rounded-lg border px-4 py-2 shadow-lg'
 			)}
 		>
 			{@render children()}

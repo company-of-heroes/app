@@ -11,6 +11,6 @@
 <img
 	src={profile.steam.avatarfull}
 	alt={profile.relic.alias}
-	class="w-full rounded-lg border-3 border-green-500"
+	class="border-success w-full rounded-lg border-3"
 	{...restProps}
 />

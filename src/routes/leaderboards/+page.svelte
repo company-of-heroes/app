@@ -21,17 +21,17 @@
 	let filteredStats = $derived.by(() => statsResource.current);
 
 	function getRatioColor(wins: number, losses: number): string {
-		if (losses === 0) return wins > 0 ? 'text-green-600' : 'text-gray-400';
+		if (losses === 0) return wins > 0 ? 'text-success' : 'text-secondary-400';
 
 		const ratio = wins / losses;
 
-		if (ratio >= 5) return 'text-green-600';
-		if (ratio >= 4) return 'text-green-500';
-		if (ratio >= 3) return 'text-green-400';
-		if (ratio >= 2) return 'text-green-300';
-		if (ratio >= 1) return 'text-green-200';
+		if (ratio >= 5) return 'text-success';
+		if (ratio >= 4) return 'text-success/90';
+		if (ratio >= 3) return 'text-success/80';
+		if (ratio >= 2) return 'text-success/70';
+		if (ratio >= 1) return 'text-success/60';
 
-		return 'text-green-100/70';
+		return 'text-success/50';
 	}
 
 	const statsResource = resource(
@@ -91,8 +91,8 @@
 <div class={cn('flex grow flex-col')}>
 	<div
 		class={cn(
-			'flex items-center gap-1 rounded-md border border-gray-600 bg-gray-700 text-gray-300',
-			'text-gray-100 [&>span]:flex [&>span]:h-10 [&>span]:items-center [&>span]:px-4 [&>span]:font-semibold'
+			'border-secondary-600 bg-secondary-700 text-secondary-300 flex items-center gap-1 rounded-md border',
+			'text-secondary-100 [&>span]:flex [&>span]:h-10 [&>span]:items-center [&>span]:px-4 [&>span]:font-semibold'
 		)}
 	>
 		<span class="flex w-12 justify-center">#</span>

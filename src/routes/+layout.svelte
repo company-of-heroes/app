@@ -21,6 +21,7 @@
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRight';
 	import HistoryIcon from 'phosphor-svelte/lib/LineSegments';
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwise';
+	import CommandIcon from 'phosphor-svelte/lib/Command';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -49,7 +50,7 @@
 				<span class="font-medium">Company of Heroes</span>
 			</div>
 			<Nav.Root class="grow">
-				<Label class="px-4 font-semibold text-gray-300">Menu</Label>
+				<Label class="text-secondary-300 px-4 font-semibold">Menu</Label>
 				<Nav.Link href="/">
 					<DashboardIcon size={28} weight="duotone" />
 					Dashboard
@@ -61,6 +62,10 @@
 				<Nav.Link href="/history">
 					<HistoryIcon size={28} weight="duotone" />
 					History
+				</Nav.Link>
+				<Nav.Link href="/shortcuts">
+					<CommandIcon size={28} weight="duotone" />
+					Keybindings
 				</Nav.Link>
 				<Nav.Link href="/leaderboards">
 					<RankingIcon size={28} weight="duotone" />
@@ -78,8 +83,8 @@
 					<span class="flex items-center gap-2 px-4 py-4">
 						<button
 							class={cn(
-								'cursor-pointer rounded-md bg-gray-800 p-1.5 text-gray-400',
-								'hover:text-primary transition-colors hover:bg-gray-700'
+								'bg-secondary-800 text-secondary-400 cursor-pointer rounded-md p-1.5',
+								'hover:text-primary hover:bg-secondary-700 transition-colors'
 							)}
 							onclick={() => openUrl('https://discord.gg/Cc69hbDnPD')}
 						>
@@ -87,8 +92,8 @@
 						</button>
 						<button
 							class={cn(
-								'cursor-pointer rounded-md bg-gray-800 p-1.5 text-gray-400',
-								'hover:text-primary transition-colors hover:bg-gray-700'
+								'bg-secondary-800 text-secondary-400 cursor-pointer rounded-md p-1.5',
+								'hover:text-primary hover:bg-secondary-700 transition-colors'
 							)}
 							onclick={() => openUrl('https://www.twitch.tv/fknoobscoh')}
 						>
@@ -96,15 +101,15 @@
 						</button>
 						<button
 							class={cn(
-								'cursor-pointer rounded-md bg-gray-800 p-1.5 text-gray-400',
-								'hover:text-primary transition-colors hover:bg-gray-700'
+								'bg-secondary-800 text-secondary-400 cursor-pointer rounded-md p-1.5',
+								'hover:text-primary hover:bg-secondary-700 transition-colors'
 							)}
 							onclick={() => openUrl('https://github.com/fknoobs/app')}
 						>
 							<GithubLogoIcon weight="duotone" />
 						</button>
 						{#if updater}
-							<span class="ms-auto flex items-center gap-2 text-sm text-gray-400">
+							<span class="text-secondary-400 ms-auto flex items-center gap-2 text-sm">
 								<span>v{updater.currentVersionFormatted}</span>
 								{#if updater.hasUpdate}
 									<ArrowRightIcon />
@@ -118,9 +123,7 @@
 				</div>
 			</Nav.Root>
 		</div>
-		<main
-			class="flex grow flex-col overflow-auto bg-gray-950/90 bg-linear-to-tl from-red-700/10 to-gray-950/80 p-8 text-white"
-		>
+		<main class="flex grow flex-col overflow-auto bg-gray-950/90 p-8 text-white">
 			{@render children()}
 		</main>
 	</div>

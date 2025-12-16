@@ -20,7 +20,7 @@
 				{...props}
 				class={cn(
 					'flex size-7 items-center justify-center rounded-full',
-					'cursor-pointer bg-gray-700 transition-colors',
+					'bg-secondary-700 cursor-pointer transition-colors',
 					'data-[state=open]:bg-primary/10',
 					size === 'sm' && 'size-5'
 				)}
@@ -32,7 +32,7 @@
 	<Popover.Portal>
 		<Popover.Content
 			class={cn(
-				'z-50 max-w-[420px] rounded-lg border border-gray-600 bg-gray-900 px-4 py-2 shadow-lg'
+				'border-secondary-600 bg-secondary-900 z-50 max-w-[420px] rounded-lg border px-4 py-2 shadow-lg'
 			)}
 			sideOffset={8}
 			{side}

@@ -14,6 +14,7 @@ import { ViewerCountOverlay } from '$features/twitch-overlays/overlays/viewer-co
 import { updater } from '$features/updater';
 import { history } from '$core/app/features/history';
 import { replayAnalyzer } from '$features/replay-analyzer';
+import { shortcuts } from '$core/app/features/shortcuts/shortcuts.svelte';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;
@@ -32,6 +33,7 @@ export const load = async () => {
 	app.register('twitch-bot', twitchBot);
 	app.register('replay-analyzer', replayAnalyzer);
 	app.register('history', history);
+	app.register('shortcuts', shortcuts);
 	app.register('updater', updater);
 
 	twitchOverlays.registerOverlay(new OppBotOverlay());

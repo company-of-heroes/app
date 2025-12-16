@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import Emittery from 'emittery';
 import { Lobby } from './lobby.svelte';
 import { isRunning } from './utils';
+import { watch } from 'runed';
 
 export type GameEvents = {
 	'GAME:LAUNCHED': never;
@@ -112,6 +113,19 @@ export class Game extends Emittery<GameEvents> {
 		this._checkGameInterval = setInterval(async () => {
 			this.isRunning = await isRunning('RelicCOH.exe');
 		}, 1000);
+
+		$effect.root(() => {
+			watch(
+				() => this.isRunning,
+				(isRunning) => {
+					if (isRunning) {
+						this.trackWindowFocus();
+					} else {
+						this.stopTrackingWindowFocus();
+					}
+				}
+			);
+		});
 	}
 
 	/**
