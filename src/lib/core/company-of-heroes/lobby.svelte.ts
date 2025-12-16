@@ -45,7 +45,7 @@ export class Lobby {
 	 * @public
 	 * @type {LobbyPlayer[]}
 	 */
-	players = $state<LobbyPlayer[]>([]);
+	players = $derived<LobbyPlayer[]>([]);
 
 	/**
 	 * Match outcome when the game ends.
@@ -180,7 +180,7 @@ export class Lobby {
 	me = $derived.by(() => {
 		if (!this.players || this.players.length === 0) return undefined;
 
-		return this.players.find((player) => player.steamId === app.game.steamId);
+		return this.players.find((p) => p.profile?.name?.endsWith(app.game.steamId!));
 	});
 
 	constructor(map: string, players: LobbyPlayer[], isRanked: boolean) {

@@ -3,6 +3,7 @@ import { watch } from 'runed';
 import { invoke } from '@tauri-apps/api/core';
 import { register, unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
 import { app } from '$core/app';
+import { t } from 'try';
 
 export type Shortcut = {
 	description: string;
@@ -32,7 +33,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		}
 	>();
 
-	enable(): void | this | Promise<void | this> {
+	enable() {
 		app.game.on('LOBBY:STARTED', (lobby) => {
 			if (!app.game.isWindowFocused || !lobby.me) {
 				return;
@@ -61,12 +62,13 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 
 	async registerShortcuts(race: number) {
 		await this.unregisterAllShortcuts();
+		console.log('Registering shortcuts for race', race);
 
 		const factionMap: { [key: number]: Shortcut[] } = {
 			0: this.settings.factions.allies,
 			1: this.settings.factions.axis,
-			2: this.settings.factions.axis_panzer_elite,
-			3: this.settings.factions.allies_commonwealth
+			2: this.settings.factions.allies_commonwealth,
+			3: this.settings.factions.axis_panzer_elite
 		};
 
 		const shortcutsToRegister = factionMap[race] || [];
@@ -75,13 +77,16 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			if (shortcut.triggerKeys.length === 0) {
 				continue;
 			}
-			try {
+
+			const [, error] = t(
 				await register(shortcut.triggerKeys.join('+'), (event) => {
 					if (event.state !== 'Pressed') return;
 					invoke('send_keys', { keys: shortcut.actionKeys });
-				});
-			} catch (e) {
-				console.error('Error unregistering shortcut', e);
+				})
+			);
+
+			if (error) {
+				console.error('Error registering shortcut', error);
 			}
 		}
 	}
@@ -135,12 +140,10 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			}
 		} else {
 			// Start recording
-			// First, ensure we aren't recording the other type for this shortcut to avoid confusion
-			const otherType = type === 'trigger' ? 'action' : 'trigger';
-			if (
-				type === 'trigger' ? keybinding.isRecordingActionKeys : keybinding.isRecordingTriggerKeys
-			) {
-				this.record(keybinding, otherType);
+			// Stop all other recordings first
+			for (const [s] of this.handlers) {
+				if (s.isRecordingTriggerKeys) this.record(s, 'trigger');
+				if (s.isRecordingActionKeys) this.record(s, 'action');
 			}
 
 			const stopRecording = () => {
@@ -150,6 +153,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			const getShortcutKey = (event: KeyboardEvent) => {
 				const { key, code } = event;
 
+				if (key === 'CapsLock') return null;
 				if (key === 'Control') return 'CommandOrControl';
 				if (key === 'Shift') return 'Shift';
 				if (key === 'Alt') return 'Alt';
@@ -182,6 +186,8 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				event.preventDefault();
 				const key = getShortcutKey(event);
 
+				if (!key) return;
+
 				const targetArray = type === 'trigger' ? keybinding.triggerKeys : keybinding.actionKeys;
 				if (!targetArray.includes(key)) {
 					targetArray.push(key);
@@ -190,11 +196,11 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				// Reset timeout
 				if (entry && entry[type]) {
 					clearTimeout(entry[type]!.timeout);
-					entry[type]!.timeout = setTimeout(stopRecording, 2000);
+					entry[type]!.timeout = setTimeout(stopRecording, 4000);
 				}
 			};
 
-			const timeout = setTimeout(stopRecording, 2000);
+			const timeout = setTimeout(stopRecording, 4000);
 			entry[type] = { handler: handleKeydown, timeout };
 			document.addEventListener('keydown', handleKeydown);
 

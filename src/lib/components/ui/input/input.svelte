@@ -14,9 +14,9 @@
 	<div
 		class={cn(
 			'flex items-center rounded-md',
-			'border-secondary-600 bg-secondary-800 focus:border-secondary-600 h-10 w-full border ps-4 pe-1.5 focus:outline-none',
-			'peer-disabled:bg-secondary-950 peer-disabled:border-secondary-800 peer-disabled:cursor-not-allowed peer-disabled:text-gray-500',
-			'peer-read-only:cursor-not-allowed peer-read-only:border-gray-600 peer-read-only:bg-gray-700 peer-read-only:text-gray-300',
+			'border-secondary-800 bg-secondary-800/30 focus:border-secondary-600 h-11 w-full border ps-4 pe-2 focus:outline-none',
+			'peer-disabled:bg-secondary-950 peer-disabled:border-secondary-800 peer-disabled:text-secondary-500 peer-disabled:cursor-not-allowed',
+			'peer-read-only:border-secondary-600 peer-read-only:bg-secondary-700 peer-read-only:text-secondary-300 peer-read-only:cursor-not-allowed',
 			restProps.class
 		)}
 	>
@@ -66,9 +66,9 @@
 			{type}
 			class={cn(
 				'rounded-md',
-				'border-secondary-600 bg-secondary-800 focus:border-secondary-600 h-10 w-full border px-4 focus:outline-none',
-				'disabled:bg-secondary-950 disabled:border-secondary-800 disabled:cursor-not-allowed disabled:text-gray-500',
-				'read-only:cursor-not-allowed read-only:border-gray-600 read-only:bg-gray-700 read-only:text-gray-300',
+				'border-secondary-800 bg-secondary-800/30 focus:border-secondary-600 h-11 w-full border px-4 focus:outline-none',
+				'disabled:bg-secondary-950 disabled:border-secondary-800 disabled:text-secondary-500 disabled:cursor-not-allowed',
+				'read-only:border-secondary-700 read-only:bg-secondary-500/30 read-only:text-secondary-400 read-only:cursor-not-allowed',
 				restProps.class
 			)}
 		/>

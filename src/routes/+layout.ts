@@ -26,7 +26,6 @@ export const load = async () => {
 	}
 
 	app.register('auth', auth);
-	app.register('shortcuts', shortcuts);
 	app.register('twitch', twitch);
 	app.register('text-to-speech', tts);
 	app.register('text-to-speech-custom-characters', ttsPersonalVoices);
@@ -34,6 +33,7 @@ export const load = async () => {
 	app.register('twitch-bot', twitchBot);
 	app.register('replay-analyzer', replayAnalyzer);
 	app.register('history', history);
+	app.register('shortcuts', shortcuts);
 	app.register('updater', updater);
 
 	twitchOverlays.registerOverlay(new OppBotOverlay());

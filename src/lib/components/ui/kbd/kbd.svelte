@@ -13,8 +13,8 @@
 
 <button
 	class={cn(
-		'bg-secondary-950/30 text-secondary-200 rounded-md px-4 py-2.5 text-sm uppercase',
-		'border border-gray-600',
+		'bg-secondary-800/30 rounded-md px-4 py-2 text-sm uppercase',
+		'border-secondary-800/30 border border-b-2 border-b-gray-600',
 		restProps.class
 	)}
 	{...restProps}

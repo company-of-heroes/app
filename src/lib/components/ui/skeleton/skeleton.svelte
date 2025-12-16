@@ -7,4 +7,4 @@
 	let { ...restProps }: Props = $props();
 </script>
 
-<div class={cn('animate-pulse rounded-lg bg-gray-700', restProps.class)}></div>
+<div class={cn('bg-secondary-700 animate-pulse rounded-lg', restProps.class)}></div>

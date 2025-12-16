@@ -197,7 +197,7 @@
 		<button
 			onclick={() => switchOverlay(overlay)}
 			class={cn(
-				'cursor-pointer py-2 font-semibold text-gray-600 transition-colors',
+				'text-secondary-600 cursor-pointer py-2 font-semibold transition-colors',
 				'data-[active=false]:hover:text-primary/20',
 				selectedOverlay.name === overlay.name && 'text-primary'
 			)}
@@ -209,7 +209,7 @@
 </div>
 <div class="mt-4 flex flex-col">
 	<label for="overlay-url" class="font-medium text-neutral-400">Overlay URL</label>
-	<small class="mb-2 text-gray-300">
+	<small class="text-secondary-300 mb-2">
 		Use this URL in your streaming software to add the overlay to your stream.
 	</small>
 	<div class="relative flex">
@@ -219,14 +219,14 @@
 			value={`http://localhost:9000/${selectedOverlay.path.replace('overlays/', '')}/index.html`}
 			class={cn(
 				'bg-secondary-800 border-secondary-600 w-full rounded-md border px-4 py-2 shadow-2xs outline-none',
-				copied && 'border-green-500 bg-green-500/5'
+				copied && 'border-success bg-success/5'
 			)}
 		/>
 		<button
 			class={cn(
-				'absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-gray-400 transition-colors',
-				'hover:bg-gray-600 hover:text-gray-200',
-				copied && 'pointer-events-none text-green-400'
+				'text-secondary-400 absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer rounded-md p-1 transition-colors',
+				'hover:bg-secondary-600 hover:text-secondary-200',
+				copied && 'text-success pointer-events-none'
 			)}
 			onclick={copyToClipboard}
 			title="Copy Overlay URL"
@@ -242,9 +242,9 @@
 <div class="mt-6">
 	<div class="mb-2 font-medium text-neutral-400">File editor</div>
 	<div
-		class="grid h-[500px] grid-cols-[300px_auto] overflow-clip rounded-lg border border-gray-700 bg-[#1E1E1E]/50"
+		class="border-secondary-700 grid h-[500px] grid-cols-[300px_auto] overflow-clip rounded-lg border bg-[#1E1E1E]/50"
 	>
-		<div class="grid grid-rows-[1fr_auto] overflow-hidden border-r border-gray-700">
+		<div class="border-secondary-700 grid grid-rows-[1fr_auto] overflow-hidden border-r">
 			<div class="overflow-auto p-1.5">
 				<FileTree
 					overlay={selectedOverlay}
@@ -253,12 +253,12 @@
 				/>
 			</div>
 			<div
-				class="flex w-full items-center justify-between gap-2 border-t border-gray-700 px-3 py-2"
+				class="border-secondary-700 flex w-full items-center justify-between gap-2 border-t px-3 py-2"
 			>
 				<button
 					onclick={async () => openPath(await selectedOverlay.getPath())}
 					type="button"
-					class="cursor-pointer text-xs font-light text-gray-200 transition-colors hover:text-gray-100"
+					class="text-secondary-200 hover:text-secondary-100 cursor-pointer text-xs font-light transition-colors"
 				>
 					Open in explorer
 				</button>
@@ -266,7 +266,7 @@
 					<button
 						onclick={saveFile}
 						type="button"
-						class="text-primary flex cursor-pointer items-center gap-1 text-xs transition-colors hover:text-gray-300"
+						class="text-primary hover:text-secondary-300 flex cursor-pointer items-center gap-1 text-xs transition-colors"
 					>
 						<FloppyDiskIcon size={14} />
 						save

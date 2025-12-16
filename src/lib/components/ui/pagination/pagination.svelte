@@ -14,7 +14,7 @@
 				class={cn(
 					'mr-2 inline-flex size-8 items-center justify-center rounded-md bg-transparent',
 					'active:scale-[0.98] disabled:cursor-not-allowed hover:disabled:bg-transparent',
-					'hover:bg-gray-500/30'
+					'hover:bg-secondary-500/30'
 				)}
 			>
 				<CaretLeft class="size-4" />
@@ -28,8 +28,8 @@
 							{page}
 							class={cn(
 								'inline-flex size-8 items-center justify-center rounded-[9px] text-sm font-medium select-none',
-								'hover:cursor-pointer hover:bg-gray-700/20',
-								'data-selected:bg-gray-700/40',
+								'hover:bg-secondary-700/20 hover:cursor-pointer',
+								'data-selected:bg-secondary-700/40',
 								'active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent'
 							)}
 						>

@@ -44,7 +44,7 @@ export class Log extends emittery<LogEvents> {
 					app.game.steamId = steamId.toString();
 					app.game.profile = { relic: profile, steam: steamProfile };
 
-					app.game.emit('GAME:LAUNCHED');
+					await app.game.emit('GAME:LAUNCHED');
 
 					break;
 				}
@@ -171,7 +171,7 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:ENDED': {
-					app.game.emit('GAME:CLOSED');
+					await app.game.emit('GAME:CLOSED');
 
 					break;
 				}

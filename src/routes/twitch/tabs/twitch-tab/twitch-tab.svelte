@@ -90,8 +90,8 @@
 				>
 					<span
 						class={cn(
-							'me-2 h-2 w-2 rounded-full bg-red-500 ring-4 ring-red-500/30',
-							isStreamOnline && 'bg-green-500 ring-green-500/30'
+							'bg-destructive ring-destructive/30 me-2 h-2 w-2 rounded-full ring-4',
+							isStreamOnline && 'bg-success ring-success/30'
 						)}
 					></span>
 					<span class="text-secondary-300">{twitch.token.userName}</span>

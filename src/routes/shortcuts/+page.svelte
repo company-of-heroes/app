@@ -7,43 +7,35 @@
 	import StopIcon from 'phosphor-svelte/lib/Stop';
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRight';
 	import HandleIcon from 'phosphor-svelte/lib/DotsSixVertical';
+	import ExportIcon from 'phosphor-svelte/lib/Export';
+	import ImportIcon from 'phosphor-svelte/lib/DownloadSimple';
 	import { H } from '$lib/components/ui/h';
 	import { createRawSnippet, onDestroy, onMount } from 'svelte';
 	import { ToggleGroup } from '$lib/components/ui/toggle-group';
 	import { cn, getFactionFlagFromRace } from '$lib/utils';
-	import { shortcuts, type ShortcutSettings } from '$core/app/features/shortcuts';
+	import { shortcuts, type Shortcut, type ShortcutSettings } from '$core/app/features/shortcuts';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { Kbd } from '$lib/components/ui/kbd';
+	import { tooltip } from '$lib/attachments';
+	import Alert from '$lib/components/ui/alert/alert.svelte';
 
 	let faction = $state<keyof ShortcutSettings['factions']>('allies');
 	let factions = [
 		{
-			label: createRawSnippet(() => ({
-				render: () =>
-					`<img src="${getFactionFlagFromRace(0)}" alt="Allies" class="w-7 border border-black" />`
-			})),
+			label: 'USA',
 			value: 'allies'
 		},
 		{
-			label: createRawSnippet(() => ({
-				render: () =>
-					`<img src="${getFactionFlagFromRace(2)}" alt="British" class="w-7 border border-black" />`
-			})),
+			label: 'Brits',
 			value: 'allies_commonwealth'
 		},
 		{
-			label: createRawSnippet(() => ({
-				render: () =>
-					`<img src="${getFactionFlagFromRace(1)}" alt="Wehrmacht" class="w-7 border border-black" />`
-			})),
+			label: 'Werhmacht',
 			value: 'axis'
 		},
 		{
-			label: createRawSnippet(() => ({
-				render: () =>
-					`<img src="${getFactionFlagFromRace(3)}" alt="Panzer Elite" class="w-7 border border-black" />`
-			})),
+			label: 'Panzer Elite',
 			value: 'axis_panzer_elite'
 		}
 	];
@@ -84,22 +76,51 @@
 	});
 </script>
 
-<H level="1">Keybindings</H>
+{#snippet triggerButton(type: 'trigger' | 'action', keybinding: Shortcut)}
+	<Button
+		class="hidden p-2.5 group-hover:block"
+		onclick={() => shortcuts.record(keybinding, type)}
+		{@attach tooltip(type === 'trigger' ? 'Record Trigger Keys' : 'Record Action Keys')}
+	>
+		{#if type === 'trigger' ? keybinding.isRecordingTriggerKeys : keybinding.isRecordingActionKeys}
+			<StopIcon weight="fill" class="text-destructive" />
+		{:else}
+			<RecordIcon weight="fill" class="text-primary" />
+		{/if}
+	</Button>
+{/snippet}
+
+<div class="mb-8 flex items-center justify-between">
+	<H level="1">Keybindings</H>
+	<div class="flex">
+		<Button variant="ghost" onclick={() => shortcuts.importSettings()}>
+			<ImportIcon />
+			Import keybindings
+		</Button>
+		<Button variant="ghost" onclick={() => shortcuts.exportSettings()}>
+			<ExportIcon />
+			Export keybindings
+		</Button>
+	</div>
+</div>
 <Form.Root class="justify-start">
 	<div class="flex gap-4">
 		<ToggleGroup bind:value={faction} items={factions} />
 	</div>
 	<div bind:this={sortableEl} class="grid grid-cols-1">
+		{#if keybindings?.length === 0}
+			<Alert variant="info">No keybindings configured yet, add one using the button below.</Alert>
+		{/if}
 		{#each keybindings as keybinding, index (keybinding)}
 			<div
 				class={cn(
-					'item flex flex-row items-center gap-4 border border-transparent px-4 py-4',
+					'group item flex flex-row items-center gap-4 border border-transparent px-4 py-2',
 					'[&.sortable-ghost]:bg-primary/5 [&.sortable-chosen]:cursor-grabbing',
-					'not-last:border-b-secondary-950 not-last:border-b'
+					'not-last:border-b-secondary-950/70 not-last:border-b'
 				)}
 			>
 				<!-- Drag Handle -->
-				<button class="handle cursor-grab text-gray-500">
+				<button class="handle cursor-grab text-gray-500 transition-colors hover:text-white">
 					<HandleIcon size={32} weight="bold" />
 				</button>
 
@@ -112,13 +133,7 @@
 
 				<!-- Trigger Keys -->
 				<span class="flex items-center gap-2">
-					<Button class="p-3" onclick={() => shortcuts.record(keybinding, 'trigger')}>
-						{#if keybinding.isRecordingTriggerKeys}
-							<StopIcon weight="fill" class="text-red-400" />
-						{:else}
-							<RecordIcon weight="fill" class="text-primary" />
-						{/if}
-					</Button>
+					{@render triggerButton('trigger', keybinding)}
 					{#each keybinding.triggerKeys as triggerKey, index}
 						{#if index > 0}
 							<PlusIcon class="text-secondary-300" />
@@ -131,13 +146,7 @@
 
 				<!-- Action Keys -->
 				<span class="flex items-center gap-2">
-					<Button class="p-3" onclick={() => shortcuts.record(keybinding, 'action')}>
-						{#if keybinding.isRecordingActionKeys}
-							<StopIcon weight="fill" class="text-red-400" />
-						{:else}
-							<RecordIcon weight="fill" class="text-primary" />
-						{/if}
-					</Button>
+					{@render triggerButton('action', keybinding)}
 					{#each keybinding.actionKeys as actionKey, index}
 						{#if index > 0}
 							<PlusIcon class="text-secondary-300" />
@@ -147,11 +156,12 @@
 				</span>
 
 				<Button
-					variant="destructive"
+					variant="ghost"
 					onclick={() => {
 						keybindings.splice(index, 1);
 					}}
-					class="p-3"
+					class="hover:text-destructive p-2.5 text-gray-400"
+					{@attach tooltip('Delete')}
 				>
 					<TrashIcon />
 				</Button>

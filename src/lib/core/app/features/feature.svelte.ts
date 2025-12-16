@@ -1,9 +1,12 @@
-import { error } from '@tauri-apps/plugin-log';
+import type { Component } from 'svelte';
 import { watch } from 'runed';
 import { app } from '$core/app';
 import { mergeWith, isPlainObject, defaultsDeep } from 'lodash-es';
 import Emittery from 'emittery';
-import type { Component } from 'svelte';
+import { save, open } from '@tauri-apps/plugin-dialog';
+import { documentDir, join } from '@tauri-apps/api/path';
+import { t } from 'try';
+import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 
 export interface Feature<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean }
@@ -138,6 +141,51 @@ export abstract class Feature<
 			// For plain objects, continue deep merge so inner missing keys get filled
 			return undefined;
 		});
+	}
+
+	/**
+	 * Imports settings from a JSON file.
+	 */
+	async importSettings() {
+		const defaultPath = await join(await documentDir(), `${this.name}.json`);
+		const [, error, selected] = await t(
+			open({
+				multiple: false,
+				filters: [{ name: 'JSON', extensions: ['json'] }],
+				defaultPath
+			})
+		);
+
+		if (error || !selected) {
+			return app.toast.error('Failed to import settings: ' + error);
+		}
+
+		const fileContent = await readTextFile(selected);
+		const importedSettings = JSON.parse(fileContent);
+		const validatedSettings = this.validateSettings(importedSettings);
+
+		this.settings = { ...validatedSettings, enabled: Boolean(validatedSettings?.enabled ?? false) };
+		app.toast.success('Settings imported successfully!');
+	}
+
+	/**
+	 * Exports settings to a JSON file.
+	 */
+	async exportSettings() {
+		const defaultPath = await join(await documentDir(), `${this.name}.json`);
+		const [, error, path] = await t(save({ defaultPath }));
+
+		if (error || !path) {
+			return app.toast.error('Failed to export settings: ' + error);
+		}
+
+		writeTextFile(path, JSON.stringify(this.settings, null, 2))
+			.then(() => {
+				app.toast.success('Settings exported successfully!');
+			})
+			.catch((err) => {
+				app.toast.error('Failed to export settings: ' + err);
+			});
 	}
 
 	/**
