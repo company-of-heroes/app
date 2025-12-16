@@ -92,7 +92,7 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 			}
 			const id = this.idCounter++;
 			this.pending.set(id, { resolve, reject });
-			this.worker.postMessage({ id, content, fileName }, [content.buffer]);
+			this.worker.postMessage({ id, content, fileName });
 		});
 	}
 
@@ -180,19 +180,18 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 		}
 
 		console.log(`Found ${newReplays.length} new replays to process.`);
-		return newReplays;
+		return newReplays.slice(0, 10);
 	}
 
 	private async processReplay(filename: string, playbackDir: string) {
 		try {
 			const filePath = await join(playbackDir, filename);
 			const replayFile = await readFile(filePath);
-
 			const replay = await this.parseReplayInWorker(replayFile, filename);
 
 			await app.database.replays().create({
 				durationInSeconds: replay.duration,
-				file: new File([replayFile], filename, { type: 'application/octet-stream' }),
+				file: new File([replayFile], filename),
 				filename: filename,
 				gameDate: dayjs(replay.gameDate, DATE_FORMATS).toISOString(),
 				isHighResources: replay.highResources,
