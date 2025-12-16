@@ -62,7 +62,6 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 
 	async registerShortcuts(race: number) {
 		await this.unregisterAllShortcuts();
-		console.log('Registering shortcuts for race', race);
 
 		const factionMap: { [key: number]: Shortcut[] } = {
 			0: this.settings.factions.allies,
