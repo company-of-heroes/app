@@ -99,7 +99,6 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 		watch(
 			() => [this.settings.providers[tts.provider.name].voices, this.settings.cost],
 			debounce(() => {
-				console.log('Updating rewards due to voice settings change');
 				this.updateRewards();
 			}, 1000)
 		);
@@ -149,6 +148,10 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 	 * is replaced by the current `settings.voices` selection.
 	 */
 	async updateRewards() {
+		if (!twitch.client) {
+			return;
+		}
+
 		this.getChannelRewards()
 			.then(() => this.removeChannelRewards())
 			.then(() => this.createChannelRewards());
@@ -158,8 +161,12 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 	 * Load existing channel point rewards and filter for personal voice rewards.
 	 */
 	async getChannelRewards() {
-		this.rewards = await twitch
-			.client!.channelPoints.getCustomRewards(twitch.token!.userId, true)
+		if (!twitch.client) {
+			return;
+		}
+
+		this.rewards = await twitch.client.channelPoints
+			.getCustomRewards(twitch.token!.userId, true)
 			.then((rewards) => {
 				return rewards.filter((reward) => reward.title.startsWith('[PERSONALITY]'));
 			});
@@ -170,8 +177,12 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 	 * they can be freshly recreated. This is done serially to avoid throttling.
 	 */
 	async removeChannelRewards() {
+		if (!twitch.client) {
+			return;
+		}
+
 		for await (const reward of this.rewards) {
-			await twitch.client!.channelPoints.deleteCustomReward(twitch.token!.userId, reward.id);
+			await twitch.client.channelPoints.deleteCustomReward(twitch.token!.userId, reward.id);
 		}
 	}
 

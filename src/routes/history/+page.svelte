@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
 	import type { LobbyFilters } from '$core/app/database/lobbies';
 	import * as Player from '$lib/components/player';
 	import * as Lobby from '$lib/components/lobby';
@@ -70,4 +70,4 @@
 			</Lobby.Root>
 		{/each}
 	</div>
-{/if}
+{/if} -->

@@ -7,6 +7,8 @@ import { relic } from '$lib/relic';
 export class History extends Feature {
 	name = 'History';
 
+	gamesPlayed = $state([]);
+
 	needsResults: number[] = [];
 
 	trackResultsInterval: ReturnType<typeof setInterval> | null = null;
@@ -22,30 +24,31 @@ export class History extends Feature {
 	}
 
 	saveLobbyResult(lobby: Lobby) {
-		if (false === app.isReady) {
-			// return;
-		}
+		console.log(lobby);
+		// if (false === app.isReady) {
+		// 	// return;
+		// }
 
-		if (!lobby) {
-			return;
-		}
+		// if (!lobby) {
+		// 	return;
+		// }
 
-		app.pocketbase
-			.collection('lobbies')
-			.getFirstListItem(`sessionId="${lobby.sessionId}"`)
-			.then()
-			.catch(() => {
-				app.pocketbase.collection('lobbies').create({
-					sessionId: lobby.sessionId,
-					isRanked: lobby.isRanked,
-					title: lobby.type,
-					map: lobby.map,
-					submittedBy: app.game.steamId,
-					players: lobby.players.map((player) => player.steamId)
-				});
+		// app.pocketbase
+		// 	.collection('lobbies')
+		// 	.getFirstListItem(`sessionId="${lobby.sessionId}"`)
+		// 	.then()
+		// 	.catch(() => {
+		// 		app.pocketbase.collection('lobbies').create({
+		// 			sessionId: lobby.sessionId,
+		// 			isRanked: lobby.isRanked,
+		// 			title: lobby.type,
+		// 			map: lobby.map,
+		// 			submittedBy: app.game.steamId,
+		// 			players: lobby.players.map((player) => player.steamId)
+		// 		});
 
-				this.needsResults.push(lobby.sessionId!);
-			});
+		// 		this.needsResults.push(lobby.sessionId!);
+		// 	});
 	}
 
 	trackResults() {
