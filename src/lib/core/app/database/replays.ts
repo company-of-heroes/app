@@ -23,7 +23,7 @@ export class Replays {
 	 *
 	 * @param options Configuration options for the request
 	 */
-	async getAll(
+	async getPaginated(
 		page = 1,
 		perPage = 50,
 		{
@@ -39,7 +39,7 @@ export class Replays {
 				filter,
 				fields: fieldsString,
 				sort,
-				expand: 'createdBy,file',
+				expand: 'createdBy',
 				fetch
 			});
 
@@ -47,6 +47,17 @@ export class Replays {
 			...response,
 			items: response.items.map(exp) as ReplaysExpanded[]
 		};
+	}
+
+	async getAll(): Promise<ReplaysExpanded[]> {
+		const response = await pocketbase
+			.collection('replays')
+			.getFullList<ReplaysResponse<Message[], Player[]>>(1000, {
+				expand: 'createdBy',
+				fetch
+			});
+
+		return response.map(exp) as ReplaysExpanded[];
 	}
 
 	/**
@@ -79,6 +90,18 @@ export class Replays {
 			fetch
 		});
 		return records.length > 0 ? records[0] : null;
+	}
+
+	/**
+	 * Retrieves all existing replay filenames.
+	 */
+	async getExistingFilenames(): Promise<string[]> {
+		const records = await pocketbase.collection('replays').getFullList({
+			fields: 'filename',
+			requestKey: null,
+			fetch
+		});
+		return records.map((r) => r.filename);
 	}
 
 	/**
