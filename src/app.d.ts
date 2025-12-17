@@ -167,6 +167,8 @@ declare module '@fknoobs/app' {
 		players: MatchHistoryPlayer[];
 	}
 
+	type Match = TransformedMatch;
+
 	interface OriginalMatchHistory {
 		matchHistoryStats: Array<{
 			id: number;

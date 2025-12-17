@@ -99,12 +99,14 @@ export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	id: string
 	isRanked?: boolean
 	map: string
+	needsResult?: boolean
 	players: null | Tplayers
+	replay?: FileNameString
 	result?: null | Tresult
 	sessionId: number
-	submittedBy: string
 	title: string
 	updatedAt: IsoAutoDateString
+	user: RecordIdString
 }
 
 export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {

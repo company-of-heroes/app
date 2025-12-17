@@ -30,6 +30,14 @@ export class Lobby {
 	sessionId: number | null = null;
 
 	/**
+	 * Started timestamp of the lobby.
+	 *
+	 * @public
+	 * @type {number | null}
+	 */
+	startedAt: string | null = null;
+
+	/**
 	 * Current map name for the lobby.
 	 * Set when a lobby is created or updated.
 	 *

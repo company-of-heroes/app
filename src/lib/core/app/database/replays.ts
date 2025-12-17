@@ -9,7 +9,6 @@ import { exp, getFile, pocketbase } from '$core/pocketbase';
 import { fetch } from '@tauri-apps/plugin-http';
 import { app } from '../app.svelte';
 import type { ListResult } from 'pocketbase';
-import { readFile } from '@tauri-apps/plugin-fs';
 import { dirname, join } from '@tauri-apps/api/path';
 import type { Message, Player } from '@fknoobs/replay-parser';
 

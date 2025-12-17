@@ -1,3 +1,15 @@
+<script lang="ts">
+	import { app } from '$core/app';
+	import { resource } from 'runed';
+
+	let matches = resource(
+		() => null,
+		() => app.database.lobbies.getList({ filter: 'createdAt > @todayStart' })
+	);
+
+	$inspect(matches.current);
+</script>
+
 <!-- <script lang="ts">
 	import type { LobbyFilters } from '$core/app/database/lobbies';
 	import * as Player from '$lib/components/player';

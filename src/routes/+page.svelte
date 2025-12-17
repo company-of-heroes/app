@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { app } from '$core/app';
 	import { H } from '$lib/components/ui/h';
-	import { WidgetStatus } from '$lib/components/widgets';
+	import { WidgetMatchHistory, WidgetStatus } from '$lib/components/widgets';
 	import { Alert } from '$lib/components/ui/alert';
 	import WidgetCurrentGame from '$lib/components/widgets/widget-current-game.svelte';
 	import WidgetProfile from '$lib/components/widgets/widget-profile.svelte';
@@ -24,15 +24,18 @@
 	</WidgetStatus>
 </div>
 
-{#if app.game.isRunning}
-	<div class="mt-8 grid gap-8">
+<div class="mt-8 grid gap-8">
+	{#if app.game.isRunning}
 		<div>
 			<WidgetProfile />
 		</div>
 		<div>
 			<WidgetCurrentGame />
 		</div>
+	{:else}
+		<Alert variant="warning" class="mt-4">Company of Heroes is not running.</Alert>
+	{/if}
+	<div>
+		<WidgetMatchHistory />
 	</div>
-{:else}
-	<Alert variant="warning" class="mt-4">Company of Heroes is not running.</Alert>
-{/if}
+</div>

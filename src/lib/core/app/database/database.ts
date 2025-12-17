@@ -7,7 +7,7 @@ export class Database {
 	public lobbies: Lobbies;
 
 	private constructor(client: Sqlite) {
-		this.lobbies = new Lobbies(client);
+		this.lobbies = new Lobbies();
 	}
 
 	replays() {
