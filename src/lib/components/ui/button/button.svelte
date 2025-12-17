@@ -15,8 +15,8 @@
 	{...restProps}
 	class={cn(
 		'border border-transparent',
-		'inline-flex items-center gap-2',
-		'cursor-pointer rounded-md px-6 py-2',
+		'inline-flex h-11 items-center gap-2',
+		'cursor-pointer rounded-md px-6',
 		'transition-all duration-100 hover:opacity-70',
 		'disabled:cursor-not-allowed disabled:opacity-60',
 		'active:scale-99',

@@ -60,6 +60,7 @@
 		"fs:scope-download-recursive",
 		"fs:scope-resource-recursive",
 		"fs:read-all",
+		"fs:read-files",
 		"fs:allow-watch",
 		"fs:scope-document-recursive",
 		"fs:scope-appdata-recursive",

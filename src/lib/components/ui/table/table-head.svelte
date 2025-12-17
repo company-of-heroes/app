@@ -11,7 +11,7 @@
 	{...restProps}
 	class={cn(
 		'flex h-12 items-center gap-4 px-4 text-left font-semibold',
-		'bg-secondary-600/20 text-secondary-300',
+		'text-secondary-300 bg-gray-800/70',
 		restProps.class
 	)}
 >

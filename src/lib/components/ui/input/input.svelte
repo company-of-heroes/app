@@ -59,7 +59,7 @@
 		</button>
 	</div>
 {:else}
-	<div class="relative flex flex-1 items-center">
+	<div class="relative flex flex-1">
 		<input
 			bind:value
 			{...restProps}

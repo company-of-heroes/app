@@ -10,7 +10,7 @@
 <div
 	{...restProps}
 	class={cn(
-		'border-secondary-950 bg-secondary-950/30 overflow-clip rounded-lg border',
+		'border-secondary-800 bg-secondary-950/30 overflow-clip rounded-lg border',
 		restProps.class
 	)}
 >

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from 'svelte/elements';
-	import { onMount, type Snippet } from 'svelte';
+	import { onMount, tick, type Snippet } from 'svelte';
 	import { Button } from '../button';
 	import { cn } from '$lib/utils';
 	import X from 'phosphor-svelte/lib/X';
@@ -27,6 +27,7 @@
 	let highlightedIndex = $state(0);
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let listItems = $state<HTMLButtonElement[]>([]);
+	let displayedCount = $state(50);
 
 	// Ensure value is array for multiple mode, string for single mode
 	let selectedValues = $derived.by(() => {
@@ -41,6 +42,13 @@
 			return options;
 		}
 		return options.filter((option) => option.label.toLowerCase().includes(search.toLowerCase()));
+	});
+
+	let displayedOptions = $derived(filteredOptions.slice(0, displayedCount));
+
+	$effect(() => {
+		search;
+		displayedCount = 50;
 	});
 
 	let displayText = $derived.by(() => {
@@ -146,29 +154,56 @@
 		}
 	}
 
-	function scrollToHighlighted() {
+	async function scrollToHighlighted() {
+		if (highlightedIndex >= displayedCount) {
+			displayedCount = highlightedIndex + 50;
+			await tick();
+		}
 		const highlightedElement = listItems[highlightedIndex];
 		if (highlightedElement) {
 			highlightedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 		}
 	}
 
-	onMount(() => {
-		return () => {
-			// Cleanup if needed
+	function viewport(node: HTMLElement) {
+		const observer = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting) {
+				displayedCount += 50;
+			}
+		});
+		observer.observe(node);
+
+		return {
+			destroy() {
+				observer.disconnect();
+			}
 		};
-	});
+	}
 </script>
 
 {#if multiple && selectedValues.length > 0}
-	<div class="flex gap-1">
+	<div class="flex flex-wrap items-start gap-1">
+		<button
+			class="me-4 mt-2 cursor-pointer text-sm font-medium text-red-400 transition-colors hover:text-red-300"
+			onclick={() => {
+				selectedValues = [];
+				value = multiple ? [] : '';
+			}}
+			type="button"
+		>
+			Clear All
+		</button>
 		{#each selectedValues as value}
 			{@const opt = options.find((o) => o.value === value)}
 			{#if opt}
 				<span
-					class="flex w-fit items-center gap-4 rounded border border-gray-600 bg-gray-700 py-1.5 ps-4 pe-3 text-sm shadow-2xs hover:bg-gray-600"
+					class={cn(
+						'grid w-fit grid-flow-col items-center gap-4 rounded border py-1.5 ps-4 pe-3 text-sm',
+						'border-gray-600 bg-gray-700 shadow-2xs',
+						'hover:bg-gray-600'
+					)}
 				>
-					<span>{opt.label}</span>
+					<span class="truncate">{opt.label}</span>
 					<button
 						class="ms-auto cursor-pointer hover:text-red-400"
 						type="button"
@@ -221,7 +256,7 @@
 				class="max-h-60 overflow-y-auto rounded-br-md rounded-bl-md border border-t-0 border-gray-600 bg-gray-900"
 				role="listbox"
 			>
-				{#each filteredOptions as option, index}
+				{#each displayedOptions as option, index}
 					<button
 						bind:this={listItems[index]}
 						class={cn(
@@ -248,6 +283,7 @@
 						{option.label}
 					</button>
 				{/each}
+				<div use:viewport class="h-px w-full"></div>
 			</ul>
 		</div>
 	</div>

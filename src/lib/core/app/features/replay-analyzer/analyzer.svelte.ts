@@ -32,11 +32,14 @@ const DATE_FORMATS = [
 	'DD-MM-YYYY h:mm A',
 	'D-M-YYYY h:mm A',
 	'DD-MM-YYYY h:mm a',
-	'D-M-YYYY h:mm a'
+	'D-M-YYYY h:mm a',
+	'DD-MMM-YY h:mm A',
+	'DD-MMM-YY h:mm a'
 ];
 
 export type ReplayAnalyzerSettings = {
 	didDoInitialScan: boolean;
+	ignoredFiles: string[];
 };
 
 export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
@@ -55,18 +58,19 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 	defaultSettings() {
 		return {
 			enabled: true,
-			didDoInitialScan: false
+			didDoInitialScan: false,
+			ignoredFiles: []
 		};
 	}
 
 	enable() {
 		this.worker = new ReplayWorker();
 		this.worker.onmessage = (event) => {
-			const { id, success, replay, error } = event.data;
+			const { id, success, replay, content, error } = event.data;
 			const p = this.pending.get(id);
 			if (p) {
 				this.pending.delete(id);
-				if (success) p.resolve(replay);
+				if (success) p.resolve({ replay, content });
 				else p.reject(error);
 			}
 		};
@@ -84,7 +88,10 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 		}
 	}
 
-	private parseReplayInWorker(content: Uint8Array, fileName: string): Promise<any> {
+	private parseReplayInWorker(
+		content: Uint8Array,
+		fileName: string
+	): Promise<{ replay: any; content: Uint8Array }> {
 		return new Promise((resolve, reject) => {
 			if (!this.worker) {
 				reject(new Error('Worker not initialized'));
@@ -111,7 +118,7 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 		this.progress.total = replays.length;
 		this.progress.processed = 0;
 
-		const CONCURRENCY = 5;
+		const CONCURRENCY = 2;
 		const queue = [...replays];
 		const activePromises = new Set<Promise<void>>();
 
@@ -136,7 +143,7 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 
 	private async getPlaybackDir(): Promise<string | null> {
 		if (!app.settings.companyOfHeroesConfigPath) {
-			console.warn('ReplayAnalyzer: CoH2 config path not set.');
+			console.warn('ReplayAnalyzer: CoH config path not set.');
 			return null;
 		}
 
@@ -166,18 +173,11 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 			.filter((f) => f.isFile && f.name.endsWith('.rec') && f.name !== 'temp.rec')
 			.map((f) => f.name);
 
-		const newReplays: string[] = [];
-		for (let i = 0; i < replays.length; i += 50) {
-			const chunk = replays.slice(i, i + 50);
-			await Promise.all(
-				chunk.map(async (filename) => {
-					const exists = await app.database.replays().getByFilename(filename);
-					if (!exists) {
-						newReplays.push(filename);
-					}
-				})
-			);
-		}
+		const existingFilenames = await app.database.replays().getExistingFilenames();
+		const existingSet = new Set(existingFilenames);
+		const newReplays = replays
+			.filter((name) => !existingSet.has(name))
+			.filter((name) => !this.settings.ignoredFiles.includes(name));
 
 		console.log(`Found ${newReplays.length} new replays to process.`);
 		return newReplays;
@@ -187,12 +187,28 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 		try {
 			const filePath = await join(playbackDir, filename);
 			const replayFile = await readFile(filePath);
+			const { replay, content } = await this.parseReplayInWorker(replayFile, filename);
 
-			const replay = await this.parseReplayInWorker(replayFile, filename);
+			console.log({
+				durationInSeconds: replay.duration,
+				file: new File([new Uint8Array(content)], filename),
+				filename: filename,
+				gameDate: dayjs(replay.gameDate, DATE_FORMATS).toISOString(),
+				isHighResources: replay.highResources,
+				isRandomStart: replay.randomStart,
+				mapFilename: replay.mapFileName,
+				mapName: replay.mapName,
+				isRanked: replay.matchType?.toLowerCase().includes('automatch') ?? false,
+				isVpGame: replay.vpGame,
+				vpCount: replay.vpCount,
+				players: replay.players,
+				messages: replay.messages,
+				title: !replay.replayName ? '-' : replay.replayName
+			});
 
 			await app.database.replays().create({
 				durationInSeconds: replay.duration,
-				file: new File([replayFile], filename, { type: 'application/octet-stream' }),
+				file: new File([new Uint8Array(content)], filename),
 				filename: filename,
 				gameDate: dayjs(replay.gameDate, DATE_FORMATS).toISOString(),
 				isHighResources: replay.highResources,
@@ -207,7 +223,8 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 				title: !replay.replayName ? '-' : replay.replayName
 			});
 		} catch (err) {
-			console.warn(`ReplayAnalyzer: Error processing ${filename}`, err);
+			this.settings.ignoredFiles.push(filename);
+			console.error(`ReplayAnalyzer: Error processing ${filename}`, err);
 		}
 	}
 }
