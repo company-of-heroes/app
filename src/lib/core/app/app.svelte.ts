@@ -288,7 +288,7 @@ export class App extends Emittery<AppEvents> {
 					) {
 						goto('/settings');
 					}
-				}, 100);
+				}, 500);
 			}
 		);
 	}
@@ -304,7 +304,7 @@ export class App extends Emittery<AppEvents> {
 		watch(
 			[() => this.socket?.state, () => this.socket, () => this.game.isRunning],
 			([state, socket, isRunning]) => {
-				this.statuses.websocketServer = !socket ? 'error' : socketStatusMap[state!] ?? 'loading';
+				this.statuses.websocketServer = !socket ? 'error' : (socketStatusMap[state!] ?? 'loading');
 				this.statuses.companyOfHeroes = isRunning ? 'success' : 'idle';
 			}
 		);

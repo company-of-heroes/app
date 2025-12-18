@@ -1,18 +1,12 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
 	import { Button } from '$lib/components/ui/button';
-	import { FileSelection, Input } from '$lib/components/ui/input';
+	import { FileSelection } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { app } from '$core/app';
-	import { documentDir } from '@tauri-apps/api/path';
-	import { open } from '@tauri-apps/plugin-dialog';
 	import { H } from '$lib/components/ui/h';
 	import ImportIcon from 'phosphor-svelte/lib/DownloadSimple';
 	import ExportIcon from 'phosphor-svelte/lib/Export';
-
-	$effect(() => {
-		console.log(app.route);
-	});
 </script>
 
 <H level="1">Settings</H>
