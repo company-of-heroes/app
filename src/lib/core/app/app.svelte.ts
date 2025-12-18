@@ -304,7 +304,7 @@ export class App extends Emittery<AppEvents> {
 		watch(
 			[() => this.socket?.state, () => this.socket, () => this.game.isRunning],
 			([state, socket, isRunning]) => {
-				this.statuses.websocketServer = !socket ? 'error' : socketStatusMap[state!] ?? 'loading';
+				this.statuses.websocketServer = !socket ? 'error' : (socketStatusMap[state!] ?? 'loading');
 				this.statuses.companyOfHeroes = isRunning ? 'success' : 'idle';
 			}
 		);
@@ -400,6 +400,15 @@ export class App extends Emittery<AppEvents> {
 	 */
 	getFeature<K extends keyof Features>(name: K): Features[K] | undefined {
 		return this._features.get(name) as Features[K] | undefined;
+	}
+
+	/**
+	 * Retrieves all registered features as an object.
+	 *
+	 * @returns An object containing all registered features.
+	 */
+	get features(): Features {
+		return Object.fromEntries(this._features) as Features;
 	}
 }
 

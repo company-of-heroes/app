@@ -1,11 +1,14 @@
 import { app } from '$core/app';
+import type { UsersResponse } from '$core/pocketbase/types';
 import { generatePassword, generateUniqueId } from '$lib/utils/password';
+import { uniq } from 'lodash-es';
 import { Feature } from '../feature.svelte';
 
 export type AuthSettings = {
 	userId: string;
 	email: string;
 	password: string;
+	enabled: boolean;
 };
 
 /**
@@ -21,6 +24,8 @@ export type AuthSettings = {
 export class Auth extends Feature<AuthSettings> {
 	name = 'auth';
 
+	private _user: UsersResponse<string[]> | null = $state(null);
+
 	async enable() {
 		await app.pocketbase
 			.collection('users')
@@ -29,6 +34,7 @@ export class Auth extends Feature<AuthSettings> {
 				app.pocketbase
 					.collection('users')
 					.authWithPassword(this.settings.email, this.settings.password)
+					.then((auth) => auth.record)
 			)
 			.catch(() =>
 				app.pocketbase.collection('users').create({
@@ -38,6 +44,9 @@ export class Auth extends Feature<AuthSettings> {
 					passwordConfirm: this.settings.password
 				})
 			)
+			.then((user) => {
+				this._user = user as UsersResponse<string[]>;
+			})
 			.catch((err) => {
 				console.error(
 					'Failed to authenticate or create user in Auth feature.',
@@ -49,13 +58,48 @@ export class Auth extends Feature<AuthSettings> {
 			});
 	}
 
-	defaultSettings() {
+	defaultSettings(): AuthSettings {
 		return {
 			userId: generateUniqueId(),
 			email: crypto.randomUUID() + '@fknoobs.com',
 			password: generatePassword(),
 			enabled: true
 		};
+	}
+
+	attachSteamId(steamId: string): Promise<UsersResponse> {
+		if (!this.user) {
+			throw new Error('No authenticated user to attach Steam ID to.');
+		}
+
+		return app.pocketbase
+			.collection('users')
+			.update(this.user.id, {
+				steamIds: uniq([...(this.user.steamIds || []), steamId])
+			})
+			.then((updatedUser) => {
+				this._user = updatedUser as UsersResponse<string[]>;
+				return this._user;
+			});
+	}
+
+	get user() {
+		return {
+			...this._user!,
+			steamIds: this._user?.steamIds || []
+		};
+	}
+
+	get userId() {
+		return this.settings.userId;
+	}
+
+	get email() {
+		return this.settings.email;
+	}
+
+	get password() {
+		return this.settings.password;
 	}
 }
 

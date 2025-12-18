@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { LobbiesExpanded } from '$core/app/database/lobbies';
+	import type { LobbyExpanded } from '$core/app/database/lobbies';
 	import type { UnsubscribeFunc } from 'pocketbase';
 	import type { LobbyPlayer } from '@fknoobs/app';
 	import { fetch } from '@tauri-apps/plugin-http';
@@ -33,12 +33,12 @@
 				if (e.action === 'create') {
 					const current = matches.current || [];
 					if (!current.find((m) => m.id === e.record.id)) {
-						matches.mutate([exp(e.record) as LobbiesExpanded, ...current]);
+						matches.mutate([...current, exp(e.record) as LobbyExpanded]);
 					}
 				} else if (e.action === 'update') {
 					matches.mutate(
 						(matches.current || []).map((match) =>
-							match.id === e.record.id ? (exp(e.record) as LobbiesExpanded) : match
+							match.id === e.record.id ? (exp(e.record) as LobbyExpanded) : match
 						)
 					);
 				} else if (e.action === 'delete') {
@@ -52,6 +52,8 @@
 	onDestroy(() => {
 		unsubscribe?.();
 	});
+
+	console.log(app.features.auth.user);
 </script>
 
 {#snippet team(players: LobbyPlayer[])}
@@ -79,7 +81,9 @@
 	{:else}
 		<div class="grid gap-[2px]">
 			{#each matches.current as match, _ (match.id)}
-				{@const result = match.result?.players.find((p) => p.steamId === app.game.steamId)}
+				{@const result = match.result?.players.find((p) =>
+					app.features.auth.user.steamIds.includes(p.steamId)
+				)}
 				{@const allies =
 					match.players?.filter((p) => p.race === Race.US || p.race === Race.Commonwealth) || []}
 				{@const axis =
@@ -89,7 +93,7 @@
 					class={cn(
 						'h-11 items-center gap-4 overflow-clip rounded-md border',
 						'bg-secondary-950/40 border-secondary-800/50 text-secondary-300',
-						'grid grid-cols-[50px_60px_60px_200px_100px_150px_100px_80px_1fr_auto]'
+						'grid grid-cols-[50px_60px_200px_100px_150px_100px_80px_1fr_auto]'
 					)}
 				>
 					<span
@@ -97,13 +101,6 @@
 						{@attach tooltip(match.map)}
 					>
 						<img src={getMapImageFromName(match.map)} alt={match.map} class="w-full" />
-					</span>
-					<span class="text-center text-sm text-white">
-						{#if result}
-							{result.newrating}
-						{:else}
-							--
-						{/if}
 					</span>
 					<span class="flex items-center gap-2">
 						{#if result}

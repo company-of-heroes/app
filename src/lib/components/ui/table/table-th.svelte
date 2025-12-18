@@ -33,6 +33,6 @@
 	let { width = '1/24', children, ...restProps }: Props = $props();
 </script>
 
-<span {...restProps} class={cn('truncate', `w-${width}`, restProps.class)}>
+<span {...restProps} class={cn('truncate', `min-w-${width} max-w-${width}`, restProps.class)}>
 	{@render children?.()}
 </span>

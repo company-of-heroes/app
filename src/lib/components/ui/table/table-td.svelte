@@ -33,6 +33,6 @@
 	let { width, children, ...restProps }: Props = $props();
 </script>
 
-<span {...restProps} class={cn(`w-${width}`, restProps.class)}>
+<span {...restProps} class={cn(`min-w-${width} max-w-${width}`, restProps.class)}>
 	{@render children?.()}
 </span>

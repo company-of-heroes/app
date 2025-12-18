@@ -5,7 +5,7 @@ import type { ListResult, RecordFullListOptions } from 'pocketbase';
 import type { LobbyPlayer, Match } from '@fknoobs/app';
 import { app } from '..';
 
-export type LobbiesExpanded = Expand<LobbiesResponse<LobbyPlayer[], Match | null>>;
+export type LobbyExpanded = Expand<LobbiesResponse<LobbyPlayer[], Match | null>>;
 
 export class Lobbies {
 	/**
@@ -21,7 +21,7 @@ export class Lobbies {
 			fields = [],
 			sort = '-createdAt'
 		}: { filter?: string; fields?: (keyof LobbiesRecord)[]; sort?: string } = {}
-	): Promise<ListResult<LobbiesExpanded>> {
+	): Promise<ListResult<LobbyExpanded>> {
 		const fieldsString = fields.join(',');
 		const response = await pocketbase
 			.collection('lobbies')
@@ -34,7 +34,7 @@ export class Lobbies {
 
 		return {
 			...response,
-			items: response.items.map(exp) as LobbiesExpanded[]
+			items: response.items.map(exp) as LobbyExpanded[]
 		};
 	}
 
@@ -48,17 +48,17 @@ export class Lobbies {
 			.collection('lobbies')
 			.getFullList<LobbiesResponse<LobbyPlayer[], Match | null>>({ ...options, fetch });
 
-		return response.map(exp) as LobbiesExpanded[];
+		return response.map(exp) as LobbyExpanded[];
 	}
 
-	async getAll(): Promise<LobbiesExpanded[]> {
+	async getAll(): Promise<LobbyExpanded[]> {
 		const response = await pocketbase
 			.collection('lobbies')
 			.getFullList<LobbiesResponse<LobbyPlayer[], any>>(1000, {
 				fetch
 			});
 
-		return response.map(exp) as LobbiesExpanded[];
+		return response.map(exp) as LobbyExpanded[];
 	}
 
 	/**
@@ -70,7 +70,7 @@ export class Lobbies {
 		const record = await pocketbase
 			.collection('lobbies')
 			.getOne<LobbiesResponse<LobbyPlayer[], any>>(id, { fetch });
-		return exp(record) as LobbiesExpanded;
+		return exp(record) as LobbyExpanded;
 	}
 
 	/**
@@ -85,7 +85,7 @@ export class Lobbies {
 				filter: `sessionId=${sessionId}`,
 				fetch
 			});
-		return records.items.length > 0 ? (exp(records.items[0]) as LobbiesExpanded) : null;
+		return records.items.length > 0 ? (exp(records.items[0]) as LobbyExpanded) : null;
 	}
 
 	/**

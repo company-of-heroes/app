@@ -1,18 +1,17 @@
 <script lang="ts">
+	import type { ReplaysExpanded } from '$core/app/database/replays';
 	import * as Form from '$lib/components/ui/form';
 	import { app } from '$core/app';
 	import { tooltip } from '$lib/attachments';
 	import { H } from '$lib/components/ui/h';
-	import { Pagination } from '$lib/components/ui/pagination';
 	import { Table, TD, TH, THead, TR } from '$lib/components/ui/table';
-	import dayjs from '$lib/dayjs';
 	import { cn, getFactionFlagFromRace } from '$lib/utils';
 	import { getString } from '$lib/utils/game';
 	import { resource } from 'runed';
 	import { isEmpty, uniqBy } from 'lodash-es';
 	import { Input, Selection } from '$lib/components/ui/input';
 	import Checkbox from '$lib/components/ui/input/checkbox.svelte';
-	import type { ReplaysExpanded } from '$core/app/database/replays';
+	import dayjs from '$lib/dayjs';
 
 	let filters = $state({
 		query: '',

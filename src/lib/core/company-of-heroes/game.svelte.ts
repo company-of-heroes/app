@@ -5,6 +5,7 @@ import Emittery from 'emittery';
 import { Lobby } from './lobby.svelte';
 import { isRunning } from './utils';
 import { watch } from 'runed';
+import { app } from '$core/app';
 
 export type GameEvents = {
 	'GAME:LAUNCHED': never;
@@ -122,6 +123,14 @@ export class Game extends Emittery<GameEvents> {
 						this.trackWindowFocus();
 					} else {
 						this.stopTrackingWindowFocus();
+					}
+				}
+			);
+			watch(
+				() => this.steamId,
+				(steamId) => {
+					if (steamId) {
+						app.features.auth.attachSteamId(steamId);
 					}
 				}
 			);
