@@ -288,7 +288,7 @@ export class App extends Emittery<AppEvents> {
 					) {
 						goto('/settings');
 					}
-				}, 100);
+				}, 500);
 			}
 		);
 	}
