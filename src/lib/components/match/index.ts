@@ -6,6 +6,7 @@ import MatchTitle from './match-title.svelte';
 import MatchPlayers from './match-players.svelte';
 import MatchRating from './match-rating.svelte';
 import MatchDate from './match-date.svelte';
+import MatchTime from './match-time.svelte';
 import MatchStatus from './match-status.svelte';
 
 export {
@@ -18,5 +19,6 @@ export {
 	MatchPlayers as Players,
 	MatchRating as Rating,
 	MatchDate as Date,
+	MatchTime as Time,
 	MatchStatus as Status
 };

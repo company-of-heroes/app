@@ -23,7 +23,7 @@
 
 <span
 	{...restProps}
-	class={cn('inline-flex items-center gap-2')}
+	class={cn('inline-flex items-center gap-2', restProps.class)}
 	{@attach tooltip('Rating Change (elo)')}
 >
 	{#if player}

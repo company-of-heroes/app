@@ -25,7 +25,8 @@
 			'border-secondary-700 bg-secondary-800/70 hover:border-secondary-600 hover:bg-secondary-700 text-white hover:opacity-100',
 		variant === 'destructive' && 'text-destructive border-destructive/30 bg-destructive/5',
 		variant === 'ghost' && 'active:bg-secondary-950/40 hover:opacity-100',
-		variant === 'link' && 'text-primary bg-transparent font-medium hover:opacity-100',
+		variant === 'link' &&
+			'text-primary hover:text-primary-600 bg-transparent font-medium hover:opacity-100',
 		restProps.class
 	)}
 	disabled={loading || restProps.disabled}

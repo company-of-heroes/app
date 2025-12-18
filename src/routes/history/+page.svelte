@@ -223,10 +223,10 @@
 <Table>
 	<THead>
 		<TH width="5/24">Map</TH>
+		<TH width="2/24"></TH>
 		<TH width="5/24">Title</TH>
 		<TH width="3/24">Allies</TH>
 		<TH width="3/24">Axis</TH>
-		<TH width="2/24"></TH>
 		<TH width="4/24">Date</TH>
 		<TH width="2/24"></TH>
 	</THead>
@@ -239,27 +239,21 @@
 						<Match.MapImage />
 						<Match.MapName />
 					</TD>
-
+					<TD width="2/24">
+						<Match.Rating class="flex justify-center" />
+					</TD>
 					<TD width="5/24">
 						<Match.Title />
 					</TD>
-
 					<TD width="3/24">
 						<Match.Players team="allies" />
 					</TD>
-
 					<TD width="3/24">
 						<Match.Players team="axis" />
 					</TD>
-
-					<TD width="2/24">
-						<Match.Rating />
-					</TD>
-
 					<TD width="4/24">
 						<Match.Date />
 					</TD>
-
 					<TD width="2/24">
 						<Match.Status />
 					</TD>
