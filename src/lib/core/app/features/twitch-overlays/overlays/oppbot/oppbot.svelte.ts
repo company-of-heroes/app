@@ -1,5 +1,5 @@
 import { Overlay } from '../overlay.svelte';
-import zip from './oppbot.asdasd.zip?base64';
+import zip from './oppbot.zip?base64';
 
 export class OppBotOverlay extends Overlay {
 	name = 'Opponent Bot';
