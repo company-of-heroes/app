@@ -34,13 +34,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 8
+
+      - name: Get pnpm store directory
+        shell: pwsh
+        run: |
+          $storePath = pnpm store path --silent
+          "PNPM_STORE_PATH=$storePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.8
