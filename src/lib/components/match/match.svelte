@@ -1,24 +1,23 @@
 <script lang="ts">
-	import type { LobbiesResponse } from '$core/pocketbase/types';
-	import type { LobbyPlayer, Match } from '@fknoobs/app';
+	import type { MatchExpanded } from '$core/app/database/lobbies';
+	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import type { Snippet } from 'svelte';
 	import { createMatch } from '.';
-	import type { HTMLAttributes } from 'svelte/elements';
 	import { isEmpty } from 'lodash-es';
 
 	type Props = {
-		match: LobbiesResponse<LobbyPlayer[], Match | null>;
+		match: MatchExpanded;
 		children: Snippet;
-	} & HTMLAttributes<HTMLDivElement>;
+	} & HTMLAnchorAttributes;
 
 	let { match, children, ...restProps }: Props = $props();
 	createMatch(match);
 </script>
 
 {#if false === isEmpty(restProps)}
-	<div {...restProps}>
+	<a {...restProps}>
 		{@render children()}
-	</div>
+	</a>
 {:else}
 	{@render children()}
 {/if}

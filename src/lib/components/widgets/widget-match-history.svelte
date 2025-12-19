@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { LobbyExpanded } from '$core/app/database/lobbies';
+	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/lobbies';
 	import type { UnsubscribeFunc } from 'pocketbase';
 	import * as Match from '$lib/components/match';
 	import { fetch } from '@tauri-apps/plugin-http';
@@ -19,22 +19,22 @@
 	let unsubscribe = $state<UnsubscribeFunc>();
 	let matches = resource(
 		() => null,
-		() => app.database.lobbies.getList({ filter: 'createdAt > @todayStart' })
+		() => app.database.matches.getList({ filter: 'createdAt > @todayStart' })
 	);
 
 	onMount(async () => {
-		unsubscribe = await app.pocketbase.collection('lobbies').subscribe(
+		unsubscribe = await app.pocketbase.collection('lobbies').subscribe<LobbyMatch>(
 			'*',
 			(e) => {
 				if (e.action === 'create') {
 					const current = matches.current || [];
 					if (!current.find((m) => m.id === e.record.id)) {
-						matches.mutate([...current, exp(e.record) as LobbyExpanded]);
+						matches.mutate([...current, exp(e.record) as MatchExpanded]);
 					}
 				} else if (e.action === 'update') {
 					matches.mutate(
 						(matches.current || []).map((match) =>
-							match.id === e.record.id ? (exp(e.record) as LobbyExpanded) : match
+							match.id === e.record.id ? (exp(e.record) as MatchExpanded) : match
 						)
 					);
 				} else if (e.action === 'delete') {
@@ -68,10 +68,12 @@
 			{#each matches.current as match, _ (match.id)}
 				<Match.Root
 					{match}
+					href={`/history/${match.id}`}
 					class={cn(
-						'h-11 items-center gap-4 overflow-clip rounded-md border',
+						'h-11 items-center gap-4 overflow-clip rounded-md border transition-colors duration-150',
 						'bg-secondary-950/40 border-secondary-800/50 text-secondary-300',
-						'grid grid-cols-[50px_200px_100px_200px_150px_150px_100px_1fr_auto]'
+						'grid grid-cols-[50px_200px_100px_200px_150px_150px_1fr_auto]',
+						'hover:bg-secondary-950/60 focus:bg-secondary-950/60 hover:text-primary'
 					)}
 				>
 					<Match.MapImage class="w-full" />
@@ -80,7 +82,6 @@
 					<Match.Title />
 					<Match.Players team="allies" />
 					<Match.Players team="axis" />
-					<Button variant="link">View</Button>
 					<Match.Time />
 					<span class="px-4">
 						{#if match.needsResult}

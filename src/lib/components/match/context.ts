@@ -1,8 +1,7 @@
+import type { MatchExpanded } from '$core/app/database/lobbies';
 import type { LobbiesResponse } from '$core/pocketbase/types';
-import type { LobbyPlayer, Match } from '@fknoobs/app';
 import { Context } from 'runed';
 
-const context = new Context<LobbiesResponse<LobbyPlayer[], Match | null>>('<match />');
-export const createMatch = (match: LobbiesResponse<LobbyPlayer[], Match | null>) =>
-	context.set(match);
+const context = new Context<MatchExpanded>('<match />');
+export const createMatch = (match: MatchExpanded) => context.set(match);
 export const useMatch = () => context.get();

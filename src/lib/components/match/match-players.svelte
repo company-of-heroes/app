@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
+	import * as Player from '$lib/components/player';
 	import { useMatch } from '.';
-	import { cn, getFactionFlagFromRace, getRacePrefix } from '$lib/utils';
+	import { cn } from '$lib/utils';
 	import { tooltip } from '$lib/attachments';
 	import { Race } from '$lib/utils/game';
 
@@ -18,13 +19,10 @@
 	);
 </script>
 
-<span {...restProps} class={cn('flex items-center gap-0.5', restProps.class)}>
+<span {...restProps} class={cn('flex items-center gap-2', restProps.class)}>
 	{#each players as player}
-		<img
-			src={getFactionFlagFromRace(player.race)}
-			alt={getRacePrefix(player.race)}
-			class={cn('border-secondary-800 size-5 rounded-full border-3 object-cover')}
-			{@attach tooltip(player.profile?.alias || 'Unknown')}
-		/>
+		<Player.Root {player}>
+			<Player.Faction {@attach tooltip(player.profile?.alias || 'Unknown')} />
+		</Player.Root>
 	{/each}
 </span>
