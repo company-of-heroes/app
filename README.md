@@ -9,6 +9,7 @@ FkNoobsCoH is a **free** companion app for **Company of Heroes** that adds helpf
 - **Replay analyzer** — scan and analyze your replays
 - **Replay viewer** — browse and inspect replay details and chat
 - **Player / match insights** — surface useful in‑game information
+- **Keybindings** — configure custom shortcuts (per faction) and export/import them
 - **Twitch integration** — stream-friendly features
 - **Twitch overlays** — built-in overlay support (served locally)
 
