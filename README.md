@@ -47,4 +47,4 @@ If you downloaded the installer from the official GitHub releases page above, yo
 
 ## Screenshot
 
-![FknoobsCoH - Screen](static/screenshot-v0.35.0.png)
+![FknoobsCoH - Screen](static/screenshot-v0.36.x.png)
