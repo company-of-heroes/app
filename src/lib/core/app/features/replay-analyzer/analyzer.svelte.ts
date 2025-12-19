@@ -170,7 +170,13 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 		}
 
 		let replays = localFiles
-			.filter((f) => f.isFile && f.name.endsWith('.rec') && f.name !== 'temp.rec')
+			.filter(
+				(f) =>
+					f.isFile &&
+					f.name.endsWith('.rec') &&
+					f.name !== 'temp.rec' &&
+					f.name.startsWith('replay_')
+			)
 			.map((f) => f.name);
 
 		const existingFilenames = await app.database.replays().getExistingFilenames();
