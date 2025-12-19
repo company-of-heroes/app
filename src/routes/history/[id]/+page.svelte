@@ -130,7 +130,7 @@
 					{/if}
 					Download replay
 				</Button>
-				<Button variant="secondary">
+				<Button variant="secondary" href={`/replays/${match.current.id}`}>
 					<TreeView class="mr-2" />
 					View replay
 				</Button>

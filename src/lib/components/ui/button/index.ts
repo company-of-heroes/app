@@ -7,6 +7,7 @@ export type ButtonProps = {
 	variant?: 'primary' | 'secondary' | 'ghost' | 'link' | 'destructive';
 	children: Snippet;
 	loading?: boolean;
+	href?: string;
 } & HTMLButtonAttributes;
 
 export { Button, ButtonBack };

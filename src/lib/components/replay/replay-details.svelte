@@ -15,8 +15,6 @@
 	let { ...restProps }: Props = $props();
 	let replay = useReplay();
 	let isRanked = $derived(replay.matchType === 'automatch');
-
-	console.log(replay);
 </script>
 
 <div {...restProps} class={cn('grid grid-cols-[300px_auto] gap-8', restProps.class)}>

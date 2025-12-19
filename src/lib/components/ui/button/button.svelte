@@ -7,13 +7,17 @@
 		children,
 		variant = 'primary',
 		loading = $bindable(false),
+		href,
 		...restProps
 	}: ButtonProps = $props();
 </script>
 
-<button
+<svelte:element
+	this={href ? 'a' : 'button'}
 	{...restProps}
+	{href}
 	class={cn(
+		'border border-transparent',
 		'border border-transparent',
 		'inline-flex h-11 items-center gap-2',
 		'cursor-pointer rounded-md px-6',
@@ -34,4 +38,4 @@
 		<LoadingIcon size="20" class="animate-[spin_1500ms_linear_infinite]" />
 	{/if}
 	{@render children()}
-</button>
+</svelte:element>
