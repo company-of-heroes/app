@@ -15,7 +15,7 @@ const config = {
 			'$features/*': 'src/lib/core/app/features/*'
 		},
 		prerender: {
-			entries: ['*', '/leaderboards/profile/[profileId]', '/replays/[replayId]']
+			entries: ['*', '/leaderboards/profile/[profileId]', '/replays/[replayId]', '/history/[id]']
 		}
 	},
 	compilerOptions: {
