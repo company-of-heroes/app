@@ -9,21 +9,21 @@ import type { Expand } from '@fknoobs/app';
 import { exp, pocketbase } from '$core/pocketbase';
 import { fetch } from '@tauri-apps/plugin-http';
 import type { ListResult, RecordFullListOptions } from 'pocketbase';
-import type { LobbyPlayer, Match } from '@fknoobs/app';
+import type { LobbyPlayer, Match as LobbyMatch } from '@fknoobs/app';
 import { app } from '..';
 
-export type Lobby = LobbiesResponse<
+export type Match = LobbiesResponse<
 	LobbyPlayer[],
-	Match | null,
+	LobbyMatch | null,
 	{
 		user: UsersResponse<string[]>;
 	}
->;
-export type LobbyExpanded = Expand<Lobby>;
+> & { players: LobbyPlayer[] };
+export type MatchExpanded = Expand<Match>;
 
 const DEFAULT_EXPAND = 'user';
 
-export class Lobbies {
+export class Matches {
 	/**
 	 * Retrieves a paginated list of lobbies.
 	 *
@@ -37,9 +37,9 @@ export class Lobbies {
 			fields = [],
 			sort = '-createdAt'
 		}: { filter?: string; fields?: (keyof LobbiesRecord)[]; sort?: string } = {}
-	): Promise<ListResult<LobbyExpanded>> {
+	): Promise<ListResult<MatchExpanded>> {
 		const fieldsString = fields.join(',');
-		const response = await pocketbase.collection('lobbies').getList<Lobby>(page, perPage, {
+		const response = await pocketbase.collection('lobbies').getList<Match>(page, perPage, {
 			filter,
 			fields: fieldsString,
 			sort,
@@ -49,7 +49,7 @@ export class Lobbies {
 
 		return {
 			...response,
-			items: response.items.map(exp) as LobbyExpanded[]
+			items: response.items.map(exp) as MatchExpanded[]
 		};
 	}
 
@@ -58,23 +58,23 @@ export class Lobbies {
 	 *
 	 * @param options Configuration options for the request
 	 */
-	async getList(options: RecordFullListOptions): Promise<LobbyExpanded[]> {
-		const response = await pocketbase.collection('lobbies').getFullList<Lobby>({
+	async getList(options: RecordFullListOptions): Promise<MatchExpanded[]> {
+		const response = await pocketbase.collection('lobbies').getFullList<Match>({
 			...options,
 			expand: DEFAULT_EXPAND,
 			fetch
 		});
 
-		return response.map(exp) as LobbyExpanded[];
+		return response.map(exp) as MatchExpanded[];
 	}
 
-	async getAll(): Promise<LobbyExpanded[]> {
-		const response = await pocketbase.collection('lobbies').getFullList<Lobby>(1000, {
+	async getAll(): Promise<MatchExpanded[]> {
+		const response = await pocketbase.collection('lobbies').getFullList<Match>(1000, {
 			expand: DEFAULT_EXPAND,
 			fetch
 		});
 
-		return response.map(exp) as LobbyExpanded[];
+		return response.map(exp) as MatchExpanded[];
 	}
 
 	/**
@@ -82,12 +82,12 @@ export class Lobbies {
 	 *
 	 * @param id The ID of the lobby
 	 */
-	async getById(id: string): Promise<LobbyExpanded> {
-		const record = await pocketbase.collection('lobbies').getOne<Lobby>(id, {
+	async getById(id: string): Promise<MatchExpanded> {
+		const record = await pocketbase.collection('lobbies').getOne<Match>(id, {
 			fetch,
 			expand: DEFAULT_EXPAND
 		});
-		return exp(record) as LobbyExpanded;
+		return exp(record) as MatchExpanded;
 	}
 
 	/**
@@ -95,13 +95,13 @@ export class Lobbies {
 	 *
 	 * @param sessionId The session ID of the lobby
 	 */
-	async getBySessionId(sessionId: number): Promise<LobbyExpanded | null> {
-		const records = await pocketbase.collection('lobbies').getList<Lobby>(1, 1, {
+	async getBySessionId(sessionId: number): Promise<MatchExpanded | null> {
+		const records = await pocketbase.collection('lobbies').getList<Match>(1, 1, {
 			filter: `sessionId=${sessionId}`,
 			expand: DEFAULT_EXPAND,
 			fetch
 		});
-		return records.items.length > 0 ? (exp(records.items[0]) as LobbyExpanded) : null;
+		return records.items.length > 0 ? (exp(records.items[0]) as MatchExpanded) : null;
 	}
 
 	/**
@@ -109,7 +109,7 @@ export class Lobbies {
 	 *
 	 * @param data The data to create the lobby with
 	 */
-	async create(data: Omit<Create<'lobbies'>, 'user'>): Promise<LobbyExpanded> {
+	async create(data: Omit<Create<'lobbies'>, 'user'>): Promise<MatchExpanded> {
 		const newData = {
 			user: app.pocketbase.authStore.record!.id,
 			...data
@@ -126,7 +126,7 @@ export class Lobbies {
 	 * @param id The ID of the lobby to update
 	 * @param data The data to update the lobby with
 	 */
-	async update(id: string, data: Update<'lobbies'>): Promise<LobbyExpanded> {
+	async update(id: string, data: Update<'lobbies'>): Promise<MatchExpanded> {
 		return await pocketbase.collection('lobbies').update(id, data, {
 			expand: DEFAULT_EXPAND,
 			fetch

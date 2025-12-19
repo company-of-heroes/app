@@ -2,23 +2,32 @@
 	import * as List from '$lib/components/ui/list';
 	import * as Player from '$lib/components/player';
 	import * as Table from '$lib/components/ui/table';
+	import { scale } from 'svelte/transition';
 	import { page } from '$app/state';
 	import { app } from '$core/app';
-	import { ButtonBack } from '$lib/components/ui/button';
+	import { Button, ButtonBack } from '$lib/components/ui/button';
 	import { H } from '$lib/components/ui/h';
 	import { cn, normalizeMapName } from '$lib/utils';
-	import { getMapImageFromName, Race } from '$lib/utils/game';
+	import { getLeaderboardStatsForPlayerByMatchType, getMapImageFromName } from '$lib/utils/game';
 	import { resource } from 'runed';
 	import { tooltip } from '$lib/attachments';
+	import { sortBy } from 'lodash-es';
 	import dayjs from '$lib/dayjs';
 	import HourGlass from 'phosphor-svelte/lib/Hourglass';
 	import Checks from 'phosphor-svelte/lib/Checks';
-	import CaretUp from 'phosphor-svelte/lib/CaretUp';
-	import CaretDown from 'phosphor-svelte/lib/CaretDown';
+	import Download from 'phosphor-svelte/lib/Download';
+	import TreeView from 'phosphor-svelte/lib/TreeView';
+	import Check from 'phosphor-svelte/lib/Check';
+	import { bounceInOut, elasticInOut } from 'svelte/easing';
 
 	const match = resource(
 		() => page.params.id,
-		() => app.database.lobbies.getById(page.params.id!)
+		() => app.database.matches.getById(page.params.id!)
+	);
+
+	let isDownloading = $state(false);
+	let didDownload = $derived(
+		match.current && (await app.features.history.downloadExists(match.current))
 	);
 
 	const title = $derived(
@@ -33,7 +42,6 @@
 			match.current?.user.steamIds?.includes(p.steamId || '')
 		)
 	);
-
 	const duration = $derived.by(() => {
 		if (!match.current?.result?.startgametime || !match.current?.result?.completiontime) {
 			return 'N/A';
@@ -48,22 +56,6 @@
 
 		return diff.format('m [mins] s [secs]');
 	});
-
-	const getTeamPlayers = (team: 'allies' | 'axis') => {
-		if (!match.current?.result?.players) {
-			return [];
-		}
-
-		if (team === 'allies') {
-			return match.current.result.players.filter(
-				(p) => p.race_id === Race.US || p.race_id === Race.Commonwealth
-			);
-		}
-
-		return match.current.result.players.filter(
-			(p) => p.race_id === Race.Wehrmacht || p.race_id === Race.PanzerElite
-		);
-	};
 </script>
 
 <ButtonBack>Go back</ButtonBack>
@@ -108,69 +100,95 @@
 					<List.Value>{duration}</List.Value>
 				</List.Root>
 			</div>
-			{#if match.current.result}
-				{@const allies = getTeamPlayers('allies')}
-				{@const axis = getTeamPlayers('axis')}
-				<H level={3} class="mt-8 mb-4">Players</H>
-				<Table.Table>
-					<Table.THead>
-						<Table.TH width="2/24"></Table.TH>
-						<Table.TH width="8/24">Name</Table.TH>
-						<Table.TH width="3/24" class="flex justify-center">Wins</Table.TH>
-						<Table.TH width="3/24" class="flex justify-center">Losses</Table.TH>
-					</Table.THead>
-					{#each allies as player}
-						<Table.TR
-							class={cn(
-								'not-last:border-secondary-950 not-last:border-b',
-								player.resulttype === 0 ? 'bg-destructive/2!' : 'bg-success/2!'
-							)}
-						>
-							<Player.Root {player}>
-								<Table.TD width="2/24" class="flex justify-center">
-									<Player.RatingChange />
-								</Table.TD>
-								<Table.TD width="8/24" class="flex items-center gap-4">
-									<Player.Faction />
-									<Player.Alias />
-									<Player.Country class="w-6" />
-								</Table.TD>
-								<Table.TD width="3/24" class="flex justify-center">
-									<Player.Wins />
-								</Table.TD>
-								<Table.TD width="3/24" class="flex justify-center">
-									<Player.Losses />
-								</Table.TD>
-							</Player.Root>
-						</Table.TR>
-					{/each}
-					{#each axis as player}
-						<Table.TR
-							class={cn(
-								'not-last:border-secondary-950 not-last:border-b',
-								player.resulttype === 0 ? 'bg-destructive/2!' : 'bg-success/2!'
-							)}
-						>
-							<Player.Root {player}>
-								<Table.TD width="2/24" class="flex justify-center">
-									<Player.RatingChange />
-								</Table.TD>
-								<Table.TD width="8/24" class="flex items-center gap-4">
-									<Player.Faction />
-									<Player.Alias />
-									<Player.Country class="w-6" />
-								</Table.TD>
-								<Table.TD width="3/24" class="flex justify-center">
-									<Player.Wins />
-								</Table.TD>
-								<Table.TD width="3/24" class="flex justify-center">
-									<Player.Losses />
-								</Table.TD>
-							</Player.Root>
-						</Table.TR>
-					{/each}
-				</Table.Table>
-			{/if}
+			<div class="mt-6 flex gap-2">
+				<Button
+					onclick={() => {
+						isDownloading = true;
+						app.features.history
+							.downloadReplay(match.current!)
+							.then(() => {
+								isDownloading = false;
+								didDownload = true;
+							})
+							.catch(() => {
+								didDownload = false;
+							})
+							.finally(() => {
+								isDownloading = false;
+							});
+					}}
+					class={cn(didDownload && 'pointer-events-none cursor-not-allowed opacity-50')}
+					loading={isDownloading}
+				>
+					{#if !isDownloading && !didDownload}
+						<Download class="mr-2" />
+					{/if}
+					{#if didDownload}
+						<span in:scale={{ easing: bounceInOut, duration: 150 }}>
+							<Check size={22} class="mr-2" />
+						</span>
+					{/if}
+					Download replay
+				</Button>
+				<Button variant="secondary">
+					<TreeView class="mr-2" />
+					View replay
+				</Button>
+			</div>
+			<H level={3} class="mt-8 mb-4">Players</H>
+			<Table.Table>
+				<Table.THead>
+					<Table.TH width="2/24">-</Table.TH>
+					<Table.TH width="2/24" class="flex justify-center">ELO</Table.TH>
+					<Table.TH width="2/24" class="flex justify-center">Rank</Table.TH>
+					<Table.TH width="9/24">Name</Table.TH>
+					<Table.TH width="3/24" class="flex justify-center">Wins</Table.TH>
+					<Table.TH width="3/24" class="flex justify-center">Losses</Table.TH>
+					<Table.TH width="3/24" class="flex justify-center">Streak</Table.TH>
+				</Table.THead>
+				{#each sortBy(match.current.players, 'index') as player}
+					{@const playerResult = match.current.result?.players.find(
+						(p) => p.profile_id === player.profile?.profile_id
+					)}
+					{@const stats = match.current.result
+						? getLeaderboardStatsForPlayerByMatchType(match.current.result.matchtype_id, player)
+						: undefined}
+
+					<!-- Player row -->
+					<Table.TR
+						class={cn(
+							'not-last:border-secondary-950 not-last:border-b',
+							playerResult?.outcome === 0 ? 'bg-destructive/2!' : 'bg-success/2!'
+						)}
+					>
+						<Player.Root {player} {playerResult} {stats}>
+							<Table.TD width="2/24" class="flex justify-center">
+								<Player.RatingChange />
+							</Table.TD>
+							<Table.TD width="2/24" class="flex justify-center">
+								{playerResult?.newrating || 'N/A'}
+							</Table.TD>
+							<Table.TD width="2/24" class="flex justify-center">
+								<Player.Rank />
+							</Table.TD>
+							<Table.TD width="9/24" class="flex items-center gap-4">
+								<Player.Faction />
+								<Player.Alias />
+								<Player.Country class="w-6" />
+							</Table.TD>
+							<Table.TD width="3/24" class="flex justify-center">
+								<Player.Wins />
+							</Table.TD>
+							<Table.TD width="3/24" class="flex justify-center">
+								<Player.Losses />
+							</Table.TD>
+							<Table.TD width="3/24" class="flex justify-center">
+								<Player.Streak />
+							</Table.TD>
+						</Player.Root>
+					</Table.TR>
+				{/each}
+			</Table.Table>
 		</div>
 	</div>
 {/if}

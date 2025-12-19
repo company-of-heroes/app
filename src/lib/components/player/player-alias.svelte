@@ -5,13 +5,13 @@
 	type Props = HTMLAnchorAttributes;
 
 	const { ...restProps }: Props = $props();
-	const player = usePlayer();
+	const { player } = usePlayer();
 </script>
 
 <a
 	class="hover:text-primary truncate transition-colors"
-	href="/leaderboards/profile/{player.profile_id}"
+	href="/leaderboards/profile/{player.playerId}"
 	{...restProps}
 >
-	{player.alias}
+	{player.profile?.alias ?? 'CPU'}
 </a>

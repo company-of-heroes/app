@@ -427,10 +427,10 @@ export function getMapImageFromName(mapName: string | undefined): string {
  * @returns The leaderboard stats for the player
  */
 export const getLeaderboardStatsForPlayerByMatchType = (
-	matchType: keyof typeof MATCH_TYPES,
+	matchType: keyof typeof MATCH_TYPES | number,
 	player: LobbyPlayer
 ): LeaderboardStat | undefined => {
-	const matchTypeName = MATCH_TYPES[matchType];
+	const matchTypeName = MATCH_TYPES[matchType as keyof typeof MATCH_TYPES];
 	const { race } = player;
 
 	// Map of match types to their race-based leaderboard IDs

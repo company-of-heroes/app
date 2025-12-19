@@ -9,7 +9,7 @@
 </script>
 
 {#if playerResult}
-	<span class="text-center text-green-100" {...restProps}>{playerResult.wins}</span>
+	<span class="text-center text-red-100" {...restProps}>{playerResult.streak}</span>
 {:else}
 	<span class="text-center" {...restProps}>-</span>
 {/if}

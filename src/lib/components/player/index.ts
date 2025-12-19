@@ -4,6 +4,7 @@ import PlayerCountry from './player-country.svelte';
 import PlayerAlias from './player-alias.svelte';
 import PlayerWins from './player-wins.svelte';
 import PlayerLosses from './player-losses.svelte';
+import PlayerStreak from './player-streak.svelte';
 import PlayerRank from './player-rank.svelte';
 import PlayerFaction from './player-faction.svelte';
 import PlayerRatingChange from './player-rating-change.svelte';
@@ -16,6 +17,7 @@ export {
 	PlayerAlias as Alias,
 	PlayerWins as Wins,
 	PlayerLosses as Losses,
+	PlayerStreak as Streak,
 	PlayerRank as Rank,
 	PlayerFaction as Faction,
 	PlayerRatingChange as RatingChange

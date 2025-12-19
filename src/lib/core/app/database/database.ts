@@ -1,13 +1,13 @@
 import Sqlite from '@tauri-apps/plugin-sql';
-import { Lobbies } from './lobbies';
+import { Matches } from './lobbies';
 import { Replays } from './replays';
 import { dev } from '$app/environment';
 
 export class Database {
-	public lobbies: Lobbies;
+	public matches: Matches;
 
 	private constructor(client: Sqlite) {
-		this.lobbies = new Lobbies();
+		this.matches = new Matches();
 	}
 
 	replays() {

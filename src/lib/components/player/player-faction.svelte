@@ -7,16 +7,13 @@
 	type Props = HTMLImgAttributes;
 
 	const { ...restProps }: Props = $props();
-	const player = usePlayer();
+	const { player } = usePlayer();
 </script>
 
 <img
 	{...restProps}
-	src={await getFactionFlagFromRace(player.race_id)}
-	alt={getRacePrefix(player.race_id)}
-	title={upperCase(getRacePrefix(player.race_id))}
-	class={cn(
-		'border-secondary-800 h-6 w-6 rounded-full border-3 object-cover object-center',
-		restProps.class
-	)}
+	src={getFactionFlagFromRace(player.race)}
+	alt={getRacePrefix(player.race)}
+	title={upperCase(getRacePrefix(player.race))}
+	class={cn('ring-secondary-800 h-5 w-5 rounded-full object-cover ring-4', restProps.class)}
 />

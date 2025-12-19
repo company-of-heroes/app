@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import type { ChatMessage } from '@twurple/chat';
 import { twMerge } from 'tailwind-merge';
 import { invoke } from '@tauri-apps/api/core';
-import WMFlag from '$lib/files/wm.png';
+import WMFlag from '$lib/files/wm-2.png';
 import PEFlag from '$lib/files/pe.png';
 import CWFlag from '$lib/files/cw.png';
 import USFlag from '$lib/files/us.png';
@@ -113,7 +113,9 @@ export async function getRankImage(race: Race | number, rank?: number): Promise<
 	}
 
 	try {
-		const rankImage = await import(`$lib/files/ranks/${racePrefix}_${rank}.png`);
+		const rankImage = await import(
+			`$lib/files/ranks/${racePrefix}_${rank.toString().padStart(2, '0')}.png`
+		);
 		const result = rankImage.default;
 		if (result) {
 			rankCache.set(cacheKey, result);

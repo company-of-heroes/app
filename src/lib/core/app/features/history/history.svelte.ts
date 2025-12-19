@@ -1,14 +1,15 @@
 import type { Lobby } from '$core/company-of-heroes';
-import type { TransformedMatch } from '@fknoobs/app';
+import type { MatchExpanded } from '$core/app/database/lobbies';
 import { app } from '$core/app';
 import { watch } from 'runed';
 import { Feature } from '../feature.svelte';
 import { relic } from '$lib/relic';
 import { dirname, join } from '@tauri-apps/api/path';
-import { readFile } from '@tauri-apps/plugin-fs';
+import { exists, readFile } from '@tauri-apps/plugin-fs';
 import { parseReplay } from '@fknoobs/replay-parser';
-import { t } from 'try';
 import { doesMatchGameDate } from '$lib/utils';
+import { t } from 'try';
+import { download } from '@tauri-apps/plugin-upload';
 
 export class History extends Feature {
 	name = 'History';
@@ -30,7 +31,7 @@ export class History extends Feature {
 			return;
 		}
 
-		app.database.lobbies.exists(lobby.sessionId).then(async (exists) => {
+		app.database.matches.exists(lobby.sessionId).then(async (exists) => {
 			if (exists) {
 				return;
 			}
@@ -42,7 +43,7 @@ export class History extends Feature {
 				replayFile = file;
 			}
 
-			app.database.lobbies.create({
+			app.database.matches.create({
 				isRanked: lobby.isRanked,
 				title: lobby.type,
 				map: lobby.map || 'Unknown',
@@ -59,26 +60,26 @@ export class History extends Feature {
 			return;
 		}
 
-		const lobbiesNeedingResults = await app.database.lobbies.getPaginated(1, 100, {
+		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
 			filter: 'needsResult=true'
 		});
 
-		if (lobbiesNeedingResults.items.length === 0) {
+		if (matchesNeedingResults.items.length === 0) {
 			return;
 		}
 
 		const matches = await relic.getRecentMatchHistoryForProfile(app.game.profile.relic.profile_id);
 
-		for (const lobby of lobbiesNeedingResults.items) {
+		for (const lobby of matchesNeedingResults.items) {
 			const match = matches.find((m) => m.id === lobby.sessionId);
 
 			if (match) {
-				app.database.lobbies.exists(lobby.sessionId).then((exists) => {
+				app.database.matches.exists(lobby.sessionId).then((exists) => {
 					if (!exists) {
 						return;
 					}
 
-					app.database.lobbies.update(lobby.id, {
+					app.database.matches.update(lobby.id, {
 						needsResult: false,
 						result: match
 					});
@@ -100,6 +101,34 @@ export class History extends Feature {
 			file: new File([fileData], 'replay.rec'),
 			replay
 		};
+	}
+
+	async downloadReplay(match: MatchExpanded) {
+		try {
+			const path = await join(
+				await dirname(app.settings.companyOfHeroesConfigPath),
+				'playback',
+				match.replay
+			);
+			const url = app.pocketbase.files.getURL(match, match.replay);
+			await download(url, path);
+
+			app.toast.success('Replay saved to the Company of Heroes playback folder.');
+			return true;
+		} catch (error) {
+			app.toast.error('Failed to download replay: ' + (error as Error).message);
+			return false;
+		}
+	}
+
+	async downloadExists(match: MatchExpanded): Promise<boolean> {
+		const path = await join(
+			await dirname(app.settings.companyOfHeroesConfigPath),
+			'playback',
+			match.replay
+		);
+
+		return await exists(path);
 	}
 
 	defaultSettings(): { enabled: boolean } {
