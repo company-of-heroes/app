@@ -7,24 +7,28 @@
 		children,
 		variant = 'primary',
 		loading = $bindable(false),
+		href,
 		...restProps
 	}: ButtonProps = $props();
 </script>
 
-<button
+<svelte:element
+	this={href ? 'a' : 'button'}
 	{...restProps}
+	{href}
 	class={cn(
-		'border border-transparent',
+		'border border-transparent transition-colors duration-150',
 		'inline-flex h-11 items-center gap-2',
 		'cursor-pointer rounded-md px-6',
-		'transition-all duration-100 hover:opacity-70',
 		'disabled:cursor-not-allowed disabled:opacity-60',
-		'active:scale-99',
-		variant === 'primary' && 'bg-primary/5 border-primary/20 text-white',
+		variant === 'primary' &&
+			'bg-primary/5 border-primary/20 hover:border-primary/80 hover:bg-primary/20 text-white',
 		variant === 'secondary' &&
-			'border-secondary-700 bg-secondary-800/70 hover:border-secondary-600 hover:bg-secondary-700 text-white hover:opacity-100',
+			'border-secondary-800 bg-secondary-800/30 hover:border-secondary-500 hover:bg-secondary-800/80 text-white hover:opacity-100',
 		variant === 'destructive' && 'text-destructive border-destructive/30 bg-destructive/5',
 		variant === 'ghost' && 'active:bg-secondary-950/40 hover:opacity-100',
+		variant === 'link' &&
+			'text-primary hover:text-primary-600 bg-transparent font-medium hover:opacity-100',
 		restProps.class
 	)}
 	disabled={loading || restProps.disabled}
@@ -33,4 +37,4 @@
 		<LoadingIcon size="20" class="animate-[spin_1500ms_linear_infinite]" />
 	{/if}
 	{@render children()}
-</button>
+</svelte:element>

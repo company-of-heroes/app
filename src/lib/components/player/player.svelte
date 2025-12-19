@@ -1,18 +1,18 @@
 <script lang="ts">
-	import type { LobbyPlayer } from '@fknoobs/app';
-	import { createPlayer } from '.';
 	import type { HTMLAttributes } from 'svelte/elements';
-	import type { Snippet } from 'svelte';
+	import { createContext, type Snippet } from 'svelte';
+	import type { LeaderboardStat, LobbyPlayer, MatchHistoryPlayer } from '@fknoobs/app';
+	import { createPlayer } from '.';
 
 	type Props = {
 		player: LobbyPlayer;
+		playerResult?: MatchHistoryPlayer;
+		stats?: LeaderboardStat;
 		children?: Snippet;
-	} & HTMLAttributes<HTMLDivElement>;
+	};
 
-	let { player, children, ...restProps }: Props = $props();
-	createPlayer(player);
+	let { player, playerResult, stats, children }: Props = $props();
+	createPlayer(player, playerResult, stats);
 </script>
 
-<div {...restProps}>
-	{@render children?.()}
-</div>
+{@render children?.()}

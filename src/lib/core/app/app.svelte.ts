@@ -401,6 +401,15 @@ export class App extends Emittery<AppEvents> {
 	getFeature<K extends keyof Features>(name: K): Features[K] | undefined {
 		return this._features.get(name) as Features[K] | undefined;
 	}
+
+	/**
+	 * Retrieves all registered features as an object.
+	 *
+	 * @returns An object containing all registered features.
+	 */
+	get features(): Features {
+		return Object.fromEntries(this._features) as Features;
+	}
 }
 
 export const app = new App();

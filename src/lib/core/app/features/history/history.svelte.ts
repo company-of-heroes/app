@@ -1,13 +1,18 @@
+import type { Lobby } from '$core/company-of-heroes';
+import type { MatchExpanded } from '$core/app/database/lobbies';
 import { app } from '$core/app';
 import { watch } from 'runed';
 import { Feature } from '../feature.svelte';
-import type { Lobby } from '$core/company-of-heroes';
 import { relic } from '$lib/relic';
+import { dirname, join } from '@tauri-apps/api/path';
+import { exists, readFile } from '@tauri-apps/plugin-fs';
+import { parseReplay } from '@fknoobs/replay-parser';
+import { doesMatchGameDate } from '$lib/utils';
+import { t } from 'try';
+import { download } from '@tauri-apps/plugin-upload';
 
 export class History extends Feature {
 	name = 'History';
-
-	needsResults: number[] = [];
 
 	trackResultsInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -18,59 +23,112 @@ export class History extends Feature {
 			clearInterval(this.trackResultsInterval);
 		}
 
-		this.trackResultsInterval = setInterval(() => this.trackResults(), 5000);
+		this.trackResultsInterval = setInterval(() => this.getMatchHistory(), 5000);
 	}
 
-	saveLobbyResult(lobby: Lobby) {
-		if (false === app.isReady) {
-			// return;
-		}
-
-		if (!lobby) {
+	async saveLobbyResult(lobby: Lobby) {
+		if (!lobby.sessionId) {
 			return;
 		}
 
-		app.pocketbase
-			.collection('lobbies')
-			.getFirstListItem(`sessionId="${lobby.sessionId}"`)
-			.then()
-			.catch(() => {
-				app.pocketbase.collection('lobbies').create({
-					sessionId: lobby.sessionId,
-					isRanked: lobby.isRanked,
-					title: lobby.type,
-					map: lobby.map,
-					submittedBy: app.game.steamId,
-					players: lobby.players.map((player) => player.steamId)
-				});
+		app.database.matches.exists(lobby.sessionId).then(async (exists) => {
+			if (exists) {
+				return;
+			}
 
-				this.needsResults.push(lobby.sessionId!);
+			let { file, replay } = await this.getLastMatchReplay();
+			let replayFile: File | undefined = undefined;
+
+			if (lobby.startedAt && doesMatchGameDate(lobby.startedAt, replay.gameDate)) {
+				replayFile = file;
+			}
+
+			app.database.matches.create({
+				isRanked: lobby.isRanked,
+				title: lobby.type,
+				map: lobby.map || 'Unknown',
+				sessionId: lobby.sessionId!,
+				needsResult: true,
+				players: lobby.players,
+				replay: replayFile
 			});
+		});
 	}
 
-	trackResults() {
-		if (app.game.profile?.relic.profile_id && this.needsResults.length > 0) {
-			relic.getRecentMatchHistoryForProfile(app.game.profile?.relic.profile_id).then((history) => {
-				const completedMatches = history.filter((match) => this.needsResults.includes(match.id));
-				completedMatches.forEach(async (match) => {
-					try {
-						const lobby = await app.pocketbase
-							.collection('lobbies')
-							.getFirstListItem(`sessionId="${match.id}"`);
-
-						if (lobby) {
-							await app.pocketbase.collection('lobbies').update(lobby.id, {
-								submittedBy: lobby.submittedBy,
-								result: match
-							});
-						}
-					} catch (error) {
-						console.error('Error updating lobby result for match id:', match.id, error);
-					}
-					this.needsResults = this.needsResults.filter((id) => id !== match.id);
-				});
-			});
+	async getMatchHistory() {
+		if (!app.game.profile?.relic.profile_id) {
+			return;
 		}
+
+		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
+			filter: 'needsResult=true'
+		});
+
+		if (matchesNeedingResults.items.length === 0) {
+			return;
+		}
+
+		const matches = await relic.getRecentMatchHistoryForProfile(app.game.profile.relic.profile_id);
+
+		for (const lobby of matchesNeedingResults.items) {
+			const match = matches.find((m) => m.id === lobby.sessionId);
+
+			if (match) {
+				app.database.matches.exists(lobby.sessionId).then((exists) => {
+					if (!exists) {
+						return;
+					}
+
+					app.database.matches.update(lobby.id, {
+						needsResult: false,
+						result: match
+					});
+				});
+			}
+		}
+	}
+
+	async getLastMatchReplay() {
+		const path = await join(
+			await dirname(app.settings.companyOfHeroesConfigPath),
+			'playback',
+			'temp.rec'
+		);
+		const fileData = await readFile(path);
+		const replay = parseReplay(new Uint8Array(fileData));
+
+		return {
+			file: new File([fileData], 'replay.rec'),
+			replay
+		};
+	}
+
+	async downloadReplay(match: MatchExpanded) {
+		try {
+			const path = await join(
+				await dirname(app.settings.companyOfHeroesConfigPath),
+				'playback',
+				match.replay
+			);
+			const url = app.pocketbase.files.getURL(match, match.replay);
+			await download(url, path);
+
+			app.toast.success('Replay saved to the Company of Heroes playback folder.');
+			return true;
+		} catch (error) {
+			app.toast.error('Failed to download replay: ' + (error as Error).message);
+			return false;
+		}
+	}
+
+	async downloadExists(match: MatchExpanded): Promise<boolean> {
+		const path = await join(
+			await dirname(app.settings.companyOfHeroesConfigPath),
+			'playback',
+			match.replay
+		);
+
+		return await exists(path);
 	}
 
 	defaultSettings(): { enabled: boolean } {

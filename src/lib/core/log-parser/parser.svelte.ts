@@ -50,9 +50,10 @@ export class Log extends emittery<LogEvents> {
 				}
 
 				case 'LOG:LOBBY:POPULATING': {
-					const { isRanked } = data as LogEvents[typeof event];
+					const { isRanked, startedAt } = data as LogEvents[typeof event];
 
 					lobby = new Lobby('', [], isRanked === 'AutoMatchForm');
+					lobby.startedAt = startedAt.split(':').slice(0, -1).join(':').trim();
 
 					break;
 				}
@@ -267,7 +268,7 @@ export type LogEvents = {
 	'LOG:ENDED': undefined;
 	'LOG:FOUND:PROFILE': { steamId: bigint };
 	'LOG:LOBBY:JOINED': undefined;
-	'LOG:LOBBY:POPULATING': { isRanked: string };
+	'LOG:LOBBY:POPULATING': { startedAt: string; isRanked: string };
 	'LOG:LOBBY:POPULATING:MAP': { map: CoHMaps };
 	'LOG:LOBBY:POPULATING:PLAYER': {
 		index: number;
@@ -301,10 +302,15 @@ export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
 	),
 	'LOG:LOBBY:JOINED': createRegExp(exactly('RLINK -- JoinAsync: AsyncJob Complete')),
 	'LOG:LOBBY:POPULATING': createRegExp(
-		exactly('AutoMatchForm')
-			.or(exactly('GameSetupForm'))
-			.groupedAs('isRanked')
-			.and(exactly(' - Starting game'))
+		oneOrMore(char)
+			.groupedAs('startedAt')
+			.and(oneOrMore(whitespace))
+			.and(
+				exactly('AutoMatchForm')
+					.or(exactly('GameSetupForm'))
+					.groupedAs('isRanked')
+					.and(exactly(' - Starting game'))
+			)
 	),
 	//'LOG:LOBBY:POPULATING': createRegExp(exactly('Form - Starting game')),
 	'LOG:LOBBY:POPULATING:MAP': createRegExp(

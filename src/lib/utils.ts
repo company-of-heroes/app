@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import type { ChatMessage } from '@twurple/chat';
 import { twMerge } from 'tailwind-merge';
 import { invoke } from '@tauri-apps/api/core';
-import WMFlag from '$lib/files/wm.png';
+import WMFlag from '$lib/files/wm-2.png';
 import PEFlag from '$lib/files/pe.png';
 import CWFlag from '$lib/files/cw.png';
 import USFlag from '$lib/files/us.png';
@@ -113,7 +113,9 @@ export async function getRankImage(race: Race | number, rank?: number): Promise<
 	}
 
 	try {
-		const rankImage = await import(`$lib/files/ranks/${racePrefix}_${rank}.png`);
+		const rankImage = await import(
+			`$lib/files/ranks/${racePrefix}_${rank.toString().padStart(2, '0')}.png`
+		);
 		const result = rankImage.default;
 		if (result) {
 			rankCache.set(cacheKey, result);
@@ -154,7 +156,7 @@ export function getRankImageByLeaderboardId(leaderboardId: number, rank?: number
 }
 
 export function normalizeMapName(mapName: string): string {
-	const match = mapName.match(/^(\d+)p_(.+)$/);
+	const match = mapName.match(/^(\d+)[pP][ _](.+)$/);
 	if (!match) {
 		return mapName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 	}
@@ -162,6 +164,7 @@ export function normalizeMapName(mapName: string): string {
 	const [, playerCount, mapNameWithoutPrefix] = match;
 	const formattedName = mapNameWithoutPrefix
 		.replace(/_/g, ' ')
+		.toLowerCase()
 		.replace(/\b\w/g, (c) => c.toUpperCase());
 
 	return `${formattedName} (${playerCount})`;
@@ -484,5 +487,56 @@ export async function unzip(zipPathOrUrl: string, destination: string): Promise<
 	} else {
 		// Use the file path command
 		await invoke('unzip_file', { zipPath: zipPathOrUrl, destination });
+	}
+}
+
+/**
+ * Compares a log timestamp (HH:MM:SS.ms) with a game date string (various formats)
+ * Returns true if the hours and minutes match
+ *
+ * @param logTimestamp - Timestamp from the log file (e.g. "19:00:20.90")
+ * @param gameDate - Date string from the replay file (e.g. "2024-11-03 오후 3:55" or "24/02/2024 11:07 AM")
+ */
+export function doesMatchGameDate(logTimestamp: string, gameDate: string): boolean {
+	try {
+		// Extract HH:MM from log timestamp (assuming 24h format)
+		// Format: 19:00:20.90
+		const logTimeMatch = logTimestamp.match(/(\d{1,2}):(\d{2})/);
+		if (!logTimeMatch) return false;
+
+		const logHour = parseInt(logTimeMatch[1], 10);
+		const logMinute = parseInt(logTimeMatch[2], 10);
+
+		// Extract time from gameDate
+		// Supports:
+		// - "오후 3:55" (Korean PM)
+		// - "오전 11:07" (Korean AM)
+		// - "11:07 AM"
+		// - "3:55 PM"
+		// - "15:55" (24h)
+
+		// Regex to find time at the end of the string
+		// Looks for HH:MM optionally followed by AM/PM, or preceded by 오전/오후
+		const timeRegex = /(?:(오전|오후)\s*)?(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i;
+		const dateMatch = gameDate.match(timeRegex);
+
+		if (!dateMatch) return false;
+
+		const [, koreanMeridiem, hourStr, minuteStr, englishMeridiem] = dateMatch;
+		let gameHour = parseInt(hourStr, 10);
+		const gameMinute = parseInt(minuteStr, 10);
+		const meridiem = (koreanMeridiem || englishMeridiem || '').toUpperCase();
+
+		// Convert to 24h format
+		if (meridiem === 'PM' || meridiem === '오후') {
+			if (gameHour < 12) gameHour += 12;
+		} else if (meridiem === 'AM' || meridiem === '오전') {
+			if (gameHour === 12) gameHour = 0;
+		}
+
+		return logHour === gameHour && logMinute === gameMinute;
+	} catch (e) {
+		console.error('Error comparing timestamps:', e);
+		return false;
 	}
 }

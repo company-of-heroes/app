@@ -1,23 +1,19 @@
 <script lang="ts">
-	import type { HTMLAttributes } from 'svelte/elements';
+	import type { HTMLImgAttributes } from 'svelte/elements';
 	import { upperCase } from 'lodash-es';
 	import { usePlayer } from '.';
-	import { getFactionFlagFromRace, getRacePrefix, getRankImage } from '$lib/utils';
-	import { getLeaderboardStatsForPlayerByMatchType } from '$lib/utils/game';
-	import { useLobby } from '../lobby';
+	import { cn, getFactionFlagFromRace, getRacePrefix, getRankImage } from '$lib/utils';
 
-	type Props = HTMLAttributes<HTMLSpanElement>;
+	type Props = HTMLImgAttributes;
 
 	const { ...restProps }: Props = $props();
-	const player = usePlayer();
-	const lobby = useLobby();
-	const stats = getLeaderboardStatsForPlayerByMatchType(lobby.matchType, player);
+	const { player } = usePlayer();
 </script>
 
-<span>
-	<img
-		src={await getFactionFlagFromRace(player.race)}
-		alt={getRacePrefix(player.race)}
-		title={upperCase(getRacePrefix(player.race))}
-	/>
-</span>
+<img
+	{...restProps}
+	src={getFactionFlagFromRace(player.race)}
+	alt={getRacePrefix(player.race)}
+	title={upperCase(getRacePrefix(player.race))}
+	class={cn('ring-secondary-800 h-5 w-5 rounded-full object-cover ring-4', restProps.class)}
+/>

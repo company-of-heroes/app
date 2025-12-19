@@ -5,6 +5,7 @@ import { camelCase } from 'lodash-es';
 import { fetch } from '@tauri-apps/plugin-http';
 
 export const pocketbase = new Pocketbase('https://api.fknoobs.com') as TypedPocketBase;
+pocketbase.autoCancellation(false);
 
 /**
  * Replaces reference arrays with their expanded objects from PocketBase expand property

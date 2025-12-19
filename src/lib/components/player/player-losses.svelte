@@ -1,18 +1,15 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { usePlayer } from '.';
-	import { getLeaderboardStatsForPlayerByMatchType } from '$lib/utils/game';
-	import { useLobby } from '../lobby';
 
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
 	const { ...restProps }: Props = $props();
-
-	const lobby = useLobby();
-	const player = usePlayer();
-	const stats = $derived(getLeaderboardStatsForPlayerByMatchType(lobby.matchType, player));
+	const { playerResult } = usePlayer();
 </script>
 
-{#if player.profile}
-	<span class="text-center" {...restProps}>{stats ? stats.losses : '-'}</span>
+{#if playerResult}
+	<span class="text-center text-red-100" {...restProps}>{playerResult.losses}</span>
+{:else}
+	<span class="text-center" {...restProps}>-</span>
 {/if}

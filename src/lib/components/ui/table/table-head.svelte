@@ -10,8 +10,9 @@
 <div
 	{...restProps}
 	class={cn(
-		'flex h-12 items-center gap-4 px-4 text-left font-semibold',
+		'flex h-11 items-center text-left font-semibold',
 		'text-secondary-300 bg-gray-800/70',
+		'*:px-4',
 		restProps.class
 	)}
 >

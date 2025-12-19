@@ -3,15 +3,16 @@ import type {
 	Create,
 	Update,
 	ReplaysRecord,
-	UsersResponse
+	UsersResponse,
+	FileNameString
 } from '$core/pocketbase/types';
 import { exp, getFile, pocketbase } from '$core/pocketbase';
 import { fetch } from '@tauri-apps/plugin-http';
 import { app } from '../app.svelte';
 import type { ListResult } from 'pocketbase';
-import { readFile } from '@tauri-apps/plugin-fs';
 import { dirname, join } from '@tauri-apps/api/path';
 import type { Message, Player } from '@fknoobs/replay-parser';
+import { t } from 'try';
 
 export type ReplaysExpanded = Expand<
 	ReplaysResponse<Message[], Player[], { createdBy: UsersResponse }>
@@ -65,17 +66,17 @@ export class Replays {
 	 *
 	 * @param id The ID of the replay
 	 */
-	async getById(id: string) {
-		const record = await pocketbase.collection('replays').getOne(id, { fetch });
-		const configDir = await dirname(app.settings.companyOfHeroesConfigPath);
-		const playbackDir = await join(configDir, 'playback');
-		//const file = await readFile(await join(playbackDir, record.filename));
-		const file = await getFile(record, record.file);
-
-		return {
-			...record,
-			file
-		};
+	async getById(id: string): Promise<Uint8Array<ArrayBuffer>> {
+		return pocketbase
+			.collection('replays')
+			.getOne(id, { fetch })
+			.then((record) => {
+				return getFile(record, record.file);
+			})
+			.catch(async () => {
+				const record = await pocketbase.collection('lobbies').getOne(id, { fetch });
+				return getFile(record, record.replay);
+			});
 	}
 
 	/**

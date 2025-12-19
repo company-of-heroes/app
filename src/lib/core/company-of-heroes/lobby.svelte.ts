@@ -27,7 +27,15 @@ export class Lobby {
 	 * @public
 	 * @type {number | null}
 	 */
-	sessionId: number | null = $state(null);
+	sessionId: number | null = null;
+
+	/**
+	 * Started timestamp of the lobby.
+	 *
+	 * @public
+	 * @type {number | null}
+	 */
+	startedAt: string | null = null;
 
 	/**
 	 * Current map name for the lobby.
@@ -36,7 +44,7 @@ export class Lobby {
 	 * @public
 	 * @type {string | undefined}
 	 */
-	map = $state<string>();
+	map?: string;
 
 	/**
 	 * Array of players currently in the lobby.
@@ -45,7 +53,7 @@ export class Lobby {
 	 * @public
 	 * @type {LobbyPlayer[]}
 	 */
-	players = $derived<LobbyPlayer[]>([]);
+	players: LobbyPlayer[] = [];
 
 	/**
 	 * Match outcome when the game ends.
@@ -54,7 +62,7 @@ export class Lobby {
 	 * @public
 	 * @type {string | undefined}
 	 */
-	outcome = $state<string>();
+	outcome?: string;
 
 	/**
 	 * Derived state providing a human-readable outcome string.
@@ -64,7 +72,7 @@ export class Lobby {
 	 * @readonly
 	 * @type {string}
 	 */
-	outcomeFormatted = $derived.by(() => {
+	get outcomeFormatted() {
 		if (!this.outcome) return 'Unknown';
 
 		switch (this.outcome) {
@@ -77,7 +85,7 @@ export class Lobby {
 			default:
 				return 'Unknown';
 		}
-	});
+	}
 
 	/**
 	 * Numeric identifier for the match type.
@@ -86,7 +94,7 @@ export class Lobby {
 	 * @public
 	 * @type {MatchTypeId | undefined}
 	 */
-	matchType: MatchTypeId = $derived.by(() => {
+	get matchType(): MatchTypeId {
 		if (!this.isRanked) {
 			return 0;
 		}
@@ -108,7 +116,7 @@ export class Lobby {
 		}
 
 		return 0;
-	});
+	}
 
 	/**
 	 * Derived state indicating whether this is a ranked match.
@@ -118,7 +126,7 @@ export class Lobby {
 	 * @readonly
 	 * @type {boolean}
 	 */
-	isRanked = $state(false);
+	isRanked = false;
 
 	/**
 	 * Derived state organizing players into teams.
@@ -128,12 +136,12 @@ export class Lobby {
 	 * @readonly
 	 * @type {{ teamId: number; players: LobbyPlayer[] }[]}
 	 */
-	teams = $derived(
-		Object.entries(groupBy(this.players, 'team')).map(([teamId, players]) => ({
+	get teams() {
+		return Object.entries(groupBy(this.players, 'team')).map(([teamId, players]) => ({
 			teamId: Number(teamId),
 			players
-		}))
-	);
+		}));
+	}
 
 	/**
 	 * Derived state providing human-readable match type name.
@@ -143,7 +151,9 @@ export class Lobby {
 	 * @readonly
 	 * @type {string}
 	 */
-	type = $derived(MATCH_TYPES[this.matchType as MatchTypeId] ?? 'Custom Game');
+	get type() {
+		return MATCH_TYPES[this.matchType as MatchTypeId] ?? 'Custom Game';
+	}
 
 	/**
 	 * Derived state providing formatted map name with player count.
@@ -153,7 +163,7 @@ export class Lobby {
 	 * @readonly
 	 * @type {string}
 	 */
-	mapName = $derived.by(() => {
+	get mapName() {
 		if (!this.map) return 'Unknown Map';
 
 		const match = this.map.match(/^(\d+)p_(.+)$/);
@@ -167,7 +177,7 @@ export class Lobby {
 			.replace(/\b\w/g, (c) => c.toUpperCase());
 
 		return `${formattedName} (${playerCount})`;
-	});
+	}
 
 	/**
 	 * Derived state to find the current player in the lobby.
@@ -177,12 +187,11 @@ export class Lobby {
 	 * @readonly
 	 * @type {LobbyPlayer | undefined}
 	 */
-	me = $derived.by(() => {
+	get me() {
 		if (!this.players || this.players.length === 0) return undefined;
 
 		return this.players.find((p) => p.profile?.name?.endsWith(app.game.steamId!));
-	});
-
+	}
 	constructor(map: string, players: LobbyPlayer[], isRanked: boolean) {
 		this.map = map;
 		this.players = players;

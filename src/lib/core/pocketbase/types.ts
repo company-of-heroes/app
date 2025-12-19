@@ -12,6 +12,7 @@ export enum Collections {
 	Otps = "_otps",
 	Superusers = "_superusers",
 	Lobbies = "lobbies",
+	LobbyPlayers = "lobby_players",
 	Replays = "replays",
 	Users = "users",
 }
@@ -99,12 +100,21 @@ export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	id: string
 	isRanked?: boolean
 	map: string
+	needsResult?: boolean
 	players: null | Tplayers
+	replay?: FileNameString
 	result?: null | Tresult
 	sessionId: number
-	submittedBy: string
 	title: string
 	updatedAt: IsoAutoDateString
+	user: RecordIdString
+}
+
+export type LobbyPlayersRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
+	id: string
+	maps?: null | Tmaps
+	players?: null | Tplayers
+	user?: null | Tuser
 }
 
 export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
@@ -128,7 +138,7 @@ export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
 	vpCount?: number
 }
 
-export type UsersRecord = {
+export type UsersRecord<TsteamIds = unknown> = {
 	avatar?: FileNameString
 	created: IsoAutoDateString
 	email: string
@@ -136,6 +146,7 @@ export type UsersRecord = {
 	id: string
 	name?: string
 	password: string
+	steamIds?: null | TsteamIds
 	tokenKey: string
 	updated: IsoAutoDateString
 	verified?: boolean
@@ -148,8 +159,9 @@ export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemF
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
+export type LobbyPlayersResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<LobbyPlayersRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
-export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
+export type UsersResponse<TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<TsteamIds>> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
 
@@ -160,6 +172,7 @@ export type CollectionRecords = {
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
 	lobbies: LobbiesRecord
+	lobby_players: LobbyPlayersRecord
 	replays: ReplaysRecord
 	users: UsersRecord
 }
@@ -171,6 +184,7 @@ export type CollectionResponses = {
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
 	lobbies: LobbiesResponse
+	lobby_players: LobbyPlayersResponse
 	replays: ReplaysResponse
 	users: UsersResponse
 }
