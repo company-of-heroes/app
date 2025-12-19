@@ -1,18 +1,17 @@
 <script lang="ts">
-	import type { LobbyPlayer } from '@fknoobs/app';
-	import { createPlayer } from '.';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { Snippet } from 'svelte';
+	import type { MatchHistoryPlayer } from '@fknoobs/app';
+	import { createPlayer } from '.';
 
 	type Props = {
-		player: LobbyPlayer;
+		player: MatchHistoryPlayer;
 		children?: Snippet;
-	} & HTMLAttributes<HTMLDivElement>;
+	};
 
-	let { player, children, ...restProps }: Props = $props();
+	let { player, children }: Props = $props();
 	createPlayer(player);
+	console.log(player);
 </script>
 
-<div {...restProps}>
-	{@render children?.()}
-</div>
+{@render children?.()}

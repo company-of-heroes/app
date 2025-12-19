@@ -26,6 +26,8 @@
 		return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 	}
 
+	console.log(app.features.auth.userId);
+
 	function buildPocketBaseFilter(filters: FiltersState) {
 		const parts: string[] = [`user = "${app.features.auth.userId}"`];
 

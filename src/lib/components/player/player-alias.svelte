@@ -8,12 +8,10 @@
 	const player = usePlayer();
 </script>
 
-{#if player.profile}
-	<a
-		class="hover:text-primary truncate transition-colors"
-		href="/leaderboards/profile/{player.profile.profile_id}"
-		{...restProps}
-	>
-		{player.profile.alias}
-	</a>
-{/if}
+<a
+	class="hover:text-primary truncate transition-colors"
+	href="/leaderboards/profile/{player.profile_id}"
+	{...restProps}
+>
+	{player.alias}
+</a>

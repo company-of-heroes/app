@@ -2,6 +2,7 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { upperCase } from 'lodash-es';
 	import { usePlayer } from '.';
+	import { cn } from '$lib/utils';
 
 	type Props = HTMLAttributes<HTMLImageElement>;
 
@@ -10,11 +11,9 @@
 	const player = usePlayer();
 </script>
 
-{#if player.profile}
-	<img
-		src="https://flagsapi.com/{upperCase(player.profile?.country)}/shiny/64.png"
-		alt={player.profile?.country}
-		class="w-full"
-		{...restProps}
-	/>
-{/if}
+<img
+	src="https://flagsapi.com/{upperCase(player.country)}/shiny/64.png"
+	alt={player.country}
+	class={cn('w-full', restProps.class)}
+	{...restProps}
+/>
