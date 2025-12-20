@@ -58,6 +58,16 @@ export class Auth extends Feature<AuthSettings> {
 			});
 	}
 
+	async refreshUser(): Promise<UsersResponse> {
+		return app.pocketbase
+			.collection('users')
+			.getOne(this.settings.userId)
+			.then((user) => {
+				this._user = user as UsersResponse<string[]>;
+				return this._user!;
+			});
+	}
+
 	defaultSettings(): AuthSettings {
 		return {
 			userId: generateUniqueId(),
@@ -100,6 +110,10 @@ export class Auth extends Feature<AuthSettings> {
 
 	get password() {
 		return this.settings.password;
+	}
+
+	get avatarUrl() {
+		return app.pocketbase.files.getURL(this.user, this.user.avatar);
 	}
 }
 

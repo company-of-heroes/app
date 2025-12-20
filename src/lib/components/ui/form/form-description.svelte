@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { cn } from '$lib/utils';
 	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 
@@ -9,4 +10,6 @@
 	let { children, ...restProps }: Props = $props();
 </script>
 
-<small {...restProps} class="-mt-2 text-gray-400">{@render children()}</small>
+<small {...restProps} class={cn('-mt-2 text-gray-300', restProps.class)}>
+	{@render children()}
+</small>
