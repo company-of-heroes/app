@@ -19,7 +19,10 @@
 	let unsubscribe = $state<UnsubscribeFunc>();
 	let matches = resource(
 		() => null,
-		() => app.database.matches.getList({ filter: 'createdAt > @todayStart' })
+		() =>
+			app.database.matches.getList({
+				filter: `createdAt > @todayStart && user = "${app.features.auth.userId}"`
+			})
 	);
 
 	onMount(async () => {
@@ -41,7 +44,10 @@
 					matches.mutate((matches.current || []).filter((match) => match.id !== e.record.id));
 				}
 			},
-			{ fetch }
+			{
+				filter: `createdAt > @todayStart && user = "${app.features.auth.userId}"`,
+				fetch
+			}
 		);
 	});
 
