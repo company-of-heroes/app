@@ -1,36 +1,4 @@
 import { parseReplay } from '@fknoobs/replay-parser';
-import dayjs from '$lib/dayjs';
-
-const DATE_FORMATS = [
-	'DD/MM/YYYY HH:mm',
-	'D/M/YYYY HH:mm',
-	'DD/M/YYYY HH:mm',
-	'D/MM/YYYY HH:mm',
-	'DD-MM-YYYY HH:mm',
-	'D-M-YYYY HH:mm',
-	'DD-M-YYYY HH:mm',
-	'D-MM-YYYY HH:mm',
-	'MM/DD/YYYY HH:mm',
-	'M/D/YYYY HH:mm',
-	'MM-DD-YYYY HH:mm',
-	'M-D-YYYY HH:mm',
-	'YYYY-MM-DD HH:mm',
-	'YYYY/MM/DD HH:mm',
-	'DD/MM/YYYY h:mm A',
-	'D/M/YYYY h:mm A',
-	'DD/MM/YYYY h:mm a',
-	'D/M/YYYY h:mm a',
-	'MM/DD/YYYY h:mm A',
-	'M/D/YYYY h:mm A',
-	'MM/DD/YYYY h:mm a',
-	'M/D/YYYY h:mm a',
-	'DD-MM-YYYY h:mm A',
-	'D-M-YYYY h:mm A',
-	'DD-MM-YYYY h:mm a',
-	'D-M-YYYY h:mm a',
-	'DD-MMM-YY h:mm A',
-	'DD-MMM-YY h:mm a'
-];
 
 onmessage = async ({ data }: MessageEvent) => {
 	const { id, type } = data;
@@ -45,7 +13,7 @@ onmessage = async ({ data }: MessageEvent) => {
 			formData.append('durationInSeconds', String(replay.duration));
 			formData.append('file', new File([content], fileName));
 			formData.append('filename', fileName);
-			formData.append('gameDate', dayjs(replay.gameDate, DATE_FORMATS).toISOString());
+			formData.append('gameDate', replay.gameDate);
 			formData.append('isHighResources', String(replay.highResources));
 			formData.append('isRandomStart', String(replay.randomStart));
 			formData.append('mapFilename', replay.mapFileName);

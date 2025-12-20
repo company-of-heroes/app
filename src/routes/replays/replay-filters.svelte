@@ -1,0 +1,61 @@
+<script lang="ts">
+	import * as Form from '$lib/components/ui/form';
+	import { Input, Selection, Checkbox } from '$lib/components/ui/input';
+	import type { ReplayList } from './replay-list.svelte';
+
+	interface Props {
+		list: ReplayList;
+		mapsList: { value: string; label: string }[];
+		playersList: { value: string; label: string }[];
+	}
+
+	let { list, mapsList, playersList }: Props = $props();
+</script>
+
+<Form.Root class="border-secondary-800 mb-4 border-b pb-4">
+	<Form.Group>
+		<Checkbox
+			label="Only ranked games"
+			bind:checked={list.filters.ranked.value}
+			bind:indeterminate={list.filters.ranked.indeterminate}
+		/>
+	</Form.Group>
+	<Form.Group>
+		<Checkbox
+			label="Only games with Victory Points"
+			bind:checked={list.filters.vp.value}
+			bind:indeterminate={list.filters.vp.indeterminate}
+		/>
+	</Form.Group>
+	<Form.Group>
+		<Checkbox
+			label="Only games with High Resources"
+			bind:checked={list.filters.highResources.value}
+			bind:indeterminate={list.filters.highResources.indeterminate}
+		/>
+	</Form.Group>
+	<Form.Group>
+		<Form.Label>Filter players</Form.Label>
+		<Selection
+			options={playersList}
+			placeholder="Select players..."
+			multiple
+			bind:value={list.filters.players}
+		/>
+	</Form.Group>
+	<div class="grid grid-cols-[250px_1fr] gap-4">
+		<Form.Group>
+			<Form.Label>Title</Form.Label>
+			<Input placeholder="Enter title" bind:value={list.filters.query} />
+		</Form.Group>
+		<Form.Group>
+			<Form.Label>Filter map(s)</Form.Label>
+			<Selection
+				options={mapsList}
+				placeholder="Select maps..."
+				multiple
+				bind:value={list.filters.maps}
+			/>
+		</Form.Group>
+	</div>
+</Form.Root>
