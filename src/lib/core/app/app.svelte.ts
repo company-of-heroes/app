@@ -62,6 +62,8 @@ export type Statuses = {
  * Manages the global state and core functionalities of the application.
  */
 export class App extends Emittery<AppEvents> {
+	static DEV_MODE = false;
+
 	isBooted: boolean = $state(false);
 
 	/**
@@ -205,6 +207,10 @@ export class App extends Emittery<AppEvents> {
 			this.trackStatuses();
 			this.validateSettings();
 
+			if (App.DEV_MODE) {
+				log.start();
+			}
+
 			watch(
 				() => this.game.isRunning,
 				(running) => {
@@ -282,11 +288,12 @@ export class App extends Emittery<AppEvents> {
 					}
 
 					if (
-						(!(await exists(this.settings.companyOfHeroesInstallationPath)) ||
-							!(await exists(this.settings.companyOfHeroesConfigPath))) &&
-						page.url.pathname !== '/settings'
+						!(await exists(this.settings.companyOfHeroesInstallationPath)) ||
+						!(await exists(this.settings.companyOfHeroesConfigPath))
 					) {
-						goto('/settings');
+						app.toast.error('Something went wrong, go to the settings page to fix the issue.', {
+							duration: 5000
+						});
 					}
 				}, 500);
 			}
@@ -408,7 +415,7 @@ export class App extends Emittery<AppEvents> {
 	 * @returns An object containing all registered features.
 	 */
 	get features(): Features {
-		return Object.fromEntries(this._features) as Features;
+		return Object.fromEntries(this._features) as unknown as Features;
 	}
 }
 

@@ -74,7 +74,7 @@
 		/>
 		{#if originalType === 'password'}
 			<button
-				class="text-secondary-400 hover:bg-secondary-800 hover:text-secondary-200 absolute right-2 cursor-pointer rounded-md p-1.5"
+				class="text-secondary-400 hover:bg-secondary-800 hover:text-secondary-200 absolute top-2 right-2 cursor-pointer rounded-md p-1.5"
 				type="button"
 				onclick={() => (type = type === 'password' ? 'text' : 'password')}
 			>

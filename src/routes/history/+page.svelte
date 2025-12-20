@@ -11,11 +11,13 @@
 	import { resource, watch, Debounced } from 'runed';
 	import { uniqBy, uniq } from 'lodash-es';
 	import { Checkbox, Input, Selection } from '$lib/components/ui/input';
+	import { ToggleGroup } from '$lib/components/ui/toggle-group';
 
 	const PAGE_SIZE = 50;
 	const FILTER_DEBOUNCE_MS = 300;
 
 	type FiltersState = {
+		scope: 'user' | 'community';
 		query: string;
 		ranked: { value: boolean; indeterminate: boolean };
 		players: string[];
@@ -27,12 +29,16 @@
 	}
 
 	function buildPocketBaseFilter(filters: FiltersState) {
-		const parts: string[] = [`user = "${app.features.auth.userId}"`];
+		const parts: string[] = [];
 
 		const query = filters.query.trim();
 		if (query) {
 			const q = escapePocketBaseString(query);
 			parts.push(`(title ~ "${q}" || result.description ~ "${q}")`);
+		}
+
+		if (filters.scope === 'user') {
+			parts.push(`user = "${app.features.auth.userId}"`);
 		}
 
 		// tri-state:
@@ -61,6 +67,7 @@
 	}
 
 	let filters = $state<FiltersState>({
+		scope: 'user',
 		query: '',
 		ranked: { value: false, indeterminate: false },
 		players: [],
@@ -147,11 +154,13 @@
 	}
 
 	const aggregation = resource(
-		() => null,
+		() => filters.scope,
 		async () => {
 			const response = await app.pocketbase
 				.collection('lobby_aggregation')
-				.getFullList<LobbyAggregationResponse<string[], LobbyPlayer[]>>();
+				.getFullList<LobbyAggregationResponse<string[], LobbyPlayer[]>>({
+					filter: filters.scope === 'user' ? `user = "${app.features.auth.userId}"` : undefined
+				});
 
 			if (response.length === 0) {
 				return { players: [], maps: [] };
@@ -180,6 +189,15 @@
 </script>
 
 <H level="1">Match History</H>
+
+<ToggleGroup
+	bind:value={filters.scope}
+	items={[
+		{ label: 'My matches', value: 'user' },
+		{ label: 'Community matches', value: 'community' }
+	]}
+	class="mb-8 w-fit"
+/>
 
 <Form.Root class="border-secondary-800 mb-4 border-b pb-4">
 	<Form.Group>

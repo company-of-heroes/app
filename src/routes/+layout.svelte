@@ -37,6 +37,8 @@
 	import '@fontsource/nunito-sans/800.css';
 
 	import '../app.css';
+	import { Avatar } from '$lib/components/ui/avatar';
+	import { page } from '$app/state';
 
 	let { children } = $props();
 
@@ -105,6 +107,16 @@
 					Settings
 				</Nav.Link>
 				<div class="mt-auto">
+					<div class="mb-4 px-4">
+						<a
+							class="group hover:text-secondary-200 flex items-center gap-2 text-sm transition-colors"
+							href="/account"
+							data-active={page.url.pathname === '/account'}
+						>
+							<Avatar />
+							<span>My account</span>
+						</a>
+					</div>
 					<span class="flex items-center gap-2 px-4 py-4">
 						<button
 							class={cn(

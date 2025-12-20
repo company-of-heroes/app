@@ -5,7 +5,7 @@ import Emittery from 'emittery';
 import { Lobby } from './lobby.svelte';
 import { isRunning } from './utils';
 import { watch } from 'runed';
-import { app } from '$core/app';
+import { App, app } from '$core/app';
 
 export type GameEvents = {
 	'GAME:LAUNCHED': never;
@@ -112,7 +112,7 @@ export class Game extends Emittery<GameEvents> {
 		}
 
 		this._checkGameInterval = setInterval(async () => {
-			this.isRunning = await isRunning('RelicCOH.exe');
+			this.isRunning = App.DEV_MODE ? true : await isRunning('RelicCOH.exe');
 		}, 1000);
 
 		$effect.root(() => {

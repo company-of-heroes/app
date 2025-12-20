@@ -10,15 +10,18 @@
 			label: Snippet | string;
 		}[];
 		type?: 'single' | 'multiple';
-	};
+	} & Omit<ToggleGroupRootProps, 'type' | 'value' | 'value' | 'children'>;
 
-	let { value = $bindable(), items }: Props = $props();
+	let { value = $bindable(), items, ...restProps }: Props = $props();
 </script>
 
 <ToggleGroup.Root
 	type="single"
 	bind:value
-	class={cn('border-secondary-700 flex items-center overflow-clip rounded-md border')}
+	class={cn(
+		'border-secondary-700 flex items-center overflow-clip rounded-md border',
+		restProps.class
+	)}
 >
 	{#each items as item}
 		<ToggleGroup.Item
