@@ -41,10 +41,14 @@
 <div
 	{...restProps}
 	class={cn(
-		'flex max-h-[500px] flex-col gap-1 overflow-auto rounded-xl bg-gray-950/40 px-6 py-4',
+		'border-secondary-800 border',
+		'bg-secondary-950/40 flex max-h-[500px] flex-col gap-1 overflow-auto rounded-xl px-6 py-4',
 		restProps.class
 	)}
 >
+	{#if replay.messages.length === 0}
+		<span>No messages</span>
+	{/if}
 	{#each replay.messages as m}
 		{@render message(m)}
 	{/each}

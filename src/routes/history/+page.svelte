@@ -1,13 +1,13 @@
 <script lang="ts">
-	import type { LobbiesResponse, LobbyPlayersResponse } from '$core/pocketbase/types';
-	import type { LobbyPlayer, Match as MatchResult } from '@fknoobs/app';
+	import type { LobbyAggregationResponse } from '$core/pocketbase/types';
+	import type { LobbyPlayer } from '@fknoobs/app';
+	import type { MatchExpanded } from '$core/app/database/lobbies';
 	import * as Form from '$lib/components/ui/form';
 	import * as Match from '$lib/components/match';
 	import { app } from '$core/app';
-	import { tooltip } from '$lib/attachments';
 	import { H } from '$lib/components/ui/h';
 	import { Table, TD, TH, THead, TR } from '$lib/components/ui/table';
-	import { cn, getFactionFlagFromRace, getRacePrefix, normalizeMapName } from '$lib/utils';
+	import { normalizeMapName } from '$lib/utils';
 	import { resource, watch, Debounced } from 'runed';
 	import { uniqBy, uniq } from 'lodash-es';
 	import { Checkbox, Input, Selection } from '$lib/components/ui/input';
@@ -25,8 +25,6 @@
 	function escapePocketBaseString(value: string) {
 		return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 	}
-
-	console.log(app.features.auth.userId);
 
 	function buildPocketBaseFilter(filters: FiltersState) {
 		const parts: string[] = [`user = "${app.features.auth.userId}"`];
@@ -69,7 +67,7 @@
 		maps: []
 	});
 
-	let lobbies = $state<LobbiesResponse<LobbyPlayer[], MatchResult | null>[]>([]);
+	let lobbies = $state<MatchExpanded[]>([]);
 	let page = $state(1);
 	let hasMore = $state(true);
 	let isLoading = $state(false);
@@ -102,12 +100,10 @@
 		}
 
 		try {
-			const result = await app.pocketbase
-				.collection('lobbies')
-				.getList<LobbiesResponse<LobbyPlayer[], MatchResult | null>>(page, PAGE_SIZE, {
-					filter: activeFilter,
-					sort: '-createdAt'
-				});
+			const result = await app.database.matches.getPaginated(page, PAGE_SIZE, {
+				filter: activeFilter,
+				sort: '-createdAt'
+			});
 
 			if (currentSearchId !== searchId) {
 				return;
@@ -154,8 +150,8 @@
 		() => null,
 		async () => {
 			const response = await app.pocketbase
-				.collection('lobby_players')
-				.getFullList<LobbyPlayersResponse<string[], LobbyPlayer[]>>();
+				.collection('lobby_aggregation')
+				.getFullList<LobbyAggregationResponse<string[], LobbyPlayer[]>>();
 
 			if (response.length === 0) {
 				return { players: [], maps: [] };

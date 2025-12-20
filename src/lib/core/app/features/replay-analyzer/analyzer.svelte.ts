@@ -2,40 +2,8 @@ import { app } from '$core/app';
 import { readDir, readFile, stat, type DirEntry, type FileInfo } from '@tauri-apps/plugin-fs';
 import { Feature } from '../feature.svelte';
 import { dirname, join } from '@tauri-apps/api/path';
-import dayjs from '$lib/dayjs';
 import { orderBy } from 'lodash-es';
 import ReplayWorker from '$lib/workers/replay.worker?worker';
-
-const DATE_FORMATS = [
-	'DD/MM/YYYY HH:mm',
-	'D/M/YYYY HH:mm',
-	'DD/M/YYYY HH:mm',
-	'D/MM/YYYY HH:mm',
-	'DD-MM-YYYY HH:mm',
-	'D-M-YYYY HH:mm',
-	'DD-M-YYYY HH:mm',
-	'D-MM-YYYY HH:mm',
-	'MM/DD/YYYY HH:mm',
-	'M/D/YYYY HH:mm',
-	'MM-DD-YYYY HH:mm',
-	'M-D-YYYY HH:mm',
-	'YYYY-MM-DD HH:mm',
-	'YYYY/MM/DD HH:mm',
-	'DD/MM/YYYY h:mm A',
-	'D/M/YYYY h:mm A',
-	'DD/MM/YYYY h:mm a',
-	'D/M/YYYY h:mm a',
-	'MM/DD/YYYY h:mm A',
-	'M/D/YYYY h:mm A',
-	'MM/DD/YYYY h:mm a',
-	'M/D/YYYY h:mm a',
-	'DD-MM-YYYY h:mm A',
-	'D-M-YYYY h:mm A',
-	'DD-MM-YYYY h:mm a',
-	'D-M-YYYY h:mm a',
-	'DD-MMM-YY h:mm A',
-	'DD-MMM-YY h:mm a'
-];
 
 export type ReplayAnalyzerSettings = {
 	didDoInitialScan: boolean;
@@ -65,15 +33,7 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 
 	enable() {
 		this.worker = new ReplayWorker();
-		this.worker.onmessage = (event) => {
-			const { id, success, replay, content, error } = event.data;
-			const p = this.pending.get(id);
-			if (p) {
-				this.pending.delete(id);
-				if (success) p.resolve({ replay, content });
-				else p.reject(error);
-			}
-		};
+		this.setupWorkerListeners();
 
 		this.scanReplays().catch((err) => {
 			console.error('ReplayAnalyzer: Scan failed', err);
@@ -88,19 +48,23 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 		}
 	}
 
-	private parseReplayInWorker(
-		content: Uint8Array,
-		fileName: string
-	): Promise<{ replay: any; content: Uint8Array }> {
-		return new Promise((resolve, reject) => {
-			if (!this.worker) {
-				reject(new Error('Worker not initialized'));
-				return;
+	private setupWorkerListeners() {
+		if (!this.worker) return;
+
+		this.worker.onmessage = (event) => {
+			const { id, success, replay, content, error } = event.data;
+			const p = this.pending.get(id);
+
+			if (p) {
+				this.pending.delete(id);
+
+				if (success) {
+					p.resolve({ replay, content });
+				} else {
+					p.reject(error);
+				}
 			}
-			const id = this.idCounter++;
-			this.pending.set(id, { resolve, reject });
-			this.worker.postMessage({ id, content, fileName }, [content.buffer]);
-		});
+		};
 	}
 
 	private async scanReplays() {
@@ -108,16 +72,26 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 		if (!playbackDir) return;
 
 		this.progress.isScanning = true;
-		const replays = await this.getReplaysToProcess(playbackDir);
 
-		if (replays.length === 0) {
+		try {
+			const replays = await this.getReplaysToProcess(playbackDir);
+
+			if (replays.length === 0) {
+				return;
+			}
+
+			this.progress.total = replays.length;
+			this.progress.processed = 0;
+
+			await this.processQueue(replays, playbackDir);
+
+			this.settings.didDoInitialScan = true;
+		} finally {
 			this.progress.isScanning = false;
-			return;
 		}
+	}
 
-		this.progress.total = replays.length;
-		this.progress.processed = 0;
-
+	private async processQueue(replays: string[], playbackDir: string) {
 		const CONCURRENCY = 2;
 		const queue = [...replays];
 		const activePromises = new Set<Promise<void>>();
@@ -136,9 +110,6 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 				await Promise.race(activePromises);
 			}
 		}
-
-		this.settings.didDoInitialScan = true;
-		this.progress.isScanning = false;
 	}
 
 	private async getPlaybackDir(): Promise<string | null> {
@@ -169,18 +140,19 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 			return [];
 		}
 
-		let replays = localFiles
+		const replays = localFiles
 			.filter(
 				(f) =>
 					f.isFile &&
 					f.name.endsWith('.rec') &&
 					f.name !== 'temp.rec' &&
-					f.name.startsWith('replay_')
+					!f.name.startsWith('replay_')
 			)
 			.map((f) => f.name);
 
-		const existingFilenames = await app.database.replays().getExistingFilenames();
+		const existingFilenames = await app.database.replays().getExistingFilenamesByUser();
 		const existingSet = new Set(existingFilenames);
+
 		const newReplays = replays
 			.filter((name) => !existingSet.has(name))
 			.filter((name) => !this.settings.ignoredFiles.includes(name));
@@ -192,46 +164,35 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 	private async processReplay(filename: string, playbackDir: string) {
 		try {
 			const filePath = await join(playbackDir, filename);
-			const replayFile = await readFile(filePath);
-			const { replay, content } = await this.parseReplayInWorker(replayFile, filename);
-
-			console.log({
-				durationInSeconds: replay.duration,
-				file: new File([new Uint8Array(content)], filename),
-				filename: filename,
-				gameDate: dayjs(replay.gameDate, DATE_FORMATS).toISOString(),
-				isHighResources: replay.highResources,
-				isRandomStart: replay.randomStart,
-				mapFilename: replay.mapFileName,
-				mapName: replay.mapName,
-				isRanked: replay.matchType?.toLowerCase().includes('automatch') ?? false,
-				isVpGame: replay.vpGame,
-				vpCount: replay.vpCount,
-				players: replay.players,
-				messages: replay.messages,
-				title: !replay.replayName ? '-' : replay.replayName
-			});
-
-			await app.database.replays().create({
-				durationInSeconds: replay.duration,
-				file: new File([new Uint8Array(content)], filename),
-				filename: filename,
-				gameDate: dayjs(replay.gameDate, DATE_FORMATS).toISOString(),
-				isHighResources: replay.highResources,
-				isRandomStart: replay.randomStart,
-				mapFilename: replay.mapFileName,
-				mapName: replay.mapName,
-				isRanked: replay.matchType?.toLowerCase().includes('automatch') ?? false,
-				isVpGame: replay.vpGame,
-				vpCount: replay.vpCount,
-				players: replay.players,
-				messages: replay.messages,
-				title: !replay.replayName ? '-' : replay.replayName
-			});
+			const content = await readFile(filePath);
+			await this.processReplayInWorker(content, filename);
 		} catch (err) {
 			this.settings.ignoredFiles.push(filename);
 			console.error(`ReplayAnalyzer: Error processing ${filename}`, err);
 		}
+	}
+
+	private processReplayInWorker(content: Uint8Array, fileName: string): Promise<void> {
+		return new Promise((resolve, reject) => {
+			if (!this.worker) {
+				reject(new Error('Worker not initialized'));
+				return;
+			}
+			const id = this.idCounter++;
+			this.pending.set(id, { resolve, reject });
+			this.worker.postMessage(
+				{
+					type: 'process',
+					id,
+					content,
+					fileName,
+					userId: app.features.auth.userId,
+					pbUrl: app.pocketbase.baseUrl,
+					authToken: app.pocketbase.authStore.token
+				},
+				[content.buffer]
+			);
+		});
 	}
 }
 

@@ -12,7 +12,8 @@ export enum Collections {
 	Otps = "_otps",
 	Superusers = "_superusers",
 	Lobbies = "lobbies",
-	LobbyPlayers = "lobby_players",
+	LobbyAggregation = "lobby_aggregation",
+	ReplayAggregation = "replay_aggregation",
 	Replays = "replays",
 	Users = "users",
 }
@@ -110,7 +111,14 @@ export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	user: RecordIdString
 }
 
-export type LobbyPlayersRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
+export type LobbyAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
+	id: string
+	maps?: null | Tmaps
+	players?: null | Tplayers
+	user?: null | Tuser
+}
+
+export type ReplayAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
 	id: string
 	maps?: null | Tmaps
 	players?: null | Tplayers
@@ -159,7 +167,8 @@ export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemF
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
-export type LobbyPlayersResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<LobbyPlayersRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
+export type LobbyAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<LobbyAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
+export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
 export type UsersResponse<TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<TsteamIds>> & AuthSystemFields<Texpand>
 
@@ -172,7 +181,8 @@ export type CollectionRecords = {
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
 	lobbies: LobbiesRecord
-	lobby_players: LobbyPlayersRecord
+	lobby_aggregation: LobbyAggregationRecord
+	replay_aggregation: ReplayAggregationRecord
 	replays: ReplaysRecord
 	users: UsersRecord
 }
@@ -184,7 +194,8 @@ export type CollectionResponses = {
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
 	lobbies: LobbiesResponse
-	lobby_players: LobbyPlayersResponse
+	lobby_aggregation: LobbyAggregationResponse
+	replay_aggregation: ReplayAggregationResponse
 	replays: ReplaysResponse
 	users: UsersResponse
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Profile from '$lib/components/ui/profile';
+	import * as List from '$lib/components/ui/list';
 	import { app } from '$core/app';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -60,16 +61,22 @@
 				</Button>
 				<!-- <MatchHistory matches={profile.current.matchHistory} /> -->
 			</div>
-			<div class="mt-2 grid grid-cols-[100px_auto] items-center gap-y-2">
-				<span>Steam ID:</span>
-				<Profile.Steamid class="text-secondary-400" />
-				<span>Created:</span>
-				<Profile.Created class="text-secondary-400" />
-				<span>Status:</span>
-				<Badge variant={app.game.isIngame ? 'success' : 'warning'}>
-					{app.game.isIngame ? 'In Game' : 'Looking for a game'}
-				</Badge>
-			</div>
+			<List.Root class="mt-2">
+				<List.Title>Steam ID:</List.Title>
+				<List.Value>
+					<Profile.Steamid />
+				</List.Value>
+				<List.Title>Created:</List.Title>
+				<List.Value>
+					<Profile.Created />
+				</List.Value>
+				<List.Title>Status:</List.Title>
+				<List.Value>
+					<Badge variant={app.game.isIngame ? 'success' : 'warning'}>
+						{app.game.isIngame ? 'In Game' : 'Looking for a game'}
+					</Badge>
+				</List.Value>
+			</List.Root>
 		</div>
 	</Profile.Root>
 {/if}

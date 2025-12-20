@@ -85,12 +85,13 @@
 	{@const CPM = durationMinutes > 0 ? (actions.length / durationMinutes).toFixed(0) : '0'}
 	<div
 		class={cn(
+			'border-secondary-800 border',
 			'grid grid-cols-[130px_auto] overflow-clip rounded-lg',
-			'bg-gray-950/40 bg-cover bg-center bg-no-repeat bg-blend-multiply'
+			'bg-secondary-950/40 bg-cover bg-center bg-no-repeat bg-blend-multiply'
 		)}
 	>
 		<div>
-			<AspectRatio.Root ratio={1 / 1} class="bg-gray-950/80">
+			<AspectRatio.Root ratio={1 / 1} class="bg-secondary-950/80">
 				{#if player.doctrineName}
 					<img
 						src={getDoctrineImage(player)}

@@ -96,8 +96,9 @@ export class Replays {
 	/**
 	 * Retrieves all existing replay filenames.
 	 */
-	async getExistingFilenames(): Promise<string[]> {
+	async getExistingFilenamesByUser(): Promise<string[]> {
 		const records = await pocketbase.collection('replays').getFullList({
+			filter: `createdBy = "${app.features.auth.userId}"`,
 			fields: 'filename',
 			requestKey: null,
 			fetch

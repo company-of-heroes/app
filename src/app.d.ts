@@ -8,7 +8,6 @@ declare module '@fknoobs/app' {
 	import type { History } from '$features/history';
 	import type { ReplayAnalyzer } from '$features/replay-analyzer';
 	import type { TwitchOverlays } from '$core/app/features/twitch-overlays';
-	import type { Replays } from '$lib/modules/replay-manager/replays.svelte';
 
 	interface Features {
 		auth: Auth;
@@ -17,7 +16,7 @@ declare module '@fknoobs/app' {
 		updater: Updater;
 		history: History;
 		'twitch-overlays': TwitchOverlays;
-		'replay-analyzer': Replays;
+		'replay-analyzer': ReplayAnalyzer;
 		'text-to-speech': TTS;
 		'twitch-bot': TwitchBot;
 		'text-to-speech-custom-characters': TTSPersonalVoices;

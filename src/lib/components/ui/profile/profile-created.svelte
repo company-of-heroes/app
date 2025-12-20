@@ -10,5 +10,5 @@
 </script>
 
 {#if profile.steam.timecreated}
-	<span {...restProps}>{dayjs.unix(profile.steam.timecreated).format('MMMM D, YYYY')}</span>
+	<span {...restProps}>{dayjs.unix(profile.steam.timecreated).format('DD MMM, YYYY')}</span>
 {/if}

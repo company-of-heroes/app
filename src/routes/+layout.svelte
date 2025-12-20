@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Nav from '$lib/components/ui/nav';
+	import { watch } from 'runed';
 	import { Toaster } from 'svelte-sonner';
 	import { Dialog } from '$lib/components/ui/dialog';
 	import { Label } from '$lib/components/ui/label';
@@ -22,6 +23,7 @@
 	import HistoryIcon from 'phosphor-svelte/lib/LineSegments';
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwise';
 	import CommandIcon from 'phosphor-svelte/lib/Command';
+	import { ToastReplaysProgress } from '$lib/components/toasts';
 
 	import '$lib/fonts/futura-pt-webfont/style.css';
 	import '$lib/fonts/gotham/style.css';
@@ -39,12 +41,37 @@
 	let { children } = $props();
 
 	const updater = app.getFeature('updater');
+
+	watch(
+		() => $state.snapshot(app.features['replay-analyzer'].progress),
+		(progress, prevProgress) => {
+			if (
+				progress.isScanning &&
+				progress.total > 0 &&
+				(!prevProgress?.isScanning || prevProgress.total === 0)
+			) {
+				app.toast.custom(ToastReplaysProgress, {
+					id: 'replay-analysis-progress',
+					duration: Infinity
+				});
+			}
+
+			if (!progress.isScanning && prevProgress?.isScanning) {
+				app.toast.dismiss('replay-analysis-progress');
+				if (progress.total > 0) {
+					app.toast.success('Replay analysis complete!');
+				}
+			}
+		}
+	);
 </script>
 
 <svelte:boundary>
 	{#snippet pending()}{/snippet}
 	<div class="flex h-screen w-screen overflow-hidden">
-		<div class="flex min-w-[300px] flex-col gap-8 bg-gray-900/90 text-white">
+		<div
+			class="border-secondary-800 bg-secondary-950/90 flex min-w-[300px] flex-col gap-8 border-r text-white"
+		>
 			<div class="mt-6 flex items-center gap-4 px-4">
 				<img src={Logo} alt="Fknoobscoh - CoH app" class="size-10" />
 				<span class="font-medium">Company of Heroes</span>
@@ -136,22 +163,22 @@
 	theme="dark"
 	toastOptions={{
 		unstyled: true,
-		class: 'gap-4 flex bg-black border rounded-md px-4 py-2 shadow-xl',
 		classes: {
-			success: 'bg-green-950 border-green-500 text-white',
-			error: 'bg-red-950 border-red-500 text-white',
-			info: 'bg-blue-950 border-blue-500 text-white',
-			icon: 'py-1'
+			success:
+				'gap-2 flex items-center bg-green-950 border-green-800 text-green-100 border rounded-md px-3 py-1.5 shadow-xl text-sm',
+			error:
+				'gap-2 flex items-center bg-red-950 border-red-800 text-red-100 border rounded-md px-3 py-1.5 shadow-xl text-sm',
+			info: 'gap-2 flex items-center bg-gray-900 border-gray-600 text-white border rounded-md px-3 py-1.5 shadow-xl text-sm'
 		}
 	}}
 >
 	{#snippet successIcon()}
-		<SuccesIcon size={28} class="rounded bg-green-900/50 p-1.5" />
+		<SuccesIcon size={24} class="rounded bg-green-900/50 p-1" />
 	{/snippet}
 	{#snippet errorIcon()}
-		<ErrorIcon size={28} class="rounded bg-red-900/50 p-1.5" />
+		<ErrorIcon size={24} class="rounded bg-red-900/50 p-1" />
 	{/snippet}
 	{#snippet infoIcon()}
-		<InfoIcon size={28} class="rounded bg-blue-900/50 p-1" />
+		<InfoIcon size={24} class="rounded bg-gray-950/40 p-1" />
 	{/snippet}
 </Toaster>
