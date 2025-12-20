@@ -4,15 +4,16 @@ import { getVersion } from '@tauri-apps/api/app';
 import { app } from '$core/app';
 import { Update } from '.';
 import { padEnd } from 'lodash-es';
+import { gt } from 'semver';
 
 export class Updater extends Feature {
 	name = 'updater';
 
 	hasUpdate = $state<boolean>(false);
 
-	currentVersion = $state<number>(0);
+	currentVersion = $state<string>('');
 
-	latestVersion = $state<number>(0);
+	latestVersion = $state<string>('');
 
 	downloadUrl = $state<string | undefined>(undefined);
 
@@ -28,12 +29,12 @@ export class Updater extends Feature {
 		fetch('https://api.github.com/repos/fknoobs/app/releases/latest')
 			.then((res) => res.json())
 			.then(async (response) => {
-				this.latestVersion = parseFloat(
-					response.tag_name ? response.tag_name.replace('v', '') : await getVersion()
-				);
-				this.currentVersion = parseFloat(await getVersion());
+				this.latestVersion = response.tag_name
+					? response.tag_name.replace('v', '')
+					: await getVersion();
+				this.currentVersion = await getVersion();
 
-				if (this.latestVersion > this.currentVersion) {
+				if (gt(this.latestVersion, this.currentVersion)) {
 					this.downloadUrl = response.assets[0]?.browser_download_url;
 					this.hasUpdate = true;
 

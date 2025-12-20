@@ -6,8 +6,8 @@
 	import { download } from '@tauri-apps/plugin-upload';
 
 	type Props = {
-		currentVersion: number;
-		latestVersion: number;
+		currentVersion: string;
+		latestVersion: string;
 		downloadUrl: string;
 	};
 

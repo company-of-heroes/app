@@ -149,6 +149,9 @@ importers:
       runed:
         specifier: ^0.30.0
         version: 0.30.0(svelte@5.46.0)
+      semver:
+        specifier: ^7.7.3
+        version: 7.7.3
       slugify:
         specifier: ^1.6.6
         version: 1.6.6
@@ -204,6 +207,9 @@ importers:
       '@twurple/eventsub':
         specifier: ^5.3.4
         version: 5.3.4(@twurple/api@7.4.0(@twurple/auth@7.4.0))
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
       '@types/sortablejs':
         specifier: ^1.15.9
         version: 1.15.9
@@ -946,8 +952,15 @@ packages:
   '@tauri-apps/plugin-websocket@2.4.1':
     resolution: {integrity: sha512-OGxbYlJv8+REcCsx1+noE17HCfpsvMH9t7EH77jUa2AduxvazrBijtTwBHJQQKWIVgpCgYxlDLgZoRoW9kkNYA==}
 
+  '@thisux/sveltednd@0.0.12':
+    resolution: {integrity: sha512-9edVcakYkoCzU6pNIwmJ6Cf+9anECod26Ue/rL3Ssf5LyuLaBLXtBx4H4U8YwQCkwtMeSGFf0OsiMpPpFjvCcg==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@thisux/sveltednd@0.0.14':
     resolution: {integrity: sha512-Vbq69SU3HUomPg6oCXtb89OG89hka0YIkdaErYibn3waK7tYE66IcQxD/Fzg8YNW3EVsXoA9kc7kW5EUBCSQGg==}
+    peerDependencies:
+      svelte: ^5.0.0
 
   '@thisux/sveltednd@0.0.17':
     resolution: {integrity: sha512-lRninjw439phhA8xAHqCpMAX0hnwFMdbXW4M0XJgAdnGxeum+QsLiIC4P3HnkNXAygsVKUqxRcbS84CxDZ9hPw==}
@@ -1081,6 +1094,9 @@ packages:
 
   '@types/range-parser@1.2.7':
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
+
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@types/send@1.2.1':
     resolution: {integrity: sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ==}
@@ -3312,11 +3328,18 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.9.1
 
-  '@thisux/sveltednd@0.0.14': {}
+  '@thisux/sveltednd@0.0.12(svelte@5.46.0)':
+    dependencies:
+      svelte: 5.46.0
+
+  '@thisux/sveltednd@0.0.14(svelte@5.46.0)':
+    dependencies:
+      '@thisux/sveltednd': 0.0.12(svelte@5.46.0)
+      svelte: 5.46.0
 
   '@thisux/sveltednd@0.0.17(svelte@5.46.0)':
     dependencies:
-      '@thisux/sveltednd': 0.0.14
+      '@thisux/sveltednd': 0.0.14(svelte@5.46.0)
       svelte: 5.46.0
 
   '@thisux/sveltednd@0.0.18(svelte@5.46.0)':
@@ -3591,6 +3614,8 @@ snapshots:
   '@types/qs@6.14.0': {}
 
   '@types/range-parser@1.2.7': {}
+
+  '@types/semver@7.7.1': {}
 
   '@types/send@1.2.1':
     dependencies:

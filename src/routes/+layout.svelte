@@ -40,8 +40,6 @@
 
 	let { children } = $props();
 
-	const updater = app.getFeature('updater');
-
 	watch(
 		() => $state.snapshot(app.features['replay-analyzer'].progress),
 		(progress, prevProgress) => {
@@ -135,17 +133,18 @@
 						>
 							<GithubLogoIcon weight="duotone" />
 						</button>
-						{#if updater}
-							<span class="text-secondary-400 ms-auto flex items-center gap-2 text-sm">
-								<span>v{updater.currentVersionFormatted}</span>
-								{#if updater.hasUpdate}
-									<ArrowRightIcon />
-									<button class="text-primary cursor-pointer" onclick={() => updater.openDialog()}>
-										v{updater.latestVersionFormatted}
-									</button>
-								{/if}
-							</span>
-						{/if}
+						<span class="text-secondary-400 ms-auto flex items-center gap-2 text-sm">
+							<span>v{app.features.updater.currentVersionFormatted}</span>
+							{#if app.features.updater.hasUpdate}
+								<ArrowRightIcon />
+								<button
+									class="text-primary cursor-pointer"
+									onclick={() => app.features.updater.openDialog()}
+								>
+									v{app.features.updater.latestVersionFormatted}
+								</button>
+							{/if}
+						</span>
 					</span>
 				</div>
 			</Nav.Root>
