@@ -10,6 +10,7 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import ImageCropper from '$lib/components/modals/image-cropper.svelte';
 	import { readFile } from '@tauri-apps/plugin-fs';
+	import { Alert } from '$lib/components/ui/alert';
 </script>
 
 <H level={1}>Account</H>
@@ -94,8 +95,11 @@
 		</AspectRatio.Root>
 	</Form.Group>
 	<Form.Group>
+		<Alert variant="warning" class="mb-4"></Alert>
+			These fields are disabled for now, as I am implementing some features.
+		</Alert>
 		<Form.Label>Email (Emails are private and will not be shared!)</Form.Label>
-		<Input type="email" value={app.features.auth.settings.email} />
+		<Input type="email" bind:value={app.features.auth.settings.email} disabled />
 		<Form.Description class="mt-1">
 			This email is used to sign in to your account. It is recommended to use a valid email address
 			so you can recover your account.
@@ -103,6 +107,6 @@
 	</Form.Group>
 	<Form.Group class="mt-4">
 		<Form.Label>Password</Form.Label>
-		<Input type="password" value={app.features.auth.settings.password} />
+		<Input type="password" bind:value={app.features.auth.settings.password} disabled />
 	</Form.Group>
 </Form.Root>

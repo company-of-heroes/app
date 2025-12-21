@@ -1,8 +1,10 @@
 import { app } from '$core/app';
 import type { UsersResponse } from '$core/pocketbase/types';
 import { generatePassword, generateUniqueId } from '$lib/utils/password';
-import { uniq } from 'lodash-es';
+import { debounce, uniq } from 'lodash-es';
 import { Feature } from '../feature.svelte';
+import { watch } from 'runed';
+import { fetch } from '@tauri-apps/plugin-http';
 
 export type AuthSettings = {
 	userId: string;
@@ -56,6 +58,23 @@ export class Auth extends Feature<AuthSettings> {
 					this.settings.password
 				);
 			});
+
+		$effect.root(() => {
+			watch(
+				() => this.settings.email,
+				(newEmail) =>
+					debounce(() => {
+						{
+							app.pocketbase
+								.collection('users')
+								.update(this.userId, { email: newEmail }, { fetch })
+								.then((updatedUser) => {
+									this._user = updatedUser as UsersResponse<string[]>;
+								});
+						}
+					}, 2000)
+			);
+		});
 	}
 
 	async refreshUser(): Promise<UsersResponse> {
