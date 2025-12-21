@@ -67,7 +67,7 @@ export class History extends Feature {
 		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
 			filter: `needsResult=true && user = "${app.features.auth.userId}"`
 		});
-		console.log(matchesNeedingResults);
+
 		if (matchesNeedingResults.items.length === 0) {
 			return;
 		}
@@ -131,8 +131,6 @@ export class History extends Feature {
 			'playback',
 			match.replay
 		);
-
-		console.log(match);
 
 		return await exists(path);
 	}
