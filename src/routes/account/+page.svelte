@@ -95,7 +95,7 @@
 		</AspectRatio.Root>
 	</Form.Group>
 	<Form.Group>
-		<Alert variant="warning" class="mb-4"></Alert>
+		<Alert variant="warning" class="mb-4">
 			These fields are disabled for now, as I am implementing some features.
 		</Alert>
 		<Form.Label>Email (Emails are private and will not be shared!)</Form.Label>

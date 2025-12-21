@@ -59,22 +59,23 @@ export class Auth extends Feature<AuthSettings> {
 				);
 			});
 
-		$effect.root(() => {
-			watch(
-				() => this.settings.email,
-				(newEmail) =>
-					debounce(() => {
-						{
-							app.pocketbase
-								.collection('users')
-								.update(this.userId, { email: newEmail }, { fetch })
-								.then((updatedUser) => {
-									this._user = updatedUser as UsersResponse<string[]>;
-								});
-						}
-					}, 2000)
-			);
-		});
+		// TODO: Re-enable email update watcher when email change UI is added
+		// $effect.root(() => {
+		// 	watch(
+		// 		() => this.settings.email,
+		// 		(newEmail) =>
+		// 			debounce(() => {
+		// 				{
+		// 					app.pocketbase
+		// 						.collection('users')
+		// 						.update(this.userId, { email: newEmail }, { fetch })
+		// 						.then((updatedUser) => {
+		// 							this._user = updatedUser as UsersResponse<string[]>;
+		// 						});
+		// 				}
+		// 			}, 2000)
+		// 	);
+		// });
 	}
 
 	async refreshUser(): Promise<UsersResponse> {
