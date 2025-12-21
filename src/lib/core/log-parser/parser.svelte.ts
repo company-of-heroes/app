@@ -53,7 +53,7 @@ export class Log extends emittery<LogEvents> {
 					const { isRanked, startedAt } = data as LogEvents[typeof event];
 
 					lobby = new Lobby('', [], isRanked === 'AutoMatchForm');
-					lobby.startedAt = startedAt.split(':').slice(0, -1).join(':').trim();
+					lobby.startedAt = startedAt.trim();
 
 					break;
 				}

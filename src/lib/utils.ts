@@ -7,6 +7,7 @@ import PEFlag from '$lib/files/pe.png';
 import CWFlag from '$lib/files/cw.png';
 import USFlag from '$lib/files/us.png';
 import { isBoolean, isString } from 'lodash-es';
+import dayjs from '$lib/dayjs';
 
 /**
  * Race enum for Company of Heroes factions
@@ -491,52 +492,21 @@ export async function unzip(zipPathOrUrl: string, destination: string): Promise<
 }
 
 /**
- * Compares a log timestamp (HH:MM:SS.ms) with a game date string (various formats)
- * Returns true if the hours and minutes match
+ * Compares a log timestamp (HH:mm:ss.ms) with a game date string (HH:mm:ss)
+ * Returns true if the difference is within 1 minute, ignoring seconds
  *
  * @param logTimestamp - Timestamp from the log file (e.g. "19:00:20.90")
- * @param gameDate - Date string from the replay file (e.g. "2024-11-03 오후 3:55" or "24/02/2024 11:07 AM")
+ * @param gameDate - Date string from the replay file (e.g. "HH:mm:ss")
  */
-export function doesMatchGameDate(logTimestamp: string, gameDate: string): boolean {
-	try {
-		// Extract HH:MM from log timestamp (assuming 24h format)
-		// Format: 19:00:20.90
-		const logTimeMatch = logTimestamp.match(/(\d{1,2}):(\d{2})/);
-		if (!logTimeMatch) return false;
+export function doesMatchGameTime(logTimestamp: string, gameDate: string): boolean {
+	if (!logTimestamp || !gameDate) return false;
 
-		const logHour = parseInt(logTimeMatch[1], 10);
-		const logMinute = parseInt(logTimeMatch[2], 10);
+	const logTime = dayjs(logTimestamp, ['HH:mm:ss.SS', 'HH:mm:ss.SSS', 'HH:mm:ss']);
+	const gameTime = dayjs(gameDate, 'HH:mm:ss');
 
-		// Extract time from gameDate
-		// Supports:
-		// - "오후 3:55" (Korean PM)
-		// - "오전 11:07" (Korean AM)
-		// - "11:07 AM"
-		// - "3:55 PM"
-		// - "15:55" (24h)
+	if (!logTime.isValid() || !gameTime.isValid()) return false;
 
-		// Regex to find time at the end of the string
-		// Looks for HH:MM optionally followed by AM/PM, or preceded by 오전/오후
-		const timeRegex = /(?:(오전|오후)\s*)?(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i;
-		const dateMatch = gameDate.match(timeRegex);
+	const diff = Math.abs(logTime.startOf('minute').diff(gameTime.startOf('minute'), 'minute'));
 
-		if (!dateMatch) return false;
-
-		const [, koreanMeridiem, hourStr, minuteStr, englishMeridiem] = dateMatch;
-		let gameHour = parseInt(hourStr, 10);
-		const gameMinute = parseInt(minuteStr, 10);
-		const meridiem = (koreanMeridiem || englishMeridiem || '').toUpperCase();
-
-		// Convert to 24h format
-		if (meridiem === 'PM' || meridiem === '오후') {
-			if (gameHour < 12) gameHour += 12;
-		} else if (meridiem === 'AM' || meridiem === '오전') {
-			if (gameHour === 12) gameHour = 0;
-		}
-
-		return logHour === gameHour && logMinute === gameMinute;
-	} catch (e) {
-		console.error('Error comparing timestamps:', e);
-		return false;
-	}
+	return diff <= 1;
 }
