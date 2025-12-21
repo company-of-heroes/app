@@ -30,6 +30,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Verify version match
+        shell: pwsh
+        run: |
+          $tauriConf = Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json
+          $tauriVersion = $tauriConf.version
+          $tagVersion = "${{ github.event.inputs.version || github.ref_name }}"
+          if ($tagVersion.StartsWith("v")) {
+            $tagVersion = $tagVersion.Substring(1)
+          }
+
+          Write-Host "Tauri version: $tauriVersion"
+          Write-Host "Release version: $tagVersion"
+
+          if ($tauriVersion -ne $tagVersion) {
+            Write-Error "Version mismatch! Tauri config version: $tauriVersion, Release tag version: $tagVersion"
+            exit 1
+          }
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
