@@ -7,9 +7,10 @@ import { relic } from '$lib/relic';
 import { dirname, join } from '@tauri-apps/api/path';
 import { exists, readFile } from '@tauri-apps/plugin-fs';
 import { parseReplay } from '@fknoobs/replay-parser';
-import { doesMatchGameDate } from '$lib/utils';
+import { doesMatchGameTime } from '$lib/utils';
 import { t } from 'try';
 import { download } from '@tauri-apps/plugin-upload';
+import dayjs from 'dayjs';
 
 export class History extends Feature {
 	name = 'History';
@@ -39,7 +40,10 @@ export class History extends Feature {
 			let { file, replay } = await this.getLastMatchReplay();
 			let replayFile: File | undefined = undefined;
 
-			if (lobby.startedAt && doesMatchGameDate(lobby.startedAt, replay.gameDate)) {
+			if (
+				lobby.startedAt &&
+				doesMatchGameTime(lobby.startedAt, dayjs(replay.gameDate).format('HH:mm:ss'))
+			) {
 				replayFile = file;
 			}
 
@@ -61,9 +65,9 @@ export class History extends Feature {
 		}
 
 		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
-			filter: 'needsResult=true'
+			filter: `needsResult=true && user = "${app.features.auth.userId}"`
 		});
-
+		console.log(matchesNeedingResults);
 		if (matchesNeedingResults.items.length === 0) {
 			return;
 		}
@@ -127,6 +131,8 @@ export class History extends Feature {
 			'playback',
 			match.replay
 		);
+
+		console.log(match);
 
 		return await exists(path);
 	}
