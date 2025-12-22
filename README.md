@@ -1,12 +1,13 @@
-# FkNoobsCoH — Company of Heroes companion app
+![FknoobsCoH - Screen](static/fknoobs-app-banner.png)
 
 FkNoobsCoH is a **free** companion app for **Company of Heroes** that adds helpful tooling around replays, stats, Twitch, and overlays.
 
+> [!WARNING]
 > **Work in progress:** this project is still actively being built. Expect changes, incomplete features, and the occasional bug.
 
 ## What the app offers
 
-- **Replay analyzer** — scan and analyze your replays
+- **Replay analyzer** — scan and analyze your replays (still working on this part)
 - **Replay viewer** — browse and inspect replay details and chat
 - **Player / match insights** — surface useful in‑game information
 - **Keybindings** — configure custom shortcuts (per faction) and export/import them
@@ -63,12 +64,20 @@ You can run a local PocketBase instance for development using Docker Compose.
 
    This runs a PocketBase container on `http://localhost:8090` and stores data in `./pocketbase`.
 
+   When running
+
+   ```bash
+   pnpm run dev
+   ```
+
+   Will automatically run `pnpm run pb:up`
+
 2. (Optional) Create an admin user using the admin UI at `http://localhost:8090/_/`.
 
 3. Use the local server in dev by copying `.env.example` to `.env` and setting:
 
    ```env
-   VITE_POCKETBASE_URL=http://localhost:8090
+   PUBLIC_PB_URL=http://localhost:8090
    ```
 
 4. Generate types (if you need updated types after schema changes):
@@ -86,4 +95,4 @@ You can run a local PocketBase instance for development using Docker Compose.
 Notes:
 
 - The project already ignores the `./pocketbase` data folder in `.gitignore`.
-- The PocketBase client now reads `VITE_POCKETBASE_URL` and falls back to the production URL when not set.
+- The PocketBase client now reads `PUBLIC_PB_URL` and falls back to the production URL when not set.
