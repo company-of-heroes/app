@@ -8,6 +8,9 @@
 	import { cn } from '$lib/utils';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import { app } from '$core/app';
+	import { ToastReplaysProgress } from '$lib/components/toasts';
+	import { Avatar } from '$lib/components/ui/avatar';
+	import { page } from '$app/state';
 	import SuccesIcon from 'phosphor-svelte/lib/Check';
 	import ErrorIcon from 'phosphor-svelte/lib/ExclamationMark';
 	import InfoIcon from 'phosphor-svelte/lib/QuestionMark';
@@ -23,22 +26,11 @@
 	import HistoryIcon from 'phosphor-svelte/lib/LineSegments';
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwise';
 	import CommandIcon from 'phosphor-svelte/lib/Command';
-	import { ToastReplaysProgress } from '$lib/components/toasts';
 
-	import '$lib/fonts/futura-pt-webfont/style.css';
-	import '$lib/fonts/gotham/style.css';
-	import '$lib/fonts/TT Firs Neue/style.css';
-	import '$lib/fonts/TT Corals/style.css';
 	import '$lib/fonts/TT Mussels/style.css';
-	import '$lib/fonts/TT Barrels/style.css';
-	import '$lib/fonts/League_Gothic/style.css';
-	import '@fontsource/league-gothic';
-	import '@fontsource/bebas-neue';
 	import '@fontsource/nunito-sans/800.css';
 
-	import '../app.css';
-	import { Avatar } from '$lib/components/ui/avatar';
-	import { page } from '$app/state';
+	import '../../app.css';
 
 	let { children } = $props();
 

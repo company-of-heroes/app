@@ -13,10 +13,12 @@
 		"windows": [
 			{
 				"title": "Fknoobs - Company of Heroes",
+				"label": "main",
 				"width": 1600,
 				"height": 1000,
 				"transparent": true,
-				"dragDropEnabled": false
+				"dragDropEnabled": false,
+				"url": "/splashscreen"
 			}
 		],
 		"security": {

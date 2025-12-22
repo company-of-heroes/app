@@ -1,6 +1,7 @@
 // Tauri doesn't have a Node.js server to do proper SSR
 // so we will use adapter-static to prerender the app (SSG)
 
+import { Window } from '@tauri-apps/api/window';
 import { browser } from '$app/environment';
 import { app } from '$core/app';
 import { tts, twitch } from '$features/twitch';
@@ -15,30 +16,42 @@ import { updater } from '$features/updater';
 import { history } from '$core/app/features/history';
 import { replayAnalyzer } from '$features/replay-analyzer';
 import { shortcuts } from '$core/app/features/shortcuts/shortcuts.svelte';
+import { goto } from '$app/navigation';
+import { page } from '$app/state';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;
 export const ssr = false;
+
+let currentWindow = Window.getCurrent();
+let isReady = false;
 
 export const load = async () => {
 	if (!browser) {
 		return;
 	}
 
-	app.register('auth', auth);
-	app.register('twitch', twitch);
-	app.register('text-to-speech', tts);
-	app.register('text-to-speech-custom-characters', ttsPersonalVoices);
-	app.register('twitch-overlays', twitchOverlays);
-	app.register('twitch-bot', twitchBot);
-	app.register('replay-analyzer', replayAnalyzer);
-	app.register('history', history);
-	app.register('shortcuts', shortcuts);
-	app.register('updater', updater);
+	if (currentWindow.label === 'main') {
+		app.register('auth', auth);
+		app.register('twitch', twitch);
+		app.register('text-to-speech', tts);
+		app.register('text-to-speech-custom-characters', ttsPersonalVoices);
+		app.register('twitch-overlays', twitchOverlays);
+		app.register('twitch-bot', twitchBot);
+		app.register('replay-analyzer', replayAnalyzer);
+		app.register('history', history);
+		app.register('shortcuts', shortcuts);
+		app.register('updater', updater);
 
-	twitchOverlays.registerOverlay(new OppBotOverlay());
-	twitchOverlays.registerOverlay(new ChatOverlay());
-	twitchOverlays.registerOverlay(new ViewerCountOverlay());
+		twitchOverlays.registerOverlay(new OppBotOverlay());
+		twitchOverlays.registerOverlay(new ChatOverlay());
+		twitchOverlays.registerOverlay(new ViewerCountOverlay());
 
-	await app.start();
+		app
+			.start()
+			.then(() => {
+				!isReady && goto('/');
+			})
+			.then(() => (isReady = true));
+	}
 };
