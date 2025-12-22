@@ -4,7 +4,7 @@
 	"description": "",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "pnpm run pb:up && vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -14,6 +14,9 @@
 		"tauri:build:macos": "tauri build --target x86_64-apple-darwin",
 		"tauri:build:windows": "tauri build --target x86_64-pc-windows-msvc",
 		"pocketbase:typegen": "npx pocketbase-typegen --env --out src/lib/core/pocketbase/types.ts",
+		"pb:up": "docker compose up -d pocketbase",
+		"pb:down": "docker compose down",
+		"pb:logs": "docker compose logs -f pocketbase",
 		"format": "prettier --write .",
 		"lint": "prettier --check ."
 	},

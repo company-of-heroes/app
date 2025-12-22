@@ -48,3 +48,42 @@ If you downloaded the installer from the official GitHub releases page above, yo
 ## Screenshot
 
 ![FknoobsCoH - Screen](static/screenshot-v0.36.x.png)
+
+---
+
+## Development — PocketBase (Docker) ✅
+
+You can run a local PocketBase instance for development using Docker Compose.
+
+1. Start PocketBase:
+
+   ```bash
+   pnpm run pb:up
+   ```
+
+   This runs a PocketBase container on `http://localhost:8090` and stores data in `./pocketbase`.
+
+2. (Optional) Create an admin user using the admin UI at `http://localhost:8090/_/`.
+
+3. Use the local server in dev by copying `.env.example` to `.env` and setting:
+
+   ```env
+   VITE_POCKETBASE_URL=http://localhost:8090
+   ```
+
+4. Generate types (if you need updated types after schema changes):
+
+   ```bash
+   pnpm run pocketbase:typegen
+   ```
+
+5. Stop PocketBase when done:
+
+   ```bash
+   pnpm run pb:down
+   ```
+
+Notes:
+
+- The project already ignores the `./pocketbase` data folder in `.gitignore`.
+- The PocketBase client now reads `VITE_POCKETBASE_URL` and falls back to the production URL when not set.

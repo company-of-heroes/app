@@ -54,8 +54,6 @@
 	onDestroy(() => {
 		unsubscribe?.();
 	});
-
-	console.log(app.features.auth.user);
 </script>
 
 <H level="2" class="mb-6">Matches played today</H>

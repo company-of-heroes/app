@@ -3,8 +3,11 @@ import type { Expand } from '@fknoobs/app';
 import Pocketbase, { type FileOptions } from 'pocketbase';
 import { camelCase } from 'lodash-es';
 import { fetch } from '@tauri-apps/plugin-http';
+import { PUBLIC_PB_URL } from '$env/static/public';
 
-export const pocketbase = new Pocketbase('https://api.fknoobs.com') as TypedPocketBase;
+export const pocketbase = new Pocketbase(
+	PUBLIC_PB_URL ?? 'https://api.fknoobs.com'
+) as TypedPocketBase;
 pocketbase.autoCancellation(false);
 
 /**

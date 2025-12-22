@@ -29,6 +29,7 @@ export class Auth extends Feature<AuthSettings> {
 	private _user: UsersResponse<string[]> | null = $state(null);
 
 	async enable() {
+		console.log(this.userId);
 		await app.pocketbase
 			.collection('users')
 			.getOne(this.settings.userId)

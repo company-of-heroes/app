@@ -43,7 +43,11 @@
 		},
 		{
 			"identifier": "http:default",
-			"allow": [{ "url": "https://*.fknoobs.com" }]
+			"allow": [
+				{ "url": "https://*.fknoobs.com" },
+				{ "url": "http://localhost" },
+				{ "url": "http://localhost:8090" }
+			]
 		},
 		"store:default",
 		"oauth:allow-start",

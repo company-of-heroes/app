@@ -11,6 +11,7 @@
 
 	const { ...restProps }: Props = $props();
 	const match = useMatch();
+
 	const player = $derived.by(() => {
 		const players = match.result?.players;
 		if (!players?.length) {

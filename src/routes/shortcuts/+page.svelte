@@ -54,7 +54,6 @@
 			onSort: (event) => {
 				const [movedItem] = keybindings.splice(event.oldIndex!, 1);
 				keybindings.splice(event.newIndex!, 0, movedItem);
-				console.log(keybindings);
 			}
 		});
 	});

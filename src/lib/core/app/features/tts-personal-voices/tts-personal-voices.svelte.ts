@@ -45,9 +45,8 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 		// Intercept speak events from the TTS service and override the
 		// voiceId for a user if they have a personal voice assigned.
 		tts.on('speak', (options) => {
-			console.log(options);
 			const userVoiceId = this.getUserVoice(options.user);
-			console.log(userVoiceId);
+
 			if (userVoiceId) {
 				options.voiceId = userVoiceId;
 			}
