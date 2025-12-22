@@ -35,7 +35,7 @@ export class Lobby {
 	 * @public
 	 * @type {number | null}
 	 */
-	startedAt: string | null = null;
+	startedAt: string | null = $state(null);
 
 	/**
 	 * Current map name for the lobby.
@@ -63,6 +63,23 @@ export class Lobby {
 	 * @type {string | undefined}
 	 */
 	outcome?: string;
+
+	/**
+	 * Flag indicating whether a notification has been sent for this lobby.
+	 * Used to prevent duplicate notifications.
+	 *
+	 * @public
+	 * @type {boolean}
+	 */
+	didNotify = false;
+
+	/**
+	 * Flag indicating whether the match has started.
+	 *
+	 * @public
+	 * @type {boolean}
+	 */
+	started = false;
 
 	/**
 	 * Derived state providing a human-readable outcome string.

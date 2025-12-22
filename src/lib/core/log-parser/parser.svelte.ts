@@ -54,6 +54,7 @@ export class Log extends emittery<LogEvents> {
 
 					lobby = new Lobby('', [], isRanked === 'AutoMatchForm');
 					lobby.startedAt = startedAt.trim();
+					app.game.lobby = lobby;
 
 					break;
 				}
@@ -119,8 +120,8 @@ export class Log extends emittery<LogEvents> {
 						});
 
 						lobby.sessionId = sessionId;
+						lobby.started = true;
 
-						app.game.lobby = lobby;
 						app.game.isIngame = true;
 						app.game.emit('LOBBY:STARTED', lobby);
 					}

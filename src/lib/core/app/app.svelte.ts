@@ -2,6 +2,7 @@ import type { Component } from 'svelte';
 import type { Features } from '@fknoobs/app';
 import type { TypedPocketBase } from '$core/pocketbase/types';
 import Emittery from 'emittery';
+import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
 import { fetch } from '@tauri-apps/plugin-http';
 import { page } from '$app/state';
 import { PathMatcher } from '$lib/utils/path-matcher';
@@ -19,7 +20,6 @@ import { exists, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { dev } from '$app/environment';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { Database } from './database';
-import { goto } from '$app/navigation';
 import { pocketbase } from '$core/pocketbase';
 
 /**
@@ -179,6 +179,14 @@ export class App extends Emittery<AppEvents> {
 	pocketbase: TypedPocketBase = pocketbase;
 
 	/**
+	 * Audio element for playing notification sounds.
+	 *
+	 * @public
+	 * @type {HTMLAudioElement}
+	 */
+	audio: HTMLAudioElement = new Audio();
+
+	/**
 	 * A reactive map holding instances of application modules.
 	 *
 	 * @public
@@ -195,11 +203,11 @@ export class App extends Emittery<AppEvents> {
 		this.socket = await Socket.connect();
 		this.database = await Database.load();
 
-		this.game.on('LOBBY:STARTED', async (lobby) => {
+		this.game.on('LOBBY:STARTED', (lobby) => {
 			this.socket?.publish('game.lobby.started', lobby);
 		});
 
-		this.game.on('LOBBY:DESTROYED', async (lobby) => {
+		this.game.on('LOBBY:DESTROYED', () => {
 			this.socket?.publish('game.lobby.destroyed', null);
 		});
 
@@ -210,6 +218,29 @@ export class App extends Emittery<AppEvents> {
 			if (App.DEV_MODE) {
 				log.start();
 			}
+
+			watch(
+				() => [this.game.lobby?.startedAt, this.game.isWindowFocused],
+				() => {
+					if (
+						this.isReady &&
+						this.game.lobby?.startedAt &&
+						!this.game.isWindowFocused &&
+						!this.game.lobby.didNotify &&
+						!this.game.lobby.started
+					) {
+						this.audio.src = GameStartedNotificationAudio;
+						this.audio.currentTime = 0;
+						this.game.lobby.didNotify = true;
+
+						this.audio.play();
+					}
+
+					if (this.game.isWindowFocused) {
+						this.audio.pause();
+					}
+				}
+			);
 
 			watch(
 				() => this.game.isRunning,
