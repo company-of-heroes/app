@@ -3,10 +3,10 @@
 	import * as Chat from '$lib/components/chat';
 	import { onDestroy } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
-	import BellIcon from 'phosphor-svelte/lib/Bell';
-	import BellSlashIcon from 'phosphor-svelte/lib/BellSlash';
 	import { tooltip } from '$lib/attachments';
 	import { app } from '$core/app';
+	import BellIcon from 'phosphor-svelte/lib/Bell';
+	import BellSlashIcon from 'phosphor-svelte/lib/BellSlash';
 
 	let chat = $state<Chat.Context>();
 

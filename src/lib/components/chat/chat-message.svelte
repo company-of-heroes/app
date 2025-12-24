@@ -51,16 +51,21 @@
 	</button>
 {/snippet}
 
-<div class="flex gap-4">
+<div class={cn('flex w-full gap-4', canModerate && 'flex-row-reverse')}>
 	<div class="w-[55px] self-end">
 		<User.Root user={message.sender}>
 			<User.Avatar />
 		</User.Root>
 	</div>
-	<div class="group relative flex max-w-lg flex-col items-start gap-2">
+	<div
+		class={cn(
+			'group relative flex max-w-lg flex-col gap-2',
+			canModerate ? 'items-end' : 'items-start'
+		)}
+	>
 		{#if canModerate}
 			<div
-				class="bg-secondary-800 absolute -top-4 -right-4 inline-flex rounded-lg opacity-0 transition-opacity group-hover:opacity-100"
+				class="bg-secondary-800 absolute -top-4 -left-4 inline-flex rounded-lg opacity-0 transition-opacity group-hover:opacity-100"
 			>
 				{#if isMessage}
 					<Button
@@ -93,7 +98,7 @@
 				</Button>
 			</div>
 		{/if}
-		<div class="flex flex-wrap gap-2">
+		<div class={cn('flex flex-wrap gap-2', canModerate && 'justify-end')}>
 			{#each message.attachments as attachment}
 				{#if attachment.type === 'image'}
 					{@render image(attachment)}
@@ -104,7 +109,12 @@
 			{/each}
 		</div>
 		{#if message.text.trim() !== ''}
-			<div class={cn('bg-secondary-950 prose prose-invert rounded-3xl')}>
+			<div
+				class={cn(
+					'bg-secondary-950 prose prose-invert rounded-3xl',
+					canModerate ? 'rounded-br-none' : 'rounded-bl-none'
+				)}
+			>
 				<span class="block px-5 py-2">{@html marked(message.text)}</span>
 			</div>
 		{/if}
