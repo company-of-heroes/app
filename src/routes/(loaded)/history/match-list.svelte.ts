@@ -101,7 +101,11 @@ export class MatchList {
 		watch(
 			() => this.filters.scope,
 			() => {
-				this.matches = [];
+				const nextFilter = buildPocketBaseFilter($state.snapshot(this.filters));
+				if (nextFilter !== this.#activeFilter) {
+					this.#resetSearch(nextFilter);
+					this.loadMore({ reset: true });
+				}
 			}
 		);
 	}
@@ -117,14 +121,12 @@ export class MatchList {
 
 	restore(state: MatchListState) {
 		this.#searchId += 1;
+		this.#activeFilter = buildPocketBaseFilter(state.filters);
 		this.filters = state.filters;
 		this.matches = state.matches;
 		this.page = state.page;
 		this.hasMore = state.hasMore;
 		this.isLoading = false;
-
-		// Sync active state immediately to prevent watchers from triggering a reset
-		this.#activeFilter = buildPocketBaseFilter(state.filters);
 	}
 
 	#resetSearch(nextFilter: string) {

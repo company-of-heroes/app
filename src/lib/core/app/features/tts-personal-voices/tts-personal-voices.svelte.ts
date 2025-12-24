@@ -99,7 +99,7 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 			() => [this.settings.providers[tts.provider.name].voices, this.settings.cost],
 			debounce(() => {
 				this.updateRewards();
-			}, 1000)
+			}, 10000)
 		);
 
 		// Listen for the Twitch token loading; this means a channel is authenticated.
