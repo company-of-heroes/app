@@ -1,8 +1,6 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { Chat, createChat, createChatCompose } from './chat.svelte.js';
-	import { onMount } from 'svelte';
-	import { app } from '$core/app/app.svelte.js';
 
 	type Props = {
 		roomId: string;

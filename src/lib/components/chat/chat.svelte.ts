@@ -1,7 +1,9 @@
 import type { ChatMessageExpanded } from '$core/app/database/chat-rooms';
-import type { ChatMessagesResponse, UsersResponse } from '$core/pocketbase/types';
+import type { UsersResponse } from '$core/pocketbase/types';
 import { app } from '$core/app';
 import { Context } from 'runed';
+import NotificationSound from '$lib/files/notification-message.mp3?url';
+import type { UnsubscribeFunction } from 'emittery';
 
 export type MessageAttachment = {
 	type: 'image' | 'file';
@@ -34,6 +36,12 @@ export class Chat {
 
 	#members = $state<UsersResponse[]>([]);
 
+	#notificationAudio?: HTMLAudioElement;
+
+	#createHandler?: UnsubscribeFunction;
+	#updateHandler?: UnsubscribeFunction;
+	#deleteHandler?: UnsubscribeFunction;
+
 	constructor(public id: string) {}
 
 	async join() {
@@ -45,11 +53,23 @@ export class Chat {
 
 		app.database.chatRooms.subscribeToRoom(this.id);
 
-		app.database.chatRooms.on('create', (message) => {
+		this.#createHandler = app.database.chatRooms.on('create', (message) => {
 			this.#messages.push(message);
+
+			if (
+				message.sender.id !== app.features.auth.userId &&
+				false === app.features.chat.settings.muted
+			) {
+				if (!this.#notificationAudio) {
+					this.#notificationAudio = new Audio(NotificationSound);
+				}
+
+				this.#notificationAudio.currentTime = 0;
+				this.#notificationAudio.play().catch(() => {});
+			}
 		});
 
-		app.database.chatRooms.on('update', (message) => {
+		this.#updateHandler = app.database.chatRooms.on('update', (message) => {
 			const index = this.#messages.findIndex((m) => m.id === message.id);
 
 			if (index !== -1) {
@@ -57,7 +77,7 @@ export class Chat {
 			}
 		});
 
-		app.database.chatRooms.on('delete', (message) => {
+		this.#deleteHandler = app.database.chatRooms.on('delete', (message) => {
 			this.#messages = this.#messages.filter((m) => m.id !== message.id);
 		});
 	}
@@ -66,6 +86,11 @@ export class Chat {
 		this.#isJoining = false;
 		this.#members = [];
 		this.#messages = [];
+		this.#notificationAudio = undefined;
+
+		this.#createHandler?.();
+		this.#updateHandler?.();
+		this.#deleteHandler?.();
 
 		app.database.chatRooms.unsubscribeFromRoom(this.id);
 	}

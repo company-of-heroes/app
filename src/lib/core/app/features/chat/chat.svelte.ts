@@ -1,7 +1,12 @@
 import { app } from '$core/app';
 import { Feature } from '../feature.svelte';
 
-export class ChatFeature extends Feature {
+export type ChatSettings = {
+	enabled: boolean;
+	muted: boolean;
+};
+
+export class ChatFeature extends Feature<ChatSettings> {
 	name = 'chat';
 
 	enable(): void | this | Promise<void | this> {
@@ -10,8 +15,11 @@ export class ChatFeature extends Feature {
 		app.database.chatRooms.join('wdqhr1l7wb2byh4');
 	}
 
-	defaultSettings(): { enabled: boolean } {
-		return { enabled: true };
+	defaultSettings(): ChatSettings {
+		return {
+			enabled: true,
+			muted: false
+		};
 	}
 }
 
