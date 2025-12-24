@@ -1,14 +1,14 @@
 use tauri::Manager;
 use window_vibrancy::{apply_acrylic, apply_vibrancy, NSVisualEffectMaterial};
 
+mod input;
 mod migrations;
 mod process_check;
 mod replay_parser;
 mod unzip;
 mod webserver;
-mod ws_server;
-mod input;
 mod window;
+mod ws_server;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,6 +19,7 @@ pub fn run() {
     let db_url = "sqlite:app.db";
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(
             tauri_plugin_sql::Builder::default()

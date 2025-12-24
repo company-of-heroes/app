@@ -1,6 +1,6 @@
-use enigo::{Enigo, Key, Keyboard, Settings, Direction};
-use tauri::command;
+use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 use std::{thread, time};
+use tauri::command;
 
 #[command]
 pub fn send_keys(keys: Vec<String>) -> Result<(), String> {
@@ -11,13 +11,15 @@ pub fn send_keys(keys: Vec<String>) -> Result<(), String> {
     // that triggered this command (e.g. CTRL+1).
     let modifiers = [Key::Control, Key::Alt, Key::Shift, Key::Meta];
     for key in modifiers {
-         // We ignore errors here because we just want to ensure they are up
-         let _ = enigo.key(key, Direction::Release);
+        // We ignore errors here because we just want to ensure they are up
+        let _ = enigo.key(key, Direction::Release);
     }
 
     for k in keys {
         let key = parse_key(&k).ok_or_else(|| format!("Unsupported key: {}", k))?;
-        enigo.key(key, Direction::Click).map_err(|e| e.to_string())?;
+        enigo
+            .key(key, Direction::Click)
+            .map_err(|e| e.to_string())?;
         thread::sleep(time::Duration::from_millis(50));
     }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
 	import { Button } from '$lib/components/ui/button';
-	import { FileSelection } from '$lib/components/ui/input';
+	import { FileSelection, Checkbox } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { app } from '$core/app';
 	import { H } from '$lib/components/ui/h';
@@ -11,6 +11,13 @@
 
 <H level="1">Settings</H>
 <Form.Root>
+	<Form.Group>
+		<Label>Launch at startup</Label>
+		<Form.Description>
+			Enable or disable launching the application automatically when your system starts.
+		</Form.Description>
+		<Checkbox label="Launch at startup" bind:checked={app.settings.autostart} />
+	</Form.Group>
 	<Form.Group>
 		<Label>Company of Heroes warnings.log</Label>
 		<Form.Description>

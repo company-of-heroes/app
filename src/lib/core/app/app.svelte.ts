@@ -3,6 +3,8 @@ import type { Features } from '@fknoobs/app';
 import type { TypedPocketBase } from '$core/pocketbase/types';
 import Emittery from 'emittery';
 import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
+
+import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
 import { fetch } from '@tauri-apps/plugin-http';
 import { page } from '$app/state';
 import { PathMatcher } from '$lib/utils/path-matcher';
@@ -106,6 +108,7 @@ export class App extends Emittery<AppEvents> {
 	 * @type {Settings}
 	 */
 	settings: Settings = $state({
+		autostart: true,
 		isStreamer: false,
 		companyOfHeroesConfigPath: '',
 		companyOfHeroesInstallationPath: ''
@@ -275,6 +278,21 @@ export class App extends Emittery<AppEvents> {
 				() => {
 					this.store?.set('settings', this.settings);
 					this.store?.save();
+				}
+			);
+
+			watch(
+				() => this.settings.autostart,
+				(autostart) => {
+					isEnabled().then(async (isEnabledAutostart) => {
+						if (autostart && !isEnabledAutostart) {
+							await enable();
+						}
+
+						if (!autostart && isEnabledAutostart) {
+							await disable();
+						}
+					});
 				}
 			);
 		});
