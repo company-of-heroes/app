@@ -2,7 +2,7 @@
 // so we will use adapter-static to prerender the app (SSG)
 
 import { Window } from '@tauri-apps/api/window';
-import { browser } from '$app/environment';
+import { browser, dev } from '$app/environment';
 import { app } from '$core/app';
 import { tts, twitch } from '$features/twitch';
 import { ttsPersonalVoices } from '$features/tts-personal-voices';
@@ -13,7 +13,8 @@ import { twitchBot } from '$features/twitch-bot';
 import { auth } from '$features/auth';
 import { ViewerCountOverlay } from '$features/twitch-overlays/overlays/viewer-count';
 import { updater } from '$features/updater';
-import { history } from '$core/app/features/history';
+import { chat } from '$features/chat';
+import { history } from '$features/history';
 import { replayAnalyzer } from '$features/replay-analyzer';
 import { shortcuts } from '$core/app/features/shortcuts/shortcuts.svelte';
 import { goto } from '$app/navigation';
@@ -41,17 +42,22 @@ export const load = async () => {
 		app.register('replay-analyzer', replayAnalyzer);
 		app.register('history', history);
 		app.register('shortcuts', shortcuts);
+		app.register('chat', chat);
 		app.register('updater', updater);
 
 		twitchOverlays.registerOverlay(new OppBotOverlay());
 		twitchOverlays.registerOverlay(new ChatOverlay());
 		twitchOverlays.registerOverlay(new ViewerCountOverlay());
 
-		app
-			.start()
-			.then(() => {
-				!isReady && goto('/');
-			})
-			.then(() => (isReady = true));
+		if (dev) {
+			await app.start();
+		} else {
+			app
+				.start()
+				.then(() => {
+					!isReady && goto('/');
+				})
+				.then(() => (isReady = true));
+		}
 	}
 };

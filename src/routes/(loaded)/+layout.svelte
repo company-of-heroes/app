@@ -26,6 +26,7 @@
 	import HistoryIcon from 'phosphor-svelte/lib/LineSegments';
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwise';
 	import CommandIcon from 'phosphor-svelte/lib/Command';
+	import ChatIcon from 'phosphor-svelte/lib/ChatCentered';
 
 	import '$lib/fonts/TT Mussels/style.css';
 	import '@fontsource/nunito-sans/800.css';
@@ -89,6 +90,10 @@
 				<Nav.Link href="/leaderboards">
 					<RankingIcon size={28} weight="duotone" />
 					Leaderboards
+				</Nav.Link>
+				<Nav.Link href="/chat">
+					<ChatIcon size={28} weight="duotone" />
+					Chat
 				</Nav.Link>
 				<Nav.Link href="/twitch">
 					<TwitchIcon size={28} weight="duotone" />

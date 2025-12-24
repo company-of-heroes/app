@@ -5,6 +5,7 @@ declare module '@fknoobs/app' {
 	import type { TTSPersonalVoices } from '$features/tts-personal-voices';
 	import type { TwitchBot } from '$features/twitch-bot';
 	import type { Updater } from '$features/updater';
+	import type { Chat } from '$features/chat';
 	import type { History } from '$features/history';
 	import type { ReplayAnalyzer } from '$features/replay-analyzer';
 	import type { TwitchOverlays } from '$core/app/features/twitch-overlays';
@@ -15,6 +16,7 @@ declare module '@fknoobs/app' {
 		shortcuts: Shortcuts;
 		updater: Updater;
 		history: History;
+		chat: Chat;
 		'twitch-overlays': TwitchOverlays;
 		'replay-analyzer': ReplayAnalyzer;
 		'text-to-speech': TTS;

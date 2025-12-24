@@ -6,7 +6,7 @@
 	import { steam } from '$core/steam';
 	import { H } from '$lib/components/ui/h';
 	import { relic } from '$lib/relic';
-	import { cn } from '$lib/utils';
+	import { cn, isSteamId } from '$lib/utils';
 	import { resource } from 'runed';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
@@ -19,7 +19,7 @@
 		() => page.params.profileId,
 		async (id) => {
 			const [relicProfile, matchHistory] = await Promise.all([
-				relic.getProfileById(parseInt(id!)),
+				isSteamId(id!) ? relic.getProfileBySteamId(id!) : relic.getProfileById(parseInt(id!)),
 				relic.getRecentMatchHistoryForProfile(parseInt(id!))
 			]);
 

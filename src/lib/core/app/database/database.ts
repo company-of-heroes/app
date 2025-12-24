@@ -2,12 +2,16 @@ import Sqlite from '@tauri-apps/plugin-sql';
 import { Matches } from './lobbies';
 import { Replays } from './replays';
 import { dev } from '$app/environment';
+import { ChatRooms } from './chat-rooms';
 
 export class Database {
 	public matches: Matches;
 
+	public chatRooms: ChatRooms;
+
 	private constructor(client: Sqlite) {
 		this.matches = new Matches();
+		this.chatRooms = new ChatRooms();
 	}
 
 	replays() {

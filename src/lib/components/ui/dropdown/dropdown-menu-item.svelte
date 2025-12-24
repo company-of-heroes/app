@@ -11,7 +11,8 @@
 <DropdownMenu.Item
 	{...restProps}
 	class={cn(
-		'cursor-pointer rounded px-4 py-2 text-gray-200 transition-colors hover:bg-gray-700 hover:text-white'
+		'cursor-pointer rounded px-4 py-2 text-gray-200 transition-colors hover:bg-gray-700 hover:text-white',
+		restProps.class
 	)}
 >
 	{@render children?.()}

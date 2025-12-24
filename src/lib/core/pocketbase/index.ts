@@ -4,6 +4,7 @@ import Pocketbase, { type FileOptions } from 'pocketbase';
 import { camelCase } from 'lodash-es';
 import { fetch } from '@tauri-apps/plugin-http';
 import { PUBLIC_PB_URL } from '$env/static/public';
+import type { UserContext } from '$lib/components/user';
 
 export const pocketbase = new Pocketbase(
 	PUBLIC_PB_URL ?? 'https://api.fknoobs.com'
@@ -64,4 +65,12 @@ export const getFile = async (
 	return fetch(pocketbase.files.getURL(record, filename, queryParams))
 		.then((res) => res.arrayBuffer())
 		.then((buffer) => new Uint8Array(buffer));
+};
+
+export const getFileUrl = (
+	record: Record<string, unknown> | UserContext,
+	filename: string,
+	queryParams?: FileOptions
+) => {
+	return pocketbase.files.getURL(record, filename, queryParams);
 };

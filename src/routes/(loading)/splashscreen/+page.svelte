@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import '../../../app.css';
+	import { dev } from '$app/environment';
+	import { goto } from '$app/navigation';
 
 	let randomTexts = [
 		'Loading assets...',
@@ -15,13 +17,22 @@
 		'Brewing some magic...'
 	];
 	let activeText = $state<string>();
+	let interval: ReturnType<typeof setInterval> | undefined = $state();
 
 	onMount(() => {
 		activeText = randomTexts[Math.floor(Math.random() * randomTexts.length)];
 
-		setInterval(() => {
+		interval = setInterval(() => {
 			activeText = randomTexts[Math.floor(Math.random() * randomTexts.length)];
 		}, 2000);
+
+		if (dev) {
+			goto('/');
+		}
+
+		return () => {
+			clearInterval(interval);
+		};
 	});
 </script>
 
