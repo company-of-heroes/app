@@ -510,3 +510,8 @@ export function doesMatchGameTime(logTimestamp: string, gameDate: string): boole
 
 	return diff <= 1;
 }
+
+export const isSteamId = (str: string): boolean => {
+	const steamIdRegex = /^(7656119\d{10})$/;
+	return steamIdRegex.test(str);
+};

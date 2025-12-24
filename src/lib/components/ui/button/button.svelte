@@ -6,6 +6,7 @@
 	let {
 		children,
 		variant = 'primary',
+		size = 'md',
 		loading = $bindable(false),
 		href,
 		...restProps
@@ -18,9 +19,14 @@
 	{href}
 	class={cn(
 		'border border-transparent transition-colors duration-150',
-		'inline-flex h-11 items-center gap-2',
+		'inline-flex items-center gap-2',
 		'cursor-pointer rounded-md px-6',
 		'disabled:cursor-not-allowed disabled:opacity-60',
+		size === 'sm' && 'h-8 px-3 text-sm',
+		size === 'md' && 'h-11 px-6 text-base',
+		size === 'lg' && 'h-14 px-8 text-lg',
+		size === 'icon' && 'size-11 justify-center p-0',
+		size === 'icon-sm' && 'size-8 justify-center p-0 text-sm',
 		variant === 'primary' &&
 			'bg-primary/5 border-primary/20 hover:border-primary/80 hover:bg-primary/20 text-white',
 		variant === 'secondary' &&

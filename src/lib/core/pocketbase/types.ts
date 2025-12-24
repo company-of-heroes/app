@@ -11,8 +11,13 @@ export enum Collections {
 	Mfas = "_mfas",
 	Otps = "_otps",
 	Superusers = "_superusers",
+	Attachments = "attachments",
+	Chat = "chat",
+	ChatMessages = "chat_messages",
+	ChatRooms = "chat_rooms",
 	Lobbies = "lobbies",
 	LobbyAggregation = "lobby_aggregation",
+	LobbyAggregationCommunity = "lobby_aggregation_community",
 	ReplayAggregation = "replay_aggregation",
 	Replays = "replays",
 	Users = "users",
@@ -96,6 +101,40 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
+export type AttachmentsRecord = {
+	created: IsoAutoDateString
+	file: FileNameString
+	id: string
+	type: string
+	updated: IsoAutoDateString
+}
+
+export type ChatRecord = {
+	attachments?: RecordIdString[]
+	created: IsoAutoDateString
+	id: string
+	message?: string
+	updated: IsoAutoDateString
+	user: RecordIdString
+}
+
+export type ChatMessagesRecord = {
+	attachments?: RecordIdString[]
+	chatRoom: string
+	created: IsoAutoDateString
+	id: string
+	sender: RecordIdString
+	text?: string
+	updated: IsoAutoDateString
+}
+
+export type ChatRoomsRecord = {
+	created: IsoAutoDateString
+	id: string
+	members?: RecordIdString[]
+	updated: IsoAutoDateString
+}
+
 export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	createdAt: IsoAutoDateString
 	id: string
@@ -116,6 +155,12 @@ export type LobbyAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = 
 	maps?: null | Tmaps
 	players?: null | Tplayers
 	user?: null | Tuser
+}
+
+export type LobbyAggregationCommunityRecord<Tmaps = unknown, Tplayers = unknown> = {
+	id: string
+	maps?: null | Tmaps
+	players?: null | Tplayers
 }
 
 export type ReplayAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
@@ -166,8 +211,13 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
+export type AttachmentsResponse<Texpand = unknown> = Required<AttachmentsRecord> & BaseSystemFields<Texpand>
+export type ChatResponse<Texpand = unknown> = Required<ChatRecord> & BaseSystemFields<Texpand>
+export type ChatMessagesResponse<Texpand = unknown> = Required<ChatMessagesRecord> & BaseSystemFields<Texpand>
+export type ChatRoomsResponse<Texpand = unknown> = Required<ChatRoomsRecord> & BaseSystemFields<Texpand>
 export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
 export type LobbyAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<LobbyAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
+export type LobbyAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Texpand = unknown> = Required<LobbyAggregationCommunityRecord<Tmaps, Tplayers>> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
 export type UsersResponse<TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<TsteamIds>> & AuthSystemFields<Texpand>
@@ -180,8 +230,13 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
+	attachments: AttachmentsRecord
+	chat: ChatRecord
+	chat_messages: ChatMessagesRecord
+	chat_rooms: ChatRoomsRecord
 	lobbies: LobbiesRecord
 	lobby_aggregation: LobbyAggregationRecord
+	lobby_aggregation_community: LobbyAggregationCommunityRecord
 	replay_aggregation: ReplayAggregationRecord
 	replays: ReplaysRecord
 	users: UsersRecord
@@ -193,8 +248,13 @@ export type CollectionResponses = {
 	_mfas: MfasResponse
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
+	attachments: AttachmentsResponse
+	chat: ChatResponse
+	chat_messages: ChatMessagesResponse
+	chat_rooms: ChatRoomsResponse
 	lobbies: LobbiesResponse
 	lobby_aggregation: LobbyAggregationResponse
+	lobby_aggregation_community: LobbyAggregationCommunityResponse
 	replay_aggregation: ReplayAggregationResponse
 	replays: ReplaysResponse
 	users: UsersResponse

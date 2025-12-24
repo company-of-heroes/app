@@ -5,6 +5,7 @@ import ButtonBack from './button-back.svelte';
 
 export type ButtonProps = {
 	variant?: 'primary' | 'secondary' | 'ghost' | 'link' | 'destructive';
+	size?: 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm';
 	children: Snippet;
 	loading?: boolean;
 	href?: string;
