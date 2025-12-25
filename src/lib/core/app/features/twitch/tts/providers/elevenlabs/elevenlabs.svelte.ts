@@ -137,7 +137,7 @@ export class ElevenlabsProvider extends TTSProvider {
 			voiceId || tts.provider.defaultVoiceId,
 			{
 				text: message,
-				modelId: 'eleven_multilingual_v2',
+				modelId: 'eleven_v3',
 				enableLogging: false,
 				voiceSettings
 			}

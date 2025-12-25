@@ -39,7 +39,7 @@
 				<span>
 					<Button
 						variant="secondary"
-						class="w-fit px-2"
+						size="icon-sm"
 						onclick={() => {
 							dialog.open = true;
 							dialog.title = `Tune voice: ${voice.name}`;
@@ -50,7 +50,7 @@
 					</Button>
 					<Button
 						variant="secondary"
-						class="w-fit px-2"
+						size="icon-sm"
 						onclick={() => {
 							voice.isDeleting = true;
 							provider

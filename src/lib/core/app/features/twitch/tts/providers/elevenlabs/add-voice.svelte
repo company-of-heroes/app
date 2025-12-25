@@ -10,7 +10,6 @@
 	import { app } from '$core/app';
 	import { toast } from 'svelte-sonner';
 	import { dialog } from '$lib/components/ui/dialog';
-	import { error } from '@tauri-apps/plugin-log';
 	import { tts } from '$features/twitch';
 	import { ElevenlabsProvider } from '.';
 
@@ -73,11 +72,11 @@
 				dialog.close();
 			} else {
 				toast.error('Failed to add voice. Please try again.');
-				error(`ElevenLabs add voice: Invalid response ${JSON.stringify(response)}`);
+				console.error(`ElevenLabs add voice: Invalid response ${JSON.stringify(response)}`);
 			}
 		} catch (err) {
 			toast.error('Failed to add voice. Please try again.');
-			error(`ElevenLabs add voice: Invalid response ${JSON.stringify(err)}`);
+			console.error(`ElevenLabs add voice: Invalid response ${JSON.stringify(err)}`);
 			isProcessing = false;
 		}
 	}}
