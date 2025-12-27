@@ -32,6 +32,7 @@ export default defineConfig({
 	define: {
 		'process.env': process.env
 	},
+	assetsInclude: ['*.md'],
 	plugins: [base64Plugin(), sveltekit(), tailwindcss(), base64()],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
@@ -39,6 +40,9 @@ export default defineConfig({
 	clearScreen: false,
 	// 2. tauri expects a fixed port, fail if that port is not available
 	server: {
+		fs: {
+			allow: ['..']
+		},
 		port: 1420,
 		strictPort: true,
 		host: host || false,

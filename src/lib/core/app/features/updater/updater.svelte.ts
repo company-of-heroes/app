@@ -5,8 +5,15 @@ import { app } from '$core/app';
 import { Update } from '.';
 import { padEnd } from 'lodash-es';
 import { gt } from 'semver';
+import Changelog from './changelog.svelte';
 
-export class Updater extends Feature {
+export type UpdaterSettings = {
+	enabled: boolean;
+	didReadChangelog: boolean;
+	version: string;
+};
+
+export class Updater extends Feature<UpdaterSettings> {
 	name = 'updater';
 
 	hasUpdate = $state<boolean>(false);
@@ -40,6 +47,20 @@ export class Updater extends Feature {
 
 					this.openDialog();
 				}
+			})
+			.then(() => {
+				if (gt(this.currentVersion, this.settings.version)) {
+					app.modal.create({
+						component: Changelog,
+						title: 'Changelog',
+						description: 'Here are the latest changes in this version:',
+						size: 'lg'
+					});
+					app.modal.open();
+					app.modal.on('close', () => {
+						this.settings.version = this.currentVersion;
+					});
+				}
 			});
 	}
 
@@ -61,9 +82,11 @@ export class Updater extends Feature {
 		app.modal.open();
 	}
 
-	defaultSettings() {
+	async defaultSettings() {
 		return {
-			enabled: true
+			enabled: true,
+			didReadChangelog: false,
+			version: await getVersion()
 		};
 	}
 }

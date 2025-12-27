@@ -11,7 +11,7 @@ import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 export interface Feature<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean }
 > {
-	defaultSettings(): Settings;
+	defaultSettings(): Promise<Settings> | Settings;
 	disable(): Promise<void> | this | void;
 }
 
@@ -71,12 +71,12 @@ export abstract class Feature<
 			let settings = await app.store.get<Settings>(`feature.${this.name}`);
 
 			if (!settings) {
-				const defaultSettings = this.defaultSettings?.();
+				const defaultSettings = await this.defaultSettings?.();
 				this.settings = { ...defaultSettings, enabled: Boolean(defaultSettings?.enabled ?? false) };
 			} else {
 				this.settings = defaultsDeep(
 					settings as Settings & { enabled: boolean },
-					this.defaultSettings?.()
+					await this.defaultSettings?.()
 				);
 			}
 
@@ -122,8 +122,8 @@ export abstract class Feature<
 	 * @param {Partial<Settings>} settings - The settings to validate.
 	 * @returns {Settings} The validated and merged settings.
 	 */
-	validateSettings(settings: Partial<Settings>): Settings {
-		const defaults = this.defaultSettings();
+	async validateSettings(settings: Partial<Settings>): Promise<Settings> {
+		const defaults = await this.defaultSettings();
 
 		return mergeWith(settings, defaults, (objValue, srcValue, key, object) => {
 			const hasKey = Object.prototype.hasOwnProperty.call(object as object, key as string);
@@ -162,7 +162,7 @@ export abstract class Feature<
 
 		const fileContent = await readTextFile(selected);
 		const importedSettings = JSON.parse(fileContent);
-		const validatedSettings = this.validateSettings(importedSettings);
+		const validatedSettings = await this.validateSettings(importedSettings);
 
 		this.settings = { ...validatedSettings, enabled: Boolean(validatedSettings?.enabled ?? false) };
 		app.toast.success('Settings imported successfully!');

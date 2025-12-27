@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@plugin '@tailwindcss/typography';
+
 @source inline('w-{1..24}/24');
 @source inline('min-w-{1..24}/24');
 @source inline('max-w-{1..24}/24');

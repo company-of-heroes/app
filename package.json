@@ -93,6 +93,7 @@
 		"@eslint/js": "^9.39.2",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
+		"@tailwindcss/typography": "^0.5.19",
 		"@tauri-apps/cli": "^2.9.6",
 		"@twurple/eventsub": "^5.3.4",
 		"@types/semver": "^7.7.1",
