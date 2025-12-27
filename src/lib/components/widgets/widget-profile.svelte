@@ -9,7 +9,6 @@
 	import { relic } from '$lib/relic';
 
 	let isLoadingRecentGames = $state(false);
-	console.log(app.game.profile);
 </script>
 
 {#if app.game.profile}

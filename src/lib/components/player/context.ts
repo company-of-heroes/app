@@ -5,11 +5,13 @@ const context = new Context<{
 	player: LobbyPlayer;
 	playerResult?: MatchHistoryPlayer;
 	stats?: LeaderboardStat;
+	race?: number;
 }>('<player />');
 
 export const createPlayer = (
 	player: LobbyPlayer,
 	playerResult?: MatchHistoryPlayer,
-	stats?: LeaderboardStat
-) => context.set({ player, playerResult, stats });
+	stats?: LeaderboardStat,
+	race?: number
+) => context.set({ player, playerResult, stats, race });
 export const usePlayer = () => context.get();

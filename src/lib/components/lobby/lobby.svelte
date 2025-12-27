@@ -1,3 +1,7 @@
+<script lang="ts" module>
+	export let lobby = $state<Lobby>();
+</script>
+
 <script lang="ts">
 	import type { Lobby } from '$core/company-of-heroes';
 	import type { HTMLAttributes } from 'svelte/elements';

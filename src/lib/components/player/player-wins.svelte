@@ -5,11 +5,15 @@
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
 	const { ...restProps }: Props = $props();
-	const { playerResult } = usePlayer();
+	const { playerResult, stats } = usePlayer();
 </script>
 
-{#if playerResult}
-	<span class="text-center text-green-100" {...restProps}>{playerResult.wins}</span>
-{:else}
-	<span class="text-center" {...restProps}>-</span>
-{/if}
+<span class="text-center text-green-100" {...restProps}>
+	{#if playerResult}
+		{playerResult.wins}
+	{:else if stats}
+		{stats.wins}
+	{:else}
+		-
+	{/if}
+</span>

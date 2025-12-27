@@ -6,14 +6,15 @@
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
 	const { ...restProps }: Props = $props();
-	const { playerResult, stats } = usePlayer();
+	const { playerResult, stats, race } = usePlayer();
 </script>
 
 {#if playerResult && stats}
-	<img
-		src={await getRankImage(playerResult.race_id, stats.ranklevel)}
-		alt="Rank"
-		class="h-6 w-6"
-		{...restProps}
-	/>
+	{#await getRankImage(playerResult.race_id, stats.ranklevel) then src}
+		<img {src} alt="Rank" class="h-6 w-6" {...restProps} />
+	{/await}
+{:else if stats && race}
+	{#await getRankImage(race, stats.ranklevel) then src}
+		<img {src} alt="Rank" class="h-6 w-6" {...restProps} />
+	{/await}
 {/if}

@@ -228,14 +228,15 @@ export function convertToType(value: any) {
  * Infers types from an object, converting values to appropriate types
  *
  * @param data - Object with values to infer types from
+ * @param exclude - Array of keys to exclude from type inference
  * @returns {object} New object with values converted to inferred types
  */
-export function inferTypes(data: object) {
+export function inferTypes(data: object, exclude: string[] = []) {
 	return Object.keys(data).reduce(
 		(acc, key) => ({
 			...acc,
 			// @ts-ignore
-			[key]: convertToType(data[key])
+			[key]: exclude.includes(key) ? data[key] : convertToType(data[key])
 		}),
 		{}
 	);

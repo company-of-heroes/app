@@ -9,8 +9,6 @@
 	const lobby = useLobby();
 </script>
 
-<div
-	class="grid aspect-square place-items-center overflow-clip rounded-lg border-3 border-white bg-gray-900"
->
-	<img src={await getMapImageFromName(lobby.map!)} alt={lobby.map!} class="w-full" {...restProps} />
+<div class="grid aspect-square place-items-center overflow-clip rounded-lg bg-gray-900">
+	<img src={getMapImageFromName(lobby.map!)} alt={lobby.map!} class="w-full" {...restProps} />
 </div>

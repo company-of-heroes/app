@@ -35,7 +35,7 @@ export class Lobby {
 	 * @public
 	 * @type {number | null}
 	 */
-	startedAt: string | null = $state(null);
+	startedAt: string | null = null;
 
 	/**
 	 * Current map name for the lobby.
@@ -112,6 +112,10 @@ export class Lobby {
 	 * @type {MatchTypeId | undefined}
 	 */
 	get matchType(): MatchTypeId {
+		if (this.isSkirmish) {
+			return 14;
+		}
+
 		if (!this.isRanked) {
 			return 0;
 		}
@@ -133,6 +137,14 @@ export class Lobby {
 		}
 
 		return 0;
+	}
+
+	get isSkirmish(): boolean {
+		const hasCpuPlayers = this.teams.some((team) =>
+			team.players.every((player) => player.playerId === -1)
+		);
+
+		return hasCpuPlayers;
 	}
 
 	/**

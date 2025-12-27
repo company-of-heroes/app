@@ -1,15 +1,32 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { usePlayer } from '.';
+	import { cn } from '$lib/utils';
 
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
 	const { ...restProps }: Props = $props();
-	const { playerResult } = usePlayer();
+	const { playerResult, stats } = usePlayer();
+
+	let isPositive = (playerResult && playerResult?.streak > 0) || (stats && stats?.streak > 0);
+	let isNegative = (playerResult && playerResult?.streak < 0) || (stats && stats?.streak < 0);
 </script>
 
-{#if playerResult}
-	<span class="text-center text-red-100" {...restProps}>{playerResult.streak}</span>
-{:else}
-	<span class="text-center" {...restProps}>-</span>
-{/if}
+<span
+	class={cn('text-center', isPositive && 'text-green-300', isNegative && 'text-red-300')}
+	{...restProps}
+>
+	{#if playerResult}
+		{#if isPositive}
+			+
+		{/if}
+		{playerResult.streak}
+	{:else if stats}
+		{#if isPositive}
+			+
+		{/if}
+		{stats.streak}
+	{:else}
+		-
+	{/if}
+</span>

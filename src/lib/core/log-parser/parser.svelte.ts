@@ -32,6 +32,7 @@ export class Log extends emittery<LogEvents> {
 			switch (event) {
 				case 'LOG:FOUND:PROFILE': {
 					const { steamId } = data as LogEvents[typeof event];
+					console.log(steamId);
 					const [profile, steamProfile] = await Promise.all([
 						relic.getProfileBySteamId(steamId),
 						steam.getUserProfile(steamId.toString())
@@ -244,7 +245,7 @@ export class Log extends emittery<LogEvents> {
 			const match = line.match(regex);
 
 			if (match) {
-				const data = match.groups ? inferTypes({ ...match.groups }) : undefined;
+				const data = match.groups ? inferTypes({ ...match.groups }, ['steamId']) : undefined;
 
 				try {
 					if (data) {
@@ -267,7 +268,7 @@ export const log = new Log();
 export type LogEvents = {
 	'LOG:STARTED': undefined;
 	'LOG:ENDED': undefined;
-	'LOG:FOUND:PROFILE': { steamId: bigint };
+	'LOG:FOUND:PROFILE': { steamId: string };
 	'LOG:LOBBY:JOINED': undefined;
 	'LOG:LOBBY:POPULATING': { startedAt: string; isRanked: string };
 	'LOG:LOBBY:POPULATING:MAP': { map: CoHMaps };
@@ -279,7 +280,7 @@ export type LogEvents = {
 		race: number;
 	};
 	'LOG:LOBBY:POPULATING:PLAYER:COUNT': { count: number };
-	'LOG:LOBBY:POPULATING:PLAYER:STEAM': { steamId: bigint; slot: number; ranking: number };
+	'LOG:LOBBY:POPULATING:PLAYER:STEAM': { steamId: string; slot: number; ranking: number };
 	'LOG:LOBBY:POPULATING:MATCH:TYPE': { type: number };
 	'LOG:LOBBY:POPULATING:COMPLETE': undefined;
 	'LOG:LOBBY:PLAYER:RESULT': { playerId: number; result: 'PS_WON' | 'PS_KILLED' };
@@ -298,9 +299,7 @@ export type LogEvents = {
 export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
 	'LOG:STARTED': createRegExp(exactly('RELICCOH started')),
 	'LOG:ENDED': createRegExp(exactly('Application closed without errors')),
-	'LOG:FOUND:PROFILE': createRegExp(
-		oneOrMore(digit).after('Found 1 profiles for account /steam/').as('steamId')
-	),
+	'LOG:FOUND:PROFILE': createRegExp(oneOrMore(digit).after('Found profile: /steam/').as('steamId')),
 	'LOG:LOBBY:JOINED': createRegExp(exactly('RLINK -- JoinAsync: AsyncJob Complete')),
 	'LOG:LOBBY:POPULATING': createRegExp(
 		oneOrMore(char)

@@ -64,7 +64,7 @@ export type Statuses = {
  * Manages the global state and core functionalities of the application.
  */
 export class App extends Emittery<AppEvents> {
-	static DEV_MODE = false;
+	static DEV_MODE = dev ? true : false;
 
 	isBooted: boolean = $state(false);
 
