@@ -1,3 +1,9 @@
+### v0.40.1
+
+- patch; make padding in messages less
+- fix; current game widget loses state on navigation
+- fix; current game widget now properly destroys itself when lobby is destroyed
+
 ### v0.40.0
 
 _This update fixes an issue where large Steam IDs were being incorrectly parsed, preventing the user profile from loading on the dashboard._
