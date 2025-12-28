@@ -111,11 +111,11 @@
 		{#if message.text.trim() !== ''}
 			<div
 				class={cn(
-					'bg-secondary-950 prose prose-invert rounded-3xl',
+					'bg-secondary-950 prose prose-invert block rounded-3xl px-6 py-4',
 					canModerate ? 'rounded-br-none' : 'rounded-bl-none'
 				)}
 			>
-				<span class="block px-5 py-2">{@html marked(message.text)}</span>
+				{@html marked(message.text)}
 			</div>
 		{/if}
 		<span class="text-secondary-500 text-xs">
