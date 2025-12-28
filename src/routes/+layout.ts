@@ -19,6 +19,7 @@ import { replayAnalyzer } from '$features/replay-analyzer';
 import { shortcuts } from '$core/app/features/shortcuts/shortcuts.svelte';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
+import { createApp } from '$core/context/app.svelte';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;
@@ -32,32 +33,32 @@ export const load = async () => {
 		return;
 	}
 
-	if (currentWindow.label === 'main') {
-		app.register('auth', auth);
-		app.register('twitch', twitch);
-		app.register('text-to-speech', tts);
-		app.register('text-to-speech-custom-characters', ttsPersonalVoices);
-		app.register('twitch-overlays', twitchOverlays);
-		app.register('twitch-bot', twitchBot);
-		app.register('replay-analyzer', replayAnalyzer);
-		app.register('history', history);
-		app.register('shortcuts', shortcuts);
-		app.register('chat', chat);
-		app.register('updater', updater);
+	// if (currentWindow.label === 'main') {
+	// 	app.register('auth', auth);
+	// 	app.register('twitch', twitch);
+	// 	app.register('text-to-speech', tts);
+	// 	app.register('text-to-speech-custom-characters', ttsPersonalVoices);
+	// 	app.register('twitch-overlays', twitchOverlays);
+	// 	app.register('twitch-bot', twitchBot);
+	// 	app.register('replay-analyzer', replayAnalyzer);
+	// 	app.register('history', history);
+	// 	app.register('shortcuts', shortcuts);
+	// 	app.register('chat', chat);
+	// 	app.register('updater', updater);
 
-		twitchOverlays.registerOverlay(new OppBotOverlay());
-		twitchOverlays.registerOverlay(new ChatOverlay());
-		twitchOverlays.registerOverlay(new ViewerCountOverlay());
+	// 	twitchOverlays.registerOverlay(new OppBotOverlay());
+	// 	twitchOverlays.registerOverlay(new ChatOverlay());
+	// 	twitchOverlays.registerOverlay(new ViewerCountOverlay());
 
-		if (dev) {
-			await app.start();
-		} else {
-			app
-				.start()
-				.then(() => {
-					!isReady && goto('/');
-				})
-				.then(() => (isReady = true));
-		}
-	}
+	// 	if (dev) {
+	// 		await app.start();
+	// 	} else {
+	// 		app
+	// 			.start()
+	// 			.then(() => {
+	// 				!isReady && goto('/');
+	// 			})
+	// 			.then(() => (isReady = true));
+	// 	}
+	// }
 };
