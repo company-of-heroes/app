@@ -41,6 +41,7 @@ export type Statuses = {
 };
 
 export class AppContext {
+	started: boolean = false;
 	/**
 	 * Indicates whether the application is ready.
 	 *
@@ -179,6 +180,10 @@ export class AppContext {
 	}
 
 	async start(): Promise<AppContext> {
+		if (this.started) {
+			return this;
+		}
+
 		$effect.root(() => {
 			this.trackStatuses();
 

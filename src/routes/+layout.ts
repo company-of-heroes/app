@@ -16,7 +16,7 @@ import { app } from '$core/context';
 import { OppBotOverlay } from '$core/app/features/twitch-overlays/overlays/oppbot';
 import { ChatOverlay } from '$core/app/features/twitch-overlays/overlays/chat';
 import { ViewerCountOverlay } from '$core/app/features/twitch-overlays/overlays/viewer-count';
-import { dev } from '$app/environment';
+import { browser, dev } from '$app/environment';
 import { goto } from '$app/navigation';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
@@ -26,6 +26,10 @@ export const ssr = false;
 let isReady = false;
 
 export const load = async () => {
+	if (!browser || isReady) {
+		return;
+	}
+
 	app.register('auth', auth);
 	app.register('twitch', twitch);
 	app.register('text-to-speech', tts);
@@ -52,8 +56,4 @@ export const load = async () => {
 			})
 			.then(() => (isReady = true));
 	}
-
-	return {
-		app
-	};
 };
