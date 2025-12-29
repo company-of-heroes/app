@@ -1,6 +1,6 @@
 import type { Lobby } from '$core/company-of-heroes';
 import type { MatchExpanded } from '$core/app/database/lobbies';
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { watch } from 'runed';
 import { Feature } from '../feature.svelte';
 import { relic } from '$lib/relic';

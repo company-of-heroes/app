@@ -4,7 +4,7 @@ import type { TTSVoice } from '$features/twitch/tts/providers/provider.svelte';
 import { Feature } from '../feature.svelte';
 import { tts, twitch } from '$features/twitch';
 import { watch } from 'runed';
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { error } from '@tauri-apps/plugin-log';
 import { debounce } from 'lodash-es';
 import PersonalVoicesPlugin from './personal-voices-plugin.svelte';

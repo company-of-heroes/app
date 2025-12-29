@@ -1,4 +1,4 @@
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { Debounced, watch } from 'runed';
 import type { ReplaysExpanded } from '$core/app/database/replays';
 

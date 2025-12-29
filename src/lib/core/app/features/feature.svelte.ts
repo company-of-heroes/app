@@ -1,12 +1,12 @@
 import type { Component } from 'svelte';
 import { watch } from 'runed';
-import { app } from '$core/app';
 import { mergeWith, isPlainObject, defaultsDeep } from 'lodash-es';
 import Emittery from 'emittery';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { documentDir, join } from '@tauri-apps/api/path';
 import { t } from 'try';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { app, type AppContext } from '$core/context';
 
 export interface Feature<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean }

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Replay from '$lib/components/replay';
 	import { page } from '$app/state';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { resource } from 'runed';
 	import { ButtonBack } from '$lib/components/ui/button';
 

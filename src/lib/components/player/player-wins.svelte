@@ -5,7 +5,7 @@
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
 	const { ...restProps }: Props = $props();
-	const { playerResult, stats } = usePlayer();
+	const { playerResult, stats } = $derived(usePlayer());
 </script>
 
 <span class="text-center text-green-100" {...restProps}>

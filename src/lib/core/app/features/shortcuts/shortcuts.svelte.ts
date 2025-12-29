@@ -2,7 +2,7 @@ import { Feature } from '$core/app/features/feature.svelte';
 import { watch } from 'runed';
 import { invoke } from '@tauri-apps/api/core';
 import { register, unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { t } from 'try';
 
 export type Shortcut = {

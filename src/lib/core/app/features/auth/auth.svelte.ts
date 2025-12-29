@@ -1,4 +1,4 @@
-import { app } from '$core/app';
+import { app } from '$core/context';
 import type { UsersResponse } from '$core/pocketbase/types';
 import { generatePassword, generateUniqueId } from '$lib/utils/password';
 import { debounce, uniq } from 'lodash-es';
@@ -29,7 +29,6 @@ export class Auth extends Feature<AuthSettings> {
 	private _user: UsersResponse<string[]> | null = $state(null);
 
 	async enable() {
-		console.log(this.userId);
 		await app.pocketbase
 			.collection('users')
 			.getOne(this.settings.userId)

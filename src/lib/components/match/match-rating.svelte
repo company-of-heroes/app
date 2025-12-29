@@ -3,7 +3,7 @@
 	import { useMatch } from '.';
 	import { cn } from '$lib/utils';
 	import { tooltip } from '$lib/attachments';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import CaretUp from 'phosphor-svelte/lib/CaretUp';
 	import CaretDown from 'phosphor-svelte/lib/CaretDown';
 

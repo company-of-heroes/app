@@ -1,4 +1,4 @@
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { Feature } from '../feature.svelte';
 
 export type ChatSettings = {

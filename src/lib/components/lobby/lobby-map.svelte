@@ -6,9 +6,12 @@
 	type Props = HTMLImgAttributes;
 
 	const { ...restProps }: Props = $props();
-	const lobby = useLobby();
+	const lobby = $derived(useLobby());
 </script>
 
-<div class="grid aspect-square place-items-center overflow-clip rounded-lg bg-black/70">
-	<img src={getMapImageFromName(lobby.map!)} alt={lobby.map!} class="w-full" {...restProps} />
-</div>
+<img
+	src={getMapImageFromName(lobby.map!)}
+	alt={lobby.map!}
+	class="w-full rounded-lg"
+	{...restProps}
+/>

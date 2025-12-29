@@ -1,3 +1,3 @@
-import { Log, log, addEvent, triggers, type LogEvents } from './parser.svelte';
+import { Log, log, triggers } from './parser.svelte';
 
-export { log, Log, addEvent, triggers, type LogEvents };
+export { log, Log, triggers };

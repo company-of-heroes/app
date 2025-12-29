@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LobbyAggregationResponse } from '$core/pocketbase/types';
 	import type { LobbyPlayer } from '@fknoobs/app';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { H } from '$lib/components/ui/h';
 	import { normalizeMapName } from '$lib/utils';
 	import { resource } from 'runed';

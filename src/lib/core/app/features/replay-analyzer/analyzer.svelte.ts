@@ -1,4 +1,4 @@
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { readDir, readFile, stat, type DirEntry, type FileInfo } from '@tauri-apps/plugin-fs';
 import { Feature } from '../feature.svelte';
 import { dirname, join } from '@tauri-apps/api/path';
@@ -150,7 +150,7 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 			)
 			.map((f) => f.name);
 
-		const existingFilenames = await app.database.replays().getExistingFilenamesByUser();
+		const existingFilenames = await app.database.replays.getExistingFilenamesByUser();
 		const existingSet = new Set(existingFilenames);
 
 		const newReplays = replays

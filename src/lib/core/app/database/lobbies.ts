@@ -5,12 +5,12 @@ import type {
 	LobbiesRecord,
 	UsersResponse
 } from '$core/pocketbase/types';
+import type { ListResult, RecordFullListOptions } from 'pocketbase';
+import type { LobbyPlayer, Match as LobbyMatch } from '@fknoobs/app';
 import type { Expand } from '@fknoobs/app';
 import { exp, pocketbase } from '$core/pocketbase';
 import { fetch } from '@tauri-apps/plugin-http';
-import type { ListResult, RecordFullListOptions } from 'pocketbase';
-import type { LobbyPlayer, Match as LobbyMatch } from '@fknoobs/app';
-import { app } from '..';
+import { app } from '$core/context';
 
 export type Match = LobbiesResponse<
 	LobbyPlayer[],

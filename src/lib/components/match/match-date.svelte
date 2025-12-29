@@ -2,7 +2,7 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { useMatch } from '.';
 	import { cn } from '$lib/utils';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 
 	type Props = HTMLAttributes<HTMLSpanElement>;
 

@@ -20,7 +20,7 @@
 
 		return countryName || 'Unknown';
 	});
-	const { player } = usePlayer();
+	const { player } = $derived(usePlayer());
 </script>
 
 {#if player.profile}

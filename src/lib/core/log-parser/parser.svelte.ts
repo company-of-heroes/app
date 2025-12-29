@@ -1,271 +1,16 @@
-import type { CoHMaps } from '@fknoobs/app';
-import emittery, { type DatalessEventNames } from 'emittery';
-import { createRegExp, digit, exactly, oneOrMore, char, whitespace, word } from 'magic-regexp';
-import { readTextFile } from '@tauri-apps/plugin-fs';
-import { watch as track, watchOnce as trackOnce } from 'runed';
-import { inferTypes } from '$lib/utils';
-import { app } from '$core/app';
-import { Lobby } from '$core/company-of-heroes';
-import { relic } from '$lib/relic';
-import { isEmpty } from 'lodash-es';
+import type { CoHMaps, RelicProfile } from '@fknoobs/app';
+import type { SteamPlayerSummary } from '$core/steam';
+import Emittery, { type DatalessEventNames } from 'emittery';
 import { steam } from '$core/steam';
-
-let lobby: Lobby | undefined;
-let matchType: number = 0;
-let sessionId: number | null = null;
-
-export class Log extends emittery<LogEvents> {
-	private lines: string[] = [];
-
-	private oldLength = 0;
-
-	private newLength = 0;
-
-	private interval: number | null = null;
-
-	public isReady: boolean | undefined = $state(undefined);
-
-	constructor() {
-		super();
-
-		this.onAny(async (event, data) => {
-			switch (event) {
-				case 'LOG:FOUND:PROFILE': {
-					const { steamId } = data as LogEvents[typeof event];
-					console.log(steamId);
-					const [profile, steamProfile] = await Promise.all([
-						relic.getProfileBySteamId(steamId),
-						steam.getUserProfile(steamId.toString())
-					]);
-
-					if (!profile || !steamProfile) {
-						return;
-					}
-
-					app.game.steamId = steamId.toString();
-					app.game.profile = { relic: profile, steam: steamProfile };
-
-					await app.game.emit('GAME:LAUNCHED');
-
-					break;
-				}
-
-				case 'LOG:LOBBY:POPULATING': {
-					const { isRanked, startedAt } = data as LogEvents[typeof event];
-
-					lobby = new Lobby('', [], isRanked === 'AutoMatchForm');
-					lobby.startedAt = startedAt.trim();
-					app.game.lobby = lobby;
-
-					break;
-				}
-
-				case 'LOG:LOBBY:POPULATING:PLAYER': {
-					const { index, playerId, type, race, team } = data as LogEvents[typeof event];
-
-					lobby?.addPlayer({
-						index,
-						playerId,
-						type,
-						race,
-						team
-					});
-
-					break;
-				}
-
-				case 'LOG:LOBBY:POPULATING:PLAYER:STEAM': {
-					const { ranking, slot, steamId } = data as LogEvents[typeof event];
-					const player = lobby?.getPlayerBySlot(slot);
-
-					if (!player) {
-						break;
-					}
-
-					player.steamId = steamId.toString();
-					player.ranking = ranking;
-					player.slot = slot;
-
-					break;
-				}
-
-				case 'LOG:LOBBY:POPULATING:MATCH:TYPE': {
-					const { type } = data as LogEvents[typeof event];
-					matchType = type;
-
-					break;
-				}
-
-				case 'LOG:LOBBY:POPULATING:MAP': {
-					const { map } = data as LogEvents[typeof event];
-
-					if (lobby) {
-						lobby.map = map;
-					}
-
-					break;
-				}
-
-				case 'LOG:LOBBY:STARTED': {
-					if (lobby) {
-						const profileIds = lobby.getPlayerIds();
-
-						if (profileIds.length === 0) {
-							return;
-						}
-
-						const profiles = await relic.getProfileByIds(profileIds);
-
-						lobby.players.forEach((player) => {
-							player.profile = profiles.find((profile) => profile.profile_id === player.playerId);
-						});
-
-						lobby.sessionId = sessionId;
-						lobby.started = true;
-
-						app.game.isIngame = true;
-						app.game.emit('LOBBY:STARTED', lobby);
-					}
-
-					break;
-				}
-
-				case 'LOG:LOBBY:SESSIONID': {
-					const result = data as LogEvents[typeof event];
-					sessionId = result.sessionId;
-
-					break;
-				}
-
-				case 'LOG:LOBBY:PLAYER:RESULT': {
-					if (!app.game.profile || !lobby) {
-						return;
-					}
-
-					const { playerId, result } = data as LogEvents[typeof event];
-					const player = lobby?.getPlayerById(app.game.profile.relic.profile_id);
-
-					if (!player) {
-						return;
-					}
-
-					if (player.playerId === playerId) {
-						lobby.outcome = result;
-					}
-
-					break;
-				}
-
-				case 'LOG:LOBBY:GAMEOVER': {
-					app.game.isIngame = false;
-					app.game.emit('LOBBY:GAMEOVER', lobby!);
-
-					break;
-				}
-
-				case 'LOG:LOBBY:DESTROYED': {
-					app.game.emit('LOBBY:DESTROYED', lobby!);
-
-					app.game.lobby = undefined;
-					lobby = undefined;
-					matchType = 0;
-
-					break;
-				}
-
-				case 'LOG:ENDED': {
-					await app.game.emit('GAME:CLOSED');
-
-					break;
-				}
-			}
-		});
-	}
-
-	start() {
-		if (!app.settings.companyOfHeroesConfigPath) {
-			app.toast.error('Company of Heroes config path is not set in settings.');
-			return;
-		}
-
-		track(
-			() => app.settings.companyOfHeroesConfigPath,
-			() => {
-				if (isEmpty(app.settings.companyOfHeroesConfigPath)) {
-					return;
-				}
-
-				if (this.interval) {
-					clearInterval(this.interval);
-				}
-
-				this.isReady = undefined;
-				this.oldLength = 0;
-				this.newLength = 0;
-
-				this.createWatcher();
-			}
-		);
-		track(
-			() => this.isReady,
-			(isReady) => {
-				if (isReady) {
-					this.emit('ISREADY' as never);
-				}
-			}
-		);
-	}
-
-	private async createWatcher() {
-		this.interval = window.setInterval(async () => {
-			const contents = await readTextFile(app.settings.companyOfHeroesConfigPath);
-			const lines = contents.split(/\r\n|\r|\n/).filter((line) => line.trim() !== '');
-
-			this.oldLength = this.newLength;
-			this.newLength = lines.length;
-
-			if (this.newLength <= this.oldLength) {
-				return;
-			}
-
-			this.lines = lines.slice(this.oldLength);
-
-			for (const line of this.lines) {
-				await this.processLine(line);
-			}
-
-			if (this.isReady === undefined) {
-				this.isReady = true;
-			}
-		}, 500);
-	}
-
-	private async processLine(line: string): Promise<void> {
-		for (const [trigger, regex] of Object.entries(triggers)) {
-			const match = line.match(regex);
-
-			if (match) {
-				const data = match.groups ? inferTypes({ ...match.groups }, ['steamId']) : undefined;
-
-				try {
-					if (data) {
-						await this.emitSerial(trigger as keyof LogEvents, data as LogEvents[keyof LogEvents]);
-					} else {
-						await this.emitSerial(trigger as DatalessEventNames<LogEvents>);
-					}
-				} catch (error) {
-					console.error(`Error processing event ${trigger} for line "${line}":`, error);
-				}
-
-				break;
-			}
-		}
-	}
-}
-
-export const log = new Log();
-
-export type LogEvents = {
+import { relic } from '$lib/relic';
+import { inferTypes } from '$lib/utils';
+import { readTextFile } from '@tauri-apps/plugin-fs';
+import { isEmpty } from 'lodash-es';
+import { char, createRegExp, digit, exactly, oneOrMore, whitespace, word } from 'magic-regexp';
+import { watch } from 'runed';
+import { Lobby } from '$core/context';
+
+export type LogParserEvents = {
 	'LOG:STARTED': undefined;
 	'LOG:ENDED': undefined;
 	'LOG:FOUND:PROFILE': { steamId: string };
@@ -291,12 +36,222 @@ export type LogEvents = {
 	ISREADY: undefined;
 };
 
-/**
- * Regular expressions used to parse log lines and trigger corresponding events.
- * The keys match the event names defined in LogEventData.
- * Named capture groups in the regex should correspond to the properties in the LogEventData payload objects.
- */
-export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
+export type LogDomainEvents = {
+	'log.authenticated': {
+		steamId: string;
+		relicProfile: RelicProfile;
+		steamProfile: SteamPlayerSummary;
+	};
+	'log.logout': undefined;
+	'log.lobby.started': Lobby;
+	'log.lobby.gameover': Lobby;
+	'log.lobby.destroyed': Lobby;
+	'log.lobby.result': {
+		playerId: number;
+		result: 'PS_WON' | 'PS_KILLED';
+	};
+};
+
+export class Log extends Emittery<LogParserEvents & LogDomainEvents> {
+	private path = $state<string>('');
+	private lines: string[] = [];
+	private oldLength = 0;
+	private newLength = 0;
+	private interval: number | null = null;
+
+	public isReady = $state<boolean>(false);
+
+	// Internal state
+	private lobby: Lobby | undefined;
+	private sessionId: number | null = null;
+
+	constructor() {
+		super();
+		this.setupListeners();
+	}
+
+	private setupListeners() {
+		this.on('LOG:FOUND:PROFILE', this.handleFoundProfile.bind(this));
+		this.on('LOG:LOBBY:POPULATING', this.handleLobbyPopulating.bind(this));
+		this.on('LOG:LOBBY:POPULATING:PLAYER', this.handleLobbyPlayer.bind(this));
+		this.on('LOG:LOBBY:POPULATING:PLAYER:STEAM', this.handleLobbyPlayerSteam.bind(this));
+		this.on('LOG:LOBBY:POPULATING:MAP', this.handleLobbyMap.bind(this));
+		this.on('LOG:LOBBY:STARTED', this.handleLobbyStarted.bind(this));
+		this.on('LOG:LOBBY:SESSIONID', this.handleLobbySessionId.bind(this));
+		this.on('LOG:LOBBY:PLAYER:RESULT', this.handleLobbyPlayerResult.bind(this));
+		this.on('LOG:LOBBY:GAMEOVER', this.handleLobbyGameOver.bind(this));
+		this.on('LOG:LOBBY:DESTROYED', this.handleLobbyDestroyed.bind(this));
+		this.on('LOG:ENDED', this.handleLogEnded.bind(this));
+	}
+
+	start(path: string) {
+		this.path = path;
+
+		if (isEmpty(this.path)) {
+			return;
+		}
+
+		this.reset();
+		this.createWatcher();
+
+		watch(
+			() => this.isReady,
+			(isReady) => {
+				if (isReady) this.emit('ISREADY');
+			}
+		);
+	}
+
+	private reset() {
+		if (this.interval) clearInterval(this.interval);
+		this.isReady = false;
+		this.oldLength = 0;
+		this.newLength = 0;
+		this.lines = [];
+	}
+
+	private createWatcher() {
+		this.interval = window.setInterval(async () => {
+			try {
+				const contents = await readTextFile(this.path);
+				const lines = contents.split(/\r\n|\r|\n/).filter((line) => line.trim() !== '');
+
+				this.oldLength = this.newLength;
+				this.newLength = lines.length;
+
+				if (this.newLength <= this.oldLength) return;
+
+				this.lines = lines.slice(this.oldLength);
+
+				for (const line of this.lines) {
+					await this.processLine(line);
+				}
+
+				if (!this.isReady) this.isReady = true;
+			} catch (error) {
+				console.error('Error reading log file:', error);
+			}
+		}, 500);
+	}
+
+	private async processLine(line: string): Promise<void> {
+		for (const [trigger, regex] of Object.entries(triggers)) {
+			const match = line.match(regex);
+
+			if (match) {
+				const data = match.groups ? inferTypes({ ...match.groups }, ['steamId']) : undefined;
+
+				try {
+					if (data) {
+						await this.emitSerial(trigger as keyof LogParserEvents, data as any);
+					} else {
+						await this.emitSerial(trigger as DatalessEventNames<LogParserEvents>);
+					}
+				} catch (error) {
+					console.error(`Error processing event ${trigger} for line "${line}":`, error);
+				}
+				break;
+			}
+		}
+	}
+
+	// Handlers
+
+	private async handleFoundProfile({ steamId }: LogParserEvents['LOG:FOUND:PROFILE']) {
+		const [relicProfile, steamProfile] = await Promise.all([
+			relic.getProfileBySteamId(steamId),
+			steam.getUserProfile(steamId.toString())
+		]);
+
+		if (relicProfile && steamProfile) {
+			await this.emitSerial('log.authenticated', { steamId, relicProfile, steamProfile });
+		}
+	}
+
+	private handleLobbyPopulating({ isRanked, startedAt }: LogParserEvents['LOG:LOBBY:POPULATING']) {
+		this.lobby = new Lobby(startedAt.trim(), isRanked === 'AutoMatchForm');
+	}
+
+	private handleLobbyPlayer(data: LogParserEvents['LOG:LOBBY:POPULATING:PLAYER']) {
+		this.lobby?.addPlayer({
+			index: data.index,
+			playerId: data.playerId,
+			type: data.type,
+			race: data.race,
+			team: data.team
+		});
+	}
+
+	private handleLobbyPlayerSteam({
+		ranking,
+		slot,
+		steamId
+	}: LogParserEvents['LOG:LOBBY:POPULATING:PLAYER:STEAM']) {
+		const player = this.lobby?.getPlayerBySlot(slot);
+		if (player) {
+			player.steamId = steamId.toString();
+			player.ranking = ranking;
+			player.slot = slot;
+		}
+	}
+
+	private handleLobbyMap({ map }: LogParserEvents['LOG:LOBBY:POPULATING:MAP']) {
+		if (this.lobby) {
+			this.lobby.map = map;
+		}
+	}
+
+	private async handleLobbyStarted() {
+		if (!this.lobby) return;
+
+		const profileIds = this.lobby.getPlayerIds();
+		if (profileIds.length === 0) return;
+
+		const profiles = await relic.getProfileByIds(profileIds);
+
+		this.lobby.players.forEach((player) => {
+			player.profile = profiles.find((profile) => profile.profile_id === player.playerId);
+		});
+
+		this.lobby.sessionId = this.sessionId;
+		this.lobby.started = true;
+
+		await this.emitSerial('log.lobby.started', this.lobby);
+	}
+
+	private handleLobbySessionId({ sessionId }: LogParserEvents['LOG:LOBBY:SESSIONID']) {
+		this.sessionId = sessionId;
+	}
+
+	private async handleLobbyPlayerResult({
+		playerId,
+		result
+	}: LogParserEvents['LOG:LOBBY:PLAYER:RESULT']) {
+		await this.emitSerial('log.lobby.result', { playerId, result });
+	}
+
+	private async handleLobbyGameOver() {
+		if (this.lobby) {
+			await this.emitSerial('log.lobby.gameover', this.lobby);
+		}
+	}
+
+	private async handleLobbyDestroyed() {
+		if (this.lobby) {
+			await this.emitSerial('log.lobby.destroyed', this.lobby);
+		}
+		this.lobby = undefined;
+		this.sessionId = null;
+	}
+
+	private async handleLogEnded() {
+		await this.emitSerial('log.logout');
+	}
+}
+
+export const log = new Log();
+
+export const triggers: Record<keyof Omit<LogParserEvents, 'ISREADY'>, RegExp> = {
 	'LOG:STARTED': createRegExp(exactly('RELICCOH started')),
 	'LOG:ENDED': createRegExp(exactly('Application closed without errors')),
 	'LOG:FOUND:PROFILE': createRegExp(oneOrMore(digit).after('Found profile: /steam/').as('steamId')),
@@ -312,7 +267,6 @@ export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
 					.and(exactly(' - Starting game'))
 			)
 	),
-	//'LOG:LOBBY:POPULATING': createRegExp(exactly('Form - Starting game')),
 	'LOG:LOBBY:POPULATING:MAP': createRegExp(
 		exactly('GAME -- *** Beginning mission ').and(oneOrMore(char).before(' (').groupedAs('map'))
 	),
@@ -357,7 +311,7 @@ export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
 		exactly('uid:', oneOrMore(digit), ':'),
 		oneOrMore(digit).groupedAs('playerId'),
 		exactly(', ', 'result:', oneOrMore(digit), ':'),
-		exactly(word).groupedAs('result') // Captures 'PS_WON' or 'PS_KILLED'
+		exactly(word).groupedAs('result')
 	),
 	'LOG:LOBBY:SESSIONID': createRegExp(
 		exactly('Created Matchinfo for sessionID ', oneOrMore(digit).groupedAs('sessionId'))
@@ -366,13 +320,3 @@ export const triggers: Record<keyof Omit<LogEvents, 'ISREADY'>, RegExp> = {
 	'LOG:LOBBY:GAMEOVER': createRegExp(exactly('GameObj::DoGameOverPopup')),
 	'LOG:LOBBY:DESTROYED': createRegExp(exactly('APP -- Game Stop'))
 };
-
-/**
- * Add a new trigger, if it already exists the existing one will be overwritten
- *
- * @param name
- * @param matcher
- */
-export function addEvent(name: keyof Omit<LogEvents, 'ISREADY'>, matcher: RegExp) {
-	triggers[name] = matcher;
-}

@@ -1,9 +1,9 @@
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { watch } from 'runed';
 import Elevenlabs from './elevenlabs.svelte';
 import { TTSProvider, type TTSVoice } from '../provider.svelte';
 import { tts } from '$features/twitch';
-import { defaultsDeep, isEmpty, uniqBy } from 'lodash-es';
+import { defaultsDeep, isEmpty, isString, uniqBy } from 'lodash-es';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import translate from 'google-translate-api-x';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -26,6 +26,11 @@ export class ElevenlabsProvider extends TTSProvider {
 						app.toast.error(
 							'Disabled TTS automatically, Elevenlabs API key is required when Elevenlabs provider is enabled.'
 						);
+						tts.settings.enabled = false;
+						return;
+					}
+
+					if (!isString(apiKey) || apiKey.trim() === '') {
 						tts.settings.enabled = false;
 						return;
 					}

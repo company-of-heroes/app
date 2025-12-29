@@ -3,7 +3,7 @@
 	import type { UnsubscribeFunc } from 'pocketbase';
 	import * as Match from '$lib/components/match';
 	import { fetch } from '@tauri-apps/plugin-http';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { exp } from '$core/pocketbase';
 	import { resource } from 'runed';
 	import { onDestroy, onMount } from 'svelte';

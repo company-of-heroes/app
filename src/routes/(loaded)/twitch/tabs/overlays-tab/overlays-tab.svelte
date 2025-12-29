@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Overlay } from '$features/twitch-overlays/overlays/overlay.svelte';
 	import * as monaco from 'monaco-editor';
 	import Editor from '$lib/components/ui/input/editor.svelte';
 	import CopyIcon from 'phosphor-svelte/lib/Copy';
@@ -10,8 +11,7 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { twitchOverlays } from '$features/twitch-overlays';
 	import { cn } from '$lib/utils';
-	import { app } from '$core/app';
-	import type { Overlay } from '$features/twitch-overlays/overlays/overlay.svelte';
+	import { app } from '$core/context';
 
 	type OpenFile = {
 		path: string;

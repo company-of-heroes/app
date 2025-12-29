@@ -12,7 +12,7 @@
 	};
 
 	let { player, playerResult, stats, race, children }: Props = $props();
-	createPlayer(player, playerResult, stats, race);
+	createPlayer(() => ({ player, playerResult, stats, race }));
 </script>
 
 {@render children?.()}

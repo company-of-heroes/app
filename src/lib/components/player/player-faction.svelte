@@ -7,7 +7,7 @@
 	type Props = HTMLImgAttributes;
 
 	const { ...restProps }: Props = $props();
-	const { player } = usePlayer();
+	const { player } = $derived(usePlayer());
 </script>
 
 <img
