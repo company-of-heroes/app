@@ -16,10 +16,14 @@ import { app } from '$core/context';
 import { OppBotOverlay } from '$core/app/features/twitch-overlays/overlays/oppbot';
 import { ChatOverlay } from '$core/app/features/twitch-overlays/overlays/chat';
 import { ViewerCountOverlay } from '$core/app/features/twitch-overlays/overlays/viewer-count';
+import { dev } from '$app/environment';
+import { goto } from '$app/navigation';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;
 export const ssr = false;
+
+let isReady = false;
 
 export const load = async () => {
 	app.register('auth', auth);
@@ -38,21 +42,18 @@ export const load = async () => {
 	twitchOverlays.registerOverlay(new ChatOverlay());
 	twitchOverlays.registerOverlay(new ViewerCountOverlay());
 
+	if (dev) {
+		await app.start();
+	} else {
+		await app
+			.start()
+			.then(() => {
+				!isReady && goto('/');
+			})
+			.then(() => (isReady = true));
+	}
+
 	return {
-		app: await app.start()
+		app
 	};
-
-	// if (currentWindow.label === 'main') {
-
-	// 	if (dev) {
-	// 		await app.start();
-	// 	} else {
-	// 		app
-	// 			.start()
-	// 			.then(() => {
-	// 				!isReady && goto('/');
-	// 			})
-	// 			.then(() => (isReady = true));
-	// 	}
-	// }
 };

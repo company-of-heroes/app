@@ -1,3 +1,9 @@
+### v0.41.0
+
+- feat; rework core logic and simplified it
+- feat; add command that lets twitch subs change their voice on the fly
+- feat; let twitch subs
+
 ### v0.40.1
 
 - patch; make padding in messages less
