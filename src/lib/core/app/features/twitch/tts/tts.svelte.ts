@@ -106,7 +106,7 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 			.replace(/https?:\/\/\S+/g, '');
 
 		this.lastMessageUser = data.user;
-		console.log(message);
+
 		const speakOptions: TTSOptions = {
 			message,
 			user: data.user,
