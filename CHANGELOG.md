@@ -1,8 +1,8 @@
 ### v0.41.0
 
-- feat; rework core logic and simplified it
+- feat; rework core logic and simplify it
 - feat; add command that lets twitch subs change their voice on the fly
-- feat; let twitch subs
+- feat; make elevenlabs message tags a twitch subscriptions only feature
 
 ### v0.40.1
 
