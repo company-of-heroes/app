@@ -91,6 +91,35 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 					.join(' | ');
 				twitch.chatClient?.say(channel, `Available voices: ${voiceList}`);
 			}
+
+			if (message.startsWith('!setvoice')) {
+				if (!msg.userInfo.isSubscriber) {
+					return twitch.chatClient?.say(
+						channel,
+						`@${user}, only subscribers can use the !setvoice command.`
+					);
+				}
+
+				const args = message.split(' ').slice(1);
+
+				// `!setvoice` must include a voice name; show usage if absent.
+				if (args.length === 0) {
+					return twitch.chatClient?.say(channel, `Usage: !setvoice <voice name>`);
+				}
+
+				const voice = tts.provider.voices.find(
+					(v) => v.name.toLowerCase() === args.join(' ').toLowerCase()
+				);
+
+				if (!voice) {
+					return twitch.chatClient?.say(
+						channel,
+						`Voice "${args.join(' ')}" not found. Use !voices to see the list of available voices.`
+					);
+				}
+
+				this.rewardVoiceToUser(voice, user, false);
+			}
 		});
 
 		// When settings.voices changes, regenerate channel point rewards
