@@ -1,21 +1,22 @@
+import { dev } from '$app/environment';
 import type { AppContext } from '$core/context';
-import { dirname, documentDir, join } from '@tauri-apps/api/path';
+import { dirname, documentDir, join, appConfigDir } from '@tauri-apps/api/path';
 
 export class Paths {
 	constructor(readonly app: AppContext) {}
 
-	async configDir(): Promise<string> {
+	async cohConfigDir(): Promise<string> {
 		return (
 			this.app.settings.companyOfHeroesConfigPath ||
 			join(await documentDir(), 'My Games', 'Company of Heroes Relaunch')
 		);
 	}
 
-	async playbackDir(): Promise<string> {
-		return join(await this.configDir(), 'playback');
+	async cohPlaybackDir(): Promise<string> {
+		return join(await dirname(await this.cohConfigDir()), 'playback');
 	}
 
-	async installationDir(): Promise<string> {
+	async cohInstallationDir(): Promise<string> {
 		return (
 			this.app.settings.companyOfHeroesInstallationPath ||
 			join(
@@ -27,5 +28,17 @@ export class Paths {
 				'Company of Heroes Relaunch'
 			)
 		);
+	}
+
+	async configDir(): Promise<string> {
+		return await appConfigDir();
+	}
+
+	async documentDir(): Promise<string> {
+		return await documentDir();
+	}
+
+	async configFilePath(): Promise<string> {
+		return join(await this.configDir(), dev ? 'app.dev.json' : 'app.json');
 	}
 }

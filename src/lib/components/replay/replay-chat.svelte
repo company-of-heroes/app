@@ -9,7 +9,7 @@
 	type Props = {} & HTMLAttributes<HTMLDivElement>;
 
 	let { ...restProps }: Props = $props();
-	let replay = useReplay();
+	let replay = $derived(useReplay());
 </script>
 
 {#snippet message(message: Message)}

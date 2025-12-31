@@ -1,7 +1,6 @@
 // Tauri doesn't have a Node.js server to do proper SSR
 // so we will use adapter-static to prerender the app (SSG)
 
-import { Window } from '@tauri-apps/api/window';
 import { auth } from '$core/app/features/auth';
 import { tts, twitch } from '$core/app/features/twitch';
 import { ttsPersonalVoices } from '$core/app/features/tts-personal-voices';

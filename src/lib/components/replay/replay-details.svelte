@@ -14,7 +14,7 @@
 	type Props = {} & HTMLAttributes<HTMLDivElement>;
 
 	let { ...restProps }: Props = $props();
-	let replay = useReplay();
+	let replay = $derived(useReplay());
 	let isRanked = $derived(replay.matchType === 'automatch');
 </script>
 

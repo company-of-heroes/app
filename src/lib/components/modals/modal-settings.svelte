@@ -35,7 +35,7 @@
 			bind:value={app.settings.companyOfHeroesConfigPath}
 			placeholder="C:\Path\To\Company of Heroes\warnings.log"
 			filters={[{ name: 'warnings.log', extensions: ['log'] }]}
-			defaultPath={(await app.paths.configDir()) + '/warnings.log'}
+			defaultPath={(await app.paths.cohConfigDir()) + '/warnings.log'}
 		/>
 	</Form.Group>
 	<Form.Group>
@@ -44,7 +44,7 @@
 			bind:value={app.settings.companyOfHeroesInstallationPath}
 			placeholder="C:\Path\To\Company of Heroes\installation"
 			filters={[{ name: 'installation', extensions: [''] }]}
-			defaultPath={await app.paths.installationDir()}
+			defaultPath={await app.paths.cohInstallationDir()}
 			directory={true}
 		/>
 	</Form.Group>

@@ -20,7 +20,7 @@
 	type Props = {} & HTMLAttributes<HTMLDivElement>;
 
 	let { ...restProps }: Props = $props();
-	let replay = useReplay();
+	let replay = $derived(useReplay());
 
 	const teams = $derived.by(() => {
 		const axis = replay.players.filter((p) => p.faction.startsWith('axis'));

@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { defaultsDeep } from 'lodash-es';
 import { Paths } from '$core/paths';
 import { modal } from '$lib/components/ui/modal';
-import { exists } from '@tauri-apps/plugin-fs';
+import { exists, readTextFile, writeTextFile, rename } from '@tauri-apps/plugin-fs';
 import { ModalSettings } from '$lib/components/modals';
 import { watch } from 'runed';
 import { toast } from 'svelte-sonner';
@@ -18,8 +18,11 @@ import { pocketbase } from '$core/pocketbase';
 import { database } from '$core/app/database';
 import { SvelteMap } from 'svelte/reactivity';
 import { Socket, SocketState } from '$core/app/socket.svelte';
-import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart';
+import Emittery from 'emittery';
+import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
+import { open, save } from '@tauri-apps/plugin-dialog';
+import { join } from '@tauri-apps/api/path';
 
 export const appSettingsSchema = z
 	.object({
@@ -39,8 +42,14 @@ export type Statuses = {
 	webserver: Status;
 	websocketServer: Status;
 };
+export type AppEvents = {
+	'game.login': { steamId: string; relicProfile: RelicProfile; steamProfile: SteamPlayerSummary };
+	'game.logout': null;
+	'lobby.started': Lobby;
+	'lobby.destroyed': Lobby;
+};
 
-export class AppContext {
+export class AppContext extends Emittery<AppEvents> {
 	started: boolean = false;
 	/**
 	 * Indicates whether the application is ready.
@@ -184,6 +193,15 @@ export class AppContext {
 			return this;
 		}
 
+		this.paths = new Paths(this);
+		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
+		this.settings = await this.loadSettings();
+		this.socket = await Socket.connect();
+
+		for await (const feature of this._features.values()) {
+			await feature.register();
+		}
+
 		$effect.root(() => {
 			this.trackStatuses();
 
@@ -238,24 +256,15 @@ export class AppContext {
 					}
 				}
 			);
+
+			log.on('log.authenticated', ({ steamId, relicProfile, steamProfile }) =>
+				this.onAuthenticated(steamId, relicProfile, steamProfile)
+			);
+			log.on('log.logout', () => this.onLogout());
+			log.on('log.lobby.started', (lobby) => this.onLobbyStarted(lobby));
+			log.on('log.lobby.result', ({ playerId, result }) => this.onLobbyResult(playerId, result));
+			log.on('log.lobby.destroyed', () => this.onLobbyDestroyed());
 		});
-
-		this.paths = new Paths(this);
-		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
-		this.settings = await this.loadSettings();
-		this.socket = await Socket.connect();
-
-		log.on('log.authenticated', ({ steamId, relicProfile, steamProfile }) =>
-			this.onAuthenticated(steamId, relicProfile, steamProfile)
-		);
-		log.on('log.logout', () => this.onLogout());
-		log.on('log.lobby.started', (lobby) => this.onLobbyStarted(lobby));
-		log.on('log.lobby.result', ({ playerId, result }) => this.onLobbyResult(playerId, result));
-		log.on('log.lobby.destroyed', () => this.onLobbyDestroyed());
-
-		for await (const feature of this._features.values()) {
-			await feature.register();
-		}
 
 		return this;
 	}
@@ -339,23 +348,89 @@ export class AppContext {
 	}
 
 	private onLogout() {
+		if (dev) {
+			return;
+		}
+
 		this.game.close();
 	}
 
 	private onLobbyStarted(lobby: Lobby) {
+		this.emit('lobby.started', lobby);
+		this.socket?.publish('game.lobby.started', lobby);
+
 		this.lobby = lobby;
-		this.socket?.publish('game.lobby.started', this.lobby);
 	}
 
 	private onLobbyDestroyed() {
+		this.emit('lobby.destroyed', this.lobby!);
+		this.socket?.publish('game.lobby.destroyed', this.lobby);
+
 		this.lobby = null;
-		this.socket?.publish('game.lobby.destroyed', null);
 	}
 
 	private onLobbyResult(playerId: number, result: 'PS_WON' | 'PS_KILLED') {
 		if (playerId === this.lobby?.me?.playerId) {
 			this.lobby!.outcome = result;
 		}
+	}
+
+	async exportSettings() {
+		save({
+			defaultPath: await join(await this.paths.documentDir(), 'settings.json'),
+			title: 'Export Settings',
+			filters: [{ name: 'JSON', extensions: ['json'] }]
+		})
+			.then(async (path) => {
+				if (!path || Array.isArray(path)) {
+					app.toast.error('No file selected for export.');
+					return;
+				}
+
+				const settingsData = await readTextFile(await this.paths.configFilePath());
+				await writeTextFile(path, settingsData);
+				this.toast.success('Settings exported successfully.');
+			})
+			.catch((error) => {
+				console.error('Failed to export settings:', error);
+				this.toast.error('Failed to export settings. Please try again.');
+			});
+	}
+
+	importSettings() {
+		open({
+			title: 'Import Settings',
+			multiple: false,
+			filters: [{ name: 'JSON', extensions: ['json'] }]
+		})
+			.then(async (path) => {
+				if (!path || Array.isArray(path)) {
+					app.toast.error('No file selected for import.');
+					return;
+				}
+
+				// Backup existing settings file
+				await rename(
+					await this.paths.configFilePath(),
+					await join(await this.paths.configDir(), dev ? 'app.dev.json.backup' : 'app.json.backup')
+				);
+
+				const settingsData = await readTextFile(path);
+				await writeTextFile(await this.paths.configFilePath(), settingsData);
+				app.toast.success(
+					'Settings imported successfully. Please restart the application to apply changes.'
+				);
+			})
+			.catch(async (error) => {
+				console.error('Failed to import settings:', error);
+				app.toast.error('Failed to import settings. Please try again.');
+
+				// Restore from backup on failure
+				await rename(
+					await join(await this.paths.configDir(), dev ? 'app.dev.json.backup' : 'app.json.backup'),
+					await this.paths.configFilePath()
+				);
+			});
 	}
 }
 

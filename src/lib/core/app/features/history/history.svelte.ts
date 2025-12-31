@@ -1,14 +1,11 @@
-import type { Lobby } from '$core/company-of-heroes';
 import type { MatchExpanded } from '$core/app/database/lobbies';
-import { app } from '$core/context';
-import { watch } from 'runed';
+import { app, Lobby } from '$core/context';
 import { Feature } from '../feature.svelte';
 import { relic } from '$lib/relic';
-import { dirname, join } from '@tauri-apps/api/path';
+import { join } from '@tauri-apps/api/path';
 import { exists, readFile } from '@tauri-apps/plugin-fs';
 import { parseReplay } from '@fknoobs/replay-parser';
 import { doesMatchGameTime } from '$lib/utils';
-import { t } from 'try';
 import { download } from '@tauri-apps/plugin-upload';
 import dayjs from 'dayjs';
 
@@ -18,7 +15,7 @@ export class History extends Feature {
 	trackResultsInterval: ReturnType<typeof setInterval> | null = null;
 
 	enable() {
-		app.game.on('LOBBY:GAMEOVER', (lobby) => this.saveLobbyResult(lobby));
+		app.on('lobby.destroyed', (lobby) => this.saveLobbyResult(lobby));
 
 		if (this.trackResultsInterval) {
 			clearInterval(this.trackResultsInterval);
@@ -73,7 +70,7 @@ export class History extends Feature {
 		}
 
 		const matches = await relic.getRecentMatchHistoryForProfile(app.game.profile.relic.profile_id);
-
+		console.log(matches);
 		for (const lobby of matchesNeedingResults.items) {
 			const match = matches.find((m) => m.id === lobby.sessionId);
 
@@ -93,11 +90,7 @@ export class History extends Feature {
 	}
 
 	async getLastMatchReplay() {
-		const path = await join(
-			await dirname(app.settings.companyOfHeroesConfigPath),
-			'playback',
-			'temp.rec'
-		);
+		const path = await join(await app.paths.cohPlaybackDir(), 'temp.rec');
 		const fileData = await readFile(path);
 		const replay = parseReplay(new Uint8Array(fileData));
 
@@ -109,11 +102,7 @@ export class History extends Feature {
 
 	async downloadReplay(match: MatchExpanded) {
 		try {
-			const path = await join(
-				await dirname(app.settings.companyOfHeroesConfigPath),
-				'playback',
-				match.replay
-			);
+			const path = await app.paths.cohPlaybackDir();
 			const url = app.pocketbase.files.getURL(match, match.replay);
 			await download(url, path);
 
@@ -126,11 +115,7 @@ export class History extends Feature {
 	}
 
 	async downloadExists(match: MatchExpanded): Promise<boolean> {
-		const path = await join(
-			await dirname(app.settings.companyOfHeroesConfigPath),
-			'playback',
-			match.replay
-		);
+		const path = await join(await app.paths.cohPlaybackDir(), match.replay);
 
 		return await exists(path);
 	}

@@ -173,7 +173,7 @@ export class ReplayList {
 		}
 
 		try {
-			const result = await app.database.replays().getPaginated(this.page, PAGE_SIZE, {
+			const result = await app.database.replays.getPaginated(this.page, PAGE_SIZE, {
 				filter: this.#activeFilter,
 				sort: this.#activeSort
 			});

@@ -7,7 +7,7 @@
 
 	let query = resource(
 		() => page.params.replayId!,
-		() => app.database.replays().getById(page.params.replayId!)
+		() => app.database.replays.getById(page.params.replayId!)
 	);
 </script>
 
