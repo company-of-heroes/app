@@ -70,7 +70,7 @@ export class History extends Feature {
 		}
 
 		const matches = await relic.getRecentMatchHistoryForProfile(app.game.profile.relic.profile_id);
-		console.log(matches);
+
 		for (const lobby of matchesNeedingResults.items) {
 			const match = matches.find((m) => m.id === lobby.sessionId);
 

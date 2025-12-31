@@ -1,5 +1,6 @@
 import type {
 	LeaderBoardResponse,
+	LeaderboardStat,
 	LeaderboardStatWithProfile,
 	PersonalStat,
 	RelicProfile,
@@ -144,6 +145,12 @@ export class RelicClient {
 		return leaderboardStatsWithMembers;
 	}
 
+	/**
+	 * Fetches recent match history for a given profile id.
+	 *
+	 * @param profileId - The profile id (number)
+	 * @returns An array of TransformedMatch objects
+	 */
 	public async getRecentMatchHistoryForProfile(profileId: number): Promise<TransformedMatch[]> {
 		const result = await this.request<any>(
 			['community', 'leaderboard', 'getrecentmatchhistorybyprofileid'],
@@ -154,6 +161,22 @@ export class RelicClient {
 		);
 
 		return transformMatchHistory(result, profileId);
+	}
+
+	/**
+	 * Fetches the leaderboard stats for a given profile id.
+	 *
+	 * @param profileId - The profile id (number)
+	 * @returns An array of LeaderboardStat objects
+	 */
+	public async getLeaderboardStatsForProfile(profileId: number): Promise<LeaderboardStat[]> {
+		const profile = await this.getProfileById(profileId);
+
+		if (!profile || !profile.leaderboardStats) {
+			return [];
+		}
+
+		return profile.leaderboardStats;
 	}
 
 	/**

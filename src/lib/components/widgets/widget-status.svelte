@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Status } from '$core/app';
+	import type { Status } from '$core/context';
 	import type { Snippet } from 'svelte';
 	import { PopoverInfo } from '$lib/components/ui/popover';
 	import { cn } from '$lib/utils';

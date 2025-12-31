@@ -11,7 +11,7 @@ function base64Plugin() {
 	return {
 		name: 'vite-plugin-base64-suffix',
 		enforce: /** @type {'pre'} */ ('pre'),
-		load(id) {
+		load(/** @type {string} */ id) {
 			if (id.includes('?base64')) {
 				const filePath = id.split('?')[0];
 				try {
