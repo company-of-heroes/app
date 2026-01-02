@@ -7,7 +7,9 @@
 	} & HTMLAttributes<HTMLDivElement>;
 
 	const { file, children, ...restProps }: Props = $props();
-	createReplay(() => file);
+	const replay = createReplay(() => file);
+
+	console.log(replay);
 </script>
 
 <div {...restProps}>

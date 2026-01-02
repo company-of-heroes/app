@@ -45,10 +45,11 @@ export class StreamElementsProvider extends TTSProvider {
 		}
 
 		const response = await fetch(
-			`https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(voiceId)}&text=${encodeURIComponent(message)}`
+			`https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(voiceId)}&text=${encodeURIComponent(message)}&key=EvDL-F4qLB2QyRL6-YWOoeffilyr3KfyCAKpQn7Wlr8XdMWA`
 		);
 
 		if (!response.ok) {
+			console.log(response);
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 

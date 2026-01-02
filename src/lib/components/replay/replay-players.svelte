@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Player } from '@fknoobs/replay-parser';
+	import type { HTMLAttributes } from 'svelte/elements';
 	import { useReplay } from '.';
 	import DoctrineAir from '$lib/files/ct_branchbanner_top_allied_airborne.png?url';
 	import DoctrineArmored from '$lib/files/ct_branchbanner_top_allied_armor.png?url';
@@ -15,7 +16,6 @@
 	import DoctrineTank from '$lib/files/ct_branchbanner_top_pnze_02.png?url';
 	import { AspectRatio } from 'bits-ui';
 	import { cn, getFactionFlagFromRace } from '$lib/utils';
-	import type { HTMLAttributes } from 'svelte/elements';
 
 	type Props = {} & HTMLAttributes<HTMLDivElement>;
 
@@ -28,18 +28,7 @@
 
 		return { axis, allies };
 	});
-	// 2: "Airborne",
-	// 9: "Armor",
-	// 17: "Infantry",
-	// 186: "Blitzkrieg",
-	// 194: "Defensive",
-	// 265: "Terror",
-	// 295: "Luftwaffe",
-	// 302: "Scorched Earth",
-	// 309: "Tank Destroyer",
-	// 316: "Royal Artillery",
-	// 323: "Royal Commandos",
-	// 330: "Royal Engineers",
+
 	const getDoctrineImage = (player: Player) => {
 		if (player.faction.startsWith('allies')) {
 			switch (player.doctrine) {
@@ -80,7 +69,9 @@
 </script>
 
 {#snippet player(player: Player)}
-	{@const actions = replay.actions.filter((a) => a.playerID === player.id)}
+	{@const a = replay.actions.filter((a) => a.playerID === player.id)}
+	{@const index = a.findIndex((a) => a.command?.type === 'AI_TAKEOVER') + 1}
+	{@const actions = index > 0 ? a.slice(0, index) : a}
 	{@const durationMinutes = replay.duration / 60}
 	{@const CPM = durationMinutes > 0 ? (actions.length / durationMinutes).toFixed(0) : '0'}
 	<div
