@@ -1,4 +1,4 @@
-import type { Lobby } from './lobby.svelte';
+import type { Lobby, Match } from './lobby.svelte';
 import type { Features, RelicProfile } from '@fknoobs/app';
 import type { SteamPlayerSummary } from '$core/steam';
 import type { TypedPocketBase } from '$core/pocketbase/types';
@@ -45,8 +45,8 @@ export type Statuses = {
 export type AppEvents = {
 	'game.login': { steamId: string; relicProfile: RelicProfile; steamProfile: SteamPlayerSummary };
 	'game.logout': null;
-	'lobby.started': Lobby;
-	'lobby.destroyed': Lobby;
+	'lobby.started': Match;
+	'lobby.destroyed': Match;
 };
 
 export class AppContext extends Emittery<AppEvents> {
@@ -356,15 +356,15 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	private onLobbyStarted(lobby: Lobby) {
-		this.emit('lobby.started', lobby);
-		this.socket?.publish('game.lobby.started', lobby);
+		this.emit('lobby.started', lobby.toJSON());
+		this.socket?.publish('game.lobby.started', lobby.toJSON());
 
 		this.lobby = lobby;
 	}
 
 	private onLobbyDestroyed() {
-		this.emit('lobby.destroyed', this.lobby!);
-		this.socket?.publish('game.lobby.destroyed', this.lobby);
+		this.emit('lobby.destroyed', this.lobby!.toJSON());
+		this.socket?.publish('game.lobby.destroyed', this.lobby!.toJSON());
 
 		this.lobby = null;
 	}

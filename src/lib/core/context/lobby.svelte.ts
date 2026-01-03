@@ -3,6 +3,24 @@ import { groupBy } from 'lodash-es';
 import { MATCH_TYPES, type MatchTypeId } from '$lib/utils/game';
 import { app } from '$core/context';
 
+export type Match = {
+	sessionId: number;
+	startedAt: string;
+	map: string;
+	players: LobbyPlayer[];
+	teams: { teamId: number; players: LobbyPlayer[] }[];
+	outcome?: string;
+	didNotify: boolean;
+	started: boolean;
+	isRanked: boolean;
+	outcomeFormatted: string;
+	matchType: MatchTypeId;
+	isSkirmish: boolean;
+	type: string;
+	mapName: string;
+	me: LobbyPlayer;
+};
+
 /**
  * Represents a Company of Heroes lobby instance.
  * Manages lobby state, player information, match details, and ranking data.
@@ -204,5 +222,25 @@ export class Lobby {
 	 */
 	getPlayerById(playerId: number): LobbyPlayer | undefined {
 		return this.players.find((player) => player.playerId === playerId);
+	}
+
+	toJSON(): Match {
+		return {
+			sessionId: this.sessionId!,
+			startedAt: this.startedAt!,
+			map: this.map!,
+			players: this.players,
+			teams: this.teams,
+			outcome: this.outcome,
+			didNotify: this.didNotify,
+			started: this.started,
+			isRanked: this.isRanked,
+			outcomeFormatted: this.outcomeFormatted,
+			matchType: this.matchType,
+			isSkirmish: this.isSkirmish,
+			type: this.type,
+			mapName: this.mapName,
+			me: this.me!
+		};
 	}
 }
