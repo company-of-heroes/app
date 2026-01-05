@@ -82,6 +82,16 @@ export class Updater extends Feature<UpdaterSettings> {
 		app.modal.open();
 	}
 
+	openChangelog() {
+		app.modal.create({
+			component: Changelog,
+			title: 'Changelog',
+			description: 'Here are the latest changes in this version:',
+			size: 'lg'
+		});
+		app.modal.open();
+	}
+
 	async defaultSettings() {
 		return {
 			enabled: true,

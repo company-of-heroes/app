@@ -1,10 +1,11 @@
 import { app } from '$core/context';
 import type { UsersResponse } from '$core/pocketbase/types';
 import { generatePassword, generateUniqueId } from '$lib/utils/password';
-import { debounce, uniq } from 'lodash-es';
+import { debounce, isEmpty, uniq } from 'lodash-es';
 import { Feature } from '../feature.svelte';
 import { watch } from 'runed';
 import { fetch } from '@tauri-apps/plugin-http';
+import { steam } from '$core/steam';
 
 export type AuthSettings = {
 	userId: string;
@@ -34,9 +35,40 @@ export class Auth extends Feature<AuthSettings> {
 			.getOne(this.settings.userId)
 			.then(() =>
 				app.pocketbase
-					.collection('users')
+					.collection<UsersResponse<string[]>>('users')
 					.authWithPassword(this.settings.email, this.settings.password)
 					.then((auth) => auth.record)
+					.then((user) => {
+						if (!isEmpty(user.steamIds) && (!user.name || isEmpty(user.name))) {
+							steam.getUserProfile(user.steamIds![0]).then(async (profile) => {
+								if (!profile) {
+									return;
+								}
+
+								let avatar: File | undefined = undefined;
+
+								if (!user.avatar || (isEmpty(user.avatar) && !isEmpty(profile.avatarfull))) {
+									// Download and upload avatar
+									await fetch(profile.avatarfull)
+										.then(async (response) => {
+											const blob = new Blob([await response.arrayBuffer()], {
+												type: response.headers.get('Content-Type') || 'image/png'
+											});
+											avatar = new File([blob], 'avatar.png', { type: blob.type });
+										})
+										.catch((err) => {
+											console.error('Failed to download Steam avatar:', err);
+										});
+								}
+
+								app.pocketbase
+									.collection('users')
+									.update(user.id, { name: profile.personaname, avatar }, { fetch });
+							});
+						}
+
+						return user;
+					})
 			)
 			.catch(() =>
 				app.pocketbase.collection('users').create({

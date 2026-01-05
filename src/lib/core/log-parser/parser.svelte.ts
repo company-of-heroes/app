@@ -43,6 +43,7 @@ export type LogDomainEvents = {
 		steamProfile: SteamPlayerSummary;
 	};
 	'log.logout': undefined;
+	'log.lobby.joined': Lobby;
 	'log.lobby.started': Lobby;
 	'log.lobby.gameover': Lobby;
 	'log.lobby.destroyed': Lobby;
@@ -50,6 +51,7 @@ export type LogDomainEvents = {
 		playerId: number;
 		result: 'PS_WON' | 'PS_KILLED';
 	};
+	'log.ready': undefined;
 };
 
 export class Log extends Emittery<LogParserEvents & LogDomainEvents> {
@@ -127,7 +129,10 @@ export class Log extends Emittery<LogParserEvents & LogDomainEvents> {
 					await this.processLine(line);
 				}
 
-				if (!this.isReady) this.isReady = true;
+				if (!this.isReady) {
+					this.isReady = true;
+					await this.emitSerial('log.ready');
+				}
 			} catch (error) {
 				console.error('Error reading log file:', error);
 			}
@@ -170,6 +175,7 @@ export class Log extends Emittery<LogParserEvents & LogDomainEvents> {
 
 	private handleLobbyPopulating({ isRanked, startedAt }: LogParserEvents['LOG:LOBBY:POPULATING']) {
 		this.lobby = new Lobby(startedAt.trim(), isRanked === 'AutoMatchForm');
+		this.emitSerial('log.lobby.joined', this.lobby);
 	}
 
 	private handleLobbyPlayer(data: LogParserEvents['LOG:LOBBY:POPULATING:PLAYER']) {

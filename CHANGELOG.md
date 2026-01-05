@@ -3,6 +3,8 @@
 - feat; rework core logic and simplify it
 - feat; add command that lets twitch subs change their voice on the fly
 - feat; make elevenlabs message tags a twitch subscriptions only feature
+- fix; Streamelements TTS working again, it stopped working after they changed auth scheme in their API endpoints
+- feat; replay parser now shows real data, just as the replay analyzer, but more! 🎉
 
 ### v0.40.1
 

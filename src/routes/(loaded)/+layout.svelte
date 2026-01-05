@@ -145,7 +145,9 @@
 							<GithubLogoIcon weight="duotone" />
 						</button>
 						<span class="text-secondary-400 ms-auto flex items-center gap-2 text-sm">
-							<span>v{app.features.updater.currentVersionFormatted}</span>
+							<button class="cursor-pointer" onclick={() => app.features.updater.openChangelog()}>
+								v{app.features.updater.currentVersionFormatted}
+							</button>
 							{#if app.features.updater.hasUpdate}
 								<ArrowRightIcon />
 								<button

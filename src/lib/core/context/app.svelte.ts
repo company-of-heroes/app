@@ -235,32 +235,22 @@ export class AppContext extends Emittery<AppEvents> {
 				}
 			);
 			watch(
-				() => [this.lobby?.startedAt, this.game.isWindowFocused],
-				() => {
-					if (
-						this.isReady &&
-						this.lobby?.startedAt &&
-						!this.game.isWindowFocused &&
-						!this.lobby.didNotify &&
-						!this.lobby.started
-					) {
-						this.audio.src = GameStartedNotificationAudio;
-						this.audio.currentTime = 0;
-						this.lobby!.didNotify = true;
-
-						this.audio.play();
-					}
-
-					if (this.game.isWindowFocused) {
+				() => this.game.isWindowFocused,
+				(isFocused) => {
+					if (isFocused) {
 						this.audio.pause();
 					}
 				}
 			);
 
+			log.on('log.ready', () => {
+				this.isReady = true;
+			});
 			log.on('log.authenticated', ({ steamId, relicProfile, steamProfile }) =>
 				this.onAuthenticated(steamId, relicProfile, steamProfile)
 			);
 			log.on('log.logout', () => this.onLogout());
+			log.on('log.lobby.joined', (lobby) => this.onLobbyJoined(lobby));
 			log.on('log.lobby.started', (lobby) => this.onLobbyStarted(lobby));
 			log.on('log.lobby.result', ({ playerId, result }) => this.onLobbyResult(playerId, result));
 			log.on('log.lobby.destroyed', () => this.onLobbyDestroyed());
@@ -358,6 +348,20 @@ export class AppContext extends Emittery<AppEvents> {
 	private onLobbyStarted(lobby: Lobby) {
 		this.emit('lobby.started', lobby.toJSON());
 		this.socket?.publish('game.lobby.started', lobby.toJSON());
+	}
+
+	private onLobbyJoined(lobby: Lobby) {
+		if (this.isReady && lobby.startedAt && !lobby.didNotify && !this.game.isWindowFocused) {
+			this.audio.src = GameStartedNotificationAudio;
+			this.audio.currentTime = 0;
+			lobby.didNotify = true;
+
+			this.audio.play();
+		}
+
+		if (this.game.isWindowFocused) {
+			this.audio.pause();
+		}
 
 		this.lobby = lobby;
 	}

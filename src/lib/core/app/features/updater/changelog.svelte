@@ -1,8 +1,6 @@
 <script lang="ts">
 	import ChangeLog from '../../../../../../CHANGELOG.md?raw';
 	import { marked } from 'marked';
-
-	console.log(ChangeLog);
 </script>
 
 <div
