@@ -5,6 +5,7 @@
 - feat; make elevenlabs message tags a twitch subscriptions only feature
 - fix; Streamelements TTS working again, it stopped working after they changed auth scheme in their API endpoints
 - feat; replay parser now shows real data, just as the replay analyzer, but more! 🎉
+- feat; add default username and avatar when username is not set, these are fetched from the connecteds steamprofile if any
 
 ### v0.40.1
 

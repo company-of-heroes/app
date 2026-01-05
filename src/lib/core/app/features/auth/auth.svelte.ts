@@ -6,6 +6,7 @@ import { Feature } from '../feature.svelte';
 import { watch } from 'runed';
 import { fetch } from '@tauri-apps/plugin-http';
 import { steam } from '$core/steam';
+import { getVersion } from '@tauri-apps/api/app';
 
 export type AuthSettings = {
 	userId: string;
@@ -38,6 +39,20 @@ export class Auth extends Feature<AuthSettings> {
 					.collection<UsersResponse<string[]>>('users')
 					.authWithPassword(this.settings.email, this.settings.password)
 					.then((auth) => auth.record)
+					.then(async (user) => {
+						app.pocketbase.collection('users').update(
+							user.id,
+							{
+								lastLogin: new Date(),
+								meta: {
+									version: await getVersion()
+								}
+							},
+							{ fetch }
+						);
+
+						return user;
+					})
 					.then((user) => {
 						if (!isEmpty(user.steamIds) && (!user.name || isEmpty(user.name))) {
 							steam.getUserProfile(user.steamIds![0]).then(async (profile) => {
