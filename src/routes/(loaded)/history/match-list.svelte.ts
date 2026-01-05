@@ -1,6 +1,7 @@
 import { app } from '$core/context';
 import { Debounced, watch } from 'runed';
 import type { MatchExpanded } from '$core/app/database/lobbies';
+import type { UsersResponse } from '$core/pocketbase/types';
 
 const PAGE_SIZE = 50;
 const FILTER_DEBOUNCE_MS = 300;
@@ -11,6 +12,7 @@ export type FiltersState = {
 	ranked: { value: boolean; indeterminate: boolean };
 	players: string[];
 	maps: string[];
+	users: string[];
 };
 
 function escapePocketBaseString(value: string) {
@@ -52,6 +54,11 @@ function buildPocketBaseFilter(filters: FiltersState) {
 		parts.push(`(${playerExpr})`);
 	}
 
+	if (filters.scope === 'community' && filters.users.length > 0) {
+		const userExpr = filters.users.map((id) => `user = "${id}"`).join(' || ');
+		parts.push(`(${userExpr})`);
+	}
+
 	return parts.join(' && ');
 }
 
@@ -68,7 +75,8 @@ export class MatchList {
 		query: '',
 		ranked: { value: false, indeterminate: false },
 		players: [],
-		maps: []
+		maps: [],
+		users: []
 	});
 
 	matches = $state<MatchExpanded[]>([]);

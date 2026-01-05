@@ -16,7 +16,7 @@ export type Match = LobbiesResponse<
 	LobbyPlayer[],
 	LobbyMatch | null,
 	{
-		user: UsersResponse<string[]>;
+		user: UsersResponse<Record<string, any>, string[]>;
 	}
 > & { players: LobbyPlayer[] };
 export type MatchExpanded = Expand<Match>;

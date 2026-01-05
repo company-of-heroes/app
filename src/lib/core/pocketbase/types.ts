@@ -192,12 +192,14 @@ export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
 	vpCount?: number
 }
 
-export type UsersRecord<TsteamIds = unknown> = {
+export type UsersRecord<Tmeta = unknown, TsteamIds = unknown> = {
 	avatar?: FileNameString
 	created: IsoAutoDateString
 	email: string
 	emailVisibility?: boolean
 	id: string
+	lastLogin?: IsoDateString
+	meta?: null | Tmeta
 	name?: string
 	password: string
 	steamIds?: null | TsteamIds
@@ -221,7 +223,7 @@ export type LobbyAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser 
 export type LobbyAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Tusers = unknown, Texpand = unknown> = Required<LobbyAggregationCommunityRecord<Tmaps, Tplayers, Tusers>> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
-export type UsersResponse<TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<TsteamIds>> & AuthSystemFields<Texpand>
+export type UsersResponse<Tmeta = unknown, TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<Tmeta, TsteamIds>> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
 

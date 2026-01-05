@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { UsersResponse } from '$core/pocketbase/types';
 	import * as Form from '$lib/components/ui/form';
 	import { Input, Selection, Checkbox } from '$lib/components/ui/input';
 	import { ToggleGroup } from '$lib/components/ui/toggle-group';
@@ -8,9 +9,10 @@
 		list: MatchList;
 		mapsList: { value: string; label: string }[];
 		playersList: { value: string; label: string }[];
+		usersList?: { value: string; label: string }[];
 	}
 
-	let { list, mapsList, playersList }: Props = $props();
+	let { list, mapsList, playersList, usersList }: Props = $props();
 </script>
 
 <ToggleGroup
@@ -30,6 +32,18 @@
 			bind:indeterminate={list.filters.ranked.indeterminate}
 		/>
 	</Form.Group>
+
+	{#if list.filters.scope === 'community' && usersList}
+		<Form.Group>
+			<Form.Label>Uploaded by</Form.Label>
+			<Selection
+				options={usersList}
+				placeholder="Select users..."
+				multiple
+				bind:value={list.filters.users}
+			/>
+		</Form.Group>
+	{/if}
 
 	<Form.Group>
 		<Form.Label>Filter players</Form.Label>

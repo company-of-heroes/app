@@ -28,7 +28,7 @@ export type AuthSettings = {
 export class Auth extends Feature<AuthSettings> {
 	name = 'auth';
 
-	private _user: UsersResponse<string[]> | null = $state(null);
+	private _user: UsersResponse<Record<string, any>, string[]> | null = $state(null);
 
 	async enable() {
 		await app.pocketbase
@@ -36,7 +36,7 @@ export class Auth extends Feature<AuthSettings> {
 			.getOne(this.settings.userId)
 			.then(() =>
 				app.pocketbase
-					.collection<UsersResponse<string[]>>('users')
+					.collection<UsersResponse<Record<string, any>, string[]>>('users')
 					.authWithPassword(this.settings.email, this.settings.password)
 					.then((auth) => auth.record)
 					.then(async (user) => {
@@ -94,7 +94,7 @@ export class Auth extends Feature<AuthSettings> {
 				})
 			)
 			.then((user) => {
-				this._user = user as UsersResponse<string[]>;
+				this._user = user as UsersResponse<Record<string, any>, string[]>;
 			})
 			.catch((err) => {
 				console.error(
@@ -130,7 +130,7 @@ export class Auth extends Feature<AuthSettings> {
 			.collection('users')
 			.getOne(this.settings.userId)
 			.then((user) => {
-				this._user = user as UsersResponse<string[]>;
+				this._user = user as UsersResponse<Record<string, any>, string[]>;
 				return this._user!;
 			});
 	}
@@ -155,7 +155,7 @@ export class Auth extends Feature<AuthSettings> {
 				steamIds: uniq([...(this.user.steamIds || []), steamId])
 			})
 			.then((updatedUser) => {
-				this._user = updatedUser as UsersResponse<string[]>;
+				this._user = updatedUser as UsersResponse<Record<string, any>, string[]>;
 				return this._user;
 			});
 	}

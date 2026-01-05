@@ -1,5 +1,9 @@
 <script lang="ts">
-	import type { LobbyAggregationResponse } from '$core/pocketbase/types';
+	import type {
+		LobbyAggregationCommunityResponse,
+		LobbyAggregationResponse,
+		UsersResponse
+	} from '$core/pocketbase/types';
 	import type { LobbyPlayer } from '@fknoobs/app';
 	import { app } from '$core/context';
 	import { H } from '$lib/components/ui/h';
@@ -10,6 +14,7 @@
 	import MatchFilters from './match-filters.svelte';
 	import MatchTable from './match-table.svelte';
 	import type { Snapshot } from './$types';
+	import { pocketbase } from '$core/pocketbase';
 
 	let list = $state(new MatchList());
 
@@ -26,17 +31,37 @@
 				.collection(
 					list.filters.scope === 'user' ? 'lobby_aggregation' : 'lobby_aggregation_community'
 				)
-				.getFullList<LobbyAggregationResponse<string[], LobbyPlayer[]>>({
+				.getFullList<
+					| LobbyAggregationResponse<string[], LobbyPlayer[]>
+					| LobbyAggregationCommunityResponse<string[], LobbyPlayer[], string[]>
+				>({
 					filter: list.filters.scope === 'user' ? `user = "${app.features.auth.userId}"` : undefined
 				});
 
+			let users: UsersResponse<Record<string, any>, string[]>[] = [];
+
+			if (list.filters.scope === 'community' && 'users' in response[0]) {
+				const userIds = response[0].users as string[];
+				try {
+					const pocketbaseUsers = await pocketbase
+						.collection('users')
+						.getFullList<UsersResponse<Record<string, any>, string[]>>({
+							filter: `id = "${userIds.join('" || id = "')}"`
+						});
+					users = pocketbaseUsers;
+				} catch (error) {
+					console.error('Error fetching users:', error);
+				}
+			}
+
 			if (response.length === 0) {
-				return { players: [], maps: [] };
+				return { players: [], maps: [], users: [] };
 			}
 
 			return {
 				players: uniqBy(response[0].players, 'profile.alias').filter((p) => p.profile),
-				maps: uniq(response[0].maps)
+				maps: uniq(response[0].maps),
+				users: uniqBy(users, 'id')
 			};
 		}
 	);
@@ -55,6 +80,13 @@
 		})) || []
 	);
 
+	const usersList = $derived(
+		aggregation.current?.users.map((u) => ({
+			value: u.id,
+			label: u.name
+		})) || []
+	);
+
 	export const snapshot: Snapshot<MatchListState> = {
 		capture: () => list.capture(),
 		restore: (value) => {
@@ -65,5 +97,5 @@
 
 <H level="1">Match History</H>
 
-<MatchFilters {list} {mapsList} {playersList} />
+<MatchFilters {list} {mapsList} {playersList} {usersList} />
 <MatchTable {list} />

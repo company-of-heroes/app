@@ -18,7 +18,7 @@ export type ChatRoom = ChatRoomsResponse<{
 export type ChatRoomExpanded = Expand<ChatRoom>;
 export type ChatMessage = ChatMessagesResponse<{
 	attachments: AttachmentsResponse[];
-	sender: UsersResponse<string[]>;
+	sender: UsersResponse<Record<string, any>, string[]>;
 }>;
 export type ChatMessageExpanded = Expand<ChatMessage>;
 

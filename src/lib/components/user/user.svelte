@@ -4,7 +4,7 @@
 	import { createUser } from '.';
 
 	type Props = {
-		user: UsersResponse<string[]>;
+		user: UsersResponse<Record<string, any>, string[]>;
 		children: Snippet;
 	};
 
