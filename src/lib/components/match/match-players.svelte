@@ -22,7 +22,9 @@
 <span {...restProps} class={cn('flex items-center gap-2', restProps.class)}>
 	{#each players as player}
 		<Player.Root {player}>
-			<Player.Faction {@attach tooltip(player.profile?.alias || 'Unknown')} />
+			<a href={`/leaderboards/profile/${player.steamId}`}>
+				<Player.Faction {@attach tooltip(player.profile?.alias || 'Unknown')} />
+			</a>
 		</Player.Root>
 	{/each}
 </span>
