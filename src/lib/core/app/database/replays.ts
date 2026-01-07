@@ -8,11 +8,11 @@ import type {
 } from '$core/pocketbase/types';
 import { exp, getFile, pocketbase } from '$core/pocketbase';
 import { fetch } from '@tauri-apps/plugin-http';
-import { app } from '../app.svelte';
 import type { ListResult } from 'pocketbase';
 import { dirname, join } from '@tauri-apps/api/path';
 import type { Message, Player } from '@fknoobs/replay-parser';
 import { t } from 'try';
+import { app } from '$core/context';
 
 export type ReplaysExpanded = Expand<
 	ReplaysResponse<Message[], Player[], { createdBy: UsersResponse }>

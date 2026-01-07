@@ -1,13 +1,14 @@
 <script lang="ts">
 	import * as Replay from '$lib/components/replay';
+	import * as Tabs from '$lib/components/ui/tabs';
 	import { page } from '$app/state';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { resource } from 'runed';
 	import { ButtonBack } from '$lib/components/ui/button';
 
 	let query = resource(
 		() => page.params.replayId!,
-		() => app.database.replays().getById(page.params.replayId!)
+		() => app.database.replays.getById(page.params.replayId!)
 	);
 </script>
 
@@ -17,7 +18,21 @@
 	<Replay.Root file={query.current} class="flex grow flex-col gap-4">
 		<Replay.Title class="mb-4" />
 		<Replay.Details class="mb-4" />
-		<Replay.Players />
-		<Replay.Chat class="grow" />
+		<Tabs.Root value="overview">
+			<Tabs.List>
+				<Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+				<Tabs.Trigger value="chat">Chat</Tabs.Trigger>
+				<Tabs.Trigger value="timeline">Timeline</Tabs.Trigger>
+			</Tabs.List>
+			<Tabs.Content value="overview" class="flex grow flex-col gap-4">
+				<Replay.Players />
+			</Tabs.Content>
+			<Tabs.Content value="chat" class="flex grow flex-col gap-4">
+				<Replay.Chat class="grow" />
+			</Tabs.Content>
+			<Tabs.Content value="timeline" class="flex grow flex-col gap-4">
+				<Replay.Actions />
+			</Tabs.Content>
+		</Tabs.Root>
 	</Replay.Root>
 {/if}

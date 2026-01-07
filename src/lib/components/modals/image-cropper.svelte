@@ -2,7 +2,7 @@
 	import Cropper, { type OnCropCompleteEvent } from 'svelte-easy-crop';
 	import getCroppedImg from '$lib/utils/canvas';
 	import { Button } from '$lib/components/ui/button';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 
 	type Props = {
 		image: string;

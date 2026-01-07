@@ -6,12 +6,11 @@ import type {
 } from '$core/pocketbase/types';
 import type { Expand } from '@fknoobs/app';
 import { fetch } from '@tauri-apps/plugin-http';
-import { app } from '../app.svelte';
 import { exp } from '$core/pocketbase';
-import type { Chat } from '$lib/components/replay';
 import type { ListResult, UnsubscribeFunc } from 'pocketbase';
 import Emittery from 'emittery';
 import type { MessageAttachment } from '$lib/components/chat';
+import { app } from '$core/context';
 
 export type ChatRoom = ChatRoomsResponse<{
 	members: UsersResponse[];
@@ -19,7 +18,7 @@ export type ChatRoom = ChatRoomsResponse<{
 export type ChatRoomExpanded = Expand<ChatRoom>;
 export type ChatMessage = ChatMessagesResponse<{
 	attachments: AttachmentsResponse[];
-	sender: UsersResponse<string[]>;
+	sender: UsersResponse<Record<string, any>, string[]>;
 }>;
 export type ChatMessageExpanded = Expand<ChatMessage>;
 

@@ -1,19 +1,16 @@
 <script lang="ts">
 	import * as Nav from '$lib/components/ui/nav';
 	import { watch } from 'runed';
-	import { Toaster } from 'svelte-sonner';
-	import { Dialog } from '$lib/components/ui/dialog';
 	import { Label } from '$lib/components/ui/label';
-	import { Modal } from '$lib/components/ui/modal';
 	import { cn } from '$lib/utils';
 	import { openUrl } from '@tauri-apps/plugin-opener';
-	import { app } from '$core/app';
+	import { app, createApp } from '$core/context';
 	import { ToastReplaysProgress } from '$lib/components/toasts';
 	import { Avatar } from '$lib/components/ui/avatar';
 	import { page } from '$app/state';
-	import SuccesIcon from 'phosphor-svelte/lib/Check';
-	import ErrorIcon from 'phosphor-svelte/lib/ExclamationMark';
-	import InfoIcon from 'phosphor-svelte/lib/QuestionMark';
+	import { Modal } from '$lib/components/ui/modal';
+	import { Toaster } from 'svelte-sonner';
+	import { Dialog } from '$lib/components/ui/dialog';
 	import DashboardIcon from 'phosphor-svelte/lib/SquaresFour';
 	import RankingIcon from 'phosphor-svelte/lib/Ranking';
 	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
@@ -27,6 +24,9 @@
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwise';
 	import CommandIcon from 'phosphor-svelte/lib/Command';
 	import ChatIcon from 'phosphor-svelte/lib/ChatCentered';
+	import SuccesIcon from 'phosphor-svelte/lib/Check';
+	import ErrorIcon from 'phosphor-svelte/lib/ExclamationMark';
+	import InfoIcon from 'phosphor-svelte/lib/QuestionMark';
 
 	import '$lib/fonts/TT Mussels/style.css';
 	import '@fontsource/nunito-sans/800.css';
@@ -57,6 +57,8 @@
 			}
 		}
 	);
+
+	createApp(app);
 </script>
 
 <svelte:boundary>
@@ -143,7 +145,9 @@
 							<GithubLogoIcon weight="duotone" />
 						</button>
 						<span class="text-secondary-400 ms-auto flex items-center gap-2 text-sm">
-							<span>v{app.features.updater.currentVersionFormatted}</span>
+							<button class="cursor-pointer" onclick={() => app.features.updater.openChangelog()}>
+								v{app.features.updater.currentVersionFormatted}
+							</button>
 							{#if app.features.updater.hasUpdate}
 								<ArrowRightIcon />
 								<button

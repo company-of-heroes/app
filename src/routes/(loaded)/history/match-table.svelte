@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Match from '$lib/components/match';
 	import { Table, TD, TH, THead, TR } from '$lib/components/ui/table';
+	import { cn } from '$lib/utils';
 	import type { MatchList } from './match-list.svelte';
 
 	interface Props {
@@ -34,32 +35,50 @@
 				By
 			{/if}
 		</TH>
-		<TH width="4/24">Title</TH>
+		<TH width="3/24">Title</TH>
 		<TH width="3/24">Allies</TH>
 		<TH width="3/24">Axis</TH>
-		<TH width="4/24">Date</TH>
+		<TH width="3/24">Date</TH>
+		<TH width="2/24"></TH>
 		<TH width="2/24"></TH>
 	</THead>
 
 	{#if list.matches.length > 0}
 		{#each list.matches as match (match.id)}
-			{@const alias =
-				match.players.find((p) => p.steamId && match.user?.steamIds?.includes(p.steamId))?.profile
-					?.alias || 'Unknown'}
+			{@const player = match.players.find(
+				(p) => p.steamId && match.user?.steamIds?.includes(p.steamId)
+			)}
 			<Match.Root {match}>
-				<TR class="text-gray-200" href={`/history/${match.id}`}>
-					<TD width="5/24" class="flex items-center">
-						<Match.MapImage />
-						<Match.MapName />
+				<TR
+					class={cn(
+						'text-gray-200',
+						match.result?.outcome === 0 && 'bg-red-500/4 odd:bg-red-500/4',
+						match.result?.outcome === 1 && 'bg-green-500/4 odd:bg-green-500/4',
+						'border-secondary-950 not-last:border-b'
+					)}
+				>
+					<TD width="5/24">
+						<a
+							href={`/history/${match.id}`}
+							class="hover:text-primary flex items-center transition-colors"
+						>
+							<Match.MapImage />
+							<Match.MapName />
+						</a>
 					</TD>
 					<TD width="3/24" class="truncate">
-						{#if list.filters.scope === 'user'}
-							<Match.Rating class="flex justify-center" />
-						{:else}
-							<span>{alias}</span>
+						{#if list.filters.scope === 'community'}
+							<button
+								onclick={() => {
+									list.filters.users.push(match.user.id);
+								}}
+								class="hover:text-primary cursor-pointer transition-colors"
+							>
+								<span>{match.user.name}</span>
+							</button>
 						{/if}
 					</TD>
-					<TD width="4/24">
+					<TD width="3/24">
 						<Match.Title />
 					</TD>
 					<TD width="3/24">
@@ -68,8 +87,11 @@
 					<TD width="3/24">
 						<Match.Players team="axis" />
 					</TD>
-					<TD width="4/24">
+					<TD width="3/24">
 						<Match.Date />
+					</TD>
+					<TD width="2/24">
+						<Match.Rating />
 					</TD>
 					<TD width="2/24">
 						<Match.Status />

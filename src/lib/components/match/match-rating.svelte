@@ -3,7 +3,6 @@
 	import { useMatch } from '.';
 	import { cn } from '$lib/utils';
 	import { tooltip } from '$lib/attachments';
-	import { app } from '$core/app';
 	import CaretUp from 'phosphor-svelte/lib/CaretUp';
 	import CaretDown from 'phosphor-svelte/lib/CaretDown';
 
@@ -18,7 +17,7 @@
 			return null;
 		}
 
-		return players.find((p) => app.features.auth.user.steamIds.includes(p.steamId)) ?? null;
+		return players.find((p) => match.user.steamIds?.includes(p.steamId)) ?? null;
 	});
 </script>
 

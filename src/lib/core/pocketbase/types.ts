@@ -157,10 +157,11 @@ export type LobbyAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = 
 	user?: null | Tuser
 }
 
-export type LobbyAggregationCommunityRecord<Tmaps = unknown, Tplayers = unknown> = {
+export type LobbyAggregationCommunityRecord<Tmaps = unknown, Tplayers = unknown, Tusers = unknown> = {
 	id: string
 	maps?: null | Tmaps
 	players?: null | Tplayers
+	users?: null | Tusers
 }
 
 export type ReplayAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
@@ -191,12 +192,14 @@ export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
 	vpCount?: number
 }
 
-export type UsersRecord<TsteamIds = unknown> = {
+export type UsersRecord<Tmeta = unknown, TsteamIds = unknown> = {
 	avatar?: FileNameString
 	created: IsoAutoDateString
 	email: string
 	emailVisibility?: boolean
 	id: string
+	lastLogin?: IsoDateString
+	meta?: null | Tmeta
 	name?: string
 	password: string
 	steamIds?: null | TsteamIds
@@ -217,10 +220,10 @@ export type ChatMessagesResponse<Texpand = unknown> = Required<ChatMessagesRecor
 export type ChatRoomsResponse<Texpand = unknown> = Required<ChatRoomsRecord> & BaseSystemFields<Texpand>
 export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
 export type LobbyAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<LobbyAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
-export type LobbyAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Texpand = unknown> = Required<LobbyAggregationCommunityRecord<Tmaps, Tplayers>> & BaseSystemFields<Texpand>
+export type LobbyAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Tusers = unknown, Texpand = unknown> = Required<LobbyAggregationCommunityRecord<Tmaps, Tplayers, Tusers>> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
-export type UsersResponse<TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<TsteamIds>> & AuthSystemFields<Texpand>
+export type UsersResponse<Tmeta = unknown, TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<Tmeta, TsteamIds>> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
 

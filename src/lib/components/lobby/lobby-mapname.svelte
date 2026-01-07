@@ -1,12 +1,11 @@
 <script lang="ts">
-	import type { HTMLAttributes } from 'svelte/elements';
-	import { H } from '../ui/h';
+	import { H, type HeadingProps } from '../ui/h';
 	import { useLobby } from '.';
 
-	type Props = {} & HTMLAttributes<HTMLHeadingElement>;
+	type Props = {} & Omit<HeadingProps, 'children'>;
 
-	let lobby = useLobby();
 	let { ...restProps }: Props = $props();
+	let lobby = $derived(useLobby());
 </script>
 
-<H level={4} {...restProps}>{lobby.map}</H>
+<H {...restProps}>{lobby.map}</H>

@@ -1,63 +1,58 @@
 // Tauri doesn't have a Node.js server to do proper SSR
 // so we will use adapter-static to prerender the app (SSG)
 
-import { Window } from '@tauri-apps/api/window';
+import { auth } from '$core/app/features/auth';
+import { tts, twitch } from '$core/app/features/twitch';
+import { ttsPersonalVoices } from '$core/app/features/tts-personal-voices';
+import { twitchOverlays } from '$core/app/features/twitch-overlays';
+import { twitchBot } from '$core/app/features/twitch-bot';
+import { replayAnalyzer } from '$core/app/features/replay-analyzer';
+import { history } from '$core/app/features/history';
+import { shortcuts } from '$core/app/features/shortcuts';
+import { chat } from '$core/app/features/chat';
+import { updater } from '$core/app/features/updater';
+import { app } from '$core/context';
+import { OppBotOverlay } from '$core/app/features/twitch-overlays/overlays/oppbot';
+import { ChatOverlay } from '$core/app/features/twitch-overlays/overlays/chat';
+import { ViewerCountOverlay } from '$core/app/features/twitch-overlays/overlays/viewer-count';
 import { browser, dev } from '$app/environment';
-import { app } from '$core/app';
-import { tts, twitch } from '$features/twitch';
-import { ttsPersonalVoices } from '$features/tts-personal-voices';
-import { twitchOverlays } from '$features/twitch-overlays';
-import { OppBotOverlay } from '$features/twitch-overlays/overlays/oppbot';
-import { ChatOverlay } from '$features/twitch-overlays/overlays/chat';
-import { twitchBot } from '$features/twitch-bot';
-import { auth } from '$features/auth';
-import { ViewerCountOverlay } from '$features/twitch-overlays/overlays/viewer-count';
-import { updater } from '$features/updater';
-import { chat } from '$features/chat';
-import { history } from '$features/history';
-import { replayAnalyzer } from '$features/replay-analyzer';
-import { shortcuts } from '$core/app/features/shortcuts/shortcuts.svelte';
 import { goto } from '$app/navigation';
-import { page } from '$app/state';
 
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = true;
 export const ssr = false;
 
-let currentWindow = Window.getCurrent();
 let isReady = false;
 
 export const load = async () => {
-	if (!browser) {
+	if (!browser || isReady) {
 		return;
 	}
 
-	if (currentWindow.label === 'main') {
-		app.register('auth', auth);
-		app.register('twitch', twitch);
-		app.register('text-to-speech', tts);
-		app.register('text-to-speech-custom-characters', ttsPersonalVoices);
-		app.register('twitch-overlays', twitchOverlays);
-		app.register('twitch-bot', twitchBot);
-		app.register('replay-analyzer', replayAnalyzer);
-		app.register('history', history);
-		app.register('shortcuts', shortcuts);
-		app.register('chat', chat);
-		app.register('updater', updater);
+	app.register('auth', auth);
+	app.register('twitch', twitch);
+	app.register('text-to-speech', tts);
+	app.register('text-to-speech-custom-characters', ttsPersonalVoices);
+	app.register('twitch-overlays', twitchOverlays);
+	app.register('twitch-bot', twitchBot);
+	app.register('replay-analyzer', replayAnalyzer);
+	app.register('history', history);
+	app.register('shortcuts', shortcuts);
+	app.register('chat', chat);
+	app.register('updater', updater);
 
-		twitchOverlays.registerOverlay(new OppBotOverlay());
-		twitchOverlays.registerOverlay(new ChatOverlay());
-		twitchOverlays.registerOverlay(new ViewerCountOverlay());
+	twitchOverlays.registerOverlay(new OppBotOverlay());
+	twitchOverlays.registerOverlay(new ChatOverlay());
+	twitchOverlays.registerOverlay(new ViewerCountOverlay());
 
-		if (dev) {
-			await app.start();
-		} else {
-			app
-				.start()
-				.then(() => {
-					!isReady && goto('/');
-				})
-				.then(() => (isReady = true));
-		}
+	if (dev) {
+		await app.start();
+	} else {
+		await app
+			.start()
+			.then(() => {
+				!isReady && goto('/');
+			})
+			.then(() => (isReady = true));
 	}
 };

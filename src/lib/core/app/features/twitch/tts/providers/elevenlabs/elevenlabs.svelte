@@ -3,7 +3,7 @@
 	import * as Form from '$lib/components/ui/form';
 	import FadersHorizontal from 'phosphor-svelte/lib/FadersHorizontal';
 	import Trash from 'phosphor-svelte/lib/Trash';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { Button } from '$lib/components/ui/button';
 	import { H } from '$lib/components/ui/h';
 	import { Input } from '$lib/components/ui/input';

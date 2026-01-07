@@ -101,7 +101,9 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 		const alias = this.getAliasedUser(data.user);
 		const message = format
 			.replace(/\{(username|user)\}/g, alias)
-			.replace(/\{(message|msg)\}/g, stripEmotes(data.message, data.msg));
+			.replace(/\{(message|msg)\}/g, data.message)
+			.replace(data.msg.userInfo.isSubscriber ? '' : /\[.*?\]/g, '')
+			.replace(/https?:\/\/\S+/g, '');
 
 		this.lastMessageUser = data.user;
 

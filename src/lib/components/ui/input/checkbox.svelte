@@ -9,11 +9,13 @@
 		checked = $bindable(false),
 		// @ts-ignore
 		indeterminate = $bindable(null),
+		size = 'md',
 		ref = $bindable(null),
 		label,
 		...restProps
 	}: WithoutChildrenOrChild<Checkbox.RootProps> & {
 		label: string;
+		size?: 'sm' | 'md';
 	} = $props();
 
 	function getChecked() {
@@ -39,14 +41,16 @@
 	}
 </script>
 
-<div class="flex items-center gap-4">
+<div class={cn('flex items-center', size === 'sm' && 'gap-2', size === 'md' && 'gap-3')}>
 	<Checkbox.Root
 		bind:checked={getChecked, setChecked}
 		{indeterminate}
 		bind:ref
 		{...restProps}
 		class={cn(
-			'border-secondary-900 flex size-7 items-center justify-center overflow-clip rounded-md border',
+			'border-secondary-900 flex items-center justify-center overflow-clip border',
+			size === 'sm' && 'size-5 rounded-sm',
+			size === 'md' && 'size-7 rounded-md',
 			restProps.class
 		)}
 		{id}
@@ -55,15 +59,15 @@
 			{#if indeterminate || checked}
 				<span class="bg-secondary-900 flex h-full w-full items-center justify-center text-white">
 					{#if indeterminate}
-						<MinusIcon weight="bold" />
+						<MinusIcon weight="bold" size={size === 'sm' ? 14 : 24} />
 					{:else if checked}
-						<CheckIcon weight="bold" />
+						<CheckIcon weight="bold" size={size === 'sm' ? 14 : 24} />
 					{/if}
 				</span>
 			{/if}
 		{/snippet}
 	</Checkbox.Root>
-	<Label.Root for={id}>
+	<Label.Root for={id} class={cn(size === 'sm' && 'text-xs', size === 'md' && 'text-md')}>
 		{label}
 	</Label.Root>
 </div>

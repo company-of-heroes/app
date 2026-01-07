@@ -3,7 +3,7 @@
 	import CaretUp from 'phosphor-svelte/lib/CaretUp';
 	import CaretDown from 'phosphor-svelte/lib/CaretDown';
 
-	const { playerResult } = usePlayer();
+	const { playerResult } = $derived(usePlayer());
 </script>
 
 {#if playerResult}

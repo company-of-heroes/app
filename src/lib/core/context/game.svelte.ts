@@ -2,20 +2,11 @@ import type { RelicProfile } from '@fknoobs/app';
 import type { SteamPlayerSummary } from '$core/steam';
 import { invoke } from '@tauri-apps/api/core';
 import Emittery from 'emittery';
-import { Lobby } from './lobby.svelte';
-import { isRunning } from './utils';
 import { watch } from 'runed';
-import { App, app } from '$core/app';
+import { isRunning } from '$lib/utils';
+import { dev } from '$app/environment';
 
-export type GameEvents = {
-	'GAME:LAUNCHED': never;
-	'GAME:CLOSED': never;
-	'LOBBY:STARTED': Lobby;
-	'LOBBY:GAMEOVER': Lobby;
-	'LOBBY:DESTROYED': Lobby;
-};
-
-export class Game extends Emittery<GameEvents> {
+export class Game extends Emittery {
 	/**
 	 * Private interval timer for tracking window focus.
 	 * Uses NodeJS.Timeout for proper cleanup on component destruction.
@@ -62,23 +53,6 @@ export class Game extends Emittery<GameEvents> {
 	profile = $state<{ relic: RelicProfile; steam: SteamPlayerSummary }>();
 
 	/**
-	 * Current lobby instance if a game lobby is active.
-	 * Contains match information, players, and lobby state.
-	 *
-	 * @public
-	 * @type {Lobby | undefined}
-	 */
-	lobby = $state.raw<Lobby>();
-
-	/**
-	 * All lobbies that have been created during the game session.
-	 *
-	 * @public
-	 * @type {Lobby[]}
-	 */
-	playedLobbies = $state<Lobby[]>([]);
-
-	/**
 	 * Reactive state indicating whether the game window has focus.
 	 * Updated periodically when the game is running.
 	 *
@@ -112,7 +86,7 @@ export class Game extends Emittery<GameEvents> {
 		}
 
 		this._checkGameInterval = setInterval(async () => {
-			this.isRunning = App.DEV_MODE ? true : await isRunning('RelicCOH.exe');
+			this.isRunning = dev ? true : await isRunning('RelicCOH.exe');
 		}, 1000);
 
 		$effect.root(() => {
@@ -123,14 +97,6 @@ export class Game extends Emittery<GameEvents> {
 						this.trackWindowFocus();
 					} else {
 						this.stopTrackingWindowFocus();
-					}
-				}
-			);
-			watch(
-				() => this.steamId,
-				(steamId) => {
-					if (steamId) {
-						app.features.auth.attachSteamId(steamId);
 					}
 				}
 			);
@@ -184,8 +150,6 @@ export class Game extends Emittery<GameEvents> {
 		this.isIngame = false;
 		this.steamId = '';
 		this.profile = undefined;
-		this.lobby = undefined;
-		this.playedLobbies = [];
 		this.isWindowFocused = false;
 		this.didNotify = false;
 	}

@@ -6,6 +6,7 @@
 @source inline('w-{1..24}/24');
 @source inline('min-w-{1..24}/24');
 @source inline('max-w-{1..24}/24');
+@source '../node_modules/layerchart/dist';
 
 @theme {
 	--default-font-family: 'TT Mussels';
@@ -72,6 +73,11 @@
 	--shadow-xs: 4px 4px 0 var(--color-secondary-950);
 	--shadow-sm: 8px 8px 0 var(--color-secondary-950);
 	--shadow-md: 12px 12px 0 var(--color-secondary-950);
+
+	--color-surface-100: var(--color-secondary-800);
+	--color-surface-200: var(--color-secondary-900);
+	--color-surface-300: var(--color-secondary-950);
+	--color-surface-content: var(--color-gray-100);
 }
 
 @utility bg-dark {

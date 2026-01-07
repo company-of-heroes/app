@@ -6,7 +6,7 @@ import { watch } from 'runed';
 import { ChatClient, ChatMessage } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { error } from '@tauri-apps/plugin-log';
-import { app } from '$core/app/app.svelte';
+import { app } from '$core/context';
 
 export type ValidatedTokenInfo = TokenInfo & { userId: string };
 

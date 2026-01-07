@@ -14,11 +14,12 @@
 	);
 </script>
 
-<span {...restProps} class={cn('flex items-center gap-2 truncate font-medium', restProps.class)}>
+<span {...restProps} class={cn('flex items-center gap-2 font-medium', restProps.class)}>
 	{#if match.isRanked}
 		<span {@attach tooltip('Ranked match')}>
 			<Ranking class="text-primary-100" weight="duotone" />
 		</span>
+	{:else}
+		<span class="truncate">{title}</span>
 	{/if}
-	{title}
 </span>

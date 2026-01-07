@@ -1,6 +1,6 @@
 import type { ChatMessageExpanded } from '$core/app/database/chat-rooms';
 import type { UsersResponse } from '$core/pocketbase/types';
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { Context } from 'runed';
 import NotificationSound from '$lib/files/notification-message.mp3?url';
 import type { UnsubscribeFunction } from 'emittery';

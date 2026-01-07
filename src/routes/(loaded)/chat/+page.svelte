@@ -4,7 +4,7 @@
 	import { onDestroy } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { tooltip } from '$lib/attachments';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import BellIcon from 'phosphor-svelte/lib/Bell';
 	import BellSlashIcon from 'phosphor-svelte/lib/BellSlash';
 

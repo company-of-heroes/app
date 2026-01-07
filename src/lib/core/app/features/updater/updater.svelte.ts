@@ -1,7 +1,7 @@
 import { Feature } from '../feature.svelte';
 import { fetch } from '@tauri-apps/plugin-http';
 import { getVersion } from '@tauri-apps/api/app';
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { Update } from '.';
 import { padEnd } from 'lodash-es';
 import { gt } from 'semver';
@@ -78,6 +78,16 @@ export class Updater extends Feature<UpdaterSettings> {
 				latestVersion: this.latestVersion,
 				downloadUrl: this.downloadUrl
 			}
+		});
+		app.modal.open();
+	}
+
+	openChangelog() {
+		app.modal.create({
+			component: Changelog,
+			title: 'Changelog',
+			description: 'Here are the latest changes in this version:',
+			size: 'lg'
 		});
 		app.modal.open();
 	}

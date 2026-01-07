@@ -1,4 +1,4 @@
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { Debounced, watch } from 'runed';
 import type { ReplaysExpanded } from '$core/app/database/replays';
 
@@ -173,7 +173,7 @@ export class ReplayList {
 		}
 
 		try {
-			const result = await app.database.replays().getPaginated(this.page, PAGE_SIZE, {
+			const result = await app.database.replays.getPaginated(this.page, PAGE_SIZE, {
 				filter: this.#activeFilter,
 				sort: this.#activeSort
 			});

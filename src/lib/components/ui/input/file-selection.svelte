@@ -15,17 +15,19 @@
 		type,
 		onSelect,
 		filters,
+		defaultPath,
 		...restProps
 	}: InputProps & {
 		filters?: DialogFilter[];
 		directory?: boolean;
 		onSelect?: (path: string) => void;
+		defaultPath?: string;
 	} = $props();
 	let fileExists = $state(false);
 
 	const selectDir = async () => {
 		const selectedPath = await open({
-			defaultPath: value,
+			defaultPath: defaultPath ?? value,
 			multiple: false,
 			directory,
 			filters

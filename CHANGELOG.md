@@ -1,25 +1,37 @@
+### v0.41.0
+
+> If this update causes issues, please downgrade
+
+- feat; Reworked and simplified the core application logic
+- feat; Added a command allowing Twitch subscribers to change their voice in real-time
+- feat; Restricted ElevenLabs message tags to Twitch subscribers only
+- fix; Restored StreamElements TTS functionality by updating authentication to match new API requirements
+- feat; Enhanced replay parser to show comprehensive live data, matching and exceeding the replay analyzer! 🎉
+- feat; Automatically fetch default username and avatar from connected Steam profile if not set
+- fix; Resolved an issue where match history only displayed matches created by the user, omitting matches where they were a participant
+
 ### v0.40.1
 
-- patch; make padding in messages less
-- fix; current game widget loses state on navigation
-- fix; current game widget now properly destroys itself when lobby is destroyed
+- patch; Reduced padding in chat messages for a more compact view
+- fix; Prevented the "Current Game" widget from losing state during navigation
+- fix; Ensured the "Current Game" widget is cleanly destroyed when the lobby is closed
 
 ### v0.40.0
 
-_This update fixes an issue where large Steam IDs were being incorrectly parsed, preventing the user profile from loading on the dashboard._
+_This update addresses an issue where large Steam IDs were parsed incorrectly, preventing user profiles from loading on the dashboard._
 
-- feat; added a changelog to let users know what changed per version
-- fix; resolved `current game widget` recieving incorrect data
-- fix; resolved a bug preventing your profile from appearing on the dashboard.
+- feat; Introduced a changelog to keep users informed about version updates
+- fix; Corrected data handling in the "Current Game" widget
+- fix; Fixed a bug that prevented user profiles from appearing on the dashboard
 
 ### v0.39.1
 
-- patch; update elevenlabs model to v3
-- tweak; some minor UI elements in the elevenlabs settings UI
-- fix; use console instead of logging plugin
+- patch; Updated ElevenLabs model to v3
+- tweak; Refined minor UI elements in the ElevenLabs settings
+- fix; Replaced logging plugin with standard console output for better stability
 
 ### v0.39.0
 
-- feat; add chatroom
-- feat; start app on system startup and option to disable this behaviour
-- fix; history not restoring properly after nagivation
+- feat; Added a new chatroom feature
+- feat; Added option to launch app on system startup (with disable toggle)
+- fix; Fixed an issue where navigation history was not restoring correctly

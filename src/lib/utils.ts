@@ -91,6 +91,7 @@ const rankCache = new Map<string, string>();
  */
 export async function getRankImage(race: Race | number, rank?: number): Promise<string> {
 	const cacheKey = `${race}-${rank}`;
+
 	// Return cached result if available
 	if (rankCache.has(cacheKey)) {
 		return rankCache.get(cacheKey)!;
@@ -110,6 +111,7 @@ export async function getRankImage(race: Race | number, rank?: number): Promise<
 		const defaultRankImage = await import(`$lib/files/ranks/no_rank_yet.png`);
 		const result = defaultRankImage.default;
 		rankCache.set(cacheKey, result);
+
 		return result;
 	}
 
@@ -516,3 +518,7 @@ export const isSteamId = (str: string): boolean => {
 	const steamIdRegex = /^(7656119\d{10})$/;
 	return steamIdRegex.test(str);
 };
+
+export async function isRunning(processName: string): Promise<boolean> {
+	return await invoke<boolean>('is_running', { processName });
+}

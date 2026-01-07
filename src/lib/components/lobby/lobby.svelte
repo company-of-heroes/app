@@ -12,7 +12,7 @@
 	} & HTMLAttributes<HTMLDivElement>;
 
 	let { lobby, children, ...restProps }: Props = $props();
-	createLobby(lobby);
+	createLobby(() => lobby);
 </script>
 
 <div {...restProps}>{@render children?.()}</div>

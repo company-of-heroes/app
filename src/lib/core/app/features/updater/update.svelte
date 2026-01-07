@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { app } from '$core/app/app.svelte';
+	import { app } from '$core/context';
 	import { Button } from '$lib/components/ui/button';
 	import { basename, downloadDir, sep } from '@tauri-apps/api/path';
 	import { openPath } from '@tauri-apps/plugin-opener';

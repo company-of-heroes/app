@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { H } from '$lib/components/ui/h';
 	import { WidgetMatchHistory, WidgetStatus } from '$lib/components/widgets';
 	import { Alert } from '$lib/components/ui/alert';

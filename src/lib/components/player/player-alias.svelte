@@ -5,7 +5,7 @@
 	type Props = HTMLAnchorAttributes;
 
 	const { ...restProps }: Props = $props();
-	const { player } = usePlayer();
+	const { player } = $derived(usePlayer());
 </script>
 
 <a

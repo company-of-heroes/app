@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { cn } from '$lib/utils';
 	import { Avatar } from 'bits-ui';
 

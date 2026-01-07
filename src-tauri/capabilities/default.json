@@ -52,7 +52,9 @@
 			"allow": [
 				{ "url": "https://*.fknoobs.com" },
 				{ "url": "http://localhost" },
-				{ "url": "http://localhost:8090" }
+				{ "url": "http://localhost:8090" },
+				{ "url": "https://*.steamusercontent.com" },
+				{ "url": "https://*.steamstatic.com" }
 			]
 		},
 		"store:default",

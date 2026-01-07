@@ -2,7 +2,7 @@ import { Feature } from '$core/app/features/feature.svelte';
 import { watch } from 'runed';
 import { invoke } from '@tauri-apps/api/core';
 import { register, unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
-import { app } from '$core/app';
+import { app } from '$core/context';
 import { t } from 'try';
 
 export type Shortcut = {
@@ -34,7 +34,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 	>();
 
 	enable() {
-		app.game.on('LOBBY:STARTED', (lobby) => {
+		app.on('lobby.started', (lobby) => {
 			if (!app.game.isWindowFocused || !lobby.me) {
 				return;
 			}
@@ -42,7 +42,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			this.registerShortcuts(lobby.me.race);
 		});
 
-		app.game.on('LOBBY:GAMEOVER', () => {
+		app.game.on('', () => {
 			this.unregisterAllShortcuts();
 		});
 
@@ -52,8 +52,8 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				if (!isFocused) {
 					this.unregisterAllShortcuts();
 				} else {
-					if (app.game.lobby?.me) {
-						this.registerShortcuts(app.game.lobby.me.race);
+					if (app.lobby?.me) {
+						this.registerShortcuts(app.lobby.me.race);
 					}
 				}
 			}

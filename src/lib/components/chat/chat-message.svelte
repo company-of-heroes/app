@@ -9,7 +9,7 @@
 	import { marked } from 'marked';
 	import { tooltip } from '$lib/attachments';
 	import { Button } from '../ui/button';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { confirm, save } from '@tauri-apps/plugin-dialog';
 	import { useChatCompose } from './chat.svelte';
 	import DownloadIcon from 'phosphor-svelte/lib/DownloadSimple';

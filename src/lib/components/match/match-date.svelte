@@ -2,7 +2,7 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { useMatch } from '.';
 	import { cn } from '$lib/utils';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
@@ -14,8 +14,6 @@
 	{new Date(match.createdAt).toLocaleDateString(undefined, {
 		year: 'numeric',
 		month: 'short',
-		day: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit'
+		day: 'numeric'
 	})}
 </span>

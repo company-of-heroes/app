@@ -2,7 +2,7 @@
 	import { H } from '$lib/components/ui/h';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { fetch } from '@tauri-apps/plugin-http';
 	import { AspectRatio } from 'bits-ui';
 	import { Button } from '$lib/components/ui/button';
@@ -94,10 +94,14 @@
 			</Button>
 		</AspectRatio.Root>
 	</Form.Group>
+	<Alert variant="warning" class="mb-4">
+		These fields are disabled for now, as I am implementing some features.
+	</Alert>
+	<Form.Group class="mt-4">
+		<Form.Label>Displayname</Form.Label>
+		<Input type="text" bind:value={app.features.auth.user.name} disabled />
+	</Form.Group>
 	<Form.Group>
-		<Alert variant="warning" class="mb-4">
-			These fields are disabled for now, as I am implementing some features.
-		</Alert>
 		<Form.Label>Email (Emails are private and will not be shared!)</Form.Label>
 		<Input type="email" bind:value={app.features.auth.settings.email} disabled />
 		<Form.Description class="mt-1">

@@ -4,7 +4,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import { scale } from 'svelte/transition';
 	import { page } from '$app/state';
-	import { app } from '$core/app';
+	import { app } from '$core/context';
 	import { Button, ButtonBack } from '$lib/components/ui/button';
 	import { H } from '$lib/components/ui/h';
 	import { cn, normalizeMapName } from '$lib/utils';
@@ -24,6 +24,8 @@
 		() => page.params.id,
 		() => app.database.matches.getById(page.params.id!)
 	);
+
+	$inspect(match.current);
 
 	let isDownloading = $state(false);
 	let didDownload = $derived(

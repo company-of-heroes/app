@@ -1,4 +1,4 @@
-import { app } from '$core/app/app.svelte';
+import { app } from '$core/context';
 import { watch } from 'runed';
 import { Feature } from '../feature.svelte';
 import { twitch } from '../twitch/twitch.svelte';
