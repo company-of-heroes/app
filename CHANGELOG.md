@@ -2,11 +2,12 @@
 
 > If this update causes issues, please downgrade
 
+- feat; Enhanced replay parser to show comprehensive replay data, matching! 🎉
 - feat; Reworked and simplified the core application logic
 - feat; Added a command allowing Twitch subscribers to change their voice in real-time
 - feat; Restricted ElevenLabs message tags to Twitch subscribers only
+- feat; Show more usefull info per match in the user and community matches
 - fix; Restored StreamElements TTS functionality by updating authentication to match new API requirements
-- feat; Enhanced replay parser to show comprehensive live data, matching and exceeding the replay analyzer! 🎉
 - feat; Automatically fetch default username and avatar from connected Steam profile if not set
 - fix; Resolved an issue where match history only displayed matches created by the user, omitting matches where they were a participant
 
