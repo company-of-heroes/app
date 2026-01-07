@@ -29,7 +29,9 @@ function buildPocketBaseFilter(filters: FiltersState) {
 	}
 
 	if (filters.scope === 'user') {
-		parts.push(`user = "${app.features.auth.userId}"`);
+		parts.push(
+			`players ~ ${app.features.auth.user.steamIds.map((id) => `"${escapePocketBaseString(id)}"`).join(' || players ~ ')}`
+		);
 	}
 
 	// tri-state:

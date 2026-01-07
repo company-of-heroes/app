@@ -5,6 +5,7 @@
 		UsersResponse
 	} from '$core/pocketbase/types';
 	import type { LobbyPlayer } from '@fknoobs/app';
+	import type { Snapshot } from './$types';
 	import { app } from '$core/context';
 	import { H } from '$lib/components/ui/h';
 	import { normalizeMapName } from '$lib/utils';
@@ -13,7 +14,6 @@
 	import { MatchList, type MatchListState } from './match-list.svelte';
 	import MatchFilters from './match-filters.svelte';
 	import MatchTable from './match-table.svelte';
-	import type { Snapshot } from './$types';
 	import { pocketbase } from '$core/pocketbase';
 
 	let list = $state(new MatchList());

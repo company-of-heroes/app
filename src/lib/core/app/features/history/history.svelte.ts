@@ -1,5 +1,5 @@
 import type { MatchExpanded } from '$core/app/database/lobbies';
-import { app, Lobby } from '$core/context';
+import { app, type Match } from '$core/context';
 import { Feature } from '../feature.svelte';
 import { relic } from '$lib/relic';
 import { join } from '@tauri-apps/api/path';
@@ -24,7 +24,7 @@ export class History extends Feature {
 		this.trackResultsInterval = setInterval(() => this.getMatchHistory(), 5000);
 	}
 
-	async saveLobbyResult(lobby: Lobby) {
+	async saveLobbyResult(lobby: Match) {
 		if (!lobby.sessionId) {
 			return;
 		}
@@ -102,10 +102,10 @@ export class History extends Feature {
 
 	async downloadReplay(match: MatchExpanded) {
 		try {
-			const path = await app.paths.cohPlaybackDir();
+			const path = await join(await app.paths.cohPlaybackDir(), match.replay);
 			const url = app.pocketbase.files.getURL(match, match.replay);
-			await download(url, path);
 
+			await download(url, path);
 			app.toast.success('Replay saved to the Company of Heroes playback folder.');
 			return true;
 		} catch (error) {

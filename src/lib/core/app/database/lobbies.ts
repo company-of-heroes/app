@@ -23,6 +23,12 @@ export type MatchExpanded = Expand<Match>;
 
 const DEFAULT_EXPAND = 'user';
 
+/**
+ * @todo Add caching layer
+ * @todo Add logging
+ * @todo Remove the user relation and just store the matches. We can retrieve the matches for the user via the steamIds in the app context.
+ * Since the players are stored with their steamIds, we can filter the matches for the current user easily.
+ */
 export class Matches {
 	/**
 	 * Retrieves a paginated list of lobbies.
@@ -143,7 +149,7 @@ export class Matches {
 	}
 
 	/**
-	 * Checks if a lobby with the given session ID exists.
+	 * Checks if a lobby with the given session ID and user exists.
 	 *
 	 * @param sessionId The session ID to check
 	 * @returns {Promise<boolean>} True if the lobby exists, false otherwise

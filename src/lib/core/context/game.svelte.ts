@@ -1,6 +1,5 @@
 import type { RelicProfile } from '@fknoobs/app';
 import type { SteamPlayerSummary } from '$core/steam';
-import type { Lobby } from './lobby.svelte';
 import { invoke } from '@tauri-apps/api/core';
 import Emittery from 'emittery';
 import { watch } from 'runed';

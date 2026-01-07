@@ -3,15 +3,19 @@
 	import { H } from '../ui/h';
 	import { app } from '$core/context';
 	import { Alert } from '../ui/alert';
+
+	const lobby = $derived(app.lobby);
+
+	$inspect(lobby);
 </script>
 
-{#if !app.lobby}
+{#if !lobby}
 	<Alert variant="warning">
 		You are currently not in a game lobby. When you are in a match, the details will be displayed
 		here.
 	</Alert>
 {:else}
-	<Lobby.Root lobby={app.lobby}>
+	<Lobby.Root {lobby}>
 		<H level="2" class="mb-4">
 			<Lobby.Mapname level="2" />
 		</H>

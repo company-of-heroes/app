@@ -21,7 +21,8 @@
 		() => null,
 		() =>
 			app.database.matches.getList({
-				filter: `createdAt > @todayStart && user = "${app.features.auth.userId}"`
+				filter: `createdAt > @todayStart && user = "${app.features.auth.userId}"`,
+				sort: '-createdAt'
 			})
 	);
 
@@ -46,6 +47,7 @@
 			},
 			{
 				filter: `createdAt > @todayStart && user = "${app.features.auth.userId}"`,
+				sort: '-createdAt',
 				fetch
 			}
 		);

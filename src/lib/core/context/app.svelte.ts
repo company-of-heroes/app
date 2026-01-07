@@ -104,9 +104,9 @@ export class AppContext extends Emittery<AppEvents> {
 	 * The current lobby context.
 	 *
 	 * @public
-	 * @type {Lobby | null}
+	 * @type {Match | null}
 	 */
-	lobby = $state<Lobby | null>(null);
+	lobby = $state<Match | null>(null);
 
 	/**
 	 * The log parser for handling game logs.
@@ -213,7 +213,7 @@ export class AppContext extends Emittery<AppEvents> {
 				}
 			);
 			watch(
-				() => [this.settings.companyOfHeroesConfigPath],
+				() => [this.settings.companyOfHeroesConfigPath, this.game.isRunning],
 				() => {
 					if (dev || this.game.isRunning) {
 						log.start(this.settings.companyOfHeroesConfigPath);
@@ -346,12 +346,22 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	private onLobbyStarted(lobby: Lobby) {
+		if (!this.isReady) {
+			return;
+		}
+
+		this.lobby = lobby.toJSON();
+
 		this.emit('lobby.started', lobby.toJSON());
 		this.socket?.publish('game.lobby.started', lobby.toJSON());
 	}
 
 	private onLobbyJoined(lobby: Lobby) {
-		if (this.isReady && lobby.startedAt && !lobby.didNotify && !this.game.isWindowFocused) {
+		if (!this.isReady) {
+			return;
+		}
+
+		if (lobby.startedAt && !lobby.didNotify && !this.game.isWindowFocused) {
 			this.audio.src = GameStartedNotificationAudio;
 			this.audio.currentTime = 0;
 			lobby.didNotify = true;
@@ -362,18 +372,24 @@ export class AppContext extends Emittery<AppEvents> {
 		if (this.game.isWindowFocused) {
 			this.audio.pause();
 		}
-
-		this.lobby = lobby;
 	}
 
 	private onLobbyDestroyed() {
-		this.emit('lobby.destroyed', this.lobby!.toJSON());
-		this.socket?.publish('game.lobby.destroyed', this.lobby!.toJSON());
+		if (!this.isReady) {
+			return;
+		}
+
+		this.emit('lobby.destroyed', this.lobby!);
+		this.socket?.publish('game.lobby.destroyed', this.lobby!);
 
 		this.lobby = null;
 	}
 
 	private onLobbyResult(playerId: number, result: 'PS_WON' | 'PS_KILLED') {
+		if (!this.isReady) {
+			return;
+		}
+
 		if (playerId === this.lobby?.me?.playerId) {
 			this.lobby!.outcome = result;
 		}

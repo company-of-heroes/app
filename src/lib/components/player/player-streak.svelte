@@ -8,12 +8,8 @@
 	const { ...restProps }: Props = $props();
 	const { playerResult, stats } = $derived(usePlayer());
 
-	let isPositive = $derived(
-		(playerResult && playerResult?.streak > 0) || (stats && stats?.streak > 0)
-	);
-	let isNegative = $derived(
-		(playerResult && playerResult?.streak < 0) || (stats && stats?.streak < 0)
-	);
+	let isPositive = $derived((playerResult?.streak ?? stats?.streak ?? 0) > 0);
+	let isNegative = $derived((playerResult?.streak ?? stats?.streak ?? 0) < 0);
 </script>
 
 <span
@@ -30,7 +26,5 @@
 			+
 		{/if}
 		{stats.streak}
-	{:else}
-		-
 	{/if}
 </span>

@@ -25,6 +25,8 @@
 		() => app.database.matches.getById(page.params.id!)
 	);
 
+	$inspect(match.current);
+
 	let isDownloading = $state(false);
 	let didDownload = $derived(
 		match.current && (await app.features.history.downloadExists(match.current))

@@ -146,7 +146,8 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 					f.isFile &&
 					f.name.endsWith('.rec') &&
 					f.name !== 'temp.rec' &&
-					!f.name.startsWith('replay_')
+					!f.name.startsWith('replay_') &&
+					!f.name.startsWith('fknoobs_')
 			)
 			.map((f) => f.name);
 

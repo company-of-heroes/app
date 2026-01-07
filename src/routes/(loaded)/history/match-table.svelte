@@ -25,8 +25,6 @@
 			}
 		};
 	}
-
-	$inspect(list.matches[1]);
 </script>
 
 <Table>
