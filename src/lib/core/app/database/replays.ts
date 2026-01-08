@@ -74,7 +74,7 @@ export class Replays {
 				return getFile(record, record.file);
 			})
 			.catch(async () => {
-				const record = await pocketbase.collection('lobbies').getOne(id, { fetch });
+				const record = await pocketbase.collection('matches').getOne(id, { fetch });
 				return getFile(record, record.replay);
 			});
 	}

@@ -1,8 +1,8 @@
 import type {
-	LobbiesResponse,
+	MatchesResponse,
 	Create,
 	Update,
-	LobbiesRecord,
+	MatchesRecord,
 	UsersResponse
 } from '$core/pocketbase/types';
 import type { ListResult, RecordFullListOptions } from 'pocketbase';
@@ -12,7 +12,7 @@ import { exp, pocketbase } from '$core/pocketbase';
 import { fetch } from '@tauri-apps/plugin-http';
 import { app } from '$core/context';
 
-export type Match = LobbiesResponse<
+export type Match = MatchesResponse<
 	LobbyPlayer[],
 	LobbyMatch | null,
 	{
@@ -42,10 +42,10 @@ export class Matches {
 			filter = '',
 			fields = [],
 			sort = '-createdAt'
-		}: { filter?: string; fields?: (keyof LobbiesRecord)[]; sort?: string } = {}
+		}: { filter?: string; fields?: (keyof MatchesRecord)[]; sort?: string } = {}
 	): Promise<ListResult<MatchExpanded>> {
 		const fieldsString = fields.join(',');
-		const response = await pocketbase.collection('lobbies').getList<Match>(page, perPage, {
+		const response = await pocketbase.collection('matches').getList<Match>(page, perPage, {
 			filter,
 			fields: fieldsString,
 			sort,
@@ -65,7 +65,7 @@ export class Matches {
 	 * @param options Configuration options for the request
 	 */
 	async getList(options: RecordFullListOptions): Promise<MatchExpanded[]> {
-		const response = await pocketbase.collection('lobbies').getFullList<Match>({
+		const response = await pocketbase.collection('matches').getFullList<Match>({
 			...options,
 			expand: DEFAULT_EXPAND,
 			fetch
@@ -75,7 +75,7 @@ export class Matches {
 	}
 
 	async getAll(): Promise<MatchExpanded[]> {
-		const response = await pocketbase.collection('lobbies').getFullList<Match>(1000, {
+		const response = await pocketbase.collection('matches').getFullList<Match>(1000, {
 			expand: DEFAULT_EXPAND,
 			fetch
 		});
@@ -89,7 +89,7 @@ export class Matches {
 	 * @param id The ID of the lobby
 	 */
 	async getById(id: string): Promise<MatchExpanded> {
-		const record = await pocketbase.collection('lobbies').getOne<Match>(id, {
+		const record = await pocketbase.collection('matches').getOne<Match>(id, {
 			fetch,
 			expand: DEFAULT_EXPAND
 		});
@@ -102,7 +102,7 @@ export class Matches {
 	 * @param sessionId The session ID of the lobby
 	 */
 	async getBySessionId(sessionId: number): Promise<MatchExpanded | null> {
-		const records = await pocketbase.collection('lobbies').getList<Match>(1, 1, {
+		const records = await pocketbase.collection('matches').getList<Match>(1, 1, {
 			filter: `sessionId=${sessionId}`,
 			expand: DEFAULT_EXPAND,
 			fetch
@@ -115,12 +115,12 @@ export class Matches {
 	 *
 	 * @param data The data to create the lobby with
 	 */
-	async create(data: Omit<Create<'lobbies'>, 'user'>): Promise<MatchExpanded> {
+	async create(data: Omit<Create<'matches'>, 'user'>): Promise<MatchExpanded> {
 		const newData = {
 			user: app.pocketbase.authStore.record!.id,
 			...data
 		};
-		return await pocketbase.collection('lobbies').create(newData, {
+		return await pocketbase.collection('matches').create(newData, {
 			expand: DEFAULT_EXPAND,
 			fetch
 		});
@@ -132,8 +132,8 @@ export class Matches {
 	 * @param id The ID of the lobby to update
 	 * @param data The data to update the lobby with
 	 */
-	async update(id: string, data: Update<'lobbies'>): Promise<MatchExpanded> {
-		return await pocketbase.collection('lobbies').update(id, data, {
+	async update(id: string, data: Update<'matches'>): Promise<MatchExpanded> {
+		return await pocketbase.collection('matches').update(id, data, {
 			expand: DEFAULT_EXPAND,
 			fetch
 		});
@@ -145,7 +145,7 @@ export class Matches {
 	 * @param id The ID of the lobby to delete
 	 */
 	async delete(id: string): Promise<boolean> {
-		return await pocketbase.collection('lobbies').delete(id, { fetch });
+		return await pocketbase.collection('matches').delete(id, { fetch });
 	}
 
 	/**
@@ -156,7 +156,7 @@ export class Matches {
 	 */
 	async exists(sessionId: number): Promise<boolean> {
 		return pocketbase
-			.collection('lobbies')
+			.collection('matches')
 			.getFirstListItem(`sessionId=${sessionId}`, { fetch })
 			.then(() => true)
 			.catch(() => false);

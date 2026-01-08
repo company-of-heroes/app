@@ -27,7 +27,7 @@
 	);
 
 	onMount(async () => {
-		unsubscribe = await app.pocketbase.collection('lobbies').subscribe<LobbyMatch>(
+		unsubscribe = await app.pocketbase.collection('matches').subscribe<LobbyMatch>(
 			'*',
 			(e) => {
 				if (e.action === 'create') {

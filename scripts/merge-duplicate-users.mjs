@@ -52,7 +52,7 @@ async function mergeUser(oldUser, targetUser) {
 		chat: await moveByField('chat', 'user', oldUser.id, targetUser.id),
 		chatMessages: await moveByField('chat_messages', 'sender', oldUser.id, targetUser.id),
 		chatRooms: await moveChatRooms(oldUser.id, targetUser.id),
-		lobbies: await moveByField('lobbies', 'user', oldUser.id, targetUser.id),
+		matches: await moveByField('matches', 'user', oldUser.id, targetUser.id),
 		replays: await moveByField('replays', 'createdBy', oldUser.id, targetUser.id)
 	};
 
@@ -167,7 +167,7 @@ async function dedupeReplaysForUser(userId) {
 }
 
 async function dedupeLobbiesForUser(userId) {
-	const lobbies = await client.collection('lobbies').getFullList(20000, {
+	const lobbies = await client.collection('matches').getFullList(20000, {
 		fields: 'id,sessionId,createdAt',
 		filter: `user = "${userId}"`
 	});
@@ -191,7 +191,7 @@ async function dedupeLobbiesForUser(userId) {
 		for (const dup of drop) {
 			removed += 1;
 			if (!dryRun) {
-				await client.collection('lobbies').delete(dup.id);
+				await client.collection('matches').delete(dup.id);
 			} else {
 				console.log(
 					`  [dry-run] Would delete duplicate lobby ${dup.id} (session ${dup.sessionId}, keeping ${keep.id})`

@@ -1,9 +1,8 @@
 import { app } from '$core/context';
 import type { UsersResponse } from '$core/pocketbase/types';
 import { generatePassword, generateUniqueId } from '$lib/utils/password';
-import { debounce, isEmpty, uniq } from 'lodash-es';
+import { isEmpty, uniq } from 'lodash-es';
 import { Feature } from '../feature.svelte';
-import { watch } from 'runed';
 import { fetch } from '@tauri-apps/plugin-http';
 import { steam } from '$core/steam';
 import { getVersion } from '@tauri-apps/api/app';
