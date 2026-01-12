@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
-	import { useApp } from '$core/context';
+	import { useApp } from '$core/app/context';
 	import { watch } from 'runed';
 	import { FileSelection } from '../ui/input';
 	import { exists } from '@tauri-apps/plugin-fs';

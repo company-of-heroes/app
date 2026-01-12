@@ -11,7 +11,7 @@ import { history } from '$core/app/features/history';
 import { shortcuts } from '$core/app/features/shortcuts';
 import { chat } from '$core/app/features/chat';
 import { updater } from '$core/app/features/updater';
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 import { OppBotOverlay } from '$core/app/features/twitch-overlays/overlays/oppbot';
 import { ChatOverlay } from '$core/app/features/twitch-overlays/overlays/chat';
 import { ViewerCountOverlay } from '$core/app/features/twitch-overlays/overlays/viewer-count';

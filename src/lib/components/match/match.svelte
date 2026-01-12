@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { MatchExpanded } from '$core/app/database/lobbies';
+	import type { MatchExpanded } from '$core/app/database/matches';
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import type { Snippet } from 'svelte';
 	import { createMatch } from '.';

@@ -1,4 +1,4 @@
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 import { watch } from 'runed';
 import Elevenlabs from './elevenlabs.svelte';
 import { TTSProvider, type TTSVoice } from '../provider.svelte';

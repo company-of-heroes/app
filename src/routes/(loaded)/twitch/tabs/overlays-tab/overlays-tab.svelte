@@ -11,7 +11,7 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { twitchOverlays } from '$features/twitch-overlays';
 	import { cn } from '$lib/utils';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 
 	type OpenFile = {
 		path: string;

@@ -1,4 +1,4 @@
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 import { readDir, readFile, stat, type DirEntry, type FileInfo } from '@tauri-apps/plugin-fs';
 import { Feature } from '../feature.svelte';
 import { dirname, join } from '@tauri-apps/api/path';

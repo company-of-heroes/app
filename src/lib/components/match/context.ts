@@ -1,5 +1,4 @@
-import type { MatchExpanded } from '$core/app/database/lobbies';
-import type { LobbiesResponse } from '$core/pocketbase/types';
+import type { MatchExpanded } from '$core/app/database/matches';
 import { Context } from 'runed';
 
 const context = new Context<MatchExpanded>('<match />');

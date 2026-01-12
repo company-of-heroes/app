@@ -1,5 +1,5 @@
 import { dev } from '$app/environment';
-import type { AppContext } from '$core/context';
+import type { AppContext } from '$core/app/context';
 import { dirname, documentDir, join, appConfigDir } from '@tauri-apps/api/path';
 
 export class Paths {

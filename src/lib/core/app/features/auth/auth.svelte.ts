@@ -1,4 +1,4 @@
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 import type { UsersResponse } from '$core/pocketbase/types';
 import { generatePassword, generateUniqueId } from '$lib/utils/password';
 import { isEmpty, uniq } from 'lodash-es';

@@ -7,7 +7,7 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
 	import { Checkbox, Input, Slider } from '$lib/components/ui/input';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { PopoverInfo } from '$lib/components/ui/popover';
 
 	let { voiceId }: TuneVoiceProps = $props();

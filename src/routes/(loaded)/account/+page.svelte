@@ -2,7 +2,7 @@
 	import { H } from '$lib/components/ui/h';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { fetch } from '@tauri-apps/plugin-http';
 	import { AspectRatio } from 'bits-ui';
 	import { Button } from '$lib/components/ui/button';
@@ -11,6 +11,7 @@
 	import ImageCropper from '$lib/components/modals/image-cropper.svelte';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { Alert } from '$lib/components/ui/alert';
+	import { dev } from '$app/environment';
 </script>
 
 <H level={1}>Account</H>
@@ -99,11 +100,11 @@
 	</Alert>
 	<Form.Group class="mt-4">
 		<Form.Label>Displayname</Form.Label>
-		<Input type="text" bind:value={app.features.auth.user.name} disabled />
+		<Input type="text" bind:value={app.features.auth.user.name} disabled={!dev} />
 	</Form.Group>
 	<Form.Group>
 		<Form.Label>Email (Emails are private and will not be shared!)</Form.Label>
-		<Input type="email" bind:value={app.features.auth.settings.email} disabled />
+		<Input type="email" bind:value={app.features.auth.settings.email} disabled={!dev} />
 		<Form.Description class="mt-1">
 			This email is used to sign in to your account. It is recommended to use a valid email address
 			so you can recover your account.
@@ -111,6 +112,6 @@
 	</Form.Group>
 	<Form.Group class="mt-4">
 		<Form.Label>Password</Form.Label>
-		<Input type="password" bind:value={app.features.auth.settings.password} disabled />
+		<Input type="password" bind:value={app.features.auth.settings.password} disabled={!dev} />
 	</Form.Group>
 </Form.Root>

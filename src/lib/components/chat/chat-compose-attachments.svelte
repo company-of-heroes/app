@@ -6,7 +6,7 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { basename } from '@tauri-apps/api/path';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { cn } from '$lib/utils';
 	import { Button } from '../ui/button';
 

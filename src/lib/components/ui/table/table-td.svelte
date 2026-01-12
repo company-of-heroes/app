@@ -28,11 +28,26 @@
 			| '22/24'
 			| '23/24'
 			| '24/24';
-	} & HTMLAttributes<HTMLSpanElement>;
+	} & HTMLAttributes<HTMLSpanElement> & {
+			href?: string;
+		};
 
-	let { width, children, ...restProps }: Props = $props();
+	let { width, children, href, ...restProps }: Props = $props();
 </script>
 
-<span {...restProps} class={cn(`min-w-${width} max-w-${width}`, restProps.class)}>
-	{@render children?.()}
-</span>
+{#if href}
+	<a
+		{href}
+		{...restProps}
+		class={cn(
+			`min-w-${width} max-w-${width} hover:text-primary transition-colors`,
+			restProps.class
+		)}
+	>
+		{@render children?.()}
+	</a>
+{:else}
+	<span {...restProps} class={cn(`min-w-${width} max-w-${width}`, restProps.class)}>
+		{@render children?.()}
+	</span>
+{/if}

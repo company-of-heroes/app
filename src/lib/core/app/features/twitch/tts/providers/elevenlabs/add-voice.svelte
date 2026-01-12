@@ -7,7 +7,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { fetch } from '@tauri-apps/plugin-http';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { toast } from 'svelte-sonner';
 	import { dialog } from '$lib/components/ui/dialog';
 	import { tts } from '$features/twitch';

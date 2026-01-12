@@ -1,6 +1,6 @@
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 import { Debounced, watch } from 'runed';
-import type { MatchExpanded } from '$core/app/database/lobbies';
+import type { MatchExpanded } from '$core/app/database/matches';
 import type { UsersResponse } from '$core/pocketbase/types';
 
 const PAGE_SIZE = 50;

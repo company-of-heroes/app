@@ -10,7 +10,7 @@ import { exp } from '$core/pocketbase';
 import type { ListResult, UnsubscribeFunc } from 'pocketbase';
 import Emittery from 'emittery';
 import type { MessageAttachment } from '$lib/components/chat';
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 
 export type ChatRoom = ChatRoomsResponse<{
 	members: UsersResponse[];

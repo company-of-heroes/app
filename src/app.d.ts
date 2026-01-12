@@ -169,6 +169,7 @@ declare module '@fknoobs/app' {
 	}
 
 	type Match = TransformedMatch;
+	type MatchResult = TransformedMatch;
 
 	interface OriginalMatchHistory {
 		matchHistoryStats: Array<{

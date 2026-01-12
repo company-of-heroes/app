@@ -1,7 +1,7 @@
 import { Feature } from '../feature.svelte';
 import { fetch } from '@tauri-apps/plugin-http';
 import { getVersion } from '@tauri-apps/api/app';
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 import { Update } from '.';
 import { padEnd } from 'lodash-es';
 import { gt } from 'semver';

@@ -1,5 +1,5 @@
-import type { MatchExpanded } from '$core/app/database/lobbies';
-import { app, type Match } from '$core/context';
+import type { MatchExpanded } from '$core/app/database/matches';
+import { app, type Match } from '$core/app/context';
 import { Feature } from '../feature.svelte';
 import { relic } from '$lib/relic';
 import { join } from '@tauri-apps/api/path';
@@ -62,7 +62,7 @@ export class History extends Feature {
 		}
 
 		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
-			filter: `needsResult=true && user = "${app.features.auth.userId}"`
+			filter: `needsResult=true && ${app.features.auth.user.steamIds.map((id) => `user.steamIds ~ "${id}"`).join(' || ')}`
 		});
 
 		if (matchesNeedingResults.items.length === 0) {

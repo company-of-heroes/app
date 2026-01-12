@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import Spinner from 'phosphor-svelte/lib/Spinner';
 </script>
 

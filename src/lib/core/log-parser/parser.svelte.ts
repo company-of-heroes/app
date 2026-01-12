@@ -8,7 +8,7 @@ import { readTextFile } from '@tauri-apps/plugin-fs';
 import { isEmpty } from 'lodash-es';
 import { char, createRegExp, digit, exactly, oneOrMore, whitespace, word } from 'magic-regexp';
 import { watch } from 'runed';
-import { Lobby } from '$core/context';
+import { Lobby } from '$core/app/context';
 
 export type LogParserEvents = {
 	'LOG:STARTED': undefined;
