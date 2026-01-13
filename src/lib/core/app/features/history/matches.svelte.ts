@@ -74,30 +74,32 @@ export class Matches {
 	public filter = $derived.by(() => {
 		const { user } = app.features.auth;
 		const { playerIds, maps } = this.filters;
-		const filter: string[] = [];
-
-		if (this.scope === 'user' && user.steamIds.length > 0) {
-			filter.push(
-				join(
-					map(user.steamIds, (id) => `players ~ '\"steamId\":\"${id}\"'`),
-					' || '
-				)
-			);
-		}
-
-		const participantQueries = compact([
-			this.scope === 'user' &&
-				user.steamIds.map((id) => `players ~ '\"steamId\":\"${id}\"'`).join(' || '),
-			playerIds?.length && playerIds.map((id) => `players ~ '\"profile_id\":${id}'`).join(' && ')
-		]);
-
-		const mapQueries = maps?.length && maps.map((map) => `map = '${map}'`).join(' || ');
 
 		return compact([
 			'needsResult = false',
-			this.filters.ranked && 'isRanked = true',
-			participantQueries.length && `(${participantQueries.join(' || ')})`,
-			mapQueries && `(${mapQueries})`
+			this.filters.ranked && `isRanked = true`,
+			/**
+			 * Add user steam ID's if in user scope
+			 */
+			this.scope === 'user' &&
+				join(
+					map(user.steamIds, (id) => `players ~ '\"steamId\":\"${id}\"'`),
+					' || '
+				),
+			/**
+			 * Add player ID's if any are selected
+			 */
+			join(
+				map(playerIds, (id) => `players ~ '\"profile_id\":${id}'`),
+				' || '
+			),
+			/**
+			 * Add map filters if any are selected
+			 */
+			join(
+				map(maps, (map) => `map = '${map}'`),
+				' || '
+			)
 		]).join(' && ');
 	});
 
