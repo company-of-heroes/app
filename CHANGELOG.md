@@ -1,3 +1,7 @@
+### v0.42.0
+
+> enhance; reworked match history
+
 ### v0.41.0
 
 > If this update causes issues, please downgrade
