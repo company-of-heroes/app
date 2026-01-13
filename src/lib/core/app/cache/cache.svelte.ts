@@ -24,45 +24,52 @@ export type CacheOptions<T> = {
  * @param {CacheOptions<T>} options - Configuration options for caching.
  * @returns {Promise<T>} - A promise that resolves to the data.
  */
-export async function useQuery<T extends unknown>(
-	key: string,
-	options: CacheOptions<T>
-): Promise<T> {
+export async function useQuery<T>(key: string, options: CacheOptions<T>): Promise<T> {
+	// Force invalidation
 	if (options.invalidate) {
 		await remove(key);
 	}
 
-	const isCached = await has(key);
+	// Check cache
+	if (await has(key)) {
+		let cached = await get<T>(key);
 
-	if (isCached) {
-		let current = await get<T>(key);
-
-		if (typeof current === 'string') {
-			try {
-				const decoded = atob(current);
-
-				if (decoded.trim().startsWith('{') || decoded.trim().startsWith('[')) {
-					current = JSON.parse(decoded);
-				}
-			} catch (e) {}
+		// Handle base64-encoded data (if needed by Tauri plugin)
+		if (typeof cached === 'string') {
+			cached = tryDecodeBase64(cached);
 		}
 
-		options.invalidateFn?.(current).then((isInvalid) => {
+		// Validate cache freshness
+		if (cached) {
+			return cached;
+		}
+
+		options.invalidateFn?.(cached).then((isInvalid) => {
 			if (isInvalid) {
-				remove(key);
+				console.log('Cache invalidated for key:', key);
+				remove(key).catch((e) => console.warn(`Cache removal failed for key: ${key}`, e));
 			}
 		});
-
-		if (current) {
-			return current;
-		}
 	}
 
+	// Fetch fresh data
 	const data = await options.queryFn();
 
-	set(key, data, { ttl: options.ttl ?? (options.invalidateFn ? undefined : 300) }).catch((e) =>
-		console.warn('Background cache write failed', e)
-	);
+	// Write to cache (non-blocking)
+	const ttl = options.ttl ?? (options.invalidateFn ? undefined : 300);
+	set(key, data, { ttl }).catch((e) => console.warn(`Cache write failed for key: ${key}`, e));
 
 	return data;
+}
+
+function tryDecodeBase64(value: string): any {
+	try {
+		const decoded = atob(value);
+		if (decoded.trim().match(/^[\[{]/)) {
+			return JSON.parse(decoded);
+		}
+	} catch {
+		// Not base64 or not JSON, return as-is
+	}
+	return value;
 }

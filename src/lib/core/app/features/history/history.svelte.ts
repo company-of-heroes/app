@@ -7,12 +7,15 @@ import { exists, readFile } from '@tauri-apps/plugin-fs';
 import { parseReplay } from '@fknoobs/replay-parser';
 import { doesMatchGameTime } from '$lib/utils';
 import { download } from '@tauri-apps/plugin-upload';
+import { Matches } from './matches.svelte';
 import dayjs from 'dayjs';
 
 export class History extends Feature {
 	name = 'History';
 
 	trackResultsInterval: ReturnType<typeof setInterval> | null = null;
+
+	matches!: Matches;
 
 	enable() {
 		app.on('lobby.destroyed', (lobby) => this.saveLobbyResult(lobby));
@@ -22,6 +25,7 @@ export class History extends Feature {
 		}
 
 		this.trackResultsInterval = setInterval(() => this.getMatchHistory(), 5000);
+		this.matches = new Matches();
 	}
 
 	async saveLobbyResult(lobby: Match) {
