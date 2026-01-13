@@ -29,10 +29,10 @@
 	{#if player}
 		{#if player.newrating < player.oldrating}
 			<CaretDown class="inline-block text-red-400" weight="duotone" />
-			{player.oldrating - player.newrating}
+			<span class="text-red-200">{player.oldrating - player.newrating}</span>
 		{:else}
 			<CaretUp class="inline-block text-green-400" weight="duotone" />
-			{player.newrating - player.oldrating}
+			<span class="text-green-100">{player.newrating - player.oldrating}</span>
 		{/if}
 	{/if}
 </span>

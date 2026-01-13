@@ -4,7 +4,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { cn } from '$lib/utils';
 	import { openUrl } from '@tauri-apps/plugin-opener';
-	import { app, createApp } from '$core/context';
+	import { app, createApp } from '$core/app/context';
 	import { ToastReplaysProgress } from '$lib/components/toasts';
 	import { Avatar } from '$lib/components/ui/avatar';
 	import { page } from '$app/state';

@@ -18,7 +18,8 @@ bun-sidebar/*
 coh.replayparser/*
 
 app.json
-pocketbase
 
+pocketbase/pb_data
+pocketbase/pb_public
 
 script.js

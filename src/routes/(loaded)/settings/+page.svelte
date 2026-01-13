@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { FileSelection, Checkbox } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { H } from '$lib/components/ui/h';
 	import ImportIcon from 'phosphor-svelte/lib/DownloadSimple';
 	import ExportIcon from 'phosphor-svelte/lib/Export';

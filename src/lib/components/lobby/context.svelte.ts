@@ -1,4 +1,4 @@
-import type { Lobby } from '$core/context';
+import type { Lobby } from '$core/app/context';
 import { Context } from 'runed';
 
 const context = new Context<() => Lobby>('<lobby />');

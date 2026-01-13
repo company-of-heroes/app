@@ -2,7 +2,7 @@
 	import type { ReplayAggregationResponse } from '$core/pocketbase/types';
 	import type { Player } from '@fknoobs/replay-parser';
 	import type { Snapshot } from './$types';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { H } from '$lib/components/ui/h';
 	import { getString } from '$lib/utils/game';
 	import { resource } from 'runed';

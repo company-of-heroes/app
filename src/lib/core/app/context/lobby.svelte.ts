@@ -1,7 +1,7 @@
 import type { LobbyPlayer } from '@fknoobs/app';
 import { groupBy } from 'lodash-es';
 import { MATCH_TYPES, type MatchTypeId } from '$lib/utils/game';
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 
 export type Match = {
 	sessionId: number;

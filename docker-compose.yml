@@ -5,7 +5,10 @@ services:
     ports:
       - "8090:8090"
     volumes:
-      - ./pocketbase:/pb_data
+      - ./pocketbase/pb_data:/pb_data
+      - ./pocketbase/pb_migrations:/pb_migrations
+      - ./pocketbase/pb_public:/pb_public
+      - ./pocketbase/pb_hooks:/pb_hooks
     environment:
       PB_HOST: ${PB_HOST:-0.0.0.0}
       PB_PORT: ${PB_PORT:-8090}

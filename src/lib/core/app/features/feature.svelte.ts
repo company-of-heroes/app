@@ -6,7 +6,7 @@ import { save, open } from '@tauri-apps/plugin-dialog';
 import { documentDir, join } from '@tauri-apps/api/path';
 import { t } from 'try';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
-import { app, type AppContext } from '$core/context';
+import { app, type AppContext } from '$core/app/context';
 
 export interface Feature<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean }

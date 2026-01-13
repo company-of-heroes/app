@@ -1,4 +1,4 @@
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 import { twitch } from '$features/twitch';
 import { watch } from 'runed';
 import { Overlay } from '../overlay.svelte';

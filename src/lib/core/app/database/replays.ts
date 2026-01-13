@@ -12,7 +12,7 @@ import type { ListResult } from 'pocketbase';
 import { dirname, join } from '@tauri-apps/api/path';
 import type { Message, Player } from '@fknoobs/replay-parser';
 import { t } from 'try';
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 
 export type ReplaysExpanded = Expand<
 	ReplaysResponse<Message[], Player[], { createdBy: UsersResponse }>

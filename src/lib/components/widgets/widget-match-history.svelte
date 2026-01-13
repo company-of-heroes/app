@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/lobbies';
+	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/matches';
 	import type { UnsubscribeFunc } from 'pocketbase';
 	import * as Match from '$lib/components/match';
 	import { fetch } from '@tauri-apps/plugin-http';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { exp } from '$core/pocketbase';
 	import { resource } from 'runed';
 	import { onDestroy, onMount } from 'svelte';

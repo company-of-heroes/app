@@ -3,14 +3,16 @@ import type {
 	Create,
 	Update,
 	MatchesRecord,
-	UsersResponse
+	UsersResponse,
+	MatchAggregationResponse,
+	MatchAggregationCommunityResponse
 } from '$core/pocketbase/types';
 import type { ListResult, RecordFullListOptions } from 'pocketbase';
 import type { LobbyPlayer, Match as LobbyMatch } from '@fknoobs/app';
 import type { Expand } from '@fknoobs/app';
 import { exp, pocketbase } from '$core/pocketbase';
 import { fetch } from '@tauri-apps/plugin-http';
-import { app } from '$core/context';
+import { app } from '$core/app/context';
 
 export type Match = MatchesResponse<
 	LobbyPlayer[],
@@ -19,7 +21,10 @@ export type Match = MatchesResponse<
 		user: UsersResponse<Record<string, any>, string[]>;
 	}
 > & { players: LobbyPlayer[] };
-export type MatchExpanded = Expand<Match>;
+export type MatchExpanded = Expand<
+	Match & { alliesOutcome?: 'win' | 'loss'; axisOutcome?: 'win' | 'loss' }
+>;
+export type AggregationPlayer = { profile_id: number; alias: string };
 
 const DEFAULT_EXPAND = 'user';
 
@@ -160,5 +165,27 @@ export class Matches {
 			.getFirstListItem(`sessionId=${sessionId}`, { fetch })
 			.then(() => true)
 			.catch(() => false);
+	}
+
+	/**
+	 * Retrieves match aggregation data.
+	 *
+	 * @param type The type of aggregation ('user' or 'community')
+	 * @param userId The user ID for 'user' type aggregation
+	 */
+	async getMatchAggregation(type: 'user' | 'community', userId?: string) {
+		if (type === 'user') {
+			return pocketbase
+				.collection<
+					MatchAggregationResponse<string[], AggregationPlayer[], string>
+				>('match_aggregation')
+				.getFirstListItem('user="' + userId + '"', { fetch });
+		}
+
+		return pocketbase
+			.collection<
+				MatchAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
+			>('match_aggregation_community')
+			.getFirstListItem('', { fetch });
 	}
 }

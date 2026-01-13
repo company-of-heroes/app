@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Lobby from '$lib/components/lobby';
 	import { H } from '../ui/h';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { Alert } from '../ui/alert';
 
 	const lobby = $derived(app.lobby);

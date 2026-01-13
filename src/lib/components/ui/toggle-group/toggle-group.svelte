@@ -2,6 +2,8 @@
 	import type { Snippet } from 'svelte';
 	import { ToggleGroup, type ToggleGroupRootProps } from 'bits-ui';
 	import { cn } from '$lib/utils';
+	import { watch } from 'runed';
+	import { isEmpty } from 'lodash-es';
 
 	type Props = {
 		value: string;
@@ -13,6 +15,15 @@
 	} & Omit<ToggleGroupRootProps, 'type' | 'value' | 'value' | 'children'>;
 
 	let { value = $bindable(), items, ...restProps }: Props = $props();
+
+	watch(
+		() => value,
+		(curr, prev) => {
+			if (isEmpty(curr) && items.length > 0) {
+				value = prev ?? items[0].value;
+			}
+		}
+	);
 </script>
 
 <ToggleGroup.Root

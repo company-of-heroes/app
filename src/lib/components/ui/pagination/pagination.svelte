@@ -13,7 +13,7 @@
 			<Pagination.PrevButton
 				class={cn(
 					'mr-2 inline-flex size-8 items-center justify-center rounded-md bg-transparent',
-					'active:scale-[0.98] disabled:cursor-not-allowed hover:disabled:bg-transparent',
+					'disabled:cursor-not-allowed hover:disabled:bg-transparent',
 					'hover:bg-secondary-500/30'
 				)}
 			>
@@ -27,10 +27,11 @@
 						<Pagination.Page
 							{page}
 							class={cn(
-								'inline-flex size-8 items-center justify-center rounded-[9px] text-sm font-medium select-none',
+								'inline-flex size-9 items-center justify-center rounded-[9px] text-sm font-medium select-none',
+								'border border-transparent',
 								'hover:bg-secondary-700/20 hover:cursor-pointer',
-								'data-selected:bg-secondary-700/40',
-								'active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent'
+								'data-selected:border-secondary-800 data-selected:bg-secondary-700/30',
+								'disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent'
 							)}
 						>
 							{page.value}
@@ -41,7 +42,7 @@
 			<Pagination.NextButton
 				class={cn(
 					'ml-2 inline-flex size-8 items-center justify-center rounded-md bg-transparent',
-					'active:scale-[0.98] disabled:cursor-not-allowed hover:disabled:bg-transparent',
+					'disabled:cursor-not-allowed hover:disabled:bg-transparent',
 					'hover:bg-gray-500/30'
 				)}
 			>

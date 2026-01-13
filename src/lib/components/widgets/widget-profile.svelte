@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Profile from '$lib/components/ui/profile';
 	import * as List from '$lib/components/ui/list';
-	import { app } from '$core/context';
+	import { app } from '$core/app/context';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { Leaderboard } from '../leaderboard';

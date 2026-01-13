@@ -1,5 +1,5 @@
-import type { MatchExpanded } from '$core/app/database/lobbies';
-import { app, type Match } from '$core/context';
+import type { MatchExpanded } from '$core/app/database/matches';
+import { app, type Match } from '$core/app/context';
 import { Feature } from '../feature.svelte';
 import { relic } from '$lib/relic';
 import { join } from '@tauri-apps/api/path';
@@ -7,12 +7,15 @@ import { exists, readFile } from '@tauri-apps/plugin-fs';
 import { parseReplay } from '@fknoobs/replay-parser';
 import { doesMatchGameTime } from '$lib/utils';
 import { download } from '@tauri-apps/plugin-upload';
+import { Matches } from './matches.svelte';
 import dayjs from 'dayjs';
 
 export class History extends Feature {
 	name = 'History';
 
 	trackResultsInterval: ReturnType<typeof setInterval> | null = null;
+
+	matches!: Matches;
 
 	enable() {
 		app.on('lobby.destroyed', (lobby) => this.saveLobbyResult(lobby));
@@ -22,6 +25,7 @@ export class History extends Feature {
 		}
 
 		this.trackResultsInterval = setInterval(() => this.getMatchHistory(), 5000);
+		this.matches = new Matches();
 	}
 
 	async saveLobbyResult(lobby: Match) {
@@ -62,7 +66,7 @@ export class History extends Feature {
 		}
 
 		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
-			filter: `needsResult=true && user = "${app.features.auth.userId}"`
+			filter: `needsResult=true && ${app.features.auth.user.steamIds.map((id) => `user.steamIds ~ "${id}"`).join(' || ')}`
 		});
 
 		if (matchesNeedingResults.items.length === 0) {
