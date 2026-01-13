@@ -115,15 +115,7 @@ export class Matches {
 			() => {
 				return useQuery('matches-aggregation-' + this.scope, {
 					queryFn: () => this.getAggregation(),
-					invalidateFn: async (value) => {
-						const response = await this.getAggregation();
-
-						if (isEqual(value, response)) {
-							return false;
-						}
-
-						return true;
-					}
+					invalidateFn: async (value) => isEqual(value, await this.getAggregation())
 				});
 			}
 		);
@@ -132,15 +124,7 @@ export class Matches {
 			() => {
 				return useQuery(md5(this.filter + '-' + this.page), {
 					queryFn: () => this.getMatches(),
-					invalidateFn: async (value) => {
-						const response = await this.getMatches();
-
-						if (isEqual(value, response)) {
-							return false;
-						}
-
-						return true;
-					}
+					invalidateFn: async (value) => isEqual(value, await this.getMatches())
 				});
 			}
 		);
