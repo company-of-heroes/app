@@ -52,35 +52,41 @@
 
 <Table>
 	<THead>
-		<TH width="4/24">Title</TH>
-		<TH width="4/24">Allies</TH>
-		<TH width="4/24">Axis</TH>
-		<TH
-			width="3/24"
-			class="flex cursor-pointer items-center select-none"
-			onclick={toggleDurationSort}
-		>
-			Duration
-			{#if list.filters.sort.duration === 'durationInSeconds'}
-				<SortAscending class="ml-auto inline-block" weight="duotone" size="18" />
-			{:else if list.filters.sort.duration === '-durationInSeconds'}
-				<SortDescending class="ml-auto inline-block" weight="duotone" size="18" />
-			{:else}
-				<Sortable class="ml-auto inline-block" weight="duotone" />
-			{/if}
-		</TH>
-		<TH width="2/24" class="text-center">Players</TH>
-		<TH width="3/24">Map</TH>
-		<TH width="4/24" class="flex cursor-pointer items-center select-none" onclick={toggleDateSort}>
-			Date
-			{#if list.filters.sort.gameDate === 'gameDate'}
-				<SortAscending class="ml-auto inline-block" weight="duotone" size="18" />
-			{:else if list.filters.sort.gameDate === '-gameDate'}
-				<SortDescending class="ml-auto inline-block" weight="duotone" size="18" />
-			{:else}
-				<Sortable class="ml-auto inline-block" weight="duotone" />
-			{/if}
-		</TH>
+		<TR>
+			<TH width="4/24">Title</TH>
+			<TH width="4/24">Allies</TH>
+			<TH width="4/24">Axis</TH>
+			<TH
+				width="3/24"
+				class="flex cursor-pointer items-center select-none"
+				onclick={toggleDurationSort}
+			>
+				Duration
+				{#if list.filters.sort.duration === 'durationInSeconds'}
+					<SortAscending class="ml-auto inline-block" weight="duotone" size="18" />
+				{:else if list.filters.sort.duration === '-durationInSeconds'}
+					<SortDescending class="ml-auto inline-block" weight="duotone" size="18" />
+				{:else}
+					<Sortable class="ml-auto inline-block" weight="duotone" />
+				{/if}
+			</TH>
+			<TH width="2/24" class="text-center">Players</TH>
+			<TH width="3/24">Map</TH>
+			<TH
+				width="4/24"
+				class="flex cursor-pointer items-center select-none"
+				onclick={toggleDateSort}
+			>
+				Date
+				{#if list.filters.sort.gameDate === 'gameDate'}
+					<SortAscending class="ml-auto inline-block" weight="duotone" size="18" />
+				{:else if list.filters.sort.gameDate === '-gameDate'}
+					<SortDescending class="ml-auto inline-block" weight="duotone" size="18" />
+				{:else}
+					<Sortable class="ml-auto inline-block" weight="duotone" />
+				{/if}
+			</TH>
+		</TR>
 	</THead>
 
 	{#if list.replays.length > 0}

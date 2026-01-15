@@ -140,13 +140,15 @@
 			<H level={3} class="mt-8 mb-4">Players</H>
 			<Table.Table>
 				<Table.THead>
-					<Table.TH width="2/24">-</Table.TH>
-					<Table.TH width="2/24" class="flex justify-center">ELO</Table.TH>
-					<Table.TH width="2/24" class="flex justify-center">Rank</Table.TH>
-					<Table.TH width="9/24">Name</Table.TH>
-					<Table.TH width="3/24" class="flex justify-center">Wins</Table.TH>
-					<Table.TH width="3/24" class="flex justify-center">Losses</Table.TH>
-					<Table.TH width="3/24" class="flex justify-center">Streak</Table.TH>
+					<Table.tr>
+						<Table.TH width="2/24">-</Table.TH>
+						<Table.TH width="2/24" class="flex justify-center">ELO</Table.TH>
+						<Table.TH width="2/24" class="flex justify-center">Rank</Table.TH>
+						<Table.TH width="9/24">Name</Table.TH>
+						<Table.TH width="3/24" class="flex justify-center">Wins</Table.TH>
+						<Table.TH width="3/24" class="flex justify-center">Losses</Table.TH>
+						<Table.TH width="3/24" class="flex justify-center">Streak</Table.TH>
+					</Table.tr>
 				</Table.THead>
 				{#each sortBy(match.current.players, 'index') as player}
 					{@const playerResult = match.current.result?.players.find(

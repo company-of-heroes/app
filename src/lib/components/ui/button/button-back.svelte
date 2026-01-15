@@ -9,8 +9,8 @@
 </script>
 
 <button
-	{...restProps}
 	onclick={() => history.back()}
+	{...restProps}
 	class={cn(
 		'mb-6 inline-flex cursor-pointer items-center gap-2 text-xl transition-transform hover:-translate-x-0.5',
 		restProps.class

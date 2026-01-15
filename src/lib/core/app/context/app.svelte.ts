@@ -23,6 +23,7 @@ import Emittery from 'emittery';
 import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { join } from '@tauri-apps/api/path';
+import { RANKED_2V2 } from '$lib/dev';
 
 export const appSettingsSchema = z
 	.object({
@@ -106,7 +107,7 @@ export class AppContext extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Match | null}
 	 */
-	lobby = $state<Match | null>(null);
+	lobby = $state<Match | null>(dev ? RANKED_2V2 : null);
 
 	/**
 	 * The log parser for handling game logs.

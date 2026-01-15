@@ -14,7 +14,7 @@
 	{href}
 	{...restProps}
 	class={cn(
-		'flex h-11 items-center *:px-4',
+		'flex h-11 w-full items-center *:px-4',
 		'odd:bg-secondary-600/5',
 		href && 'hover:text-primary cursor-pointer transition-colors',
 		restProps.class

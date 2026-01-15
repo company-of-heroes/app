@@ -92,13 +92,15 @@
 <div class={cn('flex grow flex-col')}>
 	<Table.Table>
 		<Table.THead>
-			<Table.TH width="1/24">#</Table.TH>
-			<Table.TH width="2/24">Rank</Table.TH>
-			<Table.TH width="13/24">Alias</Table.TH>
-			<Table.TH width="2/24" class="text-center">Wins</Table.TH>
-			<Table.TH width="2/24" class="text-center">Losses</Table.TH>
-			<Table.TH width="2/24">Streak</Table.TH>
-			<Table.TH width="2/24">Ratio</Table.TH>
+			<Table.tr>
+				<Table.TH width="1/24">#</Table.TH>
+				<Table.TH width="2/24">Rank</Table.TH>
+				<Table.TH width="13/24">Alias</Table.TH>
+				<Table.TH width="2/24" class="text-center">Wins</Table.TH>
+				<Table.TH width="2/24" class="text-center">Losses</Table.TH>
+				<Table.TH width="2/24">Streak</Table.TH>
+				<Table.TH width="2/24">Ratio</Table.TH>
+			</Table.tr>
 		</Table.THead>
 		{#if statsResource.loading}
 			{#each Array(5)}
@@ -128,6 +130,7 @@
 			{/each}
 		{:else if statsResource.current}
 			{#each filteredStats as stat}
+				{console.log(stat)}
 				<Table.TR href={`/leaderboards/profile/${stat.profile.profile_id}`}>
 					<Table.TD width="1/24" class="text-center font-semibold">{stat.rank}</Table.TD>
 					<Table.TD width="2/24" class="relative flex items-center gap-4">

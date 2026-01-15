@@ -76,6 +76,9 @@
 				>
 					Recent games
 				</Button>
+				{#if app.lobby}
+					<Button href="/current-game" variant="secondary">Current Game</Button>
+				{/if}
 			</div>
 		</div>
 	</Profile.Root>

@@ -14,11 +14,13 @@
 
 <Table.Table {...restProps}>
 	<Table.THead>
-		<Table.TH width="2/24" class="text-center">Rank</Table.TH>
-		<Table.TH width="10/24">Alias</Table.TH>
-		<Table.TH width="4/24" class="text-center">Wins</Table.TH>
-		<Table.TH width="4/24" class="text-center">Losses</Table.TH>
-		<Table.TH width="4/24" class="text-center">Streak</Table.TH>
+		<Table.tr>
+			<Table.TH width="2/24" class="text-center">Rank</Table.TH>
+			<Table.TH width="10/24">Alias</Table.TH>
+			<Table.TH width="4/24" class="text-center">Wins</Table.TH>
+			<Table.TH width="4/24" class="text-center">Losses</Table.TH>
+			<Table.TH width="4/24" class="text-center">Streak</Table.TH>
+		</Table.tr>
 	</Table.THead>
 	{#each orderBy(lobby.players, 'team') as player}
 		{@const stats = getLeaderboardStatsForPlayerByMatchType(lobby.matchType, player)}

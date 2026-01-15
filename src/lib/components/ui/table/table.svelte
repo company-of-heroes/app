@@ -9,10 +9,7 @@
 
 <div
 	{...restProps}
-	class={cn(
-		'border-secondary-800 bg-secondary-950/30 overflow-clip rounded-lg border',
-		restProps.class
-	)}
+	class={cn('border-secondary-800 overflow-clip rounded-lg border', restProps.class)}
 >
 	{@render children?.()}
 </div>

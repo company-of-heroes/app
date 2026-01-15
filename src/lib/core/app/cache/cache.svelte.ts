@@ -25,21 +25,17 @@ export type CacheOptions<T> = {
  * @returns {Promise<T>} - A promise that resolves to the data.
  */
 export async function useQuery<T>(key: string, options: CacheOptions<T>): Promise<T> {
-	// Force invalidation
 	if (options.invalidate) {
 		await remove(key);
 	}
 
-	// Check cache
 	if (await has(key)) {
 		let cached = await get<T>(key);
 
-		// Handle base64-encoded data (if needed by Tauri plugin)
 		if (typeof cached === 'string') {
 			cached = tryDecodeBase64(cached);
 		}
 
-		// Validate cache freshness
 		if (cached) {
 			return cached;
 		}
@@ -52,11 +48,9 @@ export async function useQuery<T>(key: string, options: CacheOptions<T>): Promis
 		});
 	}
 
-	// Fetch fresh data
 	const data = await options.queryFn();
-
-	// Write to cache (non-blocking)
 	const ttl = options.ttl ?? (options.invalidateFn ? undefined : 300);
+
 	set(key, data, { ttl }).catch((e) => console.warn(`Cache write failed for key: ${key}`, e));
 
 	return data;
@@ -65,11 +59,13 @@ export async function useQuery<T>(key: string, options: CacheOptions<T>): Promis
 function tryDecodeBase64(value: string): any {
 	try {
 		const decoded = atob(value);
+
 		if (decoded.trim().match(/^[\[{]/)) {
 			return JSON.parse(decoded);
+		} else {
+			return null;
 		}
 	} catch {
-		// Not base64 or not JSON, return as-is
+		return null;
 	}
-	return value;
 }
