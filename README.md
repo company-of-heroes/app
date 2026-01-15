@@ -97,6 +97,6 @@ Notes:
 - The project already ignores the `./pocketbase` data folder in `.gitignore`.
 - The PocketBase client now reads `PUBLIC_PB_URL` and falls back to the production URL when not set.
 
-#### Maintained
+### Maintained
 
 This project is maintained by Richard Mauritz <richard@codeit.ninja>
