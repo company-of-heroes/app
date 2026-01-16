@@ -23,7 +23,8 @@ import Emittery from 'emittery';
 import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { join } from '@tauri-apps/api/path';
-import { RANKED_2V2 } from '$lib/dev';
+import { LOBBY_4V4, RANKED_1V1, RANKED_2V2 } from '$lib/dev';
+import { getVersion } from '@tauri-apps/api/app';
 
 export const appSettingsSchema = z
 	.object({
@@ -52,6 +53,13 @@ export type AppEvents = {
 
 export class AppContext extends Emittery<AppEvents> {
 	started: boolean = false;
+	/**
+	 * The application version.
+	 *
+	 * @public
+	 * @type {string}
+	 */
+	version: string = '';
 	/**
 	 * Indicates whether the application is ready.
 	 *
@@ -194,6 +202,7 @@ export class AppContext extends Emittery<AppEvents> {
 			return this;
 		}
 
+		this.version = await getVersion();
 		this.paths = new Paths(this);
 		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
 		this.settings = await this.loadSettings();
@@ -347,6 +356,7 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	private onLobbyStarted(lobby: Lobby) {
+		console.log(lobby.toJSON());
 		if (!this.isReady) {
 			return;
 		}

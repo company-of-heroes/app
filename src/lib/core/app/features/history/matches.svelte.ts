@@ -58,8 +58,10 @@ export class Matches {
 	public players = $derived.by(() => {
 		return map(this.aggregation.current?.players || [], (p) => {
 			return {
-				label: p.alias,
-				value: p.profile_id.toString()
+				// @ts-expect-error This is for backward compatibility until all types are fixed
+				label: 'profile' in p ? p.profile!.alias! : p.alias,
+				// @ts-expect-error This is for backward compatibility until all types are fixed
+				value: 'profile' in p ? p.profile!.profile_id!.toString() : p.profile_id?.toString()
 			};
 		});
 	});

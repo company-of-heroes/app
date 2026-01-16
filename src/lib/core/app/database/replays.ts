@@ -13,6 +13,7 @@ import { dirname, join } from '@tauri-apps/api/path';
 import type { Message, Player } from '@fknoobs/replay-parser';
 import { t } from 'try';
 import { app } from '$core/app/context';
+import lte from 'semver/functions/lte';
 
 export type ReplaysExpanded = Expand<
 	ReplaysResponse<Message[], Player[], { createdBy: UsersResponse }>
@@ -74,7 +75,9 @@ export class Replays {
 				return getFile(record, record.file);
 			})
 			.catch(async () => {
-				const record = await pocketbase.collection('matches').getOne(id, { fetch });
+				const record = await pocketbase
+					.collection(lte('0.40.1', app.version) ? 'lobbies' : 'matches')
+					.getOne(id, { fetch });
 				return getFile(record, record.replay);
 			});
 	}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import { usePlayer } from '.';
+	import { cn } from '$lib/utils';
 
 	type Props = HTMLAnchorAttributes;
 
@@ -9,9 +10,9 @@
 </script>
 
 <a
-	class="hover:text-primary truncate transition-colors"
-	href="/leaderboards/profile/{player.playerId}"
 	{...restProps}
+	class={cn('hover:text-primary truncate transition-colors', restProps.class)}
+	href="/leaderboards/profile/{player.playerId}"
 >
 	{player.profile?.alias ?? 'CPU'}
 </a>

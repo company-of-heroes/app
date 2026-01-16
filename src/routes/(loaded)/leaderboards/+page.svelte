@@ -130,7 +130,6 @@
 			{/each}
 		{:else if statsResource.current}
 			{#each filteredStats as stat}
-				{console.log(stat)}
 				<Table.TR href={`/leaderboards/profile/${stat.profile.profile_id}`}>
 					<Table.TD width="1/24" class="text-center font-semibold">{stat.rank}</Table.TD>
 					<Table.TD width="2/24" class="relative flex items-center gap-4">

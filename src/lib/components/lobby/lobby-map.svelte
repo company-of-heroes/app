@@ -2,7 +2,7 @@
 	import type { HTMLImgAttributes } from 'svelte/elements';
 	import { useLobby } from '.';
 	import { getMapImageFromName } from '$lib/utils/game';
-	import { cn } from '$lib/utils';
+	import { AspectRatio } from 'bits-ui';
 
 	type Props = HTMLImgAttributes;
 
@@ -10,20 +10,20 @@
 	const lobby = $derived(useLobby());
 </script>
 
-<div
-	class={cn(
-		'relative flex aspect-square items-center justify-center rounded-lg',
-		'border-secondary-800 bg-secondary-950/40 border'
-	)}
+<AspectRatio.Root
+	ratio={1}
+	class="border-secondary-800 flex items-center justify-center overflow-clip rounded-lg border"
 >
-	<div
-		class={cn(`absolute inset-0 bg-cover bg-center opacity-30`)}
-		style="background-image: url('{getMapImageFromName(lobby.map!)}');"
-	></div>
 	<img
 		src={getMapImageFromName(lobby.map!)}
 		alt={lobby.map!}
-		class="relative z-10 w-full rounded-lg"
+		class="absolute inset-0 z-5 h-full w-full scale-180 object-cover opacity-30"
 		{...restProps}
 	/>
-</div>
+	<img
+		src={getMapImageFromName(lobby.map!)}
+		alt={lobby.map!}
+		class="absolute z-10 w-full object-cover"
+		{...restProps}
+	/>
+</AspectRatio.Root>
