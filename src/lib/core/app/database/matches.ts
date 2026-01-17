@@ -52,7 +52,7 @@ export class Matches {
 	): Promise<ListResult<MatchExpanded>> {
 		const fieldsString = fields.join(',');
 		const response = await pocketbase
-			.collection(lte('0.40.1', app.version) ? 'lobbies' : 'matches')
+			.collection(lte(app.version, '0.40.1') ? 'lobbies' : 'matches')
 			.getList<Match>(page, perPage, {
 				filter,
 				fields: fieldsString,
@@ -74,7 +74,7 @@ export class Matches {
 	 */
 	async getList(options: RecordFullListOptions): Promise<MatchExpanded[]> {
 		const response = await pocketbase
-			.collection(lte('0.40.1', app.version) ? 'lobbies' : 'matches')
+			.collection(lte(app.version, '0.40.1') ? 'lobbies' : 'matches')
 			.getFullList<Match>({
 				...options,
 				expand: DEFAULT_EXPAND,
@@ -102,7 +102,7 @@ export class Matches {
 	 */
 	async getById(id: string): Promise<MatchExpanded> {
 		const record = await pocketbase
-			.collection(lte('0.40.1', app.version) ? 'lobbies' : 'matches')
+			.collection(lte(app.version, '0.40.1') ? 'lobbies' : 'matches')
 			.getOne<Match>(id, {
 				fetch,
 				expand: DEFAULT_EXPAND
@@ -117,7 +117,7 @@ export class Matches {
 	 */
 	async getBySessionId(sessionId: number): Promise<MatchExpanded | null> {
 		const records = await pocketbase
-			.collection(lte('0.40.1', app.version) ? 'lobbies' : 'matches')
+			.collection(lte(app.version, '0.40.1') ? 'lobbies' : 'matches')
 			.getList<Match>(1, 1, {
 				filter: `sessionId=${sessionId}`,
 				expand: DEFAULT_EXPAND,
@@ -152,7 +152,7 @@ export class Matches {
 	 */
 	async update(id: string, data: Update<'matches'>): Promise<MatchExpanded> {
 		return await pocketbase
-			.collection(lte('0.40.1', app.version) ? 'lobbies' : 'matches')
+			.collection(lte(app.version, '0.40.1') ? 'lobbies' : 'matches')
 			.update(id, data, {
 				expand: DEFAULT_EXPAND,
 				fetch
@@ -166,7 +166,7 @@ export class Matches {
 	 */
 	async delete(id: string): Promise<boolean> {
 		return await pocketbase
-			.collection(lte('0.40.1', app.version) ? 'lobbies' : 'matches')
+			.collection(lte(app.version, '0.40.1') ? 'lobbies' : 'matches')
 			.delete(id, { fetch });
 	}
 
@@ -178,7 +178,7 @@ export class Matches {
 	 */
 	async exists(sessionId: number): Promise<boolean> {
 		return pocketbase
-			.collection(lte('0.40.1', app.version) ? 'lobbies' : 'matches')
+			.collection(lte(app.version, '0.40.1') ? 'lobbies' : 'matches')
 			.getFirstListItem(`sessionId=${sessionId}`, { fetch })
 			.then(() => true)
 			.catch(() => false);
@@ -195,14 +195,14 @@ export class Matches {
 			return pocketbase
 				.collection<
 					MatchAggregationResponse<string[], AggregationPlayer[], string>
-				>(lte('0.40.1', app.version) ? 'lobby_aggregation' : 'match_aggregation')
+				>(lte(app.version, '0.40.1') ? 'lobby_aggregation' : 'match_aggregation')
 				.getFirstListItem('user="' + userId + '"', { fetch });
 		}
 
 		return pocketbase
 			.collection<
 				MatchAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
-			>(lte('0.40.1', app.version) ? 'lobby_aggregation_community' : 'match_aggregation_community')
+			>(lte(app.version, '0.40.1') ? 'lobby_aggregation_community' : 'match_aggregation_community')
 			.getFirstListItem('', { fetch });
 	}
 }

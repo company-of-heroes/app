@@ -7,12 +7,24 @@
 	import { getLeaderboardStatsForPlayerByMatchType } from '$lib/utils/game';
 	import { ButtonBack } from '$lib/components/ui/button';
 	import { goto } from '$app/navigation';
+	import type { ReplayData } from '@fknoobs/replay-parser';
+
+	let match = $state(app.lobby);
+	let replay = $state<{
+		file: File;
+		replay: ReplayData;
+	} | null>(null);
+
+	app.on('lobby.destroyed', (lobby) => {
+		match = lobby.match;
+		replay = lobby.replay;
+	});
 </script>
 
 <ButtonBack onclick={() => goto('/')}>Back to Dashboard</ButtonBack>
 
-{#if app.lobby}
-	<Lobby.Root lobby={app.lobby}>
+{#if match}
+	<Lobby.Root lobby={match}>
 		<div class="mb-6 grid grid-cols-[250px_auto] gap-8">
 			<Lobby.Map />
 			<div class="py-2">
@@ -21,8 +33,8 @@
 			</div>
 		</div>
 		<div class="grid grid-cols-2 gap-4">
-			{#each app.lobby.players as player}
-				{@const stats = getLeaderboardStatsForPlayerByMatchType(app.lobby.matchType, player)}
+			{#each match.players as player}
+				{@const stats = getLeaderboardStatsForPlayerByMatchType(match.matchType, player)}
 				{@const race = player.race}
 
 				<Player.Root {player} {stats} {race}>
@@ -31,7 +43,7 @@
 							class={cn(
 								'bg-secondary-950/40 border-secondary-900 rounded-lg border',
 								'grid grid-cols-[175px_auto] overflow-clip',
-								player.playerId === app.lobby.me.playerId && 'border-blue-500'
+								player.playerId === match.me.playerId && 'border-blue-500'
 							)}
 						>
 							<Player.Avatar />

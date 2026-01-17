@@ -25,6 +25,7 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { join } from '@tauri-apps/api/path';
 import { LOBBY_4V4, RANKED_1V1, RANKED_2V2 } from '$lib/dev';
 import { getVersion } from '@tauri-apps/api/app';
+import type { ReplayData } from '@fknoobs/replay-parser';
 
 export const appSettingsSchema = z
 	.object({
@@ -48,7 +49,13 @@ export type AppEvents = {
 	'game.login': { steamId: string; relicProfile: RelicProfile; steamProfile: SteamPlayerSummary };
 	'game.logout': null;
 	'lobby.started': Match;
-	'lobby.destroyed': Match;
+	'lobby.destroyed': {
+		match: Match;
+		replay: {
+			file: File;
+			replay: ReplayData;
+		};
+	};
 };
 
 export class AppContext extends Emittery<AppEvents> {
@@ -385,12 +392,15 @@ export class AppContext extends Emittery<AppEvents> {
 		}
 	}
 
-	private onLobbyDestroyed() {
+	private async onLobbyDestroyed() {
 		if (!this.isReady) {
 			return;
 		}
 
-		this.emit('lobby.destroyed', this.lobby!);
+		this.emit('lobby.destroyed', {
+			match: this.lobby!,
+			replay: await this.features.history.getLastMatchReplay()
+		});
 		this.socket?.publish('game.lobby.destroyed', this.lobby!);
 
 		this.lobby = null;
