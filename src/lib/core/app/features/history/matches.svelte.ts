@@ -3,8 +3,8 @@ import { app } from '$core/app/context';
 import { resource, watch, type ResourceReturn } from 'runed';
 import { compact, isEqual, map, join } from 'lodash-es';
 import type {
-	MatchAggregationCommunityResponse,
-	MatchAggregationResponse
+	LobbyAggregationResponse,
+	LobbyAggregationCommunityResponse
 } from '$core/pocketbase/types';
 import type { ListResult } from 'pocketbase';
 import type { AggregationPlayer, MatchExpanded } from '$core/app/database/matches';
@@ -42,8 +42,8 @@ export class Matches {
 	public aggregation =
 		$state<
 			ResourceReturn<
-				| MatchAggregationResponse<string[], AggregationPlayer[], string>
-				| MatchAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
+				| LobbyAggregationResponse<string[], AggregationPlayer[], string>
+				| LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
 			>
 		>()!;
 
@@ -124,10 +124,7 @@ export class Matches {
 		this.result = resource(
 			() => [this.scope, this.filter, this.page],
 			() => {
-				return useQuery(md5(this.filter + '-' + this.page), {
-					queryFn: () => this.getMatches(),
-					invalidateFn: async (value) => isEqual(value, await this.getMatches())
-				});
+				return this.getMatches();
 			}
 		);
 	}
