@@ -44,7 +44,7 @@
 									{#if typeof modal.description === 'function'}
 										{@render modal.description()}
 									{:else}
-										{modal.description}
+										{@html modal.description}
 									{/if}
 								</Dialog.Description>
 							{/if}

@@ -1,3 +1,7 @@
+### v0.42.1
+
+- enhance; warn about to not uninstall the old version if windows asks for it.
+
 ### v0.42.0
 
 - enhance; reworked match history
@@ -7,7 +11,7 @@
 
 ### v0.41.0
 
-> If this update causes issues, please downgrade
+> If this update causes issues, please downgrade, or upgrade to latest version
 
 - feat; Enhanced replay parser to show comprehensive replay data, matching! 🎉
 - feat; Reworked and simplified the core application logic

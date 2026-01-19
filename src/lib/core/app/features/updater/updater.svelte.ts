@@ -72,7 +72,10 @@ export class Updater extends Feature<UpdaterSettings> {
 		app.modal.create({
 			component: Update,
 			title: 'Update Available',
-			description: `A new version (${this.latestVersion}) is available. You are currently on version ${this.currentVersion}.`,
+			description: `
+                A new version (${this.latestVersion}) is available. You are currently on version ${this.currentVersion}.<br/><br/>
+                ❗NOTE! When asked, to uninstall, select 'do not uninstall' before installing the new version, as this will delete your settings! Just install the new version over the old one.❗
+            `,
 			props: {
 				currentVersion: this.currentVersion,
 				latestVersion: this.latestVersion,
