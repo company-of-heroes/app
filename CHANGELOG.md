@@ -3,6 +3,7 @@
 - enhance; reworked match history
 - enhance; current game widget overhaul, now shows better and more info on dedicated page.
 - fix; players with same name would get merged, now uses player ID instead of name
+- feat; add code signing certificate! 🎉
 
 ### v0.41.0
 
