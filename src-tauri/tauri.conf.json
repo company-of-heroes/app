@@ -14,11 +14,12 @@
 			{
 				"title": "Fknoobs - Company of Heroes",
 				"label": "main",
-				"width": 1600,
+				"width": 1800,
 				"height": 1000,
 				"transparent": true,
 				"dragDropEnabled": false,
-				"url": "/splashscreen"
+				"url": "/splashscreen",
+				"titleBarStyle": "Overlay"
 			}
 		],
 		"security": {

@@ -9,14 +9,14 @@
 
 	const replay = $derived(useReplay());
 
-	let selectedPlayer = $derived(replay.players.length > 0 ? replay.players[0].name : null);
-	let filteredPlayers = $state<string[]>([]);
+	let selectedPlayer = $derived(replay.players.length > 0 ? replay.players[0].id : null);
+	let filteredPlayers = $state<number[]>([]);
 
 	let actions = $derived.by(() => {
 		if (!selectedPlayer) return [];
 
 		const actions = replay.actions.filter(
-			(a) => a.playerName === selectedPlayer && a.command && !isEmpty(a.command.description)
+			(a) => a.playerID === selectedPlayer && a.command && !isEmpty(a.command.description)
 		);
 		const aiTakeOverIndex = actions.findIndex((a) => a.command?.type === 'AI_TAKEOVER');
 
@@ -52,7 +52,7 @@
 		}
 
 		return result.filter((s) =>
-			filteredPlayers.length > 0 ? filteredPlayers.includes(s.player.name) : true
+			filteredPlayers.length > 0 ? filteredPlayers.includes(s.player.id!) : true
 		);
 	});
 
@@ -70,13 +70,13 @@
 	const series = $derived(
 		replay.players
 			.map((player, i) => ({
-				key: player.name,
+				key: player.id,
 				label: player.name,
 				value: player.name,
 				color: colors[i % colors.length],
-				data: data.filter((d) => d.player.name === player.name)
+				data: data.filter((d) => d.player.id === player.id)
 			}))
-			.filter((s) => (filteredPlayers.length > 0 ? filteredPlayers.includes(s.key) : true))
+			.filter((s) => (filteredPlayers.length > 0 ? filteredPlayers.includes(s.key!) : true))
 	);
 
 	const aggregatedGroups = $derived.by(() => {
@@ -117,12 +117,12 @@
 		<Checkbox
 			size="sm"
 			label={player.name}
-			checked={filteredPlayers.includes(player.name)}
+			checked={filteredPlayers.includes(player.id!)}
 			onCheckedChange={() => {
-				if (filteredPlayers.includes(player.name)) {
-					filteredPlayers = filteredPlayers.filter((p) => p !== player.name);
+				if (filteredPlayers.includes(player.id!)) {
+					filteredPlayers = filteredPlayers.filter((p) => p !== player.id!);
 				} else {
-					filteredPlayers = [...filteredPlayers, player.name];
+					filteredPlayers = [...filteredPlayers, player.id!];
 				}
 			}}
 		/>
@@ -144,8 +144,7 @@
 					<Axis placement="left" grid rule />
 					<Axis placement="bottom" rule />
 					{#each series as s (s.key)}
-						{@const active =
-							s.key === context.tooltip.data?.player?.name || s.key === selectedPlayer}
+						{@const active = s.key === context.tooltip.data?.player?.id || s.key === selectedPlayer}
 						<g class={cn(!active && 'opacity-20 saturate-0')}>
 							<Spline
 								data={s.data}
@@ -194,8 +193,8 @@
 					'hover:text-secondary-500',
 					'data-[active=true]:text-primary data-[active=true]:bg-secondary-800'
 				)}
-				data-active={selectedPlayer === player.name}
-				onclick={() => (selectedPlayer = player.name)}
+				data-active={selectedPlayer === player.id}
+				onclick={() => (selectedPlayer = player.id)}
 			>
 				<img
 					src={getFactionFlagFromRace(

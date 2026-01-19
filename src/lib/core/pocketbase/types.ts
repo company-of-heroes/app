@@ -15,9 +15,9 @@ export enum Collections {
 	Chat = "chat",
 	ChatMessages = "chat_messages",
 	ChatRooms = "chat_rooms",
-	MatchAggregation = "match_aggregation",
-	MatchAggregationCommunity = "match_aggregation_community",
-	Matches = "matches",
+	Lobbies = "lobbies",
+	LobbyAggregation = "lobby_aggregation",
+	LobbyAggregationCommunity = "lobby_aggregation_community",
 	ReplayAggregation = "replay_aggregation",
 	Replays = "replays",
 	Users = "users",
@@ -135,21 +135,7 @@ export type ChatRoomsRecord = {
 	updated: IsoAutoDateString
 }
 
-export type MatchAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
-	id: string
-	maps?: null | Tmaps
-	players?: null | Tplayers
-	user?: null | Tuser
-}
-
-export type MatchAggregationCommunityRecord<Tmaps = unknown, Tplayers = unknown, Tusers = unknown> = {
-	id: string
-	maps?: null | Tmaps
-	players?: null | Tplayers
-	users?: null | Tusers
-}
-
-export type MatchesRecord<Tplayers = unknown, Tresult = unknown> = {
+export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	createdAt: IsoAutoDateString
 	id: string
 	isRanked?: boolean
@@ -162,6 +148,20 @@ export type MatchesRecord<Tplayers = unknown, Tresult = unknown> = {
 	title: string
 	updatedAt: IsoAutoDateString
 	user: RecordIdString
+}
+
+export type LobbyAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
+	id: string
+	maps?: null | Tmaps
+	players?: null | Tplayers
+	user?: null | Tuser
+}
+
+export type LobbyAggregationCommunityRecord<Tmaps = unknown, Tplayers = unknown, Tusers = unknown> = {
+	id: string
+	maps?: null | Tmaps
+	players?: null | Tplayers
+	users?: null | Tusers
 }
 
 export type ReplayAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
@@ -218,9 +218,9 @@ export type AttachmentsResponse<Texpand = unknown> = Required<AttachmentsRecord>
 export type ChatResponse<Texpand = unknown> = Required<ChatRecord> & BaseSystemFields<Texpand>
 export type ChatMessagesResponse<Texpand = unknown> = Required<ChatMessagesRecord> & BaseSystemFields<Texpand>
 export type ChatRoomsResponse<Texpand = unknown> = Required<ChatRoomsRecord> & BaseSystemFields<Texpand>
-export type MatchAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<MatchAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
-export type MatchAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Tusers = unknown, Texpand = unknown> = Required<MatchAggregationCommunityRecord<Tmaps, Tplayers, Tusers>> & BaseSystemFields<Texpand>
-export type MatchesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<MatchesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
+export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
+export type LobbyAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<LobbyAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
+export type LobbyAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Tusers = unknown, Texpand = unknown> = Required<LobbyAggregationCommunityRecord<Tmaps, Tplayers, Tusers>> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
 export type UsersResponse<Tmeta = unknown, TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<Tmeta, TsteamIds>> & AuthSystemFields<Texpand>
@@ -237,9 +237,9 @@ export type CollectionRecords = {
 	chat: ChatRecord
 	chat_messages: ChatMessagesRecord
 	chat_rooms: ChatRoomsRecord
-	match_aggregation: MatchAggregationRecord
-	match_aggregation_community: MatchAggregationCommunityRecord
-	matches: MatchesRecord
+	lobbies: LobbiesRecord
+	lobby_aggregation: LobbyAggregationRecord
+	lobby_aggregation_community: LobbyAggregationCommunityRecord
 	replay_aggregation: ReplayAggregationRecord
 	replays: ReplaysRecord
 	users: UsersRecord
@@ -255,9 +255,9 @@ export type CollectionResponses = {
 	chat: ChatResponse
 	chat_messages: ChatMessagesResponse
 	chat_rooms: ChatRoomsResponse
-	match_aggregation: MatchAggregationResponse
-	match_aggregation_community: MatchAggregationCommunityResponse
-	matches: MatchesResponse
+	lobbies: LobbiesResponse
+	lobby_aggregation: LobbyAggregationResponse
+	lobby_aggregation_community: LobbyAggregationCommunityResponse
 	replay_aggregation: ReplayAggregationResponse
 	replays: ReplaysResponse
 	users: UsersResponse
