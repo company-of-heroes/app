@@ -63,12 +63,14 @@
 {#if app.features.history.matches.result.loading}
 	<Table.Table>
 		<Table.Head>
-			<Table.th width="6/24">Map</Table.th>
-			<Table.th width="4/24">Name</Table.th>
-			<Table.th width="3/24">Allies</Table.th>
-			<Table.th width="3/24">Axis</Table.th>
-			<Table.th width="3/24">Duration</Table.th>
-			<Table.th width="5/24" class="text-end">Date</Table.th>
+			<Table.tr>
+				<Table.th width="6/24">Map</Table.th>
+				<Table.th width="4/24">Name</Table.th>
+				<Table.th width="3/24">Allies</Table.th>
+				<Table.th width="3/24">Axis</Table.th>
+				<Table.th width="3/24">Duration</Table.th>
+				<Table.th width="5/24" class="text-end">Date</Table.th>
+			</Table.tr>
 		</Table.Head>
 		{#each Array(app.features.history.matches.perPage) as _, i}
 			<Table.tr>
@@ -96,12 +98,14 @@
 {:else if app.features.history.matches.result.current}
 	<Table.Table>
 		<Table.Head>
-			<Table.th width="6/24">Map</Table.th>
-			<Table.th width="4/24">Name</Table.th>
-			<Table.th width="3/24">Allies</Table.th>
-			<Table.th width="3/24">Axis</Table.th>
-			<Table.th width="3/24">Duration</Table.th>
-			<Table.th width="5/24" class="text-end">Date</Table.th>
+			<Table.tr>
+				<Table.th width="6/24">Map</Table.th>
+				<Table.th width="4/24">Name</Table.th>
+				<Table.th width="3/24">Allies</Table.th>
+				<Table.th width="3/24">Axis</Table.th>
+				<Table.th width="3/24">Duration</Table.th>
+				<Table.th width="5/24" class="text-end">Date</Table.th>
+			</Table.tr>
 		</Table.Head>
 		{#each app.features.history.matches.result.current.items as match, _ (match.id)}
 			<Match.Root {match}>

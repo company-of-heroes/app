@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { usePlayer } from '.';
-	import { getRankImage } from '$lib/utils';
+	import { cn, getRankImage } from '$lib/utils';
 	import { isNumber } from 'lodash-es';
 
 	type Props = HTMLAttributes<HTMLSpanElement>;
@@ -12,10 +12,10 @@
 
 {#if playerResult && stats}
 	{#await getRankImage(playerResult.race_id, stats.ranklevel) then src}
-		<img {src} alt="Rank" class="h-6 w-6" {...restProps} />
+		<img {src} alt="Rank" {...restProps} class={cn('h-6 w-6', restProps.class)} />
 	{/await}
 {:else if stats && isNumber(race)}
 	{#await getRankImage(race, stats.ranklevel) then src}
-		<img {src} alt="Rank" class="h-6 w-6" {...restProps} />
+		<img {src} alt="Rank" {...restProps} class={cn('h-6 w-6', restProps.class)} />
 	{/await}
 {/if}

@@ -5,8 +5,6 @@
 	import { Alert } from '../ui/alert';
 
 	const lobby = $derived(app.lobby);
-
-	$inspect(lobby);
 </script>
 
 {#if !lobby}

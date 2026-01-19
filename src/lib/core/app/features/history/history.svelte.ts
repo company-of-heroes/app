@@ -18,7 +18,7 @@ export class History extends Feature {
 	matches!: Matches;
 
 	enable() {
-		app.on('lobby.destroyed', (lobby) => this.saveLobbyResult(lobby));
+		app.on('lobby.destroyed', ({ match }) => this.saveLobbyResult(match));
 
 		if (this.trackResultsInterval) {
 			clearInterval(this.trackResultsInterval);

@@ -5,6 +5,11 @@
 	import { Alert } from '$lib/components/ui/alert';
 	import WidgetCurrentGame from '$lib/components/widgets/widget-current-game.svelte';
 	import WidgetProfile from '$lib/components/widgets/widget-profile.svelte';
+	import { goto } from '$app/navigation';
+
+	app.on('lobby.started', () => {
+		goto('/current-game');
+	});
 </script>
 
 <H level="1">Dashboard</H>
@@ -28,9 +33,6 @@
 	{#if app.game.isRunning}
 		<div>
 			<WidgetProfile />
-		</div>
-		<div>
-			<WidgetCurrentGame />
 		</div>
 	{:else}
 		<Alert variant="warning" class="mt-4">Company of Heroes is not running.</Alert>

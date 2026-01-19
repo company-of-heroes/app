@@ -1,14 +1,10 @@
-<script lang="ts" module>
-	export let lobby = $state<Lobby>();
-</script>
-
 <script lang="ts">
-	import type { Lobby } from '$core/company-of-heroes';
 	import type { HTMLAttributes } from 'svelte/elements';
+	import type { Match } from '$core/app/context';
 	import { createLobby } from '.';
 
 	type Props = {
-		lobby: Lobby;
+		lobby: Match;
 	} & HTMLAttributes<HTMLDivElement>;
 
 	let { lobby, children, ...restProps }: Props = $props();

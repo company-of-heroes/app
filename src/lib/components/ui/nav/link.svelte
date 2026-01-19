@@ -5,9 +5,11 @@
 
 	let { path, component, children, ...restProps }: LinkProps = $props();
 	let isActive = $derived(
-		restProps.href === '/'
-			? page.url.pathname === '/'
-			: page.url.pathname.startsWith(restProps.href ?? '')
+		restProps.href === '/' && page.url.pathname === '/current-game'
+			? true
+			: restProps.href === '/'
+				? page.url.pathname === '/'
+				: page.url.pathname.startsWith(restProps.href ?? '')
 	);
 </script>
 

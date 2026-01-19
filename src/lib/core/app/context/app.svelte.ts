@@ -23,6 +23,9 @@ import Emittery from 'emittery';
 import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { join } from '@tauri-apps/api/path';
+import { LOBBY_4V4, RANKED_1V1, RANKED_2V2 } from '$lib/dev';
+import { getVersion } from '@tauri-apps/api/app';
+import type { ReplayData } from '@fknoobs/replay-parser';
 
 export const appSettingsSchema = z
 	.object({
@@ -46,11 +49,24 @@ export type AppEvents = {
 	'game.login': { steamId: string; relicProfile: RelicProfile; steamProfile: SteamPlayerSummary };
 	'game.logout': null;
 	'lobby.started': Match;
-	'lobby.destroyed': Match;
+	'lobby.destroyed': {
+		match: Match;
+		replay: {
+			file: File;
+			replay: ReplayData;
+		};
+	};
 };
 
 export class AppContext extends Emittery<AppEvents> {
 	started: boolean = false;
+	/**
+	 * The application version.
+	 *
+	 * @public
+	 * @type {string}
+	 */
+	version: string = '';
 	/**
 	 * Indicates whether the application is ready.
 	 *
@@ -106,7 +122,7 @@ export class AppContext extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Match | null}
 	 */
-	lobby = $state<Match | null>(null);
+	lobby = $state<Match | null>(dev ? RANKED_2V2 : null);
 
 	/**
 	 * The log parser for handling game logs.
@@ -193,6 +209,7 @@ export class AppContext extends Emittery<AppEvents> {
 			return this;
 		}
 
+		this.version = await getVersion();
 		this.paths = new Paths(this);
 		this.store = await Store.load(dev ? 'app.dev.json' : 'app.json');
 		this.settings = await this.loadSettings();
@@ -346,6 +363,7 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	private onLobbyStarted(lobby: Lobby) {
+		console.log(lobby.toJSON());
 		if (!this.isReady) {
 			return;
 		}
@@ -374,12 +392,15 @@ export class AppContext extends Emittery<AppEvents> {
 		}
 	}
 
-	private onLobbyDestroyed() {
+	private async onLobbyDestroyed() {
 		if (!this.isReady) {
 			return;
 		}
 
-		this.emit('lobby.destroyed', this.lobby!);
+		this.emit('lobby.destroyed', {
+			match: this.lobby!,
+			replay: await this.features.history.getLastMatchReplay()
+		});
 		this.socket?.publish('game.lobby.destroyed', this.lobby!);
 
 		this.lobby = null;
