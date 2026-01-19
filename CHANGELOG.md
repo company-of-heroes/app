@@ -1,6 +1,7 @@
 ### v0.42.0
 
-> enhance; reworked match history
+- enhance; reworked match history
+- enhance; current game widget overhaul, now shows better and more info on dedicated page.
 
 ### v0.41.0
 
