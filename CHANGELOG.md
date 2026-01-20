@@ -1,3 +1,7 @@
+### v0.42.2
+
+- fix; new messages not being displayed because of wrong sort order
+
 ### v0.42.1
 
 - enhance; warn about to not uninstall the old version if windows asks for it.
