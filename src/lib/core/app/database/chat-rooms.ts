@@ -63,13 +63,13 @@ export class ChatRooms extends Emittery<ChatRoomEvents> {
 			.collection('chat_messages')
 			.getList<ChatMessage>(page, perPage, {
 				filter: `chatRoom = "${roomId}"`,
-				sort: '+created',
+				sort: '-created',
 				expand: DEFAULT_CHAT_MESSAGE_EXPAND
 			})
 			.then((result) => {
 				return {
 					...result,
-					items: result.items.map(exp)
+					items: result.items.map(exp).reverse()
 				};
 			});
 	}
