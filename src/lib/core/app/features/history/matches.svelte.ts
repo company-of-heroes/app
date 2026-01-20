@@ -80,8 +80,6 @@ export class Matches {
 		const { user } = app.features.auth;
 		const { playerIds, maps } = this.filters;
 
-		console.log(playerIds);
-
 		return compact([
 			'needsResult = false',
 			'title != "Skirmish"',
@@ -103,7 +101,7 @@ export class Matches {
 			playerIds?.length &&
 				'(' +
 					join(
-						map(playerIds, (id) => `players ~ '\"profile_id\":${id}'`),
+						map(playerIds, (id) => `players ~ '\"profile_id\":${id},'`),
 						' || '
 					) +
 					')',
