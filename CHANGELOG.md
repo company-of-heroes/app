@@ -2,6 +2,7 @@
 
 - fix; new messages not being displayed because of wrong sort order
 - fix; should now correctly attach last replay to match result
+- fix; filtering by players broken because of changes in previous version
 
 ### v0.42.1
 

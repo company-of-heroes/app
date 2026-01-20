@@ -1,7 +1,7 @@
 import { useQuery } from '$core/app/cache';
 import { app } from '$core/app/context';
 import { resource, watch, type ResourceReturn } from 'runed';
-import { compact, isEqual, map, join } from 'lodash-es';
+import { compact, isEqual, map, join, uniqBy } from 'lodash-es';
 import type {
 	LobbyAggregationResponse,
 	LobbyAggregationCommunityResponse
@@ -56,14 +56,17 @@ export class Matches {
 	});
 
 	public players = $derived.by(() => {
-		return map(this.aggregation.current?.players || [], (p) => {
-			return {
-				// @ts-expect-error This is for backward compatibility until all types are fixed
-				label: 'profile' in p ? p.profile!.alias! : p.alias,
-				// @ts-expect-error This is for backward compatibility until all types are fixed
-				value: 'profile' in p ? p.profile!.profile_id!.toString() : p.profile_id?.toString()
-			};
-		});
+		return uniqBy(
+			map(this.aggregation.current?.players || [], (p) => {
+				return {
+					// @ts-expect-error This is for backward compatibility until all types are fixed
+					label: 'profile' in p ? p.profile!.alias! : p.alias,
+					// @ts-expect-error This is for backward compatibility until all types are fixed
+					value: 'profile' in p ? p.profile!.profile_id!.toString() : p.profile_id?.toString()
+				};
+			}),
+			'value'
+		);
 	});
 
 	public maps = $derived.by(() => {
@@ -77,6 +80,8 @@ export class Matches {
 		const { user } = app.features.auth;
 		const { playerIds, maps } = this.filters;
 
+		console.log(playerIds);
+
 		return compact([
 			'needsResult = false',
 			'title != "Skirmish"',
@@ -86,24 +91,31 @@ export class Matches {
 			 * Add user steam ID's if in user scope
 			 */
 			this.scope === 'user' &&
-				join(
-					map(user.steamIds, (id) => `players ~ '\"steamId\":\"${id}\"'`),
-					' || '
-				),
+				'(' +
+					join(
+						map(user.steamIds, (id) => `players ~ '\"steamId\":\"${id}\"'`),
+						' || '
+					) +
+					')',
 			/**
 			 * Add player ID's if any are selected
 			 */
-			join(
-				map(playerIds, (id) => `players ~ '\"profile_id\":${id}'`),
-				' || '
-			),
+			playerIds?.length &&
+				'(' +
+					join(
+						map(playerIds, (id) => `players ~ '\"profile_id\":${id}'`),
+						' || '
+					) +
+					')',
 			/**
 			 * Add map filters if any are selected
 			 */
-			join(
-				map(maps, (map) => `map = '${map}'`),
-				' || '
-			)
+			maps?.length &&
+				'(' +
+					join(
+						map(maps, (map) => `map = '${map}'`),
+						' || '
+					)
 		]).join(' && ');
 	});
 
@@ -111,6 +123,7 @@ export class Matches {
 		watch(
 			() => $state.snapshot(this.filters),
 			() => {
+				console.log(this.filter);
 				this.page = 1;
 			}
 		);

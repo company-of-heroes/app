@@ -363,7 +363,6 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	private onLobbyStarted(lobby: Lobby) {
-		console.log(lobby.toJSON());
 		if (!this.isReady) {
 			return;
 		}
