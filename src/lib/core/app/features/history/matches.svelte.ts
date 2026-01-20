@@ -79,6 +79,8 @@ export class Matches {
 
 		return compact([
 			'needsResult = false',
+			'title != "Skirmish"',
+			this.scope === 'community' && `replay != ""`,
 			this.filters.ranked && `isRanked = true`,
 			/**
 			 * Add user steam ID's if in user scope

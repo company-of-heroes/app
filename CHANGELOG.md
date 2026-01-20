@@ -1,6 +1,7 @@
 ### v0.42.2
 
 - fix; new messages not being displayed because of wrong sort order
+- fix; should now correctly attach last replay to match result
 
 ### v0.42.1
 

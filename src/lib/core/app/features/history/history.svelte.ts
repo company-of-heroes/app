@@ -5,10 +5,8 @@ import { relic } from '$lib/relic';
 import { join } from '@tauri-apps/api/path';
 import { exists, readFile } from '@tauri-apps/plugin-fs';
 import { parseReplay } from '@fknoobs/replay-parser';
-import { doesMatchGameTime } from '$lib/utils';
 import { download } from '@tauri-apps/plugin-upload';
 import { Matches } from './matches.svelte';
-import dayjs from 'dayjs';
 
 export class History extends Feature {
 	name = 'History';
@@ -29,7 +27,7 @@ export class History extends Feature {
 	}
 
 	async saveLobbyResult(lobby: Match) {
-		if (!lobby.sessionId) {
+		if (!lobby.sessionId || !app.isReady) {
 			return;
 		}
 
@@ -38,15 +36,7 @@ export class History extends Feature {
 				return;
 			}
 
-			let { file, replay } = await this.getLastMatchReplay();
-			let replayFile: File | undefined = undefined;
-
-			if (
-				lobby.startedAt &&
-				doesMatchGameTime(lobby.startedAt, dayjs(replay.gameDate).format('HH:mm:ss'))
-			) {
-				replayFile = file;
-			}
+			let { file } = await this.getLastMatchReplay();
 
 			app.database.matches.create({
 				isRanked: lobby.isRanked,
@@ -55,7 +45,7 @@ export class History extends Feature {
 				sessionId: lobby.sessionId!,
 				needsResult: true,
 				players: lobby.players,
-				replay: replayFile
+				replay: file
 			});
 		});
 	}
