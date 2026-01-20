@@ -18,7 +18,8 @@
 		"pb:down": "podman compose down",
 		"pb:logs": "podman compose logs -f pocketbase",
 		"format": "prettier --write .",
-		"lint": "prettier --check ."
+		"lint": "prettier --check .",
+		"sign": "powershell -ExecutionPolicy Bypass -File ./.sign-windows.ps1"
 	},
 	"license": "MIT",
 	"dependencies": {
