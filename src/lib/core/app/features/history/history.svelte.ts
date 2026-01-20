@@ -27,6 +27,7 @@ export class History extends Feature {
 	}
 
 	async saveLobbyResult(lobby: Match) {
+		console.log(lobby, app.isReady);
 		if (!lobby.sessionId || !app.isReady) {
 			return;
 		}

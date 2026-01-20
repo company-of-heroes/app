@@ -17,7 +17,7 @@ export class Paths {
 	}
 
 	async cohPlaybackDir(): Promise<string> {
-		return join(await dirname(await this.cohConfigDir()), 'playback');
+		return join(await this.cohConfigDir(), 'playback');
 	}
 
 	async cohInstallationDir(): Promise<string> {

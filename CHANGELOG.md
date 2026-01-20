@@ -1,3 +1,7 @@
+### v0.43.1
+
+- fix; match result not saved because of a previous change determining the playback dir
+
 ### v0.43.0
 
 - fix; new messages not being displayed because of wrong sort order
