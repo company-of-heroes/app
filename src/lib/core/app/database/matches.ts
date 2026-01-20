@@ -1,11 +1,12 @@
-import type {
-	LobbiesResponse,
-	Create,
-	Update,
-	LobbiesRecord,
-	UsersResponse,
-	LobbyAggregationResponse,
-	LobbyAggregationCommunityResponse
+import {
+	type LobbiesResponse,
+	type Create,
+	type Update,
+	type LobbiesRecord,
+	type UsersResponse,
+	type LobbyAggregationResponse,
+	type LobbyAggregationCommunityResponse,
+	Collections
 } from '$core/pocketbase/types';
 import type { ListResult, RecordFullListOptions } from 'pocketbase';
 import type { LobbyPlayer, Match as LobbyMatch } from '@fknoobs/app';
@@ -174,19 +175,47 @@ export class Matches {
 	 * @param type The type of aggregation ('user' or 'community')
 	 * @param userId The user ID for 'user' type aggregation
 	 */
-	async getMatchAggregation(type: 'user' | 'community', userId?: string) {
-		if (type === 'user') {
+	async getMatchAggregation(
+		type: 'user' | 'community',
+		userId?: string
+	): Promise<
+		| LobbyAggregationResponse<string[], AggregationPlayer[], string>
+		| LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
+	> {
+		try {
+			if (type === 'user') {
+				return pocketbase
+					.collection<
+						LobbyAggregationResponse<string[], AggregationPlayer[], string>
+					>('lobby_aggregation')
+					.getFirstListItem('user="' + userId + '"', { fetch });
+			}
+
 			return pocketbase
 				.collection<
-					LobbyAggregationResponse<string[], AggregationPlayer[], string>
-				>('lobby_aggregation')
-				.getFirstListItem('user="' + userId + '"', { fetch });
+					LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
+				>('lobby_aggregation_community')
+				.getFirstListItem('', { fetch });
+		} catch (error) {
+			if (type === 'user') {
+				return {
+					id: '',
+					collectionId: '',
+					collectionName: Collections.LobbyAggregation,
+					maps: [],
+					players: [],
+					users: []
+				};
+			} else {
+				return {
+					id: '',
+					collectionId: '',
+					collectionName: Collections.LobbyAggregationCommunity,
+					maps: [],
+					players: [],
+					users: []
+				};
+			}
 		}
-
-		return pocketbase
-			.collection<
-				LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
-			>('lobby_aggregation_community')
-			.getFirstListItem('', { fetch });
 	}
 }

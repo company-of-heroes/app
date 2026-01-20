@@ -1,8 +1,9 @@
-### v0.42.2
+### v0.43.0
 
 - fix; new messages not being displayed because of wrong sort order
-- fix; should now correctly attach last replay to match result
+- fix; for some players the replay was not attached to the game result
 - fix; filtering by players broken because of changes in previous version
+- feat; ability to restore account if app was previously installed
 
 ### v0.42.1
 

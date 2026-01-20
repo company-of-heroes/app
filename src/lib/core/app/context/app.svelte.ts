@@ -216,7 +216,9 @@ export class AppContext extends Emittery<AppEvents> {
 		this.socket = await Socket.connect();
 
 		for await (const feature of this._features.values()) {
+			console.time('Register Feature ' + feature.name);
 			await feature.register();
+			console.timeEnd('Register Feature ' + feature.name);
 		}
 
 		$effect.root(() => {
@@ -427,7 +429,7 @@ export class AppContext extends Emittery<AppEvents> {
 					return;
 				}
 
-				const settingsData = await readTextFile(await this.paths.configFilePath());
+				const settingsData = await readTextFile(await this.paths.appConfigFilePath());
 				await writeTextFile(path, settingsData);
 				this.toast.success('Settings exported successfully.');
 			})
@@ -451,12 +453,15 @@ export class AppContext extends Emittery<AppEvents> {
 
 				// Backup existing settings file
 				await rename(
-					await this.paths.configFilePath(),
-					await join(await this.paths.configDir(), dev ? 'app.dev.json.backup' : 'app.json.backup')
+					await this.paths.appConfigFilePath(),
+					await join(
+						await this.paths.appConfigDir(),
+						dev ? 'app.dev.json.backup' : 'app.json.backup'
+					)
 				);
 
 				const settingsData = await readTextFile(path);
-				await writeTextFile(await this.paths.configFilePath(), settingsData);
+				await writeTextFile(await this.paths.appConfigFilePath(), settingsData);
 				app.toast.success(
 					'Settings imported successfully. Please restart the application to apply changes.'
 				);
@@ -467,10 +472,44 @@ export class AppContext extends Emittery<AppEvents> {
 
 				// Restore from backup on failure
 				await rename(
-					await join(await this.paths.configDir(), dev ? 'app.dev.json.backup' : 'app.json.backup'),
-					await this.paths.configFilePath()
+					await join(
+						await this.paths.appConfigDir(),
+						dev ? 'app.dev.json.backup' : 'app.json.backup'
+					),
+					await this.paths.appConfigFilePath()
 				);
 			});
+	}
+
+	importSettingsFromObject(settingsObj: AppSettings) {
+		return new Promise<void>(async (resolve, reject) => {
+			try {
+				await rename(
+					await this.paths.appConfigFilePath(),
+					await join(
+						await this.paths.appConfigDir(),
+						dev ? 'app.dev.json.backup' : 'app.json.backup'
+					)
+				);
+				const settingsData = JSON.stringify(settingsObj, null, 2);
+				await writeTextFile(await this.paths.appConfigFilePath(), settingsData);
+
+				return resolve();
+			} catch (error) {
+				console.error('Failed to import settings:', error);
+				app.toast.error('Failed to import settings. Please try again.');
+
+				await rename(
+					await join(
+						await this.paths.appConfigDir(),
+						dev ? 'app.dev.json.backup' : 'app.json.backup'
+					),
+					await this.paths.appConfigFilePath()
+				);
+
+				return reject(error);
+			}
+		});
 	}
 }
 

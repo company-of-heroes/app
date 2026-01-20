@@ -4,8 +4,12 @@ import { generatePassword, generateUniqueId } from '$lib/utils/password';
 import { isEmpty, uniq } from 'lodash-es';
 import { Feature } from '../feature.svelte';
 import { fetch } from '@tauri-apps/plugin-http';
+import { exists, readTextFile } from '@tauri-apps/plugin-fs';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { confirm } from '@tauri-apps/plugin-dialog';
 import { steam } from '$core/steam';
 import { getVersion } from '@tauri-apps/api/app';
+import { dev } from '$app/environment';
 
 export type AuthSettings = {
 	userId: string;
@@ -84,14 +88,42 @@ export class Auth extends Feature<AuthSettings> {
 						return user;
 					})
 			)
-			.catch(() =>
-				app.pocketbase.collection('users').create({
-					id: this.settings.userId,
-					email: this.settings.email,
-					password: this.settings.password,
-					passwordConfirm: this.settings.password
-				})
-			)
+			.catch(async () => {
+				if (await exists(await app.paths.appConfigFileBackupPath())) {
+					const restore = await confirm(
+						'We detected that there is a backup of your app configuration. You should restore it to avoid data loss.',
+						{
+							okLabel: 'Restore',
+							cancelLabel: 'Delete old data',
+							kind: 'warning'
+						}
+					);
+
+					const backupJson = JSON.parse(
+						await readTextFile(await app.paths.appConfigFileBackupPath())
+					);
+
+					if (restore) {
+						console.log('[FEATURES.AUTH]: Restoring app config from backup...');
+						this.settings.userId = backupJson['feature.auth'].userId;
+						this.settings.email = backupJson['feature.auth'].email;
+						this.settings.password = backupJson['feature.auth'].password;
+
+						dev ? window.location.reload() : await relaunch();
+					} else {
+						console.log(
+							'[FEATURES.AUTH]: Deleting old backup and continuing with new user creation...'
+						);
+
+						app.pocketbase.collection('users').create({
+							id: this.settings.userId,
+							email: this.settings.email,
+							password: this.settings.password,
+							passwordConfirm: this.settings.password
+						});
+					}
+				}
+			})
 			.then((user) => {
 				this._user = user as UsersResponse<Record<string, any>, string[]>;
 			})

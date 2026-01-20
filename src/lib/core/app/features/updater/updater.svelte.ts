@@ -1,5 +1,6 @@
 import { Feature } from '../feature.svelte';
 import { fetch } from '@tauri-apps/plugin-http';
+import { copyFile } from '@tauri-apps/plugin-fs';
 import { getVersion } from '@tauri-apps/api/app';
 import { app } from '$core/app/context';
 import { Update } from '.';
@@ -33,6 +34,10 @@ export class Updater extends Feature<UpdaterSettings> {
 	}
 
 	enable() {
+		setTimeout(async () => {
+			copyFile(await app.paths.appConfigFilePath(), await app.paths.appConfigFileBackupPath());
+		}, 1000);
+
 		fetch('https://api.github.com/repos/fknoobs/app/releases/latest')
 			.then((res) => res.json())
 			.then(async (response) => {

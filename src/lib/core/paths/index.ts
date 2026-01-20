@@ -7,9 +7,13 @@ export class Paths {
 
 	async cohConfigDir(): Promise<string> {
 		return (
-			this.app.settings.companyOfHeroesConfigPath ||
+			(await dirname(this.app.settings.companyOfHeroesConfigPath)) ||
 			join(await documentDir(), 'My Games', 'Company of Heroes Relaunch')
 		);
+	}
+
+	async appConfigFileBackupPath(): Promise<string> {
+		return join(await this.documentDir(), 'com.fknoobscoh.app.backup');
 	}
 
 	async cohPlaybackDir(): Promise<string> {
@@ -30,15 +34,15 @@ export class Paths {
 		);
 	}
 
-	async configDir(): Promise<string> {
-		return await appConfigDir();
-	}
-
 	async documentDir(): Promise<string> {
 		return await documentDir();
 	}
 
-	async configFilePath(): Promise<string> {
-		return join(await this.configDir(), dev ? 'app.dev.json' : 'app.json');
+	async appConfigDir(): Promise<string> {
+		return await appConfigDir();
+	}
+
+	async appConfigFilePath(): Promise<string> {
+		return join(await this.appConfigDir(), dev ? 'app.dev.json' : 'app.json');
 	}
 }

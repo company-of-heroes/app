@@ -1,153 +1,167 @@
 {
-	"$schema": "../gen/schemas/desktop-schema.json",
-	"identifier": "default",
-	"description": "Capability for the main window",
-	"windows": ["main"],
-	"permissions": [
-		"autostart:allow-enable",
-		"autostart:allow-disable",
-		"autostart:allow-is-enabled",
-		"core:default",
-		"core:window:allow-hide",
-		"core:window:allow-close",
-		"core:window:allow-show",
-		"cors-fetch:default",
-		"opener:allow-reveal-item-in-dir",
-		{
-			"identifier": "opener:allow-open-path",
-			"allow": [
-				{
-					"path": "$APPDATA/**"
-				},
-				{
-					"path": "$DOWNLOAD/**"
-				}
-			]
-		},
-		{
-			"identifier": "opener:allow-open-url",
-			"allow": [
-				{
-					"url": "https://id.twitch.tv/*"
-				},
-				{
-					"url": "https://twitch.tv/*"
-				},
-				{
-					"url": "https://www.twitch.tv/*"
-				},
-				{
-					"url": "https://api.steampowered.com"
-				},
-				{
-					"url": "https://github.com/fknoobs/app"
-				},
-				{
-					"url": "https://discord.gg/Cc69hbDnPD"
-				}
-			]
-		},
-		{
-			"identifier": "http:default",
-			"allow": [
-				{ "url": "https://*.fknoobs.com" },
-				{ "url": "http://localhost" },
-				{ "url": "http://localhost:8090" },
-				{ "url": "https://*.steamusercontent.com" },
-				{ "url": "https://*.steamstatic.com" }
-			]
-		},
-		"store:default",
-		"oauth:allow-start",
-		"oauth:allow-cancel",
-		"fs:allow-open",
-		"fs:allow-write",
-		"fs:allow-read",
-		"fs:allow-rename",
-		"fs:allow-mkdir",
-		"fs:allow-remove",
-		"fs:allow-create",
-		"fs:allow-write-text-file",
-		"fs:allow-write-file",
-		"fs:scope-download-recursive",
-		"fs:scope-resource-recursive",
-		"fs:read-all",
-		"fs:read-files",
-		"fs:allow-watch",
-		"fs:scope-document-recursive",
-		"fs:scope-appdata-recursive",
-		{
-			"identifier": "fs:allow-exists",
-			"allow": [
-				{
-					"path": "**"
-				}
-			]
-		},
-		"shell:default",
-		"shell:allow-open",
-		{
-			"identifier": "http:default",
-			"allow": [
-				{
-					"url": "http://localhost:1420"
-				},
-				{
-					"url": "https://*.tauri.app"
-				},
-				{
-					"url": "https://*.your-objectstorage.com"
-				},
-				{
-					"url": "https://*.google.com"
-				},
-				{
-					"url": "https://*.google.nl"
-				},
-				{
-					"url": "https://*.elevenlabs.io"
-				},
-				{
-					"url": "https://*.twitch.tv"
-				},
-				{
-					"url": "https://twitch.tv"
-				},
-				{
-					"url": "https://*.streamelements.com"
-				},
-				{
-					"url": "https://*.reliclink.com"
-				},
-				{
-					"url": "http://*.reliclink.com"
-				},
-				{
-					"url": "https://api.steampowered.com"
-				},
-				{
-					"url": "https://github.com/fknoobs/*"
-				},
-				{
-					"url": "http://localhost:9000"
-				},
-				{
-					"url": "https://*.github.com"
-				}
-			]
-		},
-		"websocket:allow-connect",
-		"websocket:allow-send",
-		"dialog:default",
-		"log:default",
-		"cache:default",
-		"upload:default",
-		"sql:allow-close",
-		"sql:allow-execute",
-		"sql:allow-load",
-		"sql:allow-select",
-		"global-shortcut:allow-is-registered",
-		"global-shortcut:allow-register",
-		"global-shortcut:allow-unregister"
-	]
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "core:default",
+    "core:window:allow-hide",
+    "core:window:allow-close",
+    "core:window:allow-show",
+    "cors-fetch:default",
+    "opener:allow-reveal-item-in-dir",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        }
+      ]
+    },
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://id.twitch.tv/*"
+        },
+        {
+          "url": "https://twitch.tv/*"
+        },
+        {
+          "url": "https://www.twitch.tv/*"
+        },
+        {
+          "url": "https://api.steampowered.com"
+        },
+        {
+          "url": "https://github.com/fknoobs/app"
+        },
+        {
+          "url": "https://discord.gg/Cc69hbDnPD"
+        }
+      ]
+    },
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://*.fknoobs.com"
+        },
+        {
+          "url": "http://localhost"
+        },
+        {
+          "url": "http://localhost:8090"
+        },
+        {
+          "url": "https://*.steamusercontent.com"
+        },
+        {
+          "url": "https://*.steamstatic.com"
+        }
+      ]
+    },
+    "store:default",
+    "oauth:allow-start",
+    "oauth:allow-cancel",
+    "fs:allow-open",
+    "fs:allow-write",
+    "fs:allow-read",
+    "fs:allow-rename",
+    "fs:allow-mkdir",
+    "fs:allow-remove",
+    "fs:allow-create",
+    "fs:allow-write-text-file",
+    "fs:allow-write-file",
+    "fs:scope-download-recursive",
+    "fs:scope-resource-recursive",
+    "fs:read-all",
+    "fs:read-files",
+    "fs:allow-watch",
+    "fs:scope-document-recursive",
+    "fs:scope-appdata-recursive",
+    "fs:allow-copy-file",
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
+    "shell:default",
+    "shell:allow-open",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http://localhost:1420"
+        },
+        {
+          "url": "https://*.tauri.app"
+        },
+        {
+          "url": "https://*.your-objectstorage.com"
+        },
+        {
+          "url": "https://*.google.com"
+        },
+        {
+          "url": "https://*.google.nl"
+        },
+        {
+          "url": "https://*.elevenlabs.io"
+        },
+        {
+          "url": "https://*.twitch.tv"
+        },
+        {
+          "url": "https://twitch.tv"
+        },
+        {
+          "url": "https://*.streamelements.com"
+        },
+        {
+          "url": "https://*.reliclink.com"
+        },
+        {
+          "url": "http://*.reliclink.com"
+        },
+        {
+          "url": "https://api.steampowered.com"
+        },
+        {
+          "url": "https://github.com/fknoobs/*"
+        },
+        {
+          "url": "http://localhost:9000"
+        },
+        {
+          "url": "https://*.github.com"
+        }
+      ]
+    },
+    "websocket:allow-connect",
+    "websocket:allow-send",
+    "dialog:default",
+    "log:default",
+    "cache:default",
+    "upload:default",
+    "sql:allow-close",
+    "sql:allow-execute",
+    "sql:allow-load",
+    "sql:allow-select",
+    "global-shortcut:allow-is-registered",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "process:default"
+  ]
 }

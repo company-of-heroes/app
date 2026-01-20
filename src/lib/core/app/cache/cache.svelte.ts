@@ -37,9 +37,7 @@ export async function useQuery<T>(key: string, options: CacheOptions<T>): Promis
 		}
 
 		options.invalidateFn?.(cached).then((isInvalid) => {
-			console.log('Cache invalidate check for key:', key, 'Result:', isInvalid);
 			if (isInvalid) {
-				console.log('Cache invalidated for key:', key);
 				remove(key).catch((e) => console.warn(`Cache removal failed for key: ${key}`, e));
 			}
 		});
