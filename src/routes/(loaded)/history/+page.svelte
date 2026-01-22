@@ -111,7 +111,7 @@
 			<Match.Root {match}>
 				<Table.tr>
 					<Table.td width="6/24" class="flex items-center gap-2" href={`/history/${match.id}`}>
-						<Match.MapImage />
+						<Match.MapImage small />
 						<Match.MapName />
 					</Table.td>
 					<Table.td width="4/24">
