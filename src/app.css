@@ -11,6 +11,7 @@
 @theme {
 	--default-font-family: 'TT Mussels';
 	--font-heading: 'Nunito Sans';
+	--font-sans: 'TT Mussels', sans-serif;
 
 	/* Primary Color Shades (Base derived from #fcf58b -> oklch(approx 97% 0.19 106.5)) */
 	/* Regenerated Primary Color Shades based on #F8C630 (golden yellow) */

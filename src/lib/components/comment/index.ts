@@ -1,0 +1,19 @@
+import * as User from '$lib/components/user';
+import Comment from './comment.svelte';
+import CommentText from './comment-text.svelte';
+import CommentDate from './comment-date.svelte';
+import CommentLikes from './comment-likes.svelte';
+import CommentDislikes from './comment-dislikes.svelte';
+import CommentReply from './comment-reply.svelte';
+import CommentReplies from './comment-replies.svelte';
+
+export {
+	Comment as Root,
+	CommentText as Text,
+	CommentDate as Date,
+	CommentLikes as Likes,
+	CommentDislikes as Dislikes,
+	CommentReply as Reply,
+	CommentReplies as Replies,
+	User
+};

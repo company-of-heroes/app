@@ -21,7 +21,7 @@
 	});
 </script>
 
-<Avatar.Root class="rounded-full">
+<Avatar.Root class="flex items-center justify-center rounded-full">
 	<Dropdown.Root class="w-[150px]">
 		{#snippet trigger({ props })}
 			<button class="cursor-pointer" {...props}>
