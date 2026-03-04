@@ -19,6 +19,7 @@ coh.replayparser/*
 
 app.json
 
+pocketbase.exe
 pocketbase/pb_data
 pocketbase/pb_public
 

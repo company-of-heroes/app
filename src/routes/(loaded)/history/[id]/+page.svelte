@@ -3,6 +3,7 @@
 	import * as Player from '$lib/components/player';
 	import * as Table from '$lib/components/ui/table';
 	import * as Match from '$lib/components/match';
+	import * as Comments from '$lib/components/comments';
 	import { scale } from 'svelte/transition';
 	import { page } from '$app/state';
 	import { app } from '$core/app/context';
@@ -21,6 +22,8 @@
 	import Check from 'phosphor-svelte/lib/Check';
 	import { bounceInOut, elasticInOut } from 'svelte/easing';
 	import type { fr } from 'zod/v4/locales';
+	import Comment from '$lib/components/comment/comment.svelte';
+	import { Editor } from '$lib/components/ui/editor';
 
 	const match = resource(
 		() => page.params.id,
@@ -99,83 +102,7 @@
 				</List.Root>
 				<List.Root>
 					<List.Title>Title</List.Title>
-					<List.Value>{title}</List.Value>
-					<List.Title>Player Count</List.Title>
-					<List.Value>{match.current.players?.length}</List.Value>
-					<List.Title>Duration</List.Title>
-					<List.Value>{duration}</List.Value>
-				</List.Root>
-			</div>
-			<div class="mt-6 flex gap-2">
-				<Button
-					onclick={() => {
-						isDownloading = true;
-						app.features.history
-							.downloadReplay(match.current!)
-							.then(() => {
-								isDownloading = false;
-								didDownload = true;
-							})
-							.catch(() => {
-								didDownload = false;
-							})
-							.finally(() => {
-								isDownloading = false;
-							});
-					}}
-					class={cn(didDownload && 'pointer-events-none cursor-not-allowed opacity-50')}
-					loading={isDownloading}
-				>
-					{#if !isDownloading && !didDownload}
-						<Download class="mr-2" />
-					{/if}
-					{#if didDownload}
-						<span in:scale={{ easing: bounceInOut, duration: 150 }}>
-							<Check size={22} class="mr-2" />
-						</span>
-					{/if}
-					Download replay
-				</Button>
-				<Button variant="secondary" href={`/replays/${match.current.id}`}>
-					<TreeView class="mr-2" />
-					View replay
-				</Button>
-			</div>
-		</div>
-	</Match.Root>
-	<!-- <div class="grid grid-cols-[300px_auto] gap-8">
-		<img src={getMapImageFromName(match.current.map)} alt={match.current.map} />
-		<div class="py-4">
-			<H level={2} class="mb-4">{normalizeMapName(match.current.map)}</H>
-			<div class="grid grid-cols-2 items-start">
-				<List.Root>
-					<List.Title>Status</List.Title>
-					<List.Value class="flex items-center">
-						{#if match.current?.needsResult}
-							<HourGlass class="text-primary" {@attach tooltip('Result pending')} />
-						{:else}
-							<Checks class="text-green-400" {@attach tooltip('Result saved')} />
-						{/if}
-					</List.Value>
-					<List.Title>Submitted at</List.Title>
-					<List.Value>{dayjs(match.current.createdAt).format('DD MMM YYYY, HH:mm')}</List.Value>
-					{#if player}
-						<List.Title>Submitted by</List.Title>
-						<List.Value>
-							<a
-								href={`/leaderboards/profile/${player.profile_id}`}
-								class="hover:text-primary-300 underline"
-							>
-								{player.alias}
-							</a>
-						</List.Value>
-					{/if}
-					<List.Title>Game Mode</List.Title>
-					<List.Value>{match.current.isRanked ? 'Ranked' : 'Custom Match'}</List.Value>
-				</List.Root>
-				<List.Root>
-					<List.Title>Title</List.Title>
-					<List.Value>{title}</List.Value>
+					<List.Value><Match.Title /></List.Value>
 					<List.Title>Player Count</List.Title>
 					<List.Value>{match.current.players?.length}</List.Value>
 					<List.Title>Duration</List.Title>
@@ -238,7 +165,6 @@
 						? getLeaderboardStatsForPlayerByMatchType(match.current.result.matchtype_id, player)
 						: undefined}
 
-
 					<Table.TR
 						class={cn(
 							'not-last:border-secondary-950 not-last:border-b',
@@ -273,6 +199,13 @@
 					</Table.TR>
 				{/each}
 			</Table.Table>
+			<Comments.Root lobbyId={match.current.id} class="mt-12">
+				<H level={3} class="mt-6 mb-4">
+					Comments (<Comments.Count />)
+				</H>
+				<Editor class="mb-6" />
+				<Comments.List />
+			</Comments.Root>
 		</div>
-	</div> -->
+	</Match.Root>
 {/if}

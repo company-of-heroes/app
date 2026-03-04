@@ -110,7 +110,7 @@
 		{#each app.features.history.matches.result.current.items as match, _ (match.id)}
 			<Match.Root {match}>
 				<Table.tr>
-					<Table.td width="6/24" class="flex items-center gap-2" href={`/history/${match.id}`}>
+					<Table.td width="6/24" class="flex items-center gap-4" href={`/history/${match.id}`}>
 						<Match.MapImage small />
 						<Match.MapName />
 					</Table.td>

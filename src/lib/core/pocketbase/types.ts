@@ -15,9 +15,11 @@ export enum Collections {
 	Chat = "chat",
 	ChatMessages = "chat_messages",
 	ChatRooms = "chat_rooms",
+	Comments = "comments",
 	Lobbies = "lobbies",
 	LobbyAggregation = "lobby_aggregation",
 	LobbyAggregationCommunity = "lobby_aggregation_community",
+	LobbyComments = "lobby_comments",
 	ReplayAggregation = "replay_aggregation",
 	Replays = "replays",
 	Users = "users",
@@ -135,6 +137,19 @@ export type ChatRoomsRecord = {
 	updated: IsoAutoDateString
 }
 
+export type CommentsRecord = {
+	created: IsoAutoDateString
+	dislikes?: RecordIdString[]
+	id: string
+	isDeleted?: boolean
+	likes?: RecordIdString[]
+	mentions?: RecordIdString[]
+	parent?: RecordIdString
+	sender: RecordIdString
+	text: string
+	updated: IsoAutoDateString
+}
+
 export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	createdAt: IsoAutoDateString
 	id: string
@@ -162,6 +177,14 @@ export type LobbyAggregationCommunityRecord<Tmaps = unknown, Tplayers = unknown,
 	maps?: null | Tmaps
 	players?: null | Tplayers
 	users?: null | Tusers
+}
+
+export type LobbyCommentsRecord = {
+	comment: RecordIdString
+	created: IsoAutoDateString
+	id: string
+	lobby: RecordIdString
+	updated: IsoAutoDateString
 }
 
 export type ReplayAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
@@ -192,6 +215,10 @@ export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
 	vpCount?: number
 }
 
+export enum UsersRoleOptions {
+	"admin" = "admin",
+	"moderator" = "moderator",
+}
 export type UsersRecord<Tmeta = unknown, TsteamIds = unknown> = {
 	avatar?: FileNameString
 	created: IsoAutoDateString
@@ -202,6 +229,7 @@ export type UsersRecord<Tmeta = unknown, TsteamIds = unknown> = {
 	meta?: null | Tmeta
 	name?: string
 	password: string
+	role?: UsersRoleOptions
 	steamIds?: null | TsteamIds
 	tokenKey: string
 	updated: IsoAutoDateString
@@ -218,9 +246,11 @@ export type AttachmentsResponse<Texpand = unknown> = Required<AttachmentsRecord>
 export type ChatResponse<Texpand = unknown> = Required<ChatRecord> & BaseSystemFields<Texpand>
 export type ChatMessagesResponse<Texpand = unknown> = Required<ChatMessagesRecord> & BaseSystemFields<Texpand>
 export type ChatRoomsResponse<Texpand = unknown> = Required<ChatRoomsRecord> & BaseSystemFields<Texpand>
+export type CommentsResponse<Texpand = unknown> = Required<CommentsRecord> & BaseSystemFields<Texpand>
 export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
 export type LobbyAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<LobbyAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type LobbyAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Tusers = unknown, Texpand = unknown> = Required<LobbyAggregationCommunityRecord<Tmaps, Tplayers, Tusers>> & BaseSystemFields<Texpand>
+export type LobbyCommentsResponse<Texpand = unknown> = Required<LobbyCommentsRecord> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
 export type UsersResponse<Tmeta = unknown, TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<Tmeta, TsteamIds>> & AuthSystemFields<Texpand>
@@ -237,9 +267,11 @@ export type CollectionRecords = {
 	chat: ChatRecord
 	chat_messages: ChatMessagesRecord
 	chat_rooms: ChatRoomsRecord
+	comments: CommentsRecord
 	lobbies: LobbiesRecord
 	lobby_aggregation: LobbyAggregationRecord
 	lobby_aggregation_community: LobbyAggregationCommunityRecord
+	lobby_comments: LobbyCommentsRecord
 	replay_aggregation: ReplayAggregationRecord
 	replays: ReplaysRecord
 	users: UsersRecord
@@ -255,9 +287,11 @@ export type CollectionResponses = {
 	chat: ChatResponse
 	chat_messages: ChatMessagesResponse
 	chat_rooms: ChatRoomsResponse
+	comments: CommentsResponse
 	lobbies: LobbiesResponse
 	lobby_aggregation: LobbyAggregationResponse
 	lobby_aggregation_community: LobbyAggregationCommunityResponse
+	lobby_comments: LobbyCommentsResponse
 	replay_aggregation: ReplayAggregationResponse
 	replays: ReplaysResponse
 	users: UsersResponse

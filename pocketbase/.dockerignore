@@ -1,0 +1,5 @@
+pb_hooks/schema/node_modules
+*.log
+.DS_Store
+./pocketbase
+./pocketbase.exe

@@ -2,7 +2,8 @@ import type {
 	Collections,
 	FileNameString,
 	RecordIdString,
-	UsersResponse
+	UsersResponse,
+	UsersRoleOptions
 } from '$core/pocketbase/types';
 import { steam, type SteamPlayerSummary } from '$core/steam';
 import { relic } from '$lib/relic';
@@ -37,6 +38,8 @@ export class UserContext {
 
 	steamProfile = $state<SteamPlayerSummary>();
 
+	role = $state<UsersRoleOptions>();
+
 	constructor(user: UsersResponse<Record<string, any>, string[]>) {
 		this.id = user.id;
 		this.collectionId = user.collectionId;
@@ -47,6 +50,7 @@ export class UserContext {
 		this.steamIds = user.steamIds || [];
 		this.created = new Date(user.created);
 		this.updated = new Date(user.updated);
+		this.role = user.role;
 	}
 
 	getRelicProfile() {
