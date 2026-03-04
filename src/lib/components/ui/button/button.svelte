@@ -27,6 +27,7 @@
 		size === 'lg' && 'h-14 px-8 text-lg',
 		size === 'icon' && 'size-11 justify-center p-0',
 		size === 'icon-sm' && 'size-8 justify-center p-0 text-sm',
+		size === 'icon-xs' && 'size-5 justify-center p-0 text-xs',
 		variant === 'primary' &&
 			'bg-primary/5 border-primary/20 hover:border-primary/80 hover:bg-primary/20 text-white',
 		variant === 'secondary' &&
@@ -35,6 +36,7 @@
 		variant === 'ghost' && 'active:bg-secondary-950/40 hover:opacity-100',
 		variant === 'link' &&
 			'text-primary hover:text-primary-600 bg-transparent font-medium hover:opacity-100',
+		variant === 'outline' && 'border-white/20 bg-transparent text-white hover:border-white/50',
 		restProps.class
 	)}
 	disabled={loading || restProps.disabled}

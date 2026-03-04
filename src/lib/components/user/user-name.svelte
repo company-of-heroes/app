@@ -10,9 +10,6 @@
 	let { ...restProps }: Props = $props();
 </script>
 
-<span
-	{...restProps}
-	class={cn(user.role === UsersRoleOptions.admin && 'text-red-500', restProps.class)}
->
+<span {...restProps}>
 	{user.name}
 </span>

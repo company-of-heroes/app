@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { Editor as TinyEditor } from 'tiny-markdown-editor';
 	import { app } from '$core/app/context';
 	import { getFileUrl } from '$core/pocketbase';
@@ -8,12 +8,13 @@
 	import { fetch } from '@tauri-apps/plugin-http';
 	import { basename, pictureDir } from '@tauri-apps/api/path';
 	import { Button } from '$lib/components/ui/button';
-	import TextB from 'phosphor-svelte/lib/TextB';
-	import TextItalic from 'phosphor-svelte/lib/TextItalic';
-	import TextStrikethrough from 'phosphor-svelte/lib/TextStrikethrough';
-	import ImageSquare from 'phosphor-svelte/lib/ImageSquare';
-	import PaperPlaneRight from 'phosphor-svelte/lib/PaperPlaneRight';
 	import { cn } from '$lib/utils';
+	import TextB from 'phosphor-svelte/lib/TextBIcon';
+	import TextItalic from 'phosphor-svelte/lib/TextItalicIcon';
+	import TextStrikethrough from 'phosphor-svelte/lib/TextStrikethroughIcon';
+	import ImageSquare from 'phosphor-svelte/lib/ImageSquareIcon';
+	import PaperPlaneRight from 'phosphor-svelte/lib/PaperPlaneRightIcon';
+	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
 
 	let {
 		value = $bindable(''),
@@ -195,7 +196,7 @@
 		</div>
 
 		<div class="flex items-center">
-			<Button variant="ghost" size="sm" class="font-bold" onclick={handleSubmit}>
+			<Button variant="ghost" size="sm" class="font-medium" onclick={handleSubmit}>
 				Submit
 				<PaperPlaneRight size={16} weight="fill" />
 			</Button>

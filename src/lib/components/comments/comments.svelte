@@ -1,13 +1,6 @@
 <script lang="ts">
-	import type { HTMLAttributes } from 'svelte/elements';
-	import { CommentsContext, createComments } from './context.svelte';
-
-	type Props = {
-		commentId?: string;
-		lobbyId?: string;
-		replayId?: string;
-		context?: CommentsContext;
-	} & HTMLAttributes<HTMLDivElement>;
+	import type { CommentsRootProps } from '.';
+	import { createComments } from './context.svelte';
 
 	let {
 		lobbyId,
@@ -16,7 +9,7 @@
 		context = $bindable(),
 		children,
 		...restProps
-	}: Props = $props();
+	}: CommentsRootProps = $props();
 	context = createComments();
 
 	$effect(() => {

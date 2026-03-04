@@ -101,6 +101,7 @@
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tauri-apps/cli": "^2.9.6",
+		"@toolwind/anchors": "^1.0.10",
 		"@twurple/eventsub": "^5.3.4",
 		"@types/semver": "^7.7.1",
 		"@types/sortablejs": "^1.15.9",

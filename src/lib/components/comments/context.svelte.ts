@@ -25,6 +25,10 @@ export class CommentsContext {
 		return this.#query.current?.totalItems ?? 0;
 	}
 
+	get isReply() {
+		return !!this.commentId && !this.lobbyId;
+	}
+
 	constructor() {
 		this.#query = resource(
 			() => [this.lobbyId, this.commentId, this.replayId, this.page, this.perPage],

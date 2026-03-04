@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { useComment } from './context.svelte';
-	import ThumbsDown from 'phosphor-svelte/lib/ThumbsDown';
+	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import { cn } from '$lib/utils';
 	import { app } from '$core/app/context';
-	import { isEmpty } from 'lodash-es';
 
 	type Props = HTMLAttributes<HTMLButtonElement>;
 
@@ -29,10 +28,5 @@
 		app.database.comments.addDislike(comment.current!.id);
 	}}
 >
-	<ThumbsDown size={24} weight="fill" />
-	{#if isEmpty(comment.current?.dislikes)}
-		<span>{0}</span>
-	{:else}
-		<span>-{comment.current!.dislikes.length}</span>
-	{/if}
+	<CaretDownIcon size={24} weight="fill" />
 </button>

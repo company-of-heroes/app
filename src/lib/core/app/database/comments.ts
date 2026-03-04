@@ -16,6 +16,7 @@ export type Comment = LobbyCommentsResponse<{
 		isReplying?: boolean;
 	} & CommentsResponse<{
 		sender: UsersResponse<Record<string, any>, string[]>;
+		comments_via_parent: CommentsResponse[];
 	}>;
 }>;
 export type CommentExpanded = Expand<
@@ -23,9 +24,11 @@ export type CommentExpanded = Expand<
 		parent: CommentExpanded | undefined;
 		sender: UsersResponse<Record<string, any>, string[]>;
 		mentions: UsersResponse<Record<string, any>, string[]>[];
+		comments_via_parent: CommentsResponse[];
 	}>
 > & {
 	isReplying?: boolean;
+	hideReplies?: boolean;
 };
 
 export class Comments {
@@ -60,7 +63,7 @@ export class Comments {
 				filter: `lobby="${lobbyId}"`,
 				sort: '-created',
 				expand:
-					'lobby,comment,comment.sender,comment.mentions,comment.parent,comment.parent.sender,comment.parent.mentions'
+					'lobby,comment,comment.sender,comment.mentions,comment.parent,comment.parent.sender,comment.parent.mentions,comment.comments_via_parent'
 			})
 			.then(async (result) => {
 				return {

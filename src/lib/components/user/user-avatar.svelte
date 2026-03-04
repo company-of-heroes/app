@@ -1,12 +1,16 @@
 <script lang="ts">
 	import * as Dropdown from '$lib/components/ui/dropdown';
-	import { Avatar } from 'bits-ui';
+	import { Avatar, type AvatarRootProps, type WithoutChildren } from 'bits-ui';
 	import { useUser } from '.';
 	import { getFileUrl } from '$core/pocketbase';
 	import { createAvatar } from '@dicebear/core';
 	import { adventurerNeutral } from '@dicebear/collection';
 	import UserIcon from 'phosphor-svelte/lib/User';
 	import { goto } from '$app/navigation';
+	import { cn } from '$lib/utils';
+
+	type Props = WithoutChildren<AvatarRootProps>;
+	let { ...restProps }: Props = $props();
 
 	let user = useUser();
 	let avatar = $derived.by(() => {
@@ -21,7 +25,10 @@
 	});
 </script>
 
-<Avatar.Root class="flex items-center justify-center rounded-full">
+<Avatar.Root
+	{...restProps}
+	class={cn('flex items-center justify-center rounded-full', restProps.class)}
+>
 	<Dropdown.Root class="w-[150px]">
 		{#snippet trigger({ props })}
 			<button class="cursor-pointer" {...props}>

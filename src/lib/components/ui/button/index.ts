@@ -4,8 +4,8 @@ import Button from './button.svelte';
 import ButtonBack from './button-back.svelte';
 
 export type ButtonProps = {
-	variant?: 'primary' | 'secondary' | 'ghost' | 'link' | 'destructive';
-	size?: 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm';
+	variant?: 'primary' | 'secondary' | 'ghost' | 'link' | 'destructive' | 'outline';
+	size?: 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm' | 'icon-xs';
 	children: Snippet;
 	loading?: boolean;
 	href?: string;

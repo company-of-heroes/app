@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { useComment } from './context.svelte';
-	import ThumbsUp from 'phosphor-svelte/lib/ThumbsUp';
 	import { cn } from '$lib/utils';
 	import { app } from '$core/app/context';
+	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
 
 	type Props = HTMLAttributes<HTMLButtonElement>;
 
@@ -28,6 +28,5 @@
 		app.database.comments.addLike(comment.current!.id);
 	}}
 >
-	<ThumbsUp size={24} weight="fill" />
-	<span>{comment.current?.likes.length || 0}</span>
+	<CaretUpIcon size={24} weight="fill" />
 </button>
