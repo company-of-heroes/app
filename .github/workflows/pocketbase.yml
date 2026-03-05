@@ -39,7 +39,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/pocketbase
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/pocketbase
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
