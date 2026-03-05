@@ -39,7 +39,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/pocketbase
+          images: ${{ env.REGISTRY }}/pocketbase
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -69,6 +69,6 @@ jobs:
           push-to-registry: true
 
       - name: Trigger deployment
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
           curl -fsSL -X POST https://deploy.codeit.website/api/deploy/compose/KyP48VE46_ojKp6Ya7fvO
