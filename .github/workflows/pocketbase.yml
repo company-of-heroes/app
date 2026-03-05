@@ -71,4 +71,4 @@ jobs:
       - name: Trigger deployment
         if: github.ref == 'refs/heads/master'
         run: |
-          curl -fsSL -X POST https://deploy.codeit.website/api/deploy/compose/KyP48VE46_ojKp6Ya7fvO
+          curl -fsSL -X POST https://deploy.codeit.website/api/deploy/9hxER8vOp8-FWgXS_takW
