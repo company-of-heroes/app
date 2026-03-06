@@ -199,13 +199,6 @@
 					</Table.TR>
 				{/each}
 			</Table.Table>
-			<Comments.Root lobbyId={match.current.id} class="mt-12">
-				<H level={3} class="mt-6 mb-4">
-					Comments (<Comments.Count />)
-				</H>
-				<Editor class="mb-6" />
-				<Comments.List />
-			</Comments.Root>
 		</div>
 	</Match.Root>
 {/if}
