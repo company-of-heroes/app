@@ -4,7 +4,7 @@
 	import { createComment } from './context.svelte';
 
 	type Props = {
-		comment: CommentExpanded['comment'];
+		comment: CommentExpanded;
 	} & HTMLAttributes<HTMLDivElement>;
 
 	let { children, comment, ...restProps }: Props = $props();
