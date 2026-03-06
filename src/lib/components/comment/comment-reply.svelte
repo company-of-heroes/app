@@ -15,7 +15,7 @@
 	variant="ghost"
 	class={cn(
 		'text-secondary-400 font-medium',
-		comment.current?.isReplying && 'text-red-500',
+		comment.current?.isReplying && 'text-red-200',
 		restProps.class
 	)}
 	onclick={() => {

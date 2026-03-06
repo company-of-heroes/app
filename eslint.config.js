@@ -45,6 +45,21 @@ export default [
 		rules: {
 			// Override or add rule settings here, such as:
 			// 'svelte/rule-name': 'error'
+			'import/order': [
+				'error',
+				{
+					groups: [
+						'index',
+						'sibling',
+						'parent',
+						'internal',
+						'external',
+						'builtin',
+						'object',
+						'type'
+					]
+				}
+			]
 		}
 	}
 ];

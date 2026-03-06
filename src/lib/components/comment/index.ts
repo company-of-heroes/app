@@ -7,6 +7,7 @@ import CommentDislike from './comment-dislike.svelte';
 import CommentReply from './comment-reply.svelte';
 import CommentReplies from './comment-replies.svelte';
 import CommentLikesCount from './comment-likes-count.svelte';
+import CommentDislikesCount from './comment-dislikes-count.svelte';
 
 export {
 	Comment as Root,
@@ -17,5 +18,6 @@ export {
 	CommentReply as Reply,
 	CommentReplies as Replies,
 	CommentLikesCount as LikesCount,
+	CommentDislikesCount as DislikesCount,
 	User
 };

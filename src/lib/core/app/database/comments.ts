@@ -73,7 +73,7 @@ export class Comments {
 			});
 	}
 
-	createLobbyComment(lobbyId: string, text: string): Promise<Comment> {
+	createLobbyComment(lobbyId: string, text: string): Promise<CommentExpanded> {
 		return pocketbase
 			.collection('comments')
 			.create({
@@ -82,11 +82,18 @@ export class Comments {
 				text
 			})
 			.then((comment) =>
-				pocketbase.collection('lobby_comments').create<Comment>({
-					lobby: lobbyId,
-					comment: comment.id
-				})
-			);
+				pocketbase.collection('lobby_comments').create<Comment>(
+					{
+						lobby: lobbyId,
+						comment: comment.id
+					},
+					{
+						expand:
+							'comment,comment.sender,comment.mentions,comment.parent,comment.parent.sender,comment.parent.mentions'
+					}
+				)
+			)
+			.then((result) => exp(result.expand.comment) as unknown as CommentExpanded);
 	}
 
 	createReply(parentCommentId: string, text: string, mentions?: string[]): Promise<Comment> {
@@ -105,9 +112,21 @@ export class Comments {
 		});
 	}
 
+	removeLike(commentId: string): Promise<Comment> {
+		return pocketbase.collection('comments').update(commentId, {
+			'likes-': app.features.auth.userId
+		});
+	}
+
 	addDislike(commentId: string): Promise<Comment> {
 		return pocketbase.collection('comments').update(commentId, {
 			'dislikes+': app.features.auth.userId
+		});
+	}
+
+	removeDislike(commentId: string): Promise<Comment> {
+		return pocketbase.collection('comments').update(commentId, {
+			'dislikes-': app.features.auth.userId
 		});
 	}
 }

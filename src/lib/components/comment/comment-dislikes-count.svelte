@@ -9,11 +9,9 @@
 
 {#if comment.current}
 	<span {...restProps} class={cn('text-secondary-300', restProps.class)}>
-		<span>
-			{#if comment.current.likes.length > 0}
-				+
-			{/if}
-			{comment.current.likes.length}
-		</span>
+		{#if comment.current.dislikes.length > 0}
+			-
+		{/if}
+		<span>{comment.current.dislikes.length}</span>
 	</span>
 {/if}

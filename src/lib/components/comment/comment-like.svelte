@@ -3,7 +3,7 @@
 	import { useComment } from './context.svelte';
 	import { cn } from '$lib/utils';
 	import { app } from '$core/app/context';
-	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
+	import PlusSquareIcon from 'phosphor-svelte/lib/PlusSquareIcon';
 
 	type Props = HTMLAttributes<HTMLButtonElement>;
 
@@ -15,18 +15,18 @@
 	{...restProps}
 	type="button"
 	class={cn(
-		'text-secondary-300 flex items-center gap-2',
+		'text-secondary-500 flex items-center gap-2',
 		'cursor-pointer transition-colors hover:text-white',
-		comment.current?.likes.includes(app.features.auth.userId) && 'text-blue-400',
+		comment.current?.likes.includes(app.features.auth.userId) && 'text-green-200',
 		restProps.class
 	)}
 	onclick={() => {
 		if (comment.current?.likes.includes(app.features.auth.userId)) {
-			return;
+			return app.database.comments.removeLike(comment.current!.id);
 		}
 
-		app.database.comments.addLike(comment.current!.id);
+		return app.database.comments.addLike(comment.current!.id);
 	}}
 >
-	<CaretUpIcon size={24} weight="fill" />
+	<PlusSquareIcon size={24} weight="fill" />
 </button>

@@ -9,21 +9,20 @@
 	import { app } from '$core/app/context';
 	import { Button, ButtonBack } from '$lib/components/ui/button';
 	import { H } from '$lib/components/ui/h';
-	import { cn, normalizeMapName } from '$lib/utils';
+	import { cn } from '$lib/utils';
 	import { getLeaderboardStatsForPlayerByMatchType, getMapImageFromName } from '$lib/utils/game';
 	import { resource } from 'runed';
 	import { tooltip } from '$lib/attachments';
 	import { sortBy } from 'lodash-es';
+	import { bounceInOut } from 'svelte/easing';
+	import { Editor } from '$lib/components/ui/editor';
 	import dayjs from '$lib/dayjs';
 	import HourGlass from 'phosphor-svelte/lib/Hourglass';
 	import Checks from 'phosphor-svelte/lib/Checks';
 	import Download from 'phosphor-svelte/lib/Download';
 	import TreeView from 'phosphor-svelte/lib/TreeView';
 	import Check from 'phosphor-svelte/lib/Check';
-	import { bounceInOut, elasticInOut } from 'svelte/easing';
-	import type { fr } from 'zod/v4/locales';
-	import Comment from '$lib/components/comment/comment.svelte';
-	import { Editor } from '$lib/components/ui/editor';
+	import { useComments } from '$lib/components/comments';
 
 	const match = resource(
 		() => page.params.id,
@@ -200,10 +199,23 @@
 				{/each}
 			</Table.Table>
 			<Comments.Root lobbyId={match.current.id} class="mt-12">
+				{@const comments = useComments()}
+
 				<H level={3} class="mt-6 mb-4">
 					Comments (<Comments.Count />)
 				</H>
-				<Editor class="mb-6" />
+				<Editor
+					class="mb-6"
+					onsubmit={(v) => {
+						if (!match.current) {
+							return;
+						}
+
+						return app.database.comments.createLobbyComment(match.current.id, v).then((comment) => {
+							comments.addComment(comment);
+						});
+					}}
+				/>
 				<Comments.List />
 			</Comments.Root>
 		</div>

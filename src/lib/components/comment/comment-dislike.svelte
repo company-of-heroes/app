@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { useComment } from './context.svelte';
-	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import { cn } from '$lib/utils';
 	import { app } from '$core/app/context';
+	import MinusSquareIcon from 'phosphor-svelte/lib/MinusSquareIcon';
 
 	type Props = HTMLAttributes<HTMLButtonElement>;
 
@@ -15,9 +15,9 @@
 	{...restProps}
 	type="button"
 	class={cn(
-		'text-secondary-300 flex items-center gap-2',
+		'text-secondary-500 flex items-center gap-2',
 		'cursor-pointer transition-colors hover:text-white',
-		comment.current?.dislikes.includes(app.features.auth.userId) && 'text-blue-400',
+		comment.current?.dislikes.includes(app.features.auth.userId) && 'text-red-200',
 		restProps.class
 	)}
 	onclick={() => {
@@ -28,5 +28,5 @@
 		app.database.comments.addDislike(comment.current!.id);
 	}}
 >
-	<CaretDownIcon size={24} weight="fill" />
+	<MinusSquareIcon size={24} weight="fill" />
 </button>

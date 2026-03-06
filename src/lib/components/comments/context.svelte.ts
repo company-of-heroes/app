@@ -2,6 +2,7 @@ import type { CommentExpanded } from '$core/app/database/comments';
 import type { ListResult } from 'pocketbase';
 import { Context, resource, type ResourceReturn } from 'runed';
 import { app } from '$core/app/context';
+import { exp } from '$core/pocketbase';
 
 export class CommentsContext {
 	lobbyId: string | undefined = $state();
@@ -9,7 +10,7 @@ export class CommentsContext {
 	commentId: string | undefined = $state();
 
 	page = $state(1);
-	perPage = $state(25);
+	perPage = $derived(this.commentId ? 2 : 25);
 
 	#query: ResourceReturn<ListResult<CommentExpanded>, unknown, false>;
 
@@ -50,6 +51,17 @@ export class CommentsContext {
 		this.lobbyId = lobbyId;
 		this.commentId = commentId;
 		this.replayId = replayId;
+	}
+
+	addComment(comment: CommentExpanded) {
+		if (!this.#query.current) {
+			return;
+		}
+
+		this.#query.mutate({
+			...this.#query.current,
+			items: [exp(comment) as unknown as CommentExpanded, ...this.items]
+		});
 	}
 }
 

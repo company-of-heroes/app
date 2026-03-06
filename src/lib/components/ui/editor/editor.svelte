@@ -14,17 +14,19 @@
 	import TextStrikethrough from 'phosphor-svelte/lib/TextStrikethroughIcon';
 	import ImageSquare from 'phosphor-svelte/lib/ImageSquareIcon';
 	import PaperPlaneRight from 'phosphor-svelte/lib/PaperPlaneRightIcon';
-	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
+	import SpinnerIcon from 'phosphor-svelte/lib/SpinnerIcon';
 
 	let {
 		value = $bindable(''),
 		placeholder = 'Enter message...',
+		isSubmitting = $bindable(false),
 		onsubmit,
 		class: className
 	}: {
 		value?: string;
 		placeholder?: string;
-		onsubmit?: (val: string) => void;
+		isSubmitting?: boolean;
+		onsubmit?: (val: string) => void | Promise<void>;
 		class?: string;
 	} = $props();
 
@@ -131,12 +133,17 @@
 		}
 	}
 
-	function handleSubmit() {
+	async function handleSubmit() {
+		isSubmitting = true;
+
 		if (onsubmit && value.trim()) {
-			onsubmit(value);
+			await onsubmit(value);
+
 			value = '';
 			editor?.setContent('');
 		}
+
+		isSubmitting = false;
 	}
 </script>
 
@@ -196,9 +203,19 @@
 		</div>
 
 		<div class="flex items-center">
-			<Button variant="ghost" size="sm" class="font-medium" onclick={handleSubmit}>
+			<Button
+				variant="ghost"
+				size="sm"
+				class="font-medium"
+				onclick={handleSubmit}
+				disabled={isSubmitting}
+			>
 				Submit
-				<PaperPlaneRight size={16} weight="fill" />
+				{#if isSubmitting}
+					<SpinnerIcon size={16} class="animate-spin" />
+				{:else}
+					<PaperPlaneRight size={16} weight="fill" />
+				{/if}
 			</Button>
 		</div>
 	</div>

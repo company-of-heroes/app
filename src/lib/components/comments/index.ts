@@ -4,6 +4,7 @@ import Comments from './comments.svelte';
 import CommentsEditor from './comments-editor.svelte';
 import CommentsList from './comments-list.svelte';
 import CommentsTotal from './comments-total.svelte';
+import { useComments } from './context.svelte';
 
 export type CommentsRootProps = {
 	commentId?: string;
@@ -12,4 +13,10 @@ export type CommentsRootProps = {
 	context?: CommentsContext;
 } & HTMLAttributes<HTMLDivElement>;
 
-export { Comments as Root, CommentsEditor as Editor, CommentsList as List, CommentsTotal as Count };
+export {
+	Comments as Root,
+	CommentsEditor as Editor,
+	CommentsList as List,
+	CommentsTotal as Count,
+	useComments
+};
