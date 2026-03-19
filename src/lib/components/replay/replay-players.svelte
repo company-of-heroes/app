@@ -111,12 +111,12 @@
 
 <div {...restProps} class={cn('grid grid-cols-2 gap-4', restProps.class)}>
 	<div class={cn('grid grid-cols-1 gap-2', teams.allies.length === 1 && ' grid-cols-1')}>
-		{#each teams.allies as p (p.id)}
+		{#each teams.allies as p (p.id + '-' + p.name)}
 			{@render player(p)}
 		{/each}
 	</div>
-	<div class={cn('grid grid-cols-1 gap-2', teams.allies.length === 1 && ' grid-cols-1')}>
-		{#each teams.axis as p (p.id)}
+	<div class={cn('grid grid-cols-1 gap-2', teams.axis.length === 1 && ' grid-cols-1')}>
+		{#each teams.axis as p (p.id + '-' + p.name)}
 			{@render player(p)}
 		{/each}
 	</div>

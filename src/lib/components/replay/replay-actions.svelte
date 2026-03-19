@@ -113,7 +113,7 @@
 
 <H level="5" class="text-secondary-300">CPM Over Time</H>
 <div class="flex gap-4">
-	{#each replay.players as player}
+	{#each replay.players as player, i (player.id + '-' + i)}
 		<Checkbox
 			size="sm"
 			label={player.name}
@@ -143,7 +143,7 @@
 				<Layer type="svg">
 					<Axis placement="left" grid rule />
 					<Axis placement="bottom" rule />
-					{#each series as s (s.key)}
+					{#each series as s, i (s.key + '-' + i)}
 						{@const active = s.key === context.tooltip.data?.player?.id || s.key === selectedPlayer}
 						<g class={cn(!active && 'opacity-20 saturate-0')}>
 							<Spline
@@ -184,7 +184,7 @@
 <H level="5" class="text-secondary-300 mt-4">Actions Over Time</H>
 <div class="border-secondary-800 grid grid-cols-[220px_auto] gap-4 rounded-xl border p-4">
 	<div class="flex flex-col gap-[4px]">
-		{#each replay.players as player, i (player.name)}
+		{#each replay.players as player, i (player.name + '-' + i)}
 			<button
 				class={cn(
 					'flex items-center gap-2',

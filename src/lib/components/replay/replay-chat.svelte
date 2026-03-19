@@ -49,7 +49,7 @@
 	{#if replay.messages.length === 0}
 		<span>No messages</span>
 	{/if}
-	{#each replay.messages as m}
+	{#each replay.messages as m, i (m.playerID + '-' + i)}
 		{@render message(m)}
 	{/each}
 </div>
