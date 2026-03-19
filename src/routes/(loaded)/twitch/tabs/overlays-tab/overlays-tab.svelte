@@ -2,11 +2,11 @@
 	import type { Overlay } from '$features/twitch-overlays/overlays/overlay.svelte';
 	import * as monaco from 'monaco-editor';
 	import Editor from '$lib/components/ui/input/editor.svelte';
-	import CopyIcon from 'phosphor-svelte/lib/Copy';
+	import CopyIcon from 'phosphor-svelte/lib/CopyIcon';
 	import FileTree from './file-tree.svelte';
-	import CheckIcon from 'phosphor-svelte/lib/Check';
-	import XIcon from 'phosphor-svelte/lib/X';
-	import FloppyDiskIcon from 'phosphor-svelte/lib/FloppyDisk';
+	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
+	import XIcon from 'phosphor-svelte/lib/XIcon';
+	import FloppyDiskIcon from 'phosphor-svelte/lib/FloppyDiskIcon';
 	import { openPath } from '@tauri-apps/plugin-opener';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { twitchOverlays } from '$features/twitch-overlays';
@@ -51,6 +51,8 @@
 		const languageMap: Record<string, string> = {
 			js: 'javascript',
 			ts: 'typescript',
+			jsx: 'javascript',
+			tsx: 'typescript',
 			json: 'json',
 			html: 'html',
 			css: 'css',
@@ -316,6 +318,7 @@
 						bind:editor={editorInstance}
 						bind:value={activeFile.content}
 						bind:language={activeFile.language}
+						path={activeFile.path}
 					/>
 				{/if}
 			</div>

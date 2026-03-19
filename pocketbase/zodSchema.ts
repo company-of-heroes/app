@@ -65,7 +65,7 @@ export const lobbyAggregationSchema = z.object({
     collectionId: z.literal('pbc_1750043174').optional(),
     collectionName: z.string().min(1).max(255).optional(),
     id: z.string().regex(/^[a-z0-9]+$/).min(1).max(5000),
-    user: z.unknown().optional(),
+    USER: z.unknown().optional(),
     players: z.unknown().optional(),
     maps: z.unknown().optional(),
 })

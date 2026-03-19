@@ -1,5 +1,3 @@
-declare const uniqueIdentifier: unique symbol
-
 export interface Users {
     /**
      * |      |        |
@@ -492,7 +490,7 @@ export interface LobbyAggregation {
      * | maxSize  | `1`     |
      * | required | `false` |
      */
-    user: any
+    USER: any
     /**
      * |          |         |
      * | -------- | ------- |
@@ -568,12 +566,6 @@ export interface ReplayAggregation {
      * | required | `false` |
      */
     maps: any
-    
-    /**
-     * This is a unique identifier to help TypeScript differentiate this interface from others sharing the same properties.
-     * Refer to https://github.com/satohshi/pocketbase-ts#dealing-with-tables-with-exactly-the-same-properties for more information.
-     */
-    readonly [uniqueIdentifier]: unique symbol
 }
 
 export interface LobbyAggregationCommunity {

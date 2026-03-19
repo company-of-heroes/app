@@ -30,7 +30,8 @@ function base64Plugin() {
 // https://vitejs.dev/config/
 export default defineConfig({
 	define: {
-		'process.env': process.env
+		'process.env': process.env,
+		global: 'globalThis'
 	},
 	assetsInclude: ['*.md'],
 	plugins: [base64Plugin(), sveltekit(), tailwindcss(), base64()],

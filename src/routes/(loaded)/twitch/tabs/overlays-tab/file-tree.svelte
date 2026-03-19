@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Overlay } from '$core/app/plugins/twitch-overlays/overlays/overlay.svelte';
+	import type { Overlay } from '$core/app/features/twitch-overlays/overlays/overlay.svelte';
 	import { cn } from '$lib/utils';
 	import FolderIcon from 'phosphor-svelte/lib/Folder';
 	import FolderOpenIcon from 'phosphor-svelte/lib/FolderOpen';
