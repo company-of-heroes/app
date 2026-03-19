@@ -30,8 +30,8 @@ tauri-plugin-store = "2.4.1"
 tauri-plugin-oauth = "2"
 tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-shell = "2"
-tauri-plugin-http = { version = "2.5.4", features = ["dangerous-settings"] }
-tauri-plugin-cors-fetch = "4.1.0"
+tauri-plugin-http = { version = "=2.4.4", features = ["dangerous-settings"] }
+tauri-plugin-cors-fetch = "=4.1.0"
 tauri-plugin-dialog = "2.4.1"
 tauri-plugin-log = "2"
 tokio = { version = "1", features = ["full"] }

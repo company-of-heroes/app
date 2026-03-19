@@ -8,6 +8,7 @@
 	import { ButtonBack } from '$lib/components/ui/button';
 	import { goto } from '$app/navigation';
 	import type { ReplayData } from '@fknoobs/replay-parser';
+	import type { Snapshot } from './$types';
 
 	let match = $state(app.lobby);
 	let replay = $state<{
@@ -19,6 +20,19 @@
 		match = lobby.match;
 		replay = lobby.replay;
 	});
+
+	export const snapshot: Snapshot = {
+		capture() {
+			return {
+				match,
+				replay
+			};
+		},
+		restore(snapshot) {
+			match = snapshot.match;
+			replay = snapshot.replay;
+		}
+	};
 </script>
 
 <ButtonBack onclick={() => goto('/')}>Back to Dashboard</ButtonBack>

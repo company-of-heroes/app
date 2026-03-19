@@ -5720,9 +5720,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-cors-fetch"
-version = "4.2.0"
+version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea24541cd5e3c8c2faa701462c5bca376ab6f363a1baed6b7d970ae692712896"
+checksum = "1bbb818e0e97f72dc9d353d38fa5799ed1dd4cf7371ff3195bd1231072d6fc2d"
 dependencies = [
  "http 1.4.0",
  "once_cell",
@@ -5795,9 +5795,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-http"
-version = "2.5.7"
+version = "2.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8f069451c4e87e7e2636b7f065a4c52866c4ce5e60e2d53fa1038edb6d184dc"
+checksum = "a673d9df72d3f3c797b8edd5950a7ab014d2bdeb7079b6588395b25242d5dffd"
 dependencies = [
  "bytes",
  "cookie_store 0.21.1",
@@ -8088,18 +8088,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.46"
+version = "0.8.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c5030500cb2d66bdfbb4ebc9563be6ce7005a4b5d0f26be0c523870fe372ca6"
+checksum = "efbb2a062be311f2ba113ce66f697a4dc589f85e78a4aea276200804cea0ed87"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.46"
+version = "0.8.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5f86989a046a79640b9d8867c823349a139367bda96549794fcc3313ce91f4e"
+checksum = "0e8bc7269b54418e7aeeef514aa68f8690b8c0489a06b0136e5f57c4c5ccab89"
 dependencies = [
  "proc-macro2",
  "quote",

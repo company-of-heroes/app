@@ -1,3 +1,8 @@
+### v0.43.2
+
+- fix; restore state after nagivating on current game page
+- fix; some small overal fixes
+
 ### v0.43.1
 
 - fix; match result not saved because of a previous change determining the playback dir
