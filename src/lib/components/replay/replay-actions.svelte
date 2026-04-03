@@ -34,7 +34,7 @@
 
 		for (const player of replay.players) {
 			const playerActions = replay.actions.filter(
-				(a) => a.playerName === player.name && a.command && !isEmpty(a.command.description)
+				(a) => a.playerID === player.id && a.command && !isEmpty(a.command.description)
 			);
 			const aiTakeOverIndex = playerActions.findIndex((a) => a.command?.type === 'AI_TAKEOVER');
 			const effectiveActions =
@@ -113,7 +113,7 @@
 
 <H level="5" class="text-secondary-300">CPM Over Time</H>
 <div class="flex gap-4">
-	{#each replay.players as player, i (player.id + '-' + i)}
+	{#each replay.players as player (player.id)}
 		<Checkbox
 			size="sm"
 			label={player.name}
@@ -184,7 +184,7 @@
 <H level="5" class="text-secondary-300 mt-4">Actions Over Time</H>
 <div class="border-secondary-800 grid grid-cols-[220px_auto] gap-4 rounded-xl border p-4">
 	<div class="flex flex-col gap-[4px]">
-		{#each replay.players as player, i (player.name + '-' + i)}
+		{#each replay.players as player (player.id)}
 			<button
 				class={cn(
 					'flex items-center gap-2',
