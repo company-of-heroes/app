@@ -728,6 +728,20 @@ migrate((app) => {
         },
         {
           "hidden": false,
+          "id": "select1466534506",
+          "maxSelect": 1,
+          "name": "role",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "select",
+          "values": [
+            "admin",
+            "moderator"
+          ]
+        },
+        {
+          "hidden": false,
           "id": "autodate2990389176",
           "name": "created",
           "onCreate": true,
@@ -952,7 +966,11 @@ migrate((app) => {
       ],
       "id": "pbc_1574334436",
       "indexes": [
-        "CREATE INDEX `idx_8b5JbSpePY` ON `lobbies` (\n  `title`,\n  `map`\n)"
+        "CREATE INDEX `idx_8b5JbSpePY` ON `lobbies` (\n  `title`,\n  `map`\n)",
+        "CREATE INDEX `idx_lobbies_user_map_agg` ON `lobbies` (`user`, `map`)",
+        "CREATE INDEX `idx_lobbies_user_players_agg` ON `lobbies` (`user`, `players`)",
+        "CREATE INDEX `idx_lobbies_players_agg` ON `lobbies` (`players`)",
+        "CREATE INDEX `idx_lobbies_map_agg` ON `lobbies` (`map`)"
       ],
       "listRule": "",
       "name": "lobbies",
@@ -1176,7 +1194,10 @@ migrate((app) => {
       ],
       "id": "pbc_3644265509",
       "indexes": [
-        "CREATE INDEX `idx_eU9tQdM8Tz` ON `replays` (\n  `title`,\n  `file`,\n  `mapName`\n)"
+        "CREATE INDEX `idx_eU9tQdM8Tz` ON `replays` (\n  `title`,\n  `file`,\n  `mapName`\n)",
+        "CREATE INDEX `idx_replays_createdBy_mapName_agg` ON `replays` (`createdBy`, `mapName`) WHERE `createdBy` != ''",
+        "CREATE INDEX `idx_replays_createdBy_players_agg` ON `replays` (`createdBy`, `players`) WHERE `createdBy` != ''",
+        "CREATE INDEX `idx_replays_players_agg` ON `replays` (`players`)"
       ],
       "listRule": "",
       "name": "replays",
@@ -1205,9 +1226,9 @@ migrate((app) => {
         },
         {
           "hidden": false,
-          "id": "json2375276105",
+          "id": "json3137747965",
           "maxSize": 1,
-          "name": "user",
+          "name": "USER",
           "presentable": false,
           "required": false,
           "system": false,
@@ -1241,7 +1262,7 @@ migrate((app) => {
       "system": false,
       "type": "view",
       "updateRule": null,
-      "viewQuery": "SELECT\n  p.user as id,\n  p.user,\n  p.players,\n  m.maps\nFROM\n  (\n    -- 1. Existing logic: Unique Players\n    SELECT\n      sub.user,\n      json_group_array(\n        json_object(\n          'profile_id', json_extract(sub.value, '$.profile.profile_id'),\n          'alias', json_extract(sub.value, '$.profile.alias')\n        )\n      ) as players\n    FROM (\n      SELECT DISTINCT\n        l.user,\n        player.value\n      FROM lobbies l, json_each(l.players) as player\n      WHERE json_extract(player.value, '$.profile.profile_id') IS NOT NULL\n    ) as sub\n    GROUP BY sub.user\n  ) as p\nLEFT JOIN\n  (\n    -- 2. New logic: Unique Maps\n    SELECT\n      sub.user,\n      json_group_array(sub.map) as maps\n    FROM (\n      SELECT DISTINCT\n        user,\n        map\n      FROM lobbies\n    ) as sub\n    GROUP BY sub.user\n  ) as m\nON p.user = m.user",
+      "viewQuery": "SELECT u.USER AS id,\n       u.USER,\n\n  (SELECT Json_group_array(Json_object('profile_id', Json_extract(sub.value, '$.profile.profile_id') , 'alias', Json_extract(sub.value, '$.profile.alias')))\n   FROM\n     (SELECT DISTINCT player.value AS value\n      FROM lobbies l,\n           Json_each(l.players) AS player\n      WHERE l.USER = u.USER\n        AND Json_extract(player.value, '$.profile.profile_id') IS NOT\n                           NULL) sub) AS players,\n\n  (SELECT Json_group_array(map_sub.map)\n   FROM\n     (SELECT DISTINCT map\n      FROM lobbies\n      WHERE USER = u.USER\n        AND map IS NOT NULL) map_sub) AS maps\nFROM\n  (SELECT DISTINCT USER\n   FROM lobbies\n   WHERE USER IS NOT NULL) u",
       "viewRule": ""
     },
     {
@@ -1493,7 +1514,10 @@ migrate((app) => {
           "protected": false,
           "required": true,
           "system": false,
-          "thumbs": [],
+          "thumbs": [
+            "300x0",
+            "500x0"
+          ],
           "type": "file"
         },
         {
@@ -1687,6 +1711,216 @@ migrate((app) => {
       "system": false,
       "type": "base",
       "updateRule": "@request.auth.id = sender",
+      "viewRule": ""
+    },
+    {
+      "createRule": "@request.auth.id != \"\"",
+      "deleteRule": null,
+      "fields": [
+        {
+          "autogeneratePattern": "[a-z0-9]{15}",
+          "hidden": false,
+          "id": "text3208210256",
+          "max": 15,
+          "min": 15,
+          "name": "id",
+          "pattern": "^[a-z0-9]+$",
+          "presentable": false,
+          "primaryKey": true,
+          "required": true,
+          "system": true,
+          "type": "text"
+        },
+        {
+          "autogeneratePattern": "",
+          "hidden": false,
+          "id": "text999008199",
+          "max": 0,
+          "min": 0,
+          "name": "text",
+          "pattern": "",
+          "presentable": true,
+          "primaryKey": false,
+          "required": true,
+          "system": false,
+          "type": "text"
+        },
+        {
+          "cascadeDelete": false,
+          "collectionId": "_pb_users_auth_",
+          "hidden": false,
+          "id": "relation1593854671",
+          "maxSelect": 1,
+          "minSelect": 0,
+          "name": "sender",
+          "presentable": false,
+          "required": true,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "hidden": false,
+          "id": "bool2382110195",
+          "name": "isDeleted",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "bool"
+        },
+        {
+          "cascadeDelete": false,
+          "collectionId": "_pb_users_auth_",
+          "hidden": false,
+          "id": "relation1237995133",
+          "maxSelect": 999,
+          "minSelect": 0,
+          "name": "likes",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "cascadeDelete": false,
+          "collectionId": "_pb_users_auth_",
+          "hidden": false,
+          "id": "relation770948625",
+          "maxSelect": 999,
+          "minSelect": 0,
+          "name": "dislikes",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "cascadeDelete": false,
+          "collectionId": "_pb_users_auth_",
+          "hidden": false,
+          "id": "relation4265177951",
+          "maxSelect": 999,
+          "minSelect": 0,
+          "name": "mentions",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "cascadeDelete": false,
+          "collectionId": "pbc_533777971",
+          "hidden": false,
+          "id": "relation1032740943",
+          "maxSelect": 1,
+          "minSelect": 0,
+          "name": "parent",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "hidden": false,
+          "id": "autodate2990389176",
+          "name": "created",
+          "onCreate": true,
+          "onUpdate": false,
+          "presentable": false,
+          "system": false,
+          "type": "autodate"
+        },
+        {
+          "hidden": false,
+          "id": "autodate3332085495",
+          "name": "updated",
+          "onCreate": true,
+          "onUpdate": true,
+          "presentable": false,
+          "system": false,
+          "type": "autodate"
+        }
+      ],
+      "id": "pbc_533777971",
+      "indexes": [],
+      "listRule": "",
+      "name": "comments",
+      "system": false,
+      "type": "base",
+      "updateRule": "@request.auth.id = sender || @request.body.likes:changed = true || @request.body.dislikes:changed = true",
+      "viewRule": ""
+    },
+    {
+      "createRule": "@request.auth.id != \"\"",
+      "deleteRule": null,
+      "fields": [
+        {
+          "autogeneratePattern": "[a-z0-9]{15}",
+          "hidden": false,
+          "id": "text3208210256",
+          "max": 15,
+          "min": 15,
+          "name": "id",
+          "pattern": "^[a-z0-9]+$",
+          "presentable": false,
+          "primaryKey": true,
+          "required": true,
+          "system": true,
+          "type": "text"
+        },
+        {
+          "cascadeDelete": true,
+          "collectionId": "pbc_1574334436",
+          "hidden": false,
+          "id": "relation3437516279",
+          "maxSelect": 1,
+          "minSelect": 0,
+          "name": "lobby",
+          "presentable": false,
+          "required": true,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "cascadeDelete": true,
+          "collectionId": "pbc_533777971",
+          "hidden": false,
+          "id": "relation2490651244",
+          "maxSelect": 1,
+          "minSelect": 0,
+          "name": "comment",
+          "presentable": false,
+          "required": true,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "hidden": false,
+          "id": "autodate2990389176",
+          "name": "created",
+          "onCreate": true,
+          "onUpdate": false,
+          "presentable": false,
+          "system": false,
+          "type": "autodate"
+        },
+        {
+          "hidden": false,
+          "id": "autodate3332085495",
+          "name": "updated",
+          "onCreate": true,
+          "onUpdate": true,
+          "presentable": false,
+          "system": false,
+          "type": "autodate"
+        }
+      ],
+      "id": "pbc_673294823",
+      "indexes": [],
+      "listRule": "",
+      "name": "lobby_comments",
+      "system": false,
+      "type": "base",
+      "updateRule": null,
       "viewRule": ""
     }
   ];
