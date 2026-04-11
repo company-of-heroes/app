@@ -10,9 +10,9 @@
 	import ExportIcon from 'phosphor-svelte/lib/Export';
 	import ImportIcon from 'phosphor-svelte/lib/DownloadSimple';
 	import { H } from '$lib/components/ui/h';
-	import { createRawSnippet, onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { ToggleGroup } from '$lib/components/ui/toggle-group';
-	import { cn, getFactionFlagFromRace } from '$lib/utils';
+	import { cn } from '$lib/utils';
 	import { shortcuts, type Shortcut, type ShortcutSettings } from '$core/app/features/shortcuts';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';

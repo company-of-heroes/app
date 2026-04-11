@@ -26,6 +26,7 @@ import { join } from '@tauri-apps/api/path';
 import { LOBBY_4V4, RANKED_1V1, RANKED_2V2 } from '$lib/dev';
 import { getVersion } from '@tauri-apps/api/app';
 import type { ReplayData } from '@fknoobs/replay-parser';
+import type { MatchExpanded } from '../database/matches';
 
 export const appSettingsSchema = z
 	.object({
@@ -56,6 +57,7 @@ export type AppEvents = {
 			replay: ReplayData;
 		};
 	};
+    'lobby.saved': MatchExpanded;
 };
 
 export class AppContext extends Emittery<AppEvents> {
@@ -122,7 +124,7 @@ export class AppContext extends Emittery<AppEvents> {
 	 * @public
 	 * @type {Match | null}
 	 */
-	lobby = $state<Match | null>(dev ? RANKED_2V2 : null);
+	lobby = $state.raw<Match | null>();
 
 	/**
 	 * The log parser for handling game logs.
@@ -223,6 +225,16 @@ export class AppContext extends Emittery<AppEvents> {
 
 		$effect.root(() => {
 			this.trackStatuses();
+
+            // Temporary code to simulate lobby state changes during development
+            if (dev) {
+                setTimeout(() => {
+                    this.lobby = RANKED_2V2;
+                }, 1000);
+                setTimeout(() => {
+                    this.lobby = LOBBY_4V4;
+                }, 5000);
+            }
 
 			watch(
 				() => $state.snapshot(this.settings),

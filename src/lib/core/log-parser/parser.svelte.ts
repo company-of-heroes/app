@@ -132,6 +132,14 @@ export class Log extends Emittery<LogParserEvents & LogDomainEvents> {
 				if (!this.isReady) {
 					this.isReady = true;
 					await this.emitSerial('log.ready');
+
+                    /**
+                     * This can happen we we open de app while already in a lobby.
+                     * Before the app would not display data until the next game.
+                     */
+                    if (this.lobby) {
+                        this.emit('log.lobby.started', this.lobby);
+                    }
 				}
 			} catch (error) {
 				console.error('Error reading log file:', error);

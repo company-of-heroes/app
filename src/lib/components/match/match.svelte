@@ -11,7 +11,7 @@
 	} & HTMLAnchorAttributes;
 
 	let { match, children, ...restProps }: Props = $props();
-	createMatch(match);
+	createMatch(() => match);
 </script>
 
 {#if false === isEmpty(restProps)}

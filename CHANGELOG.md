@@ -1,3 +1,14 @@
+### v0.43.4
+
+- fix; current game page not properly updating data when a new game started
+- feat; redirect to match history record after finishing lobby
+- fix; a memory leak, caused by a wrong filter query
+- fix; an issue where realtime data didn't propagate properly throught the component tree
+
+### v0.43.3
+
+- fix; reverted a change that broke the replays page
+
 ### v0.43.2
 
 - fix; restore state after nagivating on current game page

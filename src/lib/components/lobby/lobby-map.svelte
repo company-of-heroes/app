@@ -7,7 +7,7 @@
 	type Props = HTMLImgAttributes;
 
 	const { ...restProps }: Props = $props();
-	const lobby = $derived(useLobby());
+	const lobby = useLobby();
 </script>
 
 <AspectRatio.Root

@@ -5,7 +5,7 @@
 	type Props = {} & Omit<HeadingProps, 'children'>;
 
 	let { ...restProps }: Props = $props();
-	let lobby = $derived(useLobby());
+	let lobby = useLobby();
 </script>
 
 <H {...restProps}>{lobby.map}</H>

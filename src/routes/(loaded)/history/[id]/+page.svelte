@@ -3,34 +3,29 @@
 	import * as Player from '$lib/components/player';
 	import * as Table from '$lib/components/ui/table';
 	import * as Match from '$lib/components/match';
-	import * as Comments from '$lib/components/comments';
 	import { scale } from 'svelte/transition';
 	import { page } from '$app/state';
 	import { app } from '$core/app/context';
 	import { Button, ButtonBack } from '$lib/components/ui/button';
 	import { H } from '$lib/components/ui/h';
-	import { cn, normalizeMapName } from '$lib/utils';
-	import { getLeaderboardStatsForPlayerByMatchType, getMapImageFromName } from '$lib/utils/game';
-	import { resource } from 'runed';
+	import { cn } from '$lib/utils';
+	import { getLeaderboardStatsForPlayerByMatchType } from '$lib/utils/game';
+	import { resource, watch } from 'runed';
 	import { tooltip } from '$lib/attachments';
 	import { sortBy } from 'lodash-es';
+	import { bounceInOut } from 'svelte/easing';
+	import { fetch } from '@tauri-apps/plugin-http';
 	import dayjs from '$lib/dayjs';
 	import HourGlass from 'phosphor-svelte/lib/Hourglass';
 	import Checks from 'phosphor-svelte/lib/Checks';
 	import Download from 'phosphor-svelte/lib/Download';
 	import TreeView from 'phosphor-svelte/lib/TreeView';
 	import Check from 'phosphor-svelte/lib/Check';
-	import { bounceInOut, elasticInOut } from 'svelte/easing';
-	import type { fr } from 'zod/v4/locales';
-	import Comment from '$lib/components/comment/comment.svelte';
-	import { Editor } from '$lib/components/ui/editor';
 
 	const match = resource(
 		() => page.params.id,
 		() => app.database.matches.getById(page.params.id!)
 	);
-
-	$inspect(match.current);
 
 	let isDownloading = $state(false);
 	let didDownload = $derived(
@@ -63,6 +58,25 @@
 
 		return diff.format('m [mins] s [secs]');
 	});
+
+	app.pocketbase.collection('lobbies').subscribe(
+		page.params.id!,
+		(e) => {
+			if (e.action === 'update') {
+				console.log(e.record.id, match.current?.id);
+				app.database.matches
+					.getById(e.record.id)
+					.then((updatedMatch) => {
+						match.mutate(updatedMatch);
+					})
+					.catch((err) => {
+						console.error('Failed to fetch updated match data:', err);
+						app.toast.error('Failed to update match data. Please refresh the page.');
+					});
+			}
+		},
+		{ fetch }
+	);
 </script>
 
 <ButtonBack>Go back</ButtonBack>

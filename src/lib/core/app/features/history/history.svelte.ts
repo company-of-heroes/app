@@ -38,7 +38,7 @@ export class History extends Feature {
 
 			let { file } = await this.getLastMatchReplay();
 
-			app.database.matches.create({
+			const match = await app.database.matches.create({
 				isRanked: lobby.isRanked,
 				title: lobby.type,
 				map: lobby.map || 'Unknown',
@@ -47,6 +47,7 @@ export class History extends Feature {
 				players: lobby.players,
 				replay: file
 			});
+            app.emit('lobby.saved', match);
 		});
 	}
 
@@ -56,7 +57,7 @@ export class History extends Feature {
 		}
 
 		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
-			filter: `needsResult=true && ${app.features.auth.user.steamIds.map((id) => `user.steamIds ~ "${id}"`).join(' || ')}`
+			filter: `needsResult=true && (${app.features.auth.user.steamIds.map((id) => `user.steamIds ~ "${id}"`).join(' || ')})`
 		});
 
 		if (matchesNeedingResults.items.length === 0) {

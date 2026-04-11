@@ -9,7 +9,7 @@
 	type Props = HTMLAttributes<HTMLDivElement>;
 
 	const { ...restProps }: Props = $props();
-	const lobby = $derived(useLobby());
+	const lobby = useLobby();
 </script>
 
 <Table.Table {...restProps}>
