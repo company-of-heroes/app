@@ -155,3 +155,16 @@ export const lobbyCommentsSchema = z.object({
     updated: z.string().regex(DATETIME_REGEX).optional(),
 })
 
+export const lobbiesLiveSchema = z.object({
+    collectionId: z.literal('pbc_908767333').optional(),
+    collectionName: z.string().min(1).max(255).optional(),
+    id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
+    user: z.string().regex(/^[a-z0-9]+$/).length(15),
+    isRanked: z.boolean().optional(),
+    sessionId: z.number().refine((n) => n !== 0),
+    map: z.string().min(1).max(5000),
+    players: z.unknown(),
+    createdAt: z.string().regex(DATETIME_REGEX).optional(),
+    updatedAt: z.string().regex(DATETIME_REGEX).optional(),
+})
+

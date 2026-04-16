@@ -218,9 +218,7 @@ export class AppContext extends Emittery<AppEvents> {
 		this.socket = await Socket.connect();
 
 		for await (const feature of this._features.values()) {
-			console.time('Register Feature ' + feature.name);
 			await feature.register();
-			console.timeEnd('Register Feature ' + feature.name);
 		}
 
 		$effect.root(() => {
@@ -385,6 +383,8 @@ export class AppContext extends Emittery<AppEvents> {
 
 		this.emit('lobby.started', lobby.toJSON());
 		this.socket?.publish('game.lobby.started', lobby.toJSON());
+
+        this.database.lobbiesLive.setLobby(lobby.toJSON());
 	}
 
 	private onLobbyJoined(lobby: Lobby) {

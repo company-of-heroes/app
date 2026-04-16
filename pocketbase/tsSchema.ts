@@ -1127,6 +1127,101 @@ export interface LobbyComments {
     updated: string
 }
 
+export interface LobbiesLive {
+    /**
+     * |      |        |
+     * | ---- | ------ |
+     * | type | `text` |
+     * | min  | `1`    |
+     * | min  | `100`  |
+     */
+    collectionId: 'pbc_908767333'
+    /**
+     * |               |                |
+     * | ------------- | -------------- |
+     * | type          | `text`         |
+     * | min           | `1`            |
+     * | min           | `255`          |
+     * | current value | `lobbies_live` |
+     */
+    collectionName: 'lobbies_live' | (string & {})
+    /**
+     * |                     |                |
+     * | ------------------- | -------------- |
+     * | type                | `text`         |
+     * | hidden              | `false`        |
+     * | required            | `true`         |
+     * | min                 | `15`           |
+     * | max                 | `15`           |
+     * | pattern             | `^[a-z0-9]+$`  |
+     * | autogeneratePattern | `[a-z0-9]{15}` |
+     */
+    id: string
+    /**
+     * |                |                    |
+     * | -------------- | ------------------ |
+     * | type           | `relation(single)` |
+     * | hidden         | `false`            |
+     * | required       | `true`             |
+     * | collectionId   | `_pb_users_auth_`  |
+     * | collectionName | `users`            |
+     * | cascadeDelete  | `false`            |
+     */
+    user: string
+    /**
+     * |        |         |
+     * | ------ | ------- |
+     * | type   | `bool`  |
+     * | hidden | `false` |
+     */
+    isRanked: boolean
+    /**
+     * |          |          |
+     * | -------- | -------- |
+     * | type     | `number` |
+     * | hidden   | `false`  |
+     * | required | `true`   |
+     * | onlyInt  | `false`  |
+     */
+    sessionId: number
+    /**
+     * |          |         |
+     * | -------- | ------- |
+     * | type     | `text`  |
+     * | hidden   | `false` |
+     * | required | `true`  |
+     * | max      | `5000`  |
+     */
+    map: string
+    /**
+     * |          |         |
+     * | -------- | ------- |
+     * | type     | `json`  |
+     * | hidden   | `false` |
+     * | maxSize  | `0`     |
+     * | required | `true`  |
+     */
+    players: any
+    /**
+     * |          |            |
+     * | -------- | ---------- |
+     * | type     | `autodate` |
+     * | hidden   | `false`    |
+     * | onCreate | `true`     |
+     * | onUpdate | `false`    |
+     */
+    createdAt: string
+    /**
+     * |          |            |
+     * | -------- | ---------- |
+     * | type     | `autodate` |
+     * | hidden   | `false`    |
+     * | onCreate | `true`     |
+     * | onUpdate | `true`     |
+     */
+    updatedAt: string
+}
+
 
 /**
  * Commented-out back-relations are what will be inferred by pocketbase-ts from the forward relations.
@@ -1149,6 +1244,7 @@ export type Schema = {
             // comments_via_likes?: Comments[]
             // comments_via_dislikes?: Comments[]
             // comments_via_mentions?: Comments[]
+            lobbies_live_via_user?: LobbiesLive
         }
     }
     lobbies: {
@@ -1217,6 +1313,12 @@ export type Schema = {
         relations: {
             lobby: Lobbies
             comment: Comments
+        }
+    }
+    lobbies_live: {
+        type: LobbiesLive
+        relations: {
+            user: Users
         }
     }
 }

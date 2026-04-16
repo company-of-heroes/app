@@ -17,6 +17,7 @@ export enum Collections {
 	ChatRooms = "chat_rooms",
 	Comments = "comments",
 	Lobbies = "lobbies",
+	LobbiesLive = "lobbies_live",
 	LobbyAggregation = "lobby_aggregation",
 	LobbyAggregationCommunity = "lobby_aggregation_community",
 	LobbyComments = "lobby_comments",
@@ -165,11 +166,22 @@ export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	user: RecordIdString
 }
 
-export type LobbyAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
+export type LobbiesLiveRecord<Tplayers = unknown> = {
+	createdAt: IsoAutoDateString
+	id: string
+	isRanked?: boolean
+	map: string
+	players: null | Tplayers
+	sessionId: number
+	updatedAt: IsoAutoDateString
+	user: RecordIdString
+}
+
+export type LobbyAggregationRecord<TUSER = unknown, Tmaps = unknown, Tplayers = unknown> = {
+	USER?: null | TUSER
 	id: string
 	maps?: null | Tmaps
 	players?: null | Tplayers
-	user?: null | Tuser
 }
 
 export type LobbyAggregationCommunityRecord<Tmaps = unknown, Tplayers = unknown, Tusers = unknown> = {
@@ -248,7 +260,8 @@ export type ChatMessagesResponse<Texpand = unknown> = Required<ChatMessagesRecor
 export type ChatRoomsResponse<Texpand = unknown> = Required<ChatRoomsRecord> & BaseSystemFields<Texpand>
 export type CommentsResponse<Texpand = unknown> = Required<CommentsRecord> & BaseSystemFields<Texpand>
 export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
-export type LobbyAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<LobbyAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
+export type LobbiesLiveResponse<Tplayers = unknown, Texpand = unknown> = Required<LobbiesLiveRecord<Tplayers>> & BaseSystemFields<Texpand>
+export type LobbyAggregationResponse<TUSER = unknown, Tmaps = unknown, Tplayers = unknown, Texpand = unknown> = Required<LobbyAggregationRecord<TUSER, Tmaps, Tplayers>> & BaseSystemFields<Texpand>
 export type LobbyAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Tusers = unknown, Texpand = unknown> = Required<LobbyAggregationCommunityRecord<Tmaps, Tplayers, Tusers>> & BaseSystemFields<Texpand>
 export type LobbyCommentsResponse<Texpand = unknown> = Required<LobbyCommentsRecord> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
@@ -269,6 +282,7 @@ export type CollectionRecords = {
 	chat_rooms: ChatRoomsRecord
 	comments: CommentsRecord
 	lobbies: LobbiesRecord
+	lobbies_live: LobbiesLiveRecord
 	lobby_aggregation: LobbyAggregationRecord
 	lobby_aggregation_community: LobbyAggregationCommunityRecord
 	lobby_comments: LobbyCommentsRecord
@@ -289,6 +303,7 @@ export type CollectionResponses = {
 	chat_rooms: ChatRoomsResponse
 	comments: CommentsResponse
 	lobbies: LobbiesResponse
+	lobbies_live: LobbiesLiveResponse
 	lobby_aggregation: LobbyAggregationResponse
 	lobby_aggregation_community: LobbyAggregationCommunityResponse
 	lobby_comments: LobbyCommentsResponse
