@@ -1,0 +1,48 @@
+{
+	"/(loaded)": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/account": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/chat": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/current-game": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/history": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/history/[id]": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/leaderboards": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/leaderboards/profile/[profileId]": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/replays": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/replays/[replayId]": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/settings": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/shortcuts": [
+		"src/routes/+layout.ts"
+	],
+	"/(loading)/splashscreen": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/twitch": [
+		"src/routes/+layout.ts"
+	]
+}

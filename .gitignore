@@ -20,7 +20,10 @@ coh.replayparser/*
 app.json
 
 pocketbase.exe
-pocketbase/pb_data
-pocketbase/pb_public
+packages/pocketbase/pb_data
+packages/pocketbase/pb_public
+
+# Tauri build artifacts
+packages/app/src-tauri/target/
 
 script.js
