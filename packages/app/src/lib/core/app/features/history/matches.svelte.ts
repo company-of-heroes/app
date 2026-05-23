@@ -1,7 +1,7 @@
 import { useQuery } from '$core/app/cache';
 import { app } from '$core/app/context';
 import { resource, watch, type ResourceReturn } from 'runed';
-import { compact, isEqual, map, join, uniqBy } from 'lodash-es';
+import { compact, map, join, uniqBy } from 'lodash-es';
 import type {
 	LobbyAggregationResponse,
 	LobbyAggregationCommunityResponse
@@ -42,7 +42,7 @@ export class Matches {
 	public aggregation =
 		$state<
 			ResourceReturn<
-				| LobbyAggregationResponse<string[], AggregationPlayer[], string>
+				| LobbyAggregationResponse<string, string[], AggregationPlayer[]>
 				| LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
 			>
 		>()!;
@@ -77,7 +77,6 @@ export class Matches {
 	});
 
 	public filter = $derived.by(() => {
-		const { user } = app.features.auth;
 		const { playerIds, maps } = this.filters;
 
 		return compact([
@@ -85,35 +84,21 @@ export class Matches {
 			'title != "Skirmish"',
 			this.scope === 'community' && `replay != ""`,
 			this.filters.ranked && `isRanked = true`,
-			/**
-			 * Add user steam ID's if in user scope
-			 */
-			this.scope === 'user' &&
-				'(' +
-					join(
-						map(user.steamIds, (id) => `players ~ '\"steamId\":\"${id}\"'`),
-						' || '
-					) +
-					')',
-			/**
-			 * Add player ID's if any are selected
-			 */
+			this.scope === 'user' && `user = "${app.features.auth.userId}"`,
 			playerIds?.length &&
 				'(' +
 					join(
-						map(playerIds, (id) => `players ~ '\"profile_id\":${id},'`),
+						map(playerIds, (id) => `players ~ '"profile_id":${id},'`),
 						' || '
 					) +
 					')',
-			/**
-			 * Add map filters if any are selected
-			 */
 			maps?.length &&
 				'(' +
 					join(
 						map(maps, (map) => `map = '${map}'`),
 						' || '
-					)
+					) +
+					')',
 		]).join(' && ');
 	});
 
@@ -121,7 +106,6 @@ export class Matches {
 		watch(
 			() => $state.snapshot(this.filters),
 			() => {
-				console.log(this.filter);
 				this.page = 1;
 			}
 		);
@@ -130,7 +114,7 @@ export class Matches {
 			() => {
 				return useQuery('matches-aggregation-' + this.scope, {
 					queryFn: () => this.getAggregation(),
-					invalidateFn: async (value) => isEqual(value, await this.getAggregation())
+					ttl: 300
 				});
 			}
 		);
@@ -143,9 +127,12 @@ export class Matches {
 	}
 
 	getMatches() {
-		return app.database.matches.getPaginated(this.page, this.perPage, {
-			filter: this.filter,
-			sort: '-createdAt'
+		const cacheKey = `matches-${md5(JSON.stringify({ scope: this.scope, filter: this.filter, page: this.page }))}`;
+
+		return useQuery(cacheKey, {
+			queryFn: () =>
+				app.database.matches.getHistoryList(this.page, this.perPage, this.filter),
+			ttl: 60
 		});
 	}
 

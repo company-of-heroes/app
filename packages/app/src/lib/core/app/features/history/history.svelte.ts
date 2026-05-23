@@ -57,7 +57,7 @@ export class History extends Feature {
 		}
 
 		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
-			filter: `needsResult=true && (${app.features.auth.user.steamIds.map((id) => `user.steamIds ~ "${id}"`).join(' || ')})`
+			filter: `needsResult=true && user = "${app.features.auth.userId}"`
 		});
 
 		if (matchesNeedingResults.items.length === 0) {

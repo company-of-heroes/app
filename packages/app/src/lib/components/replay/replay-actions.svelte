@@ -128,58 +128,60 @@
 		/>
 	{/each}
 </div>
-{#key isInViewport.current}
-	<div class="border-secondary-800 h-54 rounded-xl border p-4" bind:this={target}>
-		<LineChart
-			{data}
-			x="minute"
-			y="value"
-			yDomain={[0, null]}
-			yNice
-			padding={{ left: 16, bottom: 24, right: 48 }}
-			tooltip={{ mode: 'quadtree' }}
-		>
-			{#snippet children({ context })}
-				<Layer type="svg">
-					<Axis placement="left" grid rule />
-					<Axis placement="bottom" rule />
-					{#each series as s, i (s.key + '-' + i)}
-						{@const active = s.key === context.tooltip.data?.player?.id || s.key === selectedPlayer}
-						<g class={cn(!active && 'opacity-20 saturate-0')}>
-							<Spline
-								data={s.data}
-								y="value"
-								class={cn('stroke-2', s.color)}
-								draw={{ duration: 0 }}
-							>
-								{#snippet endContent()}
-									<Circle r={4} class={s.color} />
-									<Text
-										value={s.label}
-										verticalAnchor="middle"
-										dx={6}
-										dy={-2}
-										class={cn('text-xs', s.color)}
-									/>
-								{/snippet}
-							</Spline>
-						</g>
-					{/each}
-					<Highlight points lines />
-				</Layer>
-				<Tooltip.Root>
-					<Tooltip.Header>{context.tooltip.data?.player?.name}</Tooltip.Header>
-					<Tooltip.List>
-						<Tooltip.Item
-							value={`${context.tooltip.data?.value} CPM`}
-							label={`${context.tooltip.data?.minute} min`}
-						/>
-					</Tooltip.List>
-				</Tooltip.Root>
-			{/snippet}
-		</LineChart>
-	</div>
-{/key}
+<div class="border-secondary-800 h-54 w-full rounded-xl border p-4" bind:this={target}>
+	{#if isInViewport.current}
+		<div class="size-full">
+			<LineChart
+				{data}
+				x="minute"
+				y="value"
+				yDomain={[0, null]}
+				yNice
+				padding={{ left: 16, bottom: 24, right: 48 }}
+				tooltip={{ mode: 'quadtree' }}
+			>
+				{#snippet children({ context })}
+					<Layer type="svg">
+						<Axis placement="left" grid rule />
+						<Axis placement="bottom" rule />
+						{#each series as s, i (s.key + '-' + i)}
+							{@const active = s.key === context.tooltip.data?.player?.id || s.key === selectedPlayer}
+							<g class={cn(!active && 'opacity-20 saturate-0')}>
+								<Spline
+									data={s.data}
+									y="value"
+									class={cn('stroke-2', s.color)}
+									draw={{ duration: 0 }}
+								>
+									{#snippet endContent()}
+										<Circle r={4} class={s.color} />
+										<Text
+											value={s.label}
+											verticalAnchor="middle"
+											dx={6}
+											dy={-2}
+											class={cn('text-xs', s.color)}
+										/>
+									{/snippet}
+								</Spline>
+							</g>
+						{/each}
+						<Highlight points lines />
+					</Layer>
+					<Tooltip.Root>
+						<Tooltip.Header>{context.tooltip.data?.player?.name}</Tooltip.Header>
+						<Tooltip.List>
+							<Tooltip.Item
+								value={`${context.tooltip.data?.value} CPM`}
+								label={`${context.tooltip.data?.minute} min`}
+							/>
+						</Tooltip.List>
+					</Tooltip.Root>
+				{/snippet}
+			</LineChart>
+		</div>
+	{/if}
+</div>
 
 <H level="5" class="text-secondary-300 mt-4">Actions Over Time</H>
 <div class="border-secondary-800 grid grid-cols-[220px_auto] gap-4 rounded-xl border p-4">

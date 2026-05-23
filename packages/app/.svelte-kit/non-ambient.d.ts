@@ -37,17 +37,17 @@ declare module "$app/types" {
 		};
 		LayoutParams(): {
 			"/(loading)": Record<string, never>;
-			"/(loaded)": { id?: string; profileId?: string; replayId?: string };
-			"/": { id?: string; profileId?: string; replayId?: string };
+			"/(loaded)": { id?: string | undefined; profileId?: string | undefined; replayId?: string | undefined };
+			"/": { id?: string | undefined; profileId?: string | undefined; replayId?: string | undefined };
 			"/(loaded)/account": Record<string, never>;
 			"/(loaded)/chat": Record<string, never>;
 			"/(loaded)/current-game": Record<string, never>;
-			"/(loaded)/history": { id?: string };
+			"/(loaded)/history": { id?: string | undefined };
 			"/(loaded)/history/[id]": { id: string };
-			"/(loaded)/leaderboards": { profileId?: string };
-			"/(loaded)/leaderboards/profile": { profileId?: string };
+			"/(loaded)/leaderboards": { profileId?: string | undefined };
+			"/(loaded)/leaderboards/profile": { profileId?: string | undefined };
 			"/(loaded)/leaderboards/profile/[profileId]": { profileId: string };
-			"/(loaded)/replays": { replayId?: string };
+			"/(loaded)/replays": { replayId?: string | undefined };
 			"/(loaded)/replays/[replayId]": { replayId: string };
 			"/(loaded)/settings": Record<string, never>;
 			"/(loaded)/shortcuts": Record<string, never>;

@@ -30,6 +30,18 @@ export type AggregationPlayer = { profile_id: number; alias: string };
 
 const DEFAULT_EXPAND = 'user';
 
+const HISTORY_LIST_FIELDS: (keyof LobbiesRecord)[] = [
+	'id',
+	'createdAt',
+	'isRanked',
+	'map',
+	'title',
+	'players',
+	'result',
+	'sessionId',
+	'needsResult'
+];
+
 /**
  * @todo Add caching layer
  * @todo Add logging
@@ -48,22 +60,46 @@ export class Matches {
 		{
 			filter = '',
 			fields = [],
-			sort = '-createdAt'
-		}: { filter?: string; fields?: (keyof LobbiesRecord)[]; sort?: string } = {}
+			sort = '-createdAt',
+			expand = DEFAULT_EXPAND
+		}: {
+			filter?: string;
+			fields?: (keyof LobbiesRecord)[];
+			sort?: string;
+			expand?: string | false;
+		} = {}
 	): Promise<ListResult<MatchExpanded>> {
-		const fieldsString = fields.join(',');
-		const response = await pocketbase.collection('lobbies').getList<Match>(page, perPage, {
+		const requestOptions: Parameters<
+			ReturnType<typeof pocketbase.collection<'lobbies'>>['getList']
+		>[2] = {
 			filter,
-			fields: fieldsString,
 			sort,
-			expand: DEFAULT_EXPAND,
 			fetch
-		});
+		};
+
+		if (fields.length > 0) {
+			requestOptions.fields = fields.join(',');
+		}
+
+		if (expand !== false) {
+			requestOptions.expand = expand;
+		}
+
+		const response = await pocketbase.collection('lobbies').getList<Match>(page, perPage, requestOptions);
 
 		return {
 			...response,
 			items: response.items.map(exp) as MatchExpanded[]
 		};
+	}
+
+	getHistoryList(page = 1, perPage = 50, filter = '') {
+		return this.getPaginated(page, perPage, {
+			filter,
+			sort: '-createdAt',
+			fields: HISTORY_LIST_FIELDS,
+			expand: false
+		});
 	}
 
 	/**
@@ -179,14 +215,14 @@ export class Matches {
 		type: 'user' | 'community',
 		userId?: string
 	): Promise<
-		| LobbyAggregationResponse<string[], AggregationPlayer[], string>
+		| LobbyAggregationResponse<string, string[], AggregationPlayer[]>
 		| LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
 	> {
 		try {
 			if (type === 'user') {
 				return pocketbase
 					.collection<
-						LobbyAggregationResponse<string[], AggregationPlayer[], string>
+						LobbyAggregationResponse<string, string[], AggregationPlayer[]>
 					>('lobby_aggregation')
 					.getFirstListItem('user="' + userId + '"', { fetch });
 			}

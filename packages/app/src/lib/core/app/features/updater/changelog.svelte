@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import ChangeLog from '../../../../../../CHANGELOG.md?raw';
+	import ChangeLog from '../../../../../../../../CHANGELOG.md?raw';
 	import { marked } from 'marked';
 </script>
 
