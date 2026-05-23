@@ -1,10 +1,9 @@
 import type { Match } from '../context/lobby.svelte';
 import { fetch } from '@tauri-apps/plugin-http';
 import { exp, pocketbase } from '$core/pocketbase';
-import { auth } from '../features/auth';
 
 export class LobbiesLive {
-	setLobby(match: Match) {
+	setLobby(match: Match, userId: string) {
 		return pocketbase
 			.collection('lobbies_live')
 			.getFirstListItem('', { fetch })
@@ -12,7 +11,7 @@ export class LobbiesLive {
 				return pocketbase.collection('lobbies_live').update(
 					existingLobby.id,
 					{
-						user: auth.userId,
+						user: userId,
 						isRanked: match.isRanked,
 						sessionId: match.sessionId,
 						map: match.map,
@@ -24,7 +23,7 @@ export class LobbiesLive {
 			.catch(() => {
 				return pocketbase.collection('lobbies_live').create(
 					{
-						user: auth.userId,
+						user: userId,
 						isRanked: match.isRanked,
 						sessionId: match.sessionId,
 						map: match.map,

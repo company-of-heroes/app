@@ -1,3 +1,9 @@
-import { type ShortcutSettings, type Shortcut, Shortcuts, shortcuts } from './shortcuts.svelte';
+import {
+	type ShortcutSettings,
+	type Shortcut,
+	type FactionKey,
+	Shortcuts,
+	shortcuts
+} from './shortcuts.svelte';
 
-export { type ShortcutSettings, type Shortcut, Shortcuts, shortcuts };
+export { type ShortcutSettings, type Shortcut, type FactionKey, Shortcuts, shortcuts };

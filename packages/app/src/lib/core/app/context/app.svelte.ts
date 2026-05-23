@@ -384,7 +384,7 @@ export class AppContext extends Emittery<AppEvents> {
 		this.emit('lobby.started', lobby.toJSON());
 		this.socket?.publish('game.lobby.started', lobby.toJSON());
 
-        this.database.lobbiesLive.setLobby(lobby.toJSON());
+		this.database.lobbiesLive.setLobby(lobby.toJSON(), this.features.auth.userId);
 	}
 
 	private onLobbyJoined(lobby: Lobby) {

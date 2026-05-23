@@ -1,3 +1,10 @@
+### v0.44.0
+
+- feat; disable the hotkeys when chatting and resume when chat closed
+- fix; app hanging / crashing while trying to view a replay
+- enhance; increase perfomance of the history page
+- enhance; keybindings page UI
+
 ### v0.43.4
 
 - fix; current game page not properly updating data when a new game started

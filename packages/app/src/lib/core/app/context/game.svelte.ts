@@ -1,6 +1,7 @@
 import type { RelicProfile } from '@fknoobs/app';
 import type { SteamPlayerSummary } from '$core/steam';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import Emittery from 'emittery';
 import { watch } from 'runed';
 import { isRunning } from '$lib/utils';
@@ -62,6 +63,11 @@ export class Game extends Emittery {
 	isWindowFocused = $state<boolean>(false);
 
 	/**
+	 * True while the in-game chat input is open (Enter toggles open/send).
+	 */
+	isIngameChatOpen = $state(false);
+
+	/**
 	 * Tracks whether a notification has been sent for the current game session.
 	 * Used to prevent duplicate notifications.
 	 *
@@ -101,6 +107,22 @@ export class Game extends Emittery {
 				}
 			);
 		});
+
+		void listen('game-chat-enter', () => {
+			this.toggleIngameChatOpen();
+		});
+
+		void listen('game-chat-escape', () => {
+			this.closeIngameChatOpen();
+		});
+	}
+
+	toggleIngameChatOpen() {
+		this.isIngameChatOpen = !this.isIngameChatOpen;
+	}
+
+	closeIngameChatOpen() {
+		this.isIngameChatOpen = false;
 	}
 
 	/**
@@ -115,7 +137,12 @@ export class Game extends Emittery {
 		this.#watchWindowFocusInterval = setInterval(() => {
 			invoke<string>('get_active_window_title')
 				.then((title) => {
-					this.isWindowFocused = title.includes('Company Of Heroes');
+					const focused = title.includes('Company Of Heroes');
+					this.isWindowFocused = focused;
+
+					if (!focused) {
+						this.isIngameChatOpen = false;
+					}
 				})
 				.catch((error) => {
 					console.error('Error getting active window title:', error);
@@ -151,6 +178,7 @@ export class Game extends Emittery {
 		this.steamId = '';
 		this.profile = undefined;
 		this.isWindowFocused = false;
+		this.isIngameChatOpen = false;
 		this.didNotify = false;
 	}
 }

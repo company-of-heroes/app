@@ -1176,6 +1176,13 @@ export interface LobbiesLive {
      */
     isRanked: boolean
     /**
+     * |        |         |
+     * | ------ | ------- |
+     * | type   | `bool`  |
+     * | hidden | `false` |
+     */
+    isSkirmish: boolean
+    /**
      * |          |          |
      * | -------- | -------- |
      * | type     | `number` |
@@ -1184,6 +1191,15 @@ export interface LobbiesLive {
      * | onlyInt  | `false`  |
      */
     sessionId: number
+    /**
+     * |          |         |
+     * | -------- | ------- |
+     * | type     | `text`  |
+     * | hidden   | `false` |
+     * | required | `true`  |
+     * | max      | `5000`  |
+     */
+    type: string
     /**
      * |          |         |
      * | -------- | ------- |
@@ -1202,6 +1218,24 @@ export interface LobbiesLive {
      * | required | `true`  |
      */
     players: any
+    /**
+     * |          |         |
+     * | -------- | ------- |
+     * | type     | `json`  |
+     * | hidden   | `false` |
+     * | maxSize  | `0`     |
+     * | required | `true`  |
+     */
+    me: any
+    /**
+     * |          |          |
+     * | -------- | -------- |
+     * | type     | `number` |
+     * | hidden   | `false`  |
+     * | required | `false`  |
+     * | onlyInt  | `false`  |
+     */
+    matchType: number
     /**
      * |          |            |
      * | -------- | ---------- |

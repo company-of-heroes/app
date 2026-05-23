@@ -4,6 +4,8 @@ use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 #[cfg(target_os = "windows")]
 use window_vibrancy::apply_acrylic;
 
+mod coh_chat;
+mod global_shortcuts;
 mod input;
 mod migrations;
 mod process_check;
@@ -43,6 +45,7 @@ pub fn run() {
         .plugin(tauri_plugin_oauth::init())
         .plugin(tauri_plugin_cors_fetch::init())
         .invoke_handler(tauri::generate_handler![
+            global_shortcuts::reset_global_shortcuts,
             unzip::unzip_file,
             unzip::unzip_bytes,
             process_check::is_running,
@@ -85,6 +88,8 @@ pub fn run() {
 
             // Start the WebSocket server
             ws_server::spawn_ws_server();
+
+            coh_chat::start_listener(app.handle());
 
             Ok(())
         })

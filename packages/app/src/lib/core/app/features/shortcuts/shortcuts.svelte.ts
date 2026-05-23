@@ -1,17 +1,44 @@
-import { Feature } from '$core/app/features/feature.svelte';
+import { Feature } from '../feature.svelte';
 import { watch } from 'runed';
 import { invoke } from '@tauri-apps/api/core';
-import { register, unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
+import { register, unregister, unregisterAll } from '@tauri-apps/plugin-global-shortcut';
 import { app } from '$core/app/context';
 import { t } from 'try';
 
+const ACTION_MODIFIER_KEYS = new Set([
+	'CommandOrControl',
+	'CmdOrControl',
+	'Ctrl',
+	'Control',
+	'Shift',
+	'Alt',
+	'Super',
+	'Meta'
+]);
+
 export type Shortcut = {
+	id: string;
 	description: string;
 	triggerKeys: string[];
 	actionKeys: string[];
 	isRecordingTriggerKeys?: boolean;
 	isRecordingActionKeys?: boolean;
 };
+
+export type FactionKey = keyof ShortcutSettings['factions'];
+
+function createShortcut(partial?: Partial<Shortcut>): Shortcut {
+	return {
+		id: partial?.id ?? crypto.randomUUID(),
+		description: partial?.description ?? 'New Keybinding',
+		triggerKeys: partial?.triggerKeys ?? [],
+		actionKeys: partial?.actionKeys ?? []
+	};
+}
+
+function normalizeShortcut(shortcut: Partial<Shortcut>): Shortcut {
+	return createShortcut(shortcut);
+}
 
 export type ShortcutSettings = {
 	factions: {
@@ -21,6 +48,107 @@ export type ShortcutSettings = {
 		allies_commonwealth: Shortcut[];
 	};
 };
+
+function actionKeysForSendKeys(keys: string[]): string[] {
+	return keys
+		.filter((key) => !ACTION_MODIFIER_KEYS.has(key))
+		.map((key) => {
+			if (key.startsWith('Key')) {
+				return key.slice(3).toLowerCase();
+			}
+
+			if (key.startsWith('Digit')) {
+				return key.slice(5);
+			}
+
+			return key.toLowerCase();
+		});
+}
+
+const FACTION_KEYS: FactionKey[] = ['allies', 'allies_commonwealth', 'axis', 'axis_panzer_elite'];
+
+const MODIFIER_ORDER = ['CommandOrControl', 'Shift', 'Alt', 'Super'] as const;
+type Modifier = (typeof MODIFIER_ORDER)[number];
+
+const MODIFIER_ALIASES: Record<Modifier, string[]> = {
+	CommandOrControl: ['CmdOrControl', 'Ctrl', 'Control'],
+	Shift: [],
+	Alt: [],
+	Super: []
+};
+
+function normalizeTriggerKey(key: string): string {
+	if (key === 'Control' || key === 'Ctrl') {
+		return 'CommandOrControl';
+	}
+
+	if (key === 'Cmd' || key === 'Command') {
+		return 'CommandOrControl';
+	}
+
+	return key;
+}
+
+function formatTrigger(keys: string[]): string | null {
+	const normalized = keys.map(normalizeTriggerKey);
+	const modifiers = MODIFIER_ORDER.filter((modifier) => normalized.includes(modifier));
+	const key = normalized.find((value) => !MODIFIER_ORDER.includes(value as Modifier));
+
+	if (!key) {
+		return modifiers.length > 0 ? modifiers.join('+') : null;
+	}
+
+	const normalizedKey =
+		key.length === 1 && key >= 'A' && key <= 'Z'
+			? `Key${key}`
+			: key.length === 1 && key >= '0' && key <= '9'
+				? `Digit${key}`
+				: key;
+
+	return [...modifiers, normalizedKey].join('+');
+}
+
+function unregisterVariants(trigger: string): string[] {
+	const variants = new Set<string>([trigger, trigger.toLowerCase()]);
+
+	for (const modifier of MODIFIER_ORDER) {
+		for (const alias of MODIFIER_ALIASES[modifier] ?? []) {
+			variants.add(trigger.replace(modifier, alias));
+			variants.add(trigger.replace(modifier, alias).toLowerCase());
+		}
+	}
+
+	return [...variants];
+}
+
+function collectTriggers(settings: ShortcutSettings, registered: Set<string>): Set<string> {
+	return new Set([
+		...registered,
+		...Object.values(settings.factions)
+			.flat()
+			.map((shortcut) => formatTrigger(shortcut.triggerKeys))
+			.filter((trigger): trigger is string => Boolean(trigger))
+	]);
+}
+
+function isAlreadyRegisteredError(error: unknown): boolean {
+	const message = error instanceof Error ? error.message : String(error);
+	return message.includes('already registered');
+}
+
+function normalizeSettings(settings: ShortcutSettings) {
+	for (const list of Object.values(settings.factions)) {
+		for (let i = 0; i < list.length; i++) {
+			const binding = list[i];
+
+			if (!binding.id) {
+				list[i] = normalizeShortcut(binding);
+			}
+
+			list[i].triggerKeys = list[i].triggerKeys.map(normalizeTriggerKey);
+		}
+	}
+}
 
 export class Shortcuts extends Feature<ShortcutSettings> {
 	name = 'shortcuts';
@@ -33,84 +161,246 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		}
 	>();
 
-	enable() {
-		app.on('lobby.started', (lobby) => {
-			if (!app.game.isWindowFocused || !lobby.me) {
-				return;
-			}
+	registeredTriggers = new Set<string>();
+	private registrationQueue: Promise<void> = Promise.resolve();
+	private disposeEnable?: () => void;
 
-			this.registerShortcuts(lobby.me.race);
-		});
+	private runRegistration<T>(task: () => Promise<T>): Promise<T> {
+		const run = this.registrationQueue.then(task);
+		this.registrationQueue = run.then(
+			() => undefined,
+			() => undefined
+		);
+		return run;
+	}
 
-		app.game.on('', () => {
-			this.unregisterAllShortcuts();
-		});
-
-		watch(
-			() => app.game.isWindowFocused,
-			(isFocused) => {
-				if (!isFocused) {
-					this.unregisterAllShortcuts();
-				} else {
-					if (app.lobby?.me) {
-						this.registerShortcuts(app.lobby.me.race);
-					}
-				}
-			}
+	private shouldRegisterShortcuts() {
+		return (
+			app.game.isRunning &&
+			app.game.isWindowFocused &&
+			!app.game.isIngameChatOpen &&
+			Boolean(app.lobby?.me)
 		);
 	}
 
-	async registerShortcuts(race: number) {
-		await this.unregisterAllShortcuts();
+	private maybeRegisterShortcuts() {
+		if (!this.shouldRegisterShortcuts() || app.lobby?.me == null) {
+			return;
+		}
 
-		const factionMap: { [key: number]: Shortcut[] } = {
-			0: this.settings.factions.allies,
-			1: this.settings.factions.axis,
-			2: this.settings.factions.allies_commonwealth,
-			3: this.settings.factions.axis_panzer_elite
-		};
+		this.safeRegisterShortcuts(app.lobby.me.race);
+	}
 
-		const shortcutsToRegister = factionMap[race] || [];
+	private safeRegisterShortcuts(race: number) {
+		void this.registerShortcuts(race).catch((error) => {
+			console.error('Failed to register shortcuts', error);
+		});
+	}
 
-		for (const shortcut of shortcutsToRegister) {
-			if (shortcut.triggerKeys.length === 0) {
-				continue;
-			}
+	private safeUnregisterAllShortcuts() {
+		void this.unregisterAllShortcuts().catch((error) => {
+			console.warn('Failed to unregister shortcuts', error);
+		});
+	}
 
-			const [, error] = t(
-				await register(shortcut.triggerKeys.join('+'), (event) => {
-					if (event.state !== 'Pressed') return;
-					invoke('send_keys', { keys: shortcut.actionKeys });
-				})
+	disable() {
+		this.disposeEnable?.();
+		this.disposeEnable = undefined;
+		return this.unregisterAllShortcuts();
+	}
+
+	enable() {
+		this.disposeEnable?.();
+
+		normalizeSettings(this.settings);
+		this.safeUnregisterAllShortcuts();
+
+		this.disposeEnable = $effect.root(() => {
+			const offLobby = app.on('lobby.started', () => {
+				this.maybeRegisterShortcuts();
+			});
+
+			watch(
+				() => app.game.isRunning,
+				(isRunning) => {
+					if (!isRunning) {
+						this.safeUnregisterAllShortcuts();
+					}
+				}
 			);
 
-			if (error) {
-				console.error('Error registering shortcut', error);
-			}
+			watch(
+				() => app.game.isWindowFocused,
+				(isFocused) => {
+					if (!isFocused) {
+						this.safeUnregisterAllShortcuts();
+					} else {
+						this.maybeRegisterShortcuts();
+					}
+				}
+			);
+
+			watch(
+				() => app.game.isIngameChatOpen,
+				(isChatOpen) => {
+					if (isChatOpen) {
+						this.safeUnregisterAllShortcuts();
+					} else {
+						this.maybeRegisterShortcuts();
+					}
+				}
+			);
+
+			return offLobby;
+		});
+	}
+
+	private async forceUnregisterTrigger(trigger: string) {
+		for (const variant of unregisterVariants(trigger)) {
+			await unregister(variant).catch(() => undefined);
 		}
 	}
 
-	async unregisterAllShortcuts() {
-		return new Promise((resolve) => {
-			const unregisterPromises = Object.values(this.settings.factions)
-				.flat()
-				.map(async (shortcut) => {
-					if (
-						shortcut.triggerKeys.length === 0 ||
-						(await isRegistered(shortcut.triggerKeys.join('+'))) === false
-					) {
-						return;
-					}
+	private async registerBinding(trigger: string, actionKeys: string[]) {
+		const keysToSend = actionKeysForSendKeys(actionKeys);
 
-					try {
-						await unregister(shortcut.triggerKeys.join('+'));
-					} catch (e) {
-						console.error('Error unregistering shortcut', e);
-					}
-				});
+		const handler = (event: { state: string; shortcut: string }) => {
+			if (event.state !== 'Pressed' || keysToSend.length === 0) {
+				return;
+			}
 
-			Promise.all(unregisterPromises).then(() => resolve(null));
+			void invoke('send_keys', { keys: keysToSend }).catch((error) => {
+				console.error('Failed to send shortcut action keys', error);
+			});
+		};
+
+		await this.forceUnregisterTrigger(trigger);
+
+		let [, error] = t(await register(trigger, handler));
+
+		if (error && isAlreadyRegisteredError(error)) {
+			await this.forceUnregisterTrigger(trigger);
+			[, error] = t(await register(trigger, handler));
+		}
+
+		if (error && isAlreadyRegisteredError(error)) {
+			this.registeredTriggers.add(trigger);
+			return;
+		}
+
+		if (error) {
+			throw error;
+		}
+
+		this.registeredTriggers.add(trigger);
+	}
+
+	async registerShortcuts(race: number) {
+		if (!this.shouldRegisterShortcuts()) {
+			return;
+		}
+
+		return this.runRegistration(async () => {
+			await this.unregisterAllShortcutsInternal();
+
+			const factionMap: { [key: number]: Shortcut[] } = {
+				0: this.settings.factions.allies,
+				1: this.settings.factions.axis,
+				2: this.settings.factions.allies_commonwealth,
+				3: this.settings.factions.axis_panzer_elite
+			};
+
+			const shortcutsToRegister = factionMap[race] || [];
+			const seenTriggers = new Set<string>();
+
+			for (const shortcut of shortcutsToRegister) {
+				const trigger = formatTrigger(shortcut.triggerKeys);
+
+				if (!trigger || seenTriggers.has(trigger)) {
+					continue;
+				}
+
+				seenTriggers.add(trigger);
+
+				try {
+					await this.registerBinding(trigger, [...shortcut.actionKeys]);
+				} catch (error) {
+					console.error('Error registering shortcut', trigger, error);
+				}
+			}
 		});
+	}
+
+	getBindings(faction: FactionKey) {
+		return this.settings.factions[faction];
+	}
+
+	addBinding(faction: FactionKey) {
+		this.settings.factions[faction].push(createShortcut());
+	}
+
+	removeBinding(faction: FactionKey, id: string) {
+		const list = this.settings.factions[faction];
+		const index = list.findIndex((binding) => binding.id === id);
+		if (index === -1) {
+			return;
+		}
+
+		const binding = list[index];
+		this.stopRecording(binding);
+		this.handlers.delete(binding);
+		list.splice(index, 1);
+	}
+
+	moveBinding(faction: FactionKey, fromIndex: number, toIndex: number) {
+		const list = this.settings.factions[faction];
+		if (fromIndex < 0 || toIndex < 0 || fromIndex >= list.length || toIndex >= list.length) {
+			return;
+		}
+
+		const [moved] = list.splice(fromIndex, 1);
+		list.splice(toIndex, 0, moved);
+	}
+
+	stopAllRecording() {
+		for (const shortcut of [...this.handlers.keys()]) {
+			this.stopRecording(shortcut);
+		}
+		this.handlers.clear();
+	}
+
+	stopRecording(keybinding: Shortcut) {
+		if (keybinding.isRecordingTriggerKeys) {
+			this.record(keybinding, 'trigger');
+		}
+		if (keybinding.isRecordingActionKeys) {
+			this.record(keybinding, 'action');
+		}
+	}
+
+	async validateSettings(settings: Partial<ShortcutSettings>): Promise<ShortcutSettings> {
+		const validated = await super.validateSettings(settings);
+		normalizeSettings(validated);
+		return validated;
+	}
+
+	async unregisterAllShortcuts() {
+		return this.runRegistration(() => this.unregisterAllShortcutsInternal());
+	}
+
+	private async unregisterAllShortcutsInternal() {
+		const triggers = collectTriggers(this.settings, this.registeredTriggers);
+
+		await Promise.all([
+			unregisterAll().catch(() => undefined),
+			invoke('reset_global_shortcuts').catch(() => undefined)
+		]);
+
+		for (const trigger of triggers) {
+			await this.forceUnregisterTrigger(trigger);
+		}
+
+		this.registeredTriggers.clear();
 	}
 
 	record(keybinding: Shortcut, type: 'trigger' | 'action') {
@@ -124,7 +414,6 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			type === 'trigger' ? keybinding.isRecordingTriggerKeys : keybinding.isRecordingActionKeys;
 
 		if (isRecording) {
-			// Stop recording
 			const recordEntry = entry[type];
 			if (recordEntry) {
 				document.removeEventListener('keydown', recordEntry.handler);
@@ -138,8 +427,6 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				keybinding.isRecordingActionKeys = false;
 			}
 		} else {
-			// Start recording
-			// Stop all other recordings first
 			for (const [s] of this.handlers) {
 				if (s.isRecordingTriggerKeys) this.record(s, 'trigger');
 				if (s.isRecordingActionKeys) this.record(s, 'action');
@@ -159,8 +446,8 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				if (key === 'Meta') return 'Super';
 				if (key === ' ') return 'Space';
 
-				if (code.startsWith('Key')) return code.slice(3);
-				if (code.startsWith('Digit')) return code.slice(5);
+				if (code.startsWith('Key')) return code;
+				if (code.startsWith('Digit')) return code;
 
 				const punctuationMap: Record<string, string> = {
 					Backquote: '`',
@@ -192,7 +479,6 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 					targetArray.push(key);
 				}
 
-				// Reset timeout
 				if (entry && entry[type]) {
 					clearTimeout(entry[type]!.timeout);
 					entry[type]!.timeout = setTimeout(stopRecording, 4000);
