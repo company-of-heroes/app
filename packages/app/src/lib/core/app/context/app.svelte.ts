@@ -49,6 +49,7 @@ export type Statuses = {
 export type AppEvents = {
 	'game.login': { steamId: string; relicProfile: RelicProfile; steamProfile: SteamPlayerSummary };
 	'game.logout': null;
+	'lobby.joined': Match;
 	'lobby.started': Match;
 	'lobby.destroyed': {
 		match: Match;
@@ -57,7 +58,7 @@ export type AppEvents = {
 			replay: ReplayData;
 		};
 	};
-    'lobby.saved': MatchExpanded;
+	'lobby.saved': MatchExpanded;
 };
 
 export class AppContext extends Emittery<AppEvents> {
@@ -224,15 +225,15 @@ export class AppContext extends Emittery<AppEvents> {
 		$effect.root(() => {
 			this.trackStatuses();
 
-            // Temporary code to simulate lobby state changes during development
-            if (dev) {
-                setTimeout(() => {
-                    this.lobby = RANKED_2V2;
-                }, 1000);
-                setTimeout(() => {
-                    this.lobby = LOBBY_4V4;
-                }, 5000);
-            }
+			// Temporary code to simulate lobby state changes during development
+			if (dev) {
+				setTimeout(() => {
+					this.lobby = RANKED_2V2;
+				}, 1000);
+				setTimeout(() => {
+					this.lobby = LOBBY_4V4;
+				}, 5000);
+			}
 
 			watch(
 				() => $state.snapshot(this.settings),
@@ -403,6 +404,9 @@ export class AppContext extends Emittery<AppEvents> {
 		if (this.game.isWindowFocused) {
 			this.audio.pause();
 		}
+
+		this.emit('lobby.joined', lobby.toJSON());
+		this.socket?.publish('game.lobby.joined', lobby.toJSON());
 	}
 
 	private async onLobbyDestroyed() {
