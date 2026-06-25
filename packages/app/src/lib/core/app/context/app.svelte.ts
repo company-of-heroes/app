@@ -18,11 +18,7 @@ import { pocketbase } from '$core/pocketbase';
 import { steam } from '$core/steam';
 import { relic } from '$lib/relic';
 import { settings } from '$core/config/settings.svelte';
-import {
-	createEnvelope,
-	parseImportContent,
-	serializeEnvelope
-} from '$core/config/import-export';
+import { createEnvelope, parseImportContent, serializeEnvelope } from '$core/config/import-export';
 import { validateGameDir, validateWarningsLog } from '$core/config/paths';
 import type { AppSettings } from '$core/config/schema';
 import { account } from '$core/account';
