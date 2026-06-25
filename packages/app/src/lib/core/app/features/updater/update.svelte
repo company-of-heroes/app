@@ -16,6 +16,11 @@
 
 	const startDownload = async () => {
 		isDownloading = true;
+
+		// Snapshot settings + account to the external backup location first,
+		// so an update that wipes app data can always be recovered.
+		await app.features.updater.prepareForUpdate();
+
 		const downloadPath = (await downloadDir()) + sep() + (await basename(downloadUrl));
 
 		download(downloadUrl, downloadPath)

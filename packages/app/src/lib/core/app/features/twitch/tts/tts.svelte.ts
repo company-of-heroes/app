@@ -24,7 +24,7 @@ export type TTSEvents = {
 
 export interface TTSOptions {
 	message: string;
-	user: string;
+	user?: string;
 	voiceId?: string;
 }
 
@@ -50,27 +50,36 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 
 	private chatMessageSubscription: UnsubscribeFunction | null = null;
 
+	private disposeWatchers: (() => void) | null = null;
+
 	private readonly audioContext = new AudioContext();
 
 	public async enable() {
-		watch(
-			() => twitch.chatClient,
-			() => {
-				if (!twitch.chatClient) {
-					return;
+		this.disposeWatchers = $effect.root(() => {
+			watch(
+				() => twitch.chatClient,
+				() => {
+					// Always drop the previous subscription so chat messages are
+					// never spoken twice after a reconnect.
+					this.chatMessageSubscription?.();
+					this.chatMessageSubscription = null;
+
+					if (!twitch.chatClient) {
+						return;
+					}
+
+					this.chatMessageSubscription = twitch.on('chat-message', this.handleMessage.bind(this));
+					this.startPlayback();
 				}
+			);
 
-				this.chatMessageSubscription = twitch.on('chat-message', this.handleMessage.bind(this));
-				this.startPlayback();
-			}
-		);
-
-		watch(
-			() => [this.settings.provider, this.provider.defaultVoiceId],
-			() => {
-				this.settings.voiceId = this.provider.defaultVoiceId;
-			}
-		);
+			watch(
+				() => [this.settings.provider, this.provider.defaultVoiceId],
+				() => {
+					this.settings.voiceId = this.provider.defaultVoiceId;
+				}
+			);
+		});
 	}
 
 	private async handleMessage(data: {
@@ -107,11 +116,11 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 
 		this.lastMessageUser = data.user;
 
-		const speakOptions: TTSOptions = {
+		const speakOptions = {
 			message,
 			user: data.user,
 			voiceId: this.settings.voiceId || undefined
-		};
+		} satisfies TTSOptions;
 
 		await this.emit('speak', speakOptions);
 		this.speak(speakOptions);
@@ -158,6 +167,9 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 	}
 
 	public async disable() {
+		this.disposeWatchers?.();
+		this.disposeWatchers = null;
+
 		if (this.chatMessageSubscription) {
 			this.chatMessageSubscription();
 			this.chatMessageSubscription = null;
@@ -181,10 +193,10 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 			aliases: [],
 			providers: this.providers.reduce(
 				(acc, provider) => {
-					acc[provider.name] = {};
+					acc[provider.name] = { voiceAliases: {} };
 					return acc;
 				},
-				{} as Record<string, any>
+				{} as Record<string, { voiceAliases: Record<string, string> }>
 			)
 		};
 	}

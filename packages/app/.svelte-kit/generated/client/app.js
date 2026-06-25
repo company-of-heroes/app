@@ -25,18 +25,18 @@ export const server_loads = [];
 export const dictionary = {
 		"/(loaded)": [3,[2]],
 		"/(loaded)/account": [4,[2]],
-		"/(loaded)/chat": [5,[2]],
-		"/(loaded)/current-game": [6,[2]],
-		"/(loaded)/history": [7,[2]],
-		"/(loaded)/history/[id]": [8,[2]],
-		"/(loaded)/leaderboards": [9,[2]],
-		"/(loaded)/leaderboards/profile/[profileId]": [10,[2]],
-		"/(loaded)/replays": [11,[2]],
-		"/(loaded)/replays/[replayId]": [12,[2]],
-		"/(loaded)/settings": [13,[2]],
-		"/(loaded)/shortcuts": [14,[2]],
-		"/(loading)/splashscreen": [16],
-		"/(loaded)/twitch": [15,[2]]
+		"/(loaded)/current-game": [5,[2]],
+		"/(loaded)/history": [6,[2]],
+		"/(loaded)/history/[id]": [7,[2]],
+		"/(loaded)/leaderboards": [8,[2]],
+		"/(loaded)/leaderboards/profile/[profileId]": [9,[2]],
+		"/(loaded)/replays": [10,[2]],
+		"/(loaded)/replays/[replayId]": [11,[2]],
+		"/(loaded)/settings": [12,[2]],
+		"/(onboarding)/setup": [16],
+		"/(loaded)/shortcuts": [13,[2]],
+		"/(loading)/splashscreen": [15],
+		"/(loaded)/twitch": [14,[2]]
 	};
 
 export const hooks = {

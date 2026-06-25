@@ -1,12 +1,19 @@
 import type { Component } from 'svelte';
 import { watch } from 'runed';
-import { mergeWith, isPlainObject, defaultsDeep } from 'lodash-es';
+import { cloneDeep, defaultsDeep, isPlainObject, mergeWith } from 'lodash-es';
 import Emittery from 'emittery';
-import { save, open } from '@tauri-apps/plugin-dialog';
+import { open, save } from '@tauri-apps/plugin-dialog';
 import { documentDir, join } from '@tauri-apps/api/path';
-import { t } from 'try';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
-import { app, type AppContext } from '$core/app/context';
+import { toast } from 'svelte-sonner';
+import { settings as settingsService } from '$core/config/settings.svelte';
+import {
+	createFeatureEnvelope,
+	parseFeatureImportContent,
+	serializeEnvelope
+} from '$core/config/import-export';
+
+export type FeatureStatus = 'disabled' | 'starting' | 'active' | 'error';
 
 export interface Feature<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean }
@@ -15,191 +22,251 @@ export interface Feature<
 	disable(): Promise<void> | this | void;
 }
 
+/**
+ * Base class for application features.
+ *
+ * - Settings are a slice of the central settings tree (`features.<name>`),
+ *   merged with the feature's defaults and written back on change.
+ * - Lifecycle is deterministic: transitions are serialized, `disable()` always
+ *   runs before a re-`enable()`, and failures are isolated (status: 'error')
+ *   so one broken feature never breaks the app.
+ * - A full settings import/restore re-syncs the slice and restarts the
+ *   feature with the new configuration automatically.
+ */
 export abstract class Feature<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean },
 	Events = {},
 	Props extends Record<string, any> = {}
 > extends Emittery<Events> {
-	/**
-	 * The name of the feature.
-	 *
-	 * @type {string}
-	 */
+	/** Canonical feature id; used as the settings key. */
 	abstract name: string;
 
-	/**
-	 * Indicates whether the feature is enabled.
-	 *
-	 * @type {boolean}
-	 * @default false
-	 */
-	enabled = $derived.by(() => this.settings.enabled);
-
-	/**
-	 * The settings for the feature.
-	 *
-	 * @type {Settings}
-	 * @default { enabled: false }
-	 */
+	/** Reactive feature settings (slice of the central tree). */
 	settings = $state({ enabled: false }) as Settings & { enabled: boolean };
 
-	/**
-	 * The components associated with the feature.
-	 *
-	 * @type {{ component: Component<Props>; props?: Props }[]}
-	 * @default []
-	 */
+	/** Whether the feature should be running. */
+	enabled = $derived.by(() => this.settings.enabled);
+
+	/** Current lifecycle status. */
+	status = $state<FeatureStatus>('disabled');
+
+	/** Components contributed by the feature (rendered by feature hosts). */
 	components: { component: Component<Props>; props?: Props }[] = $state([]);
 
-	/**
-	 * Adds a component to the feature's component list.
-	 *
-	 * @param {Component<Props>} component - The Svelte component to add.
-	 * @param {Props} [props] - Optional props to pass to the component.
-	 */
+	#registered = false;
+	#transitionQueue: Promise<void> = Promise.resolve();
+	#disposeWatchers: (() => void) | null = null;
+
 	addComponent(component: Component<Props>, props?: Props) {
 		this.components.push({ component, props });
 	}
 
 	/**
-	 * Registers the feature with the application.
-	 *
-	 * @returns {Promise<Feature<Settings>>} A promise that resolves to the registered feature.
+	 * Initializes settings from the central tree and starts the feature when
+	 * enabled. Resolves after the initial transition completed. Idempotent.
 	 */
-	async register() {
-		return new Promise(async (resolve) => {
-			let settings = await app.store.get<Settings>(`feature.${this.name}`);
+	async register(): Promise<this> {
+		if (this.#registered) {
+			return this;
+		}
 
-			if (!settings) {
-				const defaultSettings = await this.defaultSettings?.();
-				this.settings = { ...defaultSettings, enabled: Boolean(defaultSettings?.enabled ?? false) };
-			} else {
-				this.settings = defaultsDeep(
-					settings as Settings & { enabled: boolean },
-					await this.defaultSettings?.()
-				);
-			}
+		this.#registered = true;
 
-			$effect.root(() => {
-				watch(
-					() => this.enabled,
-					() => {
-						(async () => {
-							this.settings.enabled = this.enabled;
+		await this.#loadSettings();
 
-							if (this.enabled) {
-								try {
-									await this.enable();
-								} catch (e) {
-									console.error(`Error initializing module ${this.constructor.name}: ${e}`);
-									await this._disable();
-								}
-							} else {
-								await this._disable();
-							}
+		this.#disposeWatchers = $effect.root(() => {
+			// Persist slice changes into the central settings tree.
+			watch(
+				() => $state.snapshot(this.settings),
+				(snapshot) => {
+					settingsService.updateFeatureSlice(this.name, snapshot as never);
+				}
+			);
 
-							return resolve(this);
-						})();
+			// React to enable/disable toggles.
+			watch(
+				() => this.enabled,
+				(enabled, previous) => {
+					if (previous === undefined) {
+						return;
 					}
-				);
 
-				watch(
-					() => $state.snapshot(this.settings),
-					() => {
-						app.store.set(`feature.${this.name}`, this.settings);
-						app.store.save();
-					}
-				);
-
-				return () => this.disable();
-			});
+					void this.#transition(enabled);
+				}
+			);
 		});
+
+		// A full settings replace (import/restore) re-syncs and restarts.
+		settingsService.onReplaced(() => {
+			void this.#reload();
+		});
+
+		await this.#transition(this.enabled);
+
+		return this;
+	}
+
+	async #loadSettings(): Promise<void> {
+		const slice = settingsService.getFeatureSlice(this.name);
+		const defaults = (await this.defaultSettings?.()) ?? ({} as Settings);
+
+		const merged = defaultsDeep(
+			cloneDeep(slice ?? {}),
+			cloneDeep(defaults)
+		) as Settings & { enabled: boolean };
+
+		merged.enabled = Boolean(merged.enabled ?? false);
+
+		this.settings = merged;
+		settingsService.updateFeatureSlice(this.name, $state.snapshot(this.settings) as never);
+	}
+
+	async #reload(): Promise<void> {
+		await this.#transition(false);
+		await this.#loadSettings();
+		await this.#transition(this.enabled);
+	}
+
+	#transition(target: boolean): Promise<void> {
+		this.#transitionQueue = this.#transitionQueue.then(async () => {
+			if (target) {
+				if (this.status === 'active' || this.status === 'starting') {
+					return;
+				}
+
+				this.status = 'starting';
+
+				try {
+					await this.enable();
+					this.status = 'active';
+				} catch (error) {
+					console.error(`[FEATURE:${this.name}]: failed to start:`, error);
+					this.status = 'error';
+
+					try {
+						await this.disable?.();
+					} catch {
+						// ignore cleanup errors after a failed start
+					}
+				}
+			} else {
+				if (this.status === 'disabled') {
+					return;
+				}
+
+				try {
+					await this.disable?.();
+				} catch (error) {
+					console.error(`[FEATURE:${this.name}]: failed to stop:`, error);
+				}
+
+				this.status = 'disabled';
+			}
+		});
+
+		return this.#transitionQueue;
+	}
+
+	/** Disposes watchers (used by tests / teardown). */
+	async destroy(): Promise<void> {
+		this.#disposeWatchers?.();
+		this.#disposeWatchers = null;
+		await this.#transition(false);
+		this.#registered = false;
 	}
 
 	/**
-	 * Validates and merges the provided settings with the default settings.
-	 *
-	 * @param {Partial<Settings>} settings - The settings to validate.
-	 * @returns {Settings} The validated and merged settings.
+	 * Merges imported settings with defaults without mutating the input:
+	 * missing keys are filled from defaults, present keys win.
 	 */
-	async validateSettings(settings: Partial<Settings>): Promise<Settings> {
+	async validateSettings(imported: Partial<Settings>): Promise<Settings> {
 		const defaults = await this.defaultSettings();
 
-		return mergeWith(settings, defaults, (objValue, srcValue, key, object) => {
-			const hasKey = Object.prototype.hasOwnProperty.call(object as object, key as string);
+		return mergeWith(
+			cloneDeep(imported),
+			defaults,
+			(objValue: unknown, srcValue: unknown, key: string, object: unknown) => {
+				const hasKey = Object.prototype.hasOwnProperty.call(object as object, key);
 
-			// Arrays: keep existing array if present; otherwise take default
-			if (Array.isArray(srcValue)) {
-				return hasKey ? objValue : srcValue;
+				// Arrays: keep imported array if present; otherwise take default
+				if (Array.isArray(srcValue)) {
+					return hasKey ? objValue : srcValue;
+				}
+
+				// Non-objects: only fill when missing
+				if (!isPlainObject(srcValue)) {
+					return hasKey ? objValue : srcValue;
+				}
+
+				// Plain objects: continue deep merge
+				return undefined;
 			}
-
-			// Non-objects (primitives, null, functions, dates, etc.): only set if key missing
-			if (!isPlainObject(srcValue)) {
-				return hasKey ? objValue : srcValue;
-			}
-
-			// For plain objects, continue deep merge so inner missing keys get filled
-			return undefined;
-		});
+		) as Settings;
 	}
 
-	/**
-	 * Imports settings from a JSON file.
-	 */
-	async importSettings() {
-		const defaultPath = await join(await documentDir(), `${this.name}.json`);
-		const [, error, selected] = await t(
-			open({
+	/** Imports this feature's settings from a JSON file (validated). */
+	async importSettings(): Promise<void> {
+		try {
+			const selected = await open({
 				multiple: false,
 				filters: [{ name: 'JSON', extensions: ['json'] }],
-				defaultPath
-			})
-		);
-
-		if (error || !selected) {
-			return app.toast.error('Failed to import settings: ' + error);
-		}
-
-		const fileContent = await readTextFile(selected);
-		const importedSettings = JSON.parse(fileContent);
-		const validatedSettings = await this.validateSettings(importedSettings);
-
-		this.settings = { ...validatedSettings, enabled: Boolean(validatedSettings?.enabled ?? false) };
-		app.toast.success('Settings imported successfully!');
-	}
-
-	/**
-	 * Exports settings to a JSON file.
-	 */
-	async exportSettings() {
-		const defaultPath = await join(await documentDir(), `${this.name}.json`);
-		const [, error, path] = await t(save({ defaultPath }));
-
-		if (error || !path) {
-			return app.toast.error('Failed to export settings: ' + error);
-		}
-
-		writeTextFile(path, JSON.stringify(this.settings, null, 2))
-			.then(() => {
-				app.toast.success('Settings exported successfully!');
-			})
-			.catch((err) => {
-				app.toast.error('Failed to export settings: ' + err);
+				defaultPath: await join(await documentDir(), `${this.name}.json`)
 			});
+
+			if (!selected || Array.isArray(selected)) {
+				return;
+			}
+
+			const content = await readTextFile(selected);
+			const parsed = parseFeatureImportContent(content, this.name);
+
+			if (!parsed.success) {
+				toast.error(`Import rejected: ${parsed.error}`);
+				return;
+			}
+
+			const validated = await this.validateSettings(parsed.data as Partial<Settings>);
+
+			await this.#transition(false);
+			this.settings = {
+				...validated,
+				enabled: Boolean((validated as { enabled?: boolean }).enabled ?? false)
+			};
+			await this.#transition(this.enabled);
+
+			toast.success('Settings imported successfully!');
+		} catch (error) {
+			console.error(`[FEATURE:${this.name}]: import failed:`, error);
+			toast.error('Failed to import settings: ' + (error instanceof Error ? error.message : error));
+		}
 	}
 
-	/**
-	 * Disables the feature internally.
-	 */
-	private async _disable() {
-		await this.disable?.();
+	/** Exports this feature's settings as a versioned envelope. */
+	async exportSettings(): Promise<void> {
+		try {
+			const path = await save({
+				defaultPath: await join(await documentDir(), `${this.name}.json`),
+				filters: [{ name: 'JSON', extensions: ['json'] }]
+			});
+
+			if (!path) {
+				return;
+			}
+
+			const envelope = createFeatureEnvelope(
+				this.name,
+				$state.snapshot(this.settings) as never,
+				''
+			);
+
+			await writeTextFile(path, serializeEnvelope(envelope));
+			toast.success('Settings exported successfully!');
+		} catch (error) {
+			console.error(`[FEATURE:${this.name}]: export failed:`, error);
+			toast.error('Failed to export settings: ' + (error instanceof Error ? error.message : error));
+		}
 	}
 
-	/**
-	 * Enables the pluggable feature.
-	 *
-	 * @abstract
-	 * @returns {Promise<void | this>} A promise that resolves when the feature is enabled.
-	 */
+	/** Starts the feature. */
 	abstract enable(): Promise<void | this> | this | void;
 }

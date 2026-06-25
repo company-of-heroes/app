@@ -1,6 +1,6 @@
 import type { AppContext, AppSettings, AppEvents, Status, Statuses } from './app.svelte';
-import { app, appSettingsSchema } from './app.svelte';
-import { Lobby, type Match } from './lobby.svelte';
+import { app } from './app.svelte';
+import { Lobby, type Match } from '$core/game/lobby';
 import { appContext, createApp, useApp } from './context';
 
 export {
@@ -13,7 +13,6 @@ export {
 	Lobby,
 	app,
 	appContext,
-	appSettingsSchema,
 	createApp,
 	useApp
 };

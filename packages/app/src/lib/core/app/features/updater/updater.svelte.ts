@@ -1,8 +1,8 @@
 import { Feature } from '../feature.svelte';
 import { fetch } from '@tauri-apps/plugin-http';
-import { copyFile } from '@tauri-apps/plugin-fs';
 import { getVersion } from '@tauri-apps/api/app';
 import { app } from '$core/app/context';
+import { settings } from '$core/config/settings.svelte';
 import { Update } from '.';
 import { padEnd } from 'lodash-es';
 import { gt } from 'semver';
@@ -14,15 +14,17 @@ export type UpdaterSettings = {
 	version: string;
 };
 
+/**
+ * Checks GitHub for new releases, shows the changelog after updates and
+ * writes a settings backup before an update is installed (so "delete all
+ * data" during the update never loses the account).
+ */
 export class Updater extends Feature<UpdaterSettings> {
 	name = 'updater';
 
 	hasUpdate = $state<boolean>(false);
-
 	currentVersion = $state<string>('');
-
 	latestVersion = $state<string>('');
-
 	downloadUrl = $state<string | undefined>(undefined);
 
 	get currentVersionFormatted() {
@@ -33,40 +35,56 @@ export class Updater extends Feature<UpdaterSettings> {
 		return padEnd(this.latestVersion.toString(), 6, '.0');
 	}
 
-	enable() {
-		setTimeout(async () => {
-			copyFile(await app.paths.appConfigFilePath(), await app.paths.appConfigFileBackupPath());
-		}, 1000);
+	async enable() {
+		this.currentVersion = await getVersion();
 
-		fetch('https://api.github.com/repos/fknoobs/app/releases/latest')
-			.then((res) => res.json())
-			.then(async (response) => {
-				this.latestVersion = response.tag_name
-					? response.tag_name.replace('v', '')
-					: await getVersion();
-				this.currentVersion = await getVersion();
+		void this.#checkForUpdate().then(() => this.#maybeShowChangelog());
+	}
 
-				if (gt(this.latestVersion, this.currentVersion)) {
-					this.downloadUrl = response.assets[0]?.browser_download_url;
-					this.hasUpdate = true;
+	disable() {
+		this.hasUpdate = false;
+		this.downloadUrl = undefined;
+	}
 
-					this.openDialog();
-				}
-			})
-			.then(() => {
-				if (gt(this.currentVersion, this.settings.version)) {
-					app.modal.create({
-						component: Changelog,
-						title: 'Changelog',
-						description: 'Here are the latest changes in this version:',
-						size: 'lg'
-					});
-					app.modal.open();
-					app.modal.on('close', () => {
-						this.settings.version = this.currentVersion;
-					});
-				}
+	async #checkForUpdate(): Promise<void> {
+		try {
+			const response = await fetch('https://api.github.com/repos/fknoobs/app/releases/latest');
+			const release = await response.json();
+
+			this.latestVersion = release.tag_name
+				? release.tag_name.replace('v', '')
+				: this.currentVersion;
+
+			if (gt(this.latestVersion, this.currentVersion)) {
+				this.downloadUrl = release.assets?.[0]?.browser_download_url;
+				this.hasUpdate = true;
+
+				this.openDialog();
+			}
+		} catch (error) {
+			console.warn('[UPDATER]: update check failed:', error);
+			this.latestVersion = this.currentVersion;
+		}
+	}
+
+	#maybeShowChangelog(): void {
+		if (!this.settings.version || gt(this.currentVersion, this.settings.version)) {
+			this.openChangelog();
+
+			app.modal.on('close', () => {
+				this.settings.version = this.currentVersion;
 			});
+		}
+	}
+
+	/**
+	 * Called by the update dialog right before downloading/launching the
+	 * installer: snapshots the settings (incl. account) to the external
+	 * backup location.
+	 */
+	async prepareForUpdate(): Promise<void> {
+		await settings.flush();
+		await settings.backup.backupNow('pre-update');
 	}
 
 	openDialog() {
@@ -79,7 +97,7 @@ export class Updater extends Feature<UpdaterSettings> {
 			title: 'Update Available',
 			description: `
                 A new version (${this.latestVersion}) is available. You are currently on version ${this.currentVersion}.<br/><br/>
-                ❗NOTE! When asked, to uninstall, select 'do not uninstall' before installing the new version, as this will delete your settings! Just install the new version over the old one.❗
+                Your settings and account are automatically backed up to your Documents folder before updating, so they survive even if you choose to remove all app data during the update.
             `,
 			props: {
 				currentVersion: this.currentVersion,
@@ -100,7 +118,7 @@ export class Updater extends Feature<UpdaterSettings> {
 		app.modal.open();
 	}
 
-	async defaultSettings() {
+	async defaultSettings(): Promise<UpdaterSettings> {
 		return {
 			enabled: true,
 			didReadChangelog: false,

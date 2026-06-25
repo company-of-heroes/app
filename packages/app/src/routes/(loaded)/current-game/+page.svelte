@@ -21,6 +21,12 @@
 		goto(resolve('/(loaded)/history/[id]', { id: match.id }));
 	});
 
+	$effect(() => {
+		if (!match) {
+			goto('/');
+		}
+	});
+
 	export const snapshot: Snapshot = {
 		capture() {
 			return {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ButtonProps } from '.';
 	import { cn } from '$lib/utils';
-	import LoadingIcon from 'phosphor-svelte/lib/Spinner';
+	import LoadingIcon from 'phosphor-svelte/lib/SpinnerIcon';
 
 	let {
 		children,
@@ -42,5 +42,7 @@
 	{#if loading}
 		<LoadingIcon size="20" class="animate-[spin_1500ms_linear_infinite]" />
 	{/if}
-	{@render children()}
+	{#if !loading || (size !== 'icon' && size !== 'icon-sm')}
+		{@render children()}
+	{/if}
 </svelte:element>

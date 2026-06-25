@@ -12,11 +12,14 @@ import PersonalVoicesPlugin from './personal-voices-plugin.svelte';
 export type ProviderVoiceSettings = {
 	voices: string[];
 	rewardedVoices: Record<string, string>;
+	freeVoices: string[];
+	rewardedFreeVoices: Record<string, string>;
 };
 
 export type TTSPersonalVoicesSettings = {
 	cost: number;
 	providers: Record<string, ProviderVoiceSettings>;
+	enableFreeVoices: boolean;
 };
 
 export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
@@ -34,7 +37,19 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 		return this.settings.providers[tts.provider.name].rewardedVoices;
 	});
 
+	freeVoices = $derived.by(() => {
+		return tts.provider.voices.filter((v) =>
+			this.settings.providers[tts.provider.name].freeVoices.includes(v.voiceId)
+		);
+	});
+
+	rewardedFreeVoices = $derived.by(() => {
+		return this.settings.providers[tts.provider.name].rewardedFreeVoices;
+	});
+
 	private eventSubscription: EventSubSubscription | null = null;
+	private unsubscribers: (() => void)[] = [];
+	private disposeWatchers: (() => void) | null = null;
 
 	constructor() {
 		super();
@@ -44,17 +59,19 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 	async enable() {
 		// Intercept speak events from the TTS service and override the
 		// voiceId for a user if they have a personal voice assigned.
-		tts.on('speak', (options) => {
-			const userVoiceId = this.getUserVoice(options.user);
+		this.unsubscribers.push(
+			tts.on('speak', (options) => {
+				const userVoiceId = this.getUserVoice(options.user);
 
-			if (userVoiceId) {
-				options.voiceId = userVoiceId;
-			}
-		});
+				if (userVoiceId) {
+					options.voiceId = userVoiceId;
+				}
+			})
+		);
 
 		// Chat command handler: `!preview` to play a sample, `!voices` to list
 		// available voices. We keep this handler lightweight and synchronous.
-		twitch.on('chat-message', ({ channel, user, message, msg }) => {
+		const offChat = twitch.on('chat-message', ({ channel, user, message, msg }) => {
 			if (message.startsWith('!preview')) {
 				const args = message.split(' ').slice(1);
 
@@ -64,7 +81,9 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 				}
 
 				const voice = tts.provider.voices.find(
-					(v) => v.name.toLowerCase() === args.join(' ').toLowerCase()
+					(v) =>
+						v.alias?.toLowerCase() === args.join(' ').toLowerCase() ||
+						v.name.toLowerCase() === args.join(' ').toLowerCase()
 				);
 
 				// If we couldn't find the voice by name reply with guidance.
@@ -77,19 +96,61 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 
 				// Trigger a short preview via the TTS provider.
 				tts.speak({
-					message: `This is a preview of the ${voice.name} voice. Hello ${user}! I hope you like my sound.`,
+					message: `This is a preview of the ${voice.name} voice. Hello ${user}! How was your day? Anything interesting happened?`,
 					voiceId: voice.voiceId,
 					user
 				});
 			}
 
 			if (message.startsWith('!voices')) {
-				// Build and send a short list of voice names available for
-				// personal unlocks. We add a marker for the default voice.
 				const voiceList = this.voices
 					.map((v) => `${v.name}${v.voiceId === tts.provider.defaultVoiceId ? ' (default)' : ''}`)
 					.join(' | ');
+
 				twitch.chatClient?.say(channel, `Available voices: ${voiceList}`);
+			}
+
+			if (message.startsWith('!freevoices')) {
+				if (!this.settings.enableFreeVoices) {
+					return twitch.chatClient?.say(channel, `@${user}, free voices are not enabled.`);
+				}
+
+				const voiceList = this.freeVoices.map((v) => `${v.alias ?? v.name}`).join(' | ');
+
+				twitch.chatClient?.say(
+					channel,
+					`Available free voices: ${voiceList}. Use !setfreevoice <voice name> to set a free voice.`
+				);
+			}
+
+			if (message.startsWith('!setfreevoice')) {
+				if (!this.settings.enableFreeVoices) {
+					return twitch.chatClient?.say(channel, `@${user}, free voices are not enabled.`);
+				}
+
+				const args = message.split(' ').slice(1);
+				const voice = tts.provider.voices.find(
+					(v) =>
+						v.alias?.toLowerCase() === args.join(' ').toLowerCase() ||
+						v.name.toLowerCase() === args.join(' ').toLowerCase()
+				);
+
+				if (!voice) {
+					return twitch.chatClient?.say(
+						channel,
+						`Voice "${args.join(' ')}" not found. Use !freevoices to see the list of available free voices.`
+					);
+				}
+
+				this.rewardVoiceToUser(voice, user, true, true);
+			}
+
+			if (message.startsWith('!removefreevoice')) {
+				if (!this.settings.enableFreeVoices) {
+					return;
+				}
+
+				this.removeFreeVoiceFromUser(user, true);
 			}
 
 			if (message.startsWith('!setvoice')) {
@@ -122,53 +183,45 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 			}
 		});
 
-		// When settings.voices changes, regenerate channel point rewards
-		// so the channel owner can enable/disable which voices are purchasable.
-		watch(
-			() => [this.settings.providers[tts.provider.name].voices, this.settings.cost],
-			debounce(() => {
-				this.updateRewards();
-			}, 10000)
-		);
+		this.unsubscribers.push(offChat);
 
-		// Listen for the Twitch token loading; this means a channel is authenticated.
-		// Once we have a token we can attach an EventSub handler to react when a
-		// channel points redemption matching a personal voice is used.
-		watch(
-			() => twitch.token,
-			() => {
-				if (!twitch.token) {
-					return;
-				}
+		this.disposeWatchers = $effect.root(() => {
+			watch(
+				() => [this.settings.providers[tts.provider.name].voices, this.settings.cost],
+				debounce(() => {
+					this.updateRewards();
+				}, 10000)
+			);
 
-				if (!twitch.eventSub) {
-					return;
-				}
+			watch(
+				() => twitch.token,
+				() => {
+					// Drop the previous redemption subscription before re-subscribing.
+					this.eventSubscription?.stop();
+					this.eventSubscription = null;
 
-				// Create an event subscription that reacts to the channel's
-				// redemption of any 'PERSONALITY' reward. The reward title stores
-				// the voice name in the channel reward text.
-				this.eventSubscription = twitch.eventSub.onChannelRedemptionAdd(
-					twitch.token.userId,
-					async (event) => {
-						if (event.rewardTitle.startsWith('[PERSONALITY]')) {
-							const voiceName = event.rewardTitle.replace('[PERSONALITY]', '').trim();
-							const voice = tts.provider.voices.find((v) => v.name === voiceName);
-
-							// If the voice can't be resolved, refund the channel
-							// points and inform the user.
-							if (!voice) {
-								return this.refundFailedReward(event, event.rewardId, event.id);
-							}
-
-							// Assign the voice to the user who redeemed the
-							// reward.
-							this.rewardVoiceToUser(voice, event.userDisplayName);
-						}
+					if (!twitch.token || !twitch.eventSub) {
+						return;
 					}
-				);
-			}
-		);
+
+					this.eventSubscription = twitch.eventSub.onChannelRedemptionAdd(
+						twitch.token.userId,
+						async (event) => {
+							if (event.rewardTitle.startsWith('[PERSONALITY]')) {
+								const voiceName = event.rewardTitle.replace('[PERSONALITY]', '').trim();
+								const voice = tts.provider.voices.find((v) => v.name === voiceName);
+
+								if (!voice) {
+									return this.refundFailedReward(event, event.rewardId, event.id);
+								}
+
+								this.rewardVoiceToUser(voice, event.userDisplayName);
+							}
+						}
+					);
+				}
+			);
+		});
 	}
 
 	/**
@@ -245,16 +298,34 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 		}
 	}
 
-	rewardVoiceToUser(voice: TTSVoice, user: string, notify: boolean = true) {
-		// Persist the voice assignment for the user so all their future
-		// messages will be spoken with the personal voice.
-		this.settings.providers[tts.provider.name].rewardedVoices[user.toLowerCase()] = voice.voiceId;
+	rewardVoiceToUser(
+		voice: TTSVoice,
+		user: string,
+		notify: boolean = true,
+		isFree: boolean = false
+	) {
+		if (isFree) {
+			this.settings.providers[tts.provider.name].rewardedFreeVoices[user.toLowerCase()] =
+				voice.voiceId;
+		} else {
+			this.settings.providers[tts.provider.name].rewardedVoices[user.toLowerCase()] = voice.voiceId;
+		}
 
-		// Announce the assignment in chat for user feedback.
 		if (notify) {
 			twitch.chatClient?.say(
 				twitch.token!.userName!,
-				`@${user}, you unlocked ${voice.name}. Your messages will now be spoken using this voice!`
+				`@${user}, you unlocked ${voice.alias ?? voice.name}. Your messages will now be spoken using this voice!`
+			);
+		}
+	}
+
+	removeFreeVoiceFromUser(user: string, notify: boolean = false) {
+		delete this.settings.providers[tts.provider.name].rewardedFreeVoices[user.toLowerCase()];
+
+		if (notify) {
+			twitch.chatClient?.say(
+				twitch.token!.userName!,
+				`@${user}, you removed your free voice. Your messages will now be spoken using the default voice or the voice you unlocked with channel points.`
 			);
 		}
 	}
@@ -282,12 +353,23 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 	}
 
 	getUserVoice(user: string): string | null {
-		// Return the voice id for a user or null if none is assigned. This is
-		// used by the TTS 'speak' handler to override voice selection.
-		return this.settings.providers[tts.provider.name].rewardedVoices[user] || null;
+		return (
+			this.settings.providers[tts.provider.name].rewardedFreeVoices[user] ||
+			this.settings.providers[tts.provider.name].rewardedVoices[user] ||
+			null
+		);
 	}
 
 	async disable() {
+		this.disposeWatchers?.();
+		this.disposeWatchers = null;
+
+		for (const unsubscribe of this.unsubscribers) {
+			unsubscribe();
+		}
+
+		this.unsubscribers = [];
+
 		if (this.eventSubscription) {
 			this.eventSubscription.stop();
 		}
@@ -307,12 +389,15 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 				(acc, provider) => {
 					acc[provider.name] = {
 						voices: [],
-						rewardedVoices: {}
+						rewardedVoices: {},
+						freeVoices: [],
+						rewardedFreeVoices: {}
 					};
 					return acc;
 				},
 				{} as Record<string, ProviderVoiceSettings>
-			)
+			),
+			enableFreeVoices: false
 		};
 	}
 }

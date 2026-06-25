@@ -2,7 +2,6 @@ import { app } from '$core/app/context';
 import { watch } from 'runed';
 import { Feature } from '../feature.svelte';
 import { twitch } from '../twitch/twitch.svelte';
-import { differenceBy } from 'lodash-es';
 
 export type TwitchBotSettings = {
 	enablePlayerStats: boolean;
@@ -12,60 +11,69 @@ export type TwitchBotSettings = {
 	}[];
 };
 
+/**
+ * Chat bot: periodic custom messages and player-stat announcements when a
+ * match starts (only while connected and live).
+ */
 export class TwitchBot extends Feature<TwitchBotSettings> {
 	name = 'twitch-bot';
 
 	customMessagesIntervals: Map<number, ReturnType<typeof setInterval>> = new Map();
 
-	lobbySubscription: (() => void) | null = null;
+	#lobbySubscription: (() => void) | null = null;
+	#disposeWatchers: (() => void) | null = null;
 
 	async enable() {
-		watch(
-			() => $state.snapshot(this.settings.messages),
-			() => {
-				this.customMessagesIntervals.forEach((interval) => clearInterval(interval));
-				this.customMessagesIntervals.clear();
+		this.#disposeWatchers = $effect.root(() => {
+			watch(
+				() => $state.snapshot(this.settings.messages),
+				() => {
+					this.#clearIntervals();
 
-				for (const [index, message] of this.settings.messages.entries()) {
-					this.registerCustomMessage(index, message.text, message.interval);
-				}
-			}
-		);
-
-		watch(
-			() => this.settings.enablePlayerStats,
-			(enabled) => {
-				if (!enabled) {
-					if (this.lobbySubscription) {
-						this.lobbySubscription();
-						this.lobbySubscription = null;
+					for (const [index, message] of this.settings.messages.entries()) {
+						this.registerCustomMessage(index, message.text, message.interval);
 					}
-
-					return;
 				}
+			);
 
-				this.lobbySubscription = app.game.on('LOBBY:STARTED', (lobby) => {
-					const message = lobby.players
-						.map((player) => {
-							if (!player.profile || !player.steamId) {
-								return null;
-							}
-							return `${player.profile.alias}: https://playercard.cohstats.com/?steamid=${player.steamId}`;
-						})
-						.filter(Boolean)
-						.join(' | ');
+			watch(
+				() => this.settings.enablePlayerStats,
+				(enabled) => {
+					this.#lobbySubscription?.();
+					this.#lobbySubscription = null;
 
-					if (!twitch.isConnected || !twitch.chatClient || !twitch.token || !twitch.isLive) {
+					if (!enabled) {
 						return;
 					}
 
-					twitch.chatClient.say(twitch.token.userName!, `Player Stats: ${message}`);
-				});
-			}
-		);
+					this.#lobbySubscription = app.on('lobby.started', (lobby) => {
+						const message = lobby.players
+							.map((player) => {
+								if (!player.profile || !player.steamId) {
+									return null;
+								}
+
+								return `${player.profile.alias}: https://playercard.cohstats.com/?steamid=${player.steamId}`;
+							})
+							.filter(Boolean)
+							.join(' | ');
+
+						if (!twitch.isConnected || !twitch.chatClient || !twitch.token || !twitch.isLive) {
+							return;
+						}
+
+						twitch.chatClient.say(twitch.token.userName!, `Player Stats: ${message}`);
+					});
+				}
+			);
+		});
 	}
 
 	registerCustomMessage(index: number, text: string, interval: number) {
+		if (!Number.isFinite(interval) || interval <= 0) {
+			return;
+		}
+
 		const int = setInterval(() => {
 			if (!twitch.isConnected || !twitch.chatClient || !twitch.token || !twitch.isLive) {
 				return;
@@ -77,14 +85,19 @@ export class TwitchBot extends Feature<TwitchBotSettings> {
 		this.customMessagesIntervals.set(index, int);
 	}
 
-	async disable() {
+	#clearIntervals() {
 		this.customMessagesIntervals.forEach((interval) => clearInterval(interval));
 		this.customMessagesIntervals.clear();
+	}
 
-		if (this.lobbySubscription) {
-			this.lobbySubscription();
-			this.lobbySubscription = null;
-		}
+	async disable() {
+		this.#disposeWatchers?.();
+		this.#disposeWatchers = null;
+
+		this.#clearIntervals();
+
+		this.#lobbySubscription?.();
+		this.#lobbySubscription = null;
 	}
 
 	defaultSettings(): TwitchBotSettings {

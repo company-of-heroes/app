@@ -58,6 +58,8 @@ export class ElevenlabsProvider extends TTSProvider {
 			name: voice.name!
 		}));
 
+		this.applyVoiceAliases();
+
 		this.customVoices = voices
 			.filter((v) => v.labels?.isCustomVoice === 'true')
 			.map((voice) => ({

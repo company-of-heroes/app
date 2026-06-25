@@ -29,18 +29,18 @@ declare module "$app/types" {
 	type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;
 
 	export interface AppTypes {
-		RouteId(): "/(loading)" | "/(loaded)" | "/" | "/(loaded)/account" | "/(loaded)/chat" | "/(loaded)/current-game" | "/(loaded)/history" | "/(loaded)/history/[id]" | "/(loaded)/leaderboards" | "/(loaded)/leaderboards/profile" | "/(loaded)/leaderboards/profile/[profileId]" | "/(loaded)/replays" | "/(loaded)/replays/[replayId]" | "/(loaded)/settings" | "/(loaded)/shortcuts" | "/(loading)/splashscreen" | "/(loaded)/twitch" | "/(loaded)/twitch/tabs" | "/(loaded)/twitch/tabs/bot-tab" | "/(loaded)/twitch/tabs/overlays-tab" | "/(loaded)/twitch/tabs/tts-tab" | "/(loaded)/twitch/tabs/twitch-tab";
+		RouteId(): "/(onboarding)" | "/(loading)" | "/(loaded)" | "/" | "/(loaded)/account" | "/(loaded)/current-game" | "/(loaded)/history" | "/(loaded)/history/[id]" | "/(loaded)/leaderboards" | "/(loaded)/leaderboards/profile" | "/(loaded)/leaderboards/profile/[profileId]" | "/(loaded)/replays" | "/(loaded)/replays/[replayId]" | "/(loaded)/settings" | "/(onboarding)/setup" | "/(loaded)/shortcuts" | "/(loading)/splashscreen" | "/(loaded)/twitch" | "/(loaded)/twitch/tabs" | "/(loaded)/twitch/tabs/bot-tab" | "/(loaded)/twitch/tabs/overlays-tab" | "/(loaded)/twitch/tabs/tts-tab" | "/(loaded)/twitch/tabs/twitch-tab";
 		RouteParams(): {
 			"/(loaded)/history/[id]": { id: string };
 			"/(loaded)/leaderboards/profile/[profileId]": { profileId: string };
 			"/(loaded)/replays/[replayId]": { replayId: string }
 		};
 		LayoutParams(): {
+			"/(onboarding)": Record<string, never>;
 			"/(loading)": Record<string, never>;
 			"/(loaded)": { id?: string | undefined; profileId?: string | undefined; replayId?: string | undefined };
 			"/": { id?: string | undefined; profileId?: string | undefined; replayId?: string | undefined };
 			"/(loaded)/account": Record<string, never>;
-			"/(loaded)/chat": Record<string, never>;
 			"/(loaded)/current-game": Record<string, never>;
 			"/(loaded)/history": { id?: string | undefined };
 			"/(loaded)/history/[id]": { id: string };
@@ -50,6 +50,7 @@ declare module "$app/types" {
 			"/(loaded)/replays": { replayId?: string | undefined };
 			"/(loaded)/replays/[replayId]": { replayId: string };
 			"/(loaded)/settings": Record<string, never>;
+			"/(onboarding)/setup": Record<string, never>;
 			"/(loaded)/shortcuts": Record<string, never>;
 			"/(loading)/splashscreen": Record<string, never>;
 			"/(loaded)/twitch": Record<string, never>;
@@ -59,7 +60,7 @@ declare module "$app/types" {
 			"/(loaded)/twitch/tabs/tts-tab": Record<string, never>;
 			"/(loaded)/twitch/tabs/twitch-tab": Record<string, never>
 		};
-		Pathname(): "/" | "/account" | "/chat" | "/current-game" | "/history" | `/history/${string}` & {} | "/leaderboards" | `/leaderboards/profile/${string}` & {} | "/replays" | `/replays/${string}` & {} | "/settings" | "/shortcuts" | "/splashscreen" | "/twitch";
+		Pathname(): "/" | "/account" | "/current-game" | "/history" | `/history/${string}` & {} | "/leaderboards" | `/leaderboards/profile/${string}` & {} | "/replays" | `/replays/${string}` & {} | "/settings" | "/setup" | "/shortcuts" | "/splashscreen" | "/twitch";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): "/favicon.png" | "/fknoobs-app-banner.png" | "/screenshot-v0.35.0.png" | "/screenshot-v0.36.x.png" | "/screenshot.png" | "/svelte.svg" | "/tauri.svg" | "/vite.svg" | string & {};
 	}

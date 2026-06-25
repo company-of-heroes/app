@@ -46,115 +46,190 @@ interface ParsedMessage {
 
 type ChatBadgeList = Awaited<ReturnType<ApiClient['chat']['getGlobalBadges']>>;
 
+/**
+ * Twitch integration.
+ *
+ * Single connect/disconnect path: every token change fully disposes the
+ * previous ApiClient/ChatClient/EventSub before creating new ones, so chat
+ * listeners can never stack up (the cause of duplicated TTS/chat messages in
+ * the previous implementation).
+ */
 export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 	name = 'twitch';
 
 	client: ApiClient | null = $state(null);
-
 	token: ValidatedTokenInfo | null = $state(null);
-
 	chatClient: ChatClient | null = $state(null);
-
 	eventSub: EventSubWsListener | undefined = $state(undefined);
 
 	isConnected = $derived.by(() => this.client !== null && this.token !== null);
-
 	isLive = $state(false);
 
 	globalBadges: ChatBadgeList | null = null;
 	channelBadges: Map<string, ChatBadgeList> = new Map();
 
-	private chatListener: Listener | null = null;
+	#chatListener: Listener | null = null;
+	#joinedChannel: string | null = null;
+	#disposeWatchers: (() => void) | null = null;
+	#connectQueue: Promise<void> = Promise.resolve();
 
-	enable(): Promise<this> {
-		return new Promise((resolve) => {
+	enable(): void {
+		this.#disposeWatchers = $effect.root(() => {
 			watch(
 				() => this.settings.accessToken,
-				() => {
-					if (!this.settings.accessToken) {
-						this.disable();
-						resolve(this);
-						return;
-					}
+				(accessToken) => {
+					this.#connectQueue = this.#connectQueue
+						.then(async () => {
+							await this.#disconnect();
 
-					const authProvider = new StaticAuthProvider(
-						this.settings.clientId,
-						this.settings.accessToken
-					);
-
-					this.client = new ApiClient({ authProvider });
-
-					// Fetch global badges
-					this.client.chat.getGlobalBadges().then((badges) => {
-						this.globalBadges = badges;
-					});
-
-					this.eventSub = new EventSubWsListener({ apiClient: this.client });
-					this.eventSub.start();
-
-					this.chatClient = new ChatClient({ authProvider });
-					this.chatClient.connect();
-
-					this.chatListener = this.chatClient.onMessage((channel, user, message, msg) => {
-						const parsedMessage = this.parseChatMessage(channel, user, message, msg);
-
-						this.emit('chat-message', { channel, user, message, msg });
-						app.socket?.publish('twitch.chat', parsedMessage);
-					});
-
-					this.client
-						.getTokenInfo()
-						.then((info) => {
-							this.token = info as ValidatedTokenInfo;
-
-							this.eventSub!.onStreamOnline(this.token!.userId, () => {
-								this.isLive = true;
-							});
-
-							this.eventSub!.onStreamOffline(this.token!.userId, () => {
-								this.isLive = false;
-							});
+							if (accessToken) {
+								await this.#connect(accessToken);
+							}
 						})
 						.catch((err) => {
-							error(`Failed to validate Twitch token: ${err}`);
-						})
-						.finally(() => {
-							resolve(this);
+							void error(`[TWITCH]: connect failed: ${err}`);
 						});
-				}
-			);
-
-			watch(
-				() => this.token?.userName,
-				(userName, prev) => {
-					if (!userName) {
-						return;
-					}
-
-					if (prev) {
-						this.chatClient?.part(prev);
-					}
-
-					this.chatClient?.join(userName).catch(console.error);
-					this.client?.users.getUserByName(userName).then((user) => {
-						if (user) {
-							this.client?.chat.getChannelBadges(user.id).then((badges) => {
-								this.channelBadges.set(userName, badges);
-							});
-						}
-					});
 				}
 			);
 		});
 	}
 
-	private parseEmotes(msg: ChatMessage): EmoteInfo[] {
+	async disable() {
+		this.#disposeWatchers?.();
+		this.#disposeWatchers = null;
+
+		this.#connectQueue = this.#connectQueue
+			.then(() => this.#disconnect())
+			.catch(() => undefined);
+
+		await this.#connectQueue;
+	}
+
+	async #connect(accessToken: string): Promise<void> {
+		const authProvider = new StaticAuthProvider(this.settings.clientId, accessToken);
+
+		const client = new ApiClient({ authProvider });
+
+		// Validate the token first; a dead token means no clients at all.
+		let token: ValidatedTokenInfo;
+
+		try {
+			token = (await client.getTokenInfo()) as ValidatedTokenInfo;
+		} catch (err) {
+			void error(`[TWITCH]: Failed to validate Twitch token: ${err}`);
+			return;
+		}
+
+		this.client = client;
+		this.token = token;
+
+		client.chat
+			.getGlobalBadges()
+			.then((badges) => {
+				this.globalBadges = badges;
+			})
+			.catch(() => undefined);
+
+		// EventSub: live status tracking.
+		this.eventSub = new EventSubWsListener({ apiClient: client });
+		this.eventSub.start();
+		this.eventSub.onStreamOnline(token.userId, () => {
+			this.isLive = true;
+		});
+		this.eventSub.onStreamOffline(token.userId, () => {
+			this.isLive = false;
+		});
+
+		// Initial live state (EventSub only reports changes).
+		client.streams
+			.getStreamByUserId(token.userId)
+			.then((stream) => {
+				this.isLive = stream !== null;
+			})
+			.catch(() => undefined);
+
+		// Chat client.
+		this.chatClient = new ChatClient({ authProvider });
+		this.chatClient.connect();
+
+		this.#chatListener = this.chatClient.onMessage((channel, user, message, msg) => {
+			const parsedMessage = this.parseChatMessage(channel, user, message, msg);
+
+			this.emit('chat-message', { channel, user, message, msg });
+			app.socket.publish('twitch.chat', parsedMessage);
+		});
+
+		if (token.userName) {
+			await this.#joinChannel(token.userName);
+		}
+	}
+
+	async #joinChannel(userName: string): Promise<void> {
+		try {
+			await this.chatClient?.join(userName);
+			this.#joinedChannel = userName;
+
+			const user = await this.client?.users.getUserByName(userName);
+
+			if (user) {
+				const badges = await this.client?.chat.getChannelBadges(user.id);
+
+				if (badges) {
+					this.channelBadges.set(userName, badges);
+				}
+			}
+		} catch (err) {
+			console.error('[TWITCH]: failed to join channel:', err);
+		}
+	}
+
+	async #disconnect(): Promise<void> {
+		if (this.#chatListener) {
+			this.chatClient?.removeListener(this.#chatListener);
+			this.#chatListener = null;
+		}
+
+		if (this.#joinedChannel) {
+			try {
+				this.chatClient?.part(this.#joinedChannel);
+			} catch {
+				// ignore
+			}
+
+			this.#joinedChannel = null;
+		}
+
+		if (this.chatClient) {
+			try {
+				this.chatClient.quit();
+			} catch {
+				// ignore
+			}
+		}
+
+		if (this.eventSub) {
+			try {
+				this.eventSub.stop();
+			} catch {
+				// ignore
+			}
+		}
+
+		this.client = null;
+		this.token = null;
+		this.chatClient = null;
+		this.eventSub = undefined;
+		this.isLive = false;
+		this.globalBadges = null;
+		this.channelBadges.clear();
+	}
+
+	#parseEmotes(msg: ChatMessage): EmoteInfo[] {
 		const emotes: EmoteInfo[] = [];
 		const emoteOffsets = msg.emoteOffsets;
 
 		for (const [emoteId, positions] of emoteOffsets) {
 			for (const position of positions) {
-				// positions is an array of strings like "0-4" or "6-10"
 				const [start, end] = position.split('-').map(Number);
 				const emoteName = msg.text.substring(start, end + 1);
 
@@ -172,8 +247,8 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 		return emotes.sort((a, b) => b.startIndex! - a.startIndex!);
 	}
 
-	private messageToHtml(msg: ChatMessage): string {
-		let emotes = this.parseEmotes(msg);
+	#messageToHtml(msg: ChatMessage): string {
+		const emotes = this.#parseEmotes(msg);
 		let html = msg.text;
 
 		// Replace emotes with img tags from end to start to preserve indices
@@ -186,19 +261,18 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 		return html;
 	}
 
-	private parseChatMessage(
+	parseChatMessage(
 		channel: string,
 		user: string,
 		message: string,
 		msg: ChatMessage
 	): ParsedMessage {
-		const emotes = this.parseEmotes(msg);
+		const emotes = this.#parseEmotes(msg);
 		const badges: { [key: string]: string } = {};
 		const badgeImages: BadgeImage[] = [];
 
 		const channelBadges = this.channelBadges.get(channel);
 
-		// Parse badges
 		for (const [badgeName, badgeVersion] of msg.userInfo.badges) {
 			badges[badgeName] = badgeVersion;
 
@@ -220,33 +294,13 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 		return {
 			channel,
 			user,
-			message: this.messageToHtml(msg),
+			message: this.#messageToHtml(msg),
 			displayName: msg.userInfo.displayName,
 			color: msg.userInfo.color || '#FFFFFF',
 			emotes,
 			badges,
 			badgeImages
 		};
-	}
-
-	async disable() {
-		if (this.chatListener) {
-			this.chatClient?.removeListener(this.chatListener);
-		}
-
-		if (this.chatClient) {
-			await this.chatClient.quit();
-		}
-
-		if (this.eventSub) {
-			await this.eventSub.stop();
-		}
-
-		this.client = null;
-		this.token = null;
-		this.chatClient = null;
-		this.eventSub = undefined;
-		this.isLive = false;
 	}
 
 	defaultSettings() {

@@ -3,6 +3,10 @@
 	import { dialog } from './dialog.svelte';
 	import { cn } from '$lib/utils';
 	import CloseIcon from 'phosphor-svelte/lib/X';
+	import {
+		isSelectionPickerTarget,
+		selectionPicker
+	} from '$lib/components/ui/input/selection-picker';
 </script>
 
 <Dialog.Root bind:open={dialog.open}>
@@ -15,6 +19,18 @@
 			)}
 		/>
 		<Dialog.Content
+			trapFocus={!selectionPicker.isOpen}
+			onInteractOutside={(e) => {
+				if (isSelectionPickerTarget(e.target)) {
+					e.preventDefault();
+				}
+			}}
+			onEscapeKeydown={(e) => {
+				if (selectionPicker.isOpen) {
+					selectionPicker.handleParentEscape();
+					e.preventDefault();
+				}
+			}}
 			class={cn(
 				'data-[state=open]:animate-in data-[state=open]:slide-in-from-right fixed',
 				'data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right',

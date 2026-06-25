@@ -1,3 +1,27 @@
+### v0.50.0
+
+> This release is a full rewrite of the app's internals. The UI stays the same, the foundation is new.
+
+- feat; **setup wizard**: the app now guides you through selecting your `warnings.log` and Company of Heroes installation folder on first start (with auto-detection) and blocks until both are valid — no more silently broken installs
+- feat; **automatic external backups**: your settings _and account_ are continuously backed up to `Documents\FKnoobs CoH\backups`. Updating the app — even when choosing "remove all data" — no longer loses your account; the app restores it automatically
+- feat; **comments on matches**: leave comments, reply and like/dislike on any match detail page
+- feat; settings import/export rewritten: exports are versioned, imports are validated first and applied instantly (no restart), and a safety backup is written before every import
+- feat; settings are migrated automatically from the old format; nothing is lost on update
+- enhance; game log watching rewritten: only new log lines are read, and restarting the game (which truncates warnings.log) is now detected correctly
+- enhance; Twitch connection lifecycle rewritten: reconnecting or changing tokens can no longer cause duplicated chat/TTS messages
+- enhance; match result fetching only polls while results are actually pending (with backoff) instead of every 5 seconds forever
+- enhance; local websocket connection now reconnects automatically
+- remove; the Chat section has been removed
+- chore; the new core logic is covered by an automated test suite
+
+### v0.45.0
+
+- feat; add new _freevoices feature_ for TTS. When enabled, viewers can choose out of a list of free TTS voices, that do not need channel points.
+  Two new chat commands are added for this feature, `!freevoices` and `!setfreevoice`
+- feat; publish new websocket topic `game.lobby.joined`, can be used to do things when loading into a game
+- fix; selection modal rendering outside viewport when inside another model / dialog
+- fix; when closing the game, stop analyzing log file
+
 ### v0.44.0
 
 - feat; disable the hotkeys when chatting and resume when chat closed

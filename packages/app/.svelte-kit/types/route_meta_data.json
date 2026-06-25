@@ -9,9 +9,6 @@
 	"/(loaded)/account": [
 		"src/routes/+layout.ts"
 	],
-	"/(loaded)/chat": [
-		"src/routes/+layout.ts"
-	],
 	"/(loaded)/current-game": [
 		"src/routes/+layout.ts"
 	],
@@ -34,6 +31,9 @@
 		"src/routes/+layout.ts"
 	],
 	"/(loaded)/settings": [
+		"src/routes/+layout.ts"
+	],
+	"/(onboarding)/setup": [
 		"src/routes/+layout.ts"
 	],
 	"/(loaded)/shortcuts": [

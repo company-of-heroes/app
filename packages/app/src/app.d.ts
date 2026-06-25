@@ -1,22 +1,20 @@
 declare module '@fknoobs/app' {
-	import type { Auth } from '$features/auth';
+	import type { AccountService } from '$core/account';
 	import type { Twitch, TTS } from '$features/twitch';
 	import type { Shortcuts } from '$features/shortcuts';
 	import type { TTSPersonalVoices } from '$features/tts-personal-voices';
 	import type { TwitchBot } from '$features/twitch-bot';
 	import type { Updater } from '$features/updater';
-	import type { ChatFeature } from '$features/chat';
 	import type { History } from '$features/history';
 	import type { ReplayAnalyzer } from '$features/replay-analyzer';
 	import type { TwitchOverlays } from '$core/app/features/twitch-overlays';
 
 	interface Features {
-		auth: Auth;
+		auth: AccountService;
 		twitch: Twitch;
 		shortcuts: Shortcuts;
 		updater: Updater;
 		history: History;
-		chat: ChatFeature;
 		'twitch-overlays': TwitchOverlays;
 		'replay-analyzer': ReplayAnalyzer;
 		'text-to-speech': TTS;

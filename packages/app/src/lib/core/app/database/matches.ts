@@ -8,13 +8,12 @@ import {
 	type LobbyAggregationCommunityResponse,
 	Collections
 } from '$core/pocketbase/types';
-import type { ListResult, RecordFullListOptions } from 'pocketbase';
+import type { ListResult, RecordFullListOptions, UnsubscribeFunc } from 'pocketbase';
 import type { LobbyPlayer, Match as LobbyMatch } from '@fknoobs/app';
 import type { Expand } from '@fknoobs/app';
 import { exp, pocketbase } from '$core/pocketbase';
 import { fetch } from '@tauri-apps/plugin-http';
-import { app } from '$core/app/context';
-import { lte } from 'semver';
+import { account } from '$core/account';
 
 export type Match = LobbiesResponse<
 	LobbyPlayer[],
@@ -23,9 +22,11 @@ export type Match = LobbiesResponse<
 		user: UsersResponse<Record<string, any>, string[]>;
 	}
 > & { players: LobbyPlayer[] };
+
 export type MatchExpanded = Expand<
 	Match & { alliesOutcome?: 'win' | 'loss'; axisOutcome?: 'win' | 'loss' }
 >;
+
 export type AggregationPlayer = { profile_id: number; alias: string };
 
 const DEFAULT_EXPAND = 'user';
@@ -43,16 +44,11 @@ const HISTORY_LIST_FIELDS: (keyof LobbiesRecord)[] = [
 ];
 
 /**
- * @todo Add caching layer
- * @todo Add logging
- * @todo Remove the user relation and just store the matches. We can retrieve the matches for the user via the steamIds in the app context.
- * Since the players are stored with their steamIds, we can filter the matches for the current user easily.
+ * Match (lobby) repository.
  */
 export class Matches {
 	/**
-	 * Retrieves a paginated list of lobbies.
-	 *
-	 * @param options Configuration options for the request
+	 * Retrieves a paginated list of matches.
 	 */
 	async getPaginated(
 		page = 1,
@@ -85,7 +81,9 @@ export class Matches {
 			requestOptions.expand = expand;
 		}
 
-		const response = await pocketbase.collection('lobbies').getList<Match>(page, perPage, requestOptions);
+		const response = await pocketbase
+			.collection('lobbies')
+			.getList<Match>(page, perPage, requestOptions);
 
 		return {
 			...response,
@@ -93,6 +91,7 @@ export class Matches {
 		};
 	}
 
+	/** Lightweight list used by the history page. */
 	getHistoryList(page = 1, perPage = 50, filter = '') {
 		return this.getPaginated(page, perPage, {
 			filter,
@@ -102,11 +101,7 @@ export class Matches {
 		});
 	}
 
-	/**
-	 * Retrieves a full list of lobbies based on the provided options.
-	 *
-	 * @param options Configuration options for the request
-	 */
+	/** Retrieves a full list of matches. */
 	async getList(options: RecordFullListOptions): Promise<MatchExpanded[]> {
 		const response = await pocketbase.collection('lobbies').getFullList<Match>({
 			...options,
@@ -126,55 +121,41 @@ export class Matches {
 		return response.map(exp) as MatchExpanded[];
 	}
 
-	/**
-	 * Retrieves a single lobby by its ID.
-	 *
-	 * @param id The ID of the lobby
-	 */
+	/** Retrieves a single match by its record ID. */
 	async getById(id: string): Promise<MatchExpanded> {
 		const record = await pocketbase.collection('lobbies').getOne<Match>(id, {
 			fetch,
 			expand: DEFAULT_EXPAND
 		});
+
 		return exp(record) as MatchExpanded;
 	}
 
-	/**
-	 * Retrieves a single lobby by its session ID.
-	 *
-	 * @param sessionId The session ID of the lobby
-	 */
+	/** Retrieves a single match by its game session ID. */
 	async getBySessionId(sessionId: number): Promise<MatchExpanded | null> {
 		const records = await pocketbase.collection('lobbies').getList<Match>(1, 1, {
 			filter: `sessionId=${sessionId}`,
 			expand: DEFAULT_EXPAND,
 			fetch
 		});
+
 		return records.items.length > 0 ? (exp(records.items[0]) as MatchExpanded) : null;
 	}
 
-	/**
-	 * Creates a new lobby record.
-	 *
-	 * @param data The data to create the lobby with
-	 */
+	/** Creates a match owned by the authenticated user. */
 	async create(data: Omit<Create<'lobbies'>, 'user'>): Promise<MatchExpanded> {
-		const newData = {
-			user: app.pocketbase.authStore.record!.id,
-			...data
-		};
-		return await pocketbase.collection('lobbies').create(newData, {
-			expand: DEFAULT_EXPAND,
-			fetch
-		});
+		return await pocketbase.collection('lobbies').create(
+			{
+				user: pocketbase.authStore.record?.id ?? account.userId,
+				...data
+			},
+			{
+				expand: DEFAULT_EXPAND,
+				fetch
+			}
+		);
 	}
 
-	/**
-	 * Updates an existing lobby record.
-	 *
-	 * @param id The ID of the lobby to update
-	 * @param data The data to update the lobby with
-	 */
 	async update(id: string, data: Update<'lobbies'>): Promise<MatchExpanded> {
 		return await pocketbase.collection('lobbies').update(id, data, {
 			expand: DEFAULT_EXPAND,
@@ -182,21 +163,11 @@ export class Matches {
 		});
 	}
 
-	/**
-	 * Deletes a lobby record.
-	 *
-	 * @param id The ID of the lobby to delete
-	 */
 	async delete(id: string): Promise<boolean> {
 		return await pocketbase.collection('lobbies').delete(id, { fetch });
 	}
 
-	/**
-	 * Checks if a lobby with the given session ID and user exists.
-	 *
-	 * @param sessionId The session ID to check
-	 * @returns {Promise<boolean>} True if the lobby exists, false otherwise
-	 */
+	/** Whether a match with the given session ID already exists. */
 	async exists(sessionId: number): Promise<boolean> {
 		return pocketbase
 			.collection('lobbies')
@@ -205,12 +176,27 @@ export class Matches {
 			.catch(() => false);
 	}
 
-	/**
-	 * Retrieves match aggregation data.
-	 *
-	 * @param type The type of aggregation ('user' or 'community')
-	 * @param userId The user ID for 'user' type aggregation
-	 */
+	/** Subscribes to realtime updates of a single match record. */
+	subscribe(
+		id: string,
+		callback: (match: MatchExpanded) => void
+	): Promise<UnsubscribeFunc> {
+		return pocketbase.collection('lobbies').subscribe(
+			id,
+			(event) => {
+				if (event.action === 'update') {
+					this.getById(event.record.id)
+						.then(callback)
+						.catch((error) => {
+							console.error('[MATCHES]: failed to fetch updated match:', error);
+						});
+				}
+			},
+			{ fetch }
+		);
+	}
+
+	/** Retrieves match aggregation data (filters for the history page). */
 	async getMatchAggregation(
 		type: 'user' | 'community',
 		userId?: string
@@ -220,19 +206,20 @@ export class Matches {
 	> {
 		try {
 			if (type === 'user') {
-				return pocketbase
+				return await pocketbase
 					.collection<
 						LobbyAggregationResponse<string, string[], AggregationPlayer[]>
 					>('lobby_aggregation')
-					.getFirstListItem('user="' + userId + '"', { fetch });
+					.getFirstListItem(`user="${userId}"`, { fetch });
 			}
 
-			return pocketbase
+			return await pocketbase
 				.collection<
 					LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
 				>('lobby_aggregation_community')
 				.getFirstListItem('', { fetch });
-		} catch (error) {
+		} catch {
+			// No aggregation yet (new user / empty community): empty fallback.
 			if (type === 'user') {
 				return {
 					id: '',
@@ -241,17 +228,17 @@ export class Matches {
 					maps: [],
 					players: [],
 					users: []
-				};
-			} else {
-				return {
-					id: '',
-					collectionId: '',
-					collectionName: Collections.LobbyAggregationCommunity,
-					maps: [],
-					players: [],
-					users: []
-				};
+				} as unknown as LobbyAggregationResponse<string, string[], AggregationPlayer[]>;
 			}
+
+			return {
+				id: '',
+				collectionId: '',
+				collectionName: Collections.LobbyAggregationCommunity,
+				maps: [],
+				players: [],
+				users: []
+			} as unknown as LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>;
 		}
 	}
 }

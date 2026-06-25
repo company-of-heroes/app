@@ -1,6 +1,6 @@
 {
 	"name": "@company-of-heroes/app",
-	"version": "0.43.4",
+	"version": "0.50.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -9,6 +9,8 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"tauri": "tauri",
 		"tauri:build:linux": "tauri build --target x86_64-unknown-linux-gnu",
 		"tauri:build:macos": "tauri build --target x86_64-apple-darwin",
@@ -103,12 +105,14 @@
 		"eslint": "^9.39.4",
 		"eslint-plugin-svelte": "^3.17.1",
 		"globals": "^16.5.0",
+		"happy-dom": "^18.0.1",
 		"svelte": "^5.55.9",
 		"svelte-check": "^4.4.8",
 		"tailwindcss": "^4.3.0",
 		"typescript": "~5.6.3",
 		"typescript-eslint": "^8.59.4",
 		"vite": "^8.0.14",
-		"vite-plugin-base64": "^0.2.0"
+		"vite-plugin-base64": "^0.2.0",
+		"vitest": "^3.2.6"
 	}
 }

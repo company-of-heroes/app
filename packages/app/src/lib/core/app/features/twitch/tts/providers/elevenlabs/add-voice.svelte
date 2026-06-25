@@ -122,7 +122,7 @@
 
 				voiceFiles = await Promise.all(files.map(async (file) => await readFile(file))).then(
 					(data) => {
-						return data.map((d: Uint8Array<ArrayBuffer>, index: number) => {
+						return data.map((d: Uint8Array, index: number) => {
 							const blob = new Blob([d], { type: 'audio/mpeg' });
 							return new File([blob], `voice-${index}.mp3`);
 						});

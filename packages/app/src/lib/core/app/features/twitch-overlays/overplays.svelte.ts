@@ -2,10 +2,16 @@ import { watch } from 'runed';
 import { Feature } from '../feature.svelte';
 import type { Overlay } from './overlays/overlay.svelte';
 
+/**
+ * Registry for Twitch stream overlays. Each overlay registers itself with the
+ * local relay server so the overlays web app can render it.
+ */
 export class TwitchOverlays extends Feature {
-	name = 'overlays';
+	name = 'twitch-overlays';
 
 	overlays: Overlay[] = $state([]);
+
+	#disposeWatchers: (() => void) | null = null;
 
 	registerOverlay(overlay: Overlay) {
 		if (this.overlays.find((o) => o.name === overlay.name)) {
@@ -16,15 +22,20 @@ export class TwitchOverlays extends Feature {
 	}
 
 	async enable() {
-		watch(
-			() => this.overlays,
-			(overlays) => {
-				overlays.forEach((overlay) => overlay.register());
-			}
-		);
+		this.#disposeWatchers = $effect.root(() => {
+			watch(
+				() => this.overlays,
+				(overlays) => {
+					overlays.forEach((overlay) => overlay.register());
+				}
+			);
+		});
 	}
 
-	async disable() {}
+	async disable() {
+		this.#disposeWatchers?.();
+		this.#disposeWatchers = null;
+	}
 
 	defaultSettings() {
 		return { enabled: true };

@@ -1,4 +1,4 @@
-import type { Match } from '$core/app/context/lobby.svelte';
+import type { Match } from '$core/game/lobby';
 
 export const LOBBY_4V4 = {
 	sessionId: 143239320,

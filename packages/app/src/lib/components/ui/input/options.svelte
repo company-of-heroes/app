@@ -2,7 +2,7 @@
 	import TrahsIcon from 'phosphor-svelte/lib/Trash';
 	import EditIcon from 'phosphor-svelte/lib/PencilSimple';
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRight';
-	import { dialog } from '$lib/components/ui/dialog/dialog.svelte';
+	import { dialog } from '$lib/components/ui/dialog';
 	import { Label } from '../label';
 	import Input from './input.svelte';
 	import Button from '../button/button.svelte';

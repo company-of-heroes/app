@@ -37,6 +37,8 @@ export class StreamElementsProvider extends TTSProvider {
 				voiceId: voice.id,
 				name: voice.name
 			}));
+
+		this.applyVoiceAliases();
 	}
 
 	async synthesize(message: string, voiceId?: string) {

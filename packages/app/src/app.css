@@ -123,3 +123,19 @@ h6 {
 ::-webkit-scrollbar-thumb:hover {
 	background: #555;
 }
+
+/*
+ * Selection picker is portaled to body. bits-ui sets pointer-events: auto on both
+ * dialog overlay and content (content is w-screen and covers the picker area).
+ */
+[data-selection-picker] {
+	z-index: 9999;
+	pointer-events: auto;
+}
+
+html[data-selection-picker-open] [data-dialog-overlay],
+html[data-selection-picker-open] [data-dialog-content],
+:root:has([data-selection-picker]) [data-dialog-overlay],
+:root:has([data-selection-picker]) [data-dialog-content] {
+	pointer-events: none !important;
+}

@@ -1,5 +1,7 @@
 import type { MatchExpanded } from '$core/app/database/matches';
-import { app, type Match } from '$core/app/context';
+import type { Match } from '$core/game/lobby';
+import { app } from '$core/app/context';
+import { account } from '$core/account';
 import { Feature } from '../feature.svelte';
 import { relic } from '$lib/relic';
 import { join } from '@tauri-apps/api/path';
@@ -8,84 +10,181 @@ import { parseReplay } from '@fknoobs/replay-parser';
 import { download } from '@tauri-apps/plugin-upload';
 import { Matches } from './matches.svelte';
 
-export class History extends Feature {
-	name = 'History';
+const POLL_INITIAL_MS = 10_000;
+const POLL_MAX_MS = 60_000;
 
-	trackResultsInterval: ReturnType<typeof setInterval> | null = null;
+/**
+ * Saves finished matches (with replay) and fills in their results from the
+ * Relic API.
+ *
+ * Result polling is on-demand: it only runs while matches with
+ * `needsResult=true` exist and backs off when results take a while, instead
+ * of polling unconditionally forever.
+ */
+export class History extends Feature {
+	name = 'history';
 
 	matches!: Matches;
 
+	#pollTimer: ReturnType<typeof setTimeout> | null = null;
+	#pollDelay = POLL_INITIAL_MS;
+	#unsubscribers: (() => void)[] = [];
+	#disposeMatches: (() => void) | null = null;
+
 	enable() {
-		app.on('lobby.destroyed', ({ match }) => this.saveLobbyResult(match));
+		// Matches sets up reactive watchers/resources in its constructor, so it
+		// must be created inside an effect root (enable() runs outside one).
+		this.#disposeMatches?.();
+		this.#disposeMatches = $effect.root(() => {
+			this.matches = new Matches();
+		});
 
-		if (this.trackResultsInterval) {
-			clearInterval(this.trackResultsInterval);
-		}
+		this.#unsubscribers.push(
+			app.on('lobby.destroyed', ({ match, replay }) => {
+				void this.saveLobbyResult(match, replay?.file ?? null);
+			}),
+			app.on('game.login', () => {
+				// Catch up on pending results as soon as we know the player.
+				this.#schedulePoll(0);
+			})
+		);
 
-		this.trackResultsInterval = setInterval(() => this.getMatchHistory(), 5000);
-		this.matches = new Matches();
+		this.#schedulePoll(0);
 	}
 
-	async saveLobbyResult(lobby: Match) {
+	disable() {
+		this.#stopPolling();
+
+		for (const unsubscribe of this.#unsubscribers) {
+			unsubscribe();
+		}
+
+		this.#unsubscribers = [];
+
+		this.#disposeMatches?.();
+		this.#disposeMatches = null;
+	}
+
+	/** Persists a finished lobby as a match (with replay when available). */
+	async saveLobbyResult(lobby: Match, replayFile: File | null = null): Promise<void> {
 		if (!lobby.sessionId || !app.isReady) {
 			return;
 		}
 
-		app.database.matches.exists(lobby.sessionId).then(async (exists) => {
-			if (exists) {
+		try {
+			if (await app.database.matches.exists(lobby.sessionId)) {
 				return;
 			}
-
-			let { file } = await this.getLastMatchReplay();
 
 			const match = await app.database.matches.create({
 				isRanked: lobby.isRanked,
 				title: lobby.type,
 				map: lobby.map || 'Unknown',
-				sessionId: lobby.sessionId!,
+				sessionId: lobby.sessionId,
 				needsResult: true,
 				players: lobby.players,
-				replay: file
+				replay: replayFile ?? undefined
 			});
-            app.emit('lobby.saved', match);
-		});
+
+			app.emit('lobby.saved', match);
+			this.#schedulePoll(POLL_INITIAL_MS);
+		} catch (error) {
+			console.error('[HISTORY]: failed to save match:', error);
+		}
 	}
 
-	async getMatchHistory() {
-		if (!app.game.profile?.relic.profile_id) {
-			return;
+	#schedulePoll(delay: number): void {
+		if (this.#pollTimer) {
+			clearTimeout(this.#pollTimer);
 		}
 
-		const matchesNeedingResults = await app.database.matches.getPaginated(1, 100, {
-			filter: `needsResult=true && user = "${app.features.auth.userId}"`
+		this.#pollDelay = delay > 0 ? delay : POLL_INITIAL_MS;
+
+		this.#pollTimer = setTimeout(() => void this.#poll(), delay);
+	}
+
+	#stopPolling(): void {
+		if (this.#pollTimer) {
+			clearTimeout(this.#pollTimer);
+			this.#pollTimer = null;
+		}
+
+		this.#pollDelay = POLL_INITIAL_MS;
+	}
+
+	async #poll(): Promise<void> {
+		this.#pollTimer = null;
+
+		try {
+			const pending = await this.#fillPendingResults();
+
+			if (pending === 0) {
+				// Nothing to do: stay idle until the next match is saved.
+				this.#stopPolling();
+				return;
+			}
+
+			// Results pending: retry with backoff.
+			this.#schedulePoll(Math.min(this.#pollDelay * 2, POLL_MAX_MS));
+		} catch (error) {
+			console.warn('[HISTORY]: result poll failed:', error);
+			this.#schedulePoll(Math.min(this.#pollDelay * 2, POLL_MAX_MS));
+		}
+	}
+
+	/**
+	 * Fetches results for matches that still need one.
+	 * Returns the number of matches still pending afterwards.
+	 */
+	async #fillPendingResults(): Promise<number> {
+		const profileId = app.game.profile?.relic.profile_id;
+
+		if (!profileId) {
+			return 0;
+		}
+
+		const needingResults = await app.database.matches.getPaginated(1, 100, {
+			filter: `needsResult=true && user = "${account.userId}"`,
+			expand: false
 		});
 
-		if (matchesNeedingResults.items.length === 0) {
-			return;
+		if (needingResults.items.length === 0) {
+			return 0;
 		}
 
-		const matches = await relic.getRecentMatchHistoryForProfile(app.game.profile.relic.profile_id);
+		const recentMatches = await relic.getRecentMatchHistoryForProfile(profileId);
+		let pending = needingResults.items.length;
 
-		for (const lobby of matchesNeedingResults.items) {
-			const match = matches.find((m) => m.id === lobby.sessionId);
+		for (const item of needingResults.items) {
+			const result = recentMatches.find((m) => m.id === item.sessionId);
 
-			if (match) {
-				app.database.matches.exists(lobby.sessionId).then((exists) => {
-					if (!exists) {
-						return;
-					}
+			if (!result) {
+				continue;
+			}
 
-					app.database.matches.update(lobby.id, {
-						needsResult: false,
-						result: match
-					});
+			try {
+				await app.database.matches.update(item.id, {
+					needsResult: false,
+					result
 				});
+
+				pending--;
+			} catch (error) {
+				console.warn('[HISTORY]: failed to store result for match', item.id, error);
 			}
 		}
+
+		return pending;
 	}
 
+	/** Reads the replay of the last finished match from the playback folder. */
 	async getLastMatchReplay() {
 		const path = await join(await app.paths.cohPlaybackDir(), 'temp.rec');
+
+		if (!(await exists(path))) {
+			return null;
+		}
+
 		const fileData = await readFile(path);
 		const replay = parseReplay(new Uint8Array(fileData));
 

@@ -3,18 +3,19 @@
 	import * as Player from '$lib/components/player';
 	import * as Table from '$lib/components/ui/table';
 	import * as Match from '$lib/components/match';
+	import * as Comments from '$lib/components/comments';
 	import { scale } from 'svelte/transition';
+	import { onDestroy } from 'svelte';
 	import { page } from '$app/state';
 	import { app } from '$core/app/context';
 	import { Button, ButtonBack } from '$lib/components/ui/button';
 	import { H } from '$lib/components/ui/h';
 	import { cn } from '$lib/utils';
 	import { getLeaderboardStatsForPlayerByMatchType } from '$lib/utils/game';
-	import { resource, watch } from 'runed';
+	import { resource } from 'runed';
 	import { tooltip } from '$lib/attachments';
 	import { sortBy } from 'lodash-es';
 	import { bounceInOut } from 'svelte/easing';
-	import { fetch } from '@tauri-apps/plugin-http';
 	import dayjs from '$lib/dayjs';
 	import HourGlass from 'phosphor-svelte/lib/Hourglass';
 	import Checks from 'phosphor-svelte/lib/Checks';
@@ -59,24 +60,13 @@
 		return diff.format('m [mins] s [secs]');
 	});
 
-	app.pocketbase.collection('lobbies').subscribe(
-		page.params.id!,
-		(e) => {
-			if (e.action === 'update') {
-				console.log(e.record.id, match.current?.id);
-				app.database.matches
-					.getById(e.record.id)
-					.then((updatedMatch) => {
-						match.mutate(updatedMatch);
-					})
-					.catch((err) => {
-						console.error('Failed to fetch updated match data:', err);
-						app.toast.error('Failed to update match data. Please refresh the page.');
-					});
-			}
-		},
-		{ fetch }
-	);
+	const subscription = app.database.matches.subscribe(page.params.id!, (updatedMatch) => {
+		match.mutate(updatedMatch);
+	});
+
+	onDestroy(() => {
+		subscription.then((unsubscribe) => unsubscribe()).catch(() => undefined);
+	});
 </script>
 
 <ButtonBack>Go back</ButtonBack>
@@ -213,6 +203,16 @@
 					</Table.TR>
 				{/each}
 			</Table.Table>
+			<Comments.Root matchId={match.current.id} class="mt-10">
+				<div class="mb-4 flex items-center gap-2">
+					<H level={3}>Comments</H>
+					<span class="text-secondary-500 text-lg">
+						(<Comments.Count />)
+					</span>
+				</div>
+				<Comments.Editor class="mb-6" />
+				<Comments.List />
+			</Comments.Root>
 		</div>
 	</Match.Root>
 {/if}

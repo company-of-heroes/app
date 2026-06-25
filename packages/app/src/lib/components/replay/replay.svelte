@@ -3,7 +3,7 @@
 	import { createReplay } from '.';
 
 	type Props = {
-		file: Uint8Array<ArrayBuffer>;
+		file: Uint8Array;
 	} & HTMLAttributes<HTMLDivElement>;
 
 	const { file, children, ...restProps }: Props = $props();

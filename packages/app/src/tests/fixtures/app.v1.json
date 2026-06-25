@@ -1,0 +1,57 @@
+{
+	"settings": {
+		"autostart": true,
+		"isStreamer": false,
+		"companyOfHeroesConfigPath": "C:\\Users\\test\\Documents\\My Games\\Company of Heroes Relaunch\\warnings.log",
+		"companyOfHeroesInstallationPath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Company of Heroes Relaunch"
+	},
+	"feature.auth": {
+		"userId": "abc123def456ghi",
+		"email": "11111111-2222-3333-4444-555555555555@fknoobs.com",
+		"password": "S3cretPassw0rd16",
+		"enabled": true
+	},
+	"feature.twitch": {
+		"enabled": false,
+		"accessToken": null,
+		"clientId": "kp4erttmb696osn4inqrlg6qmv5eaq"
+	},
+	"feature.text-to-speech": {
+		"enabled": false,
+		"provider": "StreamElements",
+		"announceUser": "onlyOnce",
+		"messageFormat": "{message}",
+		"voiceId": null,
+		"aliases": [],
+		"providers": {}
+	},
+	"feature.History": {
+		"enabled": true
+	},
+	"feature.overlays": {
+		"enabled": true
+	},
+	"feature.chat": {
+		"enabled": true,
+		"muted": false
+	},
+	"feature.shortcuts": {
+		"enabled": true,
+		"factions": {
+			"axis": [],
+			"axis_panzer_elite": [],
+			"allies": [],
+			"allies_commonwealth": []
+		}
+	},
+	"feature.replay-analyzer": {
+		"enabled": true,
+		"didDoInitialScan": true,
+		"ignoredFiles": ["temp.rec"]
+	},
+	"feature.updater": {
+		"enabled": true,
+		"didReadChangelog": true,
+		"version": "0.44.1"
+	}
+}

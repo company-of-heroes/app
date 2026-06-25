@@ -5,6 +5,7 @@ import { tts } from '../tts.svelte';
 export type TTSVoice = {
 	voiceId: string;
 	name: string;
+	alias?: string;
 	isDeleting?: boolean;
 };
 
@@ -63,4 +64,40 @@ export abstract class TTSProvider {
 	abstract init(): Promise<void> | void;
 
 	abstract synthesize(message: string, voiceId?: string): Promise<Blob>;
+
+	protected applyVoiceAliases() {
+		const aliases = tts.settings.providers[this.name]?.voiceAliases as
+			| Record<string, string>
+			| undefined;
+
+		if (!aliases) {
+			return;
+		}
+
+		this.voices = this.voices.map((voice) => ({
+			...voice,
+			alias: aliases[voice.voiceId]
+		}));
+	}
+
+	setVoiceAlias(voiceId: string, alias: string) {
+		const providerSettings = (tts.settings.providers[this.name] ??= {});
+		const voiceAliases = (providerSettings.voiceAliases ??= {}) as Record<string, string>;
+		const trimmedAlias = alias.trim();
+
+		if (trimmedAlias) {
+			voiceAliases[voiceId] = trimmedAlias;
+		} else {
+			delete voiceAliases[voiceId];
+		}
+
+		const voice = this.voices.find((item) => item.voiceId === voiceId);
+		if (voice) {
+			voice.alias = trimmedAlias || undefined;
+		}
+	}
+
+	getVoiceLabel(voice: TTSVoice): string {
+		return voice.alias?.trim() || voice.name;
+	}
 }

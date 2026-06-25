@@ -104,7 +104,7 @@
 	</Form.Group>
 	<Form.Group>
 		<Form.Label>Email (Emails are private and will not be shared!)</Form.Label>
-		<Input type="email" bind:value={app.features.auth.settings.email} disabled={!dev} />
+		<Input type="email" bind:value={app.account.settings.email} disabled={!dev} />
 		<Form.Description class="mt-1">
 			This email is used to sign in to your account. It is recommended to use a valid email address
 			so you can recover your account.
@@ -112,6 +112,6 @@
 	</Form.Group>
 	<Form.Group class="mt-4">
 		<Form.Label>Password</Form.Label>
-		<Input type="password" bind:value={app.features.auth.settings.password} disabled={!dev} />
+		<Input type="password" bind:value={app.account.settings.password} disabled={!dev} />
 	</Form.Group>
 </Form.Root>

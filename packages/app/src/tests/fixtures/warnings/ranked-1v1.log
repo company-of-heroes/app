@@ -1,0 +1,18 @@
+19:00:01.00 APP -- RELICCOH started
+19:00:02.10 MOD -- Loading data
+19:00:05.10 RLINK -- Found profile: /steam/76561198000000001
+19:01:59.50 RLINK -- JoinAsync: AsyncJob Complete
+19:02:00.00 RLINK -- Created Matchinfo for sessionID 987654
+19:02:11.32  AutoMatchForm - Starting game
+19:02:11.40 RLINK -- GetRequestInfoBySearchID - matchType 1
+19:02:12.00 GAME -- PopulateGameInfoInternal - Player #0, Name player one, Id 8666, Type 0, Team 0, Race 1
+19:02:12.01 GAME -- PopulateGameInfoInternal - Player #1, Name player two, Id 9777, Type 0, Team 1, Race 0
+19:02:12.10 GetMaxFrameTimeFromProfile: players=2
+19:02:12.20 RLINK -- MatchStartInfo /steam/76561198000000001 info slot =  0 info ranking =  25
+19:02:12.21 RLINK -- MatchStartInfo /steam/76561198000000002 info slot =  1 info ranking =  -1
+19:02:13.00 GAME -- *** Beginning mission 2p_semois (RGM - Multiplayer/Skirmish Game)
+19:02:14.00 GAME -- Starting mission
+19:25:33.00 GameObj::DoGameOverPopup
+19:25:35.00 RLINK -- ReportMatchResults - matchid:123, race:1, team:0, uid:0:8666, result:1:PS_WON
+19:25:40.00 APP -- Game Stop
+19:30:00.00 Application closed without errors
