@@ -146,9 +146,6 @@ importers:
       dayjs:
         specifier: ^1.11.20
         version: 1.11.20
-      dompurify:
-        specifier: ^3.4.5
-        version: 3.4.5
       emittery:
         specifier: ^1.2.1
         version: 1.2.1
@@ -203,9 +200,6 @@ importers:
       tauri-plugin-cache-api:
         specifier: ^0.1.6
         version: 0.1.6
-      tiny-markdown-editor:
-        specifier: ^0.2.28
-        version: 0.2.28
       tippy.js:
         specifier: ^6.3.7
         version: 6.3.7
@@ -2376,9 +2370,6 @@ packages:
     resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
     engines: {node: '>= 0.6'}
 
-  core-js@3.49.0:
-    resolution: {integrity: sha512-es1U2+YTtzpwkxVLwAFdSpaIMyQaq0PBgm3YD1W3Qpsn1NAmO3KSgZfu+oGSWVu6NvLHoHCV/aYcsE5wiB7ALg==}
-
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
@@ -2566,9 +2557,6 @@ packages:
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
-
-  dompurify@3.4.5:
-    resolution: {integrity: sha512-OrwIBKsdNSVEeubdJ1HBv/wNENRM9ytAVCv7YXt//A3vPdVMNuACRqK9mXCGCBW2ln7BT/A4X0jXHo2Gu89miA==}
 
   dotenv@17.4.1:
     resolution: {integrity: sha512-k8DaKGP6r1G30Lx8V4+pCsLzKr8vLmV2paqEj1Y55GdAgJuIqpRp5FfajGF8KtwMxCz9qJc6wUIJnm053d/WCw==}
@@ -3972,9 +3960,6 @@ packages:
   term-size@2.2.1:
     resolution: {integrity: sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==}
     engines: {node: '>=8'}
-
-  tiny-markdown-editor@0.2.28:
-    resolution: {integrity: sha512-nfwDL4thukEMi9rA/SLMQ69YnF0MgWrqeUjBk8covunbpZFbPYjCdh9ApzpWMBpa3jIiDpepNA+P463Myric1w==}
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
@@ -6511,8 +6496,6 @@ snapshots:
 
   cookie@0.6.0: {}
 
-  core-js@3.49.0: {}
-
   cross-spawn@7.0.6:
     dependencies:
       path-key: 3.1.1
@@ -6684,10 +6667,6 @@ snapshots:
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
-
-  dompurify@3.4.5:
-    optionalDependencies:
-      '@types/trusted-types': 2.0.7
 
   dotenv@17.4.1: {}
 
@@ -8256,10 +8235,6 @@ snapshots:
       '@tauri-apps/api': 2.11.0
 
   term-size@2.2.1: {}
-
-  tiny-markdown-editor@0.2.28:
-    dependencies:
-      core-js: 3.49.0
 
   tinybench@2.9.0: {}
 

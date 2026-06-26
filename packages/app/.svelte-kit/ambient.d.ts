@@ -49,12 +49,12 @@ declare module '$env/static/private' {
 	export const COMPUTERNAME: string;
 	export const ComSpec: string;
 	export const DriverData: string;
-	export const EFC_8092_1262719628: string;
-	export const EFC_8092_1592913036: string;
-	export const EFC_8092_2283032206: string;
-	export const EFC_8092_2775293581: string;
-	export const EFC_8092_3789132940: string;
-	export const EFC_8092_4126798990: string;
+	export const EFC_7976_1262719628: string;
+	export const EFC_7976_1592913036: string;
+	export const EFC_7976_2283032206: string;
+	export const EFC_7976_2775293581: string;
+	export const EFC_7976_3789132940: string;
+	export const EFC_7976_4126798990: string;
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
@@ -72,7 +72,6 @@ declare module '$env/static/private' {
 	export const npm_config_frozen_lockfile: string;
 	export const npm_config_globalconfig: string;
 	export const npm_config_npm_globalconfig: string;
-	export const npm_config_recursive: string;
 	export const npm_config_registry: string;
 	export const npm_config_user_agent: string;
 	export const npm_config_verify_deps_before_run: string;
@@ -107,7 +106,6 @@ declare module '$env/static/private' {
 	export const SystemRoot: string;
 	export const TAURI_CLI_VERBOSITY: string;
 	export const TAURI_ENV_ARCH: string;
-	export const TAURI_ENV_DEBUG: string;
 	export const TAURI_ENV_FAMILY: string;
 	export const TAURI_ENV_PLATFORM: string;
 	export const TAURI_ENV_PLATFORM_VERSION: string;
@@ -129,9 +127,6 @@ declare module '$env/static/private' {
 	export const VSCODE_GIT_IPC_HANDLE: string;
 	export const VSCODE_INJECTION: string;
 	export const windir: string;
-	export const WSLENV: string;
-	export const WT_PROFILE_ID: string;
-	export const WT_SESSION: string;
 }
 
 /**
@@ -230,12 +225,12 @@ declare module '$env/dynamic/private' {
 		COMPUTERNAME: string;
 		ComSpec: string;
 		DriverData: string;
-		EFC_8092_1262719628: string;
-		EFC_8092_1592913036: string;
-		EFC_8092_2283032206: string;
-		EFC_8092_2775293581: string;
-		EFC_8092_3789132940: string;
-		EFC_8092_4126798990: string;
+		EFC_7976_1262719628: string;
+		EFC_7976_1592913036: string;
+		EFC_7976_2283032206: string;
+		EFC_7976_2775293581: string;
+		EFC_7976_3789132940: string;
+		EFC_7976_4126798990: string;
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
@@ -253,7 +248,6 @@ declare module '$env/dynamic/private' {
 		npm_config_frozen_lockfile: string;
 		npm_config_globalconfig: string;
 		npm_config_npm_globalconfig: string;
-		npm_config_recursive: string;
 		npm_config_registry: string;
 		npm_config_user_agent: string;
 		npm_config_verify_deps_before_run: string;
@@ -288,7 +282,6 @@ declare module '$env/dynamic/private' {
 		SystemRoot: string;
 		TAURI_CLI_VERBOSITY: string;
 		TAURI_ENV_ARCH: string;
-		TAURI_ENV_DEBUG: string;
 		TAURI_ENV_FAMILY: string;
 		TAURI_ENV_PLATFORM: string;
 		TAURI_ENV_PLATFORM_VERSION: string;
@@ -310,9 +303,6 @@ declare module '$env/dynamic/private' {
 		VSCODE_GIT_IPC_HANDLE: string;
 		VSCODE_INJECTION: string;
 		windir: string;
-		WSLENV: string;
-		WT_PROFILE_ID: string;
-		WT_SESSION: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

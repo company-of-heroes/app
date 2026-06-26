@@ -9,6 +9,8 @@ const PROFILES = [
 	{ profile_id: 9777, name: '/steam/76561198000000002', alias: 'Opponent' }
 ];
 
+const MATCH_HISTORY = [{ id: 111 }, { id: 222 }];
+
 function makeDeps(overrides: Partial<SessionDeps> = {}): SessionDeps {
 	return {
 		getProfileBySteamId: vi.fn(async (steamId: string) =>
@@ -18,6 +20,7 @@ function makeDeps(overrides: Partial<SessionDeps> = {}): SessionDeps {
 		getProfileByIds: vi.fn(async (ids: number[]) =>
 			PROFILES.filter((p) => ids.includes(p.profile_id))
 		),
+		getRecentMatchHistoryForProfile: vi.fn(async () => MATCH_HISTORY),
 		...overrides
 	};
 }
@@ -72,6 +75,10 @@ describe('LogSession', () => {
 		// Profiles resolved and attached
 		expect(startedLobby!.players[0].profile?.alias).toBe('LocalHero');
 		expect(startedLobby!.players[1].profile?.alias).toBe('Opponent');
+
+		// Match history fetched per player
+		expect(startedLobby!.players[0].matchHistory).toEqual(MATCH_HISTORY);
+		expect(startedLobby!.players[1].matchHistory).toEqual(MATCH_HISTORY);
 
 		// Steam slots assigned
 		expect(startedLobby!.players[0].steamId).toBe('76561198000000001');

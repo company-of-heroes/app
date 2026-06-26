@@ -1,4 +1,5 @@
 import Emittery from 'emittery';
+import type { TransformedMatch } from '@fknoobs/app';
 import { Lobby } from '../lobby';
 import type { TriggerEvent, TriggerEvents } from './parser';
 
@@ -21,6 +22,7 @@ export type SessionDeps = {
 	getProfileBySteamId(steamId: string): Promise<RelicProfileLike | null | undefined>;
 	getSteamProfile(steamId: string): Promise<unknown | null>;
 	getProfileByIds(ids: number[]): Promise<RelicProfileLike[]>;
+	getRecentMatchHistoryForProfile(profileId: number): Promise<TransformedMatch[]>;
 };
 
 export type SessionEvents = {
@@ -157,10 +159,36 @@ export class LogSession extends Emittery<SessionEvents> {
 			console.error('[LOG]: Failed to resolve lobby player profiles:', error);
 		}
 
+		await this.#attachMatchHistory();
+
 		this.lobby.sessionId = this.sessionId;
 		this.lobby.started = true;
 
 		await this.emitSerial('lobby.started', this.lobby);
+	}
+
+	async #attachMatchHistory(): Promise<void> {
+		if (!this.lobby) {
+			return;
+		}
+
+		await Promise.all(
+			this.lobby.players.map(async (player) => {
+				const profileId = player.profile?.profile_id;
+
+				if (!profileId) {
+					player.matchHistory = [];
+					return;
+				}
+
+				try {
+					player.matchHistory = await this.#deps.getRecentMatchHistoryForProfile(profileId);
+				} catch (error) {
+					console.error('[LOG]: Failed to fetch match history for', profileId, error);
+					player.matchHistory = [];
+				}
+			})
+		);
 	}
 
 	async #onResult({ playerId, result }: TriggerEvents['LOG:LOBBY:PLAYER:RESULT']): Promise<void> {

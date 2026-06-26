@@ -64,7 +64,7 @@
 								class={cn(
 									'bg-secondary-950/40 border-secondary-900 rounded-lg border',
 									'grid grid-cols-[175px_auto] overflow-clip',
-									player.playerId === match.me.playerId && 'border-blue-500'
+									player.playerId === match.me?.playerId && 'border-blue-500'
 								)}
 							>
 								<Player.Avatar />

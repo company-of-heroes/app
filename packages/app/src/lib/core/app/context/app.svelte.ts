@@ -123,7 +123,9 @@ export class AppContext extends Emittery<AppEvents> {
 		this.gameLog = new GameLogService({
 			getProfileBySteamId: (steamId) => relic.getProfileBySteamId(steamId),
 			getSteamProfile: (steamId) => steam.getUserProfile(steamId.toString()),
-			getProfileByIds: (ids) => relic.getProfileByIds(ids)
+			getProfileByIds: (ids) => relic.getProfileByIds(ids),
+			getRecentMatchHistoryForProfile: (profileId) =>
+				relic.getRecentMatchHistoryForProfile(profileId)
 		});
 	}
 
@@ -216,14 +218,14 @@ export class AppContext extends Emittery<AppEvents> {
 			);
 
 			// Dev: simulate lobby state changes.
-			if (dev) {
-				setTimeout(() => {
-					this.lobby = RANKED_2V2 as unknown as Match;
-				}, 1000);
-				setTimeout(() => {
-					this.lobby = LOBBY_4V4 as unknown as Match;
-				}, 5000);
-			}
+			// if (dev) {
+			// 	setTimeout(() => {
+			// 		this.lobby = RANKED_2V2 as unknown as Match;
+			// 	}, 1000);
+			// 	setTimeout(() => {
+			// 		this.lobby = LOBBY_4V4 as unknown as Match;
+			// 	}, 5000);
+			// }
 		});
 
 		this.gameLog.on('ready', () => {
@@ -324,6 +326,7 @@ export class AppContext extends Emittery<AppEvents> {
 		}
 
 		this.lobby = lobby.toJSON();
+		console.log('lobby started', lobby.toJSON());
 
 		this.emit('lobby.started', lobby.toJSON());
 		this.socket.publish('game.lobby.started', lobby.toJSON());

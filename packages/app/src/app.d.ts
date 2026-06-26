@@ -113,6 +113,7 @@ declare module '@fknoobs/app' {
 		slot?: number;
 		steamId?: string;
 		profile?: RelicProfile; // Computers dont have profiles
+		matchHistory?: TransformedMatch[];
 	};
 
 	interface MatchHistoryPlayer {

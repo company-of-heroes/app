@@ -931,202 +931,6 @@ export interface ChatMessages {
     updated: string
 }
 
-export interface Comments {
-    /**
-     * |      |        |
-     * | ---- | ------ |
-     * | type | `text` |
-     * | min  | `1`    |
-     * | min  | `100`  |
-     */
-    collectionId: 'pbc_533777971'
-    /**
-     * |               |            |
-     * | ------------- | ---------- |
-     * | type          | `text`     |
-     * | min           | `1`        |
-     * | min           | `255`      |
-     * | current value | `comments` |
-     */
-    collectionName: 'comments' | (string & {})
-    /**
-     * |                     |                |
-     * | ------------------- | -------------- |
-     * | type                | `text`         |
-     * | hidden              | `false`        |
-     * | required            | `true`         |
-     * | min                 | `15`           |
-     * | max                 | `15`           |
-     * | pattern             | `^[a-z0-9]+$`  |
-     * | autogeneratePattern | `[a-z0-9]{15}` |
-     */
-    id: string
-    /**
-     * |          |         |
-     * | -------- | ------- |
-     * | type     | `text`  |
-     * | hidden   | `false` |
-     * | required | `true`  |
-     * | max      | `5000`  |
-     */
-    text: string
-    /**
-     * |                |                    |
-     * | -------------- | ------------------ |
-     * | type           | `relation(single)` |
-     * | hidden         | `false`            |
-     * | required       | `true`             |
-     * | collectionId   | `_pb_users_auth_`  |
-     * | collectionName | `users`            |
-     * | cascadeDelete  | `false`            |
-     */
-    sender: string
-    /**
-     * |        |         |
-     * | ------ | ------- |
-     * | type   | `bool`  |
-     * | hidden | `false` |
-     */
-    isDeleted: boolean
-    /**
-     * |                |                       |
-     * | -------------- | --------------------- |
-     * | type           | `relation (multiple)` |
-     * | hidden         | `false`               |
-     * | required       | `false`               |
-     * | collectionId   | `_pb_users_auth_`     |
-     * | collectionName | `users`               |
-     * | cascadeDelete  | `false`               |
-     * | maxSelect      | `999`                 |
-     */
-    likes: string[]
-    /**
-     * |                |                       |
-     * | -------------- | --------------------- |
-     * | type           | `relation (multiple)` |
-     * | hidden         | `false`               |
-     * | required       | `false`               |
-     * | collectionId   | `_pb_users_auth_`     |
-     * | collectionName | `users`               |
-     * | cascadeDelete  | `false`               |
-     * | maxSelect      | `999`                 |
-     */
-    dislikes: string[]
-    /**
-     * |                |                       |
-     * | -------------- | --------------------- |
-     * | type           | `relation (multiple)` |
-     * | hidden         | `false`               |
-     * | required       | `false`               |
-     * | collectionId   | `_pb_users_auth_`     |
-     * | collectionName | `users`               |
-     * | cascadeDelete  | `false`               |
-     * | maxSelect      | `999`                 |
-     */
-    mentions: string[]
-    /**
-     * |                |                    |
-     * | -------------- | ------------------ |
-     * | type           | `relation(single)` |
-     * | hidden         | `false`            |
-     * | required       | `false`            |
-     * | collectionId   | `pbc_533777971`    |
-     * | collectionName | `comments`         |
-     * | cascadeDelete  | `false`            |
-     */
-    parent: string
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `false`    |
-     */
-    created: string
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `true`     |
-     */
-    updated: string
-}
-
-export interface LobbyComments {
-    /**
-     * |      |        |
-     * | ---- | ------ |
-     * | type | `text` |
-     * | min  | `1`    |
-     * | min  | `100`  |
-     */
-    collectionId: 'pbc_673294823'
-    /**
-     * |               |                  |
-     * | ------------- | ---------------- |
-     * | type          | `text`           |
-     * | min           | `1`              |
-     * | min           | `255`            |
-     * | current value | `lobby_comments` |
-     */
-    collectionName: 'lobby_comments' | (string & {})
-    /**
-     * |                     |                |
-     * | ------------------- | -------------- |
-     * | type                | `text`         |
-     * | hidden              | `false`        |
-     * | required            | `true`         |
-     * | min                 | `15`           |
-     * | max                 | `15`           |
-     * | pattern             | `^[a-z0-9]+$`  |
-     * | autogeneratePattern | `[a-z0-9]{15}` |
-     */
-    id: string
-    /**
-     * |                |                    |
-     * | -------------- | ------------------ |
-     * | type           | `relation(single)` |
-     * | hidden         | `false`            |
-     * | required       | `true`             |
-     * | collectionId   | `pbc_1574334436`   |
-     * | collectionName | `lobbies`          |
-     * | cascadeDelete  | `true`             |
-     */
-    lobby: string
-    /**
-     * |                |                    |
-     * | -------------- | ------------------ |
-     * | type           | `relation(single)` |
-     * | hidden         | `false`            |
-     * | required       | `true`             |
-     * | collectionId   | `pbc_533777971`    |
-     * | collectionName | `comments`         |
-     * | cascadeDelete  | `true`             |
-     */
-    comment: string
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `false`    |
-     */
-    created: string
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `true`     |
-     */
-    updated: string
-}
-
 export interface LobbiesLive {
     /**
      * |      |        |
@@ -1274,10 +1078,6 @@ export type Schema = {
             // chat_via_user?: Chat[]
             // chat_rooms_via_members?: ChatRooms[]
             // chat_messages_via_sender?: ChatMessages[]
-            // comments_via_sender?: Comments[]
-            // comments_via_likes?: Comments[]
-            // comments_via_dislikes?: Comments[]
-            // comments_via_mentions?: Comments[]
             lobbies_live_via_user?: LobbiesLive
         }
     }
@@ -1285,7 +1085,6 @@ export type Schema = {
         type: Lobbies
         relations: {
             user: Users
-            // lobby_comments_via_lobby?: LobbyComments[]
         }
     }
     replays: {
@@ -1328,25 +1127,6 @@ export type Schema = {
         relations: {
             sender: Users
             attachments?: Attachments[]
-        }
-    }
-    comments: {
-        type: Comments
-        relations: {
-            sender: Users
-            likes?: Users[]
-            dislikes?: Users[]
-            mentions?: Users[]
-            parent?: Comments
-            // comments_via_parent?: Comments[]
-            // lobby_comments_via_comment?: LobbyComments[]
-        }
-    }
-    lobby_comments: {
-        type: LobbyComments
-        relations: {
-            lobby: Lobbies
-            comment: Comments
         }
     }
     lobbies_live: {

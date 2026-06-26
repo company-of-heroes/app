@@ -19,7 +19,7 @@
 	<List.Value class="flex items-center gap-2">
 		{#each sortBy(lobby.players, 'team') as player}
 			<Player.Root {player}>
-				<Player.Faction class={cn(player.playerId === lobby.me.playerId && 'ring-blue-500')} />
+				<Player.Faction class={cn(player.playerId === lobby.me?.playerId && 'ring-blue-500')} />
 			</Player.Root>
 		{/each}
 	</List.Value>

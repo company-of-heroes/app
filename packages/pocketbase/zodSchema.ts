@@ -130,31 +130,6 @@ export const chatMessagesSchema = z.object({
     updated: z.string().regex(DATETIME_REGEX).optional(),
 })
 
-export const commentsSchema = z.object({
-    collectionId: z.literal('pbc_533777971').optional(),
-    collectionName: z.string().min(1).max(255).optional(),
-    id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
-    text: z.string().min(1).max(5000),
-    sender: z.string().regex(/^[a-z0-9]+$/).length(15),
-    isDeleted: z.boolean().optional(),
-    likes: z.string().regex(/^[a-z0-9]+$/).length(15).array().max(999).optional(),
-    dislikes: z.string().regex(/^[a-z0-9]+$/).length(15).array().max(999).optional(),
-    mentions: z.string().regex(/^[a-z0-9]+$/).length(15).array().max(999).optional(),
-    parent: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
-    created: z.string().regex(DATETIME_REGEX).optional(),
-    updated: z.string().regex(DATETIME_REGEX).optional(),
-})
-
-export const lobbyCommentsSchema = z.object({
-    collectionId: z.literal('pbc_673294823').optional(),
-    collectionName: z.string().min(1).max(255).optional(),
-    id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
-    lobby: z.string().regex(/^[a-z0-9]+$/).length(15),
-    comment: z.string().regex(/^[a-z0-9]+$/).length(15),
-    created: z.string().regex(DATETIME_REGEX).optional(),
-    updated: z.string().regex(DATETIME_REGEX).optional(),
-})
-
 export const lobbiesLiveSchema = z.object({
     collectionId: z.literal('pbc_908767333').optional(),
     collectionName: z.string().min(1).max(255).optional(),

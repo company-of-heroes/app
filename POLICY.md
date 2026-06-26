@@ -16,7 +16,7 @@ This Privacy Policy explains how **FKNOOBS App** (“App”, “we”, “us”)
 
 ### b) Content and files you provide
 
-- Data you create in the App (for example comments, likes, replay-related data)
+- Data you create in the App (for example replay-related data)
 - Files you explicitly select or upload (for example logs or images)
 
 ### c) Technical and usage data

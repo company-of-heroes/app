@@ -3,7 +3,6 @@
 	import * as Player from '$lib/components/player';
 	import * as Table from '$lib/components/ui/table';
 	import * as Match from '$lib/components/match';
-	import * as Comments from '$lib/components/comments';
 	import { scale } from 'svelte/transition';
 	import { onDestroy } from 'svelte';
 	import { page } from '$app/state';
@@ -203,16 +202,6 @@
 					</Table.TR>
 				{/each}
 			</Table.Table>
-			<Comments.Root matchId={match.current.id} class="mt-10">
-				<div class="mb-4 flex items-center gap-2">
-					<H level={3}>Comments</H>
-					<span class="text-secondary-500 text-lg">
-						(<Comments.Count />)
-					</span>
-				</div>
-				<Comments.Editor class="mb-6" />
-				<Comments.List />
-			</Comments.Root>
 		</div>
 	</Match.Root>
 {/if}

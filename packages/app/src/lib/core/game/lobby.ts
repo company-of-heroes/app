@@ -39,7 +39,7 @@ export type Match = {
 	isSkirmish: boolean;
 	type: string;
 	mapName: string;
-	me: LobbyPlayer;
+	me?: LobbyPlayer;
 };
 
 /**
@@ -142,11 +142,14 @@ export class Lobby {
 
 	/** The local player, resolved via the injected Steam ID. */
 	get me(): LobbyPlayer | undefined {
-		if (!this.players || this.players.length === 0 || !this.localSteamId) {
+		if (!this.players?.length || !this.localSteamId) {
 			return undefined;
 		}
 
-		return this.players.find((p) => p.profile?.name?.endsWith(this.localSteamId!));
+		return (
+			this.players.find((p) => p.steamId === this.localSteamId) ??
+			this.players.find((p) => p.profile?.name?.endsWith(this.localSteamId!))
+		);
 	}
 
 	addPlayer(player: LobbyPlayer) {
@@ -209,7 +212,7 @@ export class Lobby {
 			isSkirmish: this.isSkirmish,
 			type: this.type,
 			mapName: this.mapName,
-			me: this.me!
+			me: this.me
 		};
 	}
 }
