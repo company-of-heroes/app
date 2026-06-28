@@ -49,6 +49,30 @@ export class Boot {
 	#settingsLoaded = false;
 	#startPromise: Promise<boolean> | null = null;
 
+	/** True once the splashscreen logo intro animation has finished. */
+	splashIntroComplete = $state(false);
+
+	/** Incremented to restart the splash intro (e.g. after retry). */
+	splashSession = $state(0);
+
+	resetSplashIntro(): void {
+		this.splashIntroComplete = false;
+		this.splashSession += 1;
+	}
+
+	markSplashIntroComplete(): void {
+		this.splashIntroComplete = true;
+	}
+
+	/** Called by the splashscreen once boot is ready and the intro animation finished. */
+	async dismissSplash(): Promise<void> {
+		if (this.phase !== 'ready') {
+			return;
+		}
+
+		await goto('/');
+	}
+
 	get phaseLabel(): string {
 		return PHASE_LABELS[this.phase];
 	}
@@ -59,10 +83,11 @@ export class Boot {
 	 */
 	async advance(pathname: string): Promise<void> {
 		if (this.phase === 'ready') {
-			if (pathname === '/splashscreen' || pathname === '/setup') {
+			if (pathname === '/setup') {
 				await goto('/');
 			}
 
+			// /splashscreen dismisses itself after the intro animation finishes.
 			return;
 		}
 
@@ -96,7 +121,7 @@ export class Boot {
 
 		const ready = await this.#ensureStarted();
 
-		if (ready && (pathname === '/splashscreen' || pathname === '/setup')) {
+		if (ready && pathname === '/setup') {
 			await goto('/');
 		}
 
@@ -113,6 +138,7 @@ export class Boot {
 
 		this.needsOnboarding = false;
 		this.restoreCandidate = null;
+		this.resetSplashIntro();
 
 		await goto('/splashscreen');
 	}
@@ -122,6 +148,7 @@ export class Boot {
 		this.error = null;
 		this.phase = 'idle';
 		this.#startPromise = null;
+		this.resetSplashIntro();
 
 		await this.advance('/splashscreen');
 	}

@@ -1,1 +1,1 @@
-export { default as component } from "../../../../src/routes/(loading)/splashscreen/+page.svelte";
+export { default as component } from "../../../../src/routes/(loaded)/twitch/+page.svelte";

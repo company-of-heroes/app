@@ -23,6 +23,9 @@ export const ssr = false;
 
 let registered = false;
 
+/** Routes that render boot progress UI — must not block on boot.advance(). */
+const BOOT_UI_ROUTES = new Set(['/splashscreen', '/setup']);
+
 export const load = async ({ url }: LoadEvent) => {
 	if (!browser) {
 		return;
@@ -44,6 +47,13 @@ export const load = async ({ url }: LoadEvent) => {
 		twitchOverlays.registerOverlay(new OppBotOverlay());
 		twitchOverlays.registerOverlay(new ChatOverlay());
 		twitchOverlays.registerOverlay(new ViewerCountOverlay());
+	}
+
+	// Boot can take several seconds. On splash/setup, render the UI immediately
+	// and let boot.advance() update phase labels reactively in the background.
+	if (BOOT_UI_ROUTES.has(url.pathname)) {
+		void boot.advance(url.pathname);
+		return;
 	}
 
 	await boot.advance(url.pathname);

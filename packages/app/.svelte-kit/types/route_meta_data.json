@@ -1,4 +1,7 @@
 {
+	"/(loading)": [
+		"src/routes/+layout.ts"
+	],
 	"/(loaded)": [
 		"src/routes/+layout.ts",
 		"src/routes/+layout.ts"

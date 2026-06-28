@@ -17,6 +17,7 @@
 				"width": 1800,
 				"height": 1000,
 				"transparent": true,
+				"backgroundColor": "#3e3e3f",
 				"dragDropEnabled": false,
 				"url": "/splashscreen",
 				"titleBarStyle": "Overlay"

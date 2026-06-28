@@ -62,6 +62,6 @@ declare module "$app/types" {
 		};
 		Pathname(): "/" | "/account" | "/current-game" | "/history" | `/history/${string}` & {} | "/leaderboards" | `/leaderboards/profile/${string}` & {} | "/replays" | `/replays/${string}` & {} | "/settings" | "/setup" | "/shortcuts" | "/splashscreen" | "/twitch";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
-		Asset(): "/favicon.png" | "/fknoobs-app-banner.png" | "/screenshot-v0.35.0.png" | "/screenshot-v0.36.x.png" | "/screenshot.png" | "/svelte.svg" | "/tauri.svg" | "/vite.svg" | string & {};
+		Asset(): "/favicon.png" | "/fknoobs-app-banner.png" | "/logo-transparent-bg.png" | "/screenshot-v0.35.0.png" | "/screenshot-v0.36.x.png" | "/screenshot.png" | "/svelte.svg" | "/tauri.svg" | "/vite.svg" | string & {};
 	}
 }
