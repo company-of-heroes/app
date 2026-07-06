@@ -1,5 +1,7 @@
 ### v0.50.2
 
+> In the next release the app will be available to download from the microsoft store!
+
 - fix; change app name to be compliant with microsoft store rules
 
 ### v0.50.1
