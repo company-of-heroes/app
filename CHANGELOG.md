@@ -1,3 +1,7 @@
+### v0.50.1
+
+- fix; make it possible to remap arrow keys
+
 ### v0.50.0
 
 > This release is a full rewrite of the app's internals. The UI stays the same, the foundation is new.
