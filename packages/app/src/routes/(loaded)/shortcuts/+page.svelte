@@ -132,7 +132,8 @@
 	<div>
 		<H level="1">Keybindings</H>
 		<p class="text-secondary-400 mt-1 text-sm">
-			Configure hotkeys per faction. Triggers run in-game when Company of Heroes is focused.
+			Configure hotkeys per faction. They only work during an active match while Company of Heroes
+			is focused (not in chat). Use the faction tab that matches your army.
 		</p>
 	</div>
 	<div class="flex flex-wrap gap-1">

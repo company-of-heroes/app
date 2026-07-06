@@ -6,6 +6,7 @@ use window_vibrancy::apply_acrylic;
 
 mod coh_chat;
 mod global_shortcuts;
+mod hold_bindings;
 mod input;
 mod migrations;
 mod process_check;
@@ -51,6 +52,9 @@ pub fn run() {
             process_check::is_running,
             replay_parser::parse_replay,
             input::send_keys,
+            input::release_all_held_keys,
+            input::shortcut_modifiers_match,
+            hold_bindings::sync_hold_bindings,
             window::get_active_window_title
         ])
         .setup(|app| {

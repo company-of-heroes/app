@@ -65,6 +65,35 @@ function actionKeysForSendKeys(keys: string[]): string[] {
 		});
 }
 
+const HOLD_ACTION_KEYS = new Set([
+	'up',
+	'down',
+	'left',
+	'right',
+	'arrowup',
+	'arrowdown',
+	'arrowleft',
+	'arrowright'
+]);
+
+function isHoldAction(keys: string[]): boolean {
+	return keys.length > 0 && keys.every((key) => HOLD_ACTION_KEYS.has(key));
+}
+
+function bindingsFingerprint(settings: ShortcutSettings): string {
+	return JSON.stringify(
+		Object.fromEntries(
+			Object.entries(settings.factions).map(([faction, bindings]) => [
+				faction,
+				bindings.map((binding) => ({
+					trigger: binding.triggerKeys,
+					action: binding.actionKeys
+				}))
+			])
+		)
+	);
+}
+
 const FACTION_KEYS: FactionKey[] = ['allies', 'allies_commonwealth', 'axis', 'axis_panzer_elite'];
 
 const MODIFIER_ORDER = ['CommandOrControl', 'Shift', 'Alt', 'Super'] as const;
@@ -164,6 +193,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 	registeredTriggers = new Set<string>();
 	private registrationQueue: Promise<void> = Promise.resolve();
 	private disposeEnable?: () => void;
+	private settingsRegisterTimer?: ReturnType<typeof setTimeout>;
 
 	private runRegistration<T>(task: () => Promise<T>): Promise<T> {
 		const run = this.registrationQueue.then(task);
@@ -191,6 +221,13 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		this.safeRegisterShortcuts(app.lobby.me.race);
 	}
 
+	private scheduleRegisterShortcuts() {
+		clearTimeout(this.settingsRegisterTimer);
+		this.settingsRegisterTimer = setTimeout(() => {
+			this.maybeRegisterShortcuts();
+		}, 200);
+	}
+
 	private safeRegisterShortcuts(race: number) {
 		void this.registerShortcuts(race).catch((error) => {
 			console.error('Failed to register shortcuts', error);
@@ -204,6 +241,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 	}
 
 	disable() {
+		clearTimeout(this.settingsRegisterTimer);
 		this.disposeEnable?.();
 		this.disposeEnable = undefined;
 		return this.unregisterAllShortcuts();
@@ -251,6 +289,13 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				}
 			);
 
+			watch(
+				() => `${app.lobby?.me?.race ?? ''}:${bindingsFingerprint(this.settings)}`,
+				() => {
+					this.scheduleRegisterShortcuts();
+				}
+			);
+
 			return offLobby;
 		});
 	}
@@ -265,11 +310,22 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		const keysToSend = actionKeysForSendKeys(actionKeys);
 
 		const handler = (event: { state: string; shortcut: string }) => {
-			if (event.state !== 'Pressed' || keysToSend.length === 0) {
+			if (keysToSend.length === 0) {
 				return;
 			}
 
-			void invoke('send_keys', { keys: keysToSend }).catch((error) => {
+			void (async () => {
+				const modifiersMatch = await invoke<boolean>('shortcut_modifiers_match', { trigger });
+				if (!modifiersMatch) {
+					return;
+				}
+
+				if (event.state !== 'Pressed') {
+					return;
+				}
+
+				await invoke('send_keys', { keys: keysToSend });
+			})().catch((error) => {
 				console.error('Failed to send shortcut action keys', error);
 			});
 		};
@@ -295,6 +351,15 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		this.registeredTriggers.add(trigger);
 	}
 
+	private async syncHoldBindings(
+		bindings: { trigger: string; actionKeys: string[] }[],
+		enabled: boolean
+	) {
+		await invoke('sync_hold_bindings', { enabled, bindings }).catch((error) => {
+			console.error('Failed to sync hold bindings', error);
+		});
+	}
+
 	async registerShortcuts(race: number) {
 		if (!this.shouldRegisterShortcuts()) {
 			return;
@@ -312,6 +377,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 
 			const shortcutsToRegister = factionMap[race] || [];
 			const seenTriggers = new Set<string>();
+			const holdBindings: { trigger: string; actionKeys: string[] }[] = [];
 
 			for (const shortcut of shortcutsToRegister) {
 				const trigger = formatTrigger(shortcut.triggerKeys);
@@ -322,12 +388,21 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 
 				seenTriggers.add(trigger);
 
+				const keysToSend = actionKeysForSendKeys(shortcut.actionKeys);
+
+				if (isHoldAction(keysToSend)) {
+					holdBindings.push({ trigger, actionKeys: keysToSend });
+					continue;
+				}
+
 				try {
 					await this.registerBinding(trigger, [...shortcut.actionKeys]);
 				} catch (error) {
 					console.error('Error registering shortcut', trigger, error);
 				}
 			}
+
+			await this.syncHoldBindings(holdBindings, true);
 		});
 	}
 
@@ -393,7 +468,9 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 
 		await Promise.all([
 			unregisterAll().catch(() => undefined),
-			invoke('reset_global_shortcuts').catch(() => undefined)
+			invoke('reset_global_shortcuts').catch(() => undefined),
+			invoke('release_all_held_keys').catch(() => undefined),
+			invoke('sync_hold_bindings', { enabled: false, bindings: [] }).catch(() => undefined)
 		]);
 
 		for (const trigger of triggers) {
