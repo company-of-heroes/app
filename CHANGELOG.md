@@ -1,3 +1,7 @@
+### v0.50.2
+
+- fix; change app name to be compliant with microsoft store rules
+
 ### v0.50.1
 
 - fix; make it possible to remap arrow keys
