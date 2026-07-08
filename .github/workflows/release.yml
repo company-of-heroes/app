@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 # Prevent overlapping runs from racing on the Version Packages PR.
 concurrency: ${{ github.workflow }}-${{ github.ref }}
