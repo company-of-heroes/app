@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 # Prevent overlapping runs from racing on the Version Packages PR.
