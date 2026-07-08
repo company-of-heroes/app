@@ -266,6 +266,22 @@ fn token_to_vk(token: &str) -> Option<u32> {
         "ARROWLEFT" | "LEFT" => Some(0x25),
         "ARROWRIGHT" | "RIGHT" => Some(0x27),
         "ARROWUP" | "UP" => Some(0x26),
+        "NUMPAD0" | "NUM0" => Some(0x60),
+        "NUMPAD1" | "NUM1" => Some(0x61),
+        "NUMPAD2" | "NUM2" => Some(0x62),
+        "NUMPAD3" | "NUM3" => Some(0x63),
+        "NUMPAD4" | "NUM4" => Some(0x64),
+        "NUMPAD5" | "NUM5" => Some(0x65),
+        "NUMPAD6" | "NUM6" => Some(0x66),
+        "NUMPAD7" | "NUM7" => Some(0x67),
+        "NUMPAD8" | "NUM8" => Some(0x68),
+        "NUMPAD9" | "NUM9" => Some(0x69),
+        "NUMPADMULTIPLY" | "NUMMULTIPLY" => Some(0x6A),
+        "NUMPADADD" | "NUMADD" | "NUMPADPLUS" | "NUMPLUS" => Some(0x6B),
+        "NUMPADSUBTRACT" | "NUMSUBTRACT" => Some(0x6D),
+        "NUMPADDECIMAL" | "NUMDECIMAL" => Some(0x6E),
+        "NUMPADDIVIDE" | "NUMDIVIDE" => Some(0x6F),
+        "NUMPADENTER" | "NUMENTER" => Some(0x0D),
         "ESCAPE" | "ESC" => Some(0x1B),
         "F1" => Some(0x70),
         "F2" => Some(0x71),
@@ -299,6 +315,22 @@ fn parse_key(k: &str) -> Option<Key> {
         "right" | "arrowright" => Some(Key::RightArrow),
         "down" | "arrowdown" => Some(Key::DownArrow),
         "delete" | "del" => Some(Key::Delete),
+        "numpad0" | "num0" => Some(Key::Numpad0),
+        "numpad1" | "num1" => Some(Key::Numpad1),
+        "numpad2" | "num2" => Some(Key::Numpad2),
+        "numpad3" | "num3" => Some(Key::Numpad3),
+        "numpad4" | "num4" => Some(Key::Numpad4),
+        "numpad5" | "num5" => Some(Key::Numpad5),
+        "numpad6" | "num6" => Some(Key::Numpad6),
+        "numpad7" | "num7" => Some(Key::Numpad7),
+        "numpad8" | "num8" => Some(Key::Numpad8),
+        "numpad9" | "num9" => Some(Key::Numpad9),
+        "numpadmultiply" | "nummultiply" => Some(Key::Multiply),
+        "numpadadd" | "numadd" | "numpadplus" | "numplus" => Some(Key::Add),
+        "numpadsubtract" | "numsubtract" => Some(Key::Subtract),
+        "numpaddecimal" | "numdecimal" => Some(Key::Decimal),
+        "numpaddivide" | "numdivide" => Some(Key::Divide),
+        "numpadenter" | "numenter" => Some(Key::Return),
         "command" | "meta" | "windows" | "win" => Some(Key::Meta),
         "option" | "alt" => Some(Key::Alt),
         "control" | "ctrl" => Some(Key::Control),
@@ -340,5 +372,13 @@ mod tests {
             parse_trigger("CommandOrControl+KeyW"),
             Some((0x57, HashSet::from([TriggerModifier::Control])))
         );
+    }
+
+    #[test]
+    fn parses_numpad_trigger_and_key() {
+        assert_eq!(parse_trigger("Numpad0"), Some((0x60, HashSet::new())));
+        assert_eq!(token_to_vk("NumpadAdd"), Some(0x6B));
+        assert!(parse_key("numpad0").is_some());
+        assert!(parse_key("numpadenter").is_some());
     }
 }

@@ -525,6 +525,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 
 				if (code.startsWith('Key')) return code;
 				if (code.startsWith('Digit')) return code;
+				if (code.startsWith('Numpad')) return code;
 
 				const punctuationMap: Record<string, string> = {
 					Backquote: '`',

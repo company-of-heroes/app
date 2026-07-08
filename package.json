@@ -12,7 +12,7 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"changeset": "changeset",
-		"version-packages": "changeset version",
+		"version-packages": "node scripts/version.mjs",
 		"release": "changeset publish"
 	},
 	"license": "MIT",
