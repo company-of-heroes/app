@@ -19,7 +19,6 @@
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogo';
 	import TwitchLogoIcon from 'phosphor-svelte/lib/TwitchLogo';
 	import GithubLogoIcon from 'phosphor-svelte/lib/GithubLogo';
-	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRight';
 	import HistoryIcon from 'phosphor-svelte/lib/LineSegments';
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwise';
 	import CommandIcon from 'phosphor-svelte/lib/Command';
@@ -143,15 +142,6 @@
 							<button class="cursor-pointer" onclick={() => app.features.updater.openChangelog()}>
 								v{app.features.updater.currentVersionFormatted}
 							</button>
-							{#if app.features.updater.hasUpdate}
-								<ArrowRightIcon />
-								<button
-									class="text-primary cursor-pointer"
-									onclick={() => app.features.updater.openDialog()}
-								>
-									v{app.features.updater.latestVersionFormatted}
-								</button>
-							{/if}
 						</span>
 					</span>
 				</div>

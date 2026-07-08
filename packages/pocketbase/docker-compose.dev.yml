@@ -1,0 +1,12 @@
+services:
+  pocketbase:
+    restart: 'no'
+    volumes:
+      - ./pb_data:/pb_data
+      - ./pb_hooks:/pb_hooks
+      - ./pb_migrations:/pb_migrations
+    env_file:
+      - path: .env
+        required: false
+      - path: ../../.env
+        required: false

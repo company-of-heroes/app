@@ -1,9 +1,8 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate((app) => {
   app.delete(app.findCollectionByNameOrId("pbc_673294823"));
-  app.delete(app.findCollectionByNameOrId("pbc_533777971"));
 
-  return true;
+  return app.delete(app.findCollectionByNameOrId("pbc_533777971"));
 }, (app) => {
   const comments = new Collection({
     createRule: '@request.auth.id != ""',

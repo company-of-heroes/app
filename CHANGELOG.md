@@ -1,6 +1,7 @@
 ### v0.51.1
 
-- > If you have two apps installed after this update, just delete the old one, called Company of Heroes - Companion app
+> If you have two apps installed after this update, just delete the old one, called Company of Heroes - Companion app
+
 - fix; rename app again, since Company of Heroes is trademarked in the microsoft store
 
 ### v0.51.0

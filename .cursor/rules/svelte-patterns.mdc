@@ -1,0 +1,58 @@
+---
+description: Svelte 5 and SvelteKit patterns for this Tauri app
+alwaysApply: true
+---
+
+# Svelte 5 / SvelteKit Patterns
+
+This is a **Svelte 5 runes** project (Tauri + adapter-static). Use modern APIs only.
+
+## Reactivity
+
+- `$derived` / `$derived.by` for computed values — not `$effect` + assignment
+- `$effect` only for side effects (subscriptions, DOM, external libs); avoid updating state inside effects
+- `$state.raw` for large objects that are reassigned, not mutated (e.g. API responses)
+- Keyed `{#each}` blocks with stable unique keys — never index keys
+
+```typescript
+// ✅ computed from props
+let { type } = $props();
+let color = $derived(type === 'danger' ? 'red' : 'green');
+
+// ❌ won't update when type changes
+let color = type === 'danger' ? 'red' : 'green';
+```
+
+## Module & State Architecture
+
+- **`.svelte.ts` modules** for reactive classes and services (`updater.svelte.ts`, `app.svelte.ts`)
+- **Feature classes** extend `Feature` from `$features/feature.svelte.ts`; settings live in the central tree
+- **Scoped context** via `runed` `Context` — not module-level singletons for UI state:
+
+```typescript
+const context = new Context<Match>('<lobby />');
+export const createLobby = (match: () => Match) => context.set(match());
+export const useLobby = () => context.get();
+```
+
+- Use `watch` from `runed` for reacting to state changes with side effects (toasts, navigation)
+
+## Modern APIs (no legacy)
+
+| Use | Not |
+|-----|-----|
+| `$props()` | `export let` |
+| `onclick={...}` | `on:click={...}` |
+| `{#snippet}` / `{@render}` | `<slot>` |
+| `{@attach ...}` | `use:action` |
+| `import { page } from '$app/state'` | `$page` store |
+
+## Project Conventions
+
+- Path aliases: `$core/*`, `$features/*`, `$workers/*`
+- Tauri APIs for FS, dialogs, HTTP — use `{ fetch }` from `@tauri-apps/plugin-http` with PocketBase
+- Async expressions are enabled (`experimental.async` in `svelte.config.js`)
+
+## Before Submitting Svelte Changes
+
+Use the Svelte MCP server: `svelte-autofixer` on every `.svelte` / `.svelte.ts` edit until clean. Use `list-sections` + `get-documentation` when unsure about an API.

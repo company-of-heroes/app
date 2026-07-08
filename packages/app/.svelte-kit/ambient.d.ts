@@ -55,6 +55,7 @@ declare module '$env/static/private' {
 	export const EFC_4836_2775293581: string;
 	export const EFC_4836_3789132940: string;
 	export const EFC_4836_4126798990: string;
+	export const FORCE_COLOR: string;
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
@@ -72,6 +73,7 @@ declare module '$env/static/private' {
 	export const npm_config_frozen_lockfile: string;
 	export const npm_config_globalconfig: string;
 	export const npm_config_npm_globalconfig: string;
+	export const npm_config_recursive: string;
 	export const npm_config_registry: string;
 	export const npm_config_user_agent: string;
 	export const npm_config_verify_deps_before_run: string;
@@ -106,6 +108,7 @@ declare module '$env/static/private' {
 	export const SystemRoot: string;
 	export const TAURI_CLI_VERBOSITY: string;
 	export const TAURI_ENV_ARCH: string;
+	export const TAURI_ENV_DEBUG: string;
 	export const TAURI_ENV_FAMILY: string;
 	export const TAURI_ENV_PLATFORM: string;
 	export const TAURI_ENV_PLATFORM_VERSION: string;
@@ -231,6 +234,7 @@ declare module '$env/dynamic/private' {
 		EFC_4836_2775293581: string;
 		EFC_4836_3789132940: string;
 		EFC_4836_4126798990: string;
+		FORCE_COLOR: string;
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
@@ -248,6 +252,7 @@ declare module '$env/dynamic/private' {
 		npm_config_frozen_lockfile: string;
 		npm_config_globalconfig: string;
 		npm_config_npm_globalconfig: string;
+		npm_config_recursive: string;
 		npm_config_registry: string;
 		npm_config_user_agent: string;
 		npm_config_verify_deps_before_run: string;
@@ -282,6 +287,7 @@ declare module '$env/dynamic/private' {
 		SystemRoot: string;
 		TAURI_CLI_VERBOSITY: string;
 		TAURI_ENV_ARCH: string;
+		TAURI_ENV_DEBUG: string;
 		TAURI_ENV_FAMILY: string;
 		TAURI_ENV_PLATFORM: string;
 		TAURI_ENV_PLATFORM_VERSION: string;

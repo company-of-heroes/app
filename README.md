@@ -62,7 +62,7 @@ You can run a local PocketBase instance for development using Docker Compose.
    pnpm run pb:up
    ```
 
-   This runs a PocketBase container on `http://localhost:8090` and stores data in `./pocketbase`.
+   This runs a PocketBase container on `http://localhost:8090` and stores data in `packages/pocketbase/pb_data`.
 
    When running
 
@@ -94,7 +94,7 @@ You can run a local PocketBase instance for development using Docker Compose.
 
 Notes:
 
-- The project already ignores the `./pocketbase` data folder in `.gitignore`.
+- The project already ignores `packages/pocketbase/pb_data` in `.gitignore`.
 - The PocketBase client now reads `PUBLIC_PB_URL` and falls back to the production URL when not set.
 
 ### Maintained

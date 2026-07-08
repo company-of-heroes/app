@@ -15,7 +15,8 @@ services:
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
     env_file:
-        - ./.env
+      - path: ./.env
+        required: false
     restart: unless-stopped
 volumes:
   pocketbase_data:

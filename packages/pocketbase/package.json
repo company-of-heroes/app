@@ -4,7 +4,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"serve": "pocketbase serve",
+		"serve": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
+		"down": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
 		"typegen": "npx pocketbase-typegen --env --out ../app/src/lib/core/pocketbase/types.ts"
 	},
 	"devDependencies": {

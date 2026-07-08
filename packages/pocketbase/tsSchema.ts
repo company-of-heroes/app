@@ -625,88 +625,6 @@ export interface LobbyAggregationCommunity {
     users: any
 }
 
-export interface Chat {
-    /**
-     * |      |        |
-     * | ---- | ------ |
-     * | type | `text` |
-     * | min  | `1`    |
-     * | min  | `100`  |
-     */
-    collectionId: 'pbc_1116771610'
-    /**
-     * |               |        |
-     * | ------------- | ------ |
-     * | type          | `text` |
-     * | min           | `1`    |
-     * | min           | `255`  |
-     * | current value | `chat` |
-     */
-    collectionName: 'chat' | (string & {})
-    /**
-     * |                     |                |
-     * | ------------------- | -------------- |
-     * | type                | `text`         |
-     * | hidden              | `false`        |
-     * | required            | `true`         |
-     * | min                 | `15`           |
-     * | max                 | `15`           |
-     * | pattern             | `^[a-z0-9]+$`  |
-     * | autogeneratePattern | `[a-z0-9]{15}` |
-     */
-    id: string
-    /**
-     * |                |                    |
-     * | -------------- | ------------------ |
-     * | type           | `relation(single)` |
-     * | hidden         | `false`            |
-     * | required       | `true`             |
-     * | collectionId   | `_pb_users_auth_`  |
-     * | collectionName | `users`            |
-     * | cascadeDelete  | `false`            |
-     */
-    user: string
-    /**
-     * |          |         |
-     * | -------- | ------- |
-     * | type     | `text`  |
-     * | hidden   | `false` |
-     * | required | `false` |
-     * | max      | `500`   |
-     */
-    message: string
-    /**
-     * |                |                       |
-     * | -------------- | --------------------- |
-     * | type           | `relation (multiple)` |
-     * | hidden         | `false`               |
-     * | required       | `false`               |
-     * | collectionId   | `pbc_3073759650`      |
-     * | collectionName | `attachments`         |
-     * | cascadeDelete  | `false`               |
-     * | maxSelect      | `999`                 |
-     */
-    attachments: string[]
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `false`    |
-     */
-    created: string
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `true`     |
-     */
-    updated: string
-}
-
 export interface Attachments {
     /**
      * |      |        |
@@ -777,160 +695,6 @@ export interface Attachments {
     updated: string
 }
 
-export interface ChatRooms {
-    /**
-     * |      |        |
-     * | ---- | ------ |
-     * | type | `text` |
-     * | min  | `1`    |
-     * | min  | `100`  |
-     */
-    collectionId: 'pbc_2204944285'
-    /**
-     * |               |              |
-     * | ------------- | ------------ |
-     * | type          | `text`       |
-     * | min           | `1`          |
-     * | min           | `255`        |
-     * | current value | `chat_rooms` |
-     */
-    collectionName: 'chat_rooms' | (string & {})
-    /**
-     * |                     |                |
-     * | ------------------- | -------------- |
-     * | type                | `text`         |
-     * | hidden              | `false`        |
-     * | required            | `true`         |
-     * | min                 | `15`           |
-     * | max                 | `15`           |
-     * | pattern             | `^[a-z0-9]+$`  |
-     * | autogeneratePattern | `[a-z0-9]{15}` |
-     */
-    id: string
-    /**
-     * |                |                       |
-     * | -------------- | --------------------- |
-     * | type           | `relation (multiple)` |
-     * | hidden         | `false`               |
-     * | required       | `false`               |
-     * | collectionId   | `_pb_users_auth_`     |
-     * | collectionName | `users`               |
-     * | cascadeDelete  | `true`                |
-     * | maxSelect      | `9999`                |
-     */
-    members: string[]
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `false`    |
-     */
-    created: string
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `true`     |
-     */
-    updated: string
-}
-
-export interface ChatMessages {
-    /**
-     * |      |        |
-     * | ---- | ------ |
-     * | type | `text` |
-     * | min  | `1`    |
-     * | min  | `100`  |
-     */
-    collectionId: 'pbc_102036695'
-    /**
-     * |               |                 |
-     * | ------------- | --------------- |
-     * | type          | `text`          |
-     * | min           | `1`             |
-     * | min           | `255`           |
-     * | current value | `chat_messages` |
-     */
-    collectionName: 'chat_messages' | (string & {})
-    /**
-     * |                     |                |
-     * | ------------------- | -------------- |
-     * | type                | `text`         |
-     * | hidden              | `false`        |
-     * | required            | `true`         |
-     * | min                 | `15`           |
-     * | max                 | `15`           |
-     * | pattern             | `^[a-z0-9]+$`  |
-     * | autogeneratePattern | `[a-z0-9]{15}` |
-     */
-    id: string
-    /**
-     * |                |                    |
-     * | -------------- | ------------------ |
-     * | type           | `relation(single)` |
-     * | hidden         | `false`            |
-     * | required       | `true`             |
-     * | collectionId   | `_pb_users_auth_`  |
-     * | collectionName | `users`            |
-     * | cascadeDelete  | `false`            |
-     */
-    sender: string
-    /**
-     * |          |               |
-     * | -------- | ------------- |
-     * | type     | `text`        |
-     * | hidden   | `false`       |
-     * | required | `true`        |
-     * | max      | `5000`        |
-     * | pattern  | `^[a-z0-9]+$` |
-     */
-    chatRoom: string
-    /**
-     * |          |         |
-     * | -------- | ------- |
-     * | type     | `text`  |
-     * | hidden   | `false` |
-     * | required | `false` |
-     * | max      | `5000`  |
-     */
-    text: string
-    /**
-     * |                |                       |
-     * | -------------- | --------------------- |
-     * | type           | `relation (multiple)` |
-     * | hidden         | `false`               |
-     * | required       | `false`               |
-     * | collectionId   | `pbc_3073759650`      |
-     * | collectionName | `attachments`         |
-     * | cascadeDelete  | `false`               |
-     * | maxSelect      | `999`                 |
-     */
-    attachments: string[]
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `false`    |
-     */
-    created: string
-    /**
-     * |          |            |
-     * | -------- | ---------- |
-     * | type     | `autodate` |
-     * | hidden   | `false`    |
-     * | onCreate | `true`     |
-     * | onUpdate | `true`     |
-     */
-    updated: string
-}
-
 export interface LobbiesLive {
     /**
      * |      |        |
@@ -980,13 +744,6 @@ export interface LobbiesLive {
      */
     isRanked: boolean
     /**
-     * |        |         |
-     * | ------ | ------- |
-     * | type   | `bool`  |
-     * | hidden | `false` |
-     */
-    isSkirmish: boolean
-    /**
      * |          |          |
      * | -------- | -------- |
      * | type     | `number` |
@@ -995,15 +752,6 @@ export interface LobbiesLive {
      * | onlyInt  | `false`  |
      */
     sessionId: number
-    /**
-     * |          |         |
-     * | -------- | ------- |
-     * | type     | `text`  |
-     * | hidden   | `false` |
-     * | required | `true`  |
-     * | max      | `5000`  |
-     */
-    type: string
     /**
      * |          |         |
      * | -------- | ------- |
@@ -1022,24 +770,6 @@ export interface LobbiesLive {
      * | required | `true`  |
      */
     players: any
-    /**
-     * |          |         |
-     * | -------- | ------- |
-     * | type     | `json`  |
-     * | hidden   | `false` |
-     * | maxSize  | `0`     |
-     * | required | `true`  |
-     */
-    me: any
-    /**
-     * |          |          |
-     * | -------- | -------- |
-     * | type     | `number` |
-     * | hidden   | `false`  |
-     * | required | `false`  |
-     * | onlyInt  | `false`  |
-     */
-    matchType: number
     /**
      * |          |            |
      * | -------- | ---------- |
@@ -1075,9 +805,6 @@ export type Schema = {
         relations: {
             // lobbies_via_user?: Lobbies[]
             // replays_via_createdBy?: Replays[]
-            // chat_via_user?: Chat[]
-            // chat_rooms_via_members?: ChatRooms[]
-            // chat_messages_via_sender?: ChatMessages[]
             lobbies_live_via_user?: LobbiesLive
         }
     }
@@ -1102,32 +829,8 @@ export type Schema = {
     lobby_aggregation_community: {
         type: LobbyAggregationCommunity
     }
-    chat: {
-        type: Chat
-        relations: {
-            user: Users
-            attachments?: Attachments[]
-        }
-    }
     attachments: {
         type: Attachments
-        relations: {
-            // chat_via_attachments?: Chat[]
-            // chat_messages_via_attachments?: ChatMessages[]
-        }
-    }
-    chat_rooms: {
-        type: ChatRooms
-        relations: {
-            members?: Users[]
-        }
-    }
-    chat_messages: {
-        type: ChatMessages
-        relations: {
-            sender: Users
-            attachments?: Attachments[]
-        }
     }
     lobbies_live: {
         type: LobbiesLive

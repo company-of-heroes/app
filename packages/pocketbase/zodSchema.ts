@@ -88,17 +88,6 @@ export const lobbyAggregationCommunitySchema = z.object({
     users: z.unknown().optional(),
 })
 
-export const chatSchema = z.object({
-    collectionId: z.literal('pbc_1116771610').optional(),
-    collectionName: z.string().min(1).max(255).optional(),
-    id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
-    user: z.string().regex(/^[a-z0-9]+$/).length(15),
-    message: z.string().max(500).optional(),
-    attachments: z.string().regex(/^[a-z0-9]+$/).length(15).array().max(999).optional(),
-    created: z.string().regex(DATETIME_REGEX).optional(),
-    updated: z.string().regex(DATETIME_REGEX).optional(),
-})
-
 export const attachmentsSchema = z.object({
     collectionId: z.literal('pbc_3073759650').optional(),
     collectionName: z.string().min(1).max(255).optional(),
@@ -109,40 +98,15 @@ export const attachmentsSchema = z.object({
     updated: z.string().regex(DATETIME_REGEX).optional(),
 })
 
-export const chatRoomsSchema = z.object({
-    collectionId: z.literal('pbc_2204944285').optional(),
-    collectionName: z.string().min(1).max(255).optional(),
-    id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
-    members: z.string().regex(/^[a-z0-9]+$/).length(15).array().max(9999).optional(),
-    created: z.string().regex(DATETIME_REGEX).optional(),
-    updated: z.string().regex(DATETIME_REGEX).optional(),
-})
-
-export const chatMessagesSchema = z.object({
-    collectionId: z.literal('pbc_102036695').optional(),
-    collectionName: z.string().min(1).max(255).optional(),
-    id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
-    sender: z.string().regex(/^[a-z0-9]+$/).length(15),
-    chatRoom: z.string().regex(/^[a-z0-9]+$/).min(1).max(5000),
-    text: z.string().max(5000).optional(),
-    attachments: z.string().regex(/^[a-z0-9]+$/).length(15).array().max(999).optional(),
-    created: z.string().regex(DATETIME_REGEX).optional(),
-    updated: z.string().regex(DATETIME_REGEX).optional(),
-})
-
 export const lobbiesLiveSchema = z.object({
     collectionId: z.literal('pbc_908767333').optional(),
     collectionName: z.string().min(1).max(255).optional(),
     id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
     user: z.string().regex(/^[a-z0-9]+$/).length(15),
     isRanked: z.boolean().optional(),
-    isSkirmish: z.boolean().optional(),
     sessionId: z.number().refine((n) => n !== 0),
-    type: z.string().min(1).max(5000),
     map: z.string().min(1).max(5000),
     players: z.unknown(),
-    me: z.unknown(),
-    matchType: z.number().optional(),
     createdAt: z.string().regex(DATETIME_REGEX).optional(),
     updatedAt: z.string().regex(DATETIME_REGEX).optional(),
 })
