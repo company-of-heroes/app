@@ -72,7 +72,6 @@ declare module '$env/static/private' {
 	export const npm_config_frozen_lockfile: string;
 	export const npm_config_globalconfig: string;
 	export const npm_config_npm_globalconfig: string;
-	export const npm_config_recursive: string;
 	export const npm_config_registry: string;
 	export const npm_config_user_agent: string;
 	export const npm_config_verify_deps_before_run: string;
@@ -107,7 +106,6 @@ declare module '$env/static/private' {
 	export const SystemRoot: string;
 	export const TAURI_CLI_VERBOSITY: string;
 	export const TAURI_ENV_ARCH: string;
-	export const TAURI_ENV_DEBUG: string;
 	export const TAURI_ENV_FAMILY: string;
 	export const TAURI_ENV_PLATFORM: string;
 	export const TAURI_ENV_PLATFORM_VERSION: string;
@@ -250,7 +248,6 @@ declare module '$env/dynamic/private' {
 		npm_config_frozen_lockfile: string;
 		npm_config_globalconfig: string;
 		npm_config_npm_globalconfig: string;
-		npm_config_recursive: string;
 		npm_config_registry: string;
 		npm_config_user_agent: string;
 		npm_config_verify_deps_before_run: string;
@@ -285,7 +282,6 @@ declare module '$env/dynamic/private' {
 		SystemRoot: string;
 		TAURI_CLI_VERBOSITY: string;
 		TAURI_ENV_ARCH: string;
-		TAURI_ENV_DEBUG: string;
 		TAURI_ENV_FAMILY: string;
 		TAURI_ENV_PLATFORM: string;
 		TAURI_ENV_PLATFORM_VERSION: string;

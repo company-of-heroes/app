@@ -8,6 +8,7 @@ mod coh_chat;
 mod global_shortcuts;
 mod hold_bindings;
 mod input;
+mod legacy_cleanup;
 mod migrations;
 mod process_check;
 mod replay_parser;
@@ -58,6 +59,10 @@ pub fn run() {
             window::get_active_window_title
         ])
         .setup(|app| {
+            // Remove installations from earlier, differently-named releases so
+            // users don't keep duplicate entries after the rename to "COH Companion".
+            legacy_cleanup::cleanup_legacy_installs();
+
             let window = app.get_webview_window("main").unwrap();
 
             #[cfg(debug_assertions)] // only include this code on debug builds

@@ -682,45 +682,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "company-of-heroes-companion-app"
-version = "1.0.0-beta.3"
-dependencies = [
- "dashmap",
- "enigo",
- "futures-util",
- "serde",
- "serde_json",
- "socket2 0.5.10",
- "sysinfo",
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-cache",
- "tauri-plugin-cors-fetch",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-http",
- "tauri-plugin-localhost",
- "tauri-plugin-log",
- "tauri-plugin-oauth",
- "tauri-plugin-opener",
- "tauri-plugin-process",
- "tauri-plugin-shell",
- "tauri-plugin-sql",
- "tauri-plugin-store",
- "tauri-plugin-upload",
- "tauri-plugin-websocket",
- "tokio",
- "tokio-tungstenite 0.21.0",
- "uuid",
- "warp",
- "window-vibrancy 0.7.1",
- "windows 0.52.0",
- "zip",
-]
-
-[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1469,6 +1430,46 @@ name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
+
+[[package]]
+name = "fknoobscoh"
+version = "0.51.0"
+dependencies = [
+ "dashmap",
+ "enigo",
+ "futures-util",
+ "serde",
+ "serde_json",
+ "socket2 0.5.10",
+ "sysinfo",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-autostart",
+ "tauri-plugin-cache",
+ "tauri-plugin-cors-fetch",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-http",
+ "tauri-plugin-localhost",
+ "tauri-plugin-log",
+ "tauri-plugin-oauth",
+ "tauri-plugin-opener",
+ "tauri-plugin-process",
+ "tauri-plugin-shell",
+ "tauri-plugin-sql",
+ "tauri-plugin-store",
+ "tauri-plugin-upload",
+ "tauri-plugin-websocket",
+ "tokio",
+ "tokio-tungstenite 0.21.0",
+ "uuid",
+ "warp",
+ "window-vibrancy 0.7.1",
+ "windows 0.52.0",
+ "winreg 0.52.0",
+ "zip",
+]
 
 [[package]]
 name = "flate2"
@@ -7533,6 +7534,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "80d0f4e272c85def139476380b12f9ac60926689dd2e01d4923222f40580869d"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "winreg"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5"
+dependencies = [
+ "cfg-if",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
