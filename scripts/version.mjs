@@ -9,9 +9,14 @@
 //
 //   - <summary>
 //
+// It also maintains packages/app/CHANGELOG.md in the standard changesets format
+// (## X.Y.Z headings). That per-package file is what `changesets/action` reads to
+// build the "Version Packages" PR body, so it must exist and use plain version
+// headings.
+//
 // Run via `pnpm version-packages`.
 
-import { readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -25,6 +30,7 @@ const root = join(scriptDir, '..');
 const paths = {
 	changesetDir: join(root, '.changeset'),
 	changelog: join(root, 'CHANGELOG.md'),
+	packageChangelog: join(root, 'packages/app/CHANGELOG.md'),
 	packageJson: join(root, 'packages/app/package.json'),
 	tauriConf: join(root, 'packages/app/src-tauri/tauri.conf.json'),
 	cargoToml: join(root, 'packages/app/src-tauri/Cargo.toml')
@@ -162,6 +168,26 @@ function prependChangelog(newVersion, bullets) {
 	writeFileSync(paths.changelog, entry + existing);
 }
 
+/**
+ * Maintains packages/app/CHANGELOG.md in the standard changesets format so
+ * `changesets/action` can read the new entry for the PR body. Uses plain
+ * `## X.Y.Z` headings (matched exactly by the action against the version).
+ */
+function prependPackageChangelog(newVersion, bullets) {
+	const title = `# ${APP_PACKAGE}`;
+	const entry = `## ${newVersion}\n\n${bullets.join('\n')}`;
+
+	let previous = '';
+	if (existsSync(paths.packageChangelog)) {
+		const existing = readFileSync(paths.packageChangelog, 'utf8').replace(/^\uFEFF/, '');
+		previous = existing.replace(/^#\s+.*(\r?\n)+/, '').trim();
+	}
+
+	const content = previous ? `${title}\n\n${entry}\n\n${previous}\n` : `${title}\n\n${entry}\n`;
+
+	writeFileSync(paths.packageChangelog, content);
+}
+
 function main() {
 	const changesets = readChangesets();
 
@@ -183,6 +209,8 @@ function main() {
 		console.log('[dry-run] Would sync version in package.json, tauri.conf.json, Cargo.toml.');
 		console.log(`[dry-run] Would prepend to CHANGELOG.md:\n`);
 		console.log(`### v${newVersion}\n\n${bullets.join('\n')}\n`);
+		console.log(`[dry-run] Would prepend to packages/app/CHANGELOG.md:\n`);
+		console.log(`## ${newVersion}\n\n${bullets.join('\n')}\n`);
 		console.log(`[dry-run] Would consume: ${changesets.map((c) => c.file).join(', ')}`);
 		return;
 	}
@@ -191,6 +219,7 @@ function main() {
 	replaceFirst(paths.tauriConf, /("version":\s*")[^"]+(")/, `$1${newVersion}$2`);
 	writeCargoVersion(newVersion);
 	prependChangelog(newVersion, bullets);
+	prependPackageChangelog(newVersion, bullets);
 
 	for (const changeset of changesets) {
 		rmSync(changeset.fullPath);
@@ -198,6 +227,7 @@ function main() {
 
 	console.log(`Bumped ${currentVersion} -> ${newVersion} (${bump})`);
 	console.log(`Updated package.json, tauri.conf.json, Cargo.toml and CHANGELOG.md`);
+	console.log(`Updated packages/app/CHANGELOG.md`);
 	console.log(`Consumed ${changesets.length} changeset(s).`);
 }
 
