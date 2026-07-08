@@ -1,0 +1,33 @@
+---
+description: Phosphor icon imports must use an Icon suffix in the app package
+globs: packages/app/**/*.{svelte,ts}
+alwaysApply: false
+---
+
+# Phosphor Icon Naming
+
+Imports from `phosphor-svelte` must use a local name ending in **`Icon`**. The import path stays the Phosphor export name (no `Icon` in the path unless Phosphor provides it).
+
+```typescript
+// ❌ BAD
+import Bell from 'phosphor-svelte/lib/Bell';
+import X from 'phosphor-svelte/lib/X';
+import TextUnderline from 'phosphor-svelte/lib/TextUnderline';
+
+// ✅ GOOD
+import BellIcon from 'phosphor-svelte/lib/Bell';
+import XIcon from 'phosphor-svelte/lib/X';
+import TextUnderlineIcon from 'phosphor-svelte/lib/TextUnderline';
+```
+
+Use the same `Icon` suffix in markup:
+
+```svelte
+<!-- ❌ BAD -->
+<Bell size={20} />
+
+<!-- ✅ GOOD -->
+<BellIcon size={20} />
+```
+
+When adding or editing icon imports in `packages/app`, rename the binding to `{Name}Icon` and update all usages in that file.

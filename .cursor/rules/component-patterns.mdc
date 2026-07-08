@@ -10,11 +10,11 @@ Before building UI, check **`packages/app/src/lib/components`** (`$lib/component
 
 ## Reuse First
 
-| Layer | Path | Use for |
-|-------|------|---------|
+| Layer      | Path                                            | Use for                         |
+| ---------- | ----------------------------------------------- | ------------------------------- |
 | Primitives | `ui/` — Button, Dialog, Popover, Tabs, Input, … | Generic, styled building blocks |
-| Domain | `match/`, `player/`, `lobby/`, `replay/`, … | Feature-specific but shared UI |
-| Widgets | `widgets/` | Dashboard / status surfaces |
+| Domain     | `match/`, `player/`, `lobby/`, `replay/`, …     | Feature-specific but shared UI  |
+| Widgets    | `widgets/`                                      | Dashboard / status surfaces     |
 
 Import from barrel `index.ts` files when available. Extend an existing component with props or snippets before copying its markup.
 
@@ -44,17 +44,18 @@ export const useMatch = () => context.get()();
 ```svelte
 <!-- ui/example/example.svelte — bits-ui + snippets -->
 <script lang="ts">
-  import { Popover, type WithoutChildren } from 'bits-ui';
-  import { cn } from '$lib/utils';
-  import type { Snippet } from 'svelte';
+	import { Popover, type WithoutChildren } from 'bits-ui';
+	import { cn } from '$lib/utils';
+	import type { Snippet } from 'svelte';
 
-  type Props = { trigger: Snippet; children: Snippet } & WithoutChildren<Popover.RootProps>;
-  let { trigger, children, ...restProps }: Props = $props();
+	type Props = { trigger: Snippet; children: Snippet } & WithoutChildren<Popover.RootProps>;
+	let { trigger, children, ...restProps }: Props = $props();
 </script>
 
 <Popover.Root {...restProps}>
-  <!-- compose primitives; style with cn() -->
+	<!-- compose primitives; style with cn() -->
 </Popover.Root>
 ```
 
 Place new files in the folder that matches scope: generic → `ui/`, feature-specific → the feature folder (e.g. `match/`).
+docker run cloudflare/cloudflared:latest tunnel --no-autoupdate run --token eyJhIjoiMDBmNjExZTExNGUyZWQ4OGYyYWFhOTc3NDJhM2ZkY2UiLCJ0IjoiNjk0YTY0ZTEtMzBhZi00NzBhLWFjZGItMGRmYjZjZTM2ZTU2IiwicyI6Ik56SXhaV0k1WVRJdE1tWTRaUzAwT0RBNExXSmhOalV0T1dNeVlXRmxZVGRsWWpBNSJ9

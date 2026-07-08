@@ -25,6 +25,8 @@
 	import SuccesIcon from 'phosphor-svelte/lib/Check';
 	import ErrorIcon from 'phosphor-svelte/lib/ExclamationMark';
 	import InfoIcon from 'phosphor-svelte/lib/QuestionMark';
+	import BriefcaseIcon from 'phosphor-svelte/lib/Briefcase';
+	import NotificationBell from '$lib/components/notifications/notification-bell.svelte';
 
 	import '$lib/fonts/TT Mussels/style.css';
 	import '@fontsource/nunito-sans/800.css';
@@ -100,15 +102,25 @@
 					Settings
 				</Nav.Link>
 				<div class="mt-auto">
-					<div class="mb-4 px-4">
+					{#if app.account.isStaff}
+						<Label class="text-secondary-400 px-4 text-xs font-semibold">Management</Label>
+						<Nav.Link href="/admin" class="gap-2 py-2 text-sm font-semibold">
+							<BriefcaseIcon size={20} weight="duotone" />
+							Management
+						</Nav.Link>
+					{/if}
+					<div class="mb-4 mt-3 flex items-center gap-2 px-4">
 						<a
-							class="group hover:text-secondary-200 flex items-center gap-2 text-sm transition-colors"
+							class="group hover:text-secondary-200 flex min-w-0 grow items-center gap-2 text-sm transition-colors"
 							href="/account"
 							data-active={page.url.pathname === '/account'}
 						>
 							<Avatar />
-							<span>My account</span>
+							<span class="truncate">{app.account.user?.name || 'My account'}</span>
 						</a>
+						{#if app.account.isAuthenticated}
+							<NotificationBell />
+						{/if}
 					</div>
 					<span class="flex items-center gap-2 px-4 py-4">
 						<button

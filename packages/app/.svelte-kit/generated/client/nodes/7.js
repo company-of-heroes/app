@@ -1,1 +1,2 @@
-export { default as component } from "../../../../src/routes/(loaded)/history/+page.svelte";
+import * as universal from "../../../../src/routes/(loaded)/admin/notifications/+page.ts";
+export { universal };

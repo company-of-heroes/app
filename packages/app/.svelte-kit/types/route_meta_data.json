@@ -12,6 +12,13 @@
 	"/(loaded)/account": [
 		"src/routes/+layout.ts"
 	],
+	"/(loaded)/admin": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/admin/notifications": [
+		"src/routes/(loaded)/admin/notifications/+page.ts",
+		"src/routes/+layout.ts"
+	],
 	"/(loaded)/current-game": [
 		"src/routes/+layout.ts"
 	],

@@ -18,7 +18,9 @@ export const nodes = [
 	() => import('./nodes/14'),
 	() => import('./nodes/15'),
 	() => import('./nodes/16'),
-	() => import('./nodes/17')
+	() => import('./nodes/17'),
+	() => import('./nodes/18'),
+	() => import('./nodes/19')
 ];
 
 export const server_loads = [];
@@ -26,18 +28,20 @@ export const server_loads = [];
 export const dictionary = {
 		"/(loaded)": [4,[2]],
 		"/(loaded)/account": [5,[2]],
-		"/(loaded)/current-game": [6,[2]],
-		"/(loaded)/history": [7,[2]],
-		"/(loaded)/history/[id]": [8,[2]],
-		"/(loaded)/leaderboards": [9,[2]],
-		"/(loaded)/leaderboards/profile/[profileId]": [10,[2]],
-		"/(loaded)/replays": [11,[2]],
-		"/(loaded)/replays/[replayId]": [12,[2]],
-		"/(loaded)/settings": [13,[2]],
-		"/(onboarding)/setup": [17],
-		"/(loaded)/shortcuts": [14,[2]],
-		"/(loading)/splashscreen": [16,[3]],
-		"/(loaded)/twitch": [15,[2]]
+		"/(loaded)/admin": [6,[2]],
+		"/(loaded)/admin/notifications": [7,[2]],
+		"/(loaded)/current-game": [8,[2]],
+		"/(loaded)/history": [9,[2]],
+		"/(loaded)/history/[id]": [10,[2]],
+		"/(loaded)/leaderboards": [11,[2]],
+		"/(loaded)/leaderboards/profile/[profileId]": [12,[2]],
+		"/(loaded)/replays": [13,[2]],
+		"/(loaded)/replays/[replayId]": [14,[2]],
+		"/(loaded)/settings": [15,[2]],
+		"/(onboarding)/setup": [19],
+		"/(loaded)/shortcuts": [16,[2]],
+		"/(loading)/splashscreen": [18,[3]],
+		"/(loaded)/twitch": [17,[2]]
 	};
 
 export const hooks = {

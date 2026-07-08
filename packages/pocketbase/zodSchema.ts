@@ -111,3 +111,25 @@ export const lobbiesLiveSchema = z.object({
     updatedAt: z.string().regex(DATETIME_REGEX).optional(),
 })
 
+export const notificationsSchema = z.object({
+    collectionId: z.literal('pbc_1847263910').optional(),
+    collectionName: z.string().min(1).max(255).optional(),
+    id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
+    title: z.string().min(1).max(200),
+    body: z.string().min(1).max(10000),
+    targetAll: z.boolean().optional(),
+    recipients: z.array(z.string().regex(/^[a-z0-9]+$/).length(15)).optional(),
+    createdBy: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
+    created: z.string().regex(DATETIME_REGEX).optional(),
+    updated: z.string().regex(DATETIME_REGEX).optional(),
+})
+
+export const notificationReadsSchema = z.object({
+    collectionId: z.literal('pbc_2958374621').optional(),
+    collectionName: z.string().min(1).max(255).optional(),
+    id: z.string().regex(/^[a-z0-9]+$/).length(15).optional(),
+    user: z.string().regex(/^[a-z0-9]+$/).length(15),
+    notification: z.string().regex(/^[a-z0-9]+$/).length(15),
+    readAt: z.string().regex(DATETIME_REGEX).optional(),
+})
+

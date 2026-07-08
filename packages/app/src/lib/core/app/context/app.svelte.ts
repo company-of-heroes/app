@@ -27,6 +27,7 @@ import { GameLogService } from '$core/game/log/index.svelte';
 import { Lobby, type Match } from '$core/game/lobby';
 import { database } from '$core/app/database';
 import { SocketManager, SocketState } from '$core/app/socket.svelte';
+import { notifications as notificationsService } from '$core/notifications/notifications.svelte';
 import { LOBBY_4V4, RANKED_2V2 } from '$lib/dev';
 import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
 
@@ -96,6 +97,9 @@ export class AppContext extends Emittery<AppEvents> {
 
 	/** Data repositories. */
 	database = database;
+
+	/** In-app notification inbox. */
+	notifications = notificationsService;
 
 	/** PocketBase client. */
 	pocketbase: TypedPocketBase = pocketbase;
@@ -213,6 +217,18 @@ export class AppContext extends Emittery<AppEvents> {
 				(isFocused) => {
 					if (isFocused) {
 						this.audio.pause();
+					}
+				}
+			);
+
+			// Start/stop PocketBase notification subscriptions with auth.
+			watch(
+				() => this.account.isAuthenticated,
+				(isAuthenticated) => {
+					if (isAuthenticated) {
+						void this.notifications.start();
+					} else {
+						void this.notifications.stop();
 					}
 				}
 			);

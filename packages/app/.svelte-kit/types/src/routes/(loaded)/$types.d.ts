@@ -11,7 +11,7 @@ type EnsureDefined<T> = T extends null | undefined ? {} : T;
 type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 export type Snapshot<T = any> = Kit.Snapshot<T>;
 type PageParentData = Omit<EnsureDefined<import('../$types.js').LayoutData>, keyof LayoutData> & EnsureDefined<LayoutData>;
-type LayoutRouteId = RouteId | "/(loaded)" | "/(loaded)/account" | "/(loaded)/current-game" | "/(loaded)/history" | "/(loaded)/history/[id]" | "/(loaded)/leaderboards" | "/(loaded)/leaderboards/profile/[profileId]" | "/(loaded)/replays" | "/(loaded)/replays/[replayId]" | "/(loaded)/settings" | "/(loaded)/shortcuts" | "/(loaded)/twitch"
+type LayoutRouteId = RouteId | "/(loaded)" | "/(loaded)/account" | "/(loaded)/admin" | "/(loaded)/admin/notifications" | "/(loaded)/current-game" | "/(loaded)/history" | "/(loaded)/history/[id]" | "/(loaded)/leaderboards" | "/(loaded)/leaderboards/profile/[profileId]" | "/(loaded)/replays" | "/(loaded)/replays/[replayId]" | "/(loaded)/settings" | "/(loaded)/shortcuts" | "/(loaded)/twitch"
 type LayoutParams = RouteParams & { id?: string | undefined; profileId?: string | undefined; replayId?: string | undefined }
 type LayoutParentData = EnsureDefined<import('../$types.js').LayoutData>;
 

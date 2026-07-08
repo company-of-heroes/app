@@ -5,24 +5,24 @@
 import type PocketBase from 'pocketbase'
 import type { RecordService } from 'pocketbase'
 
-export enum Collections {
-	Authorigins = "_authOrigins",
-	Externalauths = "_externalAuths",
-	Mfas = "_mfas",
-	Otps = "_otps",
-	Superusers = "_superusers",
-	Attachments = "attachments",
-	Chat = "chat",
-	ChatMessages = "chat_messages",
-	ChatRooms = "chat_rooms",
-	Lobbies = "lobbies",
-	LobbiesLive = "lobbies_live",
-	LobbyAggregation = "lobby_aggregation",
-	LobbyAggregationCommunity = "lobby_aggregation_community",
-	ReplayAggregation = "replay_aggregation",
-	Replays = "replays",
-	Users = "users",
-}
+export const Collections = {
+	Authorigins: "_authOrigins",
+	Externalauths: "_externalAuths",
+	Mfas: "_mfas",
+	Otps: "_otps",
+	Superusers: "_superusers",
+	Attachments: "attachments",
+	Lobbies: "lobbies",
+	LobbiesLive: "lobbies_live",
+	LobbyAggregation: "lobby_aggregation",
+	LobbyAggregationCommunity: "lobby_aggregation_community",
+	NotificationReads: "notification_reads",
+	Notifications: "notifications",
+	ReplayAggregation: "replay_aggregation",
+	Replays: "replays",
+	Users: "users",
+} as const
+export type Collections = typeof Collections[keyof typeof Collections]
 
 // Alias types for improved usability
 export type IsoDateString = string
@@ -110,32 +110,6 @@ export type AttachmentsRecord = {
 	updated: IsoAutoDateString
 }
 
-export type ChatRecord = {
-	attachments?: RecordIdString[]
-	created: IsoAutoDateString
-	id: string
-	message?: string
-	updated: IsoAutoDateString
-	user: RecordIdString
-}
-
-export type ChatMessagesRecord = {
-	attachments?: RecordIdString[]
-	chatRoom: string
-	created: IsoAutoDateString
-	id: string
-	sender: RecordIdString
-	text?: string
-	updated: IsoAutoDateString
-}
-
-export type ChatRoomsRecord = {
-	created: IsoAutoDateString
-	id: string
-	members?: RecordIdString[]
-	updated: IsoAutoDateString
-}
-
 export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	createdAt: IsoAutoDateString
 	id: string
@@ -176,6 +150,24 @@ export type LobbyAggregationCommunityRecord<Tmaps = unknown, Tplayers = unknown,
 	users?: null | Tusers
 }
 
+export type NotificationReadsRecord = {
+	id: string
+	notification: RecordIdString
+	readAt: IsoAutoDateString
+	user: RecordIdString
+}
+
+export type NotificationsRecord = {
+	body: string
+	created: IsoAutoDateString
+	createdBy?: RecordIdString
+	id: string
+	recipients?: RecordIdString[]
+	targetAll?: boolean
+	title: string
+	updated: IsoAutoDateString
+}
+
 export type ReplayAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser = unknown> = {
 	id: string
 	maps?: null | Tmaps
@@ -204,10 +196,11 @@ export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
 	vpCount?: number
 }
 
-export enum UsersRoleOptions {
-	"admin" = "admin",
-	"moderator" = "moderator",
-}
+export const UsersRoleOptions = {
+	"admin": "admin",
+	"moderator": "moderator",
+} as const
+export type UsersRoleOptions = typeof UsersRoleOptions[keyof typeof UsersRoleOptions]
 export type UsersRecord<Tmeta = unknown, TsteamIds = unknown> = {
 	avatar?: FileNameString
 	created: IsoAutoDateString
@@ -232,13 +225,12 @@ export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemF
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type AttachmentsResponse<Texpand = unknown> = Required<AttachmentsRecord> & BaseSystemFields<Texpand>
-export type ChatResponse<Texpand = unknown> = Required<ChatRecord> & BaseSystemFields<Texpand>
-export type ChatMessagesResponse<Texpand = unknown> = Required<ChatMessagesRecord> & BaseSystemFields<Texpand>
-export type ChatRoomsResponse<Texpand = unknown> = Required<ChatRoomsRecord> & BaseSystemFields<Texpand>
 export type LobbiesResponse<Tplayers = unknown, Tresult = unknown, Texpand = unknown> = Required<LobbiesRecord<Tplayers, Tresult>> & BaseSystemFields<Texpand>
 export type LobbiesLiveResponse<Tplayers = unknown, Texpand = unknown> = Required<LobbiesLiveRecord<Tplayers>> & BaseSystemFields<Texpand>
 export type LobbyAggregationResponse<TUSER = unknown, Tmaps = unknown, Tplayers = unknown, Texpand = unknown> = Required<LobbyAggregationRecord<TUSER, Tmaps, Tplayers>> & BaseSystemFields<Texpand>
 export type LobbyAggregationCommunityResponse<Tmaps = unknown, Tplayers = unknown, Tusers = unknown, Texpand = unknown> = Required<LobbyAggregationCommunityRecord<Tmaps, Tplayers, Tusers>> & BaseSystemFields<Texpand>
+export type NotificationReadsResponse<Texpand = unknown> = Required<NotificationReadsRecord> & BaseSystemFields<Texpand>
+export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRecord> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
 export type UsersResponse<Tmeta = unknown, TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<Tmeta, TsteamIds>> & AuthSystemFields<Texpand>
@@ -252,13 +244,12 @@ export type CollectionRecords = {
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
 	attachments: AttachmentsRecord
-	chat: ChatRecord
-	chat_messages: ChatMessagesRecord
-	chat_rooms: ChatRoomsRecord
 	lobbies: LobbiesRecord
 	lobbies_live: LobbiesLiveRecord
 	lobby_aggregation: LobbyAggregationRecord
 	lobby_aggregation_community: LobbyAggregationCommunityRecord
+	notification_reads: NotificationReadsRecord
+	notifications: NotificationsRecord
 	replay_aggregation: ReplayAggregationRecord
 	replays: ReplaysRecord
 	users: UsersRecord
@@ -271,13 +262,12 @@ export type CollectionResponses = {
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
 	attachments: AttachmentsResponse
-	chat: ChatResponse
-	chat_messages: ChatMessagesResponse
-	chat_rooms: ChatRoomsResponse
 	lobbies: LobbiesResponse
 	lobbies_live: LobbiesLiveResponse
 	lobby_aggregation: LobbyAggregationResponse
 	lobby_aggregation_community: LobbyAggregationCommunityResponse
+	notification_reads: NotificationReadsResponse
+	notifications: NotificationsResponse
 	replay_aggregation: ReplayAggregationResponse
 	replays: ReplaysResponse
 	users: UsersResponse

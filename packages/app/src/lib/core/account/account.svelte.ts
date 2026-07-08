@@ -4,7 +4,7 @@ import { confirm } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { isEmpty, uniq } from 'lodash-es';
 import { pocketbase } from '$core/pocketbase';
-import type { UsersResponse } from '$core/pocketbase/types';
+import { UsersRoleOptions, type UsersResponse } from '$core/pocketbase/types';
 import { settings } from '$core/config/settings.svelte';
 import type { AccountSettings } from '$core/config/schema';
 import { generatePassword, generateUniqueId } from '$lib/utils/password';
@@ -231,6 +231,12 @@ export class AccountService {
 
 	get isAuthenticated(): boolean {
 		return this.status === 'authenticated' && this.#user !== null;
+	}
+
+	get isStaff(): boolean {
+		const role = this.#user?.role;
+
+		return role === UsersRoleOptions.admin || role === UsersRoleOptions.moderator;
 	}
 
 	get userId(): string {
