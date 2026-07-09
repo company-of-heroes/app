@@ -51,4 +51,31 @@ export class LobbiesLive {
 			throw error;
 		}
 	}
+
+	async removeLobby() {
+		const user = pocketbase.authStore.record?.id;
+
+		if (!pocketbase.authStore.isValid || !user) {
+			console.warn('[LOBBIES_LIVE]: skipping delete, PocketBase auth is missing or expired');
+			return;
+		}
+
+		try {
+			const existing = await pocketbase
+				.collection('lobbies_live')
+				.getFirstListItem(`user="${user}"`, { fetch });
+
+			return await pocketbase.collection('lobbies_live').delete(existing.id, { fetch });
+		} catch (error) {
+			if (error instanceof ClientResponseError && error.status === 404) {
+				return;
+			}
+
+			if (error instanceof ClientResponseError) {
+				console.warn('[LOBBIES_LIVE]: delete failed:', error.status, error.response);
+			}
+
+			throw error;
+		}
+	}
 }

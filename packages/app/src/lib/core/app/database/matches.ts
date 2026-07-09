@@ -29,19 +29,15 @@ export type MatchExpanded = Expand<
 
 export type AggregationPlayer = { profile_id: number; alias: string };
 
-const DEFAULT_EXPAND = 'user';
+export type HistoryListQuery = {
+	scope: 'user' | 'community';
+	userId?: string;
+	ranked?: boolean;
+	playerIds?: string[];
+	maps?: string[];
+};
 
-const HISTORY_LIST_FIELDS: (keyof LobbiesRecord)[] = [
-	'id',
-	'createdAt',
-	'isRanked',
-	'map',
-	'title',
-	'players',
-	'result',
-	'sessionId',
-	'needsResult'
-];
+const DEFAULT_EXPAND = 'user';
 
 /**
  * Match (lobby) repository.
@@ -92,13 +88,40 @@ export class Matches {
 	}
 
 	/** Lightweight list used by the history page. */
-	getHistoryList(page = 1, perPage = 50, filter = '') {
-		return this.getPaginated(page, perPage, {
-			filter,
-			sort: '-createdAt',
-			fields: HISTORY_LIST_FIELDS,
-			expand: false
+	async getHistoryList(
+		page = 1,
+		perPage = 50,
+		{ scope, userId, ranked = false, playerIds = [], maps = [] }: HistoryListQuery
+	): Promise<ListResult<MatchExpanded>> {
+		const query: Record<string, string> = {
+			scope,
+			page: String(page),
+			perPage: String(perPage),
+			ranked: ranked ? 'true' : 'false'
+		};
+
+		if (scope === 'user' && userId) {
+			query.userId = userId;
+		}
+
+		if (playerIds.length > 0) {
+			query.playerIds = playerIds.join(',');
+		}
+
+		if (maps.length > 0) {
+			query.maps = maps.join(',');
+		}
+
+		const response = await pocketbase.send<ListResult<MatchExpanded>>('/api/match-history', {
+			method: 'GET',
+			query,
+			fetch
 		});
+
+		return {
+			...response,
+			items: response.items.map(exp) as MatchExpanded[]
+		};
 	}
 
 	/** Retrieves a full list of matches. */
@@ -177,10 +200,7 @@ export class Matches {
 	}
 
 	/** Subscribes to realtime updates of a single match record. */
-	subscribe(
-		id: string,
-		callback: (match: MatchExpanded) => void
-	): Promise<UnsubscribeFunc> {
+	subscribe(id: string, callback: (match: MatchExpanded) => void): Promise<UnsubscribeFunc> {
 		return pocketbase.collection('lobbies').subscribe(
 			id,
 			(event) => {
@@ -205,19 +225,40 @@ export class Matches {
 		| LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
 	> {
 		try {
-			if (type === 'user') {
-				return await pocketbase
-					.collection<
-						LobbyAggregationResponse<string, string[], AggregationPlayer[]>
-					>('lobby_aggregation')
-					.getFirstListItem(`user="${userId}"`, { fetch });
+			const query: Record<string, string> = {};
+			if (type === 'user' && userId) {
+				query.userId = userId;
 			}
 
-			return await pocketbase
-				.collection<
-					LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
-				>('lobby_aggregation_community')
-				.getFirstListItem('', { fetch });
+			const data = await pocketbase.send<{ maps: string[]; players: AggregationPlayer[] }>(
+				`/api/match-filters/${type}`,
+				{
+					method: 'GET',
+					query,
+					fetch
+				}
+			);
+
+			if (type === 'user') {
+				return {
+					id: userId ?? '',
+					collectionId: '',
+					collectionName: Collections.LobbyAggregation,
+					user: userId ?? '',
+					maps: data.maps ?? [],
+					players: data.players ?? [],
+					users: []
+				} as LobbyAggregationResponse<string, string[], AggregationPlayer[]>;
+			}
+
+			return {
+				id: '1',
+				collectionId: '',
+				collectionName: Collections.LobbyAggregationCommunity,
+				maps: data.maps ?? [],
+				players: data.players ?? [],
+				users: []
+			} as LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>;
 		} catch {
 			// No aggregation yet (new user / empty community): empty fallback.
 			if (type === 'user') {

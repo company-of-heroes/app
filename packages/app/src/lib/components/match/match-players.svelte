@@ -39,7 +39,11 @@
 <span {...restProps} class={cn('flex items-center gap-2', restProps.class)}>
 	{#each players as player}
 		{@const isHighlighted =
-			intersection(highlightedPlayers, [player.playerId.toString(), player.steamId]).length > 0}
+			intersection(highlightedPlayers, [
+				player.playerId?.toString(),
+				player.profile?.profile_id?.toString(),
+				player.steamId
+			]).length > 0}
 		{@const isMe = intersection(app.features.auth.user?.steamIds, [player.steamId]).length > 0}
 
 		<Player.Root {player}>

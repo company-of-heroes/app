@@ -1,12 +1,9 @@
 <script lang="ts">
-	import type { ReplayAggregationResponse } from '$core/pocketbase/types';
-	import type { Player } from '@fknoobs/replay-parser';
 	import type { Snapshot } from './$types';
 	import { app } from '$core/app/context';
 	import { H } from '$lib/components/ui/h';
 	import { getString } from '$lib/utils/game';
 	import { resource } from 'runed';
-	import { uniqBy, uniq } from 'lodash-es';
 	import { ReplayList, type ReplayListState } from './replay-list.svelte';
 	import ReplayFilters from './replay-filters.svelte';
 	import ReplayTable from './replay-table.svelte';
@@ -20,23 +17,19 @@
 	});
 
 	const aggregation = resource(
-		() => null,
+		() => app.features.auth.userId,
 		async () => {
-			const response = await app.pocketbase
-				.collection('replay_aggregation')
-				.getFullList<ReplayAggregationResponse<string[], Player[]>>();
-
-			if (response.length === 0) {
-				return { players: [], maps: [] };
-			}
-
-			// Aggregate across all users
-			const allPlayers = response.flatMap((r) => r.players || []);
-			const allMaps = response.flatMap((r) => r.maps || []);
+			const response = await app.pocketbase.send<{
+				maps: string[];
+				players: { name: string }[];
+			}>('/api/replay-filters', {
+				method: 'GET',
+				query: { userId: app.features.auth.userId }
+			});
 
 			return {
-				players: uniqBy(allPlayers, 'name'),
-				maps: uniq(allMaps)
+				players: response.players ?? [],
+				maps: response.maps ?? []
 			};
 		}
 	);

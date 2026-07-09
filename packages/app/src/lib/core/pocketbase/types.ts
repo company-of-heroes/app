@@ -112,10 +112,13 @@ export type AttachmentsRecord = {
 
 export type LobbiesRecord<Tplayers = unknown, Tresult = unknown> = {
 	createdAt: IsoAutoDateString
+	hasReplay?: boolean
 	id: string
 	isRanked?: boolean
+	lobbyPlayers?: null | unknown
 	map: string
 	needsResult?: boolean
+	playerProfileIdsCsv?: string
 	players: null | Tplayers
 	replay?: FileNameString
 	result?: null | Tresult

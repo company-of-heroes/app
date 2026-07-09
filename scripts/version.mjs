@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Custom version step for the Tauri app.
+// Custom version step for the Tauri app and PocketBase package.
 //
 // Consumes pending changesets in `.changeset/*.md`, bumps the app version in
 // package.json, tauri.conf.json and Cargo.toml (all kept in sync), and prepends
@@ -9,10 +9,9 @@
 //
 //   - <summary>
 //
-// It also maintains packages/app/CHANGELOG.md in the standard changesets format
-// (## X.Y.Z headings). That per-package file is what `changesets/action` reads to
-// build the "Version Packages" PR body, so it must exist and use plain version
-// headings.
+// It also maintains packages/app/CHANGELOG.md and packages/pocketbase/CHANGELOG.md
+// in the standard changesets format (## X.Y.Z headings). Those per-package files
+// are what `changesets/action` reads to build the "Version Packages" PR body.
 //
 // Run via `pnpm version-packages`.
 
@@ -21,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const APP_PACKAGE = '@company-of-heroes/app';
+const POCKETBASE_PACKAGE = '@company-of-heroes/pocketbase';
 const BUMP_RANK = { patch: 1, minor: 2, major: 3 };
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -30,14 +30,16 @@ const root = join(scriptDir, '..');
 const paths = {
 	changesetDir: join(root, '.changeset'),
 	changelog: join(root, 'CHANGELOG.md'),
-	packageChangelog: join(root, 'packages/app/CHANGELOG.md'),
-	packageJson: join(root, 'packages/app/package.json'),
+	appChangelog: join(root, 'packages/app/CHANGELOG.md'),
+	appPackageJson: join(root, 'packages/app/package.json'),
 	tauriConf: join(root, 'packages/app/src-tauri/tauri.conf.json'),
-	cargoToml: join(root, 'packages/app/src-tauri/Cargo.toml')
+	cargoToml: join(root, 'packages/app/src-tauri/Cargo.toml'),
+	pocketbaseChangelog: join(root, 'packages/pocketbase/CHANGELOG.md'),
+	pocketbasePackageJson: join(root, 'packages/pocketbase/package.json')
 };
 
-/** Reads and parses every pending changeset that targets the app package. */
-function readChangesets() {
+/** Reads and parses every pending changeset file. */
+function readAllChangesets() {
 	const files = readdirSync(paths.changesetDir).filter(
 		(name) => name.endsWith('.md') && name.toLowerCase() !== 'readme.md'
 	);
@@ -63,16 +65,19 @@ function readChangesets() {
 			}
 		}
 
-		const appBump = bumps[APP_PACKAGE];
-		if (!appBump) {
-			// Not an app-facing changeset; leave it untouched for other tooling.
-			continue;
-		}
-
-		changesets.push({ file, fullPath, bump: appBump, summary: body.trim() });
+		changesets.push({ file, fullPath, bumps, summary: body.trim() });
 	}
 
 	return changesets;
+}
+
+function changesetsForPackage(changesets, packageName) {
+	return changesets
+		.filter((changeset) => changeset.bumps[packageName])
+		.map((changeset) => ({
+			...changeset,
+			bump: changeset.bumps[packageName]
+		}));
 }
 
 /** Bumps a semver `X.Y.Z` string by the given release type. */
@@ -98,13 +103,27 @@ function bumpVersion(current, bump) {
 	return `${major}.${minor}.${patch}`;
 }
 
-/** tauri.conf.json is the source of truth for the current version. */
-function readCurrentVersion() {
+function highestBump(changesets) {
+	return changesets
+		.map((changeset) => changeset.bump)
+		.reduce((highest, current) => (BUMP_RANK[current] > BUMP_RANK[highest] ? current : highest));
+}
+
+/** tauri.conf.json is the source of truth for the app version. */
+function readAppVersion() {
 	const conf = JSON.parse(readFileSync(paths.tauriConf, 'utf8'));
 	if (!conf.version) {
 		throw new Error('No "version" found in tauri.conf.json');
 	}
 	return conf.version;
+}
+
+function readPocketbaseVersion() {
+	const pkg = JSON.parse(readFileSync(paths.pocketbasePackageJson, 'utf8'));
+	if (!pkg.version) {
+		throw new Error('No "version" found in packages/pocketbase/package.json');
+	}
+	return pkg.version;
 }
 
 function replaceFirst(filePath, regex, replacement) {
@@ -168,67 +187,110 @@ function prependChangelog(newVersion, bullets) {
 	writeFileSync(paths.changelog, entry + existing);
 }
 
-/**
- * Maintains packages/app/CHANGELOG.md in the standard changesets format so
- * `changesets/action` can read the new entry for the PR body. Uses plain
- * `## X.Y.Z` headings (matched exactly by the action against the version).
- */
-function prependPackageChangelog(newVersion, bullets) {
-	const title = `# ${APP_PACKAGE}`;
+function prependPackageChangelog(packageName, changelogPath, newVersion, bullets) {
+	const title = `# ${packageName}`;
 	const entry = `## ${newVersion}\n\n${bullets.join('\n')}`;
 
 	let previous = '';
-	if (existsSync(paths.packageChangelog)) {
-		const existing = readFileSync(paths.packageChangelog, 'utf8').replace(/^\uFEFF/, '');
+	if (existsSync(changelogPath)) {
+		const existing = readFileSync(changelogPath, 'utf8').replace(/^\uFEFF/, '');
 		previous = existing.replace(/^#\s+.*(\r?\n)+/, '').trim();
 	}
 
 	const content = previous ? `${title}\n\n${entry}\n\n${previous}\n` : `${title}\n\n${entry}\n`;
 
-	writeFileSync(paths.packageChangelog, content);
+	writeFileSync(changelogPath, content);
 }
 
-function main() {
-	const changesets = readChangesets();
-
-	if (changesets.length === 0) {
-		console.log('No app changesets found. Nothing to version.');
-		return;
-	}
-
-	const bump = changesets
-		.map((changeset) => changeset.bump)
-		.reduce((highest, current) => (BUMP_RANK[current] > BUMP_RANK[highest] ? current : highest));
-
-	const currentVersion = readCurrentVersion();
+function versionApp(appChangesets) {
+	const bump = highestBump(appChangesets);
+	const currentVersion = readAppVersion();
 	const newVersion = bumpVersion(currentVersion, bump);
-	const bullets = toBullets(changesets);
+	const bullets = toBullets(appChangesets);
 
 	if (DRY_RUN) {
-		console.log(`[dry-run] ${currentVersion} -> ${newVersion} (${bump})`);
+		console.log(`[dry-run] app ${currentVersion} -> ${newVersion} (${bump})`);
 		console.log('[dry-run] Would sync version in package.json, tauri.conf.json, Cargo.toml.');
 		console.log(`[dry-run] Would prepend to CHANGELOG.md:\n`);
 		console.log(`### v${newVersion}\n\n${bullets.join('\n')}\n`);
 		console.log(`[dry-run] Would prepend to packages/app/CHANGELOG.md:\n`);
 		console.log(`## ${newVersion}\n\n${bullets.join('\n')}\n`);
-		console.log(`[dry-run] Would consume: ${changesets.map((c) => c.file).join(', ')}`);
 		return;
 	}
 
-	replaceFirst(paths.packageJson, /("version":\s*")[^"]+(")/, `$1${newVersion}$2`);
+	replaceFirst(paths.appPackageJson, /("version":\s*")[^"]+(")/, `$1${newVersion}$2`);
 	replaceFirst(paths.tauriConf, /("version":\s*")[^"]+(")/, `$1${newVersion}$2`);
 	writeCargoVersion(newVersion);
 	prependChangelog(newVersion, bullets);
-	prependPackageChangelog(newVersion, bullets);
+	prependPackageChangelog(APP_PACKAGE, paths.appChangelog, newVersion, bullets);
 
-	for (const changeset of changesets) {
-		rmSync(changeset.fullPath);
+	console.log(`Bumped app ${currentVersion} -> ${newVersion} (${bump})`);
+}
+
+function versionPocketbase(pocketbaseChangesets) {
+	const bump = highestBump(pocketbaseChangesets);
+	const currentVersion = readPocketbaseVersion();
+	const newVersion = bumpVersion(currentVersion, bump);
+	const bullets = toBullets(pocketbaseChangesets);
+
+	if (DRY_RUN) {
+		console.log(`[dry-run] pocketbase ${currentVersion} -> ${newVersion} (${bump})`);
+		console.log(`[dry-run] Would prepend to packages/pocketbase/CHANGELOG.md:\n`);
+		console.log(`## ${newVersion}\n\n${bullets.join('\n')}\n`);
+		return;
 	}
 
-	console.log(`Bumped ${currentVersion} -> ${newVersion} (${bump})`);
-	console.log(`Updated package.json, tauri.conf.json, Cargo.toml and CHANGELOG.md`);
-	console.log(`Updated packages/app/CHANGELOG.md`);
-	console.log(`Consumed ${changesets.length} changeset(s).`);
+	replaceFirst(
+		paths.pocketbasePackageJson,
+		/("version":\s*")[^"]+(")/,
+		`$1${newVersion}$2`
+	);
+	prependPackageChangelog(
+		POCKETBASE_PACKAGE,
+		paths.pocketbaseChangelog,
+		newVersion,
+		bullets
+	);
+
+	console.log(`Bumped pocketbase ${currentVersion} -> ${newVersion} (${bump})`);
+}
+
+function main() {
+	const allChangesets = readAllChangesets();
+	const appChangesets = changesetsForPackage(allChangesets, APP_PACKAGE);
+	const pocketbaseChangesets = changesetsForPackage(allChangesets, POCKETBASE_PACKAGE);
+
+	if (appChangesets.length === 0 && pocketbaseChangesets.length === 0) {
+		console.log('No versionable changesets found. Nothing to version.');
+		return;
+	}
+
+	const toConsume = new Set();
+
+	for (const changeset of allChangesets) {
+		if (changeset.bumps[APP_PACKAGE] || changeset.bumps[POCKETBASE_PACKAGE]) {
+			toConsume.add(changeset.fullPath);
+		}
+	}
+
+	if (appChangesets.length > 0) {
+		versionApp(appChangesets);
+	}
+
+	if (pocketbaseChangesets.length > 0) {
+		versionPocketbase(pocketbaseChangesets);
+	}
+
+	if (DRY_RUN) {
+		console.log(`[dry-run] Would consume: ${[...toConsume].map((path) => path.split('/').pop()).join(', ')}`);
+		return;
+	}
+
+	for (const fullPath of toConsume) {
+		rmSync(fullPath);
+	}
+
+	console.log(`Consumed ${toConsume.size} changeset(s).`);
 }
 
 main();

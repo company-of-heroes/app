@@ -379,6 +379,10 @@ export class AppContext extends Emittery<AppEvents> {
 		this.emit('lobby.destroyed', { match, replay });
 		this.socket.publish('game.lobby.destroyed', match);
 
+		this.database.lobbiesLive
+			.removeLobby()
+			.catch((error) => console.warn('[APP]: lobbies_live delete failed:', error));
+
 		this.lobby = null;
 	}
 
