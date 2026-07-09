@@ -38,3 +38,22 @@ routerAdd('GET', '/hello/{name}', (e) => {
 
 	return e.json(200, { message: 'Hello ' + name });
 });
+
+onRecordCreateRequest((e) => {
+	if (e.hasSuperuserAuth()) {
+		return e.next();
+	}
+
+	e.record.set('role', '');
+	e.next();
+}, 'users');
+
+onRecordUpdateRequest((e) => {
+	if (e.hasSuperuserAuth()) {
+		return e.next();
+	}
+
+	const original = e.record.original();
+	e.record.set('role', original.get('role'));
+	e.next();
+}, 'users');

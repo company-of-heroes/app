@@ -80,9 +80,11 @@
 							<button
 								type="button"
 								class={cn(
-									'hover:text-primary w-full px-4 py-3 text-left transition-colors',
+									'hover:text-primary w-full cursor-pointer px-4 py-3 text-left transition-colors',
 									'hover:bg-secondary-800/40',
-									!notification.read ? 'text-primary' : 'text-secondary-300'
+									!notification.read
+										? 'bg-primary/5 text-white hover:bg-primary/10'
+										: 'text-secondary-300'
 								)}
 								onclick={() => openNotification(notification)}
 							>

@@ -1,0 +1,26 @@
+/// <reference path="../pb_data/types.d.ts" />
+migrate((app) => {
+  const collection = app.findCollectionByNameOrId('_pb_users_auth_');
+
+  unmarshal(
+    {
+      createRule: '@request.body.role:isset = false',
+      updateRule: 'id = @request.auth.id && @request.body.role:changed = false'
+    },
+    collection
+  );
+
+  return app.save(collection);
+}, (app) => {
+  const collection = app.findCollectionByNameOrId('_pb_users_auth_');
+
+  unmarshal(
+    {
+      createRule: '',
+      updateRule: 'id = @request.auth.id'
+    },
+    collection
+  );
+
+  return app.save(collection);
+});

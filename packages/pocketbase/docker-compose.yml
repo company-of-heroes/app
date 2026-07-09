@@ -1,6 +1,9 @@
 services:
   pocketbase:
-    image: ghcr.io/company-of-heroes/app/pocketbase
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fknoobscoh-pocketbase
     ports:
       - '${PB_PORT:-8090}:${PB_PORT:-8090}'
     volumes:
@@ -11,6 +14,9 @@ services:
       - PB_PORT=${PB_PORT:-8090}
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
+    env_file:
+      - path: ./.env
+        required: false
     restart: unless-stopped
 volumes:
   pocketbase_data:

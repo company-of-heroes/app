@@ -348,7 +348,7 @@ export class AppContext extends Emittery<AppEvents> {
 		this.socket.publish('game.lobby.started', lobby.toJSON());
 
 		this.database.lobbiesLive
-			.setLobby(lobby.toJSON(), this.account.userId)
+			.setLobby(lobby.toJSON())
 			.catch((error) => console.warn('[APP]: lobbies_live upsert failed:', error));
 	}
 
