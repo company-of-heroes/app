@@ -52,8 +52,12 @@
 			</span>
 			<span class="justify-center">{getLeaderboardType(stat.leaderboard_id)}</span>
 			<span class="justify-center">
-					<img src={getFactionFlagFromLeaderboardId(stat.leaderboard_id)} alt="Faction Flag" class="w-6 ring ring-black" />
-				</span>
+				<img
+					src={getFactionFlagFromLeaderboardId(stat.leaderboard_id)}
+					alt="Faction Flag"
+					class="w-6 ring ring-black"
+				/>
+			</span>
 			<span class="items-center justify-center gap-2">
 				{#if stat.rank === 1}
 					<span class="relative -top-0.5">👑</span>

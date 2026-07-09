@@ -3,8 +3,8 @@
 	import * as List from '$lib/components/ui/list';
 	import { useReplay } from '.';
 	import { cn } from '$lib/utils';
-	import { getMapImageFromName } from '$lib/utils/game';
 	import { getString } from '$lib/utils/game';
+	import MapImage from '$lib/components/ui/map-image.svelte';
 	import { H } from '../ui/h';
 	import { Badge } from '../ui/badge';
 	import dayjs from '$lib/dayjs';
@@ -16,14 +16,11 @@
 	let { ...restProps }: Props = $props();
 	let replay = $derived(useReplay());
 	let isRanked = $derived(replay.matchType === 'automatch');
+	const mapKey = $derived(replay.mapFileName.split(/[/\\]/).pop());
 </script>
 
-<div {...restProps} class={cn('grid grid-cols-[300px_auto] gap-8', restProps.class)}>
-	<img
-		src={getMapImageFromName(replay.mapFileName.split(/[/\\]/).pop())}
-		alt={getString(replay.mapName)}
-		class="rounded-lg bg-gray-950"
-	/>
+<div {...restProps} class={cn('grid grid-cols-1 gap-4 lg:grid-cols-[minmax(180px,280px)_minmax(0,1fr)] lg:gap-6 xl:gap-8', restProps.class)}>
+	<MapImage map={mapKey} alt={getString(replay.mapName)} />
 	<div class="py-4">
 		<H level="2" class="mb-4">{getString(replay.mapName)}</H>
 		<List.Root>

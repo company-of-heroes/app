@@ -109,7 +109,7 @@
 							Management
 						</Nav.Link>
 					{/if}
-					<div class="mb-4 mt-3 flex items-center gap-2 px-4">
+					<div class="mt-3 mb-4 flex items-center gap-2 px-4">
 						<a
 							class="group hover:text-secondary-200 flex min-w-0 grow items-center gap-2 text-sm transition-colors"
 							href="/account"

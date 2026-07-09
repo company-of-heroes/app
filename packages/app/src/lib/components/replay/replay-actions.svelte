@@ -145,7 +145,8 @@
 						<Axis placement="left" grid rule />
 						<Axis placement="bottom" rule />
 						{#each series as s, i (s.key + '-' + i)}
-							{@const active = s.key === context.tooltip.data?.player?.id || s.key === selectedPlayer}
+							{@const active =
+								s.key === context.tooltip.data?.player?.id || s.key === selectedPlayer}
 							<g class={cn(!active && 'opacity-20 saturate-0')}>
 								<Spline
 									data={s.data}

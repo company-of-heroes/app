@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Table, TD, TH, THead, TR } from '$lib/components/ui/table';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+	import MapImage from '$lib/components/ui/map-image.svelte';
 	import { cn, getFactionFlagFromRace } from '$lib/utils';
 	import { getString } from '$lib/utils/game';
 	import { tooltip } from '$lib/attachments';
@@ -71,7 +73,7 @@
 				{/if}
 			</TH>
 			<TH width="2/24" class="text-center">Players</TH>
-			<TH width="3/24">Map</TH>
+			<TH width="6/24">Map</TH>
 			<TH
 				width="4/24"
 				class="flex cursor-pointer items-center select-none"
@@ -129,7 +131,10 @@
 						.format(item.durationInSeconds < 3600 ? 'm[min]' : 'H[hr] m[min]')}
 				</TD>
 				<TD width="2/24" class="text-center">{item.players?.length}</TD>
-				<TD width="3/24" class="truncate">{getString(item.mapName)}</TD>
+				<TD width="6/24" class="flex items-center gap-4">
+					<MapImage small map={item.mapFilename.split(/[/\\]/).pop()} />
+					<span class="truncate">{getString(item.mapName)}</span>
+				</TD>
 				<TD width="4/24" class="truncate">{dayjs(item.gameDate).format('YYYY-MM-DD HH:mm')}</TD>
 			</TR>
 		{/each}
@@ -148,15 +153,26 @@
 				<small>Showing {list.replays.length} replays</small>
 			</div>
 		{/if}
+	{:else if list.isLoading}
+		{#each Array(10) as _, i (i)}
+			<TR>
+				<TD width="4/24"><Skeleton class="h-4 w-5/6" /></TD>
+				<TD width="4/24"><Skeleton class="h-4 w-full" /></TD>
+				<TD width="4/24"><Skeleton class="h-4 w-full" /></TD>
+				<TD width="3/24"><Skeleton class="h-4 w-1/2" /></TD>
+				<TD width="2/24" class="flex justify-center">
+					<Skeleton class="h-4 w-4" />
+				</TD>
+				<TD width="6/24" class="flex items-center gap-4">
+					<Skeleton class="h-10 w-10 shrink-0" />
+					<Skeleton class="h-4 w-3/4" />
+				</TD>
+				<TD width="4/24"><Skeleton class="h-4 w-2/3" /></TD>
+			</TR>
+		{/each}
 	{:else}
 		<div use:viewport class="border-secondary-800 w-full border-t px-4 py-2">
-			<small>
-				{#if list.isLoading}
-					Loading replays...
-				{:else}
-					No replays found.
-				{/if}
-			</small>
+			<small>No replays found.</small>
 		</div>
 	{/if}
 </Table>

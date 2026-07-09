@@ -3,6 +3,7 @@
 	import * as Player from '$lib/components/player';
 	import * as Table from '$lib/components/ui/table';
 	import * as Match from '$lib/components/match';
+	import * as Replay from '$lib/components/replay';
 	import { scale } from 'svelte/transition';
 	import { onDestroy } from 'svelte';
 	import { page } from '$app/state';
@@ -19,7 +20,6 @@
 	import HourGlass from 'phosphor-svelte/lib/Hourglass';
 	import Checks from 'phosphor-svelte/lib/Checks';
 	import Download from 'phosphor-svelte/lib/Download';
-	import TreeView from 'phosphor-svelte/lib/TreeView';
 	import Check from 'phosphor-svelte/lib/Check';
 
 	const match = resource(
@@ -27,7 +27,12 @@
 		() => app.database.matches.getById(page.params.id!)
 	);
 
-	$inspect(match.current);
+	const hasReplay = $derived(!!(match.current?.hasReplay || match.current?.replay));
+
+	const replayFile = resource(
+		() => (hasReplay ? page.params.id : null),
+		(id) => app.database.replays.getById(id!)
+	);
 
 	let isDownloading = $state(false);
 	let didDownload = $derived(
@@ -73,13 +78,16 @@
 <ButtonBack>Go back</ButtonBack>
 
 {#if match.current}
-	<Match.Root match={match.current} class="grid grid-cols-[300px_auto] gap-8">
+	<Match.Root
+		match={match.current}
+		class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(180px,280px)_minmax(0,1fr)] lg:gap-6 xl:gap-8"
+	>
 		<div>
 			<Match.MapImage />
 		</div>
 		<div class="py-4">
 			<Match.MapName class="mb-6 block text-3xl font-bold" />
-			<div class="grid grid-cols-2 items-start">
+			<div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
 				<List.Root>
 					<List.Title>Status</List.Title>
 					<List.Value class="flex items-center">
@@ -115,39 +123,37 @@
 				</List.Root>
 			</div>
 			<div class="mt-6 flex gap-2">
-				<Button
-					onclick={() => {
-						isDownloading = true;
-						app.features.history
-							.downloadReplay(match.current!)
-							.then(() => {
-								isDownloading = false;
-								didDownload = true;
-							})
-							.catch(() => {
-								didDownload = false;
-							})
-							.finally(() => {
-								isDownloading = false;
-							});
-					}}
-					class={cn(didDownload && 'pointer-events-none cursor-not-allowed opacity-50')}
-					loading={isDownloading}
-				>
-					{#if !isDownloading && !didDownload}
-						<Download class="mr-2" />
-					{/if}
-					{#if didDownload}
-						<span in:scale={{ easing: bounceInOut, duration: 150 }}>
-							<Check size={22} class="mr-2" />
-						</span>
-					{/if}
-					Download replay
-				</Button>
-				<Button variant="secondary" href={`/replays/${match.current.id}`}>
-					<TreeView class="mr-2" />
-					View replay
-				</Button>
+				{#if hasReplay}
+					<Button
+						onclick={() => {
+							isDownloading = true;
+							app.features.history
+								.downloadReplay(match.current!)
+								.then(() => {
+									isDownloading = false;
+									didDownload = true;
+								})
+								.catch(() => {
+									didDownload = false;
+								})
+								.finally(() => {
+									isDownloading = false;
+								});
+						}}
+						class={cn(didDownload && 'pointer-events-none cursor-not-allowed opacity-50')}
+						loading={isDownloading}
+					>
+						{#if !isDownloading && !didDownload}
+							<Download class="mr-2" />
+						{/if}
+						{#if didDownload}
+							<span in:scale={{ easing: bounceInOut, duration: 150 }}>
+								<Check size={22} class="mr-2" />
+							</span>
+						{/if}
+						Download replay
+					</Button>
+				{/if}
 			</div>
 			<H level={3} class="mt-8 mb-4">Players</H>
 			<Table.Table>
@@ -204,6 +210,20 @@
 					</Table.TR>
 				{/each}
 			</Table.Table>
+
+			{#if hasReplay}
+				{#if replayFile.loading}
+					<Replay.TabsSkeleton />
+				{:else if replayFile.current}
+					<H level={3} class="mt-8 mb-4">Replay</H>
+					<Replay.Root file={replayFile.current} class="flex flex-col gap-4">
+						<Replay.Tabs />
+					</Replay.Root>
+				{:else if replayFile.error}
+					<H level={3} class="mt-8 mb-4">Replay</H>
+					<p class="text-secondary-400 text-sm">Failed to load replay data.</p>
+				{/if}
+			{/if}
 		</div>
 	</Match.Root>
 {/if}

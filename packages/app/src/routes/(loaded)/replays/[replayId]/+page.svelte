@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as Replay from '$lib/components/replay';
-	import * as Tabs from '$lib/components/ui/tabs';
 	import { page } from '$app/state';
 	import { app } from '$core/app/context';
 	import { resource } from 'runed';
@@ -14,25 +13,14 @@
 
 <ButtonBack>Go back</ButtonBack>
 
-{#if query.current}
+{#if query.loading}
+	<Replay.PageSkeleton />
+{:else if query.current}
 	<Replay.Root file={query.current} class="flex grow flex-col gap-4">
 		<Replay.Title class="mb-4" />
 		<Replay.Details class="mb-4" />
-		<Tabs.Root value="overview">
-			<Tabs.List>
-				<Tabs.Trigger value="overview">Overview</Tabs.Trigger>
-				<Tabs.Trigger value="chat">Chat</Tabs.Trigger>
-				<Tabs.Trigger value="timeline">Timeline</Tabs.Trigger>
-			</Tabs.List>
-			<Tabs.Content value="overview" class="flex grow flex-col gap-4">
-				<Replay.Players />
-			</Tabs.Content>
-			<Tabs.Content value="chat" class="flex grow flex-col gap-4">
-				<Replay.Chat class="grow" />
-			</Tabs.Content>
-			<Tabs.Content value="timeline" class="flex grow flex-col gap-4">
-				<Replay.Actions />
-			</Tabs.Content>
-		</Tabs.Root>
+		<Replay.Tabs />
 	</Replay.Root>
+{:else if query.error}
+	<p class="text-secondary-400 text-sm">Failed to load replay.</p>
 {/if}
