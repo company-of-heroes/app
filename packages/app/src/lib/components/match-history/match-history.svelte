@@ -1,15 +1,17 @@
 <script lang="ts">
-	import type { TransformedMatch } from '@fknoobs/app';
+	import type { MatchHistoryPlayer, TransformedMatch } from '@fknoobs/app';
 	import dayjs from '$lib/dayjs';
 	import {
 		cn,
 		getFactionFlagFromRace,
-		getRacePrefix,
-		getRankImage,
+		isSteamId,
 		normalizeMapName
 	} from '$lib/utils';
-	import { getMapImageFromName } from '$lib/utils/game';
-	import { H } from '../ui/h';
+	import { steam, type SteamPlayerSummary } from '$core/steam';
+	import { resource } from 'runed';
+	import MapImage from '$lib/components/ui/map-image.svelte';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { surfacePanel, interactive } from '$lib/components/ui/variants';
 	import { orderBy, sortBy, upperCase } from 'lodash-es';
 	import ClockIcon from 'phosphor-svelte/lib/Clock';
 	import CaretDown from 'phosphor-svelte/lib/CaretDown';
@@ -21,89 +23,159 @@
 	};
 
 	let { matches }: Props = $props();
-	let orderedMatches = $derived(orderBy(matches, ['completiontime'], ['desc']));
+
+	const orderedMatches = $derived(orderBy(matches, ['completiontime'], ['desc']));
+
+	const steamProfiles = resource(
+		() =>
+			orderedMatches
+				.flatMap((match) => match.players.map((player) => player.steamId))
+				.join(','),
+		async () => {
+			const steamIds = [
+				...new Set(
+					orderedMatches.flatMap((match) =>
+						match.players.map((player) => player.steamId).filter(Boolean)
+					)
+				)
+			];
+
+			if (steamIds.length === 0) return {} as Record<string, SteamPlayerSummary>;
+
+			const profiles = await steam.getUserProfiles(steamIds.slice(0, 100));
+			return Object.fromEntries(profiles.map((profile) => [profile.steamid, profile]));
+		},
+		{ initialValue: {} as Record<string, SteamPlayerSummary> }
+	);
+
+	const playerGrid =
+		'grid grid-cols-[2.5rem_3.5rem_4rem_minmax(0,1fr)_3.5rem_3.5rem_3.5rem] items-center gap-3';
+
+	function matchDuration(match: TransformedMatch): string {
+		const seconds = dayjs.unix(match.completiontime).diff(dayjs.unix(match.startgametime), 'seconds');
+		return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+	}
+
+	function isCurrentProfile(player: MatchHistoryPlayer): boolean {
+		const id = page.params.id;
+		if (!id) return false;
+		if (isSteamId(id)) return player.steamId === id;
+		return player.profile_id === parseInt(id, 10);
+	}
+
+	function getSteamAvatar(steamId: string): string | undefined {
+		return steamProfiles.current[steamId]?.avatarfull;
+	}
+
+	function ratingChange(player: MatchHistoryPlayer): number {
+		return player.newrating - player.oldrating;
+	}
 </script>
 
-<div class="grid gap-2">
-	{#each orderedMatches as match}
-		<div>
-			<div
-				class="text-primary-100 flex items-center justify-between rounded-t-md bg-gray-700 px-4 py-2 font-semibold"
-			>
-				<span class="flex items-center gap-2">
-					<ClockIcon />
-					{Math.floor(
-						dayjs.unix(match.completiontime).diff(dayjs.unix(match.startgametime), 'seconds') / 60
-					)}:{String(
-						dayjs.unix(match.completiontime).diff(dayjs.unix(match.startgametime), 'seconds') % 60
-					).padStart(2, '0')}
-				</span>
-				<span>{normalizeMapName(match.mapname)}</span>
-				<span>{dayjs.unix(match.startgametime).format('YYYY-MM-DD HH:mm')}</span>
-			</div>
-			<div>
-				<div>
-					{#each sortBy(match.players, ['teamid']) as player}
-						<div
+{#if orderedMatches.length === 0}
+	<p class="text-secondary-400 text-sm">No recent matches found.</p>
+{:else}
+	<div class="grid gap-4">
+		{#each orderedMatches as match (match.id)}
+			<article class={cn(surfacePanel, 'overflow-clip')}>
+				<div class="border-secondary-800 flex items-center gap-4 border-b px-4 py-3">
+					<MapImage small map={match.mapname} alt={normalizeMapName(match.mapname)} />
+					<div class="min-w-0 grow">
+						<h3 class="font-heading truncate text-lg font-bold">
+							{normalizeMapName(match.mapname)}
+						</h3>
+						<p class="text-secondary-400 text-sm">
+							{dayjs.unix(match.startgametime).format('MMM D, YYYY · HH:mm')}
+						</p>
+					</div>
+					<span class="text-secondary-300 flex shrink-0 items-center gap-2 text-sm font-medium">
+						<ClockIcon class="size-4" />
+						{matchDuration(match)}
+					</span>
+				</div>
+				<div
+					class={cn(
+						playerGrid,
+						'bg-secondary-950/90 text-secondary-300 border-secondary-800 border-b px-4 py-2 text-xs font-semibold tracking-wide uppercase'
+					)}
+				>
+					<span class="text-center">Team</span>
+					<span class="text-center">ELO</span>
+					<span class="text-center">Change</span>
+					<span>Player</span>
+					<span class="text-center">Wins</span>
+					<span class="text-center">Losses</span>
+					<span class="text-center">Streak</span>
+				</div>
+				{#each sortBy(match.players, ['teamid']) as player (player.profile_id)}
+					{@const change = ratingChange(player)}
+					{@const currentProfile = isCurrentProfile(player)}
+					<div
+						class={cn(
+							playerGrid,
+							'border-secondary-800 border-b px-4 py-3 last:border-b-0',
+							player.outcome === 1 ? 'bg-success/5' : 'bg-destructive/5',
+							currentProfile && 'bg-primary/5 ring-primary/30 ring-1 ring-inset'
+						)}
+					>
+						{#await getFactionFlagFromRace(player.race_id) then flagImg}
+							<img
+								src={flagImg}
+								alt=""
+								class="mx-auto w-6 ring-1 ring-black/40"
+							/>
+						{/await}
+						<span class="text-center font-medium tabular-nums">{player.newrating}</span>
+						<span class="flex items-center justify-center gap-1 text-sm tabular-nums">
+							{#if change < 0}
+								<CaretDown class="text-destructive size-4" weight="duotone" />
+								<span class="text-destructive/90">{Math.abs(change)}</span>
+							{:else if change > 0}
+								<CaretUp class="text-success size-4" weight="duotone" />
+								<span class="text-success">{change}</span>
+							{:else}
+								<span class="text-secondary-500">—</span>
+							{/if}
+						</span>
+						<a
+							href="/players/{player.profile_id}"
 							class={cn(
-								'grid w-full grid-cols-[2rem_2rem_6rem_auto_4rem_4rem_4rem] items-center gap-6 px-4 py-2',
-								'border-gray-700 not-last:border-b-2',
-								player.outcome === 1 ? 'bg-green-900/5' : 'bg-red-900/5',
-								player.profile_id === parseInt(page.params.profileId!) &&
-									'ring-primary-200/50 text-primary ring'
+								interactive,
+								'flex min-w-0 items-center gap-3 transition-colors hover:text-primary',
+								currentProfile && 'text-primary font-semibold'
 							)}
 						>
-							{#await getFactionFlagFromRace(player.race_id) then flagImg}
+							{#if steamProfiles.loading}
+								<Skeleton class="size-9 shrink-0 rounded-lg" />
+							{:else if getSteamAvatar(player.steamId)}
 								<img
-									src={flagImg}
-									alt={getRacePrefix(player.race_id)}
-									class="w-6 ring-2 ring-black"
+									src={getSteamAvatar(player.steamId)}
+									alt={player.alias}
+									class="size-9 shrink-0 rounded-lg border border-secondary-800 object-cover"
 								/>
-							{/await}
-							<span class="text-center">{player.newrating}</span>
-							<span class="flex items-center justify-between gap-4">
-								{#if player.newrating < player.oldrating}
-									<span class="flex items-center gap-2">
-										<CaretDown class="text-red-500" weight="duotone" />
-										<span class="text-sm text-red-100">
-											{player.oldrating - player.newrating}
-										</span>
-									</span>
-								{:else if player.newrating > player.oldrating}
-									<span class="flex items-center gap-2">
-										<CaretUp class="text-green-500" weight="duotone" />
-										<span class="text-sm text-green-100">
-											{player.newrating - player.oldrating}
-										</span>
-									</span>
-								{/if}
-							</span>
-							<a
-								class={cn('flex items-center gap-2')}
-								href={`/leaderboards/profile/${player.profile_id}`}
-							>
+							{/if}
+							{#if player.country}
 								<img
-									class="w-6"
+									class="size-4 shrink-0"
 									src="https://flagsapi.com/{upperCase(player.country)}/shiny/64.png"
 									alt={player.country}
 								/>
-								{player.alias}
-							</a>
-							<span class="text-center text-green-200">
-								{player.wins}
-							</span>
-							<span class="text-center text-red-200">
-								{player.losses}
-							</span>
-							<span
-								class={cn('text-center', player.streak > 0 ? 'text-green-500' : 'text-red-500')}
-							>
-								{player.streak > 0 ? `+${player.streak}` : player.streak}
-							</span>
-						</div>
-					{/each}
-				</div>
-			</div>
-		</div>
-	{/each}
-</div>
+							{/if}
+							<span class="truncate">{player.alias}</span>
+						</a>
+						<span class="text-success text-center font-medium tabular-nums">{player.wins}</span>
+						<span class="text-destructive/90 text-center font-medium tabular-nums">{player.losses}</span>
+						<span
+							class={cn(
+								'text-center font-medium tabular-nums',
+								player.streak > 0 ? 'text-success' : player.streak < 0 ? 'text-destructive/90' : 'text-secondary-400'
+							)}
+						>
+							{player.streak > 0 ? `+${player.streak}` : player.streak}
+						</span>
+					</div>
+				{/each}
+			</article>
+		{/each}
+	</div>
+{/if}

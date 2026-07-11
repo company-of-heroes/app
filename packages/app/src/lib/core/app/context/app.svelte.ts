@@ -7,7 +7,7 @@ import { dev } from '$app/environment';
 import { goto } from '$app/navigation';
 import Emittery from 'emittery';
 import { watch } from 'runed';
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/components/ui/toasts';
 import { SvelteMap } from 'svelte/reactivity';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';

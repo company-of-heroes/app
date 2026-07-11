@@ -1,5 +1,5 @@
 import type { Listener } from '@d-fischer/typed-event-emitter';
-import { ApiClient } from '@twurple/api';
+import { ApiClient, type HelixPrivilegedUser } from '@twurple/api';
 import { StaticAuthProvider, TokenInfo } from '@twurple/auth';
 import { Feature } from '$features/feature.svelte';
 import { watch } from 'runed';
@@ -59,6 +59,7 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 
 	client: ApiClient | null = $state(null);
 	token: ValidatedTokenInfo | null = $state(null);
+	user: HelixPrivilegedUser | null = $state(null);
 	chatClient: ChatClient | null = $state(null);
 	eventSub: EventSubWsListener | undefined = $state(undefined);
 
@@ -122,6 +123,15 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 
 		this.client = client;
 		this.token = token;
+
+		client.users
+			.getAuthenticatedUser(token.userId, true)
+			.then((user) => {
+				this.user = user;
+			})
+			.catch((err) => {
+				void error(`[TWITCH]: Failed to fetch user profile: ${err}`);
+			});
 
 		client.chat
 			.getGlobalBadges()
@@ -217,6 +227,7 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 
 		this.client = null;
 		this.token = null;
+		this.user = null;
 		this.chatClient = null;
 		this.eventSub = undefined;
 		this.isLive = false;

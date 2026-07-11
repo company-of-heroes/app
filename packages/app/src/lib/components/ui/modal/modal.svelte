@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
 	import { cn } from '$lib/utils';
+	import { overlayBackdrop, surfaceModal } from '../variants';
 	import { modal } from './modal.svelte.js';
 	import { H } from '../h';
 	import CloseIcon from 'phosphor-svelte/lib/X';
@@ -10,7 +11,8 @@
 	<Dialog.Portal>
 		<Dialog.Overlay
 			class={cn(
-				'fixed inset-0 z-50 bg-gray-950/60 backdrop-blur-lg',
+				overlayBackdrop,
+				'fixed inset-0 z-50',
 				'data-[state=open]:animate-in data-[state=open]:fade-in-0',
 				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
 				'flex items-center justify-center overflow-y-auto p-4'
@@ -20,8 +22,9 @@
 			class={cn(
 				'data-[state=open]:animate-in data-[state=open]:zoom-in absolute duration-75',
 				'data-[state=closed]:animate-out data-[state=closed]:zoom-out data-[state=closed]:fade-out',
-				'top-0 left-1/2 z-50 mx-auto mt-12 -translate-x-1/2 rounded-xl shadow-lg',
-				'max-h-[calc(100vh-4rem)] bg-gray-800 outline-hidden',
+				'top-0 left-1/2 z-50 mx-auto mt-12 -translate-x-1/2 rounded-xl outline-hidden',
+				'max-h-[calc(100vh-4rem)]',
+				surfaceModal,
 				modal.size === 'sm' && 'w-[320px]',
 				modal.size === 'md' && 'w-[480px]',
 				modal.size === 'lg' && 'w-[640px]',
@@ -40,7 +43,7 @@
 								<H level="4">{modal.title}</H>
 							{/if}
 							{#if modal.description}
-								<Dialog.Description class="mt-1 text-gray-400">
+								<Dialog.Description class="mt-1 text-secondary-400">
 									{#if typeof modal.description === 'function'}
 										{@render modal.description()}
 									{:else}
@@ -51,7 +54,7 @@
 						</div>
 						{#if false === modal.hideCloseButton}
 							<Dialog.Close
-								class="cursor-pointer rounded-md bg-gray-700 p-1.5 transition outline-none hover:bg-gray-600"
+								class="cursor-pointer rounded-md bg-secondary-800 p-1.5 transition outline-none hover:bg-secondary-700"
 							>
 								<CloseIcon size={24} />
 							</Dialog.Close>

@@ -3,12 +3,10 @@
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { readFile } from '@tauri-apps/plugin-fs';
-	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { fetch } from '@tauri-apps/plugin-http';
 	import { app } from '$core/app/context';
-	import { toast } from 'svelte-sonner';
 	import { dialog } from '$lib/components/ui/dialog';
 	import { tts } from '$features/twitch';
 	import { ElevenlabsProvider } from '.';
@@ -26,7 +24,7 @@
 		e.preventDefault();
 
 		if (voiceFiles.length === 0) {
-			toast.error('Please select at least one audio file.');
+			app.toast.error('Please select at least one audio file.');
 			return;
 		}
 
@@ -60,7 +58,7 @@
 
 			if (response && response.voice_id) {
 				if (response.requires_verification) {
-					toast.info(
+					app.toast.info(
 						'Voice added successfully, but it requires verification by ElevenLabs. Please check your email for further instructions.'
 					);
 				}
@@ -68,21 +66,21 @@
 				await provider.getVoices();
 
 				isProcessing = false;
-				toast.success(`${voiceName} added successfully.`);
+				app.toast.success(`${voiceName} added successfully.`);
 				dialog.close();
 			} else {
-				toast.error('Failed to add voice. Please try again.');
+				app.toast.error('Failed to add voice. Please try again.');
 				console.error(`ElevenLabs add voice: Invalid response ${JSON.stringify(response)}`);
 			}
 		} catch (err) {
-			toast.error('Failed to add voice. Please try again.');
+			app.toast.error('Failed to add voice. Please try again.');
 			console.error(`ElevenLabs add voice: Invalid response ${JSON.stringify(err)}`);
 			isProcessing = false;
 		}
 	}}
 >
 	<Form.Group>
-		<Label>Voice name</Label>
+		<Form.Label>Voice name</Form.Label>
 		<Input
 			placeholder="Enter voice name ..."
 			name="name"
@@ -92,20 +90,22 @@
 		/>
 	</Form.Group>
 	<Form.Group>
-		<Label>Audio files</Label>
+		<Form.Label>Audio files</Form.Label>
 		<div class="grid gap-1">
 			{#each voiceFiles as file, index}
-				<span class="grid grid-flow-col gap-4 rounded bg-gray-700 px-3 py-1">
+				<span class="bg-secondary-800 grid grid-flow-col gap-4 rounded px-3 py-1">
 					<span class="truncate">{file.name}</span>
-					<button
+					<Button
 						type="button"
-						class="ms-auto cursor-pointer rounded text-red-400 transition-colors hover:text-red-500"
+						variant="ghost"
+						size="icon-sm"
+						class="text-destructive hover:text-destructive/80 ms-auto"
 						onclick={() => {
 							voiceFiles = voiceFiles.filter((_, i) => i !== index);
 						}}
 					>
 						<Trash />
-					</button>
+					</Button>
 				</span>
 			{/each}
 		</div>
@@ -129,7 +129,8 @@
 					}
 				);
 			}}
-			class="bg-secondary-950 w-fit text-white"
+			variant="secondary"
+			class="w-fit"
 			type="button"
 		>
 			{voiceFiles.length ? `Selected ${voiceFiles.length} file(s)` : 'Select audio file(s)'}

@@ -9,7 +9,7 @@
 		playersList: { value: string; label: string }[];
 	}
 
-	let { list, mapsList, playersList }: Props = $props();
+	let { list = $bindable(), mapsList, playersList }: Props = $props();
 </script>
 
 <Form.Root class="border-secondary-800 mb-4 border-b pb-4">

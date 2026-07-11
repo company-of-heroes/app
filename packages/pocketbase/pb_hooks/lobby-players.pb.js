@@ -3,137 +3,72 @@
 'use strict';
 
 onRecordCreate((e) => {
-	let players = e.record.get('players');
-	if (!Array.isArray(players)) {
-		if (typeof players === 'string') {
-			try {
-				const parsed = JSON.parse(players);
-				players = Array.isArray(parsed) ? parsed : [];
-			} catch {
-				players = [];
-			}
-		} else {
-			players = [];
-		}
-	}
-
-	const summaries = [];
-	const ids = [];
-
-	for (const player of players) {
-		const profileId = player?.profile?.profile_id;
-		if (profileId == null) {
-			continue;
-		}
-
-		ids.push(profileId);
-		summaries.push({
-			profile_id: profileId,
-			alias: player?.profile?.alias ?? '',
-			playerId: player?.playerId ?? null,
-			steamId: player?.steamId ?? null,
-			race: player?.race ?? null
-		});
-	}
-
-	e.record.set('lobbyPlayers', summaries);
-	e.record.set('playerProfileIdsCsv', ids.length > 0 ? `,${ids.join(',')},` : '');
-	e.record.set('hasReplay', !!e.record.get('replay'));
-
-	if (!e.record.get('needsResult') && e.record.get('title') !== 'Skirmish' && e.record.get('replay')) {
-		try {
-			const snapshot = $app.findRecordById('match_filter_snapshots', 'community');
-			const maps = snapshot.get('maps') || [];
-			const snapshotPlayers = snapshot.get('players') || [];
-			const map = e.record.get('map');
-
-			if (map && !maps.includes(map)) {
-				maps.push(map);
-				maps.sort();
-			}
-
-			for (const summary of summaries) {
-				if (!snapshotPlayers.some((player) => player.profile_id === summary.profile_id)) {
-					snapshotPlayers.push(summary);
-				}
-			}
-
-			snapshotPlayers.sort((a, b) => String(a.alias).localeCompare(String(b.alias)));
-			snapshot.set('maps', maps);
-			snapshot.set('players', snapshotPlayers);
-			$app.save(snapshot);
-		} catch {
-			// snapshot not ready yet
-		}
-	}
-
+	require(`${__hooks}/lib/lobby-players.js`).processLobbyRecord(e);
 	e.next();
 }, 'lobbies');
 
 onRecordUpdate((e) => {
-	let players = e.record.get('players');
-	if (!Array.isArray(players)) {
-		if (typeof players === 'string') {
-			try {
-				const parsed = JSON.parse(players);
-				players = Array.isArray(parsed) ? parsed : [];
-			} catch {
-				players = [];
-			}
-		} else {
-			players = [];
-		}
-	}
-
-	const summaries = [];
-	const ids = [];
-
-	for (const player of players) {
-		const profileId = player?.profile?.profile_id;
-		if (profileId == null) {
-			continue;
-		}
-
-		ids.push(profileId);
-		summaries.push({
-			profile_id: profileId,
-			alias: player?.profile?.alias ?? '',
-			playerId: player?.playerId ?? null,
-			steamId: player?.steamId ?? null,
-			race: player?.race ?? null
-		});
-	}
-
-	e.record.set('lobbyPlayers', summaries);
-	e.record.set('playerProfileIdsCsv', ids.length > 0 ? `,${ids.join(',')},` : '');
-	e.record.set('hasReplay', !!e.record.get('replay'));
-
-	if (!e.record.get('needsResult') && e.record.get('title') !== 'Skirmish' && e.record.get('replay')) {
-		try {
-			const snapshot = $app.findRecordById('match_filter_snapshots', 'community');
-			const maps = snapshot.get('maps') || [];
-			const snapshotPlayers = snapshot.get('players') || [];
-			const map = e.record.get('map');
-
-			if (map && !maps.includes(map)) {
-				maps.push(map);
-				maps.sort();
-			}
-
-			for (const summary of summaries) {
-				if (!snapshotPlayers.some((player) => player.profile_id === summary.profile_id)) {
-					snapshotPlayers.push(summary);
-				}
-			}
-
-			snapshotPlayers.sort((a, b) => String(a.alias).localeCompare(String(b.alias)));
-			snapshot.set('maps', maps);
-			snapshot.set('players', snapshotPlayers);
-			$app.save(snapshot);
-		} catch {
-			// snapshot not ready yet
-		}
-	}
-
+	require(`${__hooks}/lib/lobby-players.js`).processLobbyRecord(e);
 	e.next();
 }, 'lobbies');
+
+onRecordAfterCreateSuccess((e) => {
+	require(`${__hooks}/lib/lobby-players.js`).syncLobbyPlayerIndexForRecord(e);
+}, 'lobbies');
+
+onRecordAfterUpdateSuccess((e) => {
+	require(`${__hooks}/lib/lobby-players.js`).syncLobbyPlayerIndexForRecord(e);
+}, 'lobbies');
+
+$app.onServe().bindFunc((e) => {
+	const { debugLog } = require(`${__hooks}/lib/debug-log.js`);
+	const serveStart = Date.now();
+
+	// #region agent log
+	debugLog('lobby-players.pb.js:onServe', 'serve start', { serveStart }, 'B');
+	// #endregion
+
+	e.next();
+
+	cronAdd('lobby_players_backfill', '*/5 * * * *', () => {
+		const backfill = require(`${__hooks}/lib/lobby-players-backfill.js`);
+		if (backfill.isComplete()) {
+			return;
+		}
+
+		const result = backfill.runBatch();
+		console.log(
+			`[lobby_players] backfill batch processed=${result.processed} updated=${result.updated} indexed=${result.indexed} complete=${result.complete}`
+		);
+	});
+
+	// #region agent log
+	debugLog(
+		'lobby-players.pb.js:onServe',
+		'cron registered (backfill deferred)',
+		{ durationMs: Date.now() - serveStart },
+		'B'
+	);
+	// #endregion
+});
+
+routerAdd('POST', '/api/lobby-players/backfill/run', (e) => {
+	const lobby = require(`${__hooks}/lib/lobby-players.js`);
+	if (!lobby.isServiceRequest(e) && !e.hasSuperuserAuth()) {
+		return e.json(401, { message: 'Unauthorized' });
+	}
+
+	const lobbyBackfill = require(`${__hooks}/lib/lobby-players-backfill.js`);
+	const reset = e.request.url.query().get('reset') === 'true';
+	if (reset) {
+		lobbyBackfill.reset();
+	}
+
+	const result = lobbyBackfill.runBatch();
+
+	return e.json(200, {
+		...result,
+		page: lobbyBackfill.getPage(),
+		complete: lobbyBackfill.isComplete()
+	});
+});

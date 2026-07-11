@@ -69,25 +69,26 @@ routerAdd('GET', '/api/match-history', (e) => {
 		const playerClauses = [];
 
 		for (let i = 0; i < playerIds.length; i++) {
+			const key = `pid${i}`;
 			const csvKey = `pidCsv${i}`;
 
-			const profileKey = `pidProfile${i}`;
-
+			bindings[key] = Number(playerIds[i]);
 			bindings[csvKey] = `%,${playerIds[i]},%`;
 
-			bindings[profileKey] = Number(playerIds[i]);
-
-			playerClauses.push(
-				`(playerProfileIdsCsv LIKE {:${csvKey}} OR EXISTS (
-
-          SELECT 1
-
-          FROM json_each(lobbies.players) AS player
-
-          WHERE json_extract(player.value, '$.profile.profile_id') = {:${profileKey}}
-
-        ))`
-			);
+			playerClauses.push(`(
+				id IN (SELECT lobby FROM lobby_player_index WHERE profile_id = {:${key}})
+				OR playerProfileIdsCsv LIKE {:${csvKey}}
+				OR EXISTS (
+					SELECT 1
+					FROM json_each(COALESCE(lobbyPlayers, '[]')) AS p
+					WHERE json_extract(p.value, '$.profile_id') = {:${key}}
+				)
+				OR EXISTS (
+					SELECT 1
+					FROM json_each(COALESCE(players, '[]')) AS p
+					WHERE json_extract(p.value, '$.profile.profile_id') = {:${key}}
+				)
+			)`);
 		}
 
 		where += ` AND (${playerClauses.join(' OR ')})`;

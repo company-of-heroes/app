@@ -3,13 +3,20 @@
 	import type { Snapshot } from './$types';
 	import * as Lobby from '$lib/components/lobby';
 	import * as Player from '$lib/components/player';
-	import * as Table from '$lib/components/ui/table';
+	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { app } from '$core/app/context';
 	import { cn } from '$lib/utils';
 	import { getLeaderboardStatsForPlayerByMatchType } from '$lib/utils/game';
 	import { ButtonBack } from '$lib/components/ui/button';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+
+	const playerStatsColumns: ColumnDef<{ id: number }>[] = [
+		{ id: 'rank', header: 'Rank', width: 'w-6/24', headerClass: 'text-secondary-200 text-center text-lg font-medium', class: 'flex items-center justify-center gap-2 text-lg' },
+		{ id: 'position', header: 'Position', width: 'w-6/24', headerClass: 'text-secondary-200 text-center text-lg font-medium', class: 'text-center text-lg' },
+		{ id: 'wins', header: 'Wins', width: 'w-6/24', headerClass: 'text-secondary-200 text-center text-lg font-medium', class: 'text-center text-lg' },
+		{ id: 'losses', header: 'Losses', width: 'w-6/24', headerClass: 'text-secondary-200 text-center text-lg font-medium', class: 'text-center text-lg' }
+	];
 
 	let match = $derived(app.lobby);
 	let replay = $state<{
@@ -74,51 +81,34 @@
 										<Player.Alias class="text-lg font-bold" />
 										<Player.Country />
 									</div>
-									<Table.Table class="my-2 rounded-none border-none">
-										<Table.Head class="bg-transparent">
-											<Table.tr class="h-9 bg-transparent odd:bg-transparent">
-												<Table.th
-													class="text-secondary-200 text-center text-lg font-medium"
-													width="6/24"
-												>
-													Rank
-												</Table.th>
-												<Table.th
-													class="text-secondary-200 text-center text-lg font-medium"
-													width="6/24"
-												>
-													Position
-												</Table.th>
-												<Table.th
-													class="text-secondary-200 text-center text-lg font-medium"
-													width="6/24"
-												>
-													Wins
-												</Table.th>
-												<Table.th
-													class="text-secondary-200 text-center text-lg font-medium"
-													width="6/24"
-												>
-													Losses
-												</Table.th>
-											</Table.tr>
-										</Table.Head>
-										<Table.tr class="h-9 bg-transparent odd:bg-transparent">
-											<Table.td class="flex items-center justify-center gap-2 text-lg" width="6/24">
-												<Player.Rank class="h-8 w-8" />
-												<Player.Level />
-											</Table.td>
-											<Table.td class="text-center text-lg" width="6/24">
-												<Player.Position />
-											</Table.td>
-											<Table.td class="text-center text-lg" width="6/24">
-												<Player.Wins />
-											</Table.td>
-											<Table.td class="text-center text-lg" width="6/24">
-												<Player.Losses />
-											</Table.td>
-										</Table.tr>
-									</Table.Table>
+									{#snippet cell_rank({ row }: { row: { id: number } })}
+										<Player.Rank class="h-8 w-8" />
+										<Player.Level />
+									{/snippet}
+									{#snippet cell_position({ row }: { row: { id: number } })}
+										<Player.Position />
+									{/snippet}
+									{#snippet cell_wins({ row }: { row: { id: number } })}
+										<Player.Wins />
+									{/snippet}
+									{#snippet cell_losses({ row }: { row: { id: number } })}
+										<Player.Losses />
+									{/snippet}
+									<DataTable
+										class="my-2 rounded-none border-none"
+										headerClass="bg-transparent"
+										headerRowClass="h-9 bg-transparent"
+										bodyRowClass="h-9 bg-transparent odd:bg-transparent"
+										data={[{ id: player.playerId }]}
+										columns={playerStatsColumns}
+										rowKey={(row) => row.id}
+										cells={{
+											rank: cell_rank,
+											position: cell_position,
+											wins: cell_wins,
+											losses: cell_losses
+										}}
+									/>
 								</div>
 							</div>
 						</div>

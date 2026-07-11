@@ -14,6 +14,7 @@ export type CacheOptions<T> = {
 	invalidateFn?: (value: T | null) => Promise<boolean>;
 	invalidate?: boolean;
 	ttl?: number;
+	signal?: AbortSignal;
 };
 
 /**
@@ -24,7 +25,15 @@ export type CacheOptions<T> = {
  * @param {CacheOptions<T>} options - Configuration options for caching.
  * @returns {Promise<T>} - A promise that resolves to the data.
  */
+function throwIfAborted(signal?: AbortSignal) {
+	if (signal?.aborted) {
+		throw new DOMException('Aborted', 'AbortError');
+	}
+}
+
 export async function useQuery<T>(key: string, options: CacheOptions<T>): Promise<T> {
+	throwIfAborted(options.signal);
+
 	if (options.invalidate) {
 		await remove(key);
 	}
@@ -43,11 +52,14 @@ export async function useQuery<T>(key: string, options: CacheOptions<T>): Promis
 		});
 
 		if (cached) {
+			throwIfAborted(options.signal);
 			return cached;
 		}
 	}
 
 	const data = await options.queryFn();
+	throwIfAborted(options.signal);
+
 	const ttl = options.ttl ?? (options.invalidateFn ? undefined : 300);
 
 	set(key, data, { ttl }).catch((e) => console.warn(`Cache write failed for key: ${key}`, e));

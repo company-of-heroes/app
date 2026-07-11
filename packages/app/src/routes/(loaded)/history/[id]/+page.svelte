@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as List from '$lib/components/ui/list';
 	import * as Player from '$lib/components/player';
-	import * as Table from '$lib/components/ui/table';
+	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import * as Match from '$lib/components/match';
 	import * as Replay from '$lib/components/replay';
 	import { scale } from 'svelte/transition';
@@ -26,6 +26,41 @@
 		() => page.params.id,
 		() => app.database.matches.getById(page.params.id!)
 	);
+
+	type MatchPlayer = NonNullable<typeof match.current>['players'][number];
+
+	const playerColumns: ColumnDef<MatchPlayer>[] = [
+		{ id: 'rating_change', header: '-', width: 'w-2/24', class: 'flex justify-center' },
+		{ id: 'elo', header: 'ELO', width: 'w-2/24', headerClass: 'text-center', class: 'flex justify-center' },
+		{ id: 'rank', header: 'Rank', width: 'w-2/24', headerClass: 'text-center', class: 'flex justify-center' },
+		{ id: 'name', header: 'Name', width: 'w-9/24', class: 'flex items-center gap-4' },
+		{ id: 'wins', header: 'Wins', width: 'w-3/24', headerClass: 'text-center', class: 'flex justify-center' },
+		{ id: 'losses', header: 'Losses', width: 'w-3/24', headerClass: 'text-center', class: 'flex justify-center' },
+		{ id: 'streak', header: 'Streak', width: 'w-3/24', headerClass: 'text-center', class: 'flex justify-center' }
+	];
+
+	const sortedPlayers = $derived(
+		match.current ? sortBy(match.current.players, 'index') : []
+	);
+
+	function getPlayerResult(player: MatchPlayer) {
+		return match.current?.result?.players.find(
+			(resultPlayer) => resultPlayer.profile_id === player.profile?.profile_id
+		);
+	}
+
+	function getPlayerStats(player: MatchPlayer) {
+		if (!match.current?.result) return undefined;
+		return getLeaderboardStatsForPlayerByMatchType(match.current.result.matchtype_id, player);
+	}
+
+	function getPlayerRowClass(player: MatchPlayer) {
+		const playerResult = getPlayerResult(player);
+		return cn(
+			'not-last:border-secondary-950 not-last:border-b',
+			playerResult?.outcome === 0 ? 'bg-destructive/2!' : 'bg-success/2!'
+		);
+	}
 
 	const hasReplay = $derived(!!(match.current?.hasReplay || match.current?.replay));
 
@@ -103,7 +138,7 @@
 						<List.Title>Submitted by</List.Title>
 						<List.Value>
 							<a
-								href={`/leaderboards/profile/${player.profile_id}`}
+								href={`/players/${player.profile_id}`}
 								class="hover:text-primary-300 underline"
 							>
 								{player.alias}
@@ -156,60 +191,54 @@
 				{/if}
 			</div>
 			<H level={3} class="mt-8 mb-4">Players</H>
-			<Table.Table>
-				<Table.THead>
-					<Table.tr>
-						<Table.TH width="2/24">-</Table.TH>
-						<Table.TH width="2/24" class="flex justify-center">ELO</Table.TH>
-						<Table.TH width="2/24" class="flex justify-center">Rank</Table.TH>
-						<Table.TH width="9/24">Name</Table.TH>
-						<Table.TH width="3/24" class="flex justify-center">Wins</Table.TH>
-						<Table.TH width="3/24" class="flex justify-center">Losses</Table.TH>
-						<Table.TH width="3/24" class="flex justify-center">Streak</Table.TH>
-					</Table.tr>
-				</Table.THead>
-				{#each sortBy(match.current.players, 'index') as player}
-					{@const playerResult = match.current.result?.players.find(
-						(p) => p.profile_id === player.profile?.profile_id
-					)}
-					{@const stats = match.current.result
-						? getLeaderboardStatsForPlayerByMatchType(match.current.result.matchtype_id, player)
-						: undefined}
-
-					<Table.TR
-						class={cn(
-							'not-last:border-secondary-950 not-last:border-b',
-							playerResult?.outcome === 0 ? 'bg-destructive/2!' : 'bg-success/2!'
-						)}
-					>
-						<Player.Root {player} {playerResult} {stats}>
-							<Table.TD width="2/24" class="flex justify-center">
-								<Player.RatingChange />
-							</Table.TD>
-							<Table.TD width="2/24" class="flex justify-center">
-								{playerResult?.newrating || 'N/A'}
-							</Table.TD>
-							<Table.TD width="2/24" class="flex justify-center">
-								<Player.Rank />
-							</Table.TD>
-							<Table.TD width="9/24" class="flex items-center gap-4">
-								<Player.Faction />
-								<Player.Alias />
-								<Player.Country class="w-6" />
-							</Table.TD>
-							<Table.TD width="3/24" class="flex justify-center">
-								<Player.Wins />
-							</Table.TD>
-							<Table.TD width="3/24" class="flex justify-center">
-								<Player.Losses />
-							</Table.TD>
-							<Table.TD width="3/24" class="flex justify-center">
-								<Player.Streak />
-							</Table.TD>
-						</Player.Root>
-					</Table.TR>
-				{/each}
-			</Table.Table>
+			{#snippet cell_rating_change({ row }: { row: MatchPlayer })}
+				<Player.RatingChange />
+			{/snippet}
+			{#snippet cell_elo({ row }: { row: MatchPlayer })}
+				{getPlayerResult(row)?.newrating || 'N/A'}
+			{/snippet}
+			{#snippet cell_rank({ row }: { row: MatchPlayer })}
+				<Player.Rank />
+			{/snippet}
+			{#snippet cell_name({ row }: { row: MatchPlayer })}
+				<Player.Faction />
+				<Player.Alias />
+				<Player.Country class="w-6" />
+			{/snippet}
+			{#snippet cell_wins({ row }: { row: MatchPlayer })}
+				<Player.Wins />
+			{/snippet}
+			{#snippet cell_losses({ row }: { row: MatchPlayer })}
+				<Player.Losses />
+			{/snippet}
+			{#snippet cell_streak({ row }: { row: MatchPlayer })}
+				<Player.Streak />
+			{/snippet}
+			{#snippet matchPlayerRowWrapper({ row, children }: { row: MatchPlayer; children: import('svelte').Snippet })}
+				<Player.Root
+					player={row}
+					playerResult={getPlayerResult(row)}
+					stats={getPlayerStats(row)}
+				>
+					{@render children()}
+				</Player.Root>
+			{/snippet}
+			<DataTable
+				data={sortedPlayers}
+				columns={playerColumns}
+				rowKey={(player) => player.profile?.profile_id ?? player.index}
+				rowClass={getPlayerRowClass}
+				rowWrapper={matchPlayerRowWrapper}
+				cells={{
+					rating_change: cell_rating_change,
+					elo: cell_elo,
+					rank: cell_rank,
+					name: cell_name,
+					wins: cell_wins,
+					losses: cell_losses,
+					streak: cell_streak
+				}}
+			/>
 
 			{#if hasReplay}
 				{#if replayFile.loading}

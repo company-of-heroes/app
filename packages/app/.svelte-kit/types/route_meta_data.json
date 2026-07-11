@@ -32,6 +32,13 @@
 		"src/routes/+layout.ts"
 	],
 	"/(loaded)/leaderboards/profile/[profileId]": [
+		"src/routes/(loaded)/leaderboards/profile/[profileId]/+page.ts",
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/players": [
+		"src/routes/+layout.ts"
+	],
+	"/(loaded)/players/[id]": [
 		"src/routes/+layout.ts"
 	],
 	"/(loaded)/replays": [

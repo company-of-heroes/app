@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Select, type WithoutChildren } from 'bits-ui';
 	import { cn } from '$lib/utils';
+	import { controlBase, surfacePanel, menuItem } from '../variants';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDown';
 	import CaretUpIcon from 'phosphor-svelte/lib/CaretUp';
 	import CheckIcon from 'phosphor-svelte/lib/Check';
@@ -25,9 +26,9 @@ from the perspective of the consumer of this component, it will be typed appropr
 <Select.Root bind:value={value as never} {...restProps}>
 	<Select.Trigger
 		class={cn(
-			'rounded-md',
-			'group bg-secondary-800 h-10 min-w-28 cursor-pointer truncate px-4 text-left',
-			'border-secondary-600 flex max-w-3xs items-center justify-between border'
+			controlBase,
+			'group min-w-28 cursor-pointer truncate px-4 text-left',
+			'flex max-w-3xs items-center justify-between'
 		)}
 	>
 		{isArray(value) && value.length
@@ -43,7 +44,7 @@ from the perspective of the consumer of this component, it will be typed appropr
 			side="bottom"
 			sideOffset={6}
 			{...contentProps}
-			class={cn('bg-secondary-800 max-h-64 max-w-3xs shadow-xs')}
+			class={cn(surfacePanel, 'max-h-64 max-w-3xs shadow-xs')}
 		>
 			<Select.ScrollUpButton class="flex items-center justify-center py-1">
 				<CaretUpIcon />
@@ -54,7 +55,7 @@ from the perspective of the consumer of this component, it will be typed appropr
 						{value}
 						{label}
 						{disabled}
-						class="hover:bg-secondary-900 flex min-w-32 items-center gap-4 px-4 py-2 hover:cursor-pointer"
+						class={cn(menuItem, 'flex min-w-32 items-center gap-4')}
 					>
 						{#snippet children({ selected })}
 							{label}

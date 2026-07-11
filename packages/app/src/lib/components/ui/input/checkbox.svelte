@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import { Checkbox, Label, useId, type WithoutChildrenOrChild } from 'bits-ui';
+	import { Checkbox, useId, type WithoutChildrenOrChild } from 'bits-ui';
+	import { Label } from '../label';
 	import CheckIcon from 'phosphor-svelte/lib/Check';
 	import MinusIcon from 'phosphor-svelte/lib/Minus';
 
@@ -67,7 +68,7 @@
 			{/if}
 		{/snippet}
 	</Checkbox.Root>
-	<Label.Root for={id} class={cn(size === 'sm' && 'text-xs', size === 'md' && 'text-md')}>
+	<Label for={id} class={cn(size === 'sm' && 'text-xs', size === 'md' && 'text-md')}>
 		{label}
-	</Label.Root>
+	</Label>
 </div>

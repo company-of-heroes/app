@@ -5,12 +5,23 @@
 	import { Axis, Circle, Highlight, Layer, LineChart, Spline, Text, Tooltip } from 'layerchart';
 	import { IsInViewport } from 'runed';
 	import { Checkbox } from '../ui/input';
+	import { menuItem } from '../ui/variants';
 	import { H } from '../ui/h';
 
 	const replay = $derived(useReplay());
 
-	let selectedPlayer = $derived(replay.players.length > 0 ? replay.players[0].id : null);
+	let selectedPlayerValue = $state('');
 	let filteredPlayers = $state<number[]>([]);
+
+	const selectedPlayer = $derived(
+		selectedPlayerValue ? Number(selectedPlayerValue) : null
+	);
+
+	$effect(() => {
+		if (!selectedPlayerValue && replay.players[0]?.id) {
+			selectedPlayerValue = String(replay.players[0].id);
+		}
+	});
 
 	let actions = $derived.by(() => {
 		if (!selectedPlayer) return [];
@@ -185,31 +196,40 @@
 </div>
 
 <H level="5" class="text-secondary-300 mt-4">Actions Over Time</H>
-<div class="border-secondary-800 grid grid-cols-[220px_auto] gap-4 rounded-xl border p-4">
-	<div class="flex flex-col gap-[4px]">
+<div class="border-secondary-800 grid grid-cols-[minmax(0,13rem)_auto] items-start gap-4 rounded-xl border p-4">
+	<nav
+		class="bg-secondary-800/30 flex h-fit w-full flex-col gap-0.5 rounded-xl p-2"
+		aria-label="Select player"
+	>
 		{#each replay.players as player (player.id)}
+			{@const isSelected = selectedPlayerValue === String(player.id)}
 			<button
+				type="button"
 				class={cn(
-					'flex items-center gap-2',
-					'cursor-pointer rounded-md px-4 py-1.5 text-start font-bold',
-					'text-secondary-600 bg-secondary-950/80',
-					'hover:text-secondary-500',
-					'data-[active=true]:text-primary data-[active=true]:bg-secondary-800'
+					menuItem,
+					'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm',
+					isSelected
+						? 'bg-secondary-800 text-primary font-medium'
+						: 'text-secondary-300 hover:text-white'
 				)}
-				data-active={selectedPlayer === player.id}
-				onclick={() => (selectedPlayer = player.id)}
+				aria-current={isSelected ? 'true' : undefined}
+				onclick={() => (selectedPlayerValue = String(player.id))}
 			>
 				<img
 					src={getFactionFlagFromRace(
-						player.faction as 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
+						player.faction as
+							| 'allies'
+							| 'axis'
+							| 'allies_commonwealth'
+							| 'axis_panzer_elite'
 					)}
 					alt={player.faction}
-					class="h-4"
+					class="h-3.5 shrink-0"
 				/>
-				<span class="truncate">{player.name}</span>
+				<span class="min-w-0 flex-1 truncate">{player.name}</span>
 			</button>
 		{/each}
-	</div>
+	</nav>
 	<div class="flex flex-col gap-4">
 		<div
 			class={cn(

@@ -38,7 +38,7 @@
 		<ToggleGroup.Item
 			value={item.value}
 			class={cn(
-				'h-10 px-4 transition-colors',
+				'h-11 px-4 transition-colors',
 				'not-disabled:hover:bg-secondary-950/50 not-disabled:hover:cursor-pointer',
 				'data-[state=on]:text-primary data-[state=on]:bg-secondary-950 data-[state=on]:hover:bg-secondary-900'
 			)}

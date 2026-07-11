@@ -11,7 +11,12 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { twitchOverlays } from '$features/twitch-overlays';
 	import { cn } from '$lib/utils';
+	import { watch } from 'runed';
 	import { app } from '$core/app/context';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { ToggleGroup } from '$lib/components/ui/toggle-group';
+	import * as Form from '$lib/components/ui/form';
 
 	type OpenFile = {
 		path: string;
@@ -22,11 +27,19 @@
 	};
 
 	let selectedOverlay = $state(twitchOverlays.overlays[0]);
+	let overlaySelection = $state(twitchOverlays.overlays[0].name);
 	let copied = $state(false);
 	let openFiles = $state<OpenFile[]>([]);
 	let activeFileIndex = $state(-1);
 	let editorInstance = $state<monaco.editor.IStandaloneCodeEditor>();
 	let editorContainer = $state<HTMLDivElement>();
+
+	const overlayItems = $derived(
+		twitchOverlays.overlays.map((overlay) => ({
+			value: overlay.name,
+			label: overlay.name
+		}))
+	);
 
 	const activeFile = $derived(activeFileIndex >= 0 ? openFiles[activeFileIndex] : null);
 	const hasUnsavedChanges = $derived(
@@ -74,13 +87,11 @@
 	}
 
 	async function handleFileClick(filePath: string, fileName: string) {
-		// Prevent opening image files
 		if (isImageFile(fileName)) {
 			app.toast.info(`Cannot edit image files: ${fileName}`);
 			return;
 		}
 
-		// Check if file is already open
 		const existingIndex = openFiles.findIndex((f) => f.path === filePath);
 		if (existingIndex !== -1) {
 			activeFileIndex = existingIndex;
@@ -120,7 +131,6 @@
 
 		openFiles.splice(index, 1);
 
-		// Adjust active tab index after closing
 		if (openFiles.length === 0) {
 			activeFileIndex = -1;
 		} else if (activeFileIndex >= openFiles.length) {
@@ -141,35 +151,45 @@
 		}
 	}
 
-	async function switchOverlay(overlay: Overlay) {
+	async function switchOverlay(overlayName: string) {
+		const overlay = twitchOverlays.overlays.find((item) => item.name === overlayName);
+		if (!overlay || overlay.name === selectedOverlay.name) return;
+
 		if (hasUnsavedChanges) {
 			const confirmSwitch = await confirm(
 				'You have unsaved changes. Switch overlays anyway? All changes will be lost.'
 			);
 			if (!confirmSwitch) {
+				overlaySelection = selectedOverlay.name;
 				return;
 			}
 		}
 
-		// Close all open files when switching overlays
 		openFiles = [];
 		activeFileIndex = -1;
 		selectedOverlay = overlay;
+		overlaySelection = overlay.name;
 	}
+
+	watch(
+		() => overlaySelection,
+		(name) => {
+			if (name && name !== selectedOverlay.name) {
+				void switchOverlay(name);
+			}
+		}
+	);
 
 	$effect(() => {
 		if (editorInstance) {
 			const model = editorInstance.getModel();
 
 			if (activeFile && model) {
-				// Update editor language and content when active file changes
 				monaco.editor.setModelLanguage(model, activeFile.language);
-				// Only set value if it's different to avoid cursor reset during editing
 				if (model.getValue() !== activeFile.content) {
 					model.setValue(activeFile.content);
 				}
 			} else if (!activeFile && model) {
-				// Clear the model when no file is active
 				editorInstance.setModel(null);
 			}
 		}
@@ -177,7 +197,6 @@
 
 	$effect(() => {
 		function handleKeyDown(e: KeyboardEvent) {
-			// Ctrl+S to save
 			if ((e.ctrlKey || e.metaKey) && e.key === 's') {
 				e.preventDefault();
 				if (hasUnsavedChanges) {
@@ -194,55 +213,42 @@
 	});
 </script>
 
-<div class="flex gap-4">
-	{#each twitchOverlays.overlays as overlay}
-		<button
-			onclick={() => switchOverlay(overlay)}
-			class={cn(
-				'text-secondary-600 cursor-pointer py-2 font-semibold transition-colors',
-				'data-[active=false]:hover:text-primary/20',
-				selectedOverlay.name === overlay.name && 'text-primary'
-			)}
-			data-active={selectedOverlay.name === overlay.name}
-		>
-			{overlay.name}
-		</button>
-	{/each}
-</div>
-<div class="mt-4 flex flex-col">
-	<label for="overlay-url" class="font-medium text-neutral-400">Overlay URL</label>
-	<small class="text-secondary-300 mb-2">
-		Use this URL in your streaming software to add the overlay to your stream.
-	</small>
-	<div class="relative flex">
-		<input
-			id="overlay-url"
-			readonly
-			value={`http://localhost:9000/${selectedOverlay.path.replace('overlays/', '')}/index.html`}
-			class={cn(
-				'bg-secondary-800 border-secondary-600 w-full rounded-md border px-4 py-2 shadow-2xs outline-none',
-				copied && 'border-success bg-success/5'
-			)}
-		/>
-		<button
-			class={cn(
-				'text-secondary-400 absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer rounded-md p-1 transition-colors',
-				'hover:bg-secondary-600 hover:text-secondary-200',
-				copied && 'text-success pointer-events-none'
-			)}
-			onclick={copyToClipboard}
-			title="Copy Overlay URL"
-		>
-			{#if copied}
-				<CheckIcon size={20} />
-			{:else}
-				<CopyIcon size={20} />
-			{/if}
-		</button>
-	</div>
-</div>
+<ToggleGroup items={overlayItems} bind:value={overlaySelection} class="w-fit" />
+<Form.Root class="mt-4">
+	<Form.Group>
+		<Form.Label for="overlay-url">Overlay URL</Form.Label>
+		<Form.Description>
+			Use this URL in your streaming software to add the overlay to your stream.
+		</Form.Description>
+		<div class="relative flex">
+			<Input
+				id="overlay-url"
+				readonly
+				value={`http://localhost:9000/${selectedOverlay.path.replace('overlays/', '')}/index.html`}
+				class={cn(copied && 'border-success bg-success/5')}
+			/>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				type="button"
+				class={cn(
+					'text-secondary-400 absolute top-1.5 right-1.5',
+					copied && 'text-success pointer-events-none'
+				)}
+				onclick={copyToClipboard}
+				title="Copy Overlay URL"
+			>
+				{#if copied}
+					<CheckIcon size={20} />
+				{:else}
+					<CopyIcon size={20} />
+				{/if}
+			</Button>
+		</div>
+	</Form.Group>
+</Form.Root>
 <div class="mt-6">
-	<div class="mb-2 font-medium text-neutral-400">File editor</div>
+	<Form.Label>File editor</Form.Label>
 	<div
 		class="border-secondary-700 grid h-[500px] grid-cols-[300px_auto] overflow-clip rounded-lg border bg-[#1E1E1E]/50"
 	>
@@ -257,40 +263,45 @@
 			<div
 				class="border-secondary-700 flex w-full items-center justify-between gap-2 border-t px-3 py-2"
 			>
-				<button
-					onclick={async () => openPath(await selectedOverlay.getPath())}
+				<Button
+					variant="ghost"
+					size="sm"
 					type="button"
-					class="text-secondary-200 hover:text-secondary-100 cursor-pointer text-xs font-light transition-colors"
+					class="text-secondary-200 hover:text-secondary-100 px-0 text-xs font-light"
+					onclick={async () => openPath(await selectedOverlay.getPath())}
 				>
 					Open in explorer
-				</button>
+				</Button>
 				{#if hasUnsavedChanges}
-					<button
-						onclick={saveFile}
+					<Button
+						variant="ghost"
+						size="sm"
 						type="button"
-						class="text-primary hover:text-secondary-300 flex cursor-pointer items-center gap-1 text-xs transition-colors"
+						class="text-primary hover:text-secondary-300 gap-1 px-0 text-xs"
+						onclick={saveFile}
 					>
 						<FloppyDiskIcon size={14} />
 						save
-					</button>
+					</Button>
 				{/if}
 			</div>
 		</div>
 		<div class="flex flex-col">
-			<!-- Tabs -->
 			<div class="flex gap-1 p-1">
 				{#each openFiles as file, index}
 					<div
 						class={cn(
 							'flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors',
 							activeFileIndex === index
-								? 'bg-gray-700/30 text-white'
-								: 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-200'
+								? 'bg-secondary-800/30 text-white'
+								: 'text-secondary-400 hover:bg-secondary-800/50 hover:text-secondary-200'
 						)}
 					>
-						<button
+						<Button
+							variant="ghost"
+							size="sm"
+							class="h-auto flex-1 justify-start px-1 py-0"
 							onclick={() => (activeFileIndex = index)}
-							class="flex-1 cursor-pointer text-left"
 						>
 							<span class={cn(file.content !== file.originalContent && 'italic')}>
 								{file.name}
@@ -298,19 +309,20 @@
 									<span class="text-primary">*</span>
 								{/if}
 							</span>
-						</button>
-						<button
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							class="size-6"
 							onclick={(e) => closeFile(index, e)}
-							class="cursor-pointer rounded p-0.5 transition-colors hover:bg-gray-600"
 							title="Close"
 						>
 							<XIcon size={14} />
-						</button>
+						</Button>
 					</div>
 				{/each}
 			</div>
 
-			<!-- Editor -->
 			<div class="flex grow">
 				{#if activeFile}
 					<Editor

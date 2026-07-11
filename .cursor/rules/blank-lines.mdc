@@ -1,0 +1,55 @@
+---
+description: Prevent and fix excessive blank lines in generated code
+alwaysApply: true
+---
+
+# Blank Line Formatting
+
+This project uses **Prettier** with `formatOnSave`. Never write code with a blank line between every statement.
+
+## Rules
+
+- **One statement per line** — not one blank line between every statement
+- **Imports**: consecutive imports with no blank lines between them; one blank line after the import block
+- **Functions**: one blank line between top-level functions; no blank lines between every line inside a function body
+- **Blocks**: one blank line between logical sections (imports → state → functions → markup), not between each line
+- **Before finishing**: scan edited files for double-spacing; remove stray blank lines so output matches existing project files
+
+## Examples
+
+```typescript
+// ❌ BAD — blank line after every line
+import { foo } from './foo';
+
+import { bar } from './bar';
+
+let x = $state(0);
+
+async function run() {
+
+	event.preventDefault();
+
+	const value = x.trim();
+
+	if (!value) {
+
+		return;
+
+	}
+
+}
+
+// ✅ GOOD — normal spacing
+import { foo } from './foo';
+import { bar } from './bar';
+
+let x = $state(0);
+
+async function run() {
+	event.preventDefault();
+	const value = x.trim();
+	if (!value) return;
+}
+```
+
+When editing Svelte files, match the density of neighboring routes (e.g. `history/[id]/+page.svelte`): tight imports, logical section breaks only.

@@ -91,7 +91,8 @@ export class Matches {
 	async getHistoryList(
 		page = 1,
 		perPage = 50,
-		{ scope, userId, ranked = false, playerIds = [], maps = [] }: HistoryListQuery
+		{ scope, userId, ranked = false, playerIds = [], maps = [] }: HistoryListQuery,
+		options?: { signal?: AbortSignal }
 	): Promise<ListResult<MatchExpanded>> {
 		const query: Record<string, string> = {
 			scope,
@@ -115,7 +116,8 @@ export class Matches {
 		const response = await pocketbase.send<ListResult<MatchExpanded>>('/api/match-history', {
 			method: 'GET',
 			query,
-			fetch
+			fetch,
+			signal: options?.signal
 		});
 
 		return {

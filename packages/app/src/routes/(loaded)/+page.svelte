@@ -1,43 +1,24 @@
 <script lang="ts">
-	import { app } from '$core/app/context';
 	import { H } from '$lib/components/ui/h';
-	import { WidgetMatchHistory, WidgetStatus } from '$lib/components/widgets';
-	import { Alert } from '$lib/components/ui/alert';
-	import WidgetCurrentGame from '$lib/components/widgets/widget-current-game.svelte';
-	import WidgetProfile from '$lib/components/widgets/widget-profile.svelte';
-	import { goto } from '$app/navigation';
+	import WidgetDashboardHero from '$lib/components/widgets/widget-dashboard-hero.svelte';
+	import WidgetActiveMatch from '$lib/components/widgets/widget-active-match.svelte';
+	import WidgetLiveLobbies from '$lib/components/widgets/widget-live-lobbies.svelte';
+	import WidgetMatchHistory from '$lib/components/widgets/widget-match-history.svelte';
+	import { app } from '$core/app/context';
 
-	app.on('lobby.started', () => {
-		goto('/current-game');
-	});
+	const hasActiveLobby = $derived(Boolean(app.lobby));
 </script>
 
 <H level="1">Dashboard</H>
 
-<div class="flex gap-4">
-	<WidgetStatus status={app.statuses.companyOfHeroes} info="Company of Heroes game status">
-		Company of Heroes
-	</WidgetStatus>
-	<WidgetStatus
-		status={app.statuses.websocketServer}
-		info="Real-time WebSocket server for bidirectional communication and event handling across the application"
-	>
-		Websocket server
-	</WidgetStatus>
-	<WidgetStatus status={app.statuses.webserver} info="Tiny webserver used to serve the overlays">
-		Web server
-	</WidgetStatus>
-</div>
+<div class="space-y-12">
+	<WidgetDashboardHero />
 
-<div class="mt-8 grid gap-8">
-	{#if app.game.isRunning}
-		<div>
-			<WidgetProfile />
-		</div>
-	{:else}
-		<Alert variant="warning" class="mt-4">Company of Heroes is not running.</Alert>
+	{#if hasActiveLobby}
+		<WidgetActiveMatch />
 	{/if}
-	<div>
-		<WidgetMatchHistory />
-	</div>
+
+	<WidgetLiveLobbies />
+
+	<WidgetMatchHistory />
 </div>

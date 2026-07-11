@@ -58,20 +58,23 @@
 	});
 </script>
 
-<H level="2" class="mb-6">Matches played today</H>
+<div class="flex items-center gap-4">
+	<H level="2" class="mb-0">Matches played today</H>
+	<Button href="/history" variant="link" size="sm" class="ms-auto px-0">View all</Button>
+</div>
 
 {#if matches.loading}
-	<div class="grid gap-[2px]">
-		{#each Array(5) as _}
+	<div class="mt-4 grid gap-[2px]">
+		{#each Array(5) as _, index (index)}
 			<Skeleton class="bg-secondary-950/40 h-11" />
 		{/each}
 	</div>
 {:else if matches.current}
 	{#if matches.current.length === 0}
-		<Alert variant="info">You have not played any matches today.</Alert>
+		<Alert variant="info" class="mt-4">You have not played any matches today.</Alert>
 	{:else}
-		<div class="grid gap-[2px]">
-			{#each matches.current as match, _ (match.id)}
+		<div class="mt-4 grid gap-[2px]">
+			{#each matches.current as match (match.id)}
 				<Match.Root
 					{match}
 					href={`/history/${match.id}`}

@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { Table, TD, TH, THead, TR } from '$lib/components/ui/table';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import MapImage from '$lib/components/ui/map-image.svelte';
 	import { cn, getFactionFlagFromRace } from '$lib/utils';
 	import { getString } from '$lib/utils/game';
@@ -9,6 +8,7 @@
 	import SortDescending from 'phosphor-svelte/lib/ArrowUp';
 	import Sortable from 'phosphor-svelte/lib/ArrowsDownUp';
 	import dayjs from '$lib/dayjs';
+	import type { ReplaysExpanded } from '$core/app/database/replays';
 	import type { ReplayList } from './replay-list.svelte';
 
 	interface Props {
@@ -16,6 +16,16 @@
 	}
 
 	let { list }: Props = $props();
+
+	const columns: ColumnDef<ReplaysExpanded>[] = [
+		{ id: 'title', header: 'Title', width: 'w-4/24', class: 'truncate', accessor: (item) => item.title },
+		{ id: 'allies', header: 'Allies', width: 'w-3/24', class: 'flex gap-2' },
+		{ id: 'axis', header: 'Axis', width: 'w-3/24', class: 'flex gap-2' },
+		{ id: 'duration', header: 'Duration', width: 'w-3/24', sortable: true, onSort: toggleDurationSort, headerClass: 'flex items-center select-none' },
+		{ id: 'players', header: 'Players', width: 'w-2/24', class: 'text-center', headerClass: 'text-center', accessor: (item) => item.players?.length },
+		{ id: 'map', header: 'Map', width: 'w-5/24', class: 'flex items-center gap-4' },
+		{ id: 'date', header: 'Date', width: 'w-4/24', class: 'truncate', sortable: true, onSort: toggleDateSort, headerClass: 'flex items-center select-none' }
+	];
 
 	function viewport(node: HTMLElement) {
 		const observer = new IntersectionObserver((entries) => {
@@ -50,129 +60,119 @@
 			list.filters.sort.gameDate = 'gameDate';
 		}
 	}
+
+	function isFilteredPlayer(name: string) {
+		const normalized = name.toLowerCase();
+		return list.filters.players.some((player) => player.toLowerCase() === normalized);
+	}
 </script>
 
-<Table>
-	<THead>
-		<TR>
-			<TH width="4/24">Title</TH>
-			<TH width="4/24">Allies</TH>
-			<TH width="4/24">Axis</TH>
-			<TH
-				width="3/24"
-				class="flex cursor-pointer items-center select-none"
-				onclick={toggleDurationSort}
-			>
-				Duration
-				{#if list.filters.sort.duration === 'durationInSeconds'}
-					<SortAscending class="ml-auto inline-block" weight="duotone" size="18" />
-				{:else if list.filters.sort.duration === '-durationInSeconds'}
-					<SortDescending class="ml-auto inline-block" weight="duotone" size="18" />
-				{:else}
-					<Sortable class="ml-auto inline-block" weight="duotone" />
-				{/if}
-			</TH>
-			<TH width="2/24" class="text-center">Players</TH>
-			<TH width="6/24">Map</TH>
-			<TH
-				width="4/24"
-				class="flex cursor-pointer items-center select-none"
-				onclick={toggleDateSort}
-			>
-				Date
-				{#if list.filters.sort.gameDate === 'gameDate'}
-					<SortAscending class="ml-auto inline-block" weight="duotone" size="18" />
-				{:else if list.filters.sort.gameDate === '-gameDate'}
-					<SortDescending class="ml-auto inline-block" weight="duotone" size="18" />
-				{:else}
-					<Sortable class="ml-auto inline-block" weight="duotone" />
-				{/if}
-			</TH>
-		</TR>
-	</THead>
-
-	{#if list.replays.length > 0}
-		{#each list.replays as item (item.id)}
-			{@const allies = item.players?.filter((p) => p.faction.startsWith('allies')) || []}
-			{@const axis = item.players?.filter((p) => p.faction.startsWith('axis')) || []}
-			<TR href={`/replays/${item.id}`} class="text-secondary-300">
-				<TD width="4/24" class="truncate">{item.title}</TD>
-				<TD width="4/24" class="flex gap-2">
-					<span class="flex items-center gap-2">
-						{#each allies as player}
-							<img
-								src={getFactionFlagFromRace(
-									player.faction as 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
-								)}
-								alt={player.faction}
-								class={cn('ring-secondary-800 h-4 w-4 rounded-full object-cover ring-4')}
-								{@attach tooltip(player.name)}
-							/>
-						{/each}
-					</span>
-				</TD>
-				<TD width="4/24" class="flex gap-2">
-					<span class="flex items-center gap-2">
-						{#each axis as player}
-							<img
-								src={getFactionFlagFromRace(
-									player.faction as 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
-								)}
-								alt={player.faction}
-								class={cn('ring-secondary-800 h-4 w-4 rounded-full object-cover ring-4')}
-								{@attach tooltip(player.name)}
-							/>
-						{/each}
-					</span>
-				</TD>
-				<TD width="3/24">
-					{dayjs
-						.duration(item.durationInSeconds, 'seconds')
-						.format(item.durationInSeconds < 3600 ? 'm[min]' : 'H[hr] m[min]')}
-				</TD>
-				<TD width="2/24" class="text-center">{item.players?.length}</TD>
-				<TD width="6/24" class="flex items-center gap-4">
-					<MapImage small map={item.mapFilename.split(/[/\\]/).pop()} />
-					<span class="truncate">{getString(item.mapName)}</span>
-				</TD>
-				<TD width="4/24" class="truncate">{dayjs(item.gameDate).format('YYYY-MM-DD HH:mm')}</TD>
-			</TR>
+{#snippet header_duration()}
+	<span class="flex w-full items-center">
+		Duration
+		{#if list.filters.sort.duration === 'durationInSeconds'}
+			<SortAscending class="ml-auto inline-block" weight="duotone" size="18" />
+		{:else if list.filters.sort.duration === '-durationInSeconds'}
+			<SortDescending class="ml-auto inline-block" weight="duotone" size="18" />
+		{:else}
+			<Sortable class="ml-auto inline-block" weight="duotone" />
+		{/if}
+	</span>
+{/snippet}
+{#snippet header_date()}
+	<span class="flex w-full items-center">
+		Date
+		{#if list.filters.sort.gameDate === 'gameDate'}
+			<SortAscending class="ml-auto inline-block" weight="duotone" size="18" />
+		{:else if list.filters.sort.gameDate === '-gameDate'}
+			<SortDescending class="ml-auto inline-block" weight="duotone" size="18" />
+		{:else}
+			<Sortable class="ml-auto inline-block" weight="duotone" />
+		{/if}
+	</span>
+{/snippet}
+{#snippet cell_allies({ row }: { row: ReplaysExpanded })}
+	{@const allies = row.players?.filter((p) => p.faction.startsWith('allies')) || []}
+	<span class="flex items-center gap-2">
+		{#each allies as player (player.id)}
+			<img
+				src={getFactionFlagFromRace(
+					player.faction as 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
+				)}
+				alt={player.faction}
+				class={cn(
+					'h-4 w-4 rounded-full object-cover ring-4',
+					isFilteredPlayer(player.name) ? 'ring-primary' : 'ring-secondary-800'
+				)}
+				{@attach tooltip(player.name)}
+			/>
 		{/each}
-
-		{#if list.hasMore}
-			<div use:viewport class="border-secondary-800 w-full border-t px-4 py-2">
-				<small>
+	</span>
+{/snippet}
+{#snippet cell_axis({ row }: { row: ReplaysExpanded })}
+	{@const axis = row.players?.filter((p) => p.faction.startsWith('axis')) || []}
+	<span class="flex items-center gap-2">
+		{#each axis as player (player.id)}
+			<img
+				src={getFactionFlagFromRace(
+					player.faction as 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
+				)}
+				alt={player.faction}
+				class={cn(
+					'h-4 w-4 rounded-full object-cover ring-4',
+					isFilteredPlayer(player.name) ? 'ring-primary' : 'ring-secondary-800'
+				)}
+				{@attach tooltip(player.name)}
+			/>
+		{/each}
+	</span>
+{/snippet}
+{#snippet cell_duration({ row }: { row: ReplaysExpanded })}
+	{dayjs
+		.duration(row.durationInSeconds, 'seconds')
+		.format(row.durationInSeconds < 3600 ? 'm[min]' : 'H[hr] m[min]')}
+{/snippet}
+{#snippet cell_map({ row }: { row: ReplaysExpanded })}
+	<MapImage small map={row.mapFilename.split(/[/\\]/).pop()} />
+	<span class="truncate">{getString(row.mapName)}</span>
+{/snippet}
+{#snippet cell_date({ row }: { row: ReplaysExpanded })}
+	{dayjs(row.gameDate).format('YYYY-MM-DD HH:mm')}
+{/snippet}
+{#snippet tableFooter()}
+	{#if list.replays.length > 0 || !list.isLoading}
+		<div use:viewport>
+			<small>
+				{#if list.replays.length > 0}
 					Showing {list.replays.length} replays
 					{#if list.isLoading}
 						(loading...)
 					{/if}
-				</small>
-			</div>
-		{:else}
-			<div class="border-secondary-800 w-full border-t px-4 py-2">
-				<small>Showing {list.replays.length} replays</small>
-			</div>
-		{/if}
-	{:else if list.isLoading}
-		{#each Array(10) as _, i (i)}
-			<TR>
-				<TD width="4/24"><Skeleton class="h-4 w-5/6" /></TD>
-				<TD width="4/24"><Skeleton class="h-4 w-full" /></TD>
-				<TD width="4/24"><Skeleton class="h-4 w-full" /></TD>
-				<TD width="3/24"><Skeleton class="h-4 w-1/2" /></TD>
-				<TD width="2/24" class="flex justify-center">
-					<Skeleton class="h-4 w-4" />
-				</TD>
-				<TD width="6/24" class="flex items-center gap-4">
-					<Skeleton class="h-10 w-10 shrink-0" />
-					<Skeleton class="h-4 w-3/4" />
-				</TD>
-				<TD width="4/24"><Skeleton class="h-4 w-2/3" /></TD>
-			</TR>
-		{/each}
-	{:else}
-		<div use:viewport class="border-secondary-800 w-full border-t px-4 py-2">
-			<small>No replays found.</small>
+				{:else}
+					No replays found.
+				{/if}
+			</small>
 		</div>
 	{/if}
-</Table>
+{/snippet}
+
+<DataTable
+	data={list.replays}
+	{columns}
+	rowKey={(item) => item.id}
+	rowHref={(item) => `/replays/${item.id}`}
+	rowClass={() => 'text-secondary-300'}
+	loading={list.isLoading && list.replays.length === 0}
+	skeletonRows={10}
+	empty=""
+	headers={{ duration: header_duration, date: header_date }}
+	cells={{
+		allies: cell_allies,
+		axis: cell_axis,
+		duration: cell_duration,
+		map: cell_map,
+		date: cell_date
+	}}
+>
+	{@render tableFooter()}
+</DataTable>

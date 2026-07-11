@@ -47,12 +47,12 @@
 		{@const isMe = intersection(app.features.auth.user?.steamIds, [player.steamId]).length > 0}
 
 		<Player.Root {player}>
-			<a href={`/leaderboards/profile/${player.steamId}`}>
+			<a href={`/players/${player.steamId}`}>
 				<Player.Faction
 					{@attach tooltip(player.profile?.alias || 'Unknown')}
 					class={cn(
 						isMe || isHighlighted ? 'grayscale-0' : 'opacity-50 grayscale-80',
-						isMe && 'ring-blue-500',
+						isHighlighted ? 'ring-primary' : isMe && 'ring-blue-500',
 						'hover:opacity-100 hover:grayscale-0'
 					)}
 				/>

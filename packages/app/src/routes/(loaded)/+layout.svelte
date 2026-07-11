@@ -2,17 +2,18 @@
 	import * as Nav from '$lib/components/ui/nav';
 	import { watch } from 'runed';
 	import { Label } from '$lib/components/ui/label';
-	import { cn } from '$lib/utils';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import { app, createApp } from '$core/app/context';
 	import { ToastReplaysProgress } from '$lib/components/toasts';
 	import { Avatar } from '$lib/components/ui/avatar';
 	import { page } from '$app/state';
 	import { Modal } from '$lib/components/ui/modal';
-	import { Toaster } from 'svelte-sonner';
+	import { Toaster } from '$lib/components/ui/toasts';
+	import { Button } from '$lib/components/ui/button';
 	import { Dialog } from '$lib/components/ui/dialog';
 	import DashboardIcon from 'phosphor-svelte/lib/SquaresFour';
 	import RankingIcon from 'phosphor-svelte/lib/Ranking';
+	import UsersIcon from 'phosphor-svelte/lib/Users';
 	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
 	import Logo from '$lib/files/logo-transparent-bg.png?url';
 	import SettingsIcon from 'phosphor-svelte/lib/GearSix';
@@ -22,9 +23,6 @@
 	import HistoryIcon from 'phosphor-svelte/lib/LineSegments';
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwise';
 	import CommandIcon from 'phosphor-svelte/lib/Command';
-	import SuccesIcon from 'phosphor-svelte/lib/Check';
-	import ErrorIcon from 'phosphor-svelte/lib/ExclamationMark';
-	import InfoIcon from 'phosphor-svelte/lib/QuestionMark';
 	import BriefcaseIcon from 'phosphor-svelte/lib/Briefcase';
 	import NotificationBell from '$lib/components/notifications/notification-bell.svelte';
 
@@ -93,6 +91,10 @@
 					<RankingIcon size={28} weight="duotone" />
 					Leaderboards
 				</Nav.Link>
+				<Nav.Link href="/players">
+					<UsersIcon size={28} weight="duotone" />
+					Players
+				</Nav.Link>
 				<Nav.Link href="/twitch">
 					<TwitchIcon size={28} weight="duotone" />
 					Twitch
@@ -123,37 +125,39 @@
 						{/if}
 					</div>
 					<span class="flex items-center gap-2 px-4 py-4">
-						<button
-							class={cn(
-								'bg-secondary-800 text-secondary-400 cursor-pointer rounded-md p-1.5',
-								'hover:text-primary hover:bg-secondary-700 transition-colors'
-							)}
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							class="bg-secondary-800 text-secondary-400 hover:text-primary hover:bg-secondary-700"
 							onclick={() => openUrl('https://discord.gg/Cc69hbDnPD')}
 						>
 							<DiscordLogoIcon weight="duotone" />
-						</button>
-						<button
-							class={cn(
-								'bg-secondary-800 text-secondary-400 cursor-pointer rounded-md p-1.5',
-								'hover:text-primary hover:bg-secondary-700 transition-colors'
-							)}
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							class="bg-secondary-800 text-secondary-400 hover:text-primary hover:bg-secondary-700"
 							onclick={() => openUrl('https://www.twitch.tv/fknoobscoh')}
 						>
 							<TwitchLogoIcon weight="duotone" />
-						</button>
-						<button
-							class={cn(
-								'bg-secondary-800 text-secondary-400 cursor-pointer rounded-md p-1.5',
-								'hover:text-primary hover:bg-secondary-700 transition-colors'
-							)}
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							class="bg-secondary-800 text-secondary-400 hover:text-primary hover:bg-secondary-700"
 							onclick={() => openUrl('https://github.com/fknoobs/app')}
 						>
 							<GithubLogoIcon weight="duotone" />
-						</button>
+						</Button>
 						<span class="text-secondary-400 ms-auto flex items-center gap-2 text-sm">
-							<button class="cursor-pointer" onclick={() => app.features.updater.openChangelog()}>
+							<Button
+								variant="link"
+								size="sm"
+								class="px-0"
+								onclick={() => app.features.updater.openChangelog()}
+							>
 								v{app.features.updater.currentVersionFormatted}
-							</button>
+							</Button>
 						</span>
 					</span>
 				</div>
@@ -168,26 +172,4 @@
 <Dialog />
 <Modal />
 
-<Toaster
-	theme="dark"
-	toastOptions={{
-		unstyled: true,
-		classes: {
-			success:
-				'gap-2 flex items-center bg-green-950 border-green-800 text-green-100 border rounded-md px-3 py-1.5 shadow-xl text-sm',
-			error:
-				'gap-2 flex items-center bg-red-950 border-red-800 text-red-100 border rounded-md px-3 py-1.5 shadow-xl text-sm',
-			info: 'gap-2 flex items-center bg-gray-900 border-gray-600 text-white border rounded-md px-3 py-1.5 shadow-xl text-sm'
-		}
-	}}
->
-	{#snippet successIcon()}
-		<SuccesIcon size={24} class="rounded bg-green-900/50 p-1" />
-	{/snippet}
-	{#snippet errorIcon()}
-		<ErrorIcon size={24} class="rounded bg-red-900/50 p-1" />
-	{/snippet}
-	{#snippet infoIcon()}
-		<InfoIcon size={24} class="rounded bg-gray-950/40 p-1" />
-	{/snippet}
-</Toaster>
+<Toaster />

@@ -1,17 +1,40 @@
 <script lang="ts">
+	import * as Form from '$lib/components/ui/form';
 	import { Button } from '$lib/components/ui/button';
-	import { Label } from '$lib/components/ui/label';
+	import { Badge } from '$lib/components/ui/badge';
 	import { cancel, onUrl, start, onInvalidUrl } from '@fabianlars/tauri-plugin-oauth';
 	import { openUrl } from '@tauri-apps/plugin-opener';
-	import { toast } from 'svelte-sonner';
+	import { app } from '$core/app/context';
+	import { Avatar } from 'bits-ui';
 	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogo';
-	import ArrowIcon from 'phosphor-svelte/lib/ArrowRight';
-	import { cn } from '$lib/utils';
-	import { Checkbox, Input } from '$lib/components/ui/input';
+	import ArrowSquareOut from 'phosphor-svelte/lib/ArrowSquareOut';
+	import SignOut from 'phosphor-svelte/lib/SignOut';
+	import EnvelopeSimple from 'phosphor-svelte/lib/EnvelopeSimple';
+	import CalendarBlank from 'phosphor-svelte/lib/CalendarBlank';
+	import Clock from 'phosphor-svelte/lib/Clock';
+	import { Checkbox } from '$lib/components/ui/input';
 	import { twitch } from '$features/twitch';
+	import dayjs from '$lib/dayjs';
+	import { cn } from '$lib/utils';
+	import { surfacePanel } from '$lib/components/ui/variants';
+	import { tooltip } from '$lib/attachments';
 
-	let isStreamOnline = $state(false);
 	let isStartingOAuth = $state(false);
+
+	const broadcasterTypeLabel = $derived.by(() => {
+		const type = twitch.user?.broadcasterType;
+
+		if (type === 'partner') return 'Partner';
+		if (type === 'affiliate') return 'Affiliate';
+
+		return null;
+	});
+
+	const initials = $derived.by(() => {
+		const name = twitch.user?.displayName ?? twitch.token?.userName ?? '';
+
+		return name.slice(0, 2).toUpperCase();
+	});
 
 	const startOAuthFlow = async () => {
 		isStartingOAuth = true;
@@ -35,17 +58,17 @@
 
 		onUrl((u) => {
 			const url = new URL(u);
-			const hash = url.hash.substring(1); // remove the '#'
+			const hash = url.hash.substring(1);
 			const params = new URLSearchParams(hash);
 
 			const { access_token } = Object.fromEntries(params.entries());
 
 			if (!access_token) {
-				toast.error('Failed to get access token');
+				app.toast.error('Failed to get access token');
 				return;
 			}
 
-			toast.success('Successfully connected to Twitch');
+			app.toast.success('Successfully connected to Twitch');
 			twitch.settings.accessToken = access_token as string;
 
 			cancel(port);
@@ -53,62 +76,139 @@
 		});
 
 		onInvalidUrl(() => {
-			toast.error('Twitch OAuth flow was cancelled or failed');
+			app.toast.error('Twitch OAuth flow was cancelled or failed');
 			isStartingOAuth = false;
 		});
 	};
 
 	const disconnect = () => {
 		twitch.settings.accessToken = null;
-		toast.success('Successfully disconnected from Twitch');
+		app.toast.success('Successfully disconnected from Twitch');
+	};
+
+	const openTwitchProfile = () => {
+		const userName = twitch.user?.name ?? twitch.token?.userName;
+
+		if (userName) {
+			openUrl(`https://www.twitch.tv/${userName}`);
+		}
 	};
 </script>
 
 <div class="mb-4 flex flex-col items-start gap-2">
-	<div class="mb-4 flex flex-col gap-2">
-		<Label>Enable twitch integration</Label>
-		<Checkbox bind:checked={twitch.settings.enabled} label="Enabled" />
-	</div>
-	<div class="mb-4 flex w-full flex-col gap-2">
-		<Label>Twitch Client ID</Label>
-		<Input
-			type="text"
-			bind:value={twitch.settings.clientId}
-			placeholder="Enter your Twitch Client ID"
-			disabled={!twitch.settings.enabled}
-		/>
-	</div>
-	{#if twitch.settings.enabled}
-		{#if twitch.token}
-			<span class="flex items-center gap-2">
-				<Button variant="destructive" onclick={disconnect} type="button">Disconnect</Button>
-				<ArrowIcon size="20" />
-				<Button
-					variant="secondary"
-					class="bg-secondary-900"
-					onclick={() => openUrl(`https://www.twitch.tv/${twitch.token!.userId}`)}
-				>
-					<span
-						class={cn(
-							'bg-destructive ring-destructive/30 me-2 h-2 w-2 rounded-full ring-4',
-							isStreamOnline && 'bg-success ring-success/30'
-						)}
-					></span>
-					<span class="text-secondary-300">{twitch.token.userName}</span>
-				</Button>
-			</span>
-		{:else}
-			<Label>Twitch Channel</Label>
-			<Button
-				variant="secondary"
-				type="button"
-				onclick={startOAuthFlow}
-				class="bg-[#6441a5] shadow-none"
-				loading={isStartingOAuth}
-			>
-				<TwitchIcon size="22" weight="bold" />
-				Connect Twitch
-			</Button>
+	<Form.Root>
+		<Form.Group>
+			<Form.Label>Enable twitch integration</Form.Label>
+			<Checkbox bind:checked={twitch.settings.enabled} label="Enabled" />
+		</Form.Group>
+		{#if twitch.settings.enabled}
+			{#if twitch.token}
+				<Form.Group>
+					<Form.Label>Connected account</Form.Label>
+					<div class={cn(surfacePanel, 'relative w-full max-w-xl overflow-hidden p-5')}>
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							onclick={disconnect}
+							type="button"
+							class="text-destructive/70 hover:text-destructive absolute top-3 right-3 cursor-pointer"
+							{@attach tooltip('Disconnect')}
+						>
+							<SignOut size="18" />
+						</Button>
+						<div class="relative flex items-start gap-4">
+							<div class="relative shrink-0">
+								<Avatar.Root
+									class={cn(
+										'size-16 rounded-full border-2',
+										twitch.isLive ? 'border-success' : 'border-secondary-600'
+									)}
+								>
+									<div
+										class="flex h-full w-full items-center justify-center overflow-hidden rounded-full"
+									>
+										<Avatar.Image
+											src={twitch.user?.profilePictureUrl}
+											alt={twitch.user?.displayName ?? twitch.token.userName ?? ''}
+										/>
+										<Avatar.Fallback
+											class="bg-secondary-800 flex h-full w-full items-center justify-center text-sm font-semibold"
+										>
+											{initials}
+										</Avatar.Fallback>
+									</div>
+								</Avatar.Root>
+								<span
+									class={cn(
+										'border-secondary-900 absolute -right-0.5 -bottom-0.5 size-4 rounded-full border-2',
+										twitch.isLive ? 'bg-success' : 'bg-secondary-500'
+									)}
+								></span>
+							</div>
+							<div class="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">
+								<div class="flex flex-wrap items-center gap-2">
+									<button
+										type="button"
+										class="hover:text-primary flex items-center gap-1 text-left font-semibold transition-colors"
+										onclick={openTwitchProfile}
+									>
+										{twitch.user?.displayName ?? twitch.token.userName}
+										<ArrowSquareOut size="14" />
+									</button>
+									<Badge variant={twitch.isLive ? 'success' : 'default'}>
+										{twitch.isLive ? 'Live' : 'Offline'}
+									</Badge>
+									{#if broadcasterTypeLabel}
+										<Badge variant="primary">{broadcasterTypeLabel}</Badge>
+									{/if}
+								</div>
+								{#if twitch.user?.name}
+									<span class="text-secondary-400 -mt-1 text-sm">@{twitch.user.name}</span>
+								{/if}
+								{#if twitch.user?.description}
+									<p class="text-secondary-400 line-clamp-2 text-sm">{twitch.user.description}</p>
+								{/if}
+								<div
+									class="text-secondary-400 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs"
+								>
+									{#if twitch.user?.email}
+										<span class="flex items-center gap-1.5">
+											<EnvelopeSimple size="14" />
+											{twitch.user.email}
+										</span>
+									{/if}
+									{#if twitch.user?.creationDate}
+										<span class="flex items-center gap-1.5">
+											<CalendarBlank size="14" />
+											Joined {dayjs(twitch.user.creationDate).format('D MMM YYYY')}
+										</span>
+									{/if}
+									{#if twitch.token.expiryDate}
+										<span class="flex items-center gap-1.5">
+											<Clock size="14" />
+											Session expires {dayjs(twitch.token.expiryDate).format('D MMM YYYY HH:mm')}
+										</span>
+									{/if}
+								</div>
+							</div>
+						</div>
+					</div>
+				</Form.Group>
+			{:else}
+				<Form.Group>
+					<Form.Label>Twitch Channel</Form.Label>
+					<Button
+						variant="secondary"
+						type="button"
+						onclick={startOAuthFlow}
+						class="bg-[#6441a5] shadow-none"
+						loading={isStartingOAuth}
+					>
+						<TwitchIcon size="22" weight="bold" />
+						Connect Twitch
+					</Button>
+				</Form.Group>
+			{/if}
 		{/if}
-	{/if}
+	</Form.Root>
 </div>

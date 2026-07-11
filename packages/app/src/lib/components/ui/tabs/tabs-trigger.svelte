@@ -18,7 +18,7 @@
 		'not-disabled:data-[state=active]:bg-primary not-disabled:data-[state=active]:text-secondary-950',
 		'disabled:text-secondary-500 transition-colors duration-100',
 		variant === 'secondary' &&
-			'data-[state=active]:bg-primary/5 border-b-2 border-b-gray-500 bg-transparent data-[state=active]:text-white'
+			'data-[state=active]:bg-primary/5 border-b-2 border-b-secondary-600 bg-transparent data-[state=active]:text-white'
 	)}
 >
 	{@render props.children?.()}

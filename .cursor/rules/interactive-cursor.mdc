@@ -1,0 +1,29 @@
+---
+description: Clickable elements must show a pointer cursor
+globs: packages/app/src/**/*.{svelte,svelte.ts}
+alwaysApply: true
+---
+
+# Interactive Cursor
+
+All clickable elements must use `cursor-pointer`. Disabled controls use `disabled:cursor-not-allowed`.
+
+## Rules
+
+- Prefer `Button` from `$lib/components/ui/button` — it includes `cursor-pointer` by default
+- Raw `<button>`, `<a>`, and clickable rows (`role="option"`, menu items) must add `cursor-pointer` explicitly
+- Reuse `interactive` from `$lib/components/ui/variants` for raw buttons/links:
+
+```svelte
+<button type="button" class={cn(interactive, 'text-secondary-400')}>...</button>
+```
+
+```typescript
+// variants.ts
+export const interactive = 'cursor-pointer disabled:cursor-not-allowed';
+```
+
+## Do not
+
+- Leave raw clickable elements without a pointer cursor
+- Use `cursor-default` on interactive elements unless they are genuinely non-clickable

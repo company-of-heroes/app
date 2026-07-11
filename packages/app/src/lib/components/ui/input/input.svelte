@@ -1,81 +1,128 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { InputProps } from '.';
 	import { cn } from '$lib/utils';
+	import {
+		adornedActions,
+		adornedControl,
+		adornedControlDisabled,
+		adornedInput,
+		adornedLeading,
+		adornedTrailing,
+		controlBase,
+		controlDisabled,
+		controlReadonly,
+		stepperButton
+	} from '../variants';
+	import { Button } from '../button';
 	import EyeIcon from 'phosphor-svelte/lib/Eye';
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlash';
 	import PlusIcon from 'phosphor-svelte/lib/Plus';
 	import MinusIcon from 'phosphor-svelte/lib/Minus';
 
-	let { value = $bindable(), type, ...restProps }: InputProps = $props();
-	let originalType = type;
+	let {
+		value = $bindable(),
+		type,
+		class: className,
+		leading,
+		trailing,
+		...restProps
+	}: InputProps = $props();
+	let showPasswordToggle = $state(untrack(() => type === 'password'));
+	let hasAdornments = $derived(leading != null || trailing != null);
+
+	function stepValue(direction: 1 | -1) {
+		const step = restProps.step ? parseFloat(restProps.step.toString()) : 1;
+		let next = (parseFloat(value) || 0) + direction * step;
+
+		if (restProps.max !== undefined && next > parseFloat(restProps.max?.toString() ?? '0')) {
+			next = parseFloat(restProps.max?.toString() ?? '0');
+		}
+
+		if (restProps.min !== undefined && next < parseFloat(restProps.min?.toString() ?? '0')) {
+			next = parseFloat(restProps.min?.toString() ?? '0');
+		}
+
+		value = next.toString();
+	}
 </script>
 
 {#if type === 'number'}
 	<div
-		class={cn(
-			'flex items-center rounded-md',
-			'border-secondary-800 bg-secondary-800/30 focus:border-secondary-600 h-11 w-full border ps-4 pe-2 focus:outline-none',
-			'peer-disabled:bg-secondary-950 peer-disabled:border-secondary-800 peer-disabled:text-secondary-500 peer-disabled:cursor-not-allowed',
-			'peer-read-only:border-secondary-600 peer-read-only:bg-secondary-700 peer-read-only:text-secondary-300 peer-read-only:cursor-not-allowed',
-			restProps.class
-		)}
+		class={cn(hasAdornments ? cn(adornedControl, adornedControlDisabled) : 'relative w-full', className)}
 	>
+		{#if leading}
+			<span class={cn(adornedLeading, 'pointer-events-none')}>
+				{@render leading()}
+			</span>
+		{/if}
 		<input
 			bind:value
 			{...restProps}
 			type="text"
-			class="w-full outline-none"
+			inputmode="numeric"
+			class={cn(
+				hasAdornments ? adornedInput : cn(controlBase, 'w-full px-4 pe-[4.25rem]'),
+				controlDisabled,
+				controlReadonly
+			)}
 			oninput={() => {
 				value = value.replace(/[^0-9.-]/g, '');
 			}}
 		/>
-		<button
-			class="text-secondary-400 hover:bg-secondary-900 hover:text-secondary-200 peer cursor-pointer rounded-md p-1.5"
-			type="button"
-			onclick={() => {
-				const step = restProps.step ? parseFloat(restProps.step.toString()) : 1;
-				value = (parseFloat(value) + step).toString();
-
-				if (restProps.max && parseFloat(value) > parseFloat(restProps.max.toString())) {
-					value = restProps.max.toString();
-				}
-			}}
+		{#if trailing}
+			<span class={adornedTrailing}>
+				{@render trailing()}
+			</span>
+		{/if}
+		<div
+			class={cn(
+				'flex items-center gap-1',
+				hasAdornments ? adornedActions : 'absolute top-1/2 right-1.5 -translate-y-1/2'
+			)}
 		>
-			<PlusIcon />
-		</button>
-		<button
-			class="text-secondary-400 hover:bg-secondary-900 hover:text-secondary-200 cursor-pointer rounded-md p-1.5"
-			type="button"
-			onclick={() => {
-				const step = restProps.step ? parseFloat(restProps.step.toString()) : 1;
-				value = (parseFloat(value) - step).toString();
-
-				if (restProps.min && parseFloat(value) < parseFloat(restProps.min.toString())) {
-					value = restProps.min.toString();
-				}
-			}}
-		>
-			<MinusIcon />
-		</button>
+			<button
+				type="button"
+				class={stepperButton}
+				aria-label="Decrease value"
+				onclick={() => stepValue(-1)}
+			>
+				<MinusIcon size={12} weight="bold" />
+			</button>
+			<button
+				type="button"
+				class={stepperButton}
+				aria-label="Increase value"
+				onclick={() => stepValue(1)}
+			>
+				<PlusIcon size={12} weight="bold" />
+			</button>
+		</div>
 	</div>
-{:else}
-	<div class="relative flex flex-1">
+{:else if hasAdornments}
+	<div class={cn(adornedControl, adornedControlDisabled, className)}>
+		{#if leading}
+			<span class={cn(adornedLeading, 'pointer-events-none')}>
+				{@render leading()}
+			</span>
+		{/if}
 		<input
 			bind:value
 			{...restProps}
 			{type}
-			class={cn(
-				'rounded-md',
-				'border-secondary-800 bg-secondary-800/30 focus:border-secondary-600 h-11 w-full border px-4 focus:outline-none',
-				'disabled:bg-secondary-950 disabled:border-secondary-800 disabled:text-secondary-500 disabled:cursor-not-allowed',
-				'read-only:border-secondary-700 read-only:bg-secondary-500/30 read-only:text-secondary-400 read-only:cursor-not-allowed',
-				restProps.class
-			)}
+			class={cn(adornedInput, controlDisabled, controlReadonly)}
 		/>
-		{#if originalType === 'password'}
-			<button
-				class="text-secondary-400 hover:bg-secondary-800 hover:text-secondary-200 absolute top-2 right-2 cursor-pointer rounded-md p-1.5"
+		{#if trailing}
+			<span class={adornedTrailing}>
+				{@render trailing()}
+			</span>
+		{/if}
+		{#if showPasswordToggle}
+			<Button
+				variant="ghost"
+				size="icon-sm"
 				type="button"
+				class="text-secondary-400 border-secondary-800 shrink-0 border-l"
 				onclick={() => (type = type === 'password' ? 'text' : 'password')}
 			>
 				{#if type === 'password'}
@@ -83,7 +130,31 @@
 				{:else}
 					<EyeIcon />
 				{/if}
-			</button>
+			</Button>
+		{/if}
+	</div>
+{:else}
+	<div class={cn('relative w-full', className)}>
+		<input
+			bind:value
+			{...restProps}
+			{type}
+			class={cn(controlBase, 'w-full px-4', controlDisabled, controlReadonly)}
+		/>
+		{#if showPasswordToggle}
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				type="button"
+				class="text-secondary-400 absolute top-1.5 right-1.5"
+				onclick={() => (type = type === 'password' ? 'text' : 'password')}
+			>
+				{#if type === 'password'}
+					<EyeSlashIcon />
+				{:else}
+					<EyeIcon />
+				{/if}
+			</Button>
 		{/if}
 	</div>
 {/if}

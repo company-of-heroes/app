@@ -2,7 +2,7 @@ import type { NotificationRecord } from '$core/app/database/notifications';
 import { database } from '$core/app/database';
 import { account } from '$core/account';
 import { modal } from '$lib/components/ui/modal';
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/components/ui/toasts';
 import NotificationDetail from '$lib/components/notifications/notification-detail.svelte';
 
 export type NotificationItem = NotificationRecord & {

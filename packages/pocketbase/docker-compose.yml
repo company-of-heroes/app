@@ -14,6 +14,7 @@ services:
       - PB_PORT=${PB_PORT:-8090}
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
+      - SMURF_SERVICE_TOKEN=${SMURF_SERVICE_TOKEN}
     env_file:
       - path: ./.env
         required: false

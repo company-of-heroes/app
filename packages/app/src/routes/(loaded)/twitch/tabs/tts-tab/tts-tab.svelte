@@ -1,20 +1,19 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import { Button } from '$lib/components/ui/button';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import UserSoundIcon from 'phosphor-svelte/lib/UserSound';
-	import { Label } from '$lib/components/ui/label';
 	import { Checkbox, Input, RadioGroup, Selection } from '$lib/components/ui/input';
 	import { tts } from '$features/twitch';
 </script>
 
 <Form.Root>
 	<Form.Group>
-		<Label>Enable TTS</Label>
-		<Checkbox bind:checked={tts.enabled} label="Enabled" />
+		<Form.Label>Enable TTS</Form.Label>
+		<Checkbox bind:checked={tts.settings.enabled} label="Enabled" />
 	</Form.Group>
 	<Form.Group>
-		<Label>TTS Provider</Label>
+		<Form.Label>TTS Provider</Form.Label>
 		<div class="flex items-center gap-8">
 			<RadioGroup
 				name="provider"
@@ -28,7 +27,7 @@
 		</div>
 	</Form.Group>
 	<Form.Group>
-		<Label>Announce user</Label>
+		<Form.Label>Announce user</Form.Label>
 		<small class="text-secondary-400 -mt-2 mb-1 block">
 			When enabled, TTS will announce the username of the message sender before reading the message.
 			<pre>{`{username} says: {message}`}</pre>
@@ -50,7 +49,7 @@
 		/>
 	</Form.Group>
 	<Form.Group>
-		<Label>TTS message format</Label>
+		<Form.Label>TTS message format</Form.Label>
 		<small class="text-secondary-400 -mt-2 mb-1 block">
 			Available variables: <code>{`{username}`}</code>
 			<code>{`{message}`}</code>
@@ -63,7 +62,7 @@
 		/>
 	</Form.Group>
 	<Form.Group>
-		<Label>Aliases</Label>
+		<Form.Label>Aliases</Form.Label>
 		<small class="text-secondary-400 -mt-2 mb-1 block">
 			Define username → spoken alias mappings. When TTS reads a message it will replace the Twitch
 			username with the alias (e.g. `sarah123 → Sarah`). Use aliases to correct pronunciations or
@@ -99,7 +98,7 @@
 		</Button>
 	</Form.Group>
 	<Form.Group>
-		<Label>Voice character</Label>
+		<Form.Label>Voice character</Form.Label>
 		<Selection
 			bind:value={tts.settings.voiceId}
 			options={tts.provider.voices?.map((voice) => {

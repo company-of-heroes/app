@@ -2,7 +2,7 @@
 	import type { ComponentProps } from 'svelte';
 	import { Selection } from '$lib/components/ui/input';
 	import { Button } from '../ui/button';
-	import { Input } from '../ui/input';
+	import { cn } from '$lib/utils';
 	import PlayIcon from 'phosphor-svelte/lib/PlayIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
@@ -22,6 +22,16 @@
 	let editingVoiceId = $state<string | null>(null);
 	let aliasDraft = $state('');
 
+	function focusAliasInput(node: HTMLInputElement) {
+		node.focus();
+		node.select();
+	}
+
+	function stopRowSelection(event: Event) {
+		event.stopPropagation();
+		event.preventDefault();
+	}
+
 	function getVoice(voiceId: string) {
 		return tts.provider.voices.find((voice) => voice.voiceId === voiceId);
 	}
@@ -37,8 +47,7 @@
 	}
 
 	function startInlineAliasEdit(voiceId: string, event: Event) {
-		event.stopPropagation();
-		event.preventDefault();
+		stopRowSelection(event);
 
 		const voice = getVoice(voiceId);
 		if (!voice) return;
@@ -48,7 +57,7 @@
 	}
 
 	function openAliasDialog(voiceId: string, event: Event) {
-		event.stopPropagation();
+		stopRowSelection(event);
 
 		const voice = getVoice(voiceId);
 		if (!voice) return;
@@ -80,13 +89,20 @@
 
 {#snippet child({ value, label }: { value: string; label: string })}
 	{@const isEditing = editingVoiceId === value}
-	<span class="grid w-full grid-cols-[1fr_auto] items-center gap-4 text-start">
+	<span class="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-start">
 		{#if isEditing}
-			<Input
-				class="h-8 min-w-0 py-1 text-sm"
+			<input
+				type="text"
+				{@attach focusAliasInput}
 				bind:value={aliasDraft}
 				placeholder={label}
-				onclick={(e) => e.stopPropagation()}
+				class={cn(
+					'border-secondary-700 bg-secondary-900 focus:border-secondary-500',
+					'h-8 w-full min-w-0 rounded border px-2.5 text-sm outline-none'
+				)}
+				onclick={stopRowSelection}
+				onmousedown={stopRowSelection}
+				onpointerdown={stopRowSelection}
 				onkeydown={(e) => {
 					e.stopPropagation();
 
@@ -100,7 +116,12 @@
 						cancelAliasEdit();
 					}
 				}}
-				onblur={() => {
+				onblur={(e) => {
+					const related = e.relatedTarget;
+					if (related instanceof Element && related.closest('[data-alias-actions]')) {
+						return;
+					}
+
 					if (editingVoiceId === value) {
 						saveAlias(value);
 					}
@@ -109,15 +130,16 @@
 		{:else}
 			<span class="truncate">{getListLabel(value, label)}</span>
 		{/if}
-		<span class="flex items-center gap-1">
+		<span class="flex items-center gap-1" data-alias-actions>
 			<Button
 				variant="secondary"
 				size="icon-sm"
 				{@attach tooltip(isEditing ? 'Save alias' : 'Edit alias')}
+				onpointerdown={stopRowSelection}
+				onmousedown={stopRowSelection}
 				onclick={(e) => {
 					if (isEditing) {
-						e.stopPropagation();
-						e.preventDefault();
+						stopRowSelection(e);
 						saveAlias(value);
 						return;
 					}
@@ -135,9 +157,10 @@
 				variant="secondary"
 				size="icon-sm"
 				{@attach tooltip('Play preview')}
+				onpointerdown={stopRowSelection}
+				onmousedown={stopRowSelection}
 				onclick={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
+					stopRowSelection(e);
 
 					previewLoadingVoiceId = value;
 

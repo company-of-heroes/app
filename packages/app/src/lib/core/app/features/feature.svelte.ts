@@ -5,7 +5,7 @@ import Emittery from 'emittery';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { documentDir, join } from '@tauri-apps/api/path';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
-import { toast } from 'svelte-sonner';
+import { toast } from '$lib/components/ui/toasts';
 import { settings as settingsService } from '$core/config/settings.svelte';
 import {
 	createFeatureEnvelope,

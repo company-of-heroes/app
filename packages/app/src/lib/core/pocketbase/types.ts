@@ -20,6 +20,7 @@ export const Collections = {
 	Notifications: "notifications",
 	ReplayAggregation: "replay_aggregation",
 	Replays: "replays",
+	SmurfWatch: "smurf_watch",
 	Users: "users",
 } as const
 export type Collections = typeof Collections[keyof typeof Collections]
@@ -221,6 +222,43 @@ export type UsersRecord<Tmeta = unknown, TsteamIds = unknown> = {
 	verified?: boolean
 }
 
+export const SmurfWatchStatusOptions = {
+	"pending_screening": "pending_screening",
+	"watching": "watching",
+	"resolved": "resolved",
+	"not_smurf": "not_smurf",
+} as const
+export type SmurfWatchStatusOptions = typeof SmurfWatchStatusOptions[keyof typeof SmurfWatchStatusOptions]
+export const SmurfWatchSourceOptions = {
+	"profile": "profile",
+	"search": "search",
+	"lobby_live": "lobby_live",
+	"lobby_match": "lobby_match",
+	"backfill": "backfill",
+} as const
+export type SmurfWatchSourceOptions = typeof SmurfWatchSourceOptions[keyof typeof SmurfWatchSourceOptions]
+export const SmurfWatchLenderSourceOptions = {
+	"live": "live",
+	"cohstats": "cohstats",
+} as const
+export type SmurfWatchLenderSourceOptions = typeof SmurfWatchLenderSourceOptions[keyof typeof SmurfWatchLenderSourceOptions]
+export type SmurfWatchRecord = {
+	check_interval_sec?: number
+	created: IsoAutoDateString
+	id: string
+	last_checked_at?: IsoDateString
+	lender_source?: SmurfWatchLenderSourceOptions
+	lender_steam_id?: string
+	next_check_at?: IsoDateString
+	owns_coh?: boolean
+	priority?: number
+	profile_id?: number
+	source: SmurfWatchSourceOptions
+	status: SmurfWatchStatusOptions
+	steam_id: string
+	updated: IsoAutoDateString
+}
+
 // Response types include system fields and match responses from the PocketBase API
 export type AuthoriginsResponse<Texpand = unknown> = Required<AuthoriginsRecord> & BaseSystemFields<Texpand>
 export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRecord> & BaseSystemFields<Texpand>
@@ -236,6 +274,7 @@ export type NotificationReadsResponse<Texpand = unknown> = Required<Notification
 export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRecord> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
+export type SmurfWatchResponse<Texpand = unknown> = Required<SmurfWatchRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Tmeta = unknown, TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<Tmeta, TsteamIds>> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -255,6 +294,7 @@ export type CollectionRecords = {
 	notifications: NotificationsRecord
 	replay_aggregation: ReplayAggregationRecord
 	replays: ReplaysRecord
+	smurf_watch: SmurfWatchRecord
 	users: UsersRecord
 }
 
@@ -273,6 +313,7 @@ export type CollectionResponses = {
 	notifications: NotificationsResponse
 	replay_aggregation: ReplayAggregationResponse
 	replays: ReplaysResponse
+	smurf_watch: SmurfWatchResponse
 	users: UsersResponse
 }
 

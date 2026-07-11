@@ -361,62 +361,130 @@ const mapModules = import.meta.glob<{ default: string }>('$lib/files/maps/*_map_
 	eager: true
 });
 
+const defaultMapModules = import.meta.glob<{ default: string }>(
+	'$lib/files/maps/mp_nobattlemap.png',
+	{ eager: true }
+);
+
 /**
  * Cache for storing map image imports to avoid repeated lookups
  * Maps map name to the imported image path
  */
 const mapCache = new Map<string, string>();
 
-/**
- * Default fallback map image
- */
-let defaultMapImage: string | null = null;
+const defaultMapImage = Object.values(defaultMapModules)[0]?.default ?? '';
+
+function registerMapKey(key: string, url: string) {
+	const normalized = key.trim().toLowerCase().replace(/\s+/g, ' ');
+	if (!normalized) return;
+
+	mapCache.set(normalized, url);
+
+	const withSpaces = normalized.replace(/_/g, ' ');
+	if (withSpaces !== normalized) {
+		mapCache.set(withSpaces, url);
+	}
+
+	const withUnderscores = normalized.replace(/ /g, '_');
+	if (withUnderscores !== normalized) {
+		mapCache.set(withUnderscores, url);
+	}
+
+	const withoutPrefix = normalized.replace(/^\d+p[_ ]/, '');
+	if (withoutPrefix !== normalized) {
+		registerMapKey(withoutPrefix, url);
+	}
+}
+
+function getMapLookupCandidates(mapName: string): string[] {
+	const candidates = new Set<string>();
+	let base = mapName.trim().toLowerCase();
+
+	base = base.split(/[/\\]/).pop() ?? base;
+	base = base.replace(/\.(sgb|rev|map|png|webp|jpg|jpeg)$/i, '');
+	base = base.replace(/_map_base$/, '');
+	base = base.replace(/\s+/g, ' ').trim();
+
+	if (!base) {
+		return [];
+	}
+
+	candidates.add(base);
+	candidates.add(base.replace(/_/g, ' '));
+	candidates.add(base.replace(/ /g, '_'));
+
+	const displayMatch = base.match(/^(.+?)\s*\((\d+)\)\s*$/);
+	if (displayMatch) {
+		const [, name, count] = displayMatch;
+		const slug = name.trim();
+		candidates.add(`${count}p_${slug}`);
+		candidates.add(`${count}p ${slug}`);
+		candidates.add(`${count}p_${slug.replace(/ /g, '_')}`);
+	}
+
+	return [...candidates];
+}
 
 /**
  * Initialize map cache from glob imports
  */
 function initializeMapCache() {
-	if (mapCache.size > 0) return; // Already initialized
+	if (mapCache.size > 0) return;
 
 	for (const [path, module] of Object.entries(mapModules)) {
-		// Extract map name from path: /src/lib/files/maps/4p_duclair_map_base.png -> 4p_duclair
 		const match = path.match(/\/maps\/(.+)_map_base\.png$/);
 		if (match) {
-			const mapName = match[1].toLowerCase();
-			mapCache.set(mapName, module.default);
+			registerMapKey(match[1], module.default);
 		}
 	}
-
-	// Load default map
-	import('$lib/files/maps/mp_nobattlemap.png').then((module) => {
-		defaultMapImage = module.default;
-	});
 }
 
-// Initialize on module load
 initializeMapCache();
+
+export function getDefaultMapImage(): string {
+	return defaultMapImage;
+}
 
 /**
  * Gets the map image based on map name with instant lookup from pre-loaded cache
- * No dynamic imports needed - all maps are loaded eagerly at startup
  *
  * @param mapName - Name of the map to get image for
  * @returns The map image asset path
  */
 export function getMapImageFromName(mapName: string | undefined): string {
 	if (!mapName || typeof mapName !== 'string') {
-		return defaultMapImage || '';
+		return defaultMapImage;
 	}
 
-	const normalizedName = mapName.toLowerCase();
-	const cachedMap = mapCache.get(normalizedName);
-
-	if (cachedMap) {
-		return cachedMap;
+	for (const candidate of getMapLookupCandidates(mapName)) {
+		const cachedMap = mapCache.get(candidate);
+		if (cachedMap) {
+			return cachedMap;
+		}
 	}
 
 	console.warn(`Map image not found for "${mapName}"`);
-	return defaultMapImage || '';
+	return defaultMapImage;
+}
+
+/**
+ * Returns the most representative leaderboard stat for display (ranked first, then highest rank level).
+ */
+export function getPrimaryLeaderboardStat(
+	stats: LeaderboardStat[] | undefined
+): LeaderboardStat | undefined {
+	if (!stats?.length) {
+		return undefined;
+	}
+
+	return [...stats].sort((a, b) => {
+		const aRanked = isRanked(a.leaderboard_id) ? 0 : 1;
+		const bRanked = isRanked(b.leaderboard_id) ? 0 : 1;
+		if (aRanked !== bRanked) {
+			return aRanked - bRanked;
+		}
+		return b.ranklevel - a.ranklevel;
+	})[0];
 }
 
 /**

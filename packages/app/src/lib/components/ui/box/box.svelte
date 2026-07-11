@@ -1,13 +1,16 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
+	import { cn } from '$lib/utils';
+	import { surfacePanel } from '../variants';
 
 	type Props = {
 		children: Snippet;
-	};
+	} & HTMLAttributes<HTMLDivElement>;
 
-	let { children }: Props = $props();
+	let { children, ...restProps }: Props = $props();
 </script>
 
-<div class="border-2 border-gray-500 bg-gray-700 p-4">
+<div {...restProps} class={cn(surfacePanel, 'border-2 p-4', restProps.class)}>
 	{@render children()}
 </div>

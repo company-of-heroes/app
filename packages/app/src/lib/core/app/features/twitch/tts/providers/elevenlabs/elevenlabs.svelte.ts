@@ -5,8 +5,7 @@ import { TTSProvider, type TTSVoice } from '../provider.svelte';
 import { tts } from '$features/twitch';
 import { defaultsDeep, isEmpty, isString, uniqBy } from 'lodash-es';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
-import translate from 'google-translate-api-x';
-import { fetch } from '@tauri-apps/plugin-http';
+import { translateText } from '$lib/translate';
 
 export class ElevenlabsProvider extends TTSProvider {
 	name = 'elevenlabs';
@@ -114,13 +113,11 @@ export class ElevenlabsProvider extends TTSProvider {
 				const wordsToTranslate = words.filter(shouldTranslate);
 
 				if (wordsToTranslate.length > 0) {
+					const targetLanguage = voiceSettings.translate_language || 'en';
 					const translatedWords = await Promise.all(
 						wordsToTranslate.map(async (word) => {
-							const { text } = await translate(word, {
-								to: voiceSettings.translate_language || 'en',
-								requestFunction: fetch
-							});
-							return { original: word, translated: text };
+							const translated = await translateText(word, targetLanguage);
+							return { original: word, translated };
 						})
 					);
 
@@ -131,12 +128,7 @@ export class ElevenlabsProvider extends TTSProvider {
 					message = words.map((word) => translationMap.get(word) ?? word).join(' ');
 				}
 			} else {
-				const { text } = await translate(message, {
-					to: voiceSettings.translate_language || 'en',
-					requestFunction: fetch
-				});
-
-				message = text;
+				message = await translateText(message, voiceSettings.translate_language || 'en');
 			}
 		}
 

@@ -7,7 +7,7 @@ import { PUBLIC_PB_URL } from '$env/static/public';
 import type { UserContext } from '$lib/components/user';
 
 export const pocketbase = new Pocketbase(
-	PUBLIC_PB_URL ?? 'https://api.fknoobs.com'
+	PUBLIC_PB_URL ?? 'https://api.coh1stats.com'
 ) as TypedPocketBase;
 pocketbase.autoCancellation(false);
 

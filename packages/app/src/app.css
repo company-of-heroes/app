@@ -4,8 +4,6 @@
 @plugin '@tailwindcss/typography';
 
 @source inline('w-{1..24}/24');
-@source inline('min-w-{1..24}/24');
-@source inline('max-w-{1..24}/24');
 @source '../node_modules/layerchart/dist';
 
 @theme {
@@ -70,10 +68,14 @@
 	--color-info: oklch(59.6% 0.15 243.3); /* Blue */
 	--color-info-foreground: oklch(98% 0 0);
 
-	--shadow: 10px 10px 0 var(--color-secondary-950);
-	--shadow-xs: 4px 4px 0 var(--color-secondary-950);
-	--shadow-sm: 8px 8px 0 var(--color-secondary-950);
-	--shadow-md: 12px 12px 0 var(--color-secondary-950);
+	/* Elevation — soft depth for dark UI (replaces hard offset blocks) */
+	--shadow-xs: 0 1px 2px oklch(0% 0 0 / 0.35);
+	--shadow-sm: 0 2px 4px oklch(0% 0 0 / 0.3), 0 1px 2px oklch(0% 0 0 / 0.2);
+	--shadow: 0 4px 8px oklch(0% 0 0 / 0.35), 0 2px 4px oklch(0% 0 0 / 0.2);
+	--shadow-md: 0 6px 16px oklch(0% 0 0 / 0.4), 0 2px 6px oklch(0% 0 0 / 0.25);
+	--shadow-lg: 0 12px 24px oklch(0% 0 0 / 0.45), 0 4px 8px oklch(0% 0 0 / 0.3);
+	--shadow-xl: 0 20px 40px oklch(0% 0 0 / 0.5), 0 8px 16px oklch(0% 0 0 / 0.35);
+	--shadow-mini-inset: inset 0 1px 3px oklch(0% 0 0 / 0.45);
 
 	--color-surface-100: var(--color-secondary-800);
 	--color-surface-200: var(--color-secondary-900);
@@ -133,9 +135,9 @@ h6 {
 	pointer-events: auto;
 }
 
-html[data-selection-picker-open] [data-dialog-overlay],
-html[data-selection-picker-open] [data-dialog-content],
-:root:has([data-selection-picker]) [data-dialog-overlay],
-:root:has([data-selection-picker]) [data-dialog-content] {
+html[data-selection-picker-open] [data-dialog-overlay]:not([data-selection-picker]),
+html[data-selection-picker-open] [data-dialog-content]:not([data-selection-picker]),
+:root:has([data-selection-picker]) [data-dialog-overlay]:not([data-selection-picker]),
+:root:has([data-selection-picker]) [data-dialog-content]:not([data-selection-picker]) {
 	pointer-events: none !important;
 }

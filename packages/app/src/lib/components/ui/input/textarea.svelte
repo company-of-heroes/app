@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils';
+	import { controlBase, controlDisabled } from '../variants';
 
 	type Props = {} & HTMLTextareaAttributes;
 
@@ -11,9 +12,9 @@
 	bind:value
 	{...restProps}
 	class={cn(
-		'rounded-md',
-		'border-secondary-800 bg-secondary-800/30 focus:border-secondary-600 w-full border px-4 py-3 text-sm focus:outline-none',
-		'disabled:bg-secondary-950 disabled:border-secondary-800 disabled:text-secondary-500 disabled:cursor-not-allowed',
+		controlBase,
+		'h-auto w-full px-4 py-3 text-sm',
+		controlDisabled,
 		restProps.class
 	)}
 ></textarea>

@@ -5,7 +5,7 @@
 	import { dialog } from '$lib/components/ui/dialog';
 	import { Label } from '../label';
 	import Input from './input.svelte';
-	import Button from '../button/button.svelte';
+	import { Button } from '../button';
 	import { findKey, isArray } from 'lodash-es';
 
 	type OptionsProps = {
@@ -83,12 +83,14 @@
 			{#each value as option}
 				<span class="flex w-full items-center gap-[2px]">
 					<span class="bg-primary/5 flex-grow px-4 py-2">{option}</span>
-					<button
-						class="bg-secondary-800 hover:bg-secondary-900 cursor-pointer p-3"
+					<Button
+						variant="secondary"
+						size="icon-sm"
+						type="button"
 						onclick={() => (value = (value as string[]).filter((item) => item !== option))}
 					>
 						<TrahsIcon />
-					</button>
+					</Button>
 				</span>
 			{/each}
 		{:else}
@@ -96,16 +98,20 @@
 				<span class="grid w-full grid-cols-[1fr_1fr_2.5rem_2.5rem] items-center gap-[2px]">
 					<span class="bg-primary/5 flex-grow truncate px-4 py-2">{key}</span>
 					<span class="bg-primary/5 flex-grow truncate px-4 py-2">{option}</span>
-					<button
-						class="bg-secondary-800 hover:bg-secondary-900 cursor-pointer p-3"
+					<Button
+						variant="secondary"
+						size="icon-sm"
+						type="button"
 						onclick={() => {
 							value = Object.fromEntries(Object.entries(value).filter(([k]) => k !== key));
 						}}
 					>
 						<TrahsIcon />
-					</button>
-					<button
-						class="bg-secondary-800 hover:bg-secondary-900 cursor-pointer p-3"
+					</Button>
+					<Button
+						variant="secondary"
+						size="icon-sm"
+						type="button"
 						onclick={() => {
 							dialog.open = true;
 							dialog.component = dialogContent;
@@ -117,12 +123,15 @@
 						}}
 					>
 						<EditIcon />
-					</button>
+					</Button>
 				</span>
 			{/each}
 		{/if}
-		<button
-			class="bg-secondary-800 hover:bg-secondary-900 ms-auto cursor-pointer p-1 px-6"
+		<Button
+			variant="secondary"
+			size="sm"
+			type="button"
+			class="ms-auto"
 			onclick={() => {
 				dialog.open = true;
 				dialog.component = dialogContent;
@@ -131,6 +140,6 @@
 			}}
 		>
 			Add
-		</button>
+		</Button>
 	</div>
 </div>

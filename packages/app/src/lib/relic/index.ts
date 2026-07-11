@@ -7,6 +7,7 @@ import type {
 	TransformedMatch
 } from '@fknoobs/app';
 import { fetch } from '@tauri-apps/plugin-http';
+import { isProfileId, isSteamId } from '$lib/utils';
 import { transformMatchHistory } from './transform-match-history';
 
 export const RELIC_API_BASE = 'https://coh1-lobby.reliclink.com';
@@ -113,6 +114,86 @@ export class RelicClient {
 	}
 
 	/**
+	 * Fetches the personal stat for a given player alias.
+	 *
+	 * @param alias - The in-game player alias
+	 * @returns The matching StatMember or null if not found
+	 */
+	async getProfileByAlias(alias: string): Promise<RelicProfile | null> {
+		const trimmed = alias.trim();
+		if (!trimmed) {
+			return null;
+		}
+
+		const { leaderboardStats, statGroups } = await this.request<PersonalStat>(
+			['community', 'leaderboard', 'getpersonalstat'],
+			{
+				title: 'coh1',
+				aliases: JSON.stringify([trimmed])
+			}
+		);
+
+		const members = statGroups?.[0]?.members ?? [];
+		const member = members.find((m) => m.alias.toLowerCase() === trimmed.toLowerCase()) ?? members[0];
+
+		if (!member) {
+			return null;
+		}
+
+		member.leaderboardStats = leaderboardStats.filter(
+			(stat) => stat.statgroup_id === member.personal_statgroup_id
+		);
+
+		return member;
+	}
+
+	async searchProfilesByName(query: string): Promise<RelicProfile[]> {
+		const trimmed = query.trim();
+		if (!trimmed) {
+			return [];
+		}
+
+		const response = await this.request<PersonalStat>(
+			['community', 'leaderboard', 'getpersonalstat'],
+			{
+				title: 'coh1',
+				search: trimmed
+			}
+		);
+
+		if (response.result?.code === 10) {
+			const exact = await this.getProfileByAlias(trimmed);
+			return exact ? [exact] : [];
+		}
+
+		const members = this.extractMembers(response.statGroups);
+		return this.enrichMembers(members, response.leaderboardStats ?? []);
+	}
+
+	/**
+	 * Resolves a player profile from a Steam ID, profile ID, or alias.
+	 *
+	 * @param query - Steam ID, numeric profile ID, or player alias
+	 * @returns The matching RelicProfile or null if not found
+	 */
+	async resolveProfile(query: string): Promise<RelicProfile | null> {
+		const trimmed = query.trim();
+		if (!trimmed) {
+			return null;
+		}
+
+		if (isSteamId(trimmed)) {
+			return this.getProfileBySteamId(trimmed);
+		}
+
+		if (isProfileId(trimmed)) {
+			return this.getProfileById(parseInt(trimmed, 10));
+		}
+
+		return this.getProfileByAlias(trimmed);
+	}
+
+	/**
 	 * Fetches the leaderboard stats for a given leaderboard ID.
 	 *
 	 * @param leaderboardId - The ID of the leaderboard to fetch
@@ -177,6 +258,35 @@ export class RelicClient {
 		}
 
 		return profile.leaderboardStats;
+	}
+
+	private extractMembers(statGroups: PersonalStat['statGroups'] | undefined): RelicProfile[] {
+		const seen = new Set<number>();
+		const members: RelicProfile[] = [];
+
+		for (const group of statGroups ?? []) {
+			for (const member of group.members ?? []) {
+				if (!seen.has(member.profile_id)) {
+					seen.add(member.profile_id);
+					members.push(member);
+				}
+			}
+		}
+
+		return members;
+	}
+
+	private enrichMembers(
+		members: RelicProfile[],
+		leaderboardStats: LeaderboardStat[]
+	): RelicProfile[] {
+		for (const member of members) {
+			member.leaderboardStats = leaderboardStats.filter(
+				(stat) => stat.statgroup_id === member.personal_statgroup_id
+			);
+		}
+
+		return members;
 	}
 
 	/**

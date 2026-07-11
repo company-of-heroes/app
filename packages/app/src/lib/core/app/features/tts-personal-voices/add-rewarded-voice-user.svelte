@@ -1,9 +1,8 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
-	import { toast } from 'svelte-sonner';
+	import { app } from '$core/app/context';
 	import { tts } from '$features/twitch';
 	import { ttsPersonalVoices } from '$features/tts-personal-voices';
-	import { Label } from '$lib/components/ui/label';
 	import { dialog } from '$lib/components/ui/dialog';
 	import { Input, Selection } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
@@ -18,12 +17,12 @@
 		e.preventDefault();
 
 		if (!userName) {
-			toast.error('Enter twitch username.');
+			app.toast.error('Enter twitch username.');
 			return;
 		}
 
 		if (!voiceId || !voice) {
-			toast.error('Select a voice.');
+			app.toast.error('Select a voice.');
 			return;
 		}
 
@@ -35,11 +34,11 @@
 	}}
 >
 	<Form.Group>
-		<Label>User Name</Label>
+		<Form.Label>User Name</Form.Label>
 		<Input type="text" bind:value={userName} placeholder="Enter the Twitch username" />
 	</Form.Group>
 	<Form.Group>
-		<Label>Select voice</Label>
+		<Form.Label>Select voice</Form.Label>
 		<Selection
 			options={tts.provider.voices.map((voice) => {
 				return {

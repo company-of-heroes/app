@@ -58,5 +58,5 @@
 
 <H level="1" class="mb-8">Replays</H>
 
-<ReplayFilters {list} {mapsList} {playersList} />
+<ReplayFilters bind:list {mapsList} {playersList} />
 <ReplayTable {list} />

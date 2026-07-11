@@ -5,18 +5,19 @@
 	import { Button } from '../button';
 	import { open, type DialogFilter } from '@tauri-apps/plugin-dialog';
 	import { watch } from 'runed';
-	import Input from './input.svelte';
 	import { exists } from '@tauri-apps/plugin-fs';
 	import { cn } from '$lib/utils';
+	import { controlBase } from '../variants';
 
 	let {
 		value = $bindable(),
 		directory = false,
-		type,
+		type: _type,
 		onSelect,
 		filters,
 		defaultPath,
-		...restProps
+		class: className,
+		..._restProps
 	}: InputProps & {
 		filters?: DialogFilter[];
 		directory?: boolean;
@@ -57,7 +58,17 @@
 </script>
 
 <div class="grid grid-cols-[auto_120px] gap-4">
-	<Input bind:value readonly {...restProps} />
+	<div
+		class={cn(
+			controlBase,
+			'flex min-w-0 items-center truncate px-4 text-secondary-400 select-text',
+			!value && 'text-secondary-600',
+			className
+		)}
+		title={value}
+	>
+		{value || 'No path selected'}
+	</div>
 	<Button variant="secondary" type="button" onclick={selectDir} class="justify-center">
 		Select
 	</Button>

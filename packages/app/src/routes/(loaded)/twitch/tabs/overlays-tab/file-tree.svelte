@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Overlay } from '$core/app/features/twitch-overlays/overlays/overlay.svelte';
 	import { cn } from '$lib/utils';
+	import { Button } from '$lib/components/ui/button';
 	import FolderIcon from 'phosphor-svelte/lib/Folder';
 	import FolderOpenIcon from 'phosphor-svelte/lib/FolderOpen';
 	import FileIcon from 'phosphor-svelte/lib/File';
@@ -58,7 +59,7 @@
 			} else {
 				expandedFolders.add(folderPath);
 			}
-			expandedFolders = new Set(expandedFolders); // Create new Set to trigger reactivity
+			expandedFolders = new Set(expandedFolders);
 		}
 	}
 
@@ -73,7 +74,7 @@
 </script>
 
 {#if loading && depth === 0}
-	<div class="py-4 text-sm text-gray-400">Loading files...</div>
+	<div class="text-secondary-400 py-4 text-sm">Loading files...</div>
 {:else}
 	<div class="flex flex-col">
 		{#each files as file}
@@ -82,22 +83,21 @@
 
 			{#if file.isDirectory}
 				<div>
-					<button
-						onclick={() => toggleFolder(file.name)}
-						class={cn(
-							'flex w-full items-center gap-2 rounded px-4 py-1 text-left',
-							'cursor-pointer transition-colors',
-							'hover:bg-gray-700'
-						)}
+					<Button
+						variant="ghost"
+						size="sm"
+						type="button"
+						class="h-auto w-full justify-start gap-2 rounded px-4 py-1 text-left"
 						style="padding-left: {depth * 16 + 16}px"
+						onclick={() => toggleFolder(file.name)}
 					>
 						{#if expanded}
 							<FolderOpenIcon size={20} class="text-primary" />
 						{:else}
 							<FolderIcon size={20} class="text-primary" />
 						{/if}
-						<span class="text-gray-200">{file.name}</span>
-					</button>
+						<span class="text-secondary-200">{file.name}</span>
+					</Button>
 
 					{#if expanded}
 						<FileTree
@@ -112,23 +112,25 @@
 					{/if}
 				</div>
 			{:else if file.isFile}
-				<button
-					onclick={() => onFileClick?.(folderPath, file.name)}
+				<Button
+					variant="ghost"
+					size="sm"
+					type="button"
 					class={cn(
-						'flex w-full items-center gap-2 rounded px-4 py-1 text-left',
-						'cursor-pointer transition-colors hover:bg-gray-700',
+						'h-auto w-full justify-start gap-2 rounded px-4 py-1 text-left',
 						activeFilePath === folderPath
 							? 'bg-primary/5 text-primary hover:bg-primary/5'
-							: 'text-gray-300'
+							: 'text-secondary-300'
 					)}
 					style="padding-left: {depth * 16 + 16}px"
+					onclick={() => onFileClick?.(folderPath, file.name)}
 				>
 					<FileIcon
 						size={20}
-						class={cn(activeFilePath === folderPath ? 'text-primary' : 'text-gray-400')}
+						class={cn(activeFilePath === folderPath ? 'text-primary' : 'text-secondary-400')}
 					/>
 					<span>{file.name}</span>
-				</button>
+				</Button>
 			{/if}
 		{/each}
 	</div>

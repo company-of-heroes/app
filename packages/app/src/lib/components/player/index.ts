@@ -11,6 +11,7 @@ import PlayerPosition from './player-position.svelte';
 import PlayerFaction from './player-faction.svelte';
 import PlayerAvatar from './player-avatar.svelte';
 import PlayerRatingChange from './player-rating-change.svelte';
+import PlayerSearchCard from './player-search-card.svelte';
 
 export {
 	createPlayer,
@@ -26,5 +27,6 @@ export {
 	PlayerPosition as Position,
 	PlayerFaction as Faction,
 	PlayerAvatar as Avatar,
-	PlayerRatingChange as RatingChange
+	PlayerRatingChange as RatingChange,
+	PlayerSearchCard as SearchCard
 };

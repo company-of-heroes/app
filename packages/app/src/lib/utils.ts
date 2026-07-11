@@ -519,6 +519,8 @@ export const isSteamId = (str: string): boolean => {
 	return steamIdRegex.test(str);
 };
 
+export const isProfileId = (str: string): boolean => /^\d+$/.test(str);
+
 export async function isRunning(processName: string): Promise<boolean> {
 	return await invoke<boolean>('is_running', { processName });
 }

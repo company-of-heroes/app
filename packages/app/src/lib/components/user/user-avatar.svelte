@@ -30,7 +30,7 @@
 		{/snippet}
 		<Dropdown.Item
 			class="flex items-center gap-2 px-2 py-1 text-sm"
-			onclick={() => goto(`/leaderboards/profile/${user.steamIds[0]}`)}
+			onclick={() => goto(`/players/${user.steamIds[0]}`)}
 		>
 			<UserIcon />
 			View Profile

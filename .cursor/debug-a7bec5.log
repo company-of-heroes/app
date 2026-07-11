@@ -1,0 +1,44 @@
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655233869},"timestamp":1783655233869,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655233887},"timestamp":1783655233887,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655233892},"timestamp":1783655233892,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655233895},"timestamp":1783655233895,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655352706},"timestamp":1783655352706,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655352716},"timestamp":1783655352716,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655352719},"timestamp":1783655352719,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655352722},"timestamp":1783655352722,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655451763},"timestamp":1783655451763,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655451778},"timestamp":1783655451778,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":528},"timestamp":1783655452306,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655452528},"timestamp":1783655452528,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655452539},"timestamp":1783655452539,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":514},"timestamp":1783655453053,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655541040},"timestamp":1783655541040,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655541054},"timestamp":1783655541054,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":538},"timestamp":1783655541592,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655541796},"timestamp":1783655541796,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655541808},"timestamp":1783655541808,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":537},"timestamp":1783655542345,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"serve start","data":{"serveStart":1783655542353},"timestamp":1783655542353,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"serve start","data":{"serveStart":1783655542357},"timestamp":1783655542357,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"initial backfill done","data":{"durationMs":1342,"result":{"processed":50,"enqueued":229,"complete":false}},"timestamp":1783655543699,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"initial backfill done","data":{"durationMs":13345,"result":{"processed":50,"updated":50,"indexed":50,"complete":false}},"timestamp":1783655555698,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655581073},"timestamp":1783655581073,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655581086},"timestamp":1783655581086,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":516},"timestamp":1783655581602,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655581821},"timestamp":1783655581821,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655581831},"timestamp":1783655581831,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":517},"timestamp":1783655582348,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"serve start","data":{"serveStart":1783655582356},"timestamp":1783655582356,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"serve start","data":{"serveStart":1783655582359},"timestamp":1783655582359,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"cron registered (backfill deferred)","data":{"durationMs":23},"timestamp":1783655582382,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"cron registered (backfill deferred)","data":{"durationMs":28},"timestamp":1783655582384,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655822731},"timestamp":1783655822731,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655822748},"timestamp":1783655822748,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":2277},"timestamp":1783655825025,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783655825260},"timestamp":1783655825260,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783655825271},"timestamp":1783655825271,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":615},"timestamp":1783655825886,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"serve start","data":{"serveStart":1783655825897},"timestamp":1783655825897,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"serve start","data":{"serveStart":1783655825900},"timestamp":1783655825900,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"cron registered (backfill deferred)","data":{"durationMs":25},"timestamp":1783655825925,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"cron registered (backfill deferred)","data":{"durationMs":29},"timestamp":1783655825926,"hypothesisId":"B"}

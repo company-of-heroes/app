@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HTMLImgAttributes } from 'svelte/elements';
-	import { getMapImageFromName } from '$lib/utils/game';
+	import { getDefaultMapImage, getMapImageFromName } from '$lib/utils/game';
 	import { cn } from '$lib/utils';
 	import { AspectRatio } from 'bits-ui';
 
@@ -14,6 +14,15 @@
 
 	const src = $derived(getMapImageFromName(map));
 	const alt = $derived(altText ?? map ?? '');
+
+	function handleImageError(event: Event) {
+		const img = event.currentTarget as HTMLImageElement;
+		const fallback = getDefaultMapImage();
+
+		if (fallback && img.src !== fallback) {
+			img.src = fallback;
+		}
+	}
 </script>
 
 {#if small}
@@ -23,6 +32,7 @@
 				{...restProps}
 				{src}
 				{alt}
+				onerror={handleImageError}
 				class={cn(
 					'absolute inset-0 z-5 h-full w-full scale-180 object-cover opacity-30',
 					className
@@ -32,6 +42,7 @@
 				{...restProps}
 				{src}
 				{alt}
+				onerror={handleImageError}
 				class={cn('z-10 h-full w-full object-contain', className)}
 			/>
 		</AspectRatio.Root>
@@ -45,6 +56,7 @@
 			{...restProps}
 			{src}
 			{alt}
+			onerror={handleImageError}
 			class={cn(
 				'absolute inset-0 z-5 h-full w-full scale-180 object-cover opacity-30',
 				className
@@ -54,6 +66,7 @@
 			{...restProps}
 			{src}
 			{alt}
+			onerror={handleImageError}
 			class={cn('z-10 h-full w-full object-contain', className)}
 		/>
 	</AspectRatio.Root>

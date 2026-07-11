@@ -20,7 +20,9 @@ export const nodes = [
 	() => import('./nodes/16'),
 	() => import('./nodes/17'),
 	() => import('./nodes/18'),
-	() => import('./nodes/19')
+	() => import('./nodes/19'),
+	() => import('./nodes/20'),
+	() => import('./nodes/21')
 ];
 
 export const server_loads = [];
@@ -35,13 +37,15 @@ export const dictionary = {
 		"/(loaded)/history/[id]": [10,[2]],
 		"/(loaded)/leaderboards": [11,[2]],
 		"/(loaded)/leaderboards/profile/[profileId]": [12,[2]],
-		"/(loaded)/replays": [13,[2]],
-		"/(loaded)/replays/[replayId]": [14,[2]],
-		"/(loaded)/settings": [15,[2]],
-		"/(onboarding)/setup": [19],
-		"/(loaded)/shortcuts": [16,[2]],
-		"/(loading)/splashscreen": [18,[3]],
-		"/(loaded)/twitch": [17,[2]]
+		"/(loaded)/players": [13,[2]],
+		"/(loaded)/players/[id]": [14,[2]],
+		"/(loaded)/replays": [15,[2]],
+		"/(loaded)/replays/[replayId]": [16,[2]],
+		"/(loaded)/settings": [17,[2]],
+		"/(onboarding)/setup": [21],
+		"/(loaded)/shortcuts": [18,[2]],
+		"/(loading)/splashscreen": [20,[3]],
+		"/(loaded)/twitch": [19,[2]]
 	};
 
 export const hooks = {

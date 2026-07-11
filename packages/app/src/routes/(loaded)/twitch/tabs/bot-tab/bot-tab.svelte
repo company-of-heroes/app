@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
-	import { Label } from '$lib/components/ui/label';
 	import { H } from '$lib/components/ui/h';
 	import { Checkbox, Input } from '$lib/components/ui/input';
 	import { twitchBot } from '$features/twitch-bot';
@@ -12,25 +11,25 @@
 <Form.Root>
 	<H level={4}>Bot settings</H>
 	<Form.Group>
-		<Label>Enable bot</Label>
+		<Form.Label>Enable bot</Form.Label>
 		<Checkbox bind:checked={twitchBot.settings.enabled} label="Enabled" />
 	</Form.Group>
 	{#if twitchBot.enabled}
 		<Form.Group>
-			<Label>Send player stats to chat</Label>
+			<Form.Label>Send player stats to chat</Form.Label>
 			<Form.Description>
 				When enabled, the bot will send player stats (like rank etc.) to the Twitch chat.
 			</Form.Description>
 			<Checkbox bind:checked={twitchBot.settings.enablePlayerStats} label="Enabled" />
 		</Form.Group>
 		<Form.Group>
-			<Label>Custom bot messages</Label>
+			<Form.Label>Custom bot messages</Form.Label>
 			{#if twitchBot.settings.messages.length === 0}
 				<p class="mb-4 text-gray-100">No messages configured yet, create your first message!</p>
 			{:else}
 				<div class="grid grid-cols-[1fr_8rem_50px] items-center gap-2">
-					<Label>Message</Label>
-					<Label>Interval (s)</Label>
+					<Form.Label>Message</Form.Label>
+					<Form.Label>Interval (s)</Form.Label>
 					<div></div>
 				</div>
 				{#each twitchBot.settings.messages as message, index}

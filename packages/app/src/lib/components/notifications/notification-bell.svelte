@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import { Popover } from '$lib/components/ui/popover';
+	import { Button } from '$lib/components/ui/button';
 	import BellIcon from 'phosphor-svelte/lib/Bell';
 	import dayjs from '$lib/dayjs';
 	import { app } from '$core/app/context';
@@ -28,17 +29,14 @@
 	side="right"
 	align="center"
 	sideOffset={12}
-	contentClass="w-[300px] p-0"
+	contentClass="bg-secondary-950 w-[300px] overflow-hidden p-0"
 >
 	{#snippet trigger({ props })}
-		<button
+		<Button
 			{...props}
-			class={cn(
-				'relative flex size-8 shrink-0 items-center justify-center rounded-md',
-				'bg-secondary-800 text-secondary-400 cursor-pointer transition-colors',
-				'hover:text-primary hover:bg-secondary-700',
-				'data-[state=open]:bg-secondary-700 data-[state=open]:text-primary'
-			)}
+			variant="ghost"
+			size="icon-sm"
+			class="bg-secondary-800 text-secondary-400 hover:text-primary hover:bg-secondary-700 data-[state=open]:bg-secondary-700 data-[state=open]:text-primary relative"
 			aria-label="Notificaties"
 		>
 			<BellIcon size={18} weight="duotone" />
@@ -54,7 +52,7 @@
 					{badgeLabel}
 				</span>
 			{/if}
-		</button>
+		</Button>
 	{/snippet}
 	{#snippet children()}
 		<div class="border-secondary-700 flex items-baseline justify-between border-b px-4 py-3">
@@ -77,14 +75,15 @@
 				<ul class="divide-secondary-800/80 divide-y">
 					{#each app.notifications.items as notification (notification.id)}
 						<li>
-							<button
+							<Button
+								variant="ghost"
+								size="sm"
 								type="button"
 								class={cn(
-									'hover:text-primary w-full cursor-pointer px-4 py-3 text-left transition-colors',
-									'hover:bg-secondary-800/40',
+									'h-auto w-full justify-start px-4 py-3 text-left',
 									!notification.read
-										? 'bg-primary/5 text-white hover:bg-primary/10'
-										: 'text-secondary-300'
+										? 'bg-secondary-900 text-white hover:bg-secondary-800'
+										: 'text-secondary-300 hover:bg-secondary-900'
 								)}
 								onclick={() => openNotification(notification)}
 							>
@@ -97,7 +96,7 @@
 								>
 									{dayjs(notification.created).fromNow()}
 								</time>
-							</button>
+							</Button>
 						</li>
 					{/each}
 				</ul>

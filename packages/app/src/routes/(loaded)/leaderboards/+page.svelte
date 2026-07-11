@@ -1,39 +1,30 @@
 <script lang="ts">
 	import type { Snapshot } from '@sveltejs/kit';
 	import * as Form from '$lib/components/ui/form';
-	import * as Table from '$lib/components/ui/table';
-	import { cn, getRankImageByLeaderboardId } from '$lib/utils';
 	import { relic } from '$lib/relic';
-	import { resource, useDebounce } from 'runed';
+	import { resource, useDebounce, watch } from 'runed';
 	import { ToggleGroup } from '$lib/components/ui/toggle-group';
 	import { H } from '$lib/components/ui/h';
+	import { getRaceLabelFromLeaderboardId } from '$lib/components/leaderboard/leaderboard-utils';
+	import { LeaderboardPodium, LeaderboardList } from '$lib/components/leaderboard';
 	import { leaderboards } from '$lib/utils/game';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { isEmpty } from 'lodash-es';
+	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 
 	let leaderboardId = $state(leaderboards[0].value);
-	let leaderboardFactionId = $derived<string>(
-		leaderboards.find((lb) => lb.value === leaderboardId)!.leaderboardFationIds[0].value
-	);
+	let leaderboardFactionId = $state(leaderboards[0].leaderboardFationIds[0].value);
+	let searchInput = $state('');
+	let debouncedSearch = $state('');
+
 	let leaderboardFactionsIds = $derived(
 		leaderboards.find((lb) => lb.value === leaderboardId)!.leaderboardFationIds!
 	);
-	let searchInput = $state<string | undefined>();
-	let filteredStats = $derived.by(() => statsResource.current);
-
-	function getRatioColor(wins: number, losses: number): string {
-		if (losses === 0) return wins > 0 ? 'text-success' : 'text-secondary-400';
-
-		const ratio = wins / losses;
-
-		if (ratio >= 5) return 'text-success';
-		if (ratio >= 4) return 'text-success/90';
-		if (ratio >= 3) return 'text-success/80';
-		if (ratio >= 2) return 'text-success/70';
-		if (ratio >= 1) return 'text-success/60';
-
-		return 'text-success/50';
-	}
+	let activeModeLabel = $derived.by(() => {
+		const mode = leaderboards.find((lb) => lb.value === leaderboardId)?.label ?? '';
+		const faction = getRaceLabelFromLeaderboardId(parseInt(leaderboardFactionId, 10));
+		return `${mode} · ${faction}`;
+	});
 
 	const statsResource = resource(
 		() => [leaderboardFactionId, leaderboardId],
@@ -43,38 +34,56 @@
 		}
 	);
 
+	const filteredStats = $derived.by(() => {
+		const query = debouncedSearch.trim().toLowerCase();
+		const stats = statsResource.current;
+
+		if (!query || isEmpty(query)) {
+			return stats;
+		}
+
+		return stats.filter(
+			(stat) =>
+				stat.profile?.alias.toLowerCase().startsWith(query) ||
+				stat.profile?.alias.toLowerCase().includes(query)
+		);
+	});
+
+	const isSearching = $derived(debouncedSearch.trim().length > 0);
+	let podiumStats = $derived(isSearching ? [] : filteredStats.slice(0, 3));
+	let listStats = $derived(isSearching ? filteredStats : filteredStats.slice(3));
+
 	const searchPlayer = useDebounce(
 		() => {
-			const query = searchInput?.trim().toLowerCase();
-
-			if (!query || isEmpty(query)) {
-				filteredStats = statsResource.current;
-				return;
-			}
-
-			const results = statsResource.current.filter(
-				(stat) =>
-					stat.profile?.alias.toLowerCase().startsWith(query) ||
-					stat.profile?.alias.toLowerCase().includes(query)
-			);
-
-			filteredStats = results;
+			debouncedSearch = searchInput;
 		},
 		() => 250
 	);
 
+	watch(
+		() => leaderboardId,
+		() => {
+			const factions = leaderboards.find((lb) => lb.value === leaderboardId)!.leaderboardFationIds;
+			if (!factions.some((faction) => faction.value === leaderboardFactionId)) {
+				leaderboardFactionId = factions[0].value;
+			}
+		}
+	);
+
 	export const snapshot: Snapshot<[string, string]> = {
 		capture: () => [leaderboardFactionId, leaderboardId],
-		restore: ([factionId, leaderboardId]) => {
-			leaderboardId = leaderboardId;
+		restore: ([factionId, id]) => {
+			leaderboardId = id;
 			leaderboardFactionId = factionId;
 		}
 	};
 </script>
 
 <H level="1">Leaderboards</H>
-<form class="mb-4 flex items-center justify-between gap-2">
-	<div class="flex gap-4">
+<p class="text-secondary-400 mb-4 text-sm">{activeModeLabel}</p>
+
+<form class="mb-6 flex flex-wrap items-center justify-between gap-4">
+	<div class="flex flex-wrap gap-4">
 		<ToggleGroup bind:value={leaderboardId} items={leaderboards} />
 		<ToggleGroup bind:value={leaderboardFactionId} items={leaderboardFactionsIds} />
 	</div>
@@ -82,80 +91,22 @@
 		<Input
 			type="text"
 			placeholder="Search player..."
-			class={cn('w-58')}
+			class="w-58"
 			bind:value={searchInput}
 			oninput={() => searchPlayer()}
-		/>
+		>
+			{#snippet leading()}
+				<MagnifyingGlass class="size-4" />
+			{/snippet}
+		</Input>
 	</Form.Root>
 </form>
 
-<div class={cn('flex grow flex-col')}>
-	<Table.Table>
-		<Table.THead>
-			<Table.tr>
-				<Table.TH width="1/24">#</Table.TH>
-				<Table.TH width="2/24">Rank</Table.TH>
-				<Table.TH width="13/24">Alias</Table.TH>
-				<Table.TH width="2/24" class="text-center">Wins</Table.TH>
-				<Table.TH width="2/24" class="text-center">Losses</Table.TH>
-				<Table.TH width="2/24">Streak</Table.TH>
-				<Table.TH width="2/24">Ratio</Table.TH>
-			</Table.tr>
-		</Table.THead>
-		{#if statsResource.loading}
-			{#each Array(5)}
-				<Table.TR>
-					<Table.TD width="1/24" class="animate-pulse">
-						<div class="h-3 w-full rounded-full bg-gray-700"></div>
-					</Table.TD>
-					<Table.TD width="2/24" class="animate-pulse">
-						<div class="h-3 w-full rounded-full bg-gray-700"></div>
-					</Table.TD>
-					<Table.TD width="13/24" class="animate-pulse">
-						<div class="h-3 w-full rounded-full bg-gray-700"></div>
-					</Table.TD>
-					<Table.TD width="2/24" class="animate-pulse">
-						<div class="h-3 w-full rounded-full bg-gray-700"></div>
-					</Table.TD>
-					<Table.TD width="2/24" class="animate-pulse">
-						<div class="h-3 w-full rounded-full bg-gray-700"></div>
-					</Table.TD>
-					<Table.TD width="2/24" class="animate-pulse">
-						<div class="h-3 w-full rounded-full bg-gray-700"></div>
-					</Table.TD>
-					<Table.TD width="2/24" class="animate-pulse">
-						<div class="h-3 w-full rounded-full bg-gray-700"></div>
-					</Table.TD>
-				</Table.TR>
-			{/each}
-		{:else if statsResource.current}
-			{#each filteredStats as stat}
-				<Table.TR href={`/leaderboards/profile/${stat.profile.profile_id}`}>
-					<Table.TD width="1/24" class="text-center font-semibold">{stat.rank}</Table.TD>
-					<Table.TD width="2/24" class="relative flex items-center gap-4">
-						{#await getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel) then rankImage}
-							<img src={rankImage} alt={`${stat.ranklevel}`} class="relative w-6" />
-						{/await}
-						<span class="relative font-medium text-white">{stat.ranklevel}</span>
-					</Table.TD>
-					<Table.TD width="13/24" class="truncate">{stat.profile?.alias}</Table.TD>
-					<Table.TD width="2/24" class="text-center font-medium text-green-200">
-						{stat.wins}
-					</Table.TD>
-					<Table.TD width="2/24" class="text-center font-medium text-red-200">
-						{stat.losses}
-					</Table.TD>
-					<Table.TD
-						width="2/24"
-						class={cn('text-center', stat.streak < 0 ? 'text-red-300' : 'text-green-300')}
-					>
-						{stat.streak}
-					</Table.TD>
-					<Table.TD width="2/24" class={cn('text-center', getRatioColor(stat.wins, stat.losses))}>
-						{stat.losses > 0 ? (stat.wins / stat.losses).toFixed(2) : stat.wins > 0 ? '∞' : '0.00'}
-					</Table.TD>
-				</Table.TR>
-			{/each}
-		{/if}
-	</Table.Table>
-</div>
+{#if !isSearching}
+	<LeaderboardPodium stats={podiumStats} loading={statsResource.loading} />
+{/if}
+<LeaderboardList
+	stats={listStats}
+	loading={statsResource.loading}
+	empty={filteredStats.length === 0 ? 'No players found.' : 'No more players to show.'}
+/>

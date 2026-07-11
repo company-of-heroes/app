@@ -1,1 +1,2 @@
-export { default as component } from "../../../../src/routes/(loaded)/leaderboards/profile/[profileId]/+page.svelte";
+import * as universal from "../../../../src/routes/(loaded)/leaderboards/profile/[profileId]/+page.ts";
+export { universal };

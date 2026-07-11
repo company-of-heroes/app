@@ -3,9 +3,7 @@
 	import * as Form from '$lib/components/ui/form';
 	import { Button } from '$lib/components/ui/button';
 	import { FileSelection } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { H } from '$lib/components/ui/h';
-	import { Toaster, toast } from 'svelte-sonner';
+	import { Toaster, toast } from '$lib/components/ui/toasts';
 	import { onMount } from 'svelte';
 	import { watch } from 'runed';
 	import { boot } from '$core/runtime/boot.svelte';
@@ -142,7 +140,7 @@
 
 		<Form.Root>
 			<Form.Group>
-				<Label>Company of Heroes warnings.log</Label>
+				<Form.Label>Company of Heroes warnings.log</Form.Label>
 				<Form.Description>
 					The game writes everything the app needs to this log file. It usually lives in
 					<code>Documents\My Games\Company of Heroes Relaunch\warnings.log</code>.
@@ -168,7 +166,7 @@
 			</Form.Group>
 
 			<Form.Group>
-				<Label>Company of Heroes installation folder</Label>
+				<Form.Label>Company of Heroes installation folder</Form.Label>
 				<Form.Description>
 					The folder containing <code>RelicCOH.exe</code>, usually inside your Steam library under
 					<code>steamapps\common\Company of Heroes Relaunch</code>.
@@ -205,4 +203,4 @@
 	</div>
 </div>
 
-<Toaster theme="dark" />
+<Toaster />

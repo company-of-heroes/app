@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
-	import * as Table from '$lib/components/ui/table';
+	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Checkbox, Input, Textarea } from '$lib/components/ui/input';
@@ -12,6 +12,23 @@
 	import type { UsersResponse } from '$core/pocketbase/types';
 	import dayjs from '$lib/dayjs';
 	import XIcon from 'phosphor-svelte/lib/X';
+
+	const sentColumns: ColumnDef<NotificationRecord>[] = [
+		{ id: 'title', header: 'Titel', width: 'w-5/24', accessor: (notification) => notification.title, class: 'truncate font-medium' },
+		{
+			id: 'body',
+			header: 'Bericht',
+			width: 'w-10/24',
+			accessor: (notification) => notification.body,
+			class: 'text-secondary-400 truncate text-sm'
+		},
+		{ id: 'recipients', header: 'Ontvangers', width: 'w-5/24', class: 'text-secondary-400 truncate text-sm' },
+		{ id: 'created', header: 'Verstuurd', width: 'w-4/24', class: 'text-secondary-500 text-sm whitespace-nowrap' }
+	];
+
+	const searchColumns: ColumnDef<UsersResponse>[] = [
+		{ id: 'user', header: '', width: 'w-24/24' }
+	];
 
 	let title = $state('');
 	let body = $state('');
@@ -147,24 +164,27 @@
 			</div>
 
 			{#if searchResults.length > 0}
-				<Table.Table>
-					{#each searchResults as user (user.id)}
-						<Table.TR>
-							<Table.TD width="24/24">
-								<button
-									type="button"
-									class="hover:text-primary w-full text-left text-sm transition-colors"
-									onclick={() => addUser(user)}
-								>
-									<span class="block">{userLabel(user)}</span>
-									{#if user.name && user.email}
-										<span class="text-secondary-400 text-xs">{user.email}</span>
-									{/if}
-								</button>
-							</Table.TD>
-						</Table.TR>
-					{/each}
-				</Table.Table>
+				{#snippet cell_user({ row }: { row: UsersResponse })}
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						class="h-auto w-full justify-start px-0 py-0 text-left text-sm"
+						onclick={() => addUser(row)}
+					>
+						<span class="block">{userLabel(row)}</span>
+						{#if row.name && row.email}
+							<span class="text-secondary-400 text-xs">{row.email}</span>
+						{/if}
+					</Button>
+				{/snippet}
+				<DataTable
+					data={searchResults}
+					columns={searchColumns}
+					rowKey={(user) => user.id}
+					showHeader={false}
+					cells={{ user: cell_user }}
+				/>
 			{/if}
 
 			{#if selectedUsers.length > 0}
@@ -172,14 +192,16 @@
 					{#each selectedUsers as user (user.id)}
 						<Badge class="inline-flex items-center gap-2">
 							{userLabel(user)}
-							<button
+							<Button
 								type="button"
+								variant="ghost"
+								size="icon-sm"
 								class="text-secondary-400 hover:text-white"
 								onclick={() => removeUser(user.id)}
 								aria-label="Verwijder {userLabel(user)}"
 							>
 								<XIcon size={14} />
-							</button>
+							</Button>
 						</Badge>
 					{/each}
 				</div>
@@ -195,31 +217,18 @@
 	{#if sentNotifications.length === 0}
 		<p class="text-secondary-400 mt-4 text-sm">Nog geen notificaties verstuurd.</p>
 	{:else}
-		<Table.Table class="mt-4">
-			<Table.THead>
-				<Table.TR>
-					<Table.TH width="5/24">Titel</Table.TH>
-					<Table.TH width="10/24">Bericht</Table.TH>
-					<Table.TH width="5/24">Ontvangers</Table.TH>
-					<Table.TH width="4/24">Verstuurd</Table.TH>
-				</Table.TR>
-			</Table.THead>
-			{#each sentNotifications as notification (notification.id)}
-				<Table.TR>
-					<Table.TD width="5/24" class="truncate font-medium">{notification.title}</Table.TD>
-					<Table.TD width="10/24" class="text-secondary-400 truncate text-sm">
-						{notification.body}
-					</Table.TD>
-					<Table.TD width="5/24" class="text-secondary-400 truncate text-sm">
-						{notification.targetAll
-							? 'Alle gebruikers'
-							: `${notification.recipients?.length ?? 0} ontvanger(s)`}
-					</Table.TD>
-					<Table.TD width="4/24" class="text-secondary-500 text-sm whitespace-nowrap">
-						{dayjs(notification.created).format('D MMM YYYY HH:mm')}
-					</Table.TD>
-				</Table.TR>
-			{/each}
-		</Table.Table>
+		{#snippet cell_recipients({ row }: { row: NotificationRecord })}
+			{row.targetAll ? 'Alle gebruikers' : `${row.recipients?.length ?? 0} ontvanger(s)`}
+		{/snippet}
+		{#snippet cell_created({ row }: { row: NotificationRecord })}
+			{dayjs(row.created).format('D MMM YYYY HH:mm')}
+		{/snippet}
+		<DataTable
+			class="mt-4"
+			data={sentNotifications}
+			columns={sentColumns}
+			rowKey={(notification) => notification.id}
+			cells={{ recipients: cell_recipients, created: cell_created }}
+		/>
 	{/if}
 </section>

@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { RadioGroup, Label, type WithoutChildrenOrChild, useId } from 'bits-ui';
+	import { RadioGroup, useId, type WithoutChildrenOrChild } from 'bits-ui';
 	import { cn } from '$lib/utils';
+	import { Label } from '../label';
 
 	type Item = {
 		value: string;
@@ -41,7 +42,7 @@
 				value={item.value}
 				disabled={item.disabled}
 				class={cn(
-					'border-secondary-900 flex size-5 shrink-0 items-center justify-center overflow-clip rounded-full border-2', // Changed rounded-full to rounded-md
+					'border-secondary-900 flex size-5 shrink-0 items-center justify-center overflow-clip rounded-md border-2',
 					item.disabled && 'cursor-not-allowed opacity-50',
 					value === item.value && 'border-secondary-100'
 				)}
@@ -54,7 +55,7 @@
 					{/if}
 				{/snippet}
 			</RadioGroup.Item>
-			<Label.Root for={id}>{item.label}</Label.Root>
+			<Label for={id}>{item.label}</Label>
 		</div>
 	{/each}
 </RadioGroup.Root>

@@ -9,39 +9,44 @@
 	import { cn, isSteamId } from '$lib/utils';
 	import { resource } from 'runed';
 	import { Skeleton } from '$lib/components/ui/skeleton';
-	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
+	import { ButtonBack } from '$lib/components/ui/button';
 	import { MatchHistory } from '$lib/components/match-history';
+	import SmurfAlert from '$lib/components/player/smurf-alert.svelte';
+	import { loadSmurfAlert } from '$lib/player/smurf';
 	import type { Snapshot } from '@sveltejs/kit';
 
 	let currentTab = $state('stats');
 
 	const profile = resource(
-		() => page.params.profileId,
+		() => page.params.id,
 		async (id) => {
-			const [relicProfile, matchHistory] = await Promise.all([
-				isSteamId(id!) ? relic.getProfileBySteamId(id!) : relic.getProfileById(parseInt(id!)),
-				relic.getRecentMatchHistoryForProfile(parseInt(id!))
-			]);
+			const relicProfile = isSteamId(id!)
+				? await relic.getProfileBySteamId(id!)
+				: await relic.getProfileById(parseInt(id!, 10));
 
 			if (!relicProfile) {
 				throw new Error('Profile not found');
 			}
 
 			const steamId = relicProfile.name.replace('/steam/', '');
-			const [steamProfile, gamePlayTime] = await Promise.all([
+			const [steamProfile, gamePlayTime, matchHistory] = await Promise.all([
 				steam.getUserProfile(steamId),
-				steam.getRecentlyPlayedGameByAppId(steamId, 228200)
+				steam.getRecentlyPlayedGameByAppId(steamId, 228200),
+				relic.getRecentMatchHistoryForProfile(relicProfile.profile_id)
 			]);
 
 			if (!steamProfile) {
 				throw new Error('Profile not found');
 			}
 
+			const smurf = await loadSmurfAlert(steamId, relicProfile.profile_id);
+
 			return {
 				relic: relicProfile,
 				steam: steamProfile,
 				game: gamePlayTime,
-				matchHistory
+				matchHistory,
+				smurf
 			};
 		}
 	);
@@ -52,13 +57,7 @@
 	};
 </script>
 
-<button
-	onclick={() => history.back()}
-	class="mb-6 inline-flex cursor-pointer items-center gap-2 text-xl transition-transform hover:-translate-x-0.5"
->
-	<ArrowLeft weight="duotone" />
-	Back to previous page
-</button>
+<ButtonBack />
 
 {#if profile.loading}
 	<div class="border-b-3 border-gray-700 pb-8">
@@ -92,6 +91,7 @@
 				/>
 				<div class="py-4">
 					<H level="1">{profile.current.relic.alias}</H>
+					<SmurfAlert smurf={profile.current.smurf} />
 					<div class="flex flex-col gap-0.5">
 						{#if profile.current.steam.timecreated}
 							<span class="text-secondary-300 grid grid-cols-[150px_auto]">

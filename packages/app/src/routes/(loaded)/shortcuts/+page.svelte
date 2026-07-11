@@ -18,7 +18,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Kbd } from '$lib/components/ui/kbd';
 	import { tooltip } from '$lib/attachments';
-	import Alert from '$lib/components/ui/alert/alert.svelte';
+	import { Alert } from '$lib/components/ui/alert';
 
 	const factions: { label: string; value: FactionKey }[] = [
 		{ label: 'USA', value: 'allies' },
@@ -180,13 +180,15 @@
 							'[&.sortable-ghost]:bg-primary/5 [&.sortable-chosen]:cursor-grabbing'
 						)}
 					>
-						<button
+						<Button
 							type="button"
-							class="handle text-secondary-500 hover:text-secondary-200 flex cursor-grab justify-center transition-colors"
+							variant="ghost"
+							size="icon-sm"
+							class="handle text-secondary-500 hover:text-secondary-200 cursor-grab"
 							aria-label="Reorder keybinding"
 						>
 							<HandleIcon size={24} weight="bold" />
-						</button>
+						</Button>
 
 						<Input
 							bind:value={keybinding.description}

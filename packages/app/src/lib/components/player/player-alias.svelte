@@ -12,7 +12,7 @@
 <a
 	{...restProps}
 	class={cn('hover:text-primary truncate transition-colors', restProps.class)}
-	href="/leaderboards/profile/{player.playerId}"
+	href="/players/{player.playerId}"
 >
 	{player.profile?.alias ?? 'CPU'}
 </a>

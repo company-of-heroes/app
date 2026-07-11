@@ -10,6 +10,6 @@
 	let { children, ...restProps }: Props = $props();
 </script>
 
-<small {...restProps} class={cn('-mt-2 text-gray-300', restProps.class)}>
+<small {...restProps} class={cn('-mt-2 text-secondary-300', restProps.class)}>
 	{@render children()}
 </small>

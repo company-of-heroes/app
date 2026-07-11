@@ -7,7 +7,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { H } from '$lib/components/ui/h';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import { tts } from '$features/twitch';
 	import { dialog } from '$lib/components/ui/dialog';
 	import { AddVoice, TuneVoice } from '.';
@@ -17,7 +16,7 @@
 
 <H level="4" class="mt-8">Elevenlabs settings</H>
 <Form.Group>
-	<Label>Elevenlabs API key</Label>
+	<Form.Label>Elevenlabs API key</Form.Label>
 	<Input
 		placeholder="Enter elevenlabs API key ..."
 		name="elevenlabsApiKey"
@@ -26,7 +25,7 @@
 	/>
 </Form.Group>
 <Form.Group>
-	<Label>Custom voices</Label>
+	<Form.Label>Custom voices</Form.Label>
 	<small class="text-secondary-400 -mt-2 mb-1 block">
 		Requires atleast 1 minute of audio playback of the voice for optimal result.
 	</small>

@@ -31,13 +31,31 @@ export class History extends Feature {
 	#unsubscribers: (() => void)[] = [];
 	#disposeMatches: (() => void) | null = null;
 
-	enable() {
-		// Matches sets up reactive watchers/resources in its constructor, so it
-		// must be created inside an effect root (enable() runs outside one).
+	override async register(): Promise<this> {
+		this.#ensureMatches();
+		return super.register();
+	}
+
+	override async destroy(): Promise<void> {
 		this.#disposeMatches?.();
+		this.#disposeMatches = null;
+		await super.destroy();
+	}
+
+	#ensureMatches(): void {
+		if (this.#disposeMatches) {
+			return;
+		}
+
+		// Matches sets up reactive watchers/resources in its constructor, so it
+		// must be created inside an effect root (register() runs outside one).
 		this.#disposeMatches = $effect.root(() => {
 			this.matches = new Matches();
 		});
+	}
+
+	enable() {
+		this.#ensureMatches();
 
 		this.#unsubscribers.push(
 			app.on('lobby.destroyed', ({ match, replay }) => {
@@ -60,9 +78,6 @@ export class History extends Feature {
 		}
 
 		this.#unsubscribers = [];
-
-		this.#disposeMatches?.();
-		this.#disposeMatches = null;
 	}
 
 	/** Persists a finished lobby as a match (with replay when available). */

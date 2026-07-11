@@ -1,3 +1,2 @@
-import Toast from './toast.svelte';
-
-export { Toast };
+export { toast } from 'svelte-sonner';
+export { default as Toaster } from './toaster.svelte';

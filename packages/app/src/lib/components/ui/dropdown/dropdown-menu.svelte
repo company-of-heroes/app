@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { DropdownMenu } from 'bits-ui';
 	import { cn } from '$lib/utils';
+	import { surfacePanel } from '../variants';
 
 	type Props = DropdownMenu.RootProps & {
 		trigger: Snippet<[{ props: DropdownMenu.TriggerProps }]>;
@@ -23,7 +24,11 @@
 			side="bottom"
 			align="start"
 			class={cn(
-				'w-[229px] rounded-md border border-gray-600 bg-gray-800 p-1 shadow-lg',
+				surfacePanel,
+				'w-[229px] p-1 shadow-lg',
+				'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+				'duration-150',
 				restProps.class
 			)}
 			sideOffset={8}

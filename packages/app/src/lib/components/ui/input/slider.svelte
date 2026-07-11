@@ -2,6 +2,7 @@
 	import type { ComponentProps } from 'svelte';
 	import { Slider, type WithoutChildren } from 'bits-ui';
 	import { cn } from '$lib/utils';
+	import { controlBase } from '../variants';
 
 	type Props = Omit<WithoutChildren<ComponentProps<typeof Slider.Root>>, 'type'>;
 
@@ -21,7 +22,7 @@
 		{...restProps as any}
 		class={cn('relative my-2 flex w-full touch-none items-center select-none', restProps.class)}
 	>
-		<span class="relative h-2 w-full grow cursor-pointer overflow-hidden rounded-full bg-gray-900">
+		<span class="relative h-2 w-full grow cursor-pointer overflow-hidden rounded-full bg-secondary-950">
 			<Slider.Range class="bg-primary/40 absolute h-full" />
 		</span>
 		<Slider.Thumb
@@ -37,7 +38,7 @@
 	<input
 		type="text"
 		{value}
-		class="w-full rounded-md border border-gray-700 py-1 text-center outline-none"
+		class={cn(controlBase, 'h-auto py-1 text-center')}
 		oninput={(e) => {
 			const input = e.target as HTMLInputElement;
 			let v = parseFloat(input.value);

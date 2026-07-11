@@ -7,7 +7,6 @@
 	import { dialog } from '$lib/components/ui/dialog';
 	import { H } from '$lib/components/ui/h';
 	import { Checkbox, Input, Selection } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import { AddRewardedVoiceUserForm } from '.';
 	import { tts } from '$features/twitch';
 	import { ttsPersonalVoices } from '$features/tts-personal-voices';
@@ -16,7 +15,7 @@
 
 <H level="4" class="mt-8">Personal voices settings</H>
 <Form.Group>
-	<Label>Use personal voices rewards</Label>
+	<Form.Label>Use personal voices rewards</Form.Label>
 	<small class="text-secondary-400 -mt-2 mb-1 block">
 		Enable this option to allow viewers to redeem a custom voice TTS reward using twitch channel
 		points.
@@ -26,7 +25,7 @@
 
 {#if ttsPersonalVoices.enabled}
 	<Form.Group>
-		<Label>Voices</Label>
+		<Form.Label>Voices</Form.Label>
 		<small class="text-secondary-400 -mt-2 mb-1 block">
 			Select the voices that viewers can choose from when redeeming the personal voice TTS reward.
 		</small>
@@ -48,18 +47,18 @@
 		</Selection>
 	</Form.Group>
 	<Form.Group>
-		<Label>Reward Cost</Label>
+		<Form.Label>Reward Cost</Form.Label>
 		<Input
 			type="number"
 			bind:value={ttsPersonalVoices.settings.cost}
 			placeholder="Enter reward cost in channel points"
-			class="w-fit"
+			class="max-w-xs"
 			step="100"
 			min="0"
 		/>
 	</Form.Group>
 	<Form.Group>
-		<Label>Rewarded Voices</Label>
+		<Form.Label>Rewarded Voices</Form.Label>
 		<div class="grid w-fit gap-1">
 			{#if Object.keys(ttsPersonalVoices.rewardedVoices).length === 0}
 				<p class="text-secondary-400">
@@ -108,7 +107,7 @@
 		</div>
 	</Form.Group>
 	<Form.Group>
-		<Label>Enable free voices</Label>
+		<Form.Label>Enable free voices</Form.Label>
 		<small class="text-secondary-400 -mt-2 mb-1 block">
 			Enable this option to allow viewers to choose a free voice TTS. This will not use the channel
 			points to redeem the reward, but uses !setvoice command to set the voice.
@@ -117,7 +116,7 @@
 	</Form.Group>
 	{#if ttsPersonalVoices.settings.enableFreeVoices}
 		<Form.Group>
-			<Label>Free voices</Label>
+			<Form.Label>Free voices</Form.Label>
 			<small class="text-secondary-400 -mt-2 mb-1 block">
 				Select the voices that viewers can choose from when redeeming the free voice TTS reward.
 			</small>
@@ -134,7 +133,7 @@
 			</SelectVoices>
 		</Form.Group>
 		<Form.Group>
-			<Label>Rewarded free voices</Label>
+			<Form.Label>Rewarded free voices</Form.Label>
 			<div class="grid w-fit gap-1">
 				{#if Object.keys(ttsPersonalVoices.rewardedFreeVoices).length === 0}
 					<p class="text-secondary-400">

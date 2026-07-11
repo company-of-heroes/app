@@ -29,10 +29,11 @@ declare module "$app/types" {
 	type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;
 
 	export interface AppTypes {
-		RouteId(): "/(onboarding)" | "/(loading)" | "/(loaded)" | "/" | "/(loaded)/account" | "/(loaded)/admin" | "/(loaded)/admin/notifications" | "/(loaded)/admin/tabs" | "/(loaded)/current-game" | "/(loaded)/history" | "/(loaded)/history/[id]" | "/(loaded)/leaderboards" | "/(loaded)/leaderboards/profile" | "/(loaded)/leaderboards/profile/[profileId]" | "/(loaded)/replays" | "/(loaded)/replays/[replayId]" | "/(loaded)/settings" | "/(onboarding)/setup" | "/(loaded)/shortcuts" | "/(loading)/splashscreen" | "/(loaded)/twitch" | "/(loaded)/twitch/tabs" | "/(loaded)/twitch/tabs/bot-tab" | "/(loaded)/twitch/tabs/overlays-tab" | "/(loaded)/twitch/tabs/tts-tab" | "/(loaded)/twitch/tabs/twitch-tab";
+		RouteId(): "/(onboarding)" | "/(loading)" | "/(loaded)" | "/" | "/(loaded)/account" | "/(loaded)/admin" | "/(loaded)/admin/notifications" | "/(loaded)/admin/tabs" | "/(loaded)/current-game" | "/(loaded)/history" | "/(loaded)/history/[id]" | "/(loaded)/leaderboards" | "/(loaded)/leaderboards/profile" | "/(loaded)/leaderboards/profile/[profileId]" | "/(loaded)/players" | "/(loaded)/players/[id]" | "/(loaded)/replays" | "/(loaded)/replays/[replayId]" | "/(loaded)/settings" | "/(onboarding)/setup" | "/(loaded)/shortcuts" | "/(loading)/splashscreen" | "/(loaded)/twitch" | "/(loaded)/twitch/tabs" | "/(loaded)/twitch/tabs/bot-tab" | "/(loaded)/twitch/tabs/overlays-tab" | "/(loaded)/twitch/tabs/tts-tab" | "/(loaded)/twitch/tabs/twitch-tab";
 		RouteParams(): {
 			"/(loaded)/history/[id]": { id: string };
 			"/(loaded)/leaderboards/profile/[profileId]": { profileId: string };
+			"/(loaded)/players/[id]": { id: string };
 			"/(loaded)/replays/[replayId]": { replayId: string }
 		};
 		LayoutParams(): {
@@ -50,6 +51,8 @@ declare module "$app/types" {
 			"/(loaded)/leaderboards": { profileId?: string | undefined };
 			"/(loaded)/leaderboards/profile": { profileId?: string | undefined };
 			"/(loaded)/leaderboards/profile/[profileId]": { profileId: string };
+			"/(loaded)/players": { id?: string | undefined };
+			"/(loaded)/players/[id]": { id: string };
 			"/(loaded)/replays": { replayId?: string | undefined };
 			"/(loaded)/replays/[replayId]": { replayId: string };
 			"/(loaded)/settings": Record<string, never>;
@@ -63,7 +66,7 @@ declare module "$app/types" {
 			"/(loaded)/twitch/tabs/tts-tab": Record<string, never>;
 			"/(loaded)/twitch/tabs/twitch-tab": Record<string, never>
 		};
-		Pathname(): "/" | "/account" | "/admin" | "/admin/notifications" | "/current-game" | "/history" | `/history/${string}` & {} | "/leaderboards" | `/leaderboards/profile/${string}` & {} | "/replays" | `/replays/${string}` & {} | "/settings" | "/setup" | "/shortcuts" | "/splashscreen" | "/twitch";
+		Pathname(): "/" | "/account" | "/admin" | "/admin/notifications" | "/current-game" | "/history" | `/history/${string}` & {} | "/leaderboards" | `/leaderboards/profile/${string}` & {} | "/players" | `/players/${string}` & {} | "/replays" | `/replays/${string}` & {} | "/settings" | "/setup" | "/shortcuts" | "/splashscreen" | "/twitch";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): "/favicon.png" | "/fknoobs-app-banner.png" | "/logo-transparent-bg.png" | "/screenshot-v0.35.0.png" | "/screenshot-v0.36.x.png" | "/screenshot.png" | "/svelte.svg" | "/tauri.svg" | "/vite.svg" | string & {};
 	}
