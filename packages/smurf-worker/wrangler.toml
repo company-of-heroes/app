@@ -3,4 +3,13 @@ main = "src/index.ts"
 compatibility_date = "2025-07-10"
 
 [triggers]
-crons = ["* * * * *"]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "STEAM_RATE_LIMIT"
+id = "93a4a7fc511d46d6b8133e34597c7535"
+preview_id = "3814008c46f940e6b445f86bc3028044"
+
+[observability.logs]
+enabled = true
+invocation_logs = true

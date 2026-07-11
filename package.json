@@ -9,6 +9,7 @@
 		"pb:down": "pnpm --filter pocketbase down",
 		"overlays:dev": "pnpm --filter overlays dev",
 		"overlays:build": "pnpm --filter overlays build",
+		"oppbot:build": "pnpm --filter @company-of-heroes/oppbot-overlay pack:zip",
 		"check": "pnpm -r check",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",

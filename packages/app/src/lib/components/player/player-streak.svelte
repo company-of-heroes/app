@@ -1,30 +1,19 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { usePlayer } from '.';
+	import { formatStreak, statStreakClass } from '$lib/components/ui/variants';
 	import { cn } from '$lib/utils';
 
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
-	const { ...restProps }: Props = $props();
+	const { class: className, ...restProps }: Props = $props();
 	const { playerResult, stats } = $derived(usePlayer());
 
-	let isPositive = $derived((playerResult?.streak ?? stats?.streak ?? 0) > 0);
-	let isNegative = $derived((playerResult?.streak ?? stats?.streak ?? 0) < 0);
+	const streak = $derived(playerResult?.streak ?? stats?.streak);
 </script>
 
-<span
-	class={cn('text-center', isPositive && 'text-green-300', isNegative && 'text-red-300')}
-	{...restProps}
->
-	{#if playerResult}
-		{#if isPositive}
-			+
-		{/if}
-		{playerResult.streak}
-	{:else if stats}
-		{#if isPositive}
-			+
-		{/if}
-		{stats.streak}
+<span class={cn('text-center font-medium', streak !== undefined && statStreakClass(streak), className)} {...restProps}>
+	{#if streak !== undefined}
+		{formatStreak(streak)}
 	{/if}
 </span>

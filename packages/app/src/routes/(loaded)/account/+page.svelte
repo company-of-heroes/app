@@ -10,7 +10,6 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import ImageCropper from '$lib/components/modals/image-cropper.svelte';
 	import { readFile } from '@tauri-apps/plugin-fs';
-	import { Alert } from '$lib/components/ui/alert';
 	import { dev } from '$app/environment';
 </script>
 
@@ -95,9 +94,6 @@
 			</Button>
 		</AspectRatio.Root>
 	</Form.Group>
-	<Alert variant="warning" class="mb-4">
-		These fields are disabled for now, as I am implementing some features.
-	</Alert>
 	<Form.Group class="mt-4">
 		<Form.Label>Displayname</Form.Label>
 		<Input type="text" bind:value={app.features.auth.user.name} disabled={!dev} />

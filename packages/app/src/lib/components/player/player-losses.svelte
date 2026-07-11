@@ -1,14 +1,16 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { usePlayer } from '.';
+	import { statLosses } from '$lib/components/ui/variants';
+	import { cn } from '$lib/utils';
 
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
-	const { ...restProps }: Props = $props();
+	const { class: className, ...restProps }: Props = $props();
 	const { playerResult, stats } = $derived(usePlayer());
 </script>
 
-<span class="text-center text-red-100" {...restProps}>
+<span class={cn('text-center font-medium', statLosses, className)} {...restProps}>
 	{#if playerResult}
 		{playerResult.losses}
 	{:else if stats}

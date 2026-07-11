@@ -5,8 +5,8 @@
 	import { steam, type SteamPlayerSummary } from '$core/steam';
 	import { resource } from 'runed';
 	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { interactive } from '$lib/components/ui/variants';
-	import { getSteamIdFromProfile, getStreakColor } from './leaderboard-utils';
+	import { interactive, formatStreak, statLosses, statStreakClass, statWins } from '$lib/components/ui/variants';
+	import { getSteamIdFromProfile } from './leaderboard-utils';
 	import Crown from 'phosphor-svelte/lib/Crown';
 
 	type Props = {
@@ -133,13 +133,11 @@
 					/>
 				{/if}
 				<div class="flex items-center gap-2">
-					{#await getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel) then rankImage}
-						<img
-							src={rankImage}
-							alt={`Rank ${stat.ranklevel}`}
-							class={cn('w-auto', tier.rankImage)}
-						/>
-					{/await}
+					<img
+						src={getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel)}
+						alt={`Rank ${stat.ranklevel}`}
+						class={cn('w-auto', tier.rankImage)}
+					/>
 					<span class="text-secondary-400 text-sm tabular-nums">Lvl {stat.ranklevel}</span>
 				</div>
 				<span class={cn('font-heading w-full truncate text-center font-bold', tier.name)}>
@@ -148,16 +146,16 @@
 				<div class="grid w-full grid-cols-3 gap-3 text-center">
 					<div>
 						<span class="text-secondary-500 text-xs font-medium tracking-wide uppercase">Wins</span>
-						<p class="text-success mt-0.5 font-semibold tabular-nums">{stat.wins}</p>
+						<p class={cn('mt-0.5 font-semibold', statWins)}>{stat.wins}</p>
 					</div>
 					<div>
 						<span class="text-secondary-500 text-xs font-medium tracking-wide uppercase">Losses</span>
-						<p class="text-destructive/90 mt-0.5 font-semibold tabular-nums">{stat.losses}</p>
+						<p class={cn('mt-0.5 font-semibold', statLosses)}>{stat.losses}</p>
 					</div>
 					<div>
 						<span class="text-secondary-500 text-xs font-medium tracking-wide uppercase">Streak</span>
-						<p class="mt-0.5 font-semibold tabular-nums" style:color={getStreakColor(stat.streak)}>
-							{stat.streak >= 0 ? '+' : ''}{stat.streak}
+						<p class={cn('mt-0.5 font-semibold', statStreakClass(stat.streak))}>
+							{formatStreak(stat.streak)}
 						</p>
 					</div>
 				</div>

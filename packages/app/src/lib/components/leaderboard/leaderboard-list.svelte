@@ -68,9 +68,11 @@
 </script>
 
 {#snippet cell_ranklevel({ row }: { row: LeaderboardStatWithProfile })}
-	{#await getRankImageByLeaderboardId(row.leaderboard_id, row.ranklevel) then rankImage}
-		<img src={rankImage} alt={`Rank ${row.ranklevel}`} class="size-6 shrink-0" />
-	{/await}
+	<img
+		src={getRankImageByLeaderboardId(row.leaderboard_id, row.ranklevel)}
+		alt={`Rank ${row.ranklevel}`}
+		class="size-6 shrink-0"
+	/>
 	<span class="text-secondary-400 text-sm tabular-nums">{row.ranklevel}</span>
 {/snippet}
 {#snippet cell_alias({ row }: { row: LeaderboardStatWithProfile })}

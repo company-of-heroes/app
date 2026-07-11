@@ -44,6 +44,9 @@
 				},
 				{
 					"url": "https://discord.gg/Cc69hbDnPD"
+				},
+				{
+					"url": "https://*.coh1stats.com"
 				}
 			]
 		},
@@ -64,6 +67,9 @@
 				},
 				{
 					"url": "https://*.steamstatic.com"
+				},
+				{
+					"url": "https://*.coh1stats.com"
 				}
 			]
 		},
@@ -144,6 +150,9 @@
 				},
 				{
 					"url": "https://*.github.com"
+				},
+				{
+					"url": "https://*.coh1stats.com"
 				}
 			]
 		},

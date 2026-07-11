@@ -1,5 +1,7 @@
 import type { Match } from '$core/game/lobby';
 
+export { CURRENT_GAME_TEST } from './current-game-test';
+
 export const LOBBY_4V4 = {
 	sessionId: 143239320,
 	startedAt: '23:02:21.11',

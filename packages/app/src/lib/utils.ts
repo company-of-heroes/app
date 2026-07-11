@@ -76,65 +76,54 @@ export function getFactionFlagFromRace(
 }
 
 /**
- * Cache for storing rank image imports to avoid repeated dynamic imports
- * Maps race-rank combination to the imported image path
+ * Eagerly load rank images — Vite cannot resolve fully dynamic import() paths.
+ */
+const rankModules = import.meta.glob<{ default: string }>('$lib/files/ranks/*.png', {
+	eager: true
+});
+
+const rankImagesByFilename = new Map(
+	Object.entries(rankModules).map(([path, module]) => {
+		const filename = path.split('/').pop() ?? path;
+		return [filename, module.default] as const;
+	})
+);
+
+const NO_RANK_IMAGE = rankImagesByFilename.get('no_rank_yet.png') ?? '';
+
+/**
+ * Cache for storing rank image paths
  */
 const rankCache = new Map<string, string>();
 
 /**
  * Gets the rank image based on race and rank with caching and fallback
- * Dynamically imports rank images and provides error handling
- * @param race - Race enum value or number (0-3)
- * @param rank - Optional rank number for the player
- *
- * @returns Promise resolving to the rank image asset path
  */
-export async function getRankImage(race: Race | number, rank?: number): Promise<string> {
+export function getRankImage(race: Race | number, rank?: number): string {
 	const cacheKey = `${race}-${rank}`;
 
-	// Return cached result if available
 	if (rankCache.has(cacheKey)) {
 		return rankCache.get(cacheKey)!;
 	}
 
-	// Validate race parameter
 	if (typeof race !== 'number' || race < 0 || race > 3) {
-		console.warn(`Invalid race parameter: ${race}`);
-		race = Race.US; // Default to US
+		race = Race.US;
 	}
 
-	// Get race prefix with better mapping
 	const racePrefix = getRacePrefix(race);
 
-	// Handle invalid or missing rank
-	if (rank === undefined || rank < 0 || !Number.isInteger(rank)) {
-		const defaultRankImage = await import(`$lib/files/ranks/no_rank_yet.png`);
-		const result = defaultRankImage.default;
-		rankCache.set(cacheKey, result);
-
-		return result;
+	if (rank === undefined || rank <= 0 || !Number.isInteger(rank)) {
+		rankCache.set(cacheKey, NO_RANK_IMAGE);
+		return NO_RANK_IMAGE;
 	}
 
-	try {
-		const rankImage = await import(
-			`$lib/files/ranks/${racePrefix}_${rank.toString().padStart(2, '0')}.png`
-		);
-		const result = rankImage.default;
-		if (result) {
-			rankCache.set(cacheKey, result);
-			return result;
-		}
-		throw new Error('Rank image not found');
-	} catch (error) {
-		console.warn(`Failed to load rank image for race ${race}, rank ${rank}:`, error);
-		const defaultRankImage = await import(`$lib/files/ranks/no_rank_yet.png`);
-		const result = defaultRankImage.default;
-		rankCache.set(cacheKey, result);
-		return result;
-	}
+	const filename = `${racePrefix}_${rank.toString().padStart(2, '0')}.png`;
+	const result = rankImagesByFilename.get(filename) ?? NO_RANK_IMAGE;
+	rankCache.set(cacheKey, result);
+	return result;
 }
 
-export function getRankImageByLeaderboardId(leaderboardId: number, rank?: number): Promise<string> {
+export function getRankImageByLeaderboardId(leaderboardId: number, rank?: number): string {
 	const leaderboardRaceMap: Record<number, Race> = {
 		4: Race.US,
 		8: Race.US,

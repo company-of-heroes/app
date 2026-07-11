@@ -39,6 +39,23 @@ export const menuItem =
 
 export const interactive = 'cursor-pointer disabled:cursor-not-allowed';
 
+export const statWins = 'text-green-100 tabular-nums';
+export const statLosses = 'text-red-100 tabular-nums';
+export const statStreakPositive = 'text-green-300 tabular-nums';
+export const statStreakNegative = 'text-red-300 tabular-nums';
+export const statStreakNeutral = 'text-secondary-400 tabular-nums';
+
+export function statStreakClass(streak: number): string {
+	if (streak > 0) return statStreakPositive;
+	if (streak < 0) return statStreakNegative;
+	return statStreakNeutral;
+}
+
+export function formatStreak(streak: number): string {
+	if (streak > 0) return `+${streak}`;
+	return String(streak);
+}
+
 export const stepperButton =
 	'border-secondary-700 bg-secondary-800/80 text-secondary-300 hover:border-secondary-600 hover:bg-secondary-700 hover:text-white active:bg-secondary-600 flex size-6 cursor-pointer items-center justify-center rounded border transition-colors disabled:cursor-not-allowed';
 

@@ -240,8 +240,8 @@ function handleWorkerBatch(e) {
 		return e.json(401, { message: 'Unauthorized' });
 	}
 
-	const screeningLimit = Number(e.request.url.query().get('screeningLimit') || 50);
-	const pollingLimit = Number(e.request.url.query().get('pollingLimit') || 150);
+	const screeningLimit = Number(e.request.url.query().get('screeningLimit') || 10);
+	const pollingLimit = Number(e.request.url.query().get('pollingLimit') || 30);
 	const now = new Date().toISOString();
 
 	const screening = arrayOf(
@@ -252,14 +252,15 @@ function handleWorkerBatch(e) {
 			status: '',
 			source: '',
 			priority: 0,
-			check_interval_sec: 0
+			check_interval_sec: 0,
+			owns_coh: null
 		})
 	);
 
 	$app
 		.db()
 		.newQuery(
-			`SELECT id, steam_id, profile_id, status, source, priority, check_interval_sec
+			`SELECT id, steam_id, profile_id, status, source, priority, check_interval_sec, owns_coh
        FROM smurf_watch
        WHERE status = 'pending_screening'
        ORDER BY priority DESC, next_check_at ASC

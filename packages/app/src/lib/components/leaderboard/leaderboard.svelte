@@ -84,9 +84,11 @@
 
 {#snippet cell_level({ row }: { row: LeaderboardStat })}
 	{#if isRanked(row.leaderboard_id)}
-		{#await getRankImage(getRaceFromLeaderboardId(row.leaderboard_id), row.ranklevel) then rankImg}
-			<img src={rankImg} alt="Rank" class="size-6 shrink-0" />
-		{/await}
+		<img
+			src={getRankImage(getRaceFromLeaderboardId(row.leaderboard_id), row.ranklevel)}
+			alt="Rank"
+			class="size-6 shrink-0"
+		/>
 		<span class="font-semibold tabular-nums">{row.ranklevel}</span>
 	{:else}
 		<span class="text-secondary-400 tabular-nums">-</span>

@@ -39,6 +39,10 @@ export function getLiveLobbyModeLabel(players: LobbyPlayer[], isRanked?: boolean
 	return MATCH_TYPES[getLiveLobbyMatchType(players, isRanked)] ?? 'Custom Game';
 }
 
+export function getMatchModeLabel(match: MatchExpanded): string {
+	return getLiveLobbyModeLabel(match.players ?? [], match.isRanked);
+}
+
 export function getPlayerProfileId(player: LobbyPlayer): number | undefined {
 	return player.profile?.profile_id ?? (player.playerId > 0 ? player.playerId : undefined);
 }

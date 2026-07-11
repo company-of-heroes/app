@@ -10,6 +10,7 @@ import PlayerLevel from './player-level.svelte';
 import PlayerPosition from './player-position.svelte';
 import PlayerFaction from './player-faction.svelte';
 import PlayerAvatar from './player-avatar.svelte';
+import PlayerRating from './player-rating.svelte';
 import PlayerRatingChange from './player-rating-change.svelte';
 import PlayerSearchCard from './player-search-card.svelte';
 
@@ -25,6 +26,7 @@ export {
 	PlayerRank as Rank,
 	PlayerLevel as Level,
 	PlayerPosition as Position,
+	PlayerRating as Rating,
 	PlayerFaction as Faction,
 	PlayerAvatar as Avatar,
 	PlayerRatingChange as RatingChange,

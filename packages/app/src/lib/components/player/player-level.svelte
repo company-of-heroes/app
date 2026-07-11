@@ -6,9 +6,12 @@
 	type Props = HTMLAttributes<HTMLSpanElement>;
 
 	const { ...restProps }: Props = $props();
-	const { playerResult, stats } = $derived(usePlayer());
+	const { stats } = $derived(usePlayer());
+	const ranklevel = $derived(
+		stats?.ranklevel ? (stats.ranklevel > 0 ? stats.ranklevel : undefined) : undefined
+	);
 </script>
 
 <span {...restProps} class={cn('text-center', restProps.class)}>
-	{stats?.ranklevel ?? 'N/A'}
+	{ranklevel ?? '-'}
 </span>

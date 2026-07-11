@@ -1,0 +1,363 @@
+@import url('https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+	--font-name: 'Literata', Georgia, serif;
+	--font-data: 'IBM Plex Mono', monospace;
+
+	--ink: #ece6d8;
+	--ink-dim: rgba(236, 230, 216, 0.55);
+	--ink-faint: rgba(236, 230, 216, 0.32);
+
+	--plate: #12100e;
+	--plate-raised: #1a1714;
+	--line: #2e2a24;
+	--line-bright: #4a4438;
+
+	--allied: #7a9e82;
+	--allied-deep: #4a6b52;
+	--axis: #9e6b6b;
+	--axis-deep: #6b4545;
+
+	--self: #c4a24a;
+
+	--col-w: 304px;
+	--icon-h: 16px;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	overflow: hidden;
+	font-family: var(--font-data);
+	color: var(--ink);
+	background: transparent;
+}
+
+/* ── Root ────────────────────────────────────────────────── */
+
+.manifest {
+	position: relative;
+	height: 100%;
+	padding: 10px;
+}
+
+/* ── Field (two sides) ───────────────────────────────────── */
+
+.manifest__field {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	width: 100%;
+}
+
+/* ── Side column ─────────────────────────────────────────── */
+
+.side {
+	width: var(--col-w);
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.side-0 {
+	align-items: flex-start;
+}
+.side-1 {
+	align-items: flex-end;
+}
+
+.side__title {
+	margin: 0 0 6px;
+	padding: 0 2px 5px;
+	width: 100%;
+	font-family: var(--font-data);
+	font-size: 0.6rem;
+	font-weight: 500;
+	letter-spacing: 0.24em;
+	text-transform: uppercase;
+	color: var(--ink-faint);
+	border-bottom: 1px solid var(--line);
+}
+
+.side-0 .side__title {
+	color: var(--allied);
+	border-bottom-color: var(--allied-deep);
+}
+
+.side-1 .side__title {
+	text-align: right;
+	color: var(--axis);
+	border-bottom-color: var(--axis-deep);
+}
+
+.side__units {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+/* ── Unit row (nameplate) ────────────────────────────────── */
+
+.unit {
+	display: flex;
+	align-items: stretch;
+	width: 100%;
+	border-bottom: 1px solid var(--line);
+}
+
+.unit:last-child {
+	border-bottom: none;
+}
+
+.side-1 .unit {
+	flex-direction: row-reverse;
+}
+
+/* Rank seal — portrait frame */
+.unit__seal {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 50px;
+	background: var(--plate);
+	border-right: 1px solid var(--line);
+}
+
+.side-1 .unit__seal {
+	border-right: none;
+	border-left: 1px solid var(--line);
+}
+
+.unit__seal img {
+	width: 36px;
+	height: 36px;
+	object-fit: contain;
+	image-rendering: pixelated;
+}
+
+/* Data panel */
+.unit__panel {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 4px;
+	padding: 8px 12px;
+	background: var(--plate-raised);
+}
+
+.side-0 .unit__panel {
+	border-left: 2px solid var(--allied-deep);
+}
+
+.side-1 .unit__panel {
+	border-right: 2px solid var(--axis-deep);
+}
+
+.unit--self .unit__panel {
+	background: #1e1a14;
+}
+
+.side-0 .unit--self .unit__panel {
+	border-left-color: var(--self);
+}
+
+.side-1 .unit--self .unit__panel {
+	border-right-color: var(--self);
+}
+
+/* Primary line */
+.unit__primary {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	min-width: 0;
+}
+
+.side-1 .unit__primary {
+	flex-direction: row-reverse;
+}
+
+.unit__flag {
+	flex-shrink: 0;
+	height: var(--icon-h);
+	width: auto;
+	object-fit: contain;
+	filter: grayscale(20%);
+}
+
+.unit__name {
+	flex: 1;
+	min-width: 0;
+	font-family: var(--font-name);
+	font-size: 0.95rem;
+	font-weight: 700;
+	line-height: 1.15;
+	color: var(--ink);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.side-1 .unit__name {
+	text-align: right;
+}
+
+.unit__scores {
+	flex-shrink: 0;
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+}
+
+.side-1 .unit__scores {
+	flex-direction: row-reverse;
+}
+
+.unit__ranking {
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	color: var(--ink-dim);
+}
+
+.unit__elo {
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--ink);
+}
+
+.unit__elo--na {
+	color: var(--ink-dim);
+	font-weight: 500;
+}
+
+/* Secondary line */
+.unit__secondary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.side-1 .unit__secondary {
+	flex-direction: row-reverse;
+}
+
+.unit__faction {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 0.66rem;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	color: var(--ink-faint);
+}
+
+.side-1 .unit__faction {
+	flex-direction: row-reverse;
+}
+
+.unit__faction img {
+	height: var(--icon-h);
+	width: auto;
+	image-rendering: pixelated;
+	opacity: 0.85;
+}
+
+.unit__record {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	font-size: 0.66rem;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+}
+
+.side-1 .unit__record {
+	flex-direction: row-reverse;
+}
+
+.unit__w {
+	color: var(--allied);
+}
+.unit__l {
+	color: var(--axis);
+}
+.unit__wr {
+	color: var(--ink-dim);
+}
+
+.unit__streak--up {
+	color: #c4925a;
+}
+.unit__streak--down {
+	color: #6a8faa;
+}
+
+/* ── Player count scaling ────────────────────────────────── */
+
+.count-2 {
+	--col-w: 320px;
+}
+.count-2 .unit__name {
+	font-size: 1rem;
+}
+
+.count-6 {
+	--col-w: 292px;
+}
+.count-6 .unit__panel {
+	padding: 7px 11px;
+}
+.count-6 .unit__seal {
+	width: 46px;
+}
+.count-6 .unit__seal img {
+	width: 34px;
+	height: 34px;
+}
+.count-6 .unit__name {
+	font-size: 0.9rem;
+}
+
+.count-8 {
+	--col-w: 280px;
+}
+.count-8 .side__title {
+	margin-bottom: 4px;
+	font-size: 0.56rem;
+}
+.count-8 .unit__panel {
+	padding: 6px 10px;
+	gap: 3px;
+}
+.count-8 .unit__seal {
+	width: 44px;
+}
+.count-8 .unit__seal img {
+	width: 32px;
+	height: 32px;
+}
+.count-8 .unit__name {
+	font-size: 0.86rem;
+}
+.count-8 .unit__primary {
+	gap: 6px;
+}
+.count-8 .unit__secondary {
+	gap: 8px;
+}
+.count-8 .unit__record {
+	gap: 7px;
+	font-size: 0.62rem;
+}
+.count-8 .unit__ranking,
+.count-8 .unit__elo {
+	font-size: 0.66rem;
+}

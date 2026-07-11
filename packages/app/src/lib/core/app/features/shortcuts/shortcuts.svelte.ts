@@ -215,6 +215,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 
 	private maybeRegisterShortcuts() {
 		if (!this.shouldRegisterShortcuts() || app.lobby?.me == null) {
+			this.safeUnregisterAllShortcuts();
 			return;
 		}
 
@@ -254,8 +255,13 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		this.safeUnregisterAllShortcuts();
 
 		this.disposeEnable = $effect.root(() => {
-			const offLobby = app.on('lobby.started', () => {
+			const offLobbyStarted = app.on('lobby.started', () => {
 				this.maybeRegisterShortcuts();
+			});
+
+			const offLobbyDestroyed = app.on('lobby.destroyed', () => {
+				clearTimeout(this.settingsRegisterTimer);
+				this.safeUnregisterAllShortcuts();
 			});
 
 			watch(
@@ -296,7 +302,10 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				}
 			);
 
-			return offLobby;
+			return () => {
+				offLobbyStarted();
+				offLobbyDestroyed();
+			};
 		});
 	}
 

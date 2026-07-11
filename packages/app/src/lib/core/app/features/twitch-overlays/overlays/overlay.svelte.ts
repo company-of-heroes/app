@@ -17,9 +17,29 @@ export abstract class Overlay {
 
 	abstract zipUrl: string;
 
+	version?: string;
+
 	async register() {
-		if (false === (await exists(this.path, { baseDir: this.baseDir }))) {
+		const installed = await exists(this.path, { baseDir: this.baseDir });
+		if (!installed || (this.version && (await this.isOutdated()))) {
 			await this.install();
+		}
+	}
+
+	async isOutdated(): Promise<boolean> {
+		if (!this.version) return false;
+
+		const versionPath = `${this.path}/overlay-version.json`;
+		if (!(await exists(versionPath, { baseDir: this.baseDir }))) {
+			return true;
+		}
+
+		try {
+			const content = await readTextFile(versionPath, { baseDir: this.baseDir });
+			const { version } = JSON.parse(content) as { version?: string };
+			return version !== this.version;
+		} catch {
+			return true;
 		}
 	}
 

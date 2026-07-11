@@ -1,17 +1,12 @@
 <script lang="ts">
 	import type { MatchHistoryPlayer, TransformedMatch } from '@fknoobs/app';
 	import dayjs from '$lib/dayjs';
-	import {
-		cn,
-		getFactionFlagFromRace,
-		isSteamId,
-		normalizeMapName
-	} from '$lib/utils';
+	import { formatStreak, statLosses, statStreakClass, statWins, surfacePanel, interactive } from '$lib/components/ui/variants';
+	import { cn, getFactionFlagFromRace, isSteamId, normalizeMapName } from '$lib/utils';
 	import { steam, type SteamPlayerSummary } from '$core/steam';
 	import { resource } from 'runed';
 	import MapImage from '$lib/components/ui/map-image.svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { surfacePanel, interactive } from '$lib/components/ui/variants';
 	import { orderBy, sortBy, upperCase } from 'lodash-es';
 	import ClockIcon from 'phosphor-svelte/lib/Clock';
 	import CaretDown from 'phosphor-svelte/lib/CaretDown';
@@ -115,7 +110,7 @@
 							playerGrid,
 							'border-secondary-800 border-b px-4 py-3 last:border-b-0',
 							player.outcome === 1 ? 'bg-success/5' : 'bg-destructive/5',
-							currentProfile && 'bg-primary/5 ring-primary/30 ring-1 ring-inset'
+							currentProfile && 'bg-primary/5'
 						)}
 					>
 						{#await getFactionFlagFromRace(player.race_id) then flagImg}
@@ -163,15 +158,10 @@
 							{/if}
 							<span class="truncate">{player.alias}</span>
 						</a>
-						<span class="text-success text-center font-medium tabular-nums">{player.wins}</span>
-						<span class="text-destructive/90 text-center font-medium tabular-nums">{player.losses}</span>
-						<span
-							class={cn(
-								'text-center font-medium tabular-nums',
-								player.streak > 0 ? 'text-success' : player.streak < 0 ? 'text-destructive/90' : 'text-secondary-400'
-							)}
-						>
-							{player.streak > 0 ? `+${player.streak}` : player.streak}
+						<span class={cn('text-center font-medium', statWins)}>{player.wins}</span>
+						<span class={cn('text-center font-medium', statLosses)}>{player.losses}</span>
+						<span class={cn('text-center font-medium', statStreakClass(player.streak))}>
+							{formatStreak(player.streak)}
 						</span>
 					</div>
 				{/each}

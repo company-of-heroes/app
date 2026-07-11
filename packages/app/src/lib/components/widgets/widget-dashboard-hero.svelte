@@ -3,12 +3,11 @@
 	import * as List from '$lib/components/ui/list';
 	import { app } from '$core/app/context';
 	import { Alert } from '$lib/components/ui/alert';
-	import { Button } from '$lib/components/ui/button';
 	import { Leaderboard } from '../leaderboard';
 	import { MatchHistory } from '../match-history';
 	import { relic } from '$lib/relic';
 	import { cn } from '$lib/utils';
-	import { interactive } from '$lib/components/ui/variants';
+	import { interactive, statLosses, statWins } from '$lib/components/ui/variants';
 	import { resource } from 'runed';
 	import { upperCase } from 'lodash-es';
 	import CaretDown from 'phosphor-svelte/lib/CaretDown';
@@ -96,7 +95,12 @@
 							<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span>
 						</a>
 						{#if app.lobby}
-							<span class="text-success text-xs font-medium">In match</span>
+							<a
+								href="/current-game"
+								class={cn(interactive, 'text-success text-xs font-medium hover:underline')}
+							>
+								In match
+							</a>
 						{/if}
 					</div>
 
@@ -106,12 +110,6 @@
 						<List.Title>Created:</List.Title>
 						<List.Value><Profile.Created /></List.Value>
 					</List.Root>
-
-					{#if app.lobby}
-						<div class="mt-4">
-							<Button href="/current-game" variant="secondary">Current game</Button>
-						</div>
-					{/if}
 				</div>
 			</div>
 
@@ -172,9 +170,9 @@
 				</span>
 				{#if todayRecord.wins + todayRecord.losses > 0}
 					<span>
-						<span class="text-success">{todayRecord.wins}W</span>
+						<span class={statWins}>{todayRecord.wins}W</span>
 						<span class="text-secondary-600"> · </span>
-						<span class="text-destructive/80">{todayRecord.losses}L</span>
+						<span class={statLosses}>{todayRecord.losses}L</span>
 					</span>
 				{:else if todayRecord.pending > 0}
 					<span>{todayRecord.pending} pending</span>

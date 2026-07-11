@@ -23,16 +23,14 @@
 </script>
 
 {#if imgSrc}
-	<div class="w-full overflow-clip">
-		<img
-			src={imgSrc}
-			alt={player.profile?.alias || 'Player Avatar'}
-			{...restProps}
-			class={cn('relative -m-0.5 w-full', restProps.class)}
-		/>
-	</div>
+	<img
+		src={imgSrc}
+		alt={player.profile?.alias || 'Player Avatar'}
+		{...restProps}
+		class={cn('size-full object-cover', restProps.class)}
+	/>
 {:else}
-	<div {...restProps} class={cn('flex items-center justify-center bg-gray-600', restProps.class)}>
+	<div {...restProps} class={cn('flex size-full items-center justify-center bg-gray-600', restProps.class)}>
 		<span class="text-xl text-white">?</span>
 	</div>
 {/if}

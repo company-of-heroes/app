@@ -1,20 +1,15 @@
 <script lang="ts">
 	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/matches';
 	import type { UnsubscribeFunc } from 'pocketbase';
-	import * as Match from '$lib/components/match';
 	import { fetch } from '@tauri-apps/plugin-http';
 	import { app } from '$core/app/context';
 	import { exp } from '$core/pocketbase';
 	import { resource } from 'runed';
 	import { onDestroy, onMount } from 'svelte';
-	import { Skeleton } from '../ui/skeleton';
-	import { Alert } from '../ui/alert';
 	import { H } from '../ui/h';
 	import { Button } from '../ui/button';
-	import { tooltip } from '$lib/attachments';
 	import { cn } from '$lib/utils';
-	import HourGlass from 'phosphor-svelte/lib/Hourglass';
-	import Checks from 'phosphor-svelte/lib/Checks';
+	import TodayMatchesTable from './today-matches-table.svelte';
 
 	let unsubscribe = $state<UnsubscribeFunc>();
 	let matches = resource(
@@ -25,6 +20,8 @@
 				sort: '-createdAt'
 			})
 	);
+
+	const matchCount = $derived(matches.current?.length ?? 0);
 
 	onMount(async () => {
 		unsubscribe = await app.pocketbase.collection('matches').subscribe<LobbyMatch>(
@@ -58,49 +55,27 @@
 	});
 </script>
 
-<div class="flex items-center gap-4">
-	<H level="2" class="mb-0">Matches played today</H>
-	<Button href="/history" variant="link" size="sm" class="ms-auto px-0">View all</Button>
-</div>
-
-{#if matches.loading}
-	<div class="mt-4 grid gap-[2px]">
-		{#each Array(5) as _, index (index)}
-			<Skeleton class="bg-secondary-950/40 h-11" />
-		{/each}
-	</div>
-{:else if matches.current}
-	{#if matches.current.length === 0}
-		<Alert variant="info" class="mt-4">You have not played any matches today.</Alert>
-	{:else}
-		<div class="mt-4 grid gap-[2px]">
-			{#each matches.current as match (match.id)}
-				<Match.Root
-					{match}
-					href={`/history/${match.id}`}
-					class={cn(
-						'h-11 items-center gap-4 overflow-clip rounded-md border transition-colors duration-150',
-						'bg-secondary-950/40 border-secondary-800/50 text-secondary-300',
-						'grid grid-cols-[50px_200px_100px_200px_150px_150px_1fr_auto]',
-						'hover:bg-secondary-950/60 focus:bg-secondary-950/60 hover:text-primary'
-					)}
-				>
-					<Match.MapImage class="w-full" />
-					<Match.MapName />
-					<Match.Rating class="flex justify-center" />
-					<Match.Title />
-					<Match.Players team="allies" />
-					<Match.Players team="axis" />
-					<Match.Time />
-					<span class="px-4">
-						{#if match.needsResult}
-							<HourGlass class="text-primary ms-auto" {@attach tooltip('Result pending')} />
-						{:else}
-							<Checks class="ms-auto text-green-400" {@attach tooltip('Result saved')} />
-						{/if}
-					</span>
-				</Match.Root>
-			{/each}
+<div
+	class={cn(
+		'bg-secondary-950/40 border-secondary-900 overflow-clip rounded-lg border',
+		'hover:border-secondary-700 transition-colors'
+	)}
+>
+	<div class="border-secondary-800 flex items-center justify-between border-b px-5 py-3">
+		<H level="2" class="mb-0">Matches played today</H>
+		<div class="flex items-center gap-4">
+			{#if !matches.loading}
+				<span class="text-secondary-400 text-sm tabular-nums">{matchCount} played</span>
+			{/if}
+			<Button href="/history" variant="link" size="sm" class="px-0">View all</Button>
 		</div>
+	</div>
+
+	{#if matches.loading}
+		<TodayMatchesTable matches={[]} loading />
+	{:else if !matches.current || matches.current.length === 0}
+		<p class="text-secondary-400 px-5 py-3 text-sm">You have not played any matches today.</p>
+	{:else}
+		<TodayMatchesTable matches={matches.current} />
 	{/if}
-{/if}
+</div>
