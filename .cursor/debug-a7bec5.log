@@ -92,3 +92,13 @@
 {"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"serve start","data":{"serveStart":1783779331652},"timestamp":1783779331652,"hypothesisId":"B"}
 {"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"cron registered (backfill deferred)","data":{"durationMs":24},"timestamp":1783779331676,"hypothesisId":"B"}
 {"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"cron registered (backfill deferred)","data":{"durationMs":29},"timestamp":1783779331678,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783824777931},"timestamp":1783824777931,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783824777950},"timestamp":1783824777950,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":1330},"timestamp":1783824779280,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"00-startup-debug.pb.js:7","message":"pb_hooks load started","data":{"t":1783824779930},"timestamp":1783824779930,"hypothesisId":"E"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"bootstrap start","data":{"bootstrapStart":1783824779946},"timestamp":1783824779946,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"main.pb.js:onBootstrap","message":"schema generation done","data":{"durationMs":394},"timestamp":1783824780340,"hypothesisId":"C"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"serve start","data":{"serveStart":1783824780393},"timestamp":1783824780393,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"serve start","data":{"serveStart":1783824780397},"timestamp":1783824780397,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"smurf-watch.pb.js:onServe","message":"cron registered (backfill deferred)","data":{"durationMs":25},"timestamp":1783824780422,"hypothesisId":"B"}
+{"sessionId":"a7bec5","location":"lobby-players.pb.js:onServe","message":"cron registered (backfill deferred)","data":{"durationMs":31},"timestamp":1783824780424,"hypothesisId":"B"}
