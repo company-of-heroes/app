@@ -133,9 +133,12 @@ function readOverlayVersion(dir) {
 
 function saveUploadedBundle(bundle, tempZip) {
 	const reader = bundle.reader.open();
-	const bytes = reader.readAll();
-	reader.close();
-	$os.writeFile(tempZip, bytes, 0o644);
+	try {
+		const bytes = toBytes(reader);
+		$os.writeFile(tempZip, bytes, 0o644);
+	} finally {
+		reader.close();
+	}
 }
 
 function handlePublish(e) {

@@ -248,12 +248,12 @@ function handleWorkerBatch(e) {
 		new DynamicModel({
 			id: '',
 			steam_id: '',
-			profile_id: 0,
+			profile_id: nullInt(),
 			status: '',
 			source: '',
 			priority: 0,
 			check_interval_sec: 0,
-			owns_coh: null
+			owns_coh: nullBool()
 		})
 	);
 
@@ -273,7 +273,7 @@ function handleWorkerBatch(e) {
 		new DynamicModel({
 			id: '',
 			steam_id: '',
-			profile_id: 0,
+			profile_id: nullInt(),
 			status: '',
 			source: '',
 			priority: 0,

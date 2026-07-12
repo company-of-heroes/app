@@ -6,6 +6,7 @@
 	import { openPath } from '@tauri-apps/plugin-opener';
 	import { twitchOverlays } from '$features/twitch-overlays';
 	import { cn } from '$lib/utils';
+	import { watch } from 'runed';
 	import { app } from '$core/app/context';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -14,12 +15,52 @@
 	const overlay = twitchOverlays.overlays[0];
 	let copied = $state(false);
 	let publishing = $state(false);
-	let lastPublishedAt = $state<string | null>(null);
-	let publishedVersion = $state<string | null>(null);
+	let hasUnpublishedChanges = $state(false);
+	let checkingChanges = $state(false);
 
 	const overlayUrl = $derived(
 		app.features.auth.user?.id ? overlay.getHostedUrl(app.features.auth.user.id) : ''
 	);
+
+	async function refreshChangeState() {
+		if (!app.features.auth.user) {
+			hasUnpublishedChanges = false;
+			return;
+		}
+
+		checkingChanges = true;
+		try {
+			hasUnpublishedChanges = await overlay.hasUnpublishedChanges();
+		} catch (error) {
+			console.warn('[OVERLAYS-TAB]: failed to check overlay changes:', error);
+			hasUnpublishedChanges = false;
+		} finally {
+			checkingChanges = false;
+		}
+	}
+
+	watch(
+		() => app.features.auth.user?.id,
+		(userId) => {
+			if (!userId) {
+				hasUnpublishedChanges = false;
+				return;
+			}
+
+			void refreshChangeState();
+		}
+	);
+
+	$effect(() => {
+		if (!app.features.auth.user) return;
+
+		const onFocus = () => {
+			void refreshChangeState();
+		};
+
+		window.addEventListener('focus', onFocus);
+		return () => window.removeEventListener('focus', onFocus);
+	});
 
 	function copyToClipboard() {
 		if (!overlayUrl) return;
@@ -40,21 +81,16 @@
 		}
 	}
 
-	async function publishOverlay() {
+	async function publishChanges() {
 		if (publishing) return;
 		publishing = true;
 		try {
-			const response = (await overlay.publish()) as {
-				success?: boolean;
-				version?: string;
-				updatedAt?: string;
-			};
-			publishedVersion = response.version ?? null;
-			lastPublishedAt = response.updatedAt ?? new Date().toISOString();
-			app.toast.success('Overlay published to server.');
+			await overlay.publish();
+			hasUnpublishedChanges = false;
+			app.toast.success('Overlay changes published to server.');
 		} catch (error) {
 			console.error('Failed to publish overlay:', error);
-			app.toast.error('Failed to publish overlay. Check your connection and try again.');
+			app.toast.error('Failed to publish overlay changes. Check your connection and try again.');
 		} finally {
 			publishing = false;
 		}
@@ -102,22 +138,17 @@
 		<FolderOpenIcon size={18} />
 		Open in editor
 	</Button>
-	<Button type="button" onclick={publishOverlay} disabled={publishing || !app.features.auth.user}>
+	<Button
+		type="button"
+		onclick={publishChanges}
+		disabled={publishing || checkingChanges || !hasUnpublishedChanges || !app.features.auth.user}
+	>
 		<CloudArrowUpIcon size={18} />
-		{publishing ? 'Publishing…' : 'Publish to server'}
+		{publishing ? 'Publishing…' : 'Publish changes to server'}
 	</Button>
 </div>
 
-{#if lastPublishedAt}
-	<p class="text-secondary-400 mt-3 text-sm">
-		Last published {new Date(lastPublishedAt).toLocaleString()}
-		{#if publishedVersion}
-			(version {publishedVersion})
-		{/if}
-	</p>
-{/if}
-
 <p class="text-secondary-400 mt-4 max-w-2xl text-sm">
-	Edit overlay files locally in your preferred code editor, then publish to update the hosted version
-	at api.coh1stats.com. Live match data is loaded automatically from your active lobby.
+	Your overlay is hosted automatically at the URL above. Open it in your code editor only when you
+	want to customize it, then use “Publish changes to server” to update the live version.
 </p>
