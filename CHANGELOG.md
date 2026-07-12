@@ -1,3 +1,7 @@
+### v0.52.2
+
+- feat; add opponent bot route
+
 ### v0.52.1
 
 - feat; oppbot overlay will now use a remote server, this will make it more reliable. Make sure the app is running when using the overlay!
