@@ -294,10 +294,30 @@ function handleWorkerBatch(e) {
 		.bind({ now, limit: pollingLimit })
 		.all(polling);
 
+	const totalPending = new DynamicModel({ count: 0 });
+	$app
+		.db()
+		.newQuery(`SELECT COUNT(*) AS count FROM smurf_watch WHERE status = 'pending_screening'`)
+		.one(totalPending);
+
+	const totalWatchingDue = new DynamicModel({ count: 0 });
+	$app
+		.db()
+		.newQuery(
+			`SELECT COUNT(*) AS count
+       FROM smurf_watch
+       WHERE status = 'watching'
+         AND (next_check_at IS NULL OR next_check_at <= {:now})`
+		)
+		.bind({ now })
+		.one(totalWatchingDue);
+
 	return e.json(200, {
 		screening,
 		polling,
-		fetched_at: now
+		fetched_at: now,
+		total_pending: Number(totalPending.count) || 0,
+		total_watching_due: Number(totalWatchingDue.count) || 0
 	});
 }
 

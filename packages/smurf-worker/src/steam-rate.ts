@@ -11,10 +11,17 @@ const KV_LAST_CALL_KEY = 'steam_last_call_at';
 const KV_WORKER_LOCK_KEY = 'worker_lock';
 
 const WORKER_LOCK_TTL_SEC = 600;
-const WORKER_LOCK_MAX_AGE_MS = 4 * 60 * 1000;
+const WORKER_LOCK_MAX_AGE_MS = 3 * 60 * 1000;
 
 let memoryBlockedUntil = 0;
 let memoryLastCallAt = 0;
+
+export type WorkerLockResult = {
+	acquired: boolean;
+	reason?: 'active_lock' | 'no_kv';
+	lockAgeMs?: number;
+	staleLockReleased?: boolean;
+};
 
 export function minIntervalForEndpoint(endpoint: string): number {
 	if (endpoint.includes('GetOwnedGames')) {
@@ -95,25 +102,34 @@ export async function recordSteamCall(env: { STEAM_RATE_LIMIT?: KVNamespace }): 
 
 export async function tryAcquireWorkerLock(env: {
 	STEAM_RATE_LIMIT?: KVNamespace;
-}): Promise<boolean> {
+}): Promise<WorkerLockResult> {
 	const kv = env.STEAM_RATE_LIMIT;
 	if (!kv) {
-		return true;
+		return { acquired: true, reason: 'no_kv' };
 	}
 
 	const lock = await kv.get(KV_WORKER_LOCK_KEY);
 	if (lock) {
 		const lockedAt = Number(lock);
-		if (Date.now() - lockedAt < WORKER_LOCK_MAX_AGE_MS) {
+		const lockAgeMs = Date.now() - lockedAt;
+
+		if (lockAgeMs < WORKER_LOCK_MAX_AGE_MS) {
 			log('info', 'worker skipped: previous run still active', {
-				lockedAt: new Date(lockedAt).toISOString()
+				lockedAt: new Date(lockedAt).toISOString(),
+				lockAgeMs
 			});
-			return false;
+			return { acquired: false, reason: 'active_lock', lockAgeMs };
 		}
+
+		log('warn', 'worker stale lock released', {
+			lockedAt: new Date(lockedAt).toISOString(),
+			lockAgeMs
+		});
+		await kv.delete(KV_WORKER_LOCK_KEY);
 	}
 
 	await kv.put(KV_WORKER_LOCK_KEY, String(Date.now()), { expirationTtl: WORKER_LOCK_TTL_SEC });
-	return true;
+	return { acquired: true, staleLockReleased: Boolean(lock) };
 }
 
 export async function releaseWorkerLock(env: { STEAM_RATE_LIMIT?: KVNamespace }): Promise<void> {

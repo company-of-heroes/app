@@ -1,10 +1,26 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
+let currentRunId: string | null = null;
+
+export function createRunContext(): string {
+	currentRunId = crypto.randomUUID();
+	return currentRunId;
+}
+
+export function getRunId(): string | null {
+	return currentRunId;
+}
+
+export function clearRunContext(): void {
+	currentRunId = null;
+}
+
 export function log(level: LogLevel, message: string, data?: Record<string, unknown>): void {
 	const entry = {
 		level,
 		message,
 		ts: new Date().toISOString(),
+		...(currentRunId ? { runId: currentRunId } : {}),
 		...data
 	};
 

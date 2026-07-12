@@ -1,24 +1,30 @@
 import type { Env } from './lib';
-import { log, logError } from './logger';
+import { clearRunContext, createRunContext, log, logError } from './logger';
 import { runSmurfWorker } from './worker';
 
 function runWorkerWithLogging(env: Env, trigger: 'scheduled' | 'manual'): Promise<void> {
 	const startedAt = Date.now();
+	const runId = createRunContext();
 
-	log('info', 'smurf worker started', { trigger });
+	log('info', 'smurf worker started', { trigger, runId });
 
 	return runSmurfWorker(env)
 		.then(() => {
 			log('info', 'smurf worker finished', {
 				trigger,
+				runId,
 				durationMs: Date.now() - startedAt
 			});
 		})
 		.catch((error: unknown) => {
 			logError('smurf worker failed', error, {
 				trigger,
+				runId,
 				durationMs: Date.now() - startedAt
 			});
+		})
+		.finally(() => {
+			clearRunContext();
 		});
 }
 
