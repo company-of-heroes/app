@@ -1,3 +1,8 @@
+### v0.52.1
+
+- feat; oppbot overlay will now use a remote server, this will make it more reliable. Make sure the app is running when using the overlay!
+- fix; fixed some cors errors
+
 ### v0.52.0
 
 - feat; pagination supports now specifying a page number
