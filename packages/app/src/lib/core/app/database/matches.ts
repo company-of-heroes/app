@@ -12,7 +12,7 @@ import type { ListResult, RecordFullListOptions, UnsubscribeFunc } from 'pocketb
 import type { LobbyPlayer, Match as LobbyMatch } from '@fknoobs/app';
 import type { Expand } from '@fknoobs/app';
 import { exp, pocketbase } from '$core/pocketbase';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 import { account } from '$core/account';
 
 export type Match = LobbiesResponse<

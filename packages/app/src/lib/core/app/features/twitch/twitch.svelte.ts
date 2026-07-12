@@ -163,10 +163,7 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 		this.chatClient.connect();
 
 		this.#chatListener = this.chatClient.onMessage((channel, user, message, msg) => {
-			const parsedMessage = this.parseChatMessage(channel, user, message, msg);
-
 			this.emit('chat-message', { channel, user, message, msg });
-			app.socket.publish('twitch.chat', parsedMessage);
 		});
 
 		if (token.userName) {

@@ -26,7 +26,6 @@ import { game } from '$core/game/process.svelte';
 import { GameLogService } from '$core/game/log/index.svelte';
 import { Lobby, type Match } from '$core/game/lobby';
 import { database } from '$core/app/database';
-import { SocketManager, SocketState } from '$core/app/socket.svelte';
 import { notifications as notificationsService } from '$core/notifications/notifications.svelte';
 import { LOBBY_4V4, RANKED_2V2 } from '$lib/dev';
 import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
@@ -40,8 +39,6 @@ export type FeatureKey = Exclude<keyof Features, 'auth'>;
 
 export type Statuses = {
 	companyOfHeroes: Status;
-	webserver: Status;
-	websocketServer: Status;
 };
 
 export type AppEvents = {
@@ -104,16 +101,11 @@ export class AppContext extends Emittery<AppEvents> {
 	/** PocketBase client. */
 	pocketbase: TypedPocketBase = pocketbase;
 
-	/** Managed websocket to the local relay server (auto-reconnecting). */
-	socket: SocketManager;
-
 	/** Notification audio element. */
 	audio: HTMLAudioElement = new Audio();
 
 	statuses = $state<Statuses>({
-		companyOfHeroes: 'idle',
-		webserver: 'loading',
-		websocketServer: 'loading'
+		companyOfHeroes: 'idle'
 	});
 
 	_features: SvelteMap<FeatureKey, Features[FeatureKey]> = new SvelteMap();
@@ -123,7 +115,6 @@ export class AppContext extends Emittery<AppEvents> {
 	constructor() {
 		super();
 
-		this.socket = new SocketManager();
 		this.gameLog = new GameLogService({
 			getProfileBySteamId: (steamId) => relic.getProfileBySteamId(steamId),
 			getSteamProfile: (steamId) => steam.getUserProfile(steamId.toString()),
@@ -266,28 +257,12 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	#trackStatuses() {
-		const socketStatusMap: Record<SocketState, Status> = {
-			[SocketState.Connected]: 'success',
-			[SocketState.Disconnected]: 'error',
-			[SocketState.Connecting]: 'loading',
-			[SocketState.Error]: 'error'
-		};
-
 		watch(
-			[() => this.socket.current?.state, () => this.socket.current, () => this.game.isRunning],
-			([state, current, isRunning]) => {
-				this.statuses.websocketServer = !current ? 'error' : (socketStatusMap[state!] ?? 'loading');
+			() => this.game.isRunning,
+			(isRunning) => {
 				this.statuses.companyOfHeroes = isRunning ? 'success' : 'idle';
 			}
 		);
-
-		fetch('http://localhost:9000')
-			.then(() => {
-				this.statuses.webserver = 'success';
-			})
-			.catch(() => {
-				this.statuses.webserver = 'error';
-			});
 	}
 
 	async #onAuthenticated(
@@ -333,7 +308,6 @@ export class AppContext extends Emittery<AppEvents> {
 		}
 
 		this.emit('lobby.joined', lobby.toJSON());
-		this.socket.publish('game.lobby.joined', lobby.toJSON());
 	}
 
 	#onLobbyStarted(lobby: Lobby) {
@@ -345,7 +319,6 @@ export class AppContext extends Emittery<AppEvents> {
 		console.log('lobby started', lobby.toJSON());
 
 		this.emit('lobby.started', lobby.toJSON());
-		this.socket.publish('game.lobby.started', lobby.toJSON());
 
 		this.database.lobbiesLive
 			.setLobby(lobby.toJSON())
@@ -377,7 +350,6 @@ export class AppContext extends Emittery<AppEvents> {
 		}
 
 		this.emit('lobby.destroyed', { match, replay });
-		this.socket.publish('game.lobby.destroyed', match);
 
 		this.database.lobbiesLive
 			.removeLobby()

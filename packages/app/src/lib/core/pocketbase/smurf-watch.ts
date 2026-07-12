@@ -1,4 +1,4 @@
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 import { PUBLIC_PB_URL } from '$env/static/public';
 import { pocketbase } from '$core/pocketbase';
 

@@ -25,7 +25,7 @@ export default defineConfig({
 			{ find: '@tauri-apps/api/app', replacement: r('./src/tests/mocks/tauri-app.ts') },
 			{ find: '@tauri-apps/api/core', replacement: r('./src/tests/mocks/tauri-core.ts') },
 			{ find: '@tauri-apps/plugin-dialog', replacement: r('./src/tests/mocks/tauri-dialog.ts') },
-			{ find: '@tauri-apps/plugin-http', replacement: r('./src/tests/mocks/tauri-http.ts') },
+			{ find: '@tauri-apps/plugin-http-original', replacement: r('./src/tests/mocks/tauri-http.ts') },
 			{ find: '@tauri-apps/plugin-log', replacement: r('./src/tests/mocks/tauri-log.ts') },
 			// SvelteKit virtual modules
 			{ find: '$app/environment', replacement: r('./src/tests/mocks/app-environment.ts') },

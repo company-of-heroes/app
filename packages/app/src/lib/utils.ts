@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import type { ChatMessage } from '@twurple/chat';
 import { twMerge } from 'tailwind-merge';
 import { invoke } from '@tauri-apps/api/core';
+import { fetch } from '$core/http/fetch';
 import WMFlag from '$lib/files/wm-2.png';
 import PEFlag from '$lib/files/pe.png';
 import CWFlag from '$lib/files/cw.png';

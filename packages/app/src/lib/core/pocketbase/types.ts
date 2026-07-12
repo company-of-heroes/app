@@ -21,6 +21,7 @@ export const Collections = {
 	ReplayAggregation: "replay_aggregation",
 	Replays: "replays",
 	SmurfWatch: "smurf_watch",
+	UserOverlays: "user_overlays",
 	Users: "users",
 } as const
 export type Collections = typeof Collections[keyof typeof Collections]
@@ -242,6 +243,14 @@ export const SmurfWatchLenderSourceOptions = {
 	"cohstats": "cohstats",
 } as const
 export type SmurfWatchLenderSourceOptions = typeof SmurfWatchLenderSourceOptions[keyof typeof SmurfWatchLenderSourceOptions]
+export type UserOverlaysRecord = {
+	bundle?: FileNameString
+	id: string
+	updated: IsoAutoDateString
+	user: RecordIdString
+	version?: string
+}
+
 export type SmurfWatchRecord = {
 	check_interval_sec?: number
 	created: IsoAutoDateString
@@ -275,6 +284,7 @@ export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRec
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
 export type SmurfWatchResponse<Texpand = unknown> = Required<SmurfWatchRecord> & BaseSystemFields<Texpand>
+export type UserOverlaysResponse<Texpand = unknown> = Required<UserOverlaysRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Tmeta = unknown, TsteamIds = unknown, Texpand = unknown> = Required<UsersRecord<Tmeta, TsteamIds>> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -295,6 +305,7 @@ export type CollectionRecords = {
 	replay_aggregation: ReplayAggregationRecord
 	replays: ReplaysRecord
 	smurf_watch: SmurfWatchRecord
+	user_overlays: UserOverlaysRecord
 	users: UsersRecord
 }
 
@@ -314,6 +325,7 @@ export type CollectionResponses = {
 	replay_aggregation: ReplayAggregationResponse
 	replays: ReplaysResponse
 	smurf_watch: SmurfWatchResponse
+	user_overlays: UserOverlaysResponse
 	users: UsersResponse
 }
 

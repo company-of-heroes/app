@@ -12,9 +12,7 @@ mod migrations;
 mod process_check;
 mod replay_parser;
 mod unzip;
-mod webserver;
 mod window;
-mod ws_server;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -35,7 +33,6 @@ pub fn run() {
         )
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_cache::init())
-        // Keep only plugin initializations (all custom commands & state removed per user request)
         .plugin(tauri_plugin_websocket::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
@@ -49,6 +46,7 @@ pub fn run() {
             global_shortcuts::reset_global_shortcuts,
             unzip::unzip_file,
             unzip::unzip_bytes,
+            unzip::zip_directory,
             process_check::is_running,
             replay_parser::parse_replay,
             input::send_keys,
@@ -60,7 +58,7 @@ pub fn run() {
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
 
-            #[cfg(debug_assertions)] // only include this code on debug builds
+            #[cfg(debug_assertions)]
             {
                 window.open_devtools();
                 window.close_devtools();
@@ -73,25 +71,6 @@ pub fn run() {
             #[cfg(target_os = "windows")]
             apply_acrylic(&window, Some((0, 0, 0, 0)))
                 .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
-
-            // Get the app data directory and create the overlays path
-            let app_data_dir = app
-                .path()
-                .app_data_dir()
-                .expect("Failed to get app data directory");
-            let overlays_path = app_data_dir.join("overlays");
-
-            // Create the overlays directory if it doesn't exist
-            if !overlays_path.exists() {
-                std::fs::create_dir_all(&overlays_path)
-                    .expect("Failed to create overlays directory");
-            }
-
-            // Start the web server
-            webserver::spawn_server(overlays_path);
-
-            // Start the WebSocket server
-            ws_server::spawn_ws_server();
 
             coh_chat::start_listener(app.handle());
 

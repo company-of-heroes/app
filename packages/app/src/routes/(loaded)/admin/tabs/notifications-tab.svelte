@@ -7,7 +7,7 @@
 	import { H } from '$lib/components/ui/h';
 	import { app } from '$core/app/context';
 	import { pocketbase } from '$core/pocketbase';
-	import { fetch } from '@tauri-apps/plugin-http';
+	import { fetch } from '$core/http/fetch';
 	import type { NotificationRecord } from '$core/app/database/notifications';
 	import type { UsersResponse } from '$core/pocketbase/types';
 	import dayjs from '$lib/dayjs';

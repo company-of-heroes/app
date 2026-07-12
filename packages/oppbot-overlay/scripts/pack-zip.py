@@ -19,7 +19,7 @@ ZIP_PATH = (
 	/ 'oppbot'
 	/ 'oppbot.zip'
 )
-OVERLAY_VERSION = '2'
+OVERLAY_VERSION = '3'
 
 
 def main() -> None:

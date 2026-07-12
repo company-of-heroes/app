@@ -90,7 +90,7 @@ Lobby started? The app notices. Jump into a live match view and save it to your 
 Connect your channel and stream with purpose:
 - **TTS** — chat read aloud (ElevenLabs, StreamElements, …)
 - **Bot** — commands and moderation helpers
-- **Overlays** — OBS-ready overlays served locally (chat, viewer count, OppBot, …)
+- **Overlays** — OBS-ready Opponent Bot overlay hosted on api.coh1stats.com
 
 </td>
   </tr>
@@ -214,7 +214,7 @@ pnpm --filter app tauri:build:linux
 ### Notes
 
 - `packages/pocketbase/pb_data` is gitignored.
-- Overlays are developed separately: `pnpm overlays:dev` / `pnpm overlays:build`.
+- OppBot overlay is developed separately: `pnpm overlays:dev` / `pnpm overlays:build` (in `packages/oppbot-overlay`).
 
 ---
 

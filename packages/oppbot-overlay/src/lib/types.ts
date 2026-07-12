@@ -73,10 +73,19 @@ export interface LobbyData {
 	type?: string;
 }
 
-export interface OverlayMessage {
-	type: string;
-	topic: string;
-	data: LobbyData;
+export interface LiveLobbyRecord {
+	id: string;
+	user: string;
+	isRanked?: boolean;
+	sessionId: number;
+	map: string;
+	players: Player[];
+	expand?: {
+		user?: {
+			id: string;
+			steamIds?: string[];
+		};
+	};
 }
 
 export interface CombatRecord {

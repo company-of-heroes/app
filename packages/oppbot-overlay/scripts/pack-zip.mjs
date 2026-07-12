@@ -5,8 +5,5 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(__dirname, '..');
 
-console.log('Building oppbot overlay...');
-execSync('pnpm build', { cwd: packageRoot, stdio: 'inherit' });
-
-console.log('Packing oppbot.zip...');
+console.log('Packing oppbot.zip for desktop app...');
 execSync('python scripts/pack-zip.py', { cwd: packageRoot, stdio: 'inherit' });

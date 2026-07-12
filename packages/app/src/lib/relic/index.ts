@@ -6,7 +6,7 @@ import type {
 	RelicProfile,
 	TransformedMatch
 } from '@fknoobs/app';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 import { isProfileId, isSteamId } from '$lib/utils';
 import { transformMatchHistory } from './transform-match-history';
 

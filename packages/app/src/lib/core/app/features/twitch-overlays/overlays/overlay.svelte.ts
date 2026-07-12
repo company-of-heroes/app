@@ -1,13 +1,10 @@
+import { BaseDirectory, exists, readDir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { join, appDataDir, tempDir } from '@tauri-apps/api/path';
+import { invoke } from '@tauri-apps/api/core';
+import { readFile, remove } from '@tauri-apps/plugin-fs';
+import { pocketbase } from '$core/pocketbase';
+import { fetch } from '@tauri-apps/plugin-http';
 import { unzip } from '$lib/utils/unzip';
-import {
-	BaseDirectory,
-	exists,
-	mkdir,
-	readDir,
-	readTextFile,
-	writeTextFile
-} from '@tauri-apps/plugin-fs';
-import { join, appDataDir } from '@tauri-apps/api/path';
 
 export abstract class Overlay {
 	baseDir = BaseDirectory.AppData;
@@ -65,5 +62,38 @@ export abstract class Overlay {
 
 	async getPath() {
 		return join(await appDataDir(), this.path);
+	}
+
+	async publish() {
+		if (!pocketbase.authStore.isValid) {
+			throw new Error('You must be logged in to publish an overlay.');
+		}
+
+		const sourcePath = await this.getPath();
+		const zipPath = await join(await tempDir(), `overlay-${Date.now()}.zip`);
+
+		try {
+			await invoke('zip_directory', { source: sourcePath, destination: zipPath });
+			const bytes = await readFile(zipPath);
+			const formData = new FormData();
+			formData.append('bundle', new Blob([bytes], { type: 'application/zip' }), 'overlay.zip');
+
+			return await pocketbase.send('/api/overlay/publish', {
+				method: 'POST',
+				body: formData,
+				fetch
+			});
+		} finally {
+			try {
+				await remove(zipPath);
+			} catch {
+				// ignore cleanup errors
+			}
+		}
+	}
+
+	getHostedUrl(userId: string) {
+		const baseUrl = (pocketbase.baseUrl || 'https://api.coh1stats.com').replace(/\/$/, '');
+		return `${baseUrl}/overlay/${userId}`;
 	}
 }

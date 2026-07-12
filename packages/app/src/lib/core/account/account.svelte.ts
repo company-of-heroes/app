@@ -1,5 +1,5 @@
 import { ClientResponseError } from 'pocketbase';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { isEmpty, uniq } from 'lodash-es';

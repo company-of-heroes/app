@@ -1,4 +1,4 @@
-/** Test double for @tauri-apps/plugin-http */
+/** Test double for @tauri-apps/plugin-http-original */
 
 type FetchHandler = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 

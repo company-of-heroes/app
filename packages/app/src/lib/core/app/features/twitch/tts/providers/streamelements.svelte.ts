@@ -1,4 +1,5 @@
 import type { Component } from 'svelte';
+import { fetch } from '$core/http/fetch';
 import { TTSProvider } from './provider.svelte';
 import Streamelements from './streamelements.svelte';
 

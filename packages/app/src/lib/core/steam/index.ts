@@ -1,5 +1,5 @@
 import { PUBLIC_STEAM_API_KEY } from '$env/static/public';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 
 // Types
 export interface SteamPlayerSummary {

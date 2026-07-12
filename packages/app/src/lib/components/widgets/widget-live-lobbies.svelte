@@ -23,7 +23,7 @@
 	)}
 >
 	<div class="border-secondary-800 flex items-center justify-between border-b px-5 py-3">
-		<H level="2" class="mb-0">Live lobbies</H>
+		<H level="6" class="mb-0 font-semibold">Live lobbies</H>
 		{#if !feed.isLoading}
 			<span class="text-secondary-400 text-sm tabular-nums">{feed.totalItems} active</span>
 		{/if}
@@ -32,7 +32,7 @@
 	{#if feed.isLoading}
 		<LiveLobbiesTable lobbies={[]} loading />
 	{:else if feed.items.length === 0}
-		<p class="text-secondary-400 px-4 py-3 text-sm">No community members are in a match right now.</p>
+		<p class="text-secondary-400 px-5 py-3 text-sm">No community members are in a match right now.</p>
 	{:else}
 		<LiveLobbiesTable lobbies={feed.items} />
 	{/if}

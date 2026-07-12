@@ -3,8 +3,8 @@ import { Feature } from '../feature.svelte';
 import type { Overlay } from './overlays/overlay.svelte';
 
 /**
- * Registry for Twitch stream overlays. Each overlay registers itself with the
- * local relay server so the overlays web app can render it.
+ * Registry for the Opponent Bot overlay. Installs local source for editing and
+ * publishes to the hosted overlay route on api.coh1stats.com.
  */
 export class TwitchOverlays extends Feature {
 	name = 'twitch-overlays';

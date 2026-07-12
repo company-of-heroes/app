@@ -3,7 +3,7 @@
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
 	import { app } from '$core/app/context';
-	import { fetch } from '@tauri-apps/plugin-http';
+	import { fetch } from '$core/http/fetch';
 	import { AspectRatio } from 'bits-ui';
 	import { Button } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';

@@ -4,7 +4,7 @@
 	import { app } from '$core/app/context';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { readFile } from '@tauri-apps/plugin-fs';
-	import { fetch } from '@tauri-apps/plugin-http';
+	import { fetch } from '$core/http/fetch';
 	import { basename, pictureDir } from '@tauri-apps/api/path';
 	import { useEditor } from '../context.svelte';
 	import { getFileUrl } from '$core/pocketbase';

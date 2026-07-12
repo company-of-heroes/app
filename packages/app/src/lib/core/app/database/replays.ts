@@ -9,7 +9,7 @@ import type { Expand } from '@fknoobs/app';
 import type { Message, Player } from '@fknoobs/replay-parser';
 import type { ListResult } from 'pocketbase';
 import { exp, getFile, pocketbase } from '$core/pocketbase';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 import { account } from '$core/account';
 
 export type ReplaysExpanded = Expand<

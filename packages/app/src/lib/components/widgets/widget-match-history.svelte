@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/matches';
 	import type { UnsubscribeFunc } from 'pocketbase';
-	import { fetch } from '@tauri-apps/plugin-http';
+	import { fetch } from '$core/http/fetch';
 	import { app } from '$core/app/context';
 	import { exp } from '$core/pocketbase';
 	import { resource } from 'runed';
@@ -62,7 +62,7 @@
 	)}
 >
 	<div class="border-secondary-800 flex items-center justify-between border-b px-5 py-3">
-		<H level="2" class="mb-0">Matches played today</H>
+		<H level="6" class="mb-0 font-semibold">Matches played today</H>
 		<div class="flex items-center gap-4">
 			{#if !matches.loading}
 				<span class="text-secondary-400 text-sm tabular-nums">{matchCount} played</span>

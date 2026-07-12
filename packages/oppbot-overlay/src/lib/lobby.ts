@@ -1,5 +1,5 @@
 import { getLeaderboardStat, getPlayerEloFromMatchHistory, getRacePrefix } from './helpers';
-import type { CombatRecord, LobbyData, OverlayMessage, Player } from './types';
+import type { CombatRecord, LobbyData, Player } from './types';
 
 export const FACTION = ['US', 'WM', 'UK', 'PE'] as const;
 
@@ -67,13 +67,4 @@ export function prepareLobbyData(data: LobbyData): LobbyData {
 	}
 
 	return data;
-}
-
-export function isOverlayMessage(payload: unknown): payload is OverlayMessage {
-	if (!payload || typeof payload !== 'object') {
-		return false;
-	}
-
-	const msg = payload as OverlayMessage;
-	return typeof msg.type === 'string' && typeof msg.topic === 'string';
 }

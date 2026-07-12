@@ -4,6 +4,7 @@
 
 import type { LoadEvent } from '@sveltejs/kit';
 import { browser } from '$app/environment';
+import { configureCorsFetch } from '$core/http/fetch';
 import { app } from '$core/app/context';
 import { boot } from '$core/runtime/boot.svelte';
 import { tts, twitch } from '$core/app/features/twitch';
@@ -15,8 +16,6 @@ import { history } from '$core/app/features/history';
 import { shortcuts } from '$core/app/features/shortcuts';
 import { updater } from '$core/app/features/updater';
 import { OppBotOverlay } from '$core/app/features/twitch-overlays/overlays/oppbot';
-import { ChatOverlay } from '$core/app/features/twitch-overlays/overlays/chat';
-import { ViewerCountOverlay } from '$core/app/features/twitch-overlays/overlays/viewer-count';
 
 export const prerender = true;
 export const ssr = false;
@@ -30,6 +29,8 @@ export const load = async ({ url }: LoadEvent) => {
 	if (!browser) {
 		return;
 	}
+
+	configureCorsFetch();
 
 	if (!registered) {
 		registered = true;
@@ -45,8 +46,6 @@ export const load = async ({ url }: LoadEvent) => {
 		app.register('twitch-overlays', twitchOverlays);
 
 		twitchOverlays.registerOverlay(new OppBotOverlay());
-		twitchOverlays.registerOverlay(new ChatOverlay());
-		twitchOverlays.registerOverlay(new ViewerCountOverlay());
 	}
 
 	// Boot can take several seconds. On splash/setup, render the UI immediately

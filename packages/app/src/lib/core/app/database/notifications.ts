@@ -5,7 +5,7 @@ import type {
 } from '$core/pocketbase/types';
 import type { RecordSubscription, UnsubscribeFunc } from 'pocketbase';
 import { pocketbase } from '$core/pocketbase';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 import { account } from '$core/account';
 
 export type NotificationRecord = NotificationsResponse;

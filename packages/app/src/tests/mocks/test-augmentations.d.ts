@@ -9,7 +9,7 @@
 
 import '@tauri-apps/plugin-fs';
 import '@tauri-apps/plugin-dialog';
-import '@tauri-apps/plugin-http';
+import '@tauri-apps/plugin-http-original';
 import '@tauri-apps/api/path';
 import '@tauri-apps/api/app';
 import '@tauri-apps/api/core';
@@ -35,7 +35,7 @@ declare module '@tauri-apps/plugin-dialog' {
 	};
 }
 
-declare module '@tauri-apps/plugin-http' {
+declare module '@tauri-apps/plugin-http-original' {
 	export const __http: {
 		setHandler(next: (input: string | URL | Request, init?: RequestInit) => Promise<Response>): void;
 		reset(): void;

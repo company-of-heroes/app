@@ -2,7 +2,7 @@ import type { TypedPocketBase } from './types';
 import type { Expand } from '@fknoobs/app';
 import Pocketbase, { type FileOptions } from 'pocketbase';
 import { camelCase } from 'lodash-es';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch as appFetch } from '$core/http/fetch';
 import { PUBLIC_PB_URL } from '$env/static/public';
 import type { UserContext } from '$lib/components/user';
 
@@ -10,6 +10,11 @@ export const pocketbase = new Pocketbase(
 	PUBLIC_PB_URL ?? 'https://api.coh1stats.com'
 ) as TypedPocketBase;
 pocketbase.autoCancellation(false);
+
+pocketbase.beforeSend = async (url, options) => ({
+	url,
+	options: { ...options, fetch: options.fetch ?? appFetch }
+});
 
 /**
  * Replaces reference arrays with their expanded objects from PocketBase expand property
@@ -62,7 +67,7 @@ export const getFile = async (
 	filename: string,
 	queryParams?: FileOptions
 ) => {
-	return fetch(pocketbase.files.getURL(record, filename, queryParams))
+	return appFetch(pocketbase.files.getURL(record, filename, queryParams))
 		.then((res) => res.arrayBuffer())
 		.then((buffer) => new Uint8Array(buffer));
 };

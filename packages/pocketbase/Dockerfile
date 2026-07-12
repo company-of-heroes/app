@@ -1,5 +1,7 @@
 FROM ghcr.io/muchobien/pocketbase:latest
 
+RUN apk add --no-cache unzip python3
+
 # Set default port if not provided
 ENV PORT=8090
 

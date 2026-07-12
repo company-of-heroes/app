@@ -3,6 +3,10 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { base64 } from 'vite-plugin-base64';
 import { readFileSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -34,6 +38,14 @@ export default defineConfig({
 		global: 'globalThis'
 	},
 	assetsInclude: ['*.md'],
+	resolve: {
+		alias: {
+			'@tauri-apps/plugin-http-original': path.resolve(
+				__dirname,
+				'node_modules/@tauri-apps/plugin-http/dist-js/index.js'
+			)
+		}
+	},
 	plugins: [base64Plugin(), sveltekit(), tailwindcss(), base64()],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//

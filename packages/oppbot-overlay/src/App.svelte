@@ -1,25 +1,17 @@
 <script lang="ts">
 	import Side from './components/Side.svelte';
-	import { getPlayerCount, isOverlayMessage, prepareLobbyData } from './lib/lobby';
-	import { connectLobby } from './lib/socket';
+	import { getPlayerCount, prepareLobbyData } from './lib/lobby';
+	import { connectLobby, getUserIdFromPath } from './lib/lobby-feed';
 	import type { LobbyData } from './lib/types';
 
 	let lobbyData = $state<LobbyData | null>(null);
+	const userId = getUserIdFromPath();
 
-	connectLobby((payload) => {
-		if (!isOverlayMessage(payload)) {
-			return;
-		}
-
-		if (payload.type === 'message' && payload.topic === 'game.lobby.destroyed') {
-			lobbyData = null;
-			return;
-		}
-
-		if (payload.type === 'message' && payload.topic === 'game.lobby.started') {
-			lobbyData = prepareLobbyData(payload.data);
-		}
-	});
+	if (userId) {
+		connectLobby(userId, (data) => {
+			lobbyData = data ? prepareLobbyData(data) : null;
+		});
+	}
 
 	const playerCount = $derived(lobbyData ? getPlayerCount(lobbyData) : 0);
 </script>

@@ -1,4 +1,5 @@
 import { parseReplay } from '@fknoobs/replay-parser';
+import { fetch } from '$core/http/fetch';
 
 onmessage = async ({ data }: MessageEvent) => {
 	const { id, type } = data;

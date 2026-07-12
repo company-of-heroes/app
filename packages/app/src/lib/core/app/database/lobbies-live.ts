@@ -2,7 +2,7 @@ import type { Match } from '$core/game/lobby';
 import type { LobbyPlayer } from '@fknoobs/app';
 import type { LobbiesLiveResponse, UsersResponse } from '$core/pocketbase/types';
 import { exp, pocketbase } from '$core/pocketbase';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 import { ClientResponseError, type ListResult, type RecordSubscription, type UnsubscribeFunc } from 'pocketbase';
 import type { Expand } from '@fknoobs/app';
 

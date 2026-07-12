@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 
 /**
  * Unzips a file to a specified destination directory.

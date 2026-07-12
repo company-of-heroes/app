@@ -1,7 +1,8 @@
 use std::fs::{self, File};
 use std::io::{self, Cursor};
 use std::path::Path;
-use zip::ZipArchive;
+use zip::write::FileOptions;
+use zip::{ZipArchive, ZipWriter};
 
 #[tauri::command]
 pub async fn unzip_file(zip_path: String, destination: String) -> Result<(), String> {
@@ -119,6 +120,62 @@ pub async fn unzip_bytes(zip_data: Vec<u8>, destination: String) -> Result<(), S
             }
         }
     }
+
+    Ok(())
+}
+
+fn add_dir_to_zip(
+    zip: &mut ZipWriter<File>,
+    base: &Path,
+    path: &Path,
+    options: FileOptions,
+) -> Result<(), String> {
+    for entry in fs::read_dir(path).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let entry_path = entry.path();
+        let name = entry_path.strip_prefix(base).map_err(|e| e.to_string())?;
+        let name_str = name.to_string_lossy().replace('\\', "/");
+
+        if name_str.is_empty() {
+            continue;
+        }
+
+        if entry_path.is_dir() {
+            let dir_name = if name_str.ends_with('/') {
+                name_str.clone()
+            } else {
+                format!("{name_str}/")
+            };
+            zip.add_directory(dir_name, options)
+                .map_err(|e| e.to_string())?;
+            add_dir_to_zip(zip, base, &entry_path, options)?;
+        } else {
+            zip.start_file(name_str, options).map_err(|e| e.to_string())?;
+            let mut file = File::open(entry_path).map_err(|e| e.to_string())?;
+            io::copy(&mut file, zip).map_err(|e| e.to_string())?;
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn zip_directory(source: String, destination: String) -> Result<(), String> {
+    let source_path = Path::new(&source);
+    if !source_path.is_dir() {
+        return Err(format!("Source directory not found: {source}"));
+    }
+
+    if let Some(parent) = Path::new(&destination).parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    let file = File::create(&destination).map_err(|e| e.to_string())?;
+    let mut zip = ZipWriter::new(file);
+    let options = FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+
+    add_dir_to_zip(&mut zip, source_path, source_path, options)?;
+    zip.finish().map_err(|e| e.to_string())?;
 
     Ok(())
 }

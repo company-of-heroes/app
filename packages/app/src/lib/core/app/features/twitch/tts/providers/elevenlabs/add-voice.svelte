@@ -5,7 +5,7 @@
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
-	import { fetch } from '@tauri-apps/plugin-http';
+	import { fetch } from '$core/http/fetch';
 	import { app } from '$core/app/context';
 	import { dialog } from '$lib/components/ui/dialog';
 	import { tts } from '$features/twitch';

@@ -1,5 +1,5 @@
 import translate from 'google-translate-api-x';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from '$core/http/fetch';
 
 export async function translateText(text: string, to: string): Promise<string> {
 	if (!text.trim()) {
