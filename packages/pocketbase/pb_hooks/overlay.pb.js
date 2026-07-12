@@ -3,6 +3,17 @@
 'use strict';
 
 routerAdd('GET', '/overlay/{userId}', (e) => {
+	const overlay = require(`${__hooks}/lib/overlay.js`);
+	const userId = e.request.pathValue('userId');
+
+	if (!overlay.isValidUserId(userId)) {
+		throw new NotFoundError('Not found');
+	}
+
+	return e.redirect(301, `/overlay/${userId}/`);
+});
+
+routerAdd('GET', '/overlay/{userId}/{$}', (e) => {
 	return require(`${__hooks}/lib/overlay.js`).handleGetOverlayIndex(e);
 });
 

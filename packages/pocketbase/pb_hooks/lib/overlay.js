@@ -87,6 +87,19 @@ function serveOverlayFile(e, userId, relPath) {
 	}
 
 	e.response.header().set('Content-Type', contentType(resolved.path));
+
+	if (resolved.path === 'index.html') {
+		const filePath = `${resolved.root}/${resolved.path}`;
+		let content = toString($os.readFile(filePath));
+		const baseHref = `/overlay/${userId}/`;
+
+		if (!content.includes('<base ')) {
+			content = content.replace('<head>', `<head>\n\t\t<base href="${baseHref}" />`);
+		}
+
+		return e.string(200, content);
+	}
+
 	return e.fileFS($os.dirFS(resolved.root), resolved.path);
 }
 

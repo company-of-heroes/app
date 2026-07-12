@@ -79,7 +79,7 @@ export abstract class Overlay {
 
 	getHostedUrl(userId: string) {
 		const baseUrl = (pocketbase.baseUrl || 'https://api.coh1stats.com').replace(/\/$/, '');
-		return `${baseUrl}/overlay/${userId}`;
+		return `${baseUrl}/overlay/${userId}/`;
 	}
 
 	async getServerOverlay(): Promise<UserOverlaysResponse | null> {
