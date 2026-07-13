@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.2.3
+
+- fix; clicking 'view details' from match history widget results into a crash
+
 ## 0.2.2
 
 - enhance; edited the default oppbot overlay design a bit
