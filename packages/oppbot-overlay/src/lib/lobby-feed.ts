@@ -29,6 +29,8 @@ export function connectLobby(userId: string, onLobby: (data: LobbyData | null) =
 	let active = true;
 	let steamIds: string[] | undefined;
 	let currentRecord: LiveLobbyRecord | null = null;
+	let pollTimer: number | null = null;
+	const debugPoll = new URLSearchParams(window.location.search).has('debugPoll');
 
 	const applyRecord = (record: LiveLobbyRecord | null) => {
 		if (!active) return;
@@ -43,31 +45,27 @@ export function connectLobby(userId: string, onLobby: (data: LobbyData | null) =
 		}
 	});
 
-	pb.collection('lobbies_live')
-		.getFirstListItem<LiveLobbyRecord>(`user="${userId}"`)
-		.then((record) => applyRecord(record))
-		.catch(() => applyRecord(null));
+	const poll = async () => {
+		if (!active) return;
+		if (debugPoll) {
+			const w = window as unknown as Record<string, unknown>;
+			w.__oppbotPollLast = Date.now();
+			w.__oppbotPollCount = (typeof w.__oppbotPollCount === 'number' ? w.__oppbotPollCount : 0) + 1;
+		}
+		try {
+			const record = await pb.collection('lobbies_live').getFirstListItem<LiveLobbyRecord>(`user="${userId}"`);
+			applyRecord(record);
+		} catch {
+			if (currentRecord) applyRecord(null);
+		}
+	};
 
-	pb.collection('lobbies_live')
-		.subscribe<LiveLobbyRecord>(
-			'*',
-			(event) => {
-				if (event.record.user !== userId) return;
-				if (event.action === 'delete') {
-					applyRecord(null);
-					return;
-				}
-				applyRecord(event.record);
-			},
-			{ filter: `user="${userId}"` }
-		)
-		.catch((error) => {
-			console.warn('[overlay] lobbies_live subscribe failed:', error);
-		});
+	void poll();
+	pollTimer = window.setInterval(() => void poll(), 2500);
 
 	return () => {
 		active = false;
-		pb.collection('lobbies_live').unsubscribe('*');
+		if (pollTimer != null) window.clearInterval(pollTimer);
 	};
 }
 

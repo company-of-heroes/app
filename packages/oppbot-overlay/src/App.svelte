@@ -15,6 +15,8 @@
 	let devScenario = $state<DevScenario>(import.meta.env.DEV ? getDevScenarioFromUrl() : '4v4');
 	const userId = getUserIdFromPath();
 	const isDevPreview = import.meta.env.DEV && !userId;
+	const debugPoll = $derived(new URLSearchParams(window.location.search).has('debugPoll'));
+	let pollStatus = $state<{ last?: number; count?: number }>({});
 
 	if (userId) {
 		connectLobby(userId, (data) => {
@@ -34,6 +36,19 @@
 			document.documentElement.style.background = '';
 			document.body.style.background = '';
 		};
+	});
+
+	$effect(() => {
+		if (!debugPoll) return;
+		const tick = () => {
+			const w = window as unknown as Record<string, unknown>;
+			const last = typeof w.__oppbotPollLast === 'number' ? w.__oppbotPollLast : undefined;
+			const count = typeof w.__oppbotPollCount === 'number' ? w.__oppbotPollCount : undefined;
+			pollStatus = { last, count };
+		};
+		tick();
+		const id = window.setInterval(tick, 500);
+		return () => window.clearInterval(id);
 	});
 
 	function setDevScenario(scenario: DevScenario) {
@@ -74,6 +89,12 @@
 	</div>
 {/if}
 
+{#if debugPoll}
+	<div class="debug-poll">
+		poll: {pollStatus.count ?? 0} • last: {pollStatus.last ? new Date(pollStatus.last).toLocaleTimeString() : '—'}
+	</div>
+{/if}
+
 <style>
 	.dev-picker {
 		position: fixed;
@@ -103,5 +124,18 @@
 		border-color: #c4a24a;
 		color: #ece6d8;
 		background: #2e2a24;
+	}
+
+	.debug-poll {
+		position: fixed;
+		left: 10px;
+		bottom: 10px;
+		z-index: 9999;
+		padding: 6px 10px;
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.9);
+		color: #111;
+		font: 500 12px/1.2 var(--font-data);
+		border: 1px solid rgba(0, 0, 0, 0.15);
 	}
 </style>

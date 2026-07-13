@@ -8,7 +8,13 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter(),
+		// Root-absolute asset URLs so nested routes (e.g. /history/[id]) load /_app/... correctly in Tauri.
+		paths: {
+			relative: false
+		},
+		adapter: adapter({
+			fallback: 'index.html'
+		}),
 		alias: {
 			'$core/*': 'src/lib/core/*',
 			'$workers/*': 'src/lib/workers',

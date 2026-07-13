@@ -46,6 +46,9 @@ export abstract class Overlay {
 	publishPath = 'dist';
 	sourcePath = 'src';
 
+	#bundledDistHash: string | null = null;
+	#bundledZipFingerprint: string | null = null;
+
 	async register() {
 		const installed = await exists(this.path, { baseDir: this.baseDir });
 		if (!installed) {
@@ -59,9 +62,18 @@ export abstract class Overlay {
 				return;
 			}
 
-			await this.install();
-			await this.saveDefaultSrcHash();
+			await this.reinstallFromBundle();
+			return;
 		}
+
+		await this.syncBundledDistIfNeeded();
+	}
+
+	async reinstallFromBundle() {
+		await remove(this.path, { baseDir: this.baseDir, recursive: true });
+		await this.install();
+		await this.saveDefaultSrcHash();
+		await this.clearPublishState();
 	}
 
 	async isOutdated(): Promise<boolean> {
@@ -131,11 +143,7 @@ export abstract class Overlay {
 			}
 		}
 
-		// Remove the current overlay directory before re-installing.
-		// `recursive: true` is required for non-empty directories.
-		await remove(this.path, { baseDir: this.baseDir, recursive: true });
-		await this.install();
-		await this.saveDefaultSrcHash();
+		await this.reinstallFromBundle();
 
 		return { didBackup: backup, backupPath };
 	}
@@ -200,10 +208,73 @@ export abstract class Overlay {
 		return Uint8Array.from(bytes);
 	}
 
-	async hashContent(subdir?: string): Promise<string> {
-		const bytes = await this.zipContent(subdir);
+	async hashBytes(bytes: Uint8Array): Promise<string> {
 		const digest = await crypto.subtle.digest('SHA-256', bytes);
 		return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+	}
+
+	async hashContent(subdir?: string): Promise<string> {
+		const bytes = await this.zipContent(subdir);
+		return this.hashBytes(bytes);
+	}
+
+	#getZipFingerprint(): string {
+		if (this.zipUrl.length > 200) {
+			return `${this.zipUrl.length}:${this.zipUrl.slice(-128)}`;
+		}
+
+		return this.zipUrl;
+	}
+
+	async getBundledDistHash(): Promise<string | null> {
+		const fingerprint = this.#getZipFingerprint();
+		if (this.#bundledDistHash && this.#bundledZipFingerprint === fingerprint) {
+			return this.#bundledDistHash;
+		}
+
+		const cachePath = `${this.path}-bundled-hash-cache`;
+		try {
+			await remove(cachePath, { baseDir: this.baseDir, recursive: true });
+			await mkdir(cachePath, { baseDir: this.baseDir, recursive: true });
+			const cacheRoot = await join(await appDataDir(), cachePath);
+			await unzip(this.zipUrl, cacheRoot);
+
+			const distIndex = `${cachePath}/${this.publishPath}/index.html`;
+			if (!(await exists(distIndex, { baseDir: this.baseDir }))) {
+				return null;
+			}
+
+			const bytes = await this.zipContentAt(cacheRoot, this.publishPath);
+			const hash = await this.hashBytes(bytes);
+			this.#bundledDistHash = hash;
+			this.#bundledZipFingerprint = fingerprint;
+			return hash;
+		} catch (error) {
+			console.warn(`[OVERLAY:${this.name}]: failed to hash bundled dist:`, error);
+			return null;
+		} finally {
+			await remove(cachePath, { baseDir: this.baseDir, recursive: true }).catch(() => {});
+		}
+	}
+
+	async zipContentAt(sourceRoot: string, subdir?: string): Promise<Uint8Array> {
+		const bytes = await invoke<number[]>('zip_directory', {
+			source: sourceRoot,
+			subdir: subdir ?? null
+		});
+		return Uint8Array.from(bytes);
+	}
+
+	async syncBundledDistIfNeeded() {
+		const bundledDistHash = await this.getBundledDistHash();
+		if (!bundledDistHash) return;
+
+		const localDistHash = await this.getLocalContentHash();
+		if (localDistHash === bundledDistHash) return;
+
+		if (await this.hasCustomizedSource()) return;
+
+		await this.reinstallFromBundle();
 	}
 
 	async getLocalContentHash(): Promise<string> {
@@ -323,19 +394,21 @@ export abstract class Overlay {
 		await writeTextFile(statePath, JSON.stringify(state, null, 2), { baseDir: this.baseDir });
 	}
 
+	async clearPublishState() {
+		const statePath = `${this.path}/.publish-state.json`;
+		if (await exists(statePath, { baseDir: this.baseDir })) {
+			await remove(statePath, { baseDir: this.baseDir });
+		}
+	}
+
 	async hasUnpublishedChanges(): Promise<boolean> {
-		const serverOverlay = await this.getServerOverlay();
-		if (!serverOverlay) {
+		if (!(await this.hasDistBuild())) {
 			return false;
 		}
 
 		const publishState = await this.getPublishState();
 		if (!publishState) {
-			return false;
-		}
-
-		if (!(await this.hasDistBuild())) {
-			return false;
+			return true;
 		}
 
 		const contentHash = await this.getLocalContentHash();
@@ -347,16 +420,7 @@ export abstract class Overlay {
 			return false;
 		}
 
-		const serverOverlay = await this.getServerOverlay();
-		if (serverOverlay) {
-			if (!(await this.getPublishState())) {
-				await this.savePublishState({
-					contentHash: await this.getLocalContentHash(),
-					updatedAt: serverOverlay.updated,
-					version: serverOverlay.version
-				});
-			}
-
+		if (await this.getServerOverlay()) {
 			return false;
 		}
 
@@ -375,6 +439,12 @@ export abstract class Overlay {
 
 		if (!(await this.hasDistBuild())) {
 			throw new Error('No build found. Run npm run build in the overlay folder first.');
+		}
+
+		if (await this.isDistStale()) {
+			throw new Error(
+				'Source files are newer than dist/. Run npm run build in the overlay folder first.'
+			);
 		}
 
 		const bytes = await this.zipContent(this.publishPath);

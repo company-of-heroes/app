@@ -114,8 +114,7 @@
 		publishing = true;
 		try {
 			await overlay.publish();
-			hasUnpublishedChanges = false;
-			distStale = false;
+			await refreshChangeState();
 			app.toast.success('Overlay changes published to server.');
 		} catch (error) {
 			console.error('Failed to publish overlay:', error);
@@ -222,8 +221,8 @@
 		</li>
 		<li>Edit Svelte/CSS in <code class="text-secondary-300">src/</code></li>
 		<li>
-			Run <code class="text-secondary-300">npm run build</code> to update
-			<code class="text-secondary-300">dist/</code>
+			Run <code class="text-secondary-300">npm run build</code> in the overlay folder (via “Open in editor”)
+			to update <code class="text-secondary-300">dist/</code>
 		</li>
 		<li>Click “Publish changes to server” to update the live overlay</li>
 	</ol>

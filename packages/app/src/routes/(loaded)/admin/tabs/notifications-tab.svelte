@@ -135,7 +135,7 @@
 
 	<Form.Group>
 		<Form.Label>Bericht</Form.Label>
-		<Form.Description>Volledige inhoud die in de modal wordt getoond.</Form.Description>
+		<Form.Description>Volledige inhoud in de modal. Markdown wordt ondersteund (koppen, lijsten, links, vet, cursief).</Form.Description>
 		<Textarea bind:value={body} rows={6} maxlength={10000} placeholder="Schrijf je bericht..." />
 	</Form.Group>
 
