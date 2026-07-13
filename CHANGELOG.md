@@ -1,3 +1,8 @@
+### v0.52.5
+
+- feat; add markdown support in notification popup
+- fix; clicking 'view details' from match history widget results into a crash
+
 ### v0.52.4
 
 - enhance; edited the default oppbot overlay design a bit
