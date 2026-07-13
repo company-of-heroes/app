@@ -12,7 +12,7 @@ import ProfileStats from './profile-stats.svelte';
 const context = new Context<Profile>('<Profile />');
 
 export type Profile = { relic: RelicProfile; steam: SteamPlayerSummary };
-export const createProfile = (profile: Profile) => context.set(profile);
+export const createProfile = (profile: () => Profile) => context.set(profile());
 export const useProfile = () => context.get();
 
 export {
