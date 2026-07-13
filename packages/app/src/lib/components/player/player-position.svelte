@@ -8,7 +8,7 @@
 	const { ...restProps }: Props = $props();
 	const { stats } = $derived(usePlayer());
 	const position = $derived(
-		stats?.rank != null && stats.rank !== -1 ? stats.rank : '-'
+		stats?.rank != null && stats.rank > 0 ? stats.rank : -1
 	);
 </script>
 

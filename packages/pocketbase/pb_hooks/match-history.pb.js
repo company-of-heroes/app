@@ -3,6 +3,17 @@
 'use strict';
 
 routerAdd('GET', '/api/match-history', (e) => {
+	const {
+		summarizePlayersFromLobbyField,
+		parseLobbyPlayersField,
+		loadPlayerAliasMap,
+		summarizePlayersFromCsv,
+		loadPlayersByLobbyIds,
+		resolvePlayersForRow,
+		parseResultField,
+		countFilteredMatches
+	} = require(`${__hooks}/lib/match-history.js`);
+
 	const query = e.request.url.query();
 
 	const scope = query.get('scope') || 'user';
@@ -16,39 +27,31 @@ routerAdd('GET', '/api/match-history', (e) => {
 	const ranked = query.get('ranked') === 'true';
 
 	const playerIds = (query.get('playerIds') || '')
-
 		.split(',')
-
 		.map((value) => value.trim())
-
 		.filter(Boolean);
 
 	const maps = (query.get('maps') || '')
-
 		.split(',')
-
 		.map((value) => value.trim())
-
 		.filter(Boolean);
 
 	const bindings = {};
-
-	let where = "needsResult = 0 AND title != 'Skirmish'";
+	const lobbyFilters = ["l.needsResult = 0", "l.title != 'Skirmish'"];
 
 	if (scope === 'community') {
-		where += " AND (hasReplay = 1 OR (replay IS NOT NULL AND replay != ''))";
+		lobbyFilters.push("(l.hasReplay = 1 OR (l.replay IS NOT NULL AND l.replay != ''))");
 	} else {
 		if (!userId) {
 			return e.json(400, { message: 'userId required for user scope' });
 		}
 
 		bindings.userId = userId;
-
-		where += ' AND user = {:userId}';
+		lobbyFilters.push('l.user = {:userId}');
 	}
 
 	if (ranked) {
-		where += ' AND isRanked = 1';
+		lobbyFilters.push('l.isRanked = 1');
 	}
 
 	if (maps.length > 0) {
@@ -56,52 +59,35 @@ routerAdd('GET', '/api/match-history', (e) => {
 
 		for (let i = 0; i < maps.length; i++) {
 			const key = `map${i}`;
-
 			bindings[key] = maps[i];
-
-			mapClauses.push(`map = {:${key}}`);
+			mapClauses.push(`l.map = {:${key}}`);
 		}
 
-		where += ` AND (${mapClauses.join(' OR ')})`;
+		lobbyFilters.push(`(${mapClauses.join(' OR ')})`);
 	}
 
-	if (playerIds.length > 0) {
-		const playerClauses = [];
+	const numericPlayerIds = [];
 
-		for (let i = 0; i < playerIds.length; i++) {
-			const key = `pid${i}`;
-			const csvKey = `pidCsv${i}`;
+	for (let i = 0; i < playerIds.length; i++) {
+		const profileId = Number(playerIds[i]);
 
-			bindings[key] = Number(playerIds[i]);
-			bindings[csvKey] = `%,${playerIds[i]},%`;
-
-			playerClauses.push(`(
-				id IN (SELECT lobby FROM lobby_player_index WHERE profile_id = {:${key}})
-				OR playerProfileIdsCsv LIKE {:${csvKey}}
-				OR EXISTS (
-					SELECT 1
-					FROM json_each(COALESCE(lobbyPlayers, '[]')) AS p
-					WHERE json_extract(p.value, '$.profile_id') = {:${key}}
-				)
-				OR EXISTS (
-					SELECT 1
-					FROM json_each(COALESCE(players, '[]')) AS p
-					WHERE json_extract(p.value, '$.profile.profile_id') = {:${key}}
-				)
-			)`);
+		if (Number.isNaN(profileId)) {
+			continue;
 		}
 
-		where += ` AND (${playerClauses.join(' OR ')})`;
+		const key = `pid${i}`;
+		bindings[key] = profileId;
+		numericPlayerIds.push(`{:${key}}`);
 	}
 
+	const hasPlayerFilter = numericPlayerIds.length > 0;
+	const hasExtraFilters = hasPlayerFilter || maps.length > 0 || ranked;
 	const offset = (page - 1) * perPage;
 
 	bindings.limit = perPage;
-
 	bindings.offset = offset;
 
-	const canUseCommunityCountCache =
-		scope === 'community' && !ranked && playerIds.length === 0 && maps.length === 0;
+	const canUseCommunityCountCache = scope === 'community' && !hasExtraFilters;
 
 	try {
 		let totalItems = null;
@@ -109,7 +95,6 @@ routerAdd('GET', '/api/match-history', (e) => {
 		if (canUseCommunityCountCache) {
 			try {
 				const snapshot = $app.findRecordById('match_filter_snapshots', 'community');
-
 				const matchCount = snapshot.get('matchCount');
 
 				if (matchCount != null && Number(matchCount) > 0) {
@@ -120,27 +105,80 @@ routerAdd('GET', '/api/match-history', (e) => {
 			}
 		}
 
-		if (totalItems === null) {
-			const countRow = new DynamicModel({ total: 0 });
+		const useInlineCount = totalItems === null && !hasExtraFilters;
+		const whereClause = lobbyFilters.join(' AND ');
 
-			$app
+		if (totalItems === null && hasExtraFilters) {
+			totalItems = countFilteredMatches(hasPlayerFilter, numericPlayerIds, whereClause, bindings);
+		}
 
-				.db()
+		const aliasMap = loadPlayerAliasMap(scope, userId);
 
-				.newQuery(`SELECT COUNT(*) AS total FROM lobbies WHERE ${where}`)
+		const itemRows = arrayOf(
+			new DynamicModel({
+				id: '',
+				map: '',
+				title: '',
+				result: '',
+				createdAt: '',
+				isRanked: false,
+				sessionId: 0,
+				needsResult: false,
+				lobbyPlayers: '',
+				playerProfileIdsCsv: '',
+				totalCount: 0
+			})
+		);
 
-				.bind(bindings)
+		let selectSql;
 
-				.one(countRow);
+		if (hasPlayerFilter) {
+			selectSql = `SELECT DISTINCT
+           l.id,
+           l.map,
+           l.title,
+           COALESCE(l.result, '') AS result,
+           l.createdAt,
+           l.isRanked,
+           l.sessionId,
+           l.needsResult,
+           COALESCE(l.lobbyPlayers, '[]') AS lobbyPlayers,
+           COALESCE(l.playerProfileIdsCsv, '') AS playerProfileIdsCsv${useInlineCount ? ', COUNT(*) OVER() AS totalCount' : ''}
+         FROM lobby_player_index i
+         INNER JOIN lobbies l ON l.id = i.lobby
+         WHERE i.profile_id IN (${numericPlayerIds.join(', ')})
+           AND ${whereClause}
+         ORDER BY l.createdAt DESC
+         LIMIT {:limit} OFFSET {:offset}`;
+		} else {
+			selectSql = `SELECT
+           l.id,
+           l.map,
+           l.title,
+           COALESCE(l.result, '') AS result,
+           l.createdAt,
+           l.isRanked,
+           l.sessionId,
+           l.needsResult,
+           COALESCE(l.lobbyPlayers, '[]') AS lobbyPlayers,
+           COALESCE(l.playerProfileIdsCsv, '') AS playerProfileIdsCsv${useInlineCount ? ', COUNT(*) OVER() AS totalCount' : ''}
+         FROM lobbies l
+         WHERE ${whereClause}
+         ORDER BY l.createdAt DESC
+         LIMIT {:limit} OFFSET {:offset}`;
+		}
 
-			totalItems = Number(countRow.total) || 0;
+		$app.db().newQuery(selectSql).bind(bindings).all(itemRows);
+
+		const pageRows = itemRows;
+
+		if (useInlineCount) {
+			totalItems = pageRows.length > 0 ? Number(pageRows[0].totalCount) || 0 : 0;
 
 			if (canUseCommunityCountCache) {
 				try {
 					const snapshot = $app.findRecordById('match_filter_snapshots', 'community');
-
 					snapshot.set('matchCount', totalItems);
-
 					$app.save(snapshot);
 				} catch {
 					// cache write failed
@@ -148,253 +186,42 @@ routerAdd('GET', '/api/match-history', (e) => {
 			}
 		}
 
-		const itemRows = arrayOf(
-			new DynamicModel({
-				id: '',
+		const unresolvedLobbyIds = [];
 
-				map: '',
+		for (const row of pageRows) {
+			const fromLobbyField = summarizePlayersFromLobbyField(parseLobbyPlayersField(row.lobbyPlayers));
+			const fromCsv = summarizePlayersFromCsv(row.playerProfileIdsCsv, aliasMap);
 
-				title: '',
+			if (fromLobbyField.length === 0 && fromCsv.length === 0) {
+				unresolvedLobbyIds.push(row.id);
+			}
+		}
 
-				result: '',
-
-				createdAt: '',
-
-				isRanked: false,
-
-				sessionId: 0,
-
-				needsResult: false,
-
-				lobbyPlayers: ''
-			})
-		);
-
-		$app
-
-			.db()
-
-			.newQuery(
-				`SELECT
-
-           id,
-
-           map,
-
-           title,
-
-           COALESCE(result, '') AS result,
-
-           createdAt,
-
-           isRanked,
-
-           sessionId,
-
-           needsResult,
-
-           COALESCE(lobbyPlayers, '[]') AS lobbyPlayers
-
-         FROM lobbies
-
-         WHERE ${where}
-
-         ORDER BY createdAt DESC
-
-         LIMIT {:limit} OFFSET {:offset}`
-			)
-
-			.bind(bindings)
-
-			.all(itemRows);
-
+		const playersByLobby = loadPlayersByLobbyIds(unresolvedLobbyIds, aliasMap);
 		const items = [];
 
-		const fallbackIds = [];
-
-		for (const row of itemRows) {
-			let lobbyPlayersRaw = [];
-
-			if (typeof row.lobbyPlayers === 'string' && row.lobbyPlayers.length > 0) {
-				try {
-					const parsed = JSON.parse(row.lobbyPlayers);
-
-					lobbyPlayersRaw = Array.isArray(parsed) ? parsed : [];
-				} catch {
-					lobbyPlayersRaw = [];
-				}
-			} else if (Array.isArray(row.lobbyPlayers)) {
-				lobbyPlayersRaw = row.lobbyPlayers;
-			}
-
-			const players = [];
-
-			for (const player of lobbyPlayersRaw) {
-				const profileId =
-					player?.profile_id != null
-						? Number(player.profile_id)
-						: player?.profile?.profile_id != null
-							? Number(player.profile.profile_id)
-							: null;
-
-				if (profileId == null) {
-					continue;
-				}
-
-				players.push({
-					playerId: player?.playerId != null ? Number(player.playerId) : null,
-
-					steamId: player?.steamId ?? null,
-
-					race: player?.race != null ? Number(player.race) : null,
-
-					profile: {
-						profile_id: profileId,
-
-						alias: player?.alias ?? player?.profile?.alias ?? ''
-					}
-				});
-			}
-
-			let hasTeamData = false;
-
-			for (const player of players) {
-				if (player.race != null) {
-					hasTeamData = true;
-
-					break;
-				}
-			}
-
-			if (!hasTeamData) {
-				fallbackIds.push(row.id);
-			}
-
-			let result = null;
-
-			if (typeof row.result === 'string' && row.result.length > 0) {
-				try {
-					result = JSON.parse(row.result);
-				} catch {
-					result = null;
-				}
-			} else if (row.result && typeof row.result === 'object') {
-				result = row.result;
-			}
+		for (const row of pageRows) {
+			const players = resolvePlayersForRow(row, aliasMap, playersByLobby);
+			const result = parseResultField(row.result);
 
 			items.push({
 				id: row.id,
-
 				map: row.map,
-
 				title: row.title,
-
 				result,
-
 				createdAt: row.createdAt,
-
 				isRanked: !!row.isRanked,
-
 				sessionId: row.sessionId,
-
 				needsResult: !!row.needsResult,
-
 				players
 			});
 		}
 
-		if (fallbackIds.length > 0) {
-			const fallbackBindings = {};
-
-			const idClauses = [];
-
-			for (let i = 0; i < fallbackIds.length; i++) {
-				const key = `fallbackId${i}`;
-
-				fallbackBindings[key] = fallbackIds[i];
-
-				idClauses.push(`id = {:${key}}`);
-			}
-
-			const fallbackRows = arrayOf(new DynamicModel({ id: '', players: '' }));
-
-			$app
-
-				.db()
-
-				.newQuery(
-					`SELECT id, players
-
-           FROM lobbies
-
-           WHERE ${idClauses.join(' OR ')}`
-				)
-
-				.bind(fallbackBindings)
-
-				.all(fallbackRows);
-
-			const playersById = {};
-
-			for (const row of fallbackRows) {
-				let playersRaw = [];
-
-				if (typeof row.players === 'string' && row.players.length > 0) {
-					try {
-						const parsed = JSON.parse(row.players);
-
-						playersRaw = Array.isArray(parsed) ? parsed : [];
-					} catch {
-						playersRaw = [];
-					}
-				} else if (Array.isArray(row.players)) {
-					playersRaw = row.players;
-				}
-
-				const summarized = [];
-
-				for (const player of playersRaw) {
-					const profileId =
-						player?.profile?.profile_id != null ? Number(player.profile.profile_id) : null;
-
-					if (profileId == null) {
-						continue;
-					}
-
-					summarized.push({
-						playerId: player?.playerId != null ? Number(player.playerId) : null,
-
-						steamId: player?.steamId ?? null,
-
-						race: player?.race != null ? Number(player.race) : null,
-
-						profile: {
-							profile_id: profileId,
-
-							alias: player?.profile?.alias ?? ''
-						}
-					});
-				}
-
-				playersById[row.id] = summarized;
-			}
-
-			for (const item of items) {
-				if (playersById[item.id]) {
-					item.players = playersById[item.id];
-				}
-			}
-		}
-
 		return e.json(200, {
 			page,
-
 			perPage,
-
 			totalItems,
-
 			totalPages: totalItems > 0 ? Math.ceil(totalItems / perPage) : 0,
-
 			items
 		});
 	} catch (error) {

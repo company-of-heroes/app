@@ -53,8 +53,7 @@ routerAdd('GET', '/api/match-filters/{scope}', (e) => {
 			}
 
 			const bindings = { userId };
-			const where =
-				"needsResult = 0 AND title != 'Skirmish' AND user = {:userId}";
+			const where = "needsResult = 0 AND title != 'Skirmish' AND user = {:userId}";
 
 			const mapRows = arrayOf(new DynamicModel({ value: '' }));
 			$app
@@ -69,26 +68,24 @@ routerAdd('GET', '/api/match-filters/{scope}', (e) => {
 				.bind(bindings)
 				.all(mapRows);
 
-			const playerRows = arrayOf(new DynamicModel({ profile_id: '', alias: '' }));
+			const playerRows = arrayOf(new DynamicModel({ profile_id: 0, alias: '' }));
 			$app
 				.db()
 				.newQuery(
-					`SELECT DISTINCT
-             json_extract(p.value, '$.profile_id') AS profile_id,
-             json_extract(p.value, '$.alias') AS alias
-           FROM lobbies l, json_each(l.lobbyPlayers) AS p
-           WHERE ${where}
-             AND l.lobbyPlayers IS NOT NULL
-             AND l.lobbyPlayers != '[]'
-             AND json_extract(p.value, '$.profile_id') IS NOT NULL
-           UNION
-           SELECT DISTINCT
-             json_extract(p.value, '$.profile.profile_id') AS profile_id,
-             json_extract(p.value, '$.profile.alias') AS alias
-           FROM lobbies l, json_each(l.players) AS p
-           WHERE ${where}
-             AND (l.lobbyPlayers IS NULL OR l.lobbyPlayers = '[]')
-             AND json_extract(p.value, '$.profile.profile_id') IS NOT NULL`
+					`SELECT
+             i.profile_id AS profile_id,
+             MAX(COALESCE(json_extract(p.value, '$.alias'), '')) AS alias
+           FROM lobby_player_index i
+           INNER JOIN lobbies l ON l.id = i.lobby
+           LEFT JOIN json_each(
+             CASE
+               WHEN l.lobbyPlayers IS NOT NULL AND l.lobbyPlayers != '[]' THEN l.lobbyPlayers
+               ELSE '[]'
+             END
+           ) AS p ON json_extract(p.value, '$.profile_id') = i.profile_id
+           WHERE ${where.replace(/\bneedsResult\b/g, 'l.needsResult').replace(/\btitle\b/g, 'l.title').replace(/\buser\b/g, 'l.user')}
+           GROUP BY i.profile_id
+           ORDER BY alias, i.profile_id`
 				)
 				.bind(bindings)
 				.all(playerRows);

@@ -10,13 +10,17 @@ import type { ListResult } from 'pocketbase';
 import type { AggregationPlayer, MatchExpanded } from '$core/app/database/matches';
 import { md5, normalizeMapName } from '$lib/utils';
 
-const FILTER_DEBOUNCE_MS = 300;
+const FILTER_DEBOUNCE_MS = 200;
 
 export type MatchesFilterState = {
 	playerIds?: string[];
 	maps?: string[];
 	ranked?: boolean;
 };
+
+type MatchAggregation =
+	| LobbyAggregationResponse<string, string[], AggregationPlayer[]>
+	| LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>;
 
 export class Matches {
 	private _scope = $state<'user' | 'community'>('user');
@@ -32,22 +36,18 @@ export class Matches {
 
 		this._scope = value;
 		this.page = 1;
+		this.#awaitingScopeFetch = true;
 		this.filters = {
 			playerIds: undefined,
 			maps: undefined,
 			ranked: false
 		};
+		this.#debouncedFilters.setImmediately($state.snapshot(this.filters));
 	}
 	public page = $state(1);
 	public perPage = $state(15);
 
-	public aggregation =
-		$state<
-			ResourceReturn<
-				| LobbyAggregationResponse<string, string[], AggregationPlayer[]>
-				| LobbyAggregationCommunityResponse<string[], AggregationPlayer[], string[]>
-			>
-		>()!;
+	public aggregation = $state<ResourceReturn<MatchAggregation>>()!;
 
 	public result = $state<ResourceReturn<ListResult<MatchExpanded>>>()!;
 
@@ -58,10 +58,53 @@ export class Matches {
 	});
 
 	#debouncedFilters: Debounced<MatchesFilterState>;
+	#resultsByKey = $state<Record<string, ListResult<MatchExpanded>>>({});
+	#aggregationByScope = $state<Partial<Record<'user' | 'community', MatchAggregation>>>({});
+	#loadedResultKey = $state<string | null>(null);
+	#loadedAggregationScope = $state<'user' | 'community' | null>(null);
+	#awaitingScopeFetch = $state(false);
+
+	public resultKey = $derived.by(() =>
+		md5(JSON.stringify({ ...this.query, page: this.page }))
+	);
+
+	public freshResult = $derived(
+		this.#loadedResultKey === this.resultKey ? this.result.current : undefined
+	);
+
+	public displayedResult = $derived.by(() => {
+		if (this.#awaitingScopeFetch) {
+			return this.freshResult;
+		}
+
+		const cached = this.#resultsByKey[this.resultKey];
+
+		if (this.result.loading) {
+			return cached;
+		}
+
+		return this.freshResult ?? cached;
+	});
+
+	public tableLoading = $derived(
+		!this.displayedResult && (this.result.loading || this.#awaitingScopeFetch)
+	);
+
+	public displayedAggregation = $derived.by(() => {
+		const cached = this.#aggregationByScope[this.scope];
+		const current =
+			this.#loadedAggregationScope === this.scope ? this.aggregation.current : undefined;
+
+		if (this.aggregation.loading) {
+			return cached;
+		}
+
+		return current ?? cached;
+	});
 
 	public players = $derived.by(() => {
 		return uniqBy(
-			map(this.aggregation.current?.players || [], (p) => {
+			map(this.displayedAggregation?.players || [], (p) => {
 				return {
 					// @ts-expect-error This is for backward compatibility until all types are fixed
 					label: 'profile' in p ? p.profile!.alias! : p.alias,
@@ -74,7 +117,7 @@ export class Matches {
 	});
 
 	public maps = $derived.by(() => {
-		return map(this.aggregation.current?.maps || [], (m) => ({
+		return map(this.displayedAggregation?.maps || [], (m) => ({
 			label: normalizeMapName(m),
 			value: m
 		}));
@@ -93,13 +136,10 @@ export class Matches {
 	});
 
 	constructor() {
-		this.#debouncedFilters = new Debounced(
-			() => $state.snapshot(this.filters),
-			FILTER_DEBOUNCE_MS
-		);
+		this.#debouncedFilters = new Debounced(() => $state.snapshot(this.filters), FILTER_DEBOUNCE_MS);
 
 		watch(
-			() => $state.snapshot(this.filters),
+			() => $state.snapshot(this.#debouncedFilters.current),
 			() => {
 				this.page = 1;
 			}
@@ -119,15 +159,58 @@ export class Matches {
 				return this.getMatches(signal);
 			}
 		);
+
+		watch(
+			() => this.result.current,
+			(current) => {
+				if (!current) {
+					return;
+				}
+
+				this.#loadedResultKey = this.resultKey;
+				this.#resultsByKey[this.resultKey] = current;
+
+				if (this.#awaitingScopeFetch) {
+					this.#awaitingScopeFetch = false;
+				}
+			}
+		);
+
+		watch(
+			() => [this.result.loading, this.result.error, this.resultKey] as const,
+			([loading, error, key]) => {
+				if (!this.#awaitingScopeFetch || loading) {
+					return;
+				}
+
+				if (this.#loadedResultKey === key || error) {
+					this.#awaitingScopeFetch = false;
+				}
+			}
+		);
+
+		watch(
+			() => this.aggregation.current,
+			(current) => {
+				if (!current) {
+					return;
+				}
+
+				this.#loadedAggregationScope = this.scope;
+				this.#aggregationByScope[this.scope] = current;
+			}
+		);
 	}
 
 	getMatches(signal?: AbortSignal) {
+		const hasFilters =
+			this.query.playerIds.length > 0 || this.query.maps.length > 0 || this.query.ranked;
 		const cacheKey = `matches-${md5(JSON.stringify({ ...this.query, page: this.page }))}`;
 
 		return useQuery(cacheKey, {
 			queryFn: () =>
 				app.database.matches.getHistoryList(this.page, this.perPage, this.query, { signal }),
-			ttl: 60,
+			ttl: hasFilters ? undefined : 60,
 			signal
 		});
 	}

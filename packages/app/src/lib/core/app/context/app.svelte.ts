@@ -111,6 +111,7 @@ export class AppContext extends Emittery<AppEvents> {
 	_features: SvelteMap<FeatureKey, Features[FeatureKey]> = new SvelteMap();
 
 	#wired = false;
+	#logStopTimer: ReturnType<typeof setTimeout> | null = null;
 
 	constructor() {
 		super();
@@ -173,12 +174,31 @@ export class AppContext extends Emittery<AppEvents> {
 			watch(
 				() => [this.settings.companyOfHeroesConfigPath, this.game.isRunning] as const,
 				([path, isRunning]) => {
+					if (this.#logStopTimer) {
+						clearTimeout(this.#logStopTimer);
+						this.#logStopTimer = null;
+					}
+
 					if (isRunning && path) {
+						this.isReady = false;
 						this.gameLog.start(path);
-					} else {
+						return;
+					}
+
+					if (!path) {
 						this.gameLog.stop();
 						this.isReady = false;
+						return;
 					}
+
+					// Process exit can flicker briefly; pause immediately and only
+					// reset after the game stays closed.
+					this.isReady = false;
+					this.gameLog.pause();
+					this.#logStopTimer = setTimeout(() => {
+						this.gameLog.stop();
+						this.#logStopTimer = null;
+					}, 2500);
 				}
 			);
 
@@ -283,6 +303,15 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	#onLogout() {
+		if (this.#logStopTimer) {
+			clearTimeout(this.#logStopTimer);
+			this.#logStopTimer = null;
+		}
+
+		this.gameLog.stop();
+		this.isReady = false;
+		this.lobby = null;
+
 		if (dev) {
 			return;
 		}
@@ -295,7 +324,12 @@ export class AppContext extends Emittery<AppEvents> {
 			return;
 		}
 
-		if (lobby.startedAt && !lobby.didNotify && !this.game.isWindowFocused) {
+		if (
+			this.game.isRunning &&
+			lobby.startedAt &&
+			!lobby.didNotify &&
+			!this.game.isWindowFocused
+		) {
 			this.audio.src = GameStartedNotificationAudio;
 			this.audio.currentTime = 0;
 			lobby.didNotify = true;

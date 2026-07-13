@@ -62,7 +62,9 @@ function syncLobbyPlayerIndex(lobbyId, profileIds) {
 	}
 
 	const collection = $app.findCollectionByNameOrId('lobby_player_index');
-	const uniqueIds = [...new Set(profileIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))];
+	const uniqueIds = [
+		...new Set(profileIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))
+	];
 
 	for (const profileId of uniqueIds) {
 		const record = new Record(collection);
@@ -110,7 +112,11 @@ function processLobbyRecord(e) {
 	e.record.set('playerProfileIdsCsv', csv);
 	e.record.set('hasReplay', !!e.record.get('replay'));
 
-	if (!e.record.get('needsResult') && e.record.get('title') !== 'Skirmish' && e.record.get('replay')) {
+	if (
+		!e.record.get('needsResult') &&
+		e.record.get('title') !== 'Skirmish' &&
+		e.record.get('replay')
+	) {
 		updateCommunitySnapshot(summaries, e.record.get('map'));
 	}
 

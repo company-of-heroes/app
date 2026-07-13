@@ -76,8 +76,21 @@ export class GameLogService extends Emittery<GameLogEvents> {
 			return;
 		}
 
+		const resume = path === this.#tailer.path && this.#tailer.offset > 0;
+
+		if (resume) {
+			this.#tailer.start(path);
+			return;
+		}
+
 		this.stop();
 		this.#tailer.start(path);
+	}
+
+	/** Pauses polling without discarding the read offset or session state. */
+	pause(): void {
+		this.#tailer.pause();
+		this.isReady = false;
 	}
 
 	stop(): void {

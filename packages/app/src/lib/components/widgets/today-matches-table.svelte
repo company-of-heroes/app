@@ -31,6 +31,7 @@
 		<col class="w-3/24" />
 		<col class="w-3/24" />
 		<col class="w-2/24" />
+		<col class="w-3/24" />
 		<col class="w-1/24" />
 	</colgroup>
 	<thead>
@@ -46,13 +47,14 @@
 			<th class="px-4 py-3 font-semibold">Rating</th>
 			<th class="px-4 py-3 text-center font-semibold">Status</th>
 			<th class="px-4 py-3"></th>
+			<th class="px-4 py-3"></th>
 		</tr>
 	</thead>
 	<tbody>
 		{#if loading}
 			{#each Array(3) as _, index (index)}
 				<tr class="border-secondary-800 h-11 border-b">
-					{#each Array(9) as _, cellIndex (cellIndex)}
+					{#each Array(10) as _, cellIndex (cellIndex)}
 						<td class="px-4">
 							<Skeleton class="h-4 w-full" />
 						</td>
@@ -74,13 +76,7 @@
 						onclick={() => toggleExpanded(match.id)}
 					>
 						<td class="px-4">
-							<a
-								href="/history/{match.id}"
-								class={interactive}
-								onclick={(event) => event.stopPropagation()}
-							>
-								<Match.MapImage small class="w-10" />
-							</a>
+							<Match.MapImage small class="w-10" />
 						</td>
 						<td class="truncate px-4 font-medium">
 							<Match.Title class="text-secondary-300" />
@@ -128,12 +124,21 @@
 							</div>
 						</td>
 						<td class="px-4">
+							<a
+								href="/history/{match.id}"
+								class={cn(interactive, 'text-primary text-sm whitespace-nowrap hover:underline')}
+								onclick={(event) => event.stopPropagation()}
+							>
+								View details
+							</a>
+						</td>
+						<td class="px-4">
 							<CaretDown class={cn('size-4 transition-transform', expanded && 'rotate-180')} />
 						</td>
 					</tr>
 					{#if expanded}
 						<tr>
-							<td colspan="9" class="p-0">
+							<td colspan="10" class="p-0">
 								<MatchLobbyPlayers {match} />
 							</td>
 						</tr>

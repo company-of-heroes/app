@@ -1,6 +1,6 @@
 'use strict';
 
-const LOBBY_BACKFILL_BATCH_SIZE = 50;
+const LOBBY_BACKFILL_BATCH_SIZE = 250;
 const LOBBY_BACKFILL_PAGE_KEY = 'lobby_players_backfill_page';
 const LOBBY_BACKFILL_COMPLETE_KEY = 'lobby_players_backfill_complete';
 
@@ -66,7 +66,9 @@ function syncLobbyPlayerIndex(lobbyId, profileIds) {
 	}
 
 	const collection = $app.findCollectionByNameOrId('lobby_player_index');
-	const uniqueIds = [...new Set(profileIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))];
+	const uniqueIds = [
+		...new Set(profileIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id)))
+	];
 
 	for (const profileId of uniqueIds) {
 		const record = new Record(collection);
@@ -126,7 +128,10 @@ function backfillLobbyFromRow(row) {
 
 	syncLobbyPlayerIndex(row.id, ids.length > 0 ? ids : summaries.map((player) => player.profile_id));
 
-	return { updated: needsLobbyUpdate && summaries.length > 0, indexed: ids.length > 0 || summaries.length > 0 };
+	return {
+		updated: needsLobbyUpdate && summaries.length > 0,
+		indexed: ids.length > 0 || summaries.length > 0
+	};
 }
 
 function runBatch() {

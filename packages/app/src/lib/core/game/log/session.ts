@@ -103,7 +103,10 @@ export class LogSession extends Emittery<SessionEvents> {
 		}
 	}
 
-	async #onPopulating({ startedAt, isRanked }: TriggerEvents['LOG:LOBBY:POPULATING']): Promise<void> {
+	async #onPopulating({
+		startedAt,
+		isRanked
+	}: TriggerEvents['LOG:LOBBY:POPULATING']): Promise<void> {
 		this.lobby = new Lobby(startedAt.trim(), isRanked === 'AutoMatchForm');
 		this.lobby.localSteamId = this.localSteamId;
 
@@ -120,7 +123,11 @@ export class LogSession extends Emittery<SessionEvents> {
 		});
 	}
 
-	#onPlayerSteam({ ranking, slot, steamId }: TriggerEvents['LOG:LOBBY:POPULATING:PLAYER:STEAM']): void {
+	#onPlayerSteam({
+		ranking,
+		slot,
+		steamId
+	}: TriggerEvents['LOG:LOBBY:POPULATING:PLAYER:STEAM']): void {
 		const player = this.lobby?.getPlayerBySlot(slot);
 
 		if (player) {

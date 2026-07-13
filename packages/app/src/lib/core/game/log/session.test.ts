@@ -102,9 +102,7 @@ describe('LogSession', () => {
 	});
 
 	it('does not emit authenticated when profiles cannot be resolved', async () => {
-		const session = new LogSession(
-			makeDeps({ getProfileBySteamId: vi.fn(async () => null) })
-		);
+		const session = new LogSession(makeDeps({ getProfileBySteamId: vi.fn(async () => null) }));
 		const authenticated = vi.fn();
 
 		session.on('authenticated', authenticated);

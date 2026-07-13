@@ -39,23 +39,40 @@ export class LogTailer {
 		return this.#timer !== null;
 	}
 
-	start(path: string): void {
-		this.stop();
+	get path(): string {
+		return this.#path;
+	}
 
-		this.#path = path;
-		this.#reset();
+	get offset(): number {
+		return this.#offset;
+	}
+
+	start(path: string): void {
+		const resume = this.#path === path && this.#offset > 0;
+
+		this.pause();
+
+		if (!resume) {
+			this.#path = path;
+			this.#reset();
+		}
 
 		const interval = this.#options.intervalMs ?? 500;
 
 		this.#timer = setInterval(() => void this.#tick(), interval);
 	}
 
-	stop(): void {
+	/** Stops polling but keeps the byte offset so a brief restart can resume tailing. */
+	pause(): void {
 		if (this.#timer) {
 			clearInterval(this.#timer);
 			this.#timer = null;
 		}
+	}
 
+	stop(): void {
+		this.pause();
+		this.#path = '';
 		this.#reset();
 	}
 

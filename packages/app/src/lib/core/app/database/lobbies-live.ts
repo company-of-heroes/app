@@ -3,7 +3,12 @@ import type { LobbyPlayer } from '@fknoobs/app';
 import type { LobbiesLiveResponse, UsersResponse } from '$core/pocketbase/types';
 import { exp, pocketbase } from '$core/pocketbase';
 import { fetch } from '$core/http/fetch';
-import { ClientResponseError, type ListResult, type RecordSubscription, type UnsubscribeFunc } from 'pocketbase';
+import {
+	ClientResponseError,
+	type ListResult,
+	type RecordSubscription,
+	type UnsubscribeFunc
+} from 'pocketbase';
 import type { Expand } from '@fknoobs/app';
 
 export type LiveLobby = Expand<

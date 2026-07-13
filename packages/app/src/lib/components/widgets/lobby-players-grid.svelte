@@ -18,7 +18,7 @@
 
 	const orderedPlayers = $derived(sortBy(players, ['team', 'index']));
 	const playerGrid =
-		'grid grid-cols-[2.5rem_3.5rem_4rem_minmax(0,1fr)_3.5rem_3.5rem_3.5rem] items-center gap-3';
+		'grid grid-cols-[2.5rem_3.5rem_3.5rem_5rem_minmax(0,1fr)_3.5rem_3.5rem_3.5rem] items-center gap-3';
 
 	function playerStats(player: LobbyPlayer) {
 		if (result) {
@@ -50,7 +50,8 @@
 	>
 		<span class="text-center">Team</span>
 		<span class="text-center">ELO</span>
-		<span class="text-center">Rank</span>
+		<span class="text-center">Pos</span>
+		<span class="text-center">Level</span>
 		<span>Player</span>
 		<span class="text-center">Wins</span>
 		<span class="text-center">Losses</span>
@@ -76,8 +77,15 @@
 						class="h-auto! w-6! shrink-0 rounded-none! object-contain! ring-1! ring-black/40"
 					/>
 				</div>
-				<Player.Rating class="text-center font-medium tabular-nums" />
-				<Player.Level class="text-secondary-400 text-center text-sm tabular-nums" />
+				<Player.Rating
+					class="text-center font-medium tabular-nums"
+					matchType={result?.matchtype_id ?? matchType}
+				/>
+				<Player.Position class="text-secondary-400 text-center text-sm tabular-nums" />
+				<div class="flex items-center justify-center gap-1.5">
+					<Player.Rank class="h-6 w-6" />
+					<Player.Level class="text-secondary-400 text-sm tabular-nums" />
+				</div>
 				<div class="flex min-w-0 items-center gap-3">
 					{#if player.playerId !== -1}
 						<span class="border-secondary-800 size-9 shrink-0 overflow-hidden rounded-lg border">

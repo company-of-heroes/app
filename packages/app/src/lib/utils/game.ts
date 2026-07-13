@@ -567,6 +567,41 @@ export const getLeaderboardStatsForPlayerByMatchType = (
 	return player.profile?.leaderboardStats?.find((stat) => stat.leaderboard_id === leaderboardId);
 };
 
+/**
+ * Resolves a player's current ELO from recent match history for a given match type and faction.
+ * Relic only returns the last 10 matches per match type, so this may return null.
+ */
+export function getPlayerEloFromMatchHistory(
+	matchType: number,
+	player: LobbyPlayer
+): number | null {
+	const history = player.matchHistory;
+	if (!history?.length) return null;
+
+	const profileId = player.profile?.profile_id ?? (player.playerId > 0 ? player.playerId : null);
+	if (profileId == null) return null;
+
+	let elo: number | null = null;
+	let latestCompletion = -1;
+
+	for (const match of history) {
+		if (match.matchtype_id !== matchType) continue;
+
+		const entry = match.players.find(
+			(member) => member.profile_id === profileId && member.race_id === player.race
+		);
+		if (!entry || typeof entry.newrating !== 'number' || entry.newrating < 1) continue;
+
+		const completed = match.completiontime ?? match.startgametime ?? 0;
+		if (completed >= latestCompletion) {
+			latestCompletion = completed;
+			elo = entry.newrating;
+		}
+	}
+
+	return elo;
+}
+
 export const STRINGS = {
 	$1: '%1X%.%2Y%',
 	$250: 'normal',
