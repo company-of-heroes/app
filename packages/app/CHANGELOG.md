@@ -1,5 +1,9 @@
 # @company-of-heroes/app
 
+## 0.52.4
+
+- enhance; edited the default oppbot overlay design a bit
+
 ## 0.52.3
 
 - fix; some minor UI tweaks throughout the app

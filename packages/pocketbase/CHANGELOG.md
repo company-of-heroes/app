@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.2.2
+
+- enhance; edited the default oppbot overlay design a bit
+
 ## 0.2.1
 
 - fix; some minor UI tweaks throughout the app
