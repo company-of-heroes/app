@@ -67,6 +67,10 @@ routerAdd('GET', '/api/smurf-watch/worker/batch', (e) => {
 	return require(`${__hooks}/lib/smurf-watch.js`).handleWorkerBatch(e);
 });
 
+routerAdd('GET', '/api/smurf-watch/worker/coplay/{profileId}', (e) => {
+	return require(`${__hooks}/lib/smurf-watch.js`).handleCoplay(e);
+});
+
 routerAdd('PATCH', '/api/smurf-watch/worker/{id}', (e) => {
 	return require(`${__hooks}/lib/smurf-watch.js`).handleWorkerPatch(e);
 });

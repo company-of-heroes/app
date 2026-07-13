@@ -1,7 +1,9 @@
 import { log, logError } from './logger';
 import {
 	COH_APP_ID,
+	type OwnedCoHResult,
 	type PlayerPresence,
+	interpretOwnedGamesResponse,
 	isPlayingCoH,
 	parseCohStatsLenderFromHtml
 } from './detect';
@@ -14,7 +16,15 @@ import {
 } from './steam-rate';
 
 export { RateLimitError } from './steam-rate';
-export { COH_APP_ID, isPlayingCoH, parseCohStatsLenderFromHtml, type PlayerPresence } from './detect';
+export {
+	COH_APP_ID,
+	interpretOwnedGamesResponse,
+	isPlayingCoH,
+	isProfilePrivate,
+	parseCohStatsLenderFromHtml,
+	type OwnedCoHResult,
+	type PlayerPresence
+} from './detect';
 
 export type SmurfWatchRecord = {
 	id: string;
@@ -25,6 +35,7 @@ export type SmurfWatchRecord = {
 	priority: number;
 	check_interval_sec: number;
 	owns_coh?: boolean | null;
+	watching_since?: string | null;
 };
 
 export type SmurfWatchBatch = {
@@ -44,7 +55,7 @@ export type Env = {
 
 export const COHSTATS_SCREENING_LIMIT = 30;
 export const WORKER_POLLING_LIMIT = 30;
-export const MAX_STEAM_CALLS_PER_RUN = 8;
+export const MAX_STEAM_CALLS_PER_RUN = 25;
 const STEAM_SUMMARY_CHUNK = 100;
 
 export class SteamCallBudget {
@@ -235,9 +246,9 @@ export async function getOwnedCoH(
 	env: Env,
 	steamId: string,
 	budget?: SteamCallBudget
-): Promise<boolean | null> {
+): Promise<OwnedCoHResult> {
 	const data = await steamRequest<{
-		response?: { game_count?: number; games?: { appid: number }[] };
+		response?: { game_count?: number; games?: { appid: number; playtime_forever?: number }[] };
 	}>(
 		env,
 		'/IPlayerService/GetOwnedGames/v1/',
@@ -250,23 +261,15 @@ export async function getOwnedCoH(
 		budget
 	);
 
-	const games = data.response?.games ?? [];
-	if (games.length > 0) {
-		const owns = games.some((game) => game.appid === COH_APP_ID);
-		log('debug', 'owned games check', { steamId, ownsCoH: owns });
-		return owns;
-	}
-
-	if ((data.response?.game_count ?? 0) === 0) {
-		log('debug', 'owned games check', { steamId, ownsCoH: false, gameCount: 0 });
-		return false;
-	}
-
-	log('debug', 'owned games check inconclusive', {
+	const result = interpretOwnedGamesResponse(data.response);
+	log('debug', 'owned games check', {
 		steamId,
+		ownsCoH: result.owns,
+		playtimeMinutes: result.playtimeMinutes,
 		gameCount: data.response?.game_count
 	});
-	return null;
+
+	return result;
 }
 
 export async function getPlayerSummaries(
@@ -289,6 +292,10 @@ export async function getPlayerSummaries(
 					gameid?: string;
 					gameextrainfo?: string;
 					personastate: number;
+					communityvisibilitystate?: number;
+					timecreated?: number;
+					avatarhash?: string;
+					personaname?: string;
 				}[];
 			};
 		}>(
@@ -304,7 +311,11 @@ export async function getPlayerSummaries(
 			map.set(player.steamid, {
 				gameid: player.gameid,
 				gameextrainfo: player.gameextrainfo,
-				personastate: player.personastate
+				personastate: player.personastate,
+				communityvisibilitystate: player.communityvisibilitystate,
+				timecreated: player.timecreated,
+				avatarhash: player.avatarhash,
+				personaname: player.personaname
 			});
 		}
 	}
@@ -347,7 +358,9 @@ export async function getLenderSteamId(
 	return lender;
 }
 
-export async function getCohStatsLender(steamId: string): Promise<string | null> {
+export type CohStatsResult = { ok: true; lender: string | null } | { ok: false };
+
+export async function getCohStatsLender(steamId: string): Promise<CohStatsResult> {
 	const startedAt = Date.now();
 
 	try {
@@ -357,12 +370,12 @@ export async function getCohStatsLender(steamId: string): Promise<string | null>
 		const durationMs = Date.now() - startedAt;
 
 		if (!response.ok) {
-			log('debug', 'cohstats lookup failed', {
+			log('warn', 'cohstats lookup failed', {
 				steamId,
 				status: response.status,
 				durationMs
 			});
-			return null;
+			return { ok: false };
 		}
 
 		const html = await response.text();
@@ -378,11 +391,105 @@ export async function getCohStatsLender(steamId: string): Promise<string | null>
 			htmlSnippet: html.slice(0, 300)
 		});
 
-		return lender;
+		return { ok: true, lender };
 	} catch (error) {
 		logError('cohstats lookup error', error, {
 			steamId,
 			durationMs: Date.now() - startedAt
+		});
+		return { ok: false };
+	}
+}
+
+export type PlayerBans = {
+	vacBanned: boolean;
+	gameBans: number;
+	daysSinceLastBan: number | null;
+};
+
+export async function getPlayerBans(
+	env: Env,
+	steamIds: string[],
+	budget?: SteamCallBudget
+): Promise<Map<string, PlayerBans>> {
+	const map = new Map<string, PlayerBans>();
+	if (steamIds.length === 0) {
+		return map;
+	}
+
+	for (let index = 0; index < steamIds.length; index += STEAM_SUMMARY_CHUNK) {
+		const chunk = steamIds.slice(index, index + STEAM_SUMMARY_CHUNK);
+		const data = await steamRequest<{
+			players?: {
+				SteamId: string;
+				VACBanned: boolean;
+				NumberOfVACBans: number;
+				NumberOfGameBans: number;
+				DaysSinceLastBan: number;
+			}[];
+		}>(
+			env,
+			'/ISteamUser/GetPlayerBans/v1/',
+			{
+				steamids: chunk.join(',')
+			},
+			budget
+		);
+
+		for (const player of data.players ?? []) {
+			const banned = player.VACBanned || player.NumberOfGameBans > 0;
+			map.set(player.SteamId, {
+				vacBanned: player.VACBanned,
+				gameBans: player.NumberOfGameBans,
+				daysSinceLastBan: banned ? player.DaysSinceLastBan : null
+			});
+		}
+	}
+
+	log('debug', 'player bans fetched', { requested: steamIds.length, returned: map.size });
+
+	return map;
+}
+
+export type SteamFriend = {
+	steamId: string;
+	friendSince: number;
+};
+
+export async function getFriendList(
+	env: Env,
+	steamId: string,
+	budget?: SteamCallBudget
+): Promise<SteamFriend[] | null> {
+	try {
+		const data = await steamRequest<{
+			friendslist?: { friends?: { steamid: string; friend_since?: number }[] };
+		}>(
+			env,
+			'/ISteamUser/GetFriendList/v1/',
+			{
+				steamid: steamId,
+				relationship: 'friend'
+			},
+			budget
+		);
+
+		const friends = (data.friendslist?.friends ?? []).map((friend) => ({
+			steamId: friend.steamid,
+			friendSince: friend.friend_since ?? 0
+		}));
+
+		log('debug', 'friend list fetched', { steamId, friendCount: friends.length });
+		return friends;
+	} catch (error) {
+		if (error instanceof RateLimitError) {
+			throw error;
+		}
+
+		// Private friend lists return a 401; treat as "not available".
+		log('debug', 'friend list unavailable', {
+			steamId,
+			error: error instanceof Error ? error.message : String(error)
 		});
 		return null;
 	}

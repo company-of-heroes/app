@@ -157,12 +157,18 @@ function handleEnqueue(e) {
 
 	const steamId = body.steam_id || body.steamId;
 	const profileId = body.profile_id ?? body.profileId ?? null;
-	const source = body.source || 'profile';
-	const priority = body.priority ?? SOURCE_PRIORITY[source] ?? 50;
+	const source = Object.prototype.hasOwnProperty.call(SOURCE_PRIORITY, body.source)
+		? body.source
+		: 'profile';
+	const maxPriority = SOURCE_PRIORITY[source];
+	const requestedPriority = Number(body.priority);
+	const priority = Number.isFinite(requestedPriority)
+		? Math.max(0, Math.min(requestedPriority, maxPriority))
+		: maxPriority;
 	const lenderSource = body.lender_source || body.lenderSource || null;
 
-	if (!steamId) {
-		return e.json(400, { message: 'steam_id is required' });
+	if (!steamId || !/^\d{17}$/.test(String(steamId))) {
+		return e.json(400, { message: 'steam_id must be a 17-digit SteamID64' });
 	}
 
 	const existing = findSmurfWatchBySteamId(String(steamId));
@@ -231,7 +237,13 @@ function handleGetBySteamId(e) {
 		lender_steam_id: record.get('lender_steam_id') || null,
 		lender_source: record.get('lender_source') || null,
 		owns_coh: record.get('owns_coh'),
-		next_check_at: record.get('next_check_at')
+		next_check_at: record.get('next_check_at'),
+		smurf_score: record.get('smurf_score'),
+		verdict: record.get('verdict') || null,
+		signals: record.get('signals') || null,
+		suspected_main_steam_id: record.get('suspected_main_steam_id') || null,
+		main_confidence: record.get('main_confidence'),
+		score_computed_at: record.get('score_computed_at') || null
 	});
 }
 
@@ -253,20 +265,23 @@ function handleWorkerBatch(e) {
 			source: '',
 			priority: 0,
 			check_interval_sec: 0,
-			owns_coh: nullBool()
+			owns_coh: nullBool(),
+			watching_since: ''
 		})
 	);
 
 	$app
 		.db()
 		.newQuery(
-			`SELECT id, steam_id, profile_id, status, source, priority, check_interval_sec, owns_coh
+			`SELECT id, steam_id, profile_id, status, source, priority, check_interval_sec, owns_coh,
+              COALESCE(watching_since, '') AS watching_since
        FROM smurf_watch
-       WHERE status = 'pending_screening'
+       WHERE status IN ('pending_screening', 'unknown_private')
+         AND (next_check_at IS NULL OR next_check_at <= {:now})
        ORDER BY priority DESC, next_check_at ASC
        LIMIT {:limit}`
 		)
-		.bind({ limit: screeningLimit })
+		.bind({ now, limit: screeningLimit })
 		.all(screening);
 
 	const polling = arrayOf(
@@ -277,14 +292,16 @@ function handleWorkerBatch(e) {
 			status: '',
 			source: '',
 			priority: 0,
-			check_interval_sec: 0
+			check_interval_sec: 0,
+			watching_since: ''
 		})
 	);
 
 	$app
 		.db()
 		.newQuery(
-			`SELECT id, steam_id, profile_id, status, source, priority, check_interval_sec
+			`SELECT id, steam_id, profile_id, status, source, priority, check_interval_sec,
+              COALESCE(watching_since, '') AS watching_since
        FROM smurf_watch
        WHERE status = 'watching'
          AND (next_check_at IS NULL OR next_check_at <= {:now})
@@ -297,7 +314,12 @@ function handleWorkerBatch(e) {
 	const totalPending = new DynamicModel({ count: 0 });
 	$app
 		.db()
-		.newQuery(`SELECT COUNT(*) AS count FROM smurf_watch WHERE status = 'pending_screening'`)
+		.newQuery(
+			`SELECT COUNT(*) AS count FROM smurf_watch
+       WHERE status IN ('pending_screening', 'unknown_private')
+         AND (next_check_at IS NULL OR next_check_at <= {:now})`
+		)
+		.bind({ now })
 		.one(totalPending);
 
 	const totalWatchingDue = new DynamicModel({ count: 0 });
@@ -353,7 +375,22 @@ function handleWorkerPatch(e) {
 		'last_checked_at',
 		'next_check_at',
 		'check_interval_sec',
-		'priority'
+		'priority',
+		'watching_since',
+		'account_created_at',
+		'coh_playtime_min',
+		'game_bans',
+		'vac_banned',
+		'relic_total_games',
+		'relic_winrate',
+		'relic_level',
+		'signals',
+		'smurf_score',
+		'verdict',
+		'score_computed_at',
+		'main_candidates',
+		'suspected_main_steam_id',
+		'main_confidence'
 	];
 
 	for (const field of fields) {
@@ -372,6 +409,124 @@ function handleWorkerPatch(e) {
 	});
 }
 
+function resolvePlayerMeta(profileId) {
+	const row = new DynamicModel({ lobbyPlayers: '' });
+
+	try {
+		$app
+			.db()
+			.newQuery(
+				`SELECT COALESCE(l.lobbyPlayers, '') AS lobbyPlayers
+         FROM lobbies l
+         JOIN lobby_player_index i ON i.lobby = l.id
+         WHERE i.profile_id = {:pid}
+         ORDER BY l.createdAt DESC
+         LIMIT 1`
+			)
+			.bind({ pid: profileId })
+			.one(row);
+	} catch {
+		return { alias: null, steam_id: null };
+	}
+
+	try {
+		const players = JSON.parse(row.lobbyPlayers);
+		const found = Array.isArray(players)
+			? players.find((player) => Number(player?.profile_id) === Number(profileId))
+			: null;
+
+		return {
+			alias: found?.alias || null,
+			steam_id: found?.steamId ? String(found.steamId) : null
+		};
+	} catch {
+		return { alias: null, steam_id: null };
+	}
+}
+
+function handleCoplay(e) {
+	if (!isServiceRequest(e)) {
+		return e.json(401, { message: 'Unauthorized' });
+	}
+
+	const profileId = Number(e.request.pathValue('profileId'));
+	if (!profileId || Number.isNaN(profileId)) {
+		return e.json(400, { message: 'profileId is required' });
+	}
+
+	const teammates = arrayOf(
+		new DynamicModel({
+			profile_id: 0,
+			shared_lobbies: 0
+		})
+	);
+
+	$app
+		.db()
+		.newQuery(
+			`SELECT i2.profile_id AS profile_id, COUNT(DISTINCT i2.lobby) AS shared_lobbies
+       FROM lobby_player_index i1
+       JOIN lobby_player_index i2 ON i1.lobby = i2.lobby AND i2.profile_id != i1.profile_id
+       WHERE i1.profile_id = {:pid}
+       GROUP BY i2.profile_id
+       ORDER BY shared_lobbies DESC
+       LIMIT 25`
+		)
+		.bind({ pid: profileId })
+		.all(teammates);
+
+	const secondOrder = arrayOf(
+		new DynamicModel({
+			profile_id: 0,
+			shared_teammates: 0
+		})
+	);
+
+	// Accounts that share >= 2 of the suspect's teammates but never played
+	// with the suspect directly: typical main-account pattern.
+	$app
+		.db()
+		.newQuery(
+			`WITH direct AS (
+         SELECT DISTINCT i2.profile_id
+         FROM lobby_player_index i1
+         JOIN lobby_player_index i2 ON i1.lobby = i2.lobby
+         WHERE i1.profile_id = {:pid} AND i2.profile_id != {:pid}
+       )
+       SELECT i2.profile_id AS profile_id, COUNT(DISTINCT i1.profile_id) AS shared_teammates
+       FROM lobby_player_index i1
+       JOIN lobby_player_index i2 ON i1.lobby = i2.lobby AND i2.profile_id != i1.profile_id
+       WHERE i1.profile_id IN (SELECT profile_id FROM direct)
+         AND i2.profile_id != {:pid}
+         AND i2.profile_id NOT IN (SELECT profile_id FROM direct)
+       GROUP BY i2.profile_id
+       HAVING COUNT(DISTINCT i1.profile_id) >= 2
+       ORDER BY shared_teammates DESC
+       LIMIT 25`
+		)
+		.bind({ pid: profileId })
+		.all(secondOrder);
+
+	const withMeta = (rows, extra) =>
+		rows.map((row) => {
+			const meta = resolvePlayerMeta(Number(row.profile_id));
+			return {
+				profile_id: Number(row.profile_id),
+				steam_id: meta.steam_id,
+				alias: meta.alias,
+				...extra(row)
+			};
+		});
+
+	return e.json(200, {
+		profile_id: profileId,
+		teammates: withMeta(teammates, (row) => ({ shared_lobbies: Number(row.shared_lobbies) })),
+		candidates: withMeta(secondOrder, (row) => ({
+			shared_teammates: Number(row.shared_teammates)
+		}))
+	});
+}
+
 module.exports = {
 	isServiceRequest,
 	enqueueLobbyMatchRecord,
@@ -379,5 +534,6 @@ module.exports = {
 	handleEnqueue,
 	handleGetBySteamId,
 	handleWorkerBatch,
-	handleWorkerPatch
+	handleWorkerPatch,
+	handleCoplay
 };

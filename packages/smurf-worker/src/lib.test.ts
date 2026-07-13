@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { COH_APP_ID, isPlayingCoH, parseCohStatsLenderFromHtml } from './detect.ts';
+import {
+	COH_APP_ID,
+	interpretOwnedGamesResponse,
+	isPlayingCoH,
+	isProfilePrivate,
+	parseCohStatsLenderFromHtml
+} from './detect.ts';
 
 describe('parseCohStatsLenderFromHtml', () => {
 	it('extracts lender from infoSmurfText anchor', () => {
@@ -37,7 +43,7 @@ describe('parseCohStatsLenderFromHtml', () => {
 });
 
 describe('isPlayingCoH', () => {
-	it('returns true when playing CoH by gameid and in-game', () => {
+	it('returns true when playing CoH by gameid and online', () => {
 		assert.equal(
 			isPlayingCoH({
 				gameid: String(COH_APP_ID),
@@ -47,7 +53,37 @@ describe('isPlayingCoH', () => {
 		);
 	});
 
-	it('returns true when playing CoH by gameextrainfo and in-game', () => {
+	it('returns true when in-game with away personastate', () => {
+		assert.equal(
+			isPlayingCoH({
+				gameid: String(COH_APP_ID),
+				personastate: 3
+			}),
+			true
+		);
+	});
+
+	it('returns true when gameid is set even with personastate 0', () => {
+		assert.equal(
+			isPlayingCoH({
+				gameid: String(COH_APP_ID),
+				personastate: 0
+			}),
+			true
+		);
+	});
+
+	it('returns true for the New Steam Version game name', () => {
+		assert.equal(
+			isPlayingCoH({
+				gameextrainfo: 'Company of Heroes (New Steam Version)',
+				personastate: 1
+			}),
+			true
+		);
+	});
+
+	it('returns true when playing CoH by gameextrainfo', () => {
 		assert.equal(
 			isPlayingCoH({
 				gameextrainfo: 'Company of Heroes',
@@ -57,11 +93,12 @@ describe('isPlayingCoH', () => {
 		);
 	});
 
-	it('returns false when offline with CoH gameid', () => {
+	it('returns false for CoH 2', () => {
 		assert.equal(
 			isPlayingCoH({
-				gameid: String(COH_APP_ID),
-				personastate: 0
+				gameid: '231430',
+				gameextrainfo: 'Company of Heroes 2',
+				personastate: 1
 			}),
 			false
 		);
@@ -80,5 +117,44 @@ describe('isPlayingCoH', () => {
 
 	it('returns false when summary is undefined', () => {
 		assert.equal(isPlayingCoH(undefined), false);
+	});
+});
+
+describe('isProfilePrivate', () => {
+	it('returns false for public profiles', () => {
+		assert.equal(isProfilePrivate({ personastate: 1, communityvisibilitystate: 3 }), false);
+	});
+
+	it('returns true for private profiles', () => {
+		assert.equal(isProfilePrivate({ personastate: 0, communityvisibilitystate: 1 }), true);
+	});
+
+	it('returns false when visibility is unknown', () => {
+		assert.equal(isProfilePrivate({ personastate: 0 }), false);
+		assert.equal(isProfilePrivate(undefined), false);
+	});
+});
+
+describe('interpretOwnedGamesResponse', () => {
+	it('detects ownership with playtime', () => {
+		const result = interpretOwnedGamesResponse({
+			game_count: 1,
+			games: [{ appid: COH_APP_ID, playtime_forever: 1234 }]
+		});
+
+		assert.equal(result.owns, true);
+		assert.equal(result.playtimeMinutes, 1234);
+	});
+
+	it('treats explicit game_count 0 as not owning', () => {
+		const result = interpretOwnedGamesResponse({ game_count: 0 });
+
+		assert.equal(result.owns, false);
+		assert.equal(result.playtimeMinutes, null);
+	});
+
+	it('treats an empty response (private profile) as inconclusive', () => {
+		assert.equal(interpretOwnedGamesResponse({}).owns, null);
+		assert.equal(interpretOwnedGamesResponse(undefined).owns, null);
 	});
 });

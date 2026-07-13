@@ -11,7 +11,9 @@ const KV_LAST_CALL_KEY = 'steam_last_call_at';
 const KV_WORKER_LOCK_KEY = 'worker_lock';
 
 const WORKER_LOCK_TTL_SEC = 600;
-const WORKER_LOCK_MAX_AGE_MS = 3 * 60 * 1000;
+// Just under the 5-minute cron cadence: a run that legitimately uses the full
+// Steam budget can take ~3-4 minutes, and overlapping runs must not double-spend.
+const WORKER_LOCK_MAX_AGE_MS = 270 * 1000;
 
 let memoryBlockedUntil = 0;
 let memoryLastCallAt = 0;

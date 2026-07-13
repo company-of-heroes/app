@@ -2,9 +2,16 @@ import { fetch } from '$core/http/fetch';
 import { PUBLIC_PB_URL } from '$env/static/public';
 import { pocketbase } from '$core/pocketbase';
 
-export type SmurfWatchStatus = 'pending_screening' | 'watching' | 'resolved' | 'not_smurf';
+export type SmurfWatchStatus =
+	| 'pending_screening'
+	| 'watching'
+	| 'resolved'
+	| 'not_smurf'
+	| 'expired'
+	| 'unknown_private';
 export type SmurfWatchSource = 'profile' | 'search' | 'lobby_live' | 'lobby_match' | 'backfill';
 export type SmurfLenderSource = 'live' | 'cohstats';
+export type SmurfVerdict = 'confirmed_shared' | 'likely_smurf' | 'suspicious' | 'clean' | 'unknown';
 
 export type SmurfWatchRecord = {
 	id: string;
@@ -16,6 +23,12 @@ export type SmurfWatchRecord = {
 	lender_source?: SmurfLenderSource | null;
 	owns_coh?: boolean | null;
 	next_check_at?: string;
+	smurf_score?: number | null;
+	verdict?: SmurfVerdict | null;
+	signals?: { id: string; points: number; detail: string }[] | null;
+	suspected_main_steam_id?: string | null;
+	main_confidence?: number | null;
+	score_computed_at?: string | null;
 };
 
 const baseUrl = () => (PUBLIC_PB_URL ?? 'https://api.coh1stats.com').replace(/\/$/, '');
