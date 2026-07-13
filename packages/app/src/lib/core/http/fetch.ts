@@ -1,5 +1,3 @@
-import { dev } from '$app/environment';
-import { PUBLIC_PB_URL } from '$env/static/public';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http-original';
 import { getUrl, localUrlPattern, selectFetchTransport } from './fetch-routing';
 
@@ -12,7 +10,10 @@ export {
 } from './fetch-routing';
 export type { FetchTransport } from './fetch-routing';
 
-const pocketBaseOrigin = new URL(PUBLIC_PB_URL ?? 'https://api.coh1stats.com').origin;
+const dev = import.meta.env.DEV;
+const pocketBaseOrigin = new URL(
+	(import.meta.env.PUBLIC_PB_URL as string | undefined) ?? 'https://api.coh1stats.com'
+).origin;
 
 type FetchWindow = typeof globalThis & {
 	fetchNative?: typeof fetch;

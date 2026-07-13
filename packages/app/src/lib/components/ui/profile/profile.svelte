@@ -7,7 +7,9 @@
 	} & HTMLAttributes<HTMLDivElement>;
 
 	let { profile, children, ...restProps }: Props = $props();
-	createProfile(profile);
+	$effect(() => {
+		createProfile(profile);
+	});
 </script>
 
 <div {...restProps}>
