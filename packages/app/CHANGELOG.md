@@ -1,5 +1,13 @@
 # @company-of-heroes/app
 
+## 0.52.3
+
+- fix; some minor UI tweaks throughout the app
+- fix; some minor issues in the oppbot overlay
+- fix; show player ELO, rank icon and position in live lobbies widget
+- fix; increase performance on history page
+- fix; automatically publish oppbot overlay to remote server
+
 ## 0.52.2
 
 - feat; add opponent bot route
