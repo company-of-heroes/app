@@ -40,7 +40,10 @@
 					"url": "https://api.steampowered.com"
 				},
 				{
-					"url": "https://github.com/fknoobs/app"
+					"url": "https://github.com/fknoobs/*"
+				},
+				{
+					"url": "https://github.com/company-of-heroes/*"
 				},
 				{
 					"url": "https://discord.gg/Cc69hbDnPD"
