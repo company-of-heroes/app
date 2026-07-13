@@ -4,6 +4,7 @@
 	import FolderOpenIcon from 'phosphor-svelte/lib/FolderOpenIcon';
 	import CloudArrowUpIcon from 'phosphor-svelte/lib/CloudArrowUpIcon';
 	import { openPath } from '@tauri-apps/plugin-opener';
+	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { twitchOverlays } from '$features/twitch-overlays';
 	import { cn } from '$lib/utils';
 	import { watch } from 'runed';
@@ -15,25 +16,49 @@
 	const overlay = twitchOverlays.overlays[0];
 	let copied = $state(false);
 	let publishing = $state(false);
+	let overwriting = $state(false);
 	let hasUnpublishedChanges = $state(false);
 	let checkingChanges = $state(false);
+	let hasDistBuild = $state(false);
+	let distStale = $state(false);
+	let pendingUpdate = $state(false);
 
 	const overlayUrl = $derived(
 		app.features.auth.user?.id ? overlay.getHostedUrl(app.features.auth.user.id) : ''
 	);
 
+	const canPublish = $derived(
+		hasDistBuild &&
+			hasUnpublishedChanges &&
+			!distStale &&
+			!publishing &&
+			!checkingChanges &&
+			!!app.features.auth.user
+	);
+
 	async function refreshChangeState() {
 		if (!app.features.auth.user) {
 			hasUnpublishedChanges = false;
+			hasDistBuild = false;
+			distStale = false;
+			pendingUpdate = false;
 			return;
 		}
 
 		checkingChanges = true;
 		try {
-			hasUnpublishedChanges = await overlay.hasUnpublishedChanges();
+			[hasUnpublishedChanges, hasDistBuild, distStale, pendingUpdate] = await Promise.all([
+				overlay.hasUnpublishedChanges(),
+				overlay.hasDistBuild(),
+				overlay.isDistStale(),
+				overlay.hasPendingUpdate()
+			]);
 		} catch (error) {
 			console.warn('[OVERLAYS-TAB]: failed to check overlay changes:', error);
 			hasUnpublishedChanges = false;
+			hasDistBuild = false;
+			distStale = false;
+			pendingUpdate = false;
 		} finally {
 			checkingChanges = false;
 		}
@@ -44,6 +69,9 @@
 		(userId) => {
 			if (!userId) {
 				hasUnpublishedChanges = false;
+				hasDistBuild = false;
+				distStale = false;
+				pendingUpdate = false;
 				return;
 			}
 
@@ -82,17 +110,45 @@
 	}
 
 	async function publishChanges() {
-		if (publishing) return;
+		if (publishing || !canPublish) return;
 		publishing = true;
 		try {
 			await overlay.publish();
 			hasUnpublishedChanges = false;
+			distStale = false;
 			app.toast.success('Overlay changes published to server.');
 		} catch (error) {
 			console.error('Failed to publish overlay:', error);
-			app.toast.error('Failed to publish overlay changes. Check your connection and try again.');
+			const message =
+				error instanceof Error ? error.message : 'Failed to publish overlay changes.';
+			app.toast.error(message);
 		} finally {
 			publishing = false;
+		}
+	}
+
+	async function overwriteWithLatest() {
+		if (!pendingUpdate || overwriting) return;
+
+		const ok = await confirm(
+			'Overwrite your local overlay with the latest version?\n\n' +
+				'Your current overlay will be backed up first.',
+			{ okLabel: 'Overwrite', cancelLabel: 'Cancel', kind: 'warning' }
+		);
+		if (!ok) return;
+
+		overwriting = true;
+		try {
+			await overlay.overwriteWithLatest({ backup: true });
+			app.toast.success('Overlay updated. Your previous version was backed up.');
+			await refreshChangeState();
+		} catch (error) {
+			console.error('Failed to overwrite overlay:', error);
+			const message =
+				error instanceof Error ? error.message : 'Failed to overwrite overlay. Check the logs.';
+			app.toast.error(message);
+		} finally {
+			overwriting = false;
 		}
 	}
 </script>
@@ -138,17 +194,60 @@
 		<FolderOpenIcon size={18} />
 		Open in editor
 	</Button>
-	<Button
-		type="button"
-		onclick={publishChanges}
-		disabled={publishing || checkingChanges || !hasUnpublishedChanges || !app.features.auth.user}
-	>
+	<Button type="button" onclick={publishChanges} disabled={!canPublish}>
 		<CloudArrowUpIcon size={18} />
 		{publishing ? 'Publishing…' : 'Publish changes to server'}
 	</Button>
 </div>
 
-<p class="text-secondary-400 mt-4 max-w-2xl text-sm">
-	Your overlay is hosted automatically at the URL above. Open it in your code editor only when you
-	want to customize it, then use “Publish changes to server” to update the live version.
-</p>
+<div class="text-secondary-400 mt-4 max-w-2xl space-y-2 text-sm">
+	<p>
+		Your overlay is hosted at the URL above. To customize it, open the overlay folder, edit files in
+		<code class="text-secondary-300">src/</code>, then build and publish:
+	</p>
+	<ol class="list-decimal space-y-1 pl-5">
+		<li>
+			Run <code class="text-secondary-300">npm install</code> once (requires
+			<a
+				class="text-secondary-300 underline"
+				href="https://nodejs.org/"
+				target="_blank"
+				rel="noreferrer">Node.js</a
+			>)
+		</li>
+		<li>
+			Preview with test lobbies: <code class="text-secondary-300">npm run dev</code>, then open
+			<code class="text-secondary-300">http://localhost:5173</code> (1v1–4v4 buttons appear
+			bottom-right)
+		</li>
+		<li>Edit Svelte/CSS in <code class="text-secondary-300">src/</code></li>
+		<li>
+			Run <code class="text-secondary-300">npm run build</code> to update
+			<code class="text-secondary-300">dist/</code>
+		</li>
+		<li>Click “Publish changes to server” to update the live overlay</li>
+	</ol>
+	{#if !hasDistBuild && app.features.auth.user}
+		<p class="text-warning">No build found. Run npm run build in the overlay folder before publishing.</p>
+	{:else if distStale}
+		<p class="text-warning">
+			Source files are newer than dist/. Run npm run build before publishing.
+		</p>
+	{/if}
+	{#if pendingUpdate}
+		<p class="text-warning">
+			A new overlay version is available in the app, but your customized source was kept. Merge
+			updates manually from a fresh install if needed.
+		</p>
+		<div>
+			<Button
+				type="button"
+				variant="secondary"
+				onclick={overwriteWithLatest}
+				disabled={overwriting}
+			>
+				{overwriting ? 'Overwriting…' : 'Overwrite with latest (backup current)'}
+			</Button>
+		</div>
+	{/if}
+</div>

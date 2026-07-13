@@ -1,9 +1,11 @@
 <script lang="ts">
 	import {
 		FACTION,
+		formatRankLevel,
 		formatRanking,
 		formatStreak,
 		getCombatRecord,
+		getFlagImage,
 		getRaceImage,
 		getRankImage
 	} from '../lib/lobby';
@@ -26,18 +28,28 @@
 
 <article class="unit side-{teamIndex}" class:unit--self={isMe}>
 	<div class="unit__seal">
-		<img src={getRankImage(matchType, player)} alt="" />
+		<div class="unit__seal-col unit__seal-col--rank">
+			{#if country}
+				<img class="unit__flag" src={getFlagImage(country)} alt={country} />
+			{:else}
+				<div class="unit__rank-stack">
+					<img class="unit__rank" src={getRankImage(matchType, player)} alt="" />
+					<span class="unit__level">{formatRankLevel(matchType, player)}</span>
+				</div>
+			{/if}
+		</div>
+		{#if country}
+			<div class="unit__seal-col unit__seal-col--flag">
+				<div class="unit__rank-stack">
+					<img class="unit__rank" src={getRankImage(matchType, player)} alt="" />
+					<span class="unit__level">{formatRankLevel(matchType, player)}</span>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<div class="unit__panel">
 		<div class="unit__primary">
-			{#if country}
-				<img
-					class="unit__flag"
-					src="https://flagsapi.com/{country.toUpperCase()}/flat/64.png"
-					alt={country}
-				/>
-			{/if}
 			<span class="unit__name" title={alias}>{alias}</span>
 			<span class="unit__scores">
 				<span class="unit__ranking">{formatRanking(player.ranking)}</span>

@@ -1,24 +1,52 @@
 <script lang="ts">
 	import Side from './components/Side.svelte';
-	import { getPlayerCount, prepareLobbyData } from './lib/lobby';
-	import { connectLobby, getUserIdFromPath } from './lib/lobby-feed';
+	import { getDevLobby } from './lib/test-data';
+	import { prepareLobbyData } from './lib/lobby';
+	import {
+		connectLobby,
+		DEV_SCENARIOS,
+		getDevScenarioFromUrl,
+		getUserIdFromPath,
+		type DevScenario
+	} from './lib/lobby-feed';
 	import type { LobbyData } from './lib/types';
 
-	let lobbyData = $state<LobbyData | null>(null);
+	let liveLobbyData = $state<LobbyData | null>(null);
+	let devScenario = $state<DevScenario>(import.meta.env.DEV ? getDevScenarioFromUrl() : '4v4');
 	const userId = getUserIdFromPath();
+	const isDevPreview = import.meta.env.DEV && !userId;
 
 	if (userId) {
 		connectLobby(userId, (data) => {
-			lobbyData = data ? prepareLobbyData(data) : null;
+			liveLobbyData = data ? prepareLobbyData(data) : null;
 		});
 	}
 
-	const playerCount = $derived(lobbyData ? getPlayerCount(lobbyData) : 0);
+	const lobbyData = $derived(
+		isDevPreview ? prepareLobbyData(getDevLobby(devScenario)) : liveLobbyData
+	);
+
+	$effect(() => {
+		if (!isDevPreview) return;
+		document.documentElement.style.background = '#fff';
+		document.body.style.background = '#fff';
+		return () => {
+			document.documentElement.style.background = '';
+			document.body.style.background = '';
+		};
+	});
+
+	function setDevScenario(scenario: DevScenario) {
+		devScenario = scenario;
+		const url = new URL(window.location.href);
+		url.searchParams.set('dev', scenario);
+		window.history.replaceState({}, '', url);
+	}
 </script>
 
 {#if lobbyData?.teams}
 	<div class="manifest">
-		<div class="manifest__field count-{playerCount}">
+		<div class="manifest__field">
 			{#each lobbyData.teams as team, index (index)}
 				<Side
 					{team}
@@ -30,3 +58,50 @@
 		</div>
 	</div>
 {/if}
+
+{#if isDevPreview}
+	<div class="dev-picker">
+		{#each DEV_SCENARIOS as scenario (scenario)}
+			<button
+				type="button"
+				class="dev-picker__btn"
+				class:dev-picker__btn--active={devScenario === scenario}
+				onclick={() => setDevScenario(scenario)}
+			>
+				{scenario}
+			</button>
+		{/each}
+	</div>
+{/if}
+
+<style>
+	.dev-picker {
+		position: fixed;
+		right: 12px;
+		bottom: 12px;
+		display: flex;
+		gap: 6px;
+		padding: 6px;
+		border-radius: 8px;
+		background: rgba(18, 16, 14, 0.92);
+		border: 1px solid #4a4438;
+	}
+
+	.dev-picker__btn {
+		cursor: pointer;
+		padding: 4px 10px;
+		border: 1px solid #2e2a24;
+		border-radius: 4px;
+		background: #1a1714;
+		color: rgba(236, 230, 216, 0.72);
+		font:
+			500 12px/1.2 'IBM Plex Mono',
+			monospace;
+	}
+
+	.dev-picker__btn--active {
+		border-color: #c4a24a;
+		color: #ece6d8;
+		background: #2e2a24;
+	}
+</style>

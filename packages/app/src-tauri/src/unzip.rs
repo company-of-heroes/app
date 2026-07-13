@@ -162,17 +162,22 @@ fn add_dir_to_zip<W: Write + io::Seek>(
 }
 
 #[tauri::command]
-pub async fn zip_directory(source: String) -> Result<Vec<u8>, String> {
+pub async fn zip_directory(source: String, subdir: Option<String>) -> Result<Vec<u8>, String> {
     let source_path = Path::new(&source);
-    if !source_path.is_dir() {
-        return Err(format!("Source directory not found: {source}"));
+    let zip_root = match subdir.as_deref() {
+        Some(name) => source_path.join(name),
+        None => source_path.to_path_buf(),
+    };
+
+    if !zip_root.is_dir() {
+        return Err(format!("Source directory not found: {}", zip_root.display()));
     }
 
     let buffer = Cursor::new(Vec::new());
     let mut zip = ZipWriter::new(buffer);
     let options = FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
-    add_dir_to_zip(&mut zip, source_path, source_path, options)?;
+    add_dir_to_zip(&mut zip, &zip_root, &zip_root, options)?;
     let buffer = zip.finish().map_err(|e| e.to_string())?;
 
     Ok(buffer.into_inner())

@@ -1,4 +1,14 @@
-import { BaseDirectory, exists, readDir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import {
+	BaseDirectory,
+	exists,
+	mkdir,
+	readDir,
+	readTextFile,
+	remove,
+	stat,
+	writeFile,
+	writeTextFile
+} from '@tauri-apps/plugin-fs';
 import { join, appDataDir } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
 import { pocketbase } from '$core/pocketbase';
@@ -19,6 +29,11 @@ type PublishResponse = {
 	updatedAt?: string;
 };
 
+type DefaultSourceHash = {
+	srcHash: string;
+	version?: string;
+};
+
 export abstract class Overlay {
 	baseDir = BaseDirectory.AppData;
 
@@ -28,11 +43,24 @@ export abstract class Overlay {
 	abstract zipUrl: string;
 
 	version?: string;
+	publishPath = 'dist';
+	sourcePath = 'src';
 
 	async register() {
 		const installed = await exists(this.path, { baseDir: this.baseDir });
-		if (!installed || (this.version && (await this.isOutdated()))) {
+		if (!installed) {
 			await this.install();
+			await this.saveDefaultSrcHash();
+			return;
+		}
+
+		if (this.version && (await this.isOutdated())) {
+			if (await this.hasCustomizedSource()) {
+				return;
+			}
+
+			await this.install();
+			await this.saveDefaultSrcHash();
 		}
 	}
 
@@ -58,6 +86,60 @@ export abstract class Overlay {
 		await unzip(this.zipUrl, path);
 	}
 
+	async overwriteWithLatest(options: { backup?: boolean } = {}) {
+		const backup = options.backup ?? true;
+		const installed = await exists(this.path, { baseDir: this.baseDir });
+		if (!installed) {
+			await this.install();
+			await this.saveDefaultSrcHash();
+			return { didBackup: false, backupPath: null as string | null };
+		}
+
+		let backupPath: string | null = null;
+		if (backup) {
+			const stamp = new Date().toISOString().replaceAll(':', '-');
+			backupPath = `${this.path}-backups/${stamp}`;
+			await mkdir(backupPath, { baseDir: this.baseDir, recursive: true });
+
+			// Do NOT zip the whole overlay directory. Users often have node_modules in there,
+			// which would make the backup huge and appear like "nothing happens".
+			const [srcZip, distZip] = await Promise.all([
+				this.zipContent(this.sourcePath),
+				this.zipContent(this.publishPath)
+			]);
+			await writeFile(`${backupPath}/src.zip`, srcZip, { baseDir: this.baseDir });
+			await writeFile(`${backupPath}/dist.zip`, distZip, { baseDir: this.baseDir });
+
+			// Optional: also persist the current overlay-version.json for quick inspection.
+			const versionFile = `${this.path}/overlay-version.json`;
+			if (await exists(versionFile, { baseDir: this.baseDir })) {
+				await writeTextFile(
+					`${backupPath}/overlay-version.json`,
+					await readTextFile(versionFile, { baseDir: this.baseDir }),
+					{ baseDir: this.baseDir }
+				);
+			}
+
+			// Also capture package.json for reproducibility.
+			const pkgFile = `${this.path}/package.json`;
+			if (await exists(pkgFile, { baseDir: this.baseDir })) {
+				await writeTextFile(
+					`${backupPath}/package.json`,
+					await readTextFile(pkgFile, { baseDir: this.baseDir }),
+					{ baseDir: this.baseDir }
+				);
+			}
+		}
+
+		// Remove the current overlay directory before re-installing.
+		// `recursive: true` is required for non-empty directories.
+		await remove(this.path, { baseDir: this.baseDir, recursive: true });
+		await this.install();
+		await this.saveDefaultSrcHash();
+
+		return { didBackup: backup, backupPath };
+	}
+
 	getFiles(subPath?: string) {
 		const path = subPath ? `${this.path}/${subPath}` : this.path;
 		return readDir(path, { baseDir: this.baseDir });
@@ -75,6 +157,10 @@ export abstract class Overlay {
 
 	async getPath() {
 		return join(await appDataDir(), this.path);
+	}
+
+	async getPublishDirPath() {
+		return join(await this.getPath(), this.publishPath);
 	}
 
 	getHostedUrl(userId: string) {
@@ -105,11 +191,117 @@ export abstract class Overlay {
 		}
 	}
 
-	async getLocalContentHash(): Promise<string> {
+	async zipContent(subdir?: string): Promise<Uint8Array> {
 		const sourcePath = await this.getPath();
-		const bytes = await invoke<number[]>('zip_directory', { source: sourcePath });
-		const digest = await crypto.subtle.digest('SHA-256', Uint8Array.from(bytes));
+		const bytes = await invoke<number[]>('zip_directory', {
+			source: sourcePath,
+			subdir: subdir ?? null
+		});
+		return Uint8Array.from(bytes);
+	}
+
+	async hashContent(subdir?: string): Promise<string> {
+		const bytes = await this.zipContent(subdir);
+		const digest = await crypto.subtle.digest('SHA-256', bytes);
 		return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+	}
+
+	async getLocalContentHash(): Promise<string> {
+		return this.hashContent(this.publishPath);
+	}
+
+	async getDefaultSrcHash(): Promise<DefaultSourceHash | null> {
+		const statePath = `${this.path}/.overlay-default-hash.json`;
+		if (!(await exists(statePath, { baseDir: this.baseDir }))) {
+			return null;
+		}
+
+		try {
+			const content = await readTextFile(statePath, { baseDir: this.baseDir });
+			return JSON.parse(content) as DefaultSourceHash;
+		} catch {
+			return null;
+		}
+	}
+
+	async saveDefaultSrcHash() {
+		const statePath = `${this.path}/.overlay-default-hash.json`;
+		await writeTextFile(
+			statePath,
+			JSON.stringify(
+				{
+					srcHash: await this.hashContent(this.sourcePath),
+					version: this.version
+				} satisfies DefaultSourceHash,
+				null,
+				2
+			),
+			{ baseDir: this.baseDir }
+		);
+	}
+
+	async hasCustomizedSource(): Promise<boolean> {
+		const defaultHash = await this.getDefaultSrcHash();
+		if (!defaultHash) {
+			return false;
+		}
+
+		const currentHash = await this.hashContent(this.sourcePath);
+		return currentHash !== defaultHash.srcHash;
+	}
+
+	async hasPendingUpdate(): Promise<boolean> {
+		if (!this.version || !(await this.isOutdated())) {
+			return false;
+		}
+
+		return this.hasCustomizedSource();
+	}
+
+	async hasDistBuild(): Promise<boolean> {
+		return exists(`${this.path}/${this.publishPath}/index.html`, { baseDir: this.baseDir });
+	}
+
+	async #latestMtime(relativeDir: string): Promise<number | null> {
+		const dirPath = `${this.path}/${relativeDir}`;
+		if (!(await exists(dirPath, { baseDir: this.baseDir }))) {
+			return null;
+		}
+
+		let latest = 0;
+
+		const walk = async (current: string) => {
+			const entries = await readDir(current, { baseDir: this.baseDir });
+			for (const entry of entries) {
+				const entryPath = `${current}/${entry.name}`;
+				if (entry.isDirectory) {
+					await walk(entryPath);
+					continue;
+				}
+
+				if (!entry.isFile) continue;
+
+				const info = await stat(entryPath, { baseDir: this.baseDir });
+				const mtime = info.mtime?.getTime() ?? 0;
+				latest = Math.max(latest, mtime);
+			}
+		};
+
+		await walk(dirPath);
+		return latest || null;
+	}
+
+	async isDistStale(): Promise<boolean> {
+		const [srcMtime, distMtime] = await Promise.all([
+			this.#latestMtime(this.sourcePath),
+			this.#latestMtime(this.publishPath)
+		]);
+
+		if (srcMtime === null || distMtime === null) {
+			return false;
+		}
+
+		return srcMtime > distMtime;
 	}
 
 	async getPublishState(): Promise<PublishState | null> {
@@ -142,6 +334,10 @@ export abstract class Overlay {
 			return false;
 		}
 
+		if (!(await this.hasDistBuild())) {
+			return false;
+		}
+
 		const contentHash = await this.getLocalContentHash();
 		return contentHash !== publishState.contentHash;
 	}
@@ -164,6 +360,10 @@ export abstract class Overlay {
 			return false;
 		}
 
+		if (!(await this.hasDistBuild())) {
+			return false;
+		}
+
 		await this.publish({ silent: true });
 		return true;
 	}
@@ -173,12 +373,15 @@ export abstract class Overlay {
 			throw new Error('You must be logged in to publish an overlay.');
 		}
 
-		const sourcePath = await this.getPath();
-		const bytes = await invoke<number[]>('zip_directory', { source: sourcePath });
+		if (!(await this.hasDistBuild())) {
+			throw new Error('No build found. Run npm run build in the overlay folder first.');
+		}
+
+		const bytes = await this.zipContent(this.publishPath);
 		const formData = new FormData();
 		formData.append(
 			'bundle',
-			new Blob([Uint8Array.from(bytes)], { type: 'application/zip' }),
+			new Blob([bytes], { type: 'application/zip' }),
 			'overlay.zip'
 		);
 

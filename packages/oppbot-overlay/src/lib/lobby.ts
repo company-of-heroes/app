@@ -17,6 +17,16 @@ export function getRankImage(type: number, player: Player): string {
 	return `./images/ranks/${prefix}_${stat.ranklevel.toString().padStart(2, '0')}.png`;
 }
 
+export function getFlagImage(country: string): string {
+	return `https://flagsapi.com/${country.toUpperCase()}/flat/64.png`;
+}
+
+export function formatRankLevel(type: number, player: Player): string {
+	const stat = getLeaderboardStat(type, player);
+	if (!stat || stat.ranklevel < 1) return '—';
+	return String(stat.ranklevel);
+}
+
 export function formatRanking(ranking: number | undefined): string {
 	if (!ranking || ranking < 1) return '—';
 	return `#${ranking.toLocaleString()}`;

@@ -13,7 +13,7 @@ cpSync(distDir, targetDir, { recursive: true });
 
 writeFileSync(
 	join(targetDir, 'overlay-version.json'),
-	JSON.stringify({ version: '3' }, null, 2),
+	JSON.stringify({ version: '7' }, null, 2),
 	'utf8'
 );
 

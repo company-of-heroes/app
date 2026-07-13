@@ -70,3 +70,5 @@ export function connectLobby(userId: string, onLobby: (data: LobbyData | null) =
 		pb.collection('lobbies_live').unsubscribe('*');
 	};
 }
+
+export { getDevScenarioFromUrl, DEV_SCENARIOS, type DevScenario } from './test-data';
