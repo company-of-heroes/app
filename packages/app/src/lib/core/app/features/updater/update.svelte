@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { openUrl } from '@tauri-apps/plugin-opener';
+	import { downloadDir, join } from '@tauri-apps/api/path';
+	import { openPath, openUrl } from '@tauri-apps/plugin-opener';
+	import { exit } from '@tauri-apps/plugin-process';
+	import { download } from '@tauri-apps/plugin-upload';
 	import { Button } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -8,23 +11,44 @@
 		currentVersion: string;
 		latestVersion: string;
 		downloadUrl?: string;
+		downloadFileName?: string;
 		releaseUrl?: string;
-		onBeforeDownload?: () => Promise<void> | void;
+		onPrepare?: () => Promise<void>;
 	} & HTMLAttributes<HTMLDivElement>;
 
 	let {
 		currentVersion,
 		latestVersion,
 		downloadUrl,
+		downloadFileName,
 		releaseUrl,
-		onBeforeDownload,
+		onPrepare,
 		...restProps
 	}: Props = $props();
 
+	let loading = $state(false);
+	let error = $state<string | null>(null);
+
 	async function onDownload() {
-		await onBeforeDownload?.();
-		if (downloadUrl) await openUrl(downloadUrl);
-		else if (releaseUrl) await openUrl(releaseUrl);
+		if (!downloadUrl) return;
+
+		loading = true;
+		error = null;
+
+		try {
+			await onPrepare?.();
+
+			const fileName =
+				downloadFileName ?? `coh-companion-${latestVersion}-setup.exe`;
+			const filePath = await join(await downloadDir(), fileName);
+
+			await download(downloadUrl, filePath);
+			await openPath(filePath);
+			await exit(0);
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to download update.';
+			loading = false;
+		}
 	}
 
 	async function onOpenRelease() {
@@ -39,19 +63,22 @@
 		You are currently on <span class="font-semibold text-white">{currentVersion}</span>.
 	</p>
 	<p class="text-secondary-400 text-sm">
-		Before downloading, the app will back up your settings so you can safely install over the
-		existing version.
+		The app will back up your settings, download the installer in the background, close itself,
+		and launch the installer when the download finishes.
 	</p>
 
+	{#if error}
+		<p class="text-destructive text-sm">{error}</p>
+	{/if}
+
 	<div class="flex flex-wrap gap-2">
-		<Button type="button" onclick={onDownload}>
-			{downloadUrl ? 'Download update' : 'Open release'}
+		<Button type="button" bind:loading onclick={onDownload} disabled={!downloadUrl}>
+			{loading ? 'Downloading update...' : 'Download and install'}
 		</Button>
 		{#if releaseUrl}
-			<Button type="button" variant="secondary" onclick={onOpenRelease}>
+			<Button type="button" variant="secondary" onclick={onOpenRelease} disabled={loading}>
 				View release notes
 			</Button>
 		{/if}
 	</div>
 </div>
-

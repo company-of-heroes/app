@@ -14,6 +14,28 @@ function getServiceToken() {
 	return $os.getenv('SMURF_SERVICE_TOKEN') || '';
 }
 
+function readRequestJsonBody(e) {
+	try {
+		const raw = toString(e.request.body);
+		if (raw) {
+			return JSON.parse(raw);
+		}
+	} catch (error) {
+		console.log('[smurf_watch] failed to parse raw request body', String(error));
+	}
+
+	try {
+		const body = e.requestInfo()?.body;
+		if (body && typeof body === 'object') {
+			return body;
+		}
+	} catch (error) {
+		console.log('[smurf_watch] failed to read requestInfo body', String(error));
+	}
+
+	return {};
+}
+
 function isServiceRequest(e) {
 	const token = getServiceToken();
 	if (!token) {
@@ -147,8 +169,7 @@ function enqueueLobbyLiveRecord(e) {
 }
 
 function handleEnqueue(e) {
-	const bodyInfo = $apis.requestInfo(e);
-	const body = bodyInfo?.body || {};
+	const body = readRequestJsonBody(e);
 	const lenderSteamId = body.lender_steam_id || body.lenderSteamId || null;
 
 	if (lenderSteamId && !isServiceRequest(e) && !e.auth?.id) {
@@ -353,11 +374,11 @@ function handleWorkerPatch(e) {
 		return e.json(400, { message: 'id is required' });
 	}
 
-	let body = {};
-	try {
-		body = $apis.requestInfo(e).body || {};
-	} catch {
-		body = {};
+	const body = readRequestJsonBody(e);
+
+	if (Object.keys(body).length === 0) {
+		console.log('[smurf_watch] worker patch received empty body', { id });
+		return e.json(400, { message: 'Request body is required' });
 	}
 
 	let record;

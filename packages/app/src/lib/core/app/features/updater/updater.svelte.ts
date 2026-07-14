@@ -27,10 +27,8 @@ function normalizeVersion(version: string): string | null {
 }
 
 /**
- * Surfaces the current app version and shows the changelog after an update.
- *
- * Updates themselves are handled outside the app (Microsoft Store), so this
- * feature no longer checks for or downloads new versions.
+ * Checks GitHub for new releases, downloads the installer in the background,
+ * and shows the changelog after an update.
  */
 export class Updater extends Feature<UpdaterSettings> {
 	name = 'updater';
@@ -39,6 +37,7 @@ export class Updater extends Feature<UpdaterSettings> {
 	currentVersion = $state<string>('');
 	latestVersion = $state<string>('');
 	downloadUrl = $state<string | undefined>(undefined);
+	downloadFileName = $state<string | undefined>(undefined);
 	releaseUrl = $state<string | undefined>(undefined);
 
 	get currentVersionFormatted() {
@@ -58,6 +57,7 @@ export class Updater extends Feature<UpdaterSettings> {
 	disable() {
 		this.hasUpdate = false;
 		this.downloadUrl = undefined;
+		this.downloadFileName = undefined;
 		this.releaseUrl = undefined;
 	}
 
@@ -93,15 +93,13 @@ export class Updater extends Feature<UpdaterSettings> {
 			if (isNewer) {
 				const assets = release.assets ?? [];
 				const pick = (pattern: RegExp) =>
-					assets.find((a) => pattern.test(a.name ?? '') && a.browser_download_url)
-						?.browser_download_url;
+					assets.find((a) => pattern.test(a.name ?? '') && a.browser_download_url);
 
-				this.downloadUrl =
-					pick(/setup\.exe$/i) ??
-					pick(/\.exe$/i) ??
-					pick(/\.msi$/i) ??
-					assets[0]?.browser_download_url ??
-					undefined;
+				const asset =
+					pick(/setup\.exe$/i) ?? pick(/\.exe$/i) ?? pick(/\.msi$/i) ?? assets[0];
+
+				this.downloadUrl = asset?.browser_download_url;
+				this.downloadFileName = asset?.name;
 
 				this.hasUpdate = true;
 				this.openDialog();
@@ -164,8 +162,9 @@ export class Updater extends Feature<UpdaterSettings> {
 				currentVersion: this.currentVersion,
 				latestVersion: this.latestVersion,
 				downloadUrl: this.downloadUrl,
+				downloadFileName: this.downloadFileName,
 				releaseUrl: this.releaseUrl,
-				onBeforeDownload: async () => this.prepareForUpdate()
+				onPrepare: async () => this.prepareForUpdate()
 			}
 		});
 		app.modal.open();
