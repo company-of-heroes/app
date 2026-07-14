@@ -1,16 +1,18 @@
 <script lang="ts">
-	import CardForm from '../components/CardForm.svelte';
-	import ShareablePlayerCard from '../components/ShareablePlayerCard.svelte';
-	import CardActions from '../components/CardActions.svelte';
+	import CardForm from '$lib/components/CardForm.svelte';
+	import ShareablePlayerCard from '$lib/components/ShareablePlayerCard.svelte';
+	import CardActions from '$lib/components/CardActions.svelte';
 	import { loadPlayerCard, playerCardState, resetPlayerCard } from '$lib/player-card.svelte';
-	import { parseCardSteamId, routerState } from '$lib/router.svelte';
+
+	type Props = {
+		steamId?: string;
+	};
+
+	let { steamId }: Props = $props();
 
 	let cardElement = $state<HTMLElement | null>(null);
 
-	const steamIdFromRoute = $derived(parseCardSteamId(routerState.pathname));
-
 	$effect(() => {
-		const steamId = steamIdFromRoute;
 		if (!steamId) {
 			resetPlayerCard();
 			return;
@@ -28,7 +30,7 @@
 		</p>
 	</div>
 
-	<CardForm initialSteamId={steamIdFromRoute ?? ''} />
+	<CardForm initialSteamId={steamId ?? ''} />
 
 	{#if playerCardState.loading}
 		<div class="mt-10 flex flex-col items-center gap-4">

@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { cn, interactive } from '$lib/cn';
-	import { isSteamId, navigate } from '$lib/router.svelte';
+	import { isSteamId } from '$lib/steam-id';
 
 	type Props = {
 		initialSteamId?: string;
@@ -25,7 +26,7 @@
 		}
 
 		validationError = null;
-		navigate(`/card/${trimmed}`);
+		void goto(`/card/${trimmed}`);
 	}
 </script>
 

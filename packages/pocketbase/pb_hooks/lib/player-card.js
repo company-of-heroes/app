@@ -58,11 +58,11 @@ function isRankedLeaderboard(leaderboardId) {
 function applyCors(e) {
 	const origin = e.request.header.get('Origin');
 	if (origin && ALLOWED_ORIGINS.includes(origin)) {
-		e.response.header().Set('Access-Control-Allow-Origin', origin);
-		e.response.header().Set('Vary', 'Origin');
+		e.response.header().set('Access-Control-Allow-Origin', origin);
+		e.response.header().set('Vary', 'Origin');
 	}
-	e.response.header().Set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-	e.response.header().Set('Access-Control-Allow-Headers', 'Content-Type');
+	e.response.header().set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+	e.response.header().set('Access-Control-Allow-Headers', 'Content-Type');
 }
 
 function jsonWithCors(e, status, body) {
