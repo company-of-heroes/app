@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.2.4
+
+- fix worker
+
 ## 0.2.3
 
 - fix; clicking 'view details' from match history widget results into a crash
