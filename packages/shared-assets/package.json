@@ -1,0 +1,10 @@
+{
+	"name": "@company-of-heroes/shared-assets",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"exports": {
+		"./logo": "./logo-transparent-bg.png",
+		"./screens/*": "./screens/*"
+	}
+}

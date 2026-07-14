@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"strict": true,
+		"skipLibCheck": true,
+		"noEmit": true,
+		"types": ["svelte", "vite/client"],
+		"paths": {
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"],
+			"@assets/*": ["../shared-assets/*"]
+		}
+	},
+	"include": ["src/**/*.ts", "src/**/*.svelte", "src/**/*.svelte.ts"]
+}

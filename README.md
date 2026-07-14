@@ -105,13 +105,13 @@ Auto-updates with changelog · Account sync · Discord, Twitch & GitHub in the s
     <td width="50%" align="center">
 
 **Dashboard**  
-![Dashboard](packages/app/static/screens/dashboard.png)
+![Dashboard](packages/shared-assets/screens/dashboard.png)
 
 </td>
     <td width="50%" align="center">
 
 **Replays**  
-![Replays](packages/app/static/screens/replays.png)
+![Replays](packages/shared-assets/screens/replays.png)
 
 </td>
   </tr>
@@ -119,13 +119,13 @@ Auto-updates with changelog · Account sync · Discord, Twitch & GitHub in the s
     <td width="50%" align="center">
 
 **Match history**  
-![Match history](packages/app/static/screens/history.png)
+![Match history](packages/shared-assets/screens/history.png)
 
 </td>
     <td width="50%" align="center">
 
 **Keybindings**  
-![Keybindings](packages/app/static/screens/keybindings.png)
+![Keybindings](packages/shared-assets/screens/keybindings.png)
 
 </td>
   </tr>
@@ -133,13 +133,13 @@ Auto-updates with changelog · Account sync · Discord, Twitch & GitHub in the s
     <td width="50%" align="center">
 
 **Leaderboards**  
-![Leaderboards](packages/app/static/screens/leaderboards.png)
+![Leaderboards](packages/shared-assets/screens/leaderboards.png)
 
 </td>
     <td width="50%" align="center">
 
 **Players**  
-![Players](packages/app/static/screens/players.png)
+![Players](packages/shared-assets/screens/players.png)
 
 </td>
   </tr>
@@ -147,7 +147,7 @@ Auto-updates with changelog · Account sync · Discord, Twitch & GitHub in the s
     <td colspan="2" align="center">
 
 **Twitch**  
-![Twitch](packages/app/static/screens/twitch.png)
+![Twitch](packages/shared-assets/screens/twitch.png)
 
 </td>
   </tr>

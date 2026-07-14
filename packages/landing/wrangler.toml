@@ -1,0 +1,3 @@
+name = "coh1stats-landing"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-07-10"

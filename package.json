@@ -10,6 +10,8 @@
 		"overlays:dev": "pnpm --filter @company-of-heroes/oppbot-overlay dev",
 		"overlays:build": "pnpm --filter @company-of-heroes/oppbot-overlay build",
 		"oppbot:build": "pnpm --filter @company-of-heroes/oppbot-overlay build",
+		"landing:dev": "pnpm --filter @company-of-heroes/landing dev",
+		"landing:build": "pnpm --filter @company-of-heroes/landing build",
 		"check": "pnpm -r check",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",

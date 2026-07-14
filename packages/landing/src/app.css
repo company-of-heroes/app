@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+@import '@fontsource/nunito-sans/400.css';
+@import '@fontsource/nunito-sans/600.css';
+@import '@fontsource/nunito-sans/800.css';
+
+@theme {
+	--default-font-family: 'Nunito Sans', system-ui, sans-serif;
+	--font-heading: 'Nunito Sans', system-ui, sans-serif;
+	--font-sans: 'Nunito Sans', system-ui, sans-serif;
+
+	--color-primary: oklch(0.88 0.11 80);
+	--color-primary-50: oklch(0.99 0.03 80);
+	--color-primary-100: oklch(0.96 0.06 80);
+	--color-primary-200: oklch(0.92 0.09 80);
+	--color-primary-300: oklch(0.88 0.11 80);
+	--color-primary-400: oklch(0.84 0.13 80);
+	--color-primary-500: oklch(0.87 0.15 80);
+	--color-primary-600: oklch(0.78 0.14 80);
+	--color-primary-700: oklch(0.7 0.13 80);
+	--color-primary-800: oklch(0.62 0.11 80);
+	--color-primary-900: oklch(0.54 0.1 80);
+	--color-primary-950: oklch(0.46 0.09 80);
+
+	--color-secondary: oklch(57% 0.006 285);
+	--color-secondary-50: oklch(97% 0.001 285);
+	--color-secondary-100: oklch(92% 0.002 285);
+	--color-secondary-200: oklch(84% 0.003 285);
+	--color-secondary-300: oklch(75% 0.004 285);
+	--color-secondary-400: oklch(66% 0.005 285);
+	--color-secondary-500: oklch(57% 0.006 285);
+	--color-secondary-600: oklch(49% 0.005 285);
+	--color-secondary-700: oklch(41% 0.004 285);
+	--color-secondary-800: oklch(35% 0.004 285);
+	--color-secondary-900: oklch(32.5% 0.004 285);
+	--color-secondary-950: oklch(29% 0.003 285);
+
+	--color-gray-950: oklch(18% 0.003 285);
+
+	--shadow-xl: 0 20px 40px oklch(0% 0 0 / 0.5), 0 8px 16px oklch(0% 0 0 / 0.35);
+}
+
+html {
+	font-size: 18px;
+	scroll-behavior: smooth;
+}
+
+html,
+body {
+	margin: 0;
+	min-height: 100%;
+	background-color: var(--color-secondary-950);
+	color: white;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-heading);
+	font-weight: 800;
+}
