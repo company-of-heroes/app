@@ -13,6 +13,7 @@ mod process_check;
 mod replay_parser;
 mod unzip;
 mod window;
+mod ws_server;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -71,6 +72,8 @@ pub fn run() {
             #[cfg(target_os = "windows")]
             apply_acrylic(&window, Some((0, 0, 0, 0)))
                 .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+
+            ws_server::spawn_ws_server();
 
             coh_chat::start_listener(app.handle());
 

@@ -199,6 +199,7 @@ export class Boot {
 
 			// Services
 			this.phase = 'services';
+			void app.socket.start();
 
 			window.addEventListener('beforeunload', () => {
 				void settings.flush();
