@@ -143,18 +143,31 @@ function parseHttpJson(response, context) {
 	}
 }
 
+// Relic's TLS cert uses legacy CN only; Go's $http.send rejects it (same as Tauri acceptInvalidCerts).
+function fetchRelicJsonInsecure(url, steamId) {
+	try {
+		const raw = toString($os.cmd('python3', `${__hooks}/lib/fetch-insecure.py`, url).output());
+		if (!raw) {
+			throw new Error('Empty HTTP body');
+		}
+		return JSON.parse(raw);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		logError('Player card Relic fetch failed', {
+			upstream: 'relic',
+			steamId,
+			error: message
+		});
+		throw new Error(`Relic fetch failed: ${message}`);
+	}
+}
+
 function fetchRelicProfileBySteamId(steamId) {
 	const url =
 		`${RELIC_API_BASE}/community/leaderboard/getpersonalstat?title=coh1&profile_names=` +
 		encodeURIComponent(JSON.stringify([`/steam/${steamId}`]));
 
-	const response = $http.send({
-		url,
-		method: 'GET',
-		timeout: 15
-	});
-
-	const data = parseHttpJson(response, { upstream: 'relic', steamId });
+	const data = fetchRelicJsonInsecure(url, steamId);
 	const members = data?.statGroups?.[0]?.members ?? [];
 	const member = members.find((entry) => entry?.name === `/steam/${steamId}`);
 
