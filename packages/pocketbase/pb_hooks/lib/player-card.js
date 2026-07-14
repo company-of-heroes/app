@@ -75,11 +75,15 @@ function parseHttpJson(response) {
 		throw new Error('Empty HTTP response');
 	}
 
-	if (response.jsonBody != null) {
-		return response.jsonBody;
+	if (response.statusCode < 200 || response.statusCode >= 300) {
+		throw new Error(`Upstream HTTP ${response.statusCode}`);
 	}
 
-	const raw = response.rawBody || response.body || '';
+	if (response.json != null) {
+		return response.json;
+	}
+
+	const raw = response.raw || '';
 	if (!raw) {
 		throw new Error('Empty HTTP body');
 	}
@@ -111,7 +115,11 @@ function fetchRelicProfileBySteamId(steamId) {
 	);
 
 	return {
-		...member,
+		profile_id: member.profile_id,
+		alias: member.alias,
+		country: member.country,
+		level: member.level,
+		personal_statgroup_id: member.personal_statgroup_id,
 		leaderboardStats
 	};
 }
@@ -191,7 +199,13 @@ function handleGet(e) {
 			stats: selectCardStats(relicProfile.leaderboardStats)
 		});
 	} catch (error) {
-		console.error('[player-card] failed:', error);
+		const message = error instanceof Error ? error.message : String(error);
+		console.error('[player-card] failed:', message);
+
+		if (message.includes('STEAM_API_KEY')) {
+			return jsonWithCors(e, 503, { message: 'Player card service is not configured' });
+		}
+
 		return jsonWithCors(e, 500, { message: 'Failed to load player card' });
 	}
 }
