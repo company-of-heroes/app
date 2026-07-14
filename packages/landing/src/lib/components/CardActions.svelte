@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PlayerCardData } from '$lib/player-card.svelte';
 	import { cn, interactive } from '$lib/cn';
+	import { inlineImagesForExport } from '$lib/inline-images';
 	import { SITE_URL } from '$lib/urls';
 	import DownloadSimpleIcon from 'phosphor-svelte/lib/DownloadSimple';
 	import LinkIcon from 'phosphor-svelte/lib/Link';
@@ -29,16 +30,21 @@
 
 		try {
 			const { toPng } = await import('html-to-image');
-			const dataUrl = await toPng(cardElement, {
-				pixelRatio: 2,
-				cacheBust: true
-			});
+			const restoreImages = await inlineImagesForExport(cardElement);
 
-			const link = document.createElement('a');
-			link.download = `${data.alias.replace(/[^\w.-]+/g, '_')}-coh-card.png`;
-			link.href = dataUrl;
-			link.click();
-			statusMessage = 'Card downloaded.';
+			try {
+				const dataUrl = await toPng(cardElement, {
+					pixelRatio: 2
+				});
+
+				const link = document.createElement('a');
+				link.download = `${data.alias.replace(/[^\w.-]+/g, '_')}-coh-card.png`;
+				link.href = dataUrl;
+				link.click();
+				statusMessage = 'Card downloaded.';
+			} finally {
+				restoreImages();
+			}
 		} catch {
 			statusMessage = 'Could not export the card image.';
 		} finally {

@@ -2,6 +2,7 @@
 	import logo from '@assets/logo-transparent-bg.png';
 	import type { PlayerCardData, PlayerCardStat } from '$lib/player-card.svelte';
 	import { getRankImageByLeaderboardId } from '$lib/ranks';
+	import { flagImageUrl, proxiedImageUrl } from '$lib/proxy-image';
 	import { SITE_URL } from '$lib/urls';
 
 	type Props = {
@@ -12,13 +13,6 @@
 	let { data, ref = $bindable(null) }: Props = $props();
 
 	const cardUrl = $derived(`${SITE_URL}/card/${data.steamId}`);
-
-	function flagUrl(country: string | null) {
-		if (!country) {
-			return null;
-		}
-		return `https://flagsapi.com/${country.toUpperCase()}/shiny/64.png`;
-	}
 </script>
 
 <div
@@ -38,15 +32,15 @@
 
 	<div class="flex flex-col gap-6 px-6 py-6 sm:flex-row sm:items-center">
 		<img
-			src={data.avatarUrl}
+			src={proxiedImageUrl(data.avatarUrl)}
 			alt={data.alias}
 			class="border-secondary-700 mx-auto size-28 shrink-0 rounded-2xl border object-cover sm:mx-0 sm:size-32"
 		/>
 		<div class="min-w-0 flex-1 text-center sm:text-left">
 			<div class="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
-				{#if flagUrl(data.country)}
+				{#if flagImageUrl(data.country)}
 					<img
-						src={flagUrl(data.country)!}
+						src={flagImageUrl(data.country)!}
 						alt={data.country ?? ''}
 						class="h-5 w-auto rounded-[2px]"
 					/>
