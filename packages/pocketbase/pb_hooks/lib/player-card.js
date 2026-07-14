@@ -55,6 +55,43 @@ function isRankedLeaderboard(leaderboardId) {
 	return leaderboardId >= RANKED_LEADERBOARD_MIN && leaderboardId <= RANKED_LEADERBOARD_MAX;
 }
 
+function logInfo(message, attrs) {
+	const pairs = ['source', 'player-card'];
+	appendLogAttrs(pairs, attrs);
+	$app.logger().info(message, ...pairs);
+}
+
+function logWarn(message, attrs) {
+	const pairs = ['source', 'player-card'];
+	appendLogAttrs(pairs, attrs);
+	$app.logger().warn(message, ...pairs);
+}
+
+function logError(message, attrs) {
+	const pairs = ['source', 'player-card'];
+	appendLogAttrs(pairs, attrs);
+	$app.logger().error(message, ...pairs);
+}
+
+function appendLogAttrs(pairs, attrs) {
+	if (!attrs) {
+		return;
+	}
+
+	for (const key in attrs) {
+		if (!Object.prototype.hasOwnProperty.call(attrs, key)) {
+			continue;
+		}
+
+		const value = attrs[key];
+		if (value == null) {
+			continue;
+		}
+
+		pairs.push(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+	}
+}
+
 function applyCors(e) {
 	const origin = e.request.header.get('Origin');
 	if (origin && ALLOWED_ORIGINS.includes(origin)) {
@@ -70,12 +107,17 @@ function jsonWithCors(e, status, body) {
 	return e.json(status, body);
 }
 
-function parseHttpJson(response) {
+function parseHttpJson(response, context) {
 	if (!response) {
 		throw new Error('Empty HTTP response');
 	}
 
 	if (response.statusCode < 200 || response.statusCode >= 300) {
+		logWarn('Player card upstream HTTP error', {
+			...context,
+			statusCode: response.statusCode,
+			rawPreview: (response.raw || '').slice(0, 200)
+		});
 		throw new Error(`Upstream HTTP ${response.statusCode}`);
 	}
 
@@ -85,10 +127,20 @@ function parseHttpJson(response) {
 
 	const raw = response.raw || '';
 	if (!raw) {
+		logWarn('Player card upstream returned empty body', context);
 		throw new Error('Empty HTTP body');
 	}
 
-	return JSON.parse(raw);
+	try {
+		return JSON.parse(raw);
+	} catch (error) {
+		logError('Player card failed to parse upstream JSON', {
+			...context,
+			error: error instanceof Error ? error.message : String(error),
+			rawPreview: raw.slice(0, 200)
+		});
+		throw error;
+	}
 }
 
 function fetchRelicProfileBySteamId(steamId) {
@@ -102,7 +154,7 @@ function fetchRelicProfileBySteamId(steamId) {
 		timeout: 15
 	});
 
-	const data = parseHttpJson(response);
+	const data = parseHttpJson(response, { upstream: 'relic', steamId });
 	const members = data?.statGroups?.[0]?.members ?? [];
 	const member = members.find((entry) => entry?.name === `/steam/${steamId}`);
 
@@ -127,6 +179,7 @@ function fetchRelicProfileBySteamId(steamId) {
 function fetchSteamProfile(steamId) {
 	const apiKey = $os.getenv('STEAM_API_KEY');
 	if (!apiKey) {
+		logError('STEAM_API_KEY is not configured', { steamId });
 		throw new Error('STEAM_API_KEY is not configured');
 	}
 
@@ -140,7 +193,7 @@ function fetchSteamProfile(steamId) {
 		timeout: 15
 	});
 
-	const data = parseHttpJson(response);
+	const data = parseHttpJson(response, { upstream: 'steam', steamId });
 	return data?.response?.players?.[0] ?? null;
 }
 
@@ -173,21 +226,37 @@ function handleOptions(e) {
 
 function handleGet(e) {
 	const steamId = e.request.pathValue('steamId');
+	const origin = e.request.header.get('Origin') || 'none';
+
+	logInfo('Player card request', { steamId, origin });
 
 	if (!steamId || !STEAM_ID_REGEX.test(steamId)) {
+		logWarn('Player card invalid steamId', { steamId });
 		return jsonWithCors(e, 400, { message: 'steamId must be a 17-digit SteamID64' });
 	}
 
 	try {
 		const relicProfile = fetchRelicProfileBySteamId(steamId);
 		if (!relicProfile) {
+			logWarn('Player card Relic profile not found', { steamId });
 			return jsonWithCors(e, 404, { message: 'Player not found' });
 		}
 
 		const steamProfile = fetchSteamProfile(steamId);
 		if (!steamProfile) {
+			logWarn('Player card Steam profile not found', {
+				steamId,
+				profileId: relicProfile.profile_id
+			});
 			return jsonWithCors(e, 404, { message: 'Player not found' });
 		}
+
+		logInfo('Player card loaded', {
+			steamId,
+			profileId: relicProfile.profile_id,
+			alias: relicProfile.alias,
+			statCount: relicProfile.leaderboardStats.length
+		});
 
 		return jsonWithCors(e, 200, {
 			steamId,
@@ -200,7 +269,7 @@ function handleGet(e) {
 		});
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
-		console.error('[player-card] failed:', message);
+		logError('Failed to load player card', { steamId, error: message });
 
 		if (message.includes('STEAM_API_KEY')) {
 			return jsonWithCors(e, 503, { message: 'Player card service is not configured' });
