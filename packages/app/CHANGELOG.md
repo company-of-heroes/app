@@ -1,5 +1,9 @@
 # @company-of-heroes/app
 
+## 0.52.6
+
+- fix; bring back the websocket events, that were removed in a previous version
+
 ## 0.52.5
 
 - feat; add markdown support in notification popup
