@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.3.1
+
+- feat; share PocketBase and API client logic in @company-of-heroes/api
+
 ## 0.3.0
 
 - enhance; share the same player profile UI components across the app and website

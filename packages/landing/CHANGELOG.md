@@ -1,5 +1,13 @@
 # @company-of-heroes/landing
 
+## 1.5.1
+
+- fix; open language and account header menus reliably without bits-ui portal races
+- enhance; mention privacy, no PC scanning, open source, and Authenticode signing on the home hero
+- feat; add optional PayPal donations section and header link on the homepage
+- fix; drop match history as a separate marketing feature now that it lives under replays
+- feat; share PocketBase and API client logic in @company-of-heroes/api
+
 ## 1.5.0
 
 - fix; update the header login state immediately after signing in without a manual refresh

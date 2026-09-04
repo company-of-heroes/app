@@ -1,6 +1,6 @@
 [package]
 name = "fknoobscoh"
-version = "0.62.0"
+version = "0.63.0"
 description = "Company of Heroes - Companion app"
 authors = ["Code IT"]
 edition = "2021"

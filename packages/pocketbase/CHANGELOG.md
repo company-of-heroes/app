@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.9.1
+
+- feat; management overview to browse, hide, and delete fair-play screenshots
+
 ## 0.9.0
 
 - enhance; share the same player profile UI components across the app and website
