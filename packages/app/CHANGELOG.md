@@ -1,5 +1,12 @@
 # @company-of-heroes/app
 
+## 0.63.0
+
+- feat; management overview to browse, hide, and delete fair-play screenshots
+- enhance; management sidebar with separate admin pages
+- feat; ask once to enable fair-play all-chat announce
+- feat; share PocketBase and API client logic in @company-of-heroes/api
+
 ## 0.62.0
 
 - fix; install and restart automatically once an update finishes downloading
