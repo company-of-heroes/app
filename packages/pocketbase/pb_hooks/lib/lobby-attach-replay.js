@@ -288,6 +288,106 @@ function storedReplaySize(lobby) {
 	}
 }
 
+/**
+ * Fields non-owners must not change via the legacy collection update path
+ * (older app clients attach replay with PATCH /api/collections/lobbies/...).
+ */
+const NON_OWNER_LOCKED_FIELDS = [
+	'user',
+	'isRanked',
+	'sessionId',
+	'title',
+	'map',
+	'players',
+	'result',
+	'needsResult',
+	'hasReplay',
+	'likeCount',
+	'downloadCount',
+	'commentCount',
+	'durationSeconds',
+	'avgElo',
+	'memberReplay',
+	'lobbyPlayers',
+	'playerProfileIdsCsv'
+];
+
+function uploadedReplaySize(e) {
+	let files;
+	try {
+		files = e.findUploadedFiles('replay');
+	} catch {
+		return 0;
+	}
+
+	if (!files || !files.length) {
+		return 0;
+	}
+
+	const uploaded = files[0];
+	const declared = Number(uploaded.size ?? uploaded.Size);
+	if (Number.isFinite(declared) && declared > 0) {
+		return declared;
+	}
+
+	const reader = uploaded.reader.open();
+	try {
+		return byteSize(toBytes(reader));
+	} finally {
+		reader.close();
+	}
+}
+
+function restoreLockedFields(record, fieldNames) {
+	const original = record.original();
+	for (let i = 0; i < fieldNames.length; i++) {
+		const name = fieldNames[i];
+		record.set(name, original.get(name));
+	}
+}
+
+/**
+ * Back-compat for older apps that PATCH lobbies with a replay file instead of
+ * POST /attach-replay. Widened updateRule lets the request through; this guard
+ * keeps non-owners to larger-replay attach only.
+ */
+function guardLegacyCollectionUpdate(e) {
+	if (typeof e.hasSuperuserAuth === 'function' && e.hasSuperuserAuth()) {
+		e.next();
+		return;
+	}
+
+	if (!e.auth || !e.auth.id) {
+		throw new ForbiddenError('Sign in to update a match.');
+	}
+
+	const original = e.record.original();
+	const ownerId = relationId(original.get('user'));
+	const isOwner = !!(ownerId && ownerId === String(e.auth.id));
+	const uploadSize = uploadedReplaySize(e);
+
+	if (!isOwner) {
+		if (!authIsParticipant(e.auth, original)) {
+			throw new ForbiddenError('Only match participants can update this match.');
+		}
+
+		if (!uploadSize) {
+			throw new ForbiddenError('Only the match owner can update this match.');
+		}
+
+		restoreLockedFields(e.record, NON_OWNER_LOCKED_FIELDS);
+	}
+
+	if (uploadSize > 0) {
+		const storedSize = storedReplaySize(original);
+		if (uploadSize <= storedSize) {
+			e.record.set('replay', original.get('replay'));
+		}
+	}
+
+	e.next();
+}
+
 function handleAttach(e) {
 	if (!e.auth || !e.auth.id) {
 		return jsonNoStore(e, 401, { message: 'Sign in to attach a replay.' });
@@ -404,5 +504,6 @@ function handleAttach(e) {
 
 module.exports = {
 	handleOptions,
-	handleAttach
+	handleAttach,
+	guardLegacyCollectionUpdate
 };

@@ -14,3 +14,9 @@ routerAdd(
 	},
 	$apis.requireAuth('users')
 );
+
+// Older clients attach temp.rec via collection update; keep that path working
+// for match participants (see guardLegacyCollectionUpdate).
+onRecordUpdateRequest((e) => {
+	require(`${__hooks}/lib/lobby-attach-replay.js`).guardLegacyCollectionUpdate(e);
+}, 'lobbies');
