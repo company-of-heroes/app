@@ -1,5 +1,9 @@
 # @company-of-heroes/api
 
+## 0.2.1
+
+- fix; steam and app website login no longer fail with an invalid or expired login link
+
 ## 0.2.0
 
 - feat; edit account profile and verify email on the website and in the app

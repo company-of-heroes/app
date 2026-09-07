@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.1.4
+
+- fix; steam and app website login no longer fail with an invalid or expired login link
+
 ## 0.1.3
 
 - feat; edit account profile and verify email on the website and in the app

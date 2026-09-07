@@ -1,5 +1,9 @@
 # @company-of-heroes/landing
 
+## 1.6.1
+
+- fix; steam and app website login no longer fail with an invalid or expired login link
+
 ## 1.6.0
 
 - feat; edit account profile and verify email on the website and in the app
