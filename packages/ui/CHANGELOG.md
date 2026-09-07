@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.4.2
+
+- enhance; show the shared players overview (rating / cpm) on live lobby detail, matching replays
+
 ## 0.4.1
 
 - enhance; make the public site usable on mobile
