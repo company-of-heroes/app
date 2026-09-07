@@ -1,3 +1,11 @@
+### v0.63.2
+
+- fix; fall back to the parent or dashboard when the header back button has no history
+- fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI
+- fix; skip lobbies_live upserts when only replay placeholders are present so PocketBase does not reject empty players
+- fix; create and link durable matches only in the lobbies_live PocketBase hook; /live always redirects to /replays
+- fix; attach match replays after crash/alt-f4 and keep the largest participant upload
+
 ### v0.63.1
 
 - fix; always link live lobbies to their durable match so /live redirects to /replays

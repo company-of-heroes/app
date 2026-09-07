@@ -1,5 +1,11 @@
 # @company-of-heroes/pocketbase
 
+## 0.10.2
+
+- fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI
+- fix; create and link durable matches only in the lobbies_live PocketBase hook; /live always redirects to /replays
+- fix; attach match replays after crash/alt-f4 and keep the largest participant upload
+
 ## 0.10.1
 
 - fix; steam and app website login no longer fail with an invalid or expired login link
