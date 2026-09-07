@@ -1,5 +1,10 @@
 # @company-of-heroes/landing
 
+## 1.6.2
+
+- fix; website login and logout update the header immediately instead of waiting for a hard refresh
+- enhance; make the public site usable on mobile
+
 ## 1.6.1
 
 - fix; steam and app website login no longer fail with an invalid or expired login link
