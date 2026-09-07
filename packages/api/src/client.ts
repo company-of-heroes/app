@@ -9,7 +9,6 @@ import { LiveLobbiesApi } from './live-lobbies/live-lobbies';
 import { MatchSocialApi } from './match-social/match-social';
 import { MatchesApi } from './matches/matches';
 import { NotificationsApi } from './notifications/notifications';
-import { PlayerCompareApi } from './player-compare/player-compare';
 import { PlayerPerformanceApi } from './player-performance/player-performance';
 import { PlayerSocialApi } from './player-social/player-social';
 import { PlayersApi } from './players/players';
@@ -30,7 +29,6 @@ export type Api = {
 	matchSocial: MatchSocialApi;
 	matches: MatchesApi;
 	notifications: NotificationsApi;
-	playerCompare: PlayerCompareApi;
 	playerPerformance: PlayerPerformanceApi;
 	playerSocial: PlayerSocialApi;
 	players: PlayersApi;
@@ -53,7 +51,6 @@ export function createApi(deps: ApiDeps): Api {
 		matchSocial: new MatchSocialApi(deps),
 		matches: new MatchesApi(deps),
 		notifications: new NotificationsApi(deps),
-		playerCompare: new PlayerCompareApi(deps),
 		playerPerformance: new PlayerPerformanceApi(deps),
 		playerSocial: new PlayerSocialApi(deps),
 		players: new PlayersApi(deps),

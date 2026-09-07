@@ -29,12 +29,7 @@
 		getEloTextShadow
 	} from '$lib/components/leaderboard/leaderboard-utils';
 	import { app } from '$core/app/context';
-	import { account } from '$core/account';
-	import { api, unwrapApi } from '$core/api';
 	import { resource } from 'runed';
-	import { PlayerH2hBadge } from '@company-of-heroes/ui/player-compare';
-	import type { PlayerH2hRecord } from '@company-of-heroes/ui/player-compare';
-	import { isAlliesRace } from '@company-of-heroes/ui/live-lobby';
 	import {
 		getAlliesPlayers,
 		getAxisPlayers,
@@ -63,7 +58,6 @@
 	const highlightPlayerId = $derived(
 		lobby.me ? (getPlayerProfileId(lobby.me) ?? lobby.me.playerId) : undefined
 	);
-	const mySteamIds = $derived(account.user.steamIds.filter(Boolean));
 	const ratingsKey = $derived(
 		lobby.isReplay
 			? ''
@@ -87,73 +81,6 @@
 			return record ? { ...player, storedElo: record.elo } : player;
 		});
 	});
-	const meInLobby = $derived(
-		players.find(
-			(player) => player.playerId !== -1 && player.steamId && mySteamIds.includes(player.steamId)
-		) ??
-			lobby.me ??
-			null
-	);
-	const resolvedMeProfileId = resource(
-		() => {
-			const inLobbyId = meInLobby ? getPlayerProfileId(meInLobby) : null;
-			if (inLobbyId != null && inLobbyId > 0) {
-				return null;
-			}
-
-			return mySteamIds[0] ?? null;
-		},
-		async (steamId) => {
-			if (!steamId) {
-				return null;
-			}
-
-			if (app.game.profile?.steam.steamid === steamId) {
-				return app.game.profile.relic.profile_id;
-			}
-
-			const results = await unwrapApi(api.players.search(steamId));
-			return results[0]?.profileId ?? null;
-		}
-	);
-	const meProfileId = $derived.by(() => {
-		const inLobbyId = meInLobby ? getPlayerProfileId(meInLobby) : null;
-		if (inLobbyId != null && inLobbyId > 0) {
-			return inLobbyId;
-		}
-
-		return resolvedMeProfileId.current ?? null;
-	});
-	const opponentProfileIds = $derived.by(() => {
-		const me = meInLobby;
-		if (!me || meProfileId == null) {
-			return [] as number[];
-		}
-
-		const meAllies = isAlliesRace(me.race);
-		return players
-			.filter((player) => player.playerId !== -1)
-			.filter((player) => isAlliesRace(player.race) !== meAllies)
-			.map((player) => getPlayerProfileId(player))
-			.filter((id): id is number => id != null && id > 0 && id !== meProfileId);
-	});
-	const h2hRecords = resource(
-		() => {
-			if (meProfileId == null || opponentProfileIds.length === 0) {
-				return null;
-			}
-
-			return `${meProfileId}:${opponentProfileIds.join(',')}`;
-		},
-		async (key) => {
-			if (!key || meProfileId == null || opponentProfileIds.length === 0) {
-				return {} as Record<string, PlayerH2hRecord>;
-			}
-
-			const result = await unwrapApi(api.playerCompare.h2hBatch(meProfileId, opponentProfileIds));
-			return result.records;
-		}
-	);
 	const humans = $derived(players.filter((player) => player.playerId !== -1));
 	const smurfKey = $derived(
 		lobby.isReplay
@@ -410,14 +337,6 @@
 				<PlayerUi.CheaterAlert compact />
 			{/if}
 		</PlayerUi.Root>
-	{/if}
-	{#if meProfileId && args.profileId && args.profileId !== meProfileId && opponentProfileIds.includes(args.profileId)}
-		<PlayerH2hBadge
-			record={h2hRecords.current?.[String(args.profileId)] ?? null}
-			href={`/compare?a=${meProfileId}&b=${args.profileId}`}
-			title={t('Head to head')}
-			emptyLabel={t('No H2H')}
-		/>
 	{/if}
 {/snippet}
 

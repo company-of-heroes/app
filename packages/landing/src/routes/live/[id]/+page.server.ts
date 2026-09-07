@@ -13,5 +13,14 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		redirect(302, localizeHref(`/replays/${lobby.lobbyId}`, locals.locale));
 	}
 
+	// Heal missed lobbies_live.lobby links: same session already has a durable row.
+	const sessionId = Number(lobby.sessionId);
+	if (Number.isInteger(sessionId) && sessionId > 0) {
+		const match = await unwrapAsync(locals.services.matches().findBySessionId(sessionId));
+		if (match?.id) {
+			redirect(302, localizeHref(`/replays/${match.id}`, locals.locale));
+		}
+	}
+
 	return { lobby };
 };

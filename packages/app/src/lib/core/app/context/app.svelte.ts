@@ -132,6 +132,8 @@ export class AppContext extends Emittery<AppEvents> {
 	#liveLobbyHeartbeat: ReturnType<typeof setInterval> | null = null;
 	/** Bumps on clear/start so in-flight upserts don't resurrect a deleted row. */
 	#liveLobbyGeneration = 0;
+	/** Durable `lobbies` id once ensureStarted/save linked this session. */
+	#linkedLobbyId: string | null = null;
 	/** True once the game process has been seen running this session. */
 	#hadGameRunning = false;
 	/** Last published `game.lobby.joined` match key (once per match). */
@@ -324,7 +326,11 @@ export class AppContext extends Emittery<AppEvents> {
 		this.gameLog.on('lobby.destroyed', () => this.#onLobbyDestroyed());
 
 		this.on('lobby.saved', (saved) => {
-			if (!this.lobby || this.lobby.sessionId !== saved.sessionId) {
+			if (!this.lobby) {
+				return;
+			}
+
+			if (Number(this.lobby.sessionId) !== Number(saved.sessionId)) {
 				return;
 			}
 
@@ -450,13 +456,20 @@ export class AppContext extends Emittery<AppEvents> {
 			lobby.isReplay && lobby.players.some((player) => isPlaceholderPlayerName(player.name));
 
 		if (!isFirstPublish) {
-			if (!waitingForReplayNames) this.#upsertLiveLobby(match);
-			if (lobby.isReplay) void this.#attachReplayPlayerNames(lobby);
+			if (!waitingForReplayNames) {
+				this.#upsertLiveLobby(match);
+			}
+
+			if (lobby.isReplay) {
+				void this.#attachReplayPlayerNames(lobby);
+			}
+
 			return;
 		}
 
 		// Invalidate in-flight upserts from a previous lobby without deleting the new row.
 		this.#liveLobbyGeneration += 1;
+		this.#linkedLobbyId = null;
 		this.#stopLiveLobbyHeartbeat();
 
 		console.log('lobby started', match);
@@ -467,7 +480,9 @@ export class AppContext extends Emittery<AppEvents> {
 
 		this.#upsertLiveLobby(match);
 		this.#startLiveLobbyHeartbeat();
-		if (lobby.isReplay) void this.#attachReplayPlayerNames(lobby);
+		if (lobby.isReplay) {
+			void this.#attachReplayPlayerNames(lobby);
+		}
 	}
 
 	async #attachReplayPlayerNames(lobby: Lobby): Promise<void> {
@@ -550,7 +565,7 @@ export class AppContext extends Emittery<AppEvents> {
 				return;
 			}
 
-			this.#upsertLiveLobby(this.lobby);
+			void this.#heartbeatLiveLobby(generation);
 		}, LOBBIES_LIVE_HEARTBEAT_MS);
 	}
 
@@ -562,13 +577,47 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	/**
+	 * Heartbeat upsert. If lobby.saved never linked this session, recover the
+	 * durable lobbies id by sessionId so /live can redirect to /replays.
+	 */
+	async #heartbeatLiveLobby(generation: number) {
+		const match = this.lobby;
+		if (!match || generation !== this.#liveLobbyGeneration) {
+			return;
+		}
+
+		if (!this.#linkedLobbyId && match.sessionId) {
+			try {
+				const existing = await this.database.matches.findBySessionId(Number(match.sessionId));
+				if (generation !== this.#liveLobbyGeneration || this.lobby !== match) {
+					return;
+				}
+
+				if (existing?.id) {
+					this.#linkedLobbyId = existing.id;
+				}
+			} catch (error) {
+				console.warn('[APP]: live lobby link lookup failed:', error);
+			}
+		}
+
+		this.#upsertLiveLobby(match);
+	}
+
+	/**
 	 * Upserts lobbies_live and deletes again if a clear started while the
 	 * request was in flight (avoids resurrecting a stale row).
+	 * Always re-sends a known durable lobby id so heartbeats heal a missed link.
 	 */
 	#upsertLiveLobby(match: Match, lobbyId?: string | null) {
+		if (lobbyId) {
+			this.#linkedLobbyId = lobbyId;
+		}
+
+		const linkedId = lobbyId ?? this.#linkedLobbyId;
 		const generation = this.#liveLobbyGeneration;
 		this.database.lobbiesLive
-			.setLobby(match, lobbyId)
+			.setLobby(match, linkedId)
 			.then(() => {
 				// Cleared while in flight — delete the resurrected row.
 				if (generation !== this.#liveLobbyGeneration && !this.lobby) {
@@ -581,6 +630,7 @@ export class AppContext extends Emittery<AppEvents> {
 	/** Clears local lobby state and deletes the user's lobbies_live row. */
 	#clearLiveLobbyOnGameExit() {
 		this.#liveLobbyGeneration += 1;
+		this.#linkedLobbyId = null;
 		this.#stopLiveLobbyHeartbeat();
 		this.#publishedJoinedKey = null;
 		this.#publishedStartedKey = null;

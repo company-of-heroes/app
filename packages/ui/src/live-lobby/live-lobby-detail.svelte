@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
 	import MapImage from '../ui/map-image.svelte';
 	import * as List from '../ui/list';
 	import { LiveBadge } from '../ui/badge';
@@ -20,12 +19,6 @@
 		type LiveLobbyPlayer
 	} from './types';
 
-	type NameExtraArgs = {
-		name: string;
-		steamId: string | null;
-		profileId: number | null;
-	};
-
 	type Props = {
 		lobby: LiveLobby;
 		meSteamIds?: string[];
@@ -44,7 +37,6 @@
 		playerCpm: (replay: ReplayData, playerId: number | null) => string | number;
 		getRankImage?: (race: number, rankLevel: number) => string;
 		formatGap?: (gap: number | null) => string;
-		nameExtra?: Snippet<[NameExtraArgs]>;
 		sessionLabel?: string;
 		matchTypeLabel?: string;
 		gameModeLabel?: string;
@@ -87,7 +79,6 @@
 		playerCpm,
 		getRankImage,
 		formatGap = (gap) => formatMatchupGap(gap),
-		nameExtra,
 		sessionLabel = 'Session',
 		matchTypeLabel = 'Match type',
 		gameModeLabel = 'Game mode',
@@ -238,7 +229,6 @@
 			{ratingLabel}
 			{cpmLabel}
 			{isHighlightedName}
-			{nameExtra}
 		/>
 	</div>
 </div>

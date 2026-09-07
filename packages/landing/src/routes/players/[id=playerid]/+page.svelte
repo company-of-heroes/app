@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { resource } from 'runed';
-	import { Button } from '@company-of-heroes/ui/button';
 	import PlayerMatchHistory from '$lib/components/player/player-match-history.svelte';
 	import PlayerPerformancePanel from '$lib/components/player-performance/player-performance-panel.svelte';
 	import PlayerCompanionStaffDebug from '$lib/components/player/player-companion-staff-debug.svelte';
@@ -9,8 +6,6 @@
 	import PlayerProfileHeader from '$lib/components/player/player-profile-header.svelte';
 	import PlayerProfileSkeleton from '$lib/components/player/player-profile-skeleton.svelte';
 	import PlayerStatsTable from '$lib/components/player/player-stats-table.svelte';
-	import { meSteamIds } from '$lib/auth/user';
-	import { searchPlayers } from '$lib/remote/players.remote';
 	import { formatRelative } from '$lib/utils/player/format';
 	import { SITE_URL } from '$lib/site/urls';
 	import { currentLocale, href, useI18n } from '$lib/i18n';
@@ -20,19 +15,6 @@
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
 	let currentTab = $state<'stats' | 'performance' | 'match-history'>('stats');
-
-	const mySteamIds = $derived(meSteamIds(page.data.user));
-	const meProfileId = resource(
-		() => mySteamIds[0] ?? null,
-		async (steamId) => {
-			if (!steamId) {
-				return null;
-			}
-
-			const results = await searchPlayers({ q: steamId });
-			return results[0]?.profileId ?? null;
-		}
-	);
 </script>
 
 <svelte:head>
@@ -59,20 +41,6 @@
 		<PlayerProfileHeader {player}>
 			{#snippet vote()}
 				<PlayerLikeButton steamId={player.steamId} likeCount={player.likeCount ?? 0} />
-			{/snippet}
-			{#snippet afterName()}
-				<Button href={href(`/compare?b=${player.profileId}`)} variant="secondary" size="sm">
-					{t('Compare')}
-				</Button>
-				{#if meProfileId.current && meProfileId.current !== player.profileId}
-					<Button
-						href={href(`/compare?a=${meProfileId.current}&b=${player.profileId}`)}
-						variant="secondary"
-						size="sm"
-					>
-						{t('Compare with me')}
-					</Button>
-				{/if}
 			{/snippet}
 			{#snippet afterDetails()}
 				<PlayerCompanionStaffDebug steamId={player.steamId} />
