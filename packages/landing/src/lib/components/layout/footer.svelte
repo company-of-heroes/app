@@ -9,7 +9,7 @@
 	const { t } = useI18n();
 
 	const footerLink =
-		'border-secondary-800 text-secondary-400 hover:bg-secondary-950/50 hover:text-white flex items-center border-l px-4 py-3 text-sm transition-colors';
+		'border-secondary-800 text-secondary-400 hover:bg-secondary-950/50 hover:text-white flex items-center border-l px-3 py-3 text-sm transition-colors sm:px-4';
 </script>
 
 <footer class="border-secondary-800 border-t">
@@ -17,7 +17,7 @@
 		<p class="text-secondary-500 px-4 py-3 text-sm">
 			© {new Date().getFullYear()} Code IT · Fknoobs
 		</p>
-		<nav class="ms-auto flex items-stretch">
+		<nav class="ms-auto flex flex-wrap items-stretch">
 			<div class="flex items-stretch sm:hidden">
 				<LocaleSwitcher side="top" />
 			</div>

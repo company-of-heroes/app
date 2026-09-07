@@ -6,6 +6,7 @@
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import HeaderAuth from '$lib/components/layout/header-auth.svelte';
 	import LocaleSwitcher from '$lib/components/layout/locale-switcher.svelte';
+	import MobileNav from '$lib/components/layout/mobile-nav.svelte';
 	import { cn } from '$lib/utils/cn';
 	import { latestDownload } from '$lib/site/download.svelte';
 	import { rememberedReplaysListHref } from '$lib/replays';
@@ -111,5 +112,6 @@
 		>
 			{t('Download')}
 		</Button>
+		<MobileNav />
 	</div>
 </header>

@@ -53,7 +53,7 @@
 {#if stats.length === 0}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
 {:else}
-	<div class="overflow-x-auto">
+	<div class="hidden overflow-x-auto md:block">
 		<table class="w-full table-fixed border-collapse text-sm">
 			<thead>
 				<tr class="{tableHeadRow} text-center">
@@ -133,5 +133,79 @@
 				{/each}
 			</tbody>
 		</table>
+	</div>
+
+	<div class="border-secondary-800 divide-y md:hidden">
+		{#each stats as stat (stat.profile.profile_id)}
+			{@const elo = eloForRow(stat)}
+			{@const countryName = getCountryDisplayName(stat.profile.country)}
+			{@const flagUrl = flagImageUrl(stat.profile.country)}
+			<div class="px-4 py-3 text-white">
+				<div class="flex items-center gap-2">
+					<span class="text-secondary-400 shrink-0 font-semibold tabular-nums">#{stat.rank}</span>
+					<div class="flex shrink-0 items-center gap-1.5">
+						<img
+							src={getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel)}
+							alt=""
+							class="size-6 shrink-0 object-contain"
+						/>
+						<span class="text-secondary-400 text-sm tabular-nums">{stat.ranklevel}</span>
+					</div>
+					<a
+						href={playerHref(stat.profile.profile_id)}
+						class={cn(
+							interactive,
+							'flex min-w-0 flex-1 items-center gap-2 font-medium hover:text-primary'
+						)}
+					>
+						{#if flagUrl}
+							<img
+								class="h-4 w-auto shrink-0 rounded-xs"
+								src={flagUrl}
+								alt={countryName ?? stat.profile.country ?? ''}
+								title={countryName ?? undefined}
+							/>
+						{/if}
+						<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
+						<span class="truncate">{stat.profile.alias}</span>
+						<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
+					</a>
+					<span
+						class={cn(
+							'shrink-0 tabular-nums',
+							elo == null && 'text-secondary-500 text-xs font-normal',
+							isEliteElo(elo) && 'font-bold tracking-wide'
+						)}
+						style:color={elo != null ? getEloColor(elo) : undefined}
+						style:text-shadow={getEloTextShadow(elo)}
+					>
+						{elo ?? 'N/A'}
+					</span>
+				</div>
+				<div class="text-secondary-400 mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+					<span>
+						Wins <span class={cn('font-medium', statWins)}>{stat.wins}</span>
+					</span>
+					<span>
+						Losses <span class={cn('font-medium', statLosses)}>{stat.losses}</span>
+					</span>
+					<span>
+						Streak
+						<span class={cn('font-medium', statStreakClass(stat.streak))}>
+							{formatStreak(stat.streak)}
+						</span>
+					</span>
+					<span>
+						Ratio
+						<span
+							class="font-medium tabular-nums"
+							style:color={getRatioColor(stat.wins, stat.losses)}
+						>
+							{formatRatio(stat.wins, stat.losses)}
+						</span>
+					</span>
+				</div>
+			</div>
+		{/each}
 	</div>
 {/if}

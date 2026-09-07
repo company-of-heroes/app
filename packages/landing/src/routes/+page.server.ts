@@ -8,12 +8,9 @@ import type { PageServerLoad } from './$types';
 
 export const prerender = false;
 
-export const load: PageServerLoad = async ({ locals, setHeaders }) => {
-	if (!locals.user) {
-		setHeaders({
-			'cache-control': 'public, s-maxage=15, stale-while-revalidate=60'
-		});
-	}
+export const load: PageServerLoad = async ({ locals }) => {
+	// Auth chrome lives in the root layout; do not public-cache this HTML.
+	// Shared caches ignore Vary: Cookie and would keep serving the anonymous shell.
 	const replays = locals.services.replays();
 	const liveLobbies = locals.services.liveLobbies().list().unwrapOr([]);
 	void liveLobbies.catch(() => {});

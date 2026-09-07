@@ -47,7 +47,7 @@
 			{/snippet}
 		</PlayerProfileHeader>
 		<div class="border-secondary-800 border-b">
-			<div class="flex items-center gap-2 px-4 py-2.5">
+			<div class="flex min-w-0 flex-wrap items-center gap-2 px-4 py-2.5">
 				<button
 					type="button"
 					class={tabTrigger}

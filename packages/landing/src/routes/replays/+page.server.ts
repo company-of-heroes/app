@@ -5,16 +5,10 @@ import type { PageServerLoad } from './$types';
 
 export const prerender = false;
 
-export const load: PageServerLoad = ({ locals, url, setHeaders }) => {
+export const load: PageServerLoad = ({ locals, url }) => {
 	const tab = parseReplaysTab(url.searchParams);
 	if (tab === 'mine' && !locals.user) {
 		redirect(303, `/login?redirect=${encodeURIComponent(url.pathname + url.search)}`);
-	}
-
-	if (!locals.user) {
-		setHeaders({
-			'cache-control': 'public, s-maxage=30, stale-while-revalidate=60'
-		});
 	}
 
 	const query = parseReplaysQuery(url.searchParams);

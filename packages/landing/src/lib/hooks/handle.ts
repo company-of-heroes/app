@@ -27,6 +27,10 @@ function localeFromUrl(pathname: string): { locale: AppLocale; englishPrefix: bo
 	};
 }
 
+function isCacheableApiPath(pathname: string): boolean {
+	return pathname === '/api' || pathname.startsWith('/api/');
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
 	const { locale, englishPrefix } = localeFromUrl(event.url.pathname);
 	if (englishPrefix) {
@@ -56,36 +60,35 @@ export const handle: Handle = async ({ event, resolve }) => {
 		transformPageChunk: ({ html }) => html.replaceAll('%lang%', locale)
 	});
 
-	// Layout always embeds `user`. Public page caches must vary on Cookie so a
-	// logged-in visitor never receives an anonymous CDN/browser entry.
-	// Prefer token presence over isValid so a just-exchanged handoff cookie is
-	// still written on the redirect response even if JWT clock skew trips isValid.
 	const hasAuthToken = Boolean(pocketbase.authStore.token);
 	const authed = hadAuthCookie || hasAuthToken || pocketbase.authStore.isValid;
-	const next = withMutableHeaders(response, (headers) => {
+	// Layout always embeds `user`. Cloudflare shared cache does not reliably honor
+	// Vary: Cookie, so auth-aware HTML/data must never be stored at the edge —
+	// otherwise login/logout only shows up after a hard refresh.
+	const allowSharedCache = isCacheableApiPath(event.url.pathname);
+
+	return withMutableHeaders(response, (headers) => {
 		const vary = headers.get('vary');
 		if (!vary?.toLowerCase().includes('cookie')) {
 			headers.append('Vary', 'Cookie');
 		}
 
-		if (authed) {
+		if (!allowSharedCache || authed) {
 			headers.set('cache-control', 'private, no-store');
 		}
-	});
 
-	if (!hasAuthToken) {
-		return next;
-	}
-
-	return withMutableHeaders(next, (headers) => {
-		headers.append(
-			'set-cookie',
-			pocketbase.authStore.exportToCookie({
-				httpOnly: false,
-				secure: event.url.protocol === 'https:',
-				sameSite: 'lax',
-				path: '/'
-			})
-		);
+		// Always re-export after login (set) or logout/clear (expire). Skipping
+		// export when the store is empty left pb_auth in the browser on logout.
+		if (hasAuthToken || hadAuthCookie) {
+			headers.append(
+				'set-cookie',
+				pocketbase.authStore.exportToCookie({
+					httpOnly: false,
+					secure: event.url.protocol === 'https:',
+					sameSite: 'lax',
+					path: '/'
+				})
+			);
+		}
 	});
 };

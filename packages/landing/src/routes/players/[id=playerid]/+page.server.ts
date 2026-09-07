@@ -3,12 +3,7 @@ import type { PageServerLoad } from './$types';
 
 export const prerender = false;
 
-export const load: PageServerLoad = ({ locals, params, setHeaders }) => {
-	if (!locals.user) {
-		setHeaders({
-			'cache-control': 'public, s-maxage=30, stale-while-revalidate=60'
-		});
-	}
+export const load: PageServerLoad = ({ locals, params }) => {
 	return {
 		player: unwrapAsync(locals.services.players().get(params.id))
 	};

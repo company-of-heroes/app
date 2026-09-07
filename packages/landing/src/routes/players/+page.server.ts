@@ -5,12 +5,7 @@ import type { PageServerLoad } from './$types';
 
 export const prerender = false;
 
-export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
-	if (!locals.user) {
-		setHeaders({
-			'cache-control': 'public, s-maxage=15, stale-while-revalidate=30'
-		});
-	}
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const query = url.searchParams.get('q')?.trim() ?? '';
 	if (isPlayerId(query)) {
 		redirect(302, localizeHref(`/players/${query}`, locals.locale));

@@ -155,29 +155,33 @@
 	/>
 {/snippet}
 
+{#snippet teamFlags(match: CommunityMatch, team: 'allies' | 'axis')}
+	<div class="flex items-center gap-2">
+		{#each teamPlayers(match, team) as player (player.profile.profile_id)}
+			{@const href = playerHref(player)}
+			{@const isMe = isMePlayer(player)}
+			{@const highlighted = highlightedPlayers.includes(String(player.profile.profile_id))}
+			{@const flagClass = cn(
+				factionIcon,
+				'hover:ring-secondary-700 transition-all hover:opacity-100 hover:grayscale-0',
+				isMe || highlighted ? 'grayscale-0' : 'opacity-50 grayscale-80',
+				isMe && 'ring-primary',
+				!isMe && highlighted && 'ring-info'
+			)}
+			{#if href}
+				<a {href} class={cn(interactive, 'shrink-0 rounded-full')}>
+					{@render playerFlag(player, flagClass)}
+				</a>
+			{:else}
+				{@render playerFlag(player, flagClass)}
+			{/if}
+		{/each}
+	</div>
+{/snippet}
+
 {#snippet teamCell(match: CommunityMatch, team: 'allies' | 'axis')}
 	<td class={cn('px-4 py-0', outcomeClass(teamOutcome(match, team)))}>
-		<div class="flex items-center gap-2">
-			{#each teamPlayers(match, team) as player (player.profile.profile_id)}
-				{@const href = playerHref(player)}
-				{@const isMe = isMePlayer(player)}
-				{@const highlighted = highlightedPlayers.includes(String(player.profile.profile_id))}
-				{@const flagClass = cn(
-					factionIcon,
-					'hover:ring-secondary-700 transition-all hover:opacity-100 hover:grayscale-0',
-					isMe || highlighted ? 'grayscale-0' : 'opacity-50 grayscale-80',
-					isMe && 'ring-primary',
-					!isMe && highlighted && 'ring-info'
-				)}
-				{#if href}
-					<a {href} class={cn(interactive, 'shrink-0 rounded-full')}>
-						{@render playerFlag(player, flagClass)}
-					</a>
-				{:else}
-					{@render playerFlag(player, flagClass)}
-				{/if}
-			{/each}
-		</div>
+		{@render teamFlags(match, team)}
 	</td>
 {/snippet}
 
@@ -207,7 +211,7 @@
 {#if matches.length === 0}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
 {:else}
-	<div class="overflow-x-auto">
+	<div class="hidden overflow-x-auto md:block">
 		<table class="w-full table-fixed border-collapse text-sm">
 			<thead class="border-secondary-800 border-b">
 				<tr class="{tableHeadRow} text-left">
@@ -270,5 +274,72 @@
 				{/each}
 			</tbody>
 		</table>
+	</div>
+
+	<div class="md:hidden divide-y border-secondary-800">
+		{#each matches as match (match.id)}
+			<div
+				class={cn(
+					'px-4 py-3 text-white',
+					match.visibility === 'deleted' && 'opacity-50'
+				)}
+			>
+				<a
+					href={replayHref(match.id)}
+					class={cn(interactive, 'flex min-w-0 items-center gap-0')}
+				>
+					<MapImage
+						map={match.map}
+						{resolveMapSrc}
+						{resolveFallbackSrc}
+						alt={formatMapName(match.map)}
+						small
+						flush
+					/>
+					<div class="flex min-w-0 items-center gap-2 px-3">
+						<span class="min-w-0 truncate font-medium">{rowLabel(match)}</span>
+						{#if match.isRanked}
+							<RankingIcon class="text-primary-100 shrink-0" weight="duotone" />
+						{/if}
+						{#if match.visibility === 'deleted'}
+							<Badge variant="warning" class="shrink-0">{deletedLabel}</Badge>
+						{/if}
+					</div>
+				</a>
+				<div class="mt-2 flex items-center gap-4">
+					<div class={cn('rounded px-1 py-0.5', outcomeClass(teamOutcome(match, 'allies')))}>
+						{@render teamFlags(match, 'allies')}
+					</div>
+					<div class={cn('rounded px-1 py-0.5', outcomeClass(teamOutcome(match, 'axis')))}>
+						{@render teamFlags(match, 'axis')}
+					</div>
+				</div>
+				<div class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tabular-nums">
+					<a href={replayHref(match.id)} class={cn(interactive, 'hover:text-white')}>
+						{formatDurationSeconds(matchDurationSeconds(match))}
+					</a>
+					<span>{formatMatchDate(match.createdAt, locale)}</span>
+				</div>
+				<div class="text-secondary-400 mt-1.5 flex items-center gap-3 text-sm tabular-nums">
+					<span
+						class={cn(
+							'inline-flex items-center gap-1',
+							scoreClassName(match.likeCount ?? 0, 'text-secondary-400')
+						)}
+					>
+						<CaretUpIcon size={14} weight="fill" />
+						{match.likeCount ?? 0}
+					</span>
+					<span class="inline-flex items-center gap-1">
+						<ChatCircleIcon size={14} weight="duotone" />
+						{match.commentCount ?? 0}
+					</span>
+					<span class="inline-flex items-center gap-1">
+						<DownloadIcon size={14} weight="duotone" />
+						{match.downloadCount ?? 0}
+					</span>
+				</div>
+			</div>
+		{/each}
 	</div>
 {/if}

@@ -124,39 +124,75 @@
 	</span>
 {/snippet}
 
+{#snippet lobbyPlayers(lobby: LiveLobby)}
+	<LiveLobbyPlayers
+		players={lobby.players}
+		{meSteamIds}
+		{resolveFactionFlag}
+		{playerHref}
+		{playerLabel}
+		showStats={hasLiveLobbyStats(lobby.players)}
+		{alliesLabel}
+		{axisLabel}
+		{eloLabel}
+		{levelLabel}
+		{posLabel}
+		{winsLabel}
+		{lossesLabel}
+		{streakLabel}
+	/>
+{/snippet}
+
 {#if loading}
-	<table class="w-full table-fixed">
-		<thead class="border-secondary-800 border-b">
-			<tr class="{tableHeadRow} text-left">
-				<th class="px-4 py-3">{mapLabel}</th>
-				<th class="px-4 py-3">{nameLabel}</th>
-				<th class="px-4 py-3">{typeLabel}</th>
-				<th class="px-4 py-3">{alliesLabel}</th>
-				<th class="px-4 py-3">{axisLabel}</th>
-				<th class="px-4 py-3">{hostLabel}</th>
-				<th class="px-4 py-3 whitespace-nowrap">{startedLabel}</th>
-				{#if detailsHref}
+	<div class="hidden md:block">
+		<table class="w-full table-fixed">
+			<thead class="border-secondary-800 border-b">
+				<tr class="{tableHeadRow} text-left">
+					<th class="px-4 py-3">{mapLabel}</th>
+					<th class="px-4 py-3">{nameLabel}</th>
+					<th class="px-4 py-3">{typeLabel}</th>
+					<th class="px-4 py-3">{alliesLabel}</th>
+					<th class="px-4 py-3">{axisLabel}</th>
+					<th class="px-4 py-3">{hostLabel}</th>
+					<th class="px-4 py-3 whitespace-nowrap">{startedLabel}</th>
+					{#if detailsHref}
+						<th class="px-4 py-3"></th>
+					{/if}
 					<th class="px-4 py-3"></th>
-				{/if}
-				<th class="px-4 py-3"></th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each Array(3) as _, index (index)}
-				<tr class="border-secondary-800 h-11 border-b">
-					{#each Array(columnCount) as _, cellIndex (cellIndex)}
-						<td class="px-4">
-							<Skeleton class="h-4 w-full rounded-none" />
-						</td>
-					{/each}
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+			</thead>
+			<tbody>
+				{#each Array(3) as _, index (index)}
+					<tr class="border-secondary-800 h-11 border-b">
+						{#each Array(columnCount) as _, cellIndex (cellIndex)}
+							<td class="px-4">
+								<Skeleton class="h-4 w-full rounded-none" />
+							</td>
+						{/each}
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+	<div class="md:hidden">
+		{#each Array(3) as _, index (index)}
+			<div class="border-secondary-800 space-y-3 border-b px-4 py-3">
+				<div class="flex items-center gap-3">
+					<Skeleton class="size-10 shrink-0 rounded" />
+					<div class="min-w-0 flex-1 space-y-2">
+						<Skeleton class="h-4 w-2/3 rounded-none" />
+						<Skeleton class="h-3 w-1/3 rounded-none" />
+					</div>
+				</div>
+				<Skeleton class="h-5 w-1/2 rounded-none" />
+				<Skeleton class="h-3 w-2/5 rounded-none" />
+			</div>
+		{/each}
+	</div>
 {:else if lobbies.length === 0}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
 {:else}
-	<div class="overflow-x-auto">
+	<div class="hidden overflow-x-auto md:block">
 		<table class="w-full table-fixed border-collapse text-sm">
 			<thead class="border-secondary-800 border-b">
 				<tr class="{tableHeadRow} text-left">
@@ -225,27 +261,82 @@
 					{#if expanded}
 						<tr>
 							<td colspan={columnCount} class="p-0">
-								<LiveLobbyPlayers
-									players={lobby.players}
-									{meSteamIds}
-									{resolveFactionFlag}
-									{playerHref}
-									{playerLabel}
-									showStats={hasLiveLobbyStats(lobby.players)}
-									{alliesLabel}
-									{axisLabel}
-									{eloLabel}
-									{levelLabel}
-									{posLabel}
-									{winsLabel}
-									{lossesLabel}
-									{streakLabel}
-								/>
+								{@render lobbyPlayers(lobby)}
 							</td>
 						</tr>
 					{/if}
 				{/each}
 			</tbody>
 		</table>
+	</div>
+	<div class="md:hidden">
+		{#each lobbies as lobby (lobby.id)}
+			{@const expanded = expandedId === lobby.id}
+			<div
+				class={cn(
+					interactive,
+					'border-secondary-800 text-secondary-300 border-b transition-colors',
+					'hover:bg-secondary-950/60 hover:text-primary',
+					expanded && 'bg-secondary-950/60 text-primary'
+				)}
+				aria-expanded={expanded}
+				onclick={(event) => handleRowClick(event, lobby.id)}
+			>
+				<div class="flex gap-3 px-4 py-3">
+					<MapImage
+						small
+						map={lobby.map}
+						{resolveMapSrc}
+						{resolveFallbackSrc}
+						alt={formatMapName(lobby.map)}
+					/>
+					<div class="min-w-0 flex-1">
+						<div class="flex items-start justify-between gap-2">
+							<div class="min-w-0">
+								<p class="truncate font-medium text-white">{formatMapName(lobby.map)}</p>
+								<p class="text-secondary-400 truncate text-sm">{lobby.modeLabel}</p>
+							</div>
+							<div class="flex shrink-0 items-center gap-2">
+								{#if detailsHref}
+									{@const detailUrl = detailsHref(lobby)}
+									{#if detailUrl}
+										<Button
+											href={detailUrl}
+											size="sm"
+											variant="secondary"
+											class="h-7 px-2.5 text-xs"
+										>
+											{detailsLabel}
+										</Button>
+									{/if}
+								{/if}
+								<CaretDownIcon
+									class={cn('size-4 transition-transform', expanded && 'rotate-180')}
+								/>
+							</div>
+						</div>
+						<div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+							<div class="flex min-w-0 items-center gap-1.5">
+								<span class="text-secondary-500 text-xs">{alliesLabel}</span>
+								{@render factionFlags(teamPlayers(lobby.players, 'allies'))}
+							</div>
+							<div class="flex min-w-0 items-center gap-1.5">
+								<span class="text-secondary-500 text-xs">{axisLabel}</span>
+								{@render factionFlags(teamPlayers(lobby.players, 'axis'))}
+							</div>
+						</div>
+						<div
+							class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
+						>
+							<span class="truncate">{lobby.hostName || unknownHostLabel}</span>
+							<span class="text-secondary-500 tabular-nums">{formatStarted(lobby.createdAt)}</span>
+						</div>
+					</div>
+				</div>
+				{#if expanded}
+					{@render lobbyPlayers(lobby)}
+				{/if}
+			</div>
+		{/each}
 	</div>
 {/if}

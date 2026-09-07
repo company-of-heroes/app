@@ -5,18 +5,12 @@ import type { PageServerLoad } from './$types';
 
 export const prerender = false;
 
-export const load: PageServerLoad = async ({ locals, params, setHeaders }) => {
+export const load: PageServerLoad = async ({ locals, params }) => {
 	const lobby = await unwrapAsync(locals.services.liveLobbies().get(params.id));
 
 	// Prefer the durable lobbies detail URL when ensureStarted has linked it.
 	if (lobby.lobbyId) {
 		redirect(302, localizeHref(`/replays/${lobby.lobbyId}`, locals.locale));
-	}
-
-	if (!locals.user) {
-		setHeaders({
-			'cache-control': 'public, s-maxage=15, stale-while-revalidate=60'
-		});
 	}
 
 	return { lobby };

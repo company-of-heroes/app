@@ -15,6 +15,12 @@ html {
 	color-scheme: dark;
 }
 
+@media (max-width: 639px) {
+	html {
+		font-size: 16px;
+	}
+}
+
 html,
 body {
 	margin: 0;
