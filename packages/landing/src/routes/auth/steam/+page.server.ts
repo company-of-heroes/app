@@ -44,6 +44,5 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	}
 
 	locals.pocketbase.authStore.save(result.value.token, result.value.record);
-
 	redirect(303, safeInternalPath(url.searchParams.get('redirect'), locals.locale));
 };

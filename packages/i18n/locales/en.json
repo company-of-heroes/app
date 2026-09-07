@@ -509,6 +509,7 @@
 	"Invalid email or password.": "Invalid email or password.",
 	"Invalid or expired email change link.": "Invalid or expired email change link.",
 	"Invalid or expired login link.": "Invalid or expired login link.",
+	"Invalid or expired login code.": "Invalid or expired login link.",
 	"Invalid or expired Steam login.": "Invalid or expired Steam login.",
 	"Invalid or expired verification link.": "Invalid or expired verification link.",
 	"Invalid replay update.": "Invalid replay update.",

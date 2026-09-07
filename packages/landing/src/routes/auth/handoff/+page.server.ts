@@ -1,5 +1,4 @@
 import { redirect } from '@sveltejs/kit';
-import { API_URL } from '$lib/site/urls';
 import { localizeHref, safeInternalPath } from '@company-of-heroes/i18n';
 import type { PageServerLoad } from './$types';
 
@@ -23,7 +22,7 @@ function decodeHandoffWire(wire: string): string {
 	return wire;
 }
 
-export const load: PageServerLoad = async ({ url, locals, fetch }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
 	const error = url.searchParams.get('error');
 	if (error) {
 		redirect(303, `${localizeHref('/login', locals.locale)}?error=${encodeURIComponent(error)}`);
@@ -35,29 +34,15 @@ export const load: PageServerLoad = async ({ url, locals, fetch }) => {
 	}
 
 	const code = decodeHandoffWire(wireCode);
+	const result = await locals.services.auth().exchangeHandoffCode(code);
 
-	const response = await fetch(`${API_URL}/api/auth/handoff/exchange`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ code })
-	});
-
-	if (!response.ok) {
-		let message = locals.t('Invalid or expired login link.');
-		try {
-			const body = await response.json();
-			if (typeof body?.message === 'string' && body.message.trim()) {
-				message = body.message;
-			}
-		} catch {
-			// ignore parse errors
-		}
-
-		redirect(303, `${localizeHref('/login', locals.locale)}?error=${encodeURIComponent(message)}`);
+	if (result.isErr()) {
+		redirect(
+			303,
+			`${localizeHref('/login', locals.locale)}?error=${encodeURIComponent(result.error.message)}`
+		);
 	}
 
-	const auth = await response.json();
-	locals.pocketbase.authStore.save(auth.token, auth.record);
-
+	locals.pocketbase.authStore.save(result.value.token, result.value.record);
 	redirect(303, safeInternalPath(url.searchParams.get('redirect'), locals.locale));
 };

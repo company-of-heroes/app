@@ -354,7 +354,7 @@ function handleCallback(e) {
 
 		const steamId = verifySteamOpenId(e);
 		const user = findOrCreateUser(steamId);
-		const code = createHandoff(user.id);
+		const code = createHandoff(String(user.id));
 		const redirect = state.redirect || '/';
 		let target = `${origin}/auth/steam?code=${encodeURIComponent(code)}`;
 		if (redirect && redirect !== '/') {

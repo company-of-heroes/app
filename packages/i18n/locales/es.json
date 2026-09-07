@@ -509,6 +509,7 @@
 	"Invalid email or password.": "Correo o contraseña no válidos.",
 	"Invalid or expired email change link.": "Enlace de cambio de correo inválido o caducado.",
 	"Invalid or expired login link.": "Enlace de inicio de sesión no válido o caducado.",
+	"Invalid or expired login code.": "Enlace de inicio de sesión no válido o caducado.",
 	"Invalid or expired Steam login.": "Inicio de sesión de Steam no válido o caducado.",
 	"Invalid or expired verification link.": "Enlace de verificación inválido o caducado.",
 	"Invalid replay update.": "Actualización de replay no válida.",

@@ -49,7 +49,7 @@ export function canRequestEmailChange(user: { email: string; verified?: boolean 
 
 const authExchangeSchema = z.object({
 	token: z.string().min(1),
-	record: z.record(z.string(), z.unknown())
+	record: z.object({ id: z.string().min(1) }).passthrough()
 });
 
 export class AuthApi {
@@ -103,28 +103,46 @@ export class AuthApi {
 	exchangeHandoffCode(code: string): ResultAsync<AuthExchange, ApiError> {
 		const trimmed = code.trim();
 		if (!trimmed) {
-			return errAsync(apiError(400, 'Invalid or expired login code.'));
+			return errAsync(apiError(400, 'Invalid or expired login link.'));
 		}
 
-		return fetchJson(this.deps.fetch, `${normalizeBaseUrl(this.deps.baseUrl)}/api/auth/handoff/exchange`, {
-			fallback: 'Invalid or expired login link.',
-			schema: authExchangeSchema,
-			onStatus: (status) => {
-				if (status === 400 || status === 401 || status === 404) {
-					return apiError(400, 'Invalid or expired login link.');
-				}
-
-				return undefined;
-			},
-			init: {
+		const url = `${normalizeBaseUrl(this.deps.baseUrl)}/api/auth/handoff/exchange`;
+		return ResultAsync.fromPromise(
+			this.deps.fetch(url, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ code: trimmed })
-			}
-		}).map((body) => ({
-			token: body.token,
-			record: body.record as AuthUser
-		}));
+				body: JSON.stringify({ code: trimmed }),
+				signal: AbortSignal.timeout(15_000)
+			}),
+			() => apiError(500, 'Invalid or expired login link.')
+		).andThen((response) =>
+			ResultAsync.fromPromise(response.json() as Promise<unknown>, () =>
+				apiError(response.ok ? 500 : 400, 'Invalid or expired login link.')
+			).andThen((json) => {
+				if (!response.ok) {
+					const bodyMessage =
+						json &&
+						typeof json === 'object' &&
+						typeof (json as { message?: unknown }).message === 'string'
+							? (json as { message: string }).message.trim()
+							: '';
+					const message = bodyMessage || 'Invalid or expired login link.';
+					const status =
+						response.status >= 400 && response.status < 600 ? response.status : 400;
+					return errAsync(apiError(status, message));
+				}
+
+				const parsed = authExchangeSchema.safeParse(json);
+				if (!parsed.success) {
+					return errAsync(apiError(500, 'Invalid or expired login link.'));
+				}
+
+				return okAsync({
+					token: parsed.data.token,
+					record: parsed.data.record as AuthUser
+				});
+			})
+		);
 	}
 
 	updateProfile(input: {

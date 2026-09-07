@@ -509,6 +509,7 @@
 	"Invalid email or password.": "이메일 또는 비밀번호가 올바르지 않습니다.",
 	"Invalid or expired email change link.": "유효하지 않거나 만료된 이메일 변경 링크입니다.",
 	"Invalid or expired login link.": "로그인 링크가 잘못되었거나 만료되었습니다.",
+	"Invalid or expired login code.": "로그인 링크가 잘못되었거나 만료되었습니다.",
 	"Invalid or expired Steam login.": "Steam 로그인이 잘못되었거나 만료되었습니다.",
 	"Invalid or expired verification link.": "유효하지 않거나 만료된 인증 링크입니다.",
 	"Invalid replay update.": "잘못된 리플레이 업데이트입니다.",

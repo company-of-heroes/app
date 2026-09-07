@@ -58,7 +58,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Layout always embeds `user`. Public page caches must vary on Cookie so a
 	// logged-in visitor never receives an anonymous CDN/browser entry.
-	const authed = hadAuthCookie || pocketbase.authStore.isValid;
+	// Prefer token presence over isValid so a just-exchanged handoff cookie is
+	// still written on the redirect response even if JWT clock skew trips isValid.
+	const hasAuthToken = Boolean(pocketbase.authStore.token);
+	const authed = hadAuthCookie || hasAuthToken || pocketbase.authStore.isValid;
 	const next = withMutableHeaders(response, (headers) => {
 		const vary = headers.get('vary');
 		if (!vary?.toLowerCase().includes('cookie')) {
@@ -70,7 +73,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	});
 
-	if (!authed) {
+	if (!hasAuthToken) {
 		return next;
 	}
 
