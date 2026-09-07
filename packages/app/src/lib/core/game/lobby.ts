@@ -51,10 +51,15 @@ export function teamFromRace(race: number): number {
 
 /**
  * Relic logs closed/empty slots as Id -1 with Type 3 or 6.
- * Real skirmish AI is Id -1 with Type 1. Replay placeholders use Id 0.
+ * Real skirmish AI is Id -1 with Type 1. Replay placeholders use Id 0 and
+ * stay in the local roster here; live publish uses the stricter shared
+ * filter in `@company-of-heroes/ui/live-lobby/slim` (rejects Id 0).
  */
 export function isOccupiedLobbySlot(player: { playerId: number; type: number }): boolean {
-	if (player.playerId === -1) return player.type === 1;
+	if (player.playerId === -1) {
+		return player.type === 1;
+	}
+
 	return true;
 }
 

@@ -275,7 +275,13 @@ export class LiveLobbiesApi {
 	}
 
 	private async upsertLobby(userId: string, data: LiveLobbyWriteInput): Promise<LiveLobbyRow | undefined> {
+		// App may still hold replay placeholders (playerId 0) that pass a looser
+		// local roster check; required JSON `players` rejects [] as blank.
 		const occupied = data.players.filter(isOccupiedLobbySlot) as LiveLobbyWritePlayer[];
+		if (occupied.length === 0) {
+			return undefined;
+		}
+
 		const players = data.isReplay ? occupied : await this.withOverlayEloSources(occupied);
 		const payload: Record<string, unknown> = {
 			user: userId,

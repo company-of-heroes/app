@@ -1,4 +1,4 @@
-import { isOccupiedLobbySlot, type Match } from '$core/game/lobby';
+import type { Match } from '$core/game/lobby';
 import type { LobbyPlayer, TransformedMatch } from '@fknoobs/app';
 import type { LobbiesLiveResponse, UsersResponse } from '$core/pocketbase/types';
 import { exp } from '$core/pocketbase';
@@ -16,6 +16,7 @@ import {
 	type LiveLobbyWriteInput,
 	type LiveLobbyWritePlayer
 } from '@company-of-heroes/api';
+import { isOccupiedLobbySlot } from '@company-of-heroes/ui/live-lobby/slim';
 
 export type LiveLobby = Expand<
 	LobbiesLiveResponse<
@@ -84,16 +85,19 @@ export class LobbiesLive {
 	}
 
 	async setLobby(match: Match) {
-		if (!match.sessionId || !match.map || match.players.length === 0) {
+		// Use the shared publish filter (rejects replay playerId 0 placeholders).
+		// Local lobby roster still keeps those slots via `$core/game/lobby`.
+		const occupied = match.players.filter(isOccupiedLobbySlot);
+		if (!match.sessionId || !match.map || occupied.length === 0) {
 			console.warn('[LOBBIES_LIVE]: skipping upsert, match is incomplete', {
 				sessionId: match.sessionId,
 				map: match.map,
-				players: match.players.length
+				players: match.players.length,
+				occupied: occupied.length
 			});
 			return;
 		}
 
-		const occupied = match.players.filter(isOccupiedLobbySlot);
 		const players = match.isReplay ? occupied : await withOverlayEloSources(occupied);
 		const data: LiveLobbyWriteInput = {
 			sessionId: match.sessionId,
