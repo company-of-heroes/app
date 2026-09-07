@@ -3,4 +3,4 @@
 '@company-of-heroes/landing': patch
 ---
 
-fix; always link live lobbies to their durable match so /live redirects to /replays
+fix; link live lobbies to their durable match and only redirect /live to /replays when that match is loadable
