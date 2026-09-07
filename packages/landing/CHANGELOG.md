@@ -1,5 +1,46 @@
 # @company-of-heroes/landing
 
+## 1.6.0
+
+- feat; edit account profile and verify email on the website and in the app
+- enhance; show send text on comment submit instead of an icon
+- enhance; use the shared players overview on the current-game / live lobby screen
+- fix; do not show ranks, ratings, or profile links for cpu players
+- fix; show replay placeholder players (id 0) in the current-game overview
+- enhance; show doctrines and CPM on the current-game screen while watching a replay
+- fix; label skirmish AI slots as CPU instead of Player N
+- fix; render circular faction icons as size-5 with ring-4 everywhere (live lobbies included)
+- fix; keep map and profile header images square instead of stretching with the details column
+- fix; open landing header dropdowns without async i18n suspense (avoids Svelte batch invariant)
+- enhance; mention privacy, no PC scanning, open source, and Authenticode signing on the home hero
+- feat; add optional PayPal donations section and header link on the homepage
+- enhance; show a shared CoH atmospheric page background on the website and desktop app
+- enhance; show a live badge on live lobbies and current game, and a pending badge on matches awaiting a result
+- fix; keep the live badge on saved matches that are still in an active lobby
+- fix; show pending (not live) in match history lists such as matches played today
+- enhance; highlight your own player with a primary ring when signed in on the site
+- feat; add member replay uploads with compose preview, ladder-stats snapshots, and per-player Steam ID linking when missing from the .rec
+- feat; owners can edit member replay title, description, and Steam links, and soft-delete uploads (hidden from public; retained for staff)
+- feat; require a description on member replay upload, edit, and publish-from-match
+- enhance; drag-and-drop .rec file picker on member replay upload
+- fix; parse .rec files in a worker and return slim results (no action dump) so the UI stays responsive
+- fix; wire mention user search on member replay descriptions and anchor the popup above the @
+- enhance; open member replay upload as a full page in the app (same flow as the website)
+- enhance; show member replay details in the app with the same header layout as the website
+- fix; render member replay descriptions as markdown (bold, mentions) on detail pages
+- enhance; share member replay detail header between app and website
+- enhance; add up/down votes on member replays like match likes
+- feat; add comments on member replays
+- enhance; hide Screenshots tab on member replay detail (uploads have none)
+- fix; align app replay detail loading skeleton with the website layout
+- feat; publish an owned community match as a member replay (leaves Community matches; stays under My matches)
+- fix; show personal match history under the replays My matches tab
+- fix; speed up replay list filtering and make replay detail navigation feel instant
+- feat; share PocketBase and API client logic in @company-of-heroes/api
+- fix; detect skirmish (match type 14) for overlay and live lobbies, including cpu race updates
+- enhance; use solid button fills instead of transparent backgrounds
+- feat; add Steam OpenID login on the website with PocketBase account find-or-create
+
 ## 1.5.0
 
 - fix; update the header login state immediately after signing in without a manual refresh
