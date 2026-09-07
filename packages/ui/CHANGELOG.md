@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.4.1
+
+- enhance; make the public site usable on mobile
+
 ## 0.4.0
 
 - enhance; show send text on comment submit instead of an icon
