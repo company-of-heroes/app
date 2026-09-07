@@ -3,7 +3,7 @@ import type { LiveLobbyPlayer } from './types';
 /** Public live-lobby row before host-specific modeLabel i18n. */
 export type LiveLobbyRecord = {
 	id: string;
-	/** Durable `lobbies` id for detail links; null until ensureStarted finishes. */
+	/** Durable `lobbies` id for detail links; set server-side when lobbies_live is saved. */
 	lobbyId?: string | null;
 	sessionId: string;
 	map: string;
