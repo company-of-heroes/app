@@ -1,5 +1,5 @@
 import type { RecordModel } from 'pocketbase';
-import { ok, okAsync, ResultAsync } from 'neverthrow';
+import { okAsync, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
 import type { ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
@@ -70,7 +70,6 @@ export class CompanionApi {
 					steamIds: Array.isArray(data.steamIds) ? data.steamIds.map(String) : [],
 					appVersion: readMetaVersion(data.meta)
 				} as CompanionUser;
-			})
-			.orElse(() => ok(null));
+			});
 	}
 }

@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * When a companion upserts lobbies_live, ensure a durable `lobbies` row exists
- * (needsResult) and set lobbies_live.lobby so /live can redirect to /replays.
- * Mirrors packages/app history.ensureLobbyStarted without depending on the client.
+ * Sole owner of in-progress durable `lobbies` rows for live games.
+ * On every lobbies_live create/update: find-or-create by sessionId, set
+ * lobbies_live.lobby. Clients must not create or link durable rows themselves.
  */
 
 function toFiniteNumber(value) {

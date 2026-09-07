@@ -29,7 +29,7 @@
 			return;
 		}
 
-		if (useHistory) {
+		if (useHistory && window.history.length > 1) {
 			history.back();
 			return;
 		}

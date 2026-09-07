@@ -62,7 +62,7 @@ export type AppEvents = {
 		match: Match;
 		replay: {
 			file: File;
-			replay: ReplayData;
+			replay: ReplayData | null;
 		} | null;
 	};
 	'lobby.saved': MatchExpanded;
@@ -132,8 +132,8 @@ export class AppContext extends Emittery<AppEvents> {
 	#liveLobbyHeartbeat: ReturnType<typeof setInterval> | null = null;
 	/** Bumps on clear/start so in-flight upserts don't resurrect a deleted row. */
 	#liveLobbyGeneration = 0;
-	/** Durable `lobbies` id once ensureStarted/save linked this session. */
-	#linkedLobbyId: string | null = null;
+	/** Emits `lobby.saved` once when the server hook links a durable lobby id. */
+	#durableLobbyEmittedKey: string | null = null;
 	/** True once the game process has been seen running this session. */
 	#hadGameRunning = false;
 	/** Last published `game.lobby.joined` match key (once per match). */
@@ -226,7 +226,7 @@ export class AppContext extends Emittery<AppEvents> {
 						this.gameLog.stop();
 						this.isReady = false;
 						if (this.#hadGameRunning) {
-							this.#clearLiveLobbyOnGameExit();
+							void this.#finalizeLobbyOnGameExit();
 						}
 						return;
 					}
@@ -245,7 +245,7 @@ export class AppContext extends Emittery<AppEvents> {
 					this.#logStopTimer = setTimeout(() => {
 						this.gameLog.stop();
 						this.#logStopTimer = null;
-						this.#clearLiveLobbyOnGameExit();
+						void this.#finalizeLobbyOnGameExit();
 					}, 2500);
 				}
 			);
@@ -324,18 +324,6 @@ export class AppContext extends Emittery<AppEvents> {
 			this.#onLobbyResult(playerId, result)
 		);
 		this.gameLog.on('lobby.destroyed', () => this.#onLobbyDestroyed());
-
-		this.on('lobby.saved', (saved) => {
-			if (!this.lobby) {
-				return;
-			}
-
-			if (Number(this.lobby.sessionId) !== Number(saved.sessionId)) {
-				return;
-			}
-
-			this.#upsertLiveLobby(this.lobby, saved.id);
-		});
 	}
 
 	#trackStatuses() {
@@ -469,7 +457,7 @@ export class AppContext extends Emittery<AppEvents> {
 
 		// Invalidate in-flight upserts from a previous lobby without deleting the new row.
 		this.#liveLobbyGeneration += 1;
-		this.#linkedLobbyId = null;
+		this.#durableLobbyEmittedKey = null;
 		this.#stopLiveLobbyHeartbeat();
 
 		console.log('lobby started', match);
@@ -531,12 +519,14 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	async #onLobbyDestroyed() {
-		if (!this.isReady || !this.lobby) {
+		// Do not require isReady — process exit may flip it false while Game Stop
+		// is still reading temp.rec / emitting lobby.destroyed.
+		if (!this.lobby) {
 			return;
 		}
 
 		const match = this.lobby;
-		let replay: { file: File; replay: ReplayData } | null = null;
+		let replay: { file: File; replay: ReplayData | null } | null = null;
 
 		if (!match.isReplay) {
 			try {
@@ -554,6 +544,37 @@ export class AppContext extends Emittery<AppEvents> {
 		this.#clearLiveLobbyOnGameExit();
 	}
 
+	/**
+	 * On abrupt quit (no APP -- Game Stop), still try to attach temp.rec before
+	 * clearing live lobby state. No-op when destroy already cleared `this.lobby`.
+	 */
+	async #finalizeLobbyOnGameExit() {
+		const match = this.lobby;
+		if (
+			match &&
+			!match.isReplay &&
+			match.sessionId &&
+			match.started &&
+			this.features.history?.enabled
+		) {
+			let replayFile: File | null = null;
+			try {
+				const replay = await this.features.history.getLastMatchReplay();
+				replayFile = replay?.file ?? null;
+			} catch (error) {
+				console.warn('[APP]: Could not read replay on game exit:', error);
+			}
+
+			try {
+				await this.features.history.saveLobbyResult(match, replayFile);
+			} catch (error) {
+				console.warn('[APP]: Could not save match on game exit:', error);
+			}
+		}
+
+		this.#clearLiveLobbyOnGameExit();
+	}
+
 	/** Heartbeat keeps updatedAt fresh so long matches aren't pruned as stale. */
 	#startLiveLobbyHeartbeat() {
 		this.#stopLiveLobbyHeartbeat();
@@ -565,7 +586,7 @@ export class AppContext extends Emittery<AppEvents> {
 				return;
 			}
 
-			void this.#heartbeatLiveLobby(generation);
+			this.#upsertLiveLobby(this.lobby);
 		}, LOBBIES_LIVE_HEARTBEAT_MS);
 	}
 
@@ -577,52 +598,38 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	/**
-	 * Heartbeat upsert. If lobby.saved never linked this session, recover the
-	 * durable lobbies id by sessionId so /live can redirect to /replays.
+	 * Upserts lobbies_live. The PocketBase hook creates/links the durable
+	 * `lobbies` row and sets `lobby` on the live record — client does not.
 	 */
-	async #heartbeatLiveLobby(generation: number) {
-		const match = this.lobby;
-		if (!match || generation !== this.#liveLobbyGeneration) {
-			return;
-		}
-
-		if (!this.#linkedLobbyId && match.sessionId) {
-			try {
-				const existing = await this.database.matches.findBySessionId(Number(match.sessionId));
-				if (generation !== this.#liveLobbyGeneration || this.lobby !== match) {
-					return;
-				}
-
-				if (existing?.id) {
-					this.#linkedLobbyId = existing.id;
-				}
-			} catch (error) {
-				console.warn('[APP]: live lobby link lookup failed:', error);
-			}
-		}
-
-		this.#upsertLiveLobby(match);
-	}
-
-	/**
-	 * Upserts lobbies_live and deletes again if a clear started while the
-	 * request was in flight (avoids resurrecting a stale row).
-	 * Always re-sends a known durable lobby id so heartbeats heal a missed link.
-	 */
-	#upsertLiveLobby(match: Match, lobbyId?: string | null) {
-		if (lobbyId) {
-			this.#linkedLobbyId = lobbyId;
-		}
-
-		const linkedId = lobbyId ?? this.#linkedLobbyId;
+	#upsertLiveLobby(match: Match) {
 		const generation = this.#liveLobbyGeneration;
 		this.database.lobbiesLive
-			.setLobby(match, linkedId)
-			.then(() => {
+			.setLobby(match)
+			.then((row) => {
 				// Cleared while in flight — delete the resurrected row.
 				if (generation !== this.#liveLobbyGeneration && !this.lobby) {
 					return this.database.lobbiesLive.removeLobby();
 				}
+
+				const lobbyId = typeof row?.lobby === 'string' && row.lobby ? row.lobby : null;
+				if (!lobbyId || !this.lobby) {
+					return;
+				}
+
+				if (Number(this.lobby.sessionId) !== Number(match.sessionId)) {
+					return;
+				}
+
+				const key = `${match.sessionId}:${lobbyId}`;
+				if (this.#durableLobbyEmittedKey === key) {
+					return;
+				}
+
+				this.#durableLobbyEmittedKey = key;
+				this.emit('lobby.saved', {
+					id: lobbyId,
+					sessionId: match.sessionId
+				} as MatchExpanded);
 			})
 			.catch((error) => console.warn('[APP]: lobbies_live upsert failed:', error));
 	}
@@ -630,7 +637,7 @@ export class AppContext extends Emittery<AppEvents> {
 	/** Clears local lobby state and deletes the user's lobbies_live row. */
 	#clearLiveLobbyOnGameExit() {
 		this.#liveLobbyGeneration += 1;
-		this.#linkedLobbyId = null;
+		this.#durableLobbyEmittedKey = null;
 		this.#stopLiveLobbyHeartbeat();
 		this.#publishedJoinedKey = null;
 		this.#publishedStartedKey = null;

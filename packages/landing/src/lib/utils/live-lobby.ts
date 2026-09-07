@@ -48,9 +48,9 @@ export function liveLobbyPlayerLabel(player: LiveLobbyPlayer, t: TranslateFn) {
 }
 
 export function liveLobbyDetailsHref(lobby: LiveLobby) {
-	if (lobby.lobbyId) {
-		return href(`/replays/${lobby.lobbyId}`);
+	if (!lobby.lobbyId) {
+		return null;
 	}
 
-	return href(`/live/${lobby.id}`);
+	return href(`/replays/${lobby.lobbyId}`);
 }

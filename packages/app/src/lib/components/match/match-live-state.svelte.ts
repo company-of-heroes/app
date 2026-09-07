@@ -2,6 +2,8 @@ import { app } from '$core/app/context';
 import { resource } from 'runed';
 import { useMatch } from './context';
 
+export type MatchLiveCheck = 'live' | 'not_live' | 'unknown';
+
 /** Live vs pending for a saved match that still has `needsResult`. */
 export function createMatchLiveState() {
 	const match = useMatch();
@@ -18,26 +20,35 @@ export function createMatchLiveState() {
 			match.needsResult && !localLive && match.id && match.sessionId
 				? `${match.id}:${match.sessionId}`
 				: null,
-		async (key) => {
+		async (key): Promise<MatchLiveCheck> => {
 			if (!key) {
-				return false;
+				return 'not_live';
 			}
 
 			const [id, session] = key.split(':');
 			if (!id || !session) {
-				return false;
+				return 'not_live';
 			}
 
 			try {
-				return await app.database.lobbiesLive.isActiveForMatch(id, Number(session));
+				const active = await app.database.lobbiesLive.isActiveForMatch(id, Number(session));
+				return active ? 'live' : 'not_live';
 			} catch (error) {
 				console.warn('[MATCH]: live lobby check failed:', error);
-				return false;
+				return 'unknown';
 			}
 		}
 	);
 
-	const isLive = $derived(localLive || !!remoteLive.current);
+	const liveCheck = $derived.by((): MatchLiveCheck => {
+		if (localLive) {
+			return 'live';
+		}
+
+		return remoteLive.current ?? (remoteLive.loading ? 'unknown' : 'not_live');
+	});
+
+	const isLive = $derived(liveCheck === 'live');
 
 	return {
 		get match() {
@@ -48,6 +59,9 @@ export function createMatchLiveState() {
 		},
 		get isLive() {
 			return isLive;
+		},
+		get liveCheck() {
+			return liveCheck;
 		}
 	};
 }

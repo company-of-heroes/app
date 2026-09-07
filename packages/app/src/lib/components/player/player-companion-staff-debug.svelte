@@ -47,6 +47,8 @@
 	<StaffDebug>
 		{#if companion.loading}
 			<p class="text-secondary-400 text-sm">{t('Loading...')}</p>
+		{:else if companion.error}
+			<p class="text-red-400 text-sm">{t('Could not load companion account.')}</p>
 		{:else if !companion.current}
 			<p class="text-secondary-300 text-sm">{t('This player has no coh1stats account.')}</p>
 		{:else}

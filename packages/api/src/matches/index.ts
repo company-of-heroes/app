@@ -1,6 +1,7 @@
 export {
 	MatchesApi,
 	type AggregationPlayer,
+	type AttachReplayResult,
 	type FilterOperator,
 	type HistoryListQuery,
 	type HistorySortField,

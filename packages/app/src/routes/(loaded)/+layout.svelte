@@ -76,11 +76,11 @@
 	const backHref = $derived(
 		crumbsFromPath(page.url.pathname, breadcrumbs.extra).find((crumb) => crumb.href)?.href ?? '/'
 	);
+	const BOOT_ROUTES = new Set(['/splashscreen', '/setup']);
 	let hasClientHistory = $state(false);
 	afterNavigate(({ from }) => {
-		if (from) {
-			hasClientHistory = true;
-		}
+		const fromPath = from?.url.pathname ?? '';
+		hasClientHistory = Boolean(from) && !BOOT_ROUTES.has(fromPath);
 	});
 	let returning = $state(false);
 	const impersonatedName = $derived(

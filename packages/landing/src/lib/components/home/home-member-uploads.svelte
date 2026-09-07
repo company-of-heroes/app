@@ -17,9 +17,10 @@
 
 	type Props = {
 		matches: CommunityMatch[];
+		error?: string | null;
 	};
 
-	let { matches }: Props = $props();
+	let { matches, error = null }: Props = $props();
 	const { t } = useI18n();
 	const mySteamIds = $derived(meSteamIds(page.data.user));
 
@@ -44,6 +45,11 @@
 			>{t('View all')}</Button
 		>
 	</div>
+	{#if error}
+		<p class="border-secondary-800 text-red-400 border-b px-4 py-2 text-sm">
+			{t('Could not load member uploads.')}
+		</p>
+	{/if}
 	<ReplayList
 		{matches}
 		meSteamIds={mySteamIds}
@@ -56,7 +62,7 @@
 		{resolveFallbackSrc}
 		{resolveFactionFlag}
 		formatMapName={normalizeMapName}
-		emptyMessage={t('No member replays found.')}
+		emptyMessage={error ? t('Could not load member uploads.') : t('No member replays found.')}
 		locale={currentLocale()}
 		mapLabel={t('Title')}
 		alliesLabel={t('Allies')}

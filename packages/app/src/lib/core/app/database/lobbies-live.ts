@@ -83,7 +83,7 @@ export class LobbiesLive {
 		);
 	}
 
-	async setLobby(match: Match, lobbyId?: string | null) {
+	async setLobby(match: Match) {
 		if (!match.sessionId || !match.map || match.players.length === 0) {
 			console.warn('[LOBBIES_LIVE]: skipping upsert, match is incomplete', {
 				sessionId: match.sessionId,
@@ -101,8 +101,7 @@ export class LobbiesLive {
 			isRanked: match.isRanked,
 			isReplay: match.isReplay ?? false,
 			matchType: match.matchType,
-			players: players as LiveLobbyWritePlayer[],
-			lobby: lobbyId
+			players: players as LiveLobbyWritePlayer[]
 		};
 
 		try {

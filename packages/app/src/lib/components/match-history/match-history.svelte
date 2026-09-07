@@ -41,25 +41,21 @@
 	const isStaff = $derived(app.account.isStaff);
 	let pendingSessionId = $state<number | null>(null);
 	const hiddenIds = resource(
-		() => isStaff,
-		() =>
-			listHiddenSessionIds().catch((error) => {
-				console.warn('[MATCH-HISTORY]: hidden match lookup failed:', error);
-				return new Set<number>();
-			})
+		() => true,
+		() => listHiddenSessionIds()
 	);
 	const hiddenWords = resource(
-		() => isStaff,
-		() =>
-			listHiddenKeywordWords().catch((error) => {
-				console.warn('[MATCH-HISTORY]: hidden title word lookup failed:', error);
-				return [] as string[];
-			})
+		() => true,
+		() => listHiddenKeywordWords()
 	);
 	const visibleMatches = $derived.by(() => {
 		if (isStaff) return orderedMatches;
-		const ids = hiddenIds.current ?? new Set<number>();
-		const words = hiddenWords.current ?? [];
+		if (hiddenIds.current == null || hiddenWords.current == null || hiddenIds.error || hiddenWords.error) {
+			return [];
+		}
+
+		const ids = hiddenIds.current;
+		const words = hiddenWords.current;
 		return orderedMatches.filter(
 			(match) => !ids.has(match.id) && !titleMatchesHiddenKeyword(match.description, words)
 		);

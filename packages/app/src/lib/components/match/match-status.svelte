@@ -16,8 +16,13 @@
 
 <span {...restProps} class={cn('inline-flex items-center', restProps.class)}>
 	{#if state.needsResult}
-		{#if state.isLive}
+		{#if state.liveCheck === 'live'}
 			<LiveBadge label={t('Live')} {@attach tooltip(t('Live'))} />
+		{:else if state.liveCheck === 'unknown'}
+			<PendingBadge
+				label={t('Pending')}
+				{@attach tooltip(t('Could not check if this match is still live.'))}
+			/>
 		{:else}
 			<PendingBadge label={t('Pending')} {@attach tooltip(t('Result pending'))} />
 		{/if}

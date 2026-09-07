@@ -2,17 +2,34 @@
 
 'use strict';
 
+/**
+ * User-scoped history search must use the authenticated account.
+ * Query userId is ignored so callers cannot enumerate another user's play graph.
+ */
+function resolveHistoryUserId(e, scope) {
+	if (scope !== 'user') {
+		return { userId: '' };
+	}
+
+	if (!e.auth || !e.auth.id) {
+		return { error: e.json(401, { message: 'Unauthorized' }) };
+	}
+
+	return { userId: String(e.auth.id) };
+}
+
 routerAdd('GET', '/api/history-players', (e) => {
 	const { loadUserSteamIds, userPlayedLobbyClause } = require(`${__hooks}/lib/match-history.js`);
 	const query = e.request.url.query();
 	const scope = query.get('scope') || 'user';
-	const userId = query.get('userId') || '';
+	const resolved = resolveHistoryUserId(e, scope);
+	if (resolved.error) {
+		return resolved.error;
+	}
+
+	const userId = resolved.userId;
 	const q = (query.get('q') || '').trim();
 	const limit = Math.min(50, Math.max(1, parseInt(query.get('limit') || '20', 10) || 20));
-
-	if (scope === 'user' && !userId) {
-		return e.json(400, { message: 'userId required for user scope' });
-	}
 
 	const bindings = {
 		like: `%${q}%`,
@@ -68,13 +85,14 @@ routerAdd('GET', '/api/history-maps', (e) => {
 	const { loadUserSteamIds, userPlayedLobbyClause } = require(`${__hooks}/lib/match-history.js`);
 	const query = e.request.url.query();
 	const scope = query.get('scope') || 'user';
-	const userId = query.get('userId') || '';
+	const resolved = resolveHistoryUserId(e, scope);
+	if (resolved.error) {
+		return resolved.error;
+	}
+
+	const userId = resolved.userId;
 	const q = (query.get('q') || '').trim();
 	const limit = Math.min(200, Math.max(1, parseInt(query.get('limit') || '100', 10) || 100));
-
-	if (scope === 'user' && !userId) {
-		return e.json(400, { message: 'userId required for user scope' });
-	}
 
 	const bindings = {
 		like: `%${q}%`,

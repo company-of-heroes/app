@@ -13,6 +13,7 @@ const POLL_MS = 15_000;
 export class LiveLobbiesFeed {
 	items = $state<LiveLobby[]>([]);
 	isLoading = $state(false);
+	error = $state<string | null>(null);
 
 	#unsubscribe: UnsubscribeFunc | null = null;
 	#pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -31,6 +32,7 @@ export class LiveLobbiesFeed {
 			await this.refresh();
 		} catch (error) {
 			console.warn('[LIVE_LOBBIES]: initial refresh failed:', error);
+			this.error = error instanceof Error ? error.message : String(error);
 		}
 
 		this.#startPolling();
@@ -45,6 +47,7 @@ export class LiveLobbiesFeed {
 		await this.#unsubscribe?.();
 		this.#unsubscribe = null;
 		this.items = [];
+		this.error = null;
 	}
 
 	async refresh(): Promise<void> {
@@ -52,6 +55,10 @@ export class LiveLobbiesFeed {
 
 		try {
 			await this.#loadItems();
+			this.error = null;
+		} catch (error) {
+			this.error = error instanceof Error ? error.message : String(error);
+			throw error;
 		} finally {
 			this.isLoading = false;
 		}
@@ -68,7 +75,10 @@ export class LiveLobbiesFeed {
 
 					// Another player in the same session may still have a live row.
 					if (wasVisible) {
-						await this.#loadItems();
+						await this.#loadItems().catch((error) => {
+							console.warn('[LIVE_LOBBIES]: reload after delete failed:', error);
+							this.error = error instanceof Error ? error.message : String(error);
+						});
 					}
 					return;
 				}
@@ -77,28 +87,44 @@ export class LiveLobbiesFeed {
 					const lobby = event.record;
 					if (lobby?.id && lobby.sessionId && isPublicLiveLobby(lobby)) {
 						this.#upsert(lobby);
+						this.error = null;
 					} else if (lobby?.id) {
 						this.items = this.items.filter((entry) => entry.id !== lobby.id);
 					} else {
 						await this.#loadItems();
+						this.error = null;
 					}
 				} catch (error) {
 					console.warn('[LIVE_LOBBIES]: failed to apply realtime event:', error);
-					await this.#loadItems();
+					try {
+						await this.#loadItems();
+						this.error = null;
+					} catch (reloadError) {
+						this.error =
+							reloadError instanceof Error ? reloadError.message : String(reloadError);
+					}
 				}
 			});
 		} catch (error) {
 			console.warn('[LIVE_LOBBIES]: subscribe failed:', error);
 			this.#unsubscribe = null;
+			if (!this.error) {
+				this.error = error instanceof Error ? error.message : String(error);
+			}
 		}
 	}
 
 	#startPolling() {
 		this.#clearPolling();
 		this.#pollInterval = setInterval(() => {
-			void this.#loadItems().catch((error) => {
-				console.warn('[LIVE_LOBBIES]: poll refresh failed:', error);
-			});
+			void this.#loadItems()
+				.then(() => {
+					this.error = null;
+				})
+				.catch((error) => {
+					console.warn('[LIVE_LOBBIES]: poll refresh failed:', error);
+					this.error = error instanceof Error ? error.message : String(error);
+				});
 		}, POLL_MS);
 	}
 

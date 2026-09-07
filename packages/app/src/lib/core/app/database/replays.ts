@@ -71,7 +71,15 @@ export class Replays {
 			const record = await unwrapApi(api.replays.getById(id));
 			const bytes = await getFile(record, String(record.file ?? ''));
 			return { bytes, record: record as unknown as ReplaysRecord };
-		} catch {
+		} catch (error) {
+			const status =
+				typeof error === 'object' && error !== null && 'status' in error
+					? Number((error as { status: number }).status)
+					: undefined;
+			if (status !== 404) {
+				throw error;
+			}
+
 			const lobby = await pocketbase.collection('lobbies').getOne(id, { fetch });
 			const bytes = await getFile(lobby, lobby.replay);
 			return { bytes, record: null };

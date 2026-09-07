@@ -19,9 +19,10 @@
 	type Props = {
 		lobbies: LiveLobbyRecord[];
 		loading?: boolean;
+		error?: string | null;
 	};
 
-	let { lobbies, loading = false }: Props = $props();
+	let { lobbies, loading = false, error = null }: Props = $props();
 	const { t } = useI18n();
 	const mySteamIds = $derived(meSteamIds(page.data.user));
 	const isDev = import.meta.env.DEV;
@@ -29,6 +30,7 @@
 	let seedError = $state<string | null>(null);
 
 	const rows = $derived(lobbies.map((lobby) => toLiveLobby(lobby, t)));
+	const loadError = $derived(error || seedError);
 
 	function playerLabel(player: LiveLobbyPlayer) {
 		return liveLobbyPlayerLabel(player, t);
@@ -95,8 +97,10 @@
 			{/if}
 		</div>
 	</div>
-	{#if seedError}
-		<p class="border-secondary-800 text-red-400 border-b px-4 py-2 text-sm">{seedError}</p>
+	{#if loadError}
+		<p class="border-secondary-800 text-red-400 border-b px-4 py-2 text-sm">
+			{seedError ?? t('Could not load live lobbies.')}
+		</p>
 	{/if}
 	<LiveLobbiesTable
 		lobbies={rows}
@@ -110,7 +114,9 @@
 		detailsHref={liveLobbyDetailsHref}
 		formatMapName={normalizeMapName}
 		formatStarted={(createdAt) => formatRelativeIso(createdAt, currentLocale())}
-		emptyMessage={t('No community members are in a match right now.')}
+		emptyMessage={loadError
+			? t('Could not load live lobbies.')
+			: t('No community members are in a match right now.')}
 		mapLabel={t('Map')}
 		nameLabel={t('Name')}
 		typeLabel={t('Type')}

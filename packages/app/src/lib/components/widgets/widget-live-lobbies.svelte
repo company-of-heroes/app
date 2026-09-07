@@ -108,11 +108,11 @@
 	}
 
 	function detailsHref(lobby: LiveLobby) {
-		if (lobby.lobbyId) {
-			return `/history/${lobby.lobbyId}`;
+		if (!lobby.lobbyId) {
+			return null;
 		}
 
-		return `/live/${lobby.id}`;
+		return `/history/${lobby.lobbyId}`;
 	}
 
 	function seedUrl() {
@@ -170,6 +170,11 @@
 			</Button>
 		</div>
 	{/if}
+	{#if feed.error}
+		<p class="border-secondary-800 text-red-400 border-b px-4 py-2 text-sm">
+			{t('Could not load live lobbies.')}
+		</p>
+	{/if}
 	<LiveLobbiesTable
 		lobbies={rows}
 		loading={feed.isLoading}
@@ -181,7 +186,9 @@
 		{detailsHref}
 		formatMapName={normalizeMapName}
 		formatStarted={(createdAt: string) => dayjs(createdAt).fromNow()}
-		emptyMessage={t('No community members are in a match right now.')}
+		emptyMessage={feed.error
+			? t('Could not load live lobbies.')
+			: t('No community members are in a match right now.')}
 		mapLabel={t('Map')}
 		nameLabel={t('Name')}
 		typeLabel={t('Type')}

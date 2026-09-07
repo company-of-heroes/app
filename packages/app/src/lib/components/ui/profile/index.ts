@@ -9,11 +9,11 @@ import ProfileCreated from './profile-created.svelte';
 import ProfileFlag from './profile-flag.svelte';
 import ProfileStats from './profile-stats.svelte';
 
-const context = new Context<Profile>('<Profile />');
+const context = new Context<() => Profile>('<Profile />');
 
 export type Profile = { relic: RelicProfile; steam: SteamPlayerSummary };
-export const createProfile = (profile: () => Profile) => context.set(profile());
-export const useProfile = () => context.get();
+export const createProfile = (profile: () => Profile) => context.set(profile);
+export const useProfile = () => context.get()();
 
 export {
 	Root,

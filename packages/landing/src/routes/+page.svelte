@@ -59,13 +59,15 @@
 <main>
 	<Hero />
 	<HomePlayerSearch />
-	{#await data.liveLobbies}
-		<HomeLiveLobbies lobbies={[]} loading />
-	{:then lobbies}
-		<HomeLiveLobbies {lobbies} />
-	{/await}
-	<HomeRecentMatches matches={data.recentMatches} />
-	<HomeMemberUploads matches={data.recentMemberUploads} />
+	<HomeLiveLobbies
+		lobbies={data.liveLobbies.items}
+		error={data.liveLobbies.error}
+	/>
+	<HomeRecentMatches matches={data.recentMatches.items} error={data.recentMatches.error} />
+	<HomeMemberUploads
+		matches={data.recentMemberUploads.items}
+		error={data.recentMemberUploads.error}
+	/>
 	<HomeLiveStreams streams={data.streams} />
 	<DonationSection />
 </main>

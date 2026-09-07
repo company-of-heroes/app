@@ -14,8 +14,10 @@
 		replay: ReplayData;
 	} | null>(null);
 
-	app.on('lobby.saved', (savedMatch) => {
-		goto(resolve('/(loaded)/history/[id]', { id: savedMatch.id }));
+	$effect(() => {
+		return app.on('lobby.saved', (savedMatch) => {
+			goto(resolve('/(loaded)/history/[id]', { id: savedMatch.id }));
+		});
 	});
 
 	$effect(() => {
@@ -26,14 +28,10 @@
 
 	export const snapshot: Snapshot = {
 		capture() {
-			return {
-				match,
-				replay
-			};
+			return { replay };
 		},
-		restore(snapshot) {
-			match = snapshot.match;
-			replay = snapshot.replay;
+		restore(data) {
+			replay = data.replay;
 		}
 	};
 </script>

@@ -83,7 +83,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			headers.append(
 				'set-cookie',
 				pocketbase.authStore.exportToCookie({
-					httpOnly: false,
+					httpOnly: true,
 					secure: event.url.protocol === 'https:',
 					sameSite: 'lax',
 					path: '/'

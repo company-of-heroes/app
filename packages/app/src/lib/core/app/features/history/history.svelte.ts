@@ -20,6 +20,13 @@ const POLL_INITIAL_MS = 10_000;
 const POLL_MAX_MS = 60_000;
 const PROFILE_REFRESH_DELAYS_MS = [15_000, 30_000, 45_000, 60_000, 90_000, 120_000];
 const REPLAY_NAME_SCAN_LIMIT = 50;
+const TEMP_REC_RETRY_ATTEMPTS = 3;
+const TEMP_REC_RETRY_DELAY_MS = 400;
+
+type HistorySettings = {
+	enabled: boolean;
+	pendingReplaySessionId: number | null;
+};
 
 /**
  * Saves finished matches (with replay) and fills in their results from the
@@ -29,7 +36,7 @@ const REPLAY_NAME_SCAN_LIMIT = 50;
  * `needsResult=true` exist and backs off when results take a while, instead
  * of polling unconditionally forever.
  */
-export class History extends Feature {
+export class History extends Feature<HistorySettings> {
 	name = 'history';
 
 	matches!: Matches;
@@ -81,7 +88,7 @@ export class History extends Feature {
 					return;
 				}
 
-				void this.ensureLobbyStarted(match);
+				this.#setPendingSessionId(match.sessionId);
 				void this.#harvestPlayerRatings(match);
 			}),
 			app.on('game.login', () => {
@@ -91,6 +98,7 @@ export class History extends Feature {
 		);
 
 		this.#schedulePoll(0);
+		void this.#recoverPendingReplay();
 	}
 
 	disable() {
@@ -102,6 +110,53 @@ export class History extends Feature {
 		}
 
 		this.#unsubscribers = [];
+	}
+
+	#setPendingSessionId(sessionId: number | null | undefined): void {
+		if (sessionId == null || !Number.isFinite(sessionId) || sessionId <= 0) {
+			return;
+		}
+
+		this.settings.pendingReplaySessionId = sessionId;
+	}
+
+	#clearPendingSessionId(sessionId?: number | null): void {
+		const pending = this.settings.pendingReplaySessionId;
+		if (pending == null) {
+			return;
+		}
+
+		if (sessionId != null && pending !== sessionId) {
+			return;
+		}
+
+		this.settings.pendingReplaySessionId = null;
+	}
+
+	async #recoverPendingReplay(): Promise<void> {
+		const sessionId = this.settings.pendingReplaySessionId;
+		if (sessionId == null || !account.userId) {
+			return;
+		}
+
+		try {
+			const existing = await app.database.matches.findBySessionId(sessionId);
+			const local = await this.getLastMatchReplay();
+			if (!local?.file) {
+				return;
+			}
+
+			if (!existing) {
+				return;
+			}
+
+			const result = await app.database.matches.attachReplay(existing.id, local.file);
+			if (result.attached || (result.keptExisting && result.replaySize >= local.file.size)) {
+				this.#clearPendingSessionId(sessionId);
+			}
+		} catch (error) {
+			console.warn('[HISTORY]: pending replay recovery failed:', error);
+		}
 	}
 
 	async #harvestPlayerRatings(match: Match): Promise<void> {
@@ -145,60 +200,81 @@ export class History extends Feature {
 		}
 	}
 
-	/** Creates (or returns) the durable lobbies row as soon as a match starts. */
-	async ensureLobbyStarted(lobby: Match): Promise<MatchExpanded | null> {
-		if (lobby.isReplay || !lobby.sessionId || !app.isReady) {
-			return null;
-		}
-
-		try {
-			const match = await app.database.matches.ensureStarted({
-				sessionId: lobby.sessionId,
-				isRanked: lobby.isRanked,
-				title: lobby.type,
-				map: lobby.map || 'Unknown',
-				// Stay publicly loadable until finish (incl. skirmish).
-				needsResult: true,
-				players: toPersistablePlayers(lobby.players)
-			});
-			app.emit('lobby.saved', match);
-			return match;
-		} catch (error) {
-			console.error('[HISTORY]: failed to ensure match at start:', error);
-			return null;
-		}
-	}
-
-	/** Persists a finished lobby as a match (with replay when available). */
+	/**
+	 * Updates the durable match row created by the lobbies_live PocketBase hook.
+	 * Does not create lobbies rows — the hook is the sole writer.
+	 */
 	async saveLobbyResult(lobby: Match, replayFile: File | null = null): Promise<void> {
-		if (lobby.isReplay || !lobby.sessionId || !app.isReady) {
+		if (lobby.isReplay || !lobby.sessionId || !account.userId) {
 			return;
 		}
 
+		this.#setPendingSessionId(lobby.sessionId);
+
 		try {
-			const existing = await app.database.matches.findBySessionId(lobby.sessionId);
+			let existing = await this.#findDurableMatch(lobby.sessionId);
+			if (!existing) {
+				console.error('[HISTORY]: durable match missing for session', lobby.sessionId);
+				app.toast.error(t('Could not save match result. The match record was not found.'));
+				return;
+			}
+
 			const players = toPersistablePlayers(lobby.players);
 			const payload = {
 				isRanked: lobby.isRanked,
 				title: lobby.type,
 				map: lobby.map || 'Unknown',
 				needsResult: !lobby.isSkirmish,
-				players,
-				...(replayFile ? { replay: replayFile } : {})
+				players
 			};
 
-			const match = existing
-				? await app.database.matches.update(existing.id, payload)
-				: await app.database.matches.create({
-						...payload,
-						sessionId: lobby.sessionId
-					});
+			try {
+				existing = await app.database.matches.update(existing.id, payload);
+			} catch (error) {
+				// Non-owners cannot update metadata; file attach still works below.
+				console.warn('[HISTORY]: match metadata update skipped:', error);
+			}
 
+			if (replayFile) {
+				try {
+					const result = await app.database.matches.attachReplay(existing.id, replayFile);
+					if (
+						result.attached ||
+						(result.keptExisting && result.replaySize >= replayFile.size)
+					) {
+						this.#clearPendingSessionId(lobby.sessionId);
+					}
+				} catch (error) {
+					console.error('[HISTORY]: failed to attach replay:', error);
+				}
+			}
+
+			const match = await app.database.matches.getById(existing.id).catch(() => existing);
 			app.emit('lobby.saved', match);
 			this.#schedulePoll(POLL_INITIAL_MS);
 		} catch (error) {
 			console.error('[HISTORY]: failed to save match:', error);
+			app.toast.error(t('Could not save match result.'));
 		}
+	}
+
+	/** Waits briefly for the PB hook to create/link the durable row. */
+	async #findDurableMatch(sessionId: number) {
+		const attempts = 5;
+		const delayMs = 400;
+
+		for (let attempt = 0; attempt < attempts; attempt++) {
+			const existing = await app.database.matches.findBySessionId(sessionId);
+			if (existing) {
+				return existing;
+			}
+
+			if (attempt < attempts - 1) {
+				await new Promise((resolve) => setTimeout(resolve, delayMs));
+			}
+		}
+
+		return null;
 	}
 
 	#schedulePoll(delay: number): void {
@@ -503,20 +579,62 @@ export class History extends Feature {
 	}
 
 	/** Reads the replay of the last finished match from the playback folder. */
-	async getLastMatchReplay() {
-		const path = await join(await app.paths.cohPlaybackDir(), 'temp.rec');
+	async getLastMatchReplay(): Promise<{
+		file: File;
+		replay: ReplayData | null;
+	} | null> {
+		let lastError: unknown = null;
 
-		if (!(await exists(path))) {
-			return null;
+		for (let attempt = 0; attempt < TEMP_REC_RETRY_ATTEMPTS; attempt++) {
+			try {
+				const path = await join(await app.paths.cohPlaybackDir(), 'temp.rec');
+				if (!(await exists(path))) {
+					if (attempt < TEMP_REC_RETRY_ATTEMPTS - 1) {
+						await new Promise((resolve) => setTimeout(resolve, TEMP_REC_RETRY_DELAY_MS));
+						continue;
+					}
+
+					return null;
+				}
+
+				const fileData = await readFile(path);
+				if (!fileData || fileData.byteLength < 64) {
+					if (attempt < TEMP_REC_RETRY_ATTEMPTS - 1) {
+						await new Promise((resolve) => setTimeout(resolve, TEMP_REC_RETRY_DELAY_MS));
+						continue;
+					}
+
+					return null;
+				}
+
+				let replay: ReplayData | null = null;
+				try {
+					replay = parseReplay(new Uint8Array(fileData));
+				} catch (error) {
+					console.warn(
+						'[HISTORY]: parseReplay failed; uploading raw temp.rec bytes:',
+						error
+					);
+				}
+
+				return {
+					file: new File([new Uint8Array(fileData)], 'replay.rec'),
+					replay
+				};
+			} catch (error) {
+				lastError = error;
+				if (attempt < TEMP_REC_RETRY_ATTEMPTS - 1) {
+					await new Promise((resolve) => setTimeout(resolve, TEMP_REC_RETRY_DELAY_MS));
+					continue;
+				}
+			}
 		}
 
-		const fileData = await readFile(path);
-		const replay = parseReplay(new Uint8Array(fileData));
+		if (lastError) {
+			throw lastError;
+		}
 
-		return {
-			file: new File([fileData], 'replay.rec'),
-			replay
-		};
+		return null;
 	}
 
 	async downloadReplay(match: MatchExpanded): Promise<{ ok: boolean; downloadCount?: number }> {
@@ -549,9 +667,10 @@ export class History extends Feature {
 		return await exists(path);
 	}
 
-	defaultSettings(): { enabled: boolean } {
+	defaultSettings(): HistorySettings {
 		return {
-			enabled: true
+			enabled: true,
+			pendingReplaySessionId: null
 		};
 	}
 }

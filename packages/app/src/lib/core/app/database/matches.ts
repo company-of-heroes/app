@@ -12,6 +12,7 @@ import { exp } from '$core/pocketbase';
 import { api, unwrapApi } from '$core/api';
 import type {
 	AggregationPlayer,
+	AttachReplayResult,
 	FilterOperator,
 	HistoryListQuery,
 	HistorySortField,
@@ -137,6 +138,10 @@ export class Matches {
 	async update(id: string, data: Update<'lobbies'>): Promise<MatchExpanded> {
 		const record = await unwrapApi(api.matches.update(id, data as MatchUpdateInput));
 		return exp(record) as unknown as MatchExpanded;
+	}
+
+	async attachReplay(id: string, file: File): Promise<AttachReplayResult> {
+		return unwrapApi(api.matches.attachReplay(id, file));
 	}
 
 	async delete(id: string): Promise<boolean> {

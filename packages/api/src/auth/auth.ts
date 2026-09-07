@@ -364,8 +364,7 @@ export class AuthApi {
 					updated: typeof row.updated === 'string' ? row.updated : undefined,
 					appVersion: readMetaVersion(row.meta)
 				};
-			})
-			.orElse(() => ok(null));
+			});
 	}
 }
 

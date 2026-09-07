@@ -1,8 +1,9 @@
 import type { ListResult, RecordFullListOptions, RecordModel } from 'pocketbase';
 import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
-import type { ApiDeps } from '../deps';
-import type { ApiError } from '../errors';
+import { normalizeBaseUrl, resolveAuthHeaders, type ApiDeps } from '../deps';
+import { apiError, type ApiError } from '../errors';
+import { fetchJson } from '../fetch-json';
 import { fromPbPromise, pbOptions, requireAuth } from '../pb';
 
 export type FilterOperator = 'gt' | 'gte' | 'lt' | 'lte';
@@ -58,6 +59,13 @@ export type MatchCreateInput = {
 
 export type MatchUpdateInput = Record<string, unknown>;
 
+export type AttachReplayResult = {
+	id: string;
+	attached: boolean;
+	keptExisting: boolean;
+	replaySize: number;
+};
+
 export type MatchAggregation = {
 	id: string;
 	collectionId: string;
@@ -71,6 +79,13 @@ export type MatchAggregation = {
 type LobbySessionRef = Pick<MatchRecord, 'id' | 'sessionId' | 'needsResult' | 'hasReplay'>;
 
 const DEFAULT_EXPAND = 'user';
+
+const attachReplaySchema = z.object({
+	id: z.string(),
+	attached: z.boolean(),
+	keptExisting: z.boolean(),
+	replaySize: z.number()
+});
 
 const historyListSchema: z.ZodType<ListResult<MatchRecord>> = z
 	.object({
@@ -425,6 +440,66 @@ export class MatchesApi {
 				.update(id, data, pbOptions(this.deps, { expand: DEFAULT_EXPAND })),
 			'Failed to update match.'
 		);
+	}
+
+	/**
+	 * Attach a replay file to a durable lobby. Any match participant may call this;
+	 * the server keeps the largest file by byte size.
+	 */
+	attachReplay(id: string, file: File): ResultAsync<AttachReplayResult, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		return ResultAsync.fromPromise(file.arrayBuffer(), () =>
+			apiError(400, 'Invalid replay upload.')
+		).andThen((buffer) => {
+			const bytes = new Uint8Array(buffer);
+			if (bytes.byteLength < 64) {
+				return errAsync(apiError(400, 'Invalid replay upload.'));
+			}
+
+			const formData = new FormData();
+			formData.append(
+				'file',
+				new File([bytes], file.name || 'replay.rec', { type: 'application/octet-stream' })
+			);
+
+			return fetchJson(
+				this.deps.fetch,
+				`${normalizeBaseUrl(this.deps.baseUrl)}/api/lobbies/${encodeURIComponent(id)}/attach-replay`,
+				{
+					fallback: 'Failed to attach replay.',
+					schema: attachReplaySchema,
+					timeoutMs: 120_000,
+					init: {
+						method: 'POST',
+						headers: resolveAuthHeaders(this.deps),
+						body: formData
+					},
+					onStatus: (status) => {
+						if (status === 401) {
+							return apiError(401, 'Log in to do that.');
+						}
+
+						if (status === 403) {
+							return apiError(403, 'Only match participants can attach a replay.');
+						}
+
+						if (status === 404) {
+							return apiError(404, 'Match not found.');
+						}
+
+						if (status === 400) {
+							return apiError(400, 'Invalid replay upload.');
+						}
+
+						return undefined;
+					}
+				}
+			);
+		});
 	}
 
 	delete(id: string): ResultAsync<boolean, ApiError> {

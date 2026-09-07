@@ -17,9 +17,10 @@
 
 	type Props = {
 		matches: CommunityMatch[];
+		error?: string | null;
 	};
 
-	let { matches }: Props = $props();
+	let { matches, error = null }: Props = $props();
 	const { t } = useI18n();
 	const mySteamIds = $derived(meSteamIds(page.data.user));
 
@@ -42,6 +43,11 @@
 		</div>
 		<Button href={href('/replays')} variant="link" size="sm" class="px-0">{t('View all')}</Button>
 	</div>
+	{#if error}
+		<p class="border-secondary-800 text-red-400 border-b px-4 py-2 text-sm">
+			{t('Could not load recent matches.')}
+		</p>
+	{/if}
 	<ReplayList
 		{matches}
 		meSteamIds={mySteamIds}
@@ -54,7 +60,7 @@
 		{resolveFallbackSrc}
 		{resolveFactionFlag}
 		formatMapName={normalizeMapName}
-		emptyMessage={t('No community replays found.')}
+		emptyMessage={error ? t('Could not load recent matches.') : t('No community replays found.')}
 		locale={currentLocale()}
 		mapLabel={t('Map')}
 		alliesLabel={t('Allies')}
