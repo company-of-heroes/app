@@ -1,14 +1,12 @@
-# @company-of-heroes/i18n
+# @company-of-heroes/api
 
-## 0.1.3
+## 0.2.0
 
 - feat; edit account profile and verify email on the website and in the app
 - feat; management overview to browse, hide, and bulk-delete fair-play screenshots
-- enhance; rebuild dashboard hero as a profile-style shell with streak, peak, best map, and fresher ranks
-- feat; ask once to enable fair-play all-chat announce
-- feat; report unknown DLLs loaded into Company of Heroes during fair play checks
-- enhance; mention privacy, no PC scanning, open source, and Authenticode signing on the home hero
-- feat; add optional PayPal donations section and header link on the homepage
+- enhance; show a live badge on live lobbies and current game, and a pending badge on matches awaiting a result
+- fix; keep the live badge on saved matches that are still in an active lobby
+- fix; show pending (not live) in match history lists such as matches played today
 - feat; add member replay uploads with compose preview, ladder-stats snapshots, and per-player Steam ID linking when missing from the .rec
 - feat; owners can edit member replay title, description, and Steam links, and soft-delete uploads (hidden from public; retained for staff)
 - feat; require a description on member replay upload, edit, and publish-from-match
@@ -26,17 +24,7 @@
 - feat; publish an owned community match as a member replay (leaves Community matches; stays under My matches)
 - fix; show personal match history under the replays My matches tab
 - fix; speed up replay list filtering and make replay detail navigation feel instant
+- feat; share PocketBase and API client logic in @company-of-heroes/api
+- fix; detect skirmish (match type 14) for overlay and live lobbies, including cpu race updates
+- fix; detect family-share smurfs via Steam only without cohstats
 - feat; add Steam OpenID login on the website with PocketBase account find-or-create
-
-## 0.1.2
-
-- enhance; align home player search with shared Form.Group controls
-- enhance; remove home download section, Download nav link, and SmartScreen notice
-- enhance; rename site brand to Company of Heroes - Companion app
-- enhance; rename hero download button to Download app
-- enhance; even out Form.Group vertical padding
-- enhance; show staff-only account debug on player profiles, replays, and matches
-
-## 0.1.1
-
-- feat; show a what's-new popup with markdown highlights after updates

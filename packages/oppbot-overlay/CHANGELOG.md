@@ -1,5 +1,9 @@
 # @company-of-heroes/oppbot-overlay
 
+## 3.2.3
+
+- fix; detect skirmish (match type 14) for overlay and live lobbies, including cpu race updates
+
 ## 3.2.2
 
 - enhance; apply blue/green/gold elo tiers and elite glow on the oppbot overlay
