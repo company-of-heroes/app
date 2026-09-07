@@ -2,16 +2,14 @@
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import logo from '@assets/logo-transparent-bg.png';
-	import { Button } from '@company-of-heroes/ui/button';
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import HeaderAuth from '$lib/components/layout/header-auth.svelte';
 	import LocaleSwitcher from '$lib/components/layout/locale-switcher.svelte';
 	import MobileNav from '$lib/components/layout/mobile-nav.svelte';
 	import { cn } from '$lib/utils/cn';
-	import { latestDownload } from '$lib/site/download.svelte';
 	import { rememberedReplaysListHref } from '$lib/replays';
 	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
-	import { interactive, headerCellAction, headerCellActionPrimary } from '$lib/utils/variants';
+	import { interactive } from '$lib/utils/variants';
 
 	const { t } = useI18n();
 
@@ -93,25 +91,9 @@
 		<div class="border-secondary-800 hidden h-full items-stretch border-r sm:flex">
 			<LocaleSwitcher />
 		</div>
-		<div class="border-secondary-800 flex h-full items-stretch border-r">
+		<div class="border-secondary-800 flex h-full items-stretch border-r md:border-r-0">
 			<HeaderAuth />
 		</div>
-		<Button
-			href={latestDownload.url}
-			download={latestDownload.fileName}
-			variant="ghost"
-			class={cn(headerCellActionPrimary, 'hidden sm:inline-flex')}
-		>
-			{t('Download for Windows')}
-		</Button>
-		<Button
-			href={latestDownload.url}
-			download={latestDownload.fileName}
-			variant="ghost"
-			class={cn(headerCellAction, 'sm:hidden')}
-		>
-			{t('Download')}
-		</Button>
 		<MobileNav />
 	</div>
 </header>

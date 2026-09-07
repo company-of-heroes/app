@@ -48,7 +48,7 @@
 {/snippet}
 
 <div aria-busy="true">
-	<div class="overflow-x-auto">
+	<div class="hidden overflow-x-auto md:block">
 		<table class="w-full table-fixed border-collapse text-sm">
 			<thead class="border-secondary-800 border-b">
 				<tr class="{tableHeadRow} text-left">
@@ -87,7 +87,30 @@
 			</tbody>
 		</table>
 	</div>
+	<div class="divide-secondary-800 divide-y md:hidden">
+		{#each rows as row (row)}
+			<div class="flex flex-col gap-2 px-4 py-3">
+				<div class="flex items-center gap-3">
+					<Skeleton class="size-11 shrink-0 rounded-none" />
+					<Skeleton class="h-4 w-40" />
+				</div>
+				<div class="flex items-center gap-2">
+					<Skeleton class="{factionIcon} opacity-50" />
+					<Skeleton class="{factionIcon} opacity-50" />
+					<Skeleton class="ms-2 {factionIcon} opacity-50" />
+					<Skeleton class="{factionIcon} opacity-50" />
+				</div>
+				<div class="flex flex-wrap items-center gap-3">
+					<Skeleton class="h-3.5 w-14" />
+					<Skeleton class="h-3.5 w-20" />
+					<Skeleton class="h-3.5 w-10" />
+					<Skeleton class="h-3.5 w-10" />
+					<Skeleton class="h-3.5 w-10" />
+				</div>
+			</div>
+		{/each}
+	</div>
 	<div class="border-secondary-800 flex border-t px-5 py-3">
-		<Skeleton class="ms-auto h-9 w-56" />
+		<Skeleton class="ms-auto h-9 w-40 sm:w-56" />
 	</div>
 </div>

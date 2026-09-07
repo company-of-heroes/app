@@ -13,7 +13,7 @@
 	let { messages, playerCount, emptyMessage = 'No messages' }: Props = $props();
 
 	const messageRow =
-		'grid grid-cols-[4.5rem_minmax(0,auto)_1fr] items-start gap-x-3 gap-y-0.5 px-4 py-2.5 border-secondary-800 border-b last:border-b-0';
+		'grid grid-cols-[3.75rem_minmax(0,auto)_1fr] sm:grid-cols-[4.5rem_minmax(0,auto)_1fr] items-start gap-x-2 sm:gap-x-3 gap-y-0.5 px-4 py-2.5 border-secondary-800 border-b last:border-b-0';
 
 	function messageTone(message: ReplayMessage) {
 		if (message.sender === 'System') return 'text-secondary-400';

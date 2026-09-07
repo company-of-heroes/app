@@ -135,7 +135,7 @@
 		</table>
 	</div>
 
-	<div class="border-secondary-800 divide-y md:hidden">
+	<div class="divide-secondary-800 divide-y md:hidden">
 		{#each stats as stat (stat.profile.profile_id)}
 			{@const elo = eloForRow(stat)}
 			{@const countryName = getCountryDisplayName(stat.profile.country)}

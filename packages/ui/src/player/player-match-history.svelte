@@ -98,6 +98,78 @@
 	}
 </script>
 
+{#snippet ratingDeltaBadge(delta: number)}
+	<span class="inline-flex items-center gap-0.5 text-sm tabular-nums">
+		{#if delta < 0}
+			<CaretDownIcon class="text-destructive size-3.5 shrink-0" weight="duotone" />
+			<span class="text-red-200">{Math.abs(delta)}</span>
+		{:else if delta > 0}
+			<CaretUpIcon class="text-success size-3.5 shrink-0" weight="duotone" />
+			<span class="text-green-200">{delta}</span>
+		{:else}
+			<MinusIcon class="text-secondary-500 size-3.5 shrink-0" />
+		{/if}
+	</span>
+{/snippet}
+
+{#snippet eloValue(elo: number | null)}
+	{#if elo == null}
+		<span class="text-secondary-500 text-xs font-normal">N/A</span>
+	{:else}
+		<span
+			class={cn('tabular-nums', isEliteElo(elo) ? 'font-bold tracking-wide' : 'font-medium')}
+			style:color={getEloColor(elo)}
+			style:text-shadow={getEloTextShadow(elo)}
+		>
+			{elo}
+		</span>
+	{/if}
+{/snippet}
+
+{#snippet playerIdentity(matchPlayer: MatchHistoryPlayer, isSelf: boolean, flagUrl: string | null)}
+	<div class="flex min-w-0 items-center gap-2">
+		{#if showAvatars}
+			<span class="border-secondary-800 size-8 shrink-0 overflow-hidden rounded-lg border">
+				{#if matchPlayer.avatarUrl}
+					<img
+						src={resolveAvatarUrl(matchPlayer.avatarUrl)}
+						alt=""
+						class="size-full object-cover"
+					/>
+				{:else}
+					<span class="flex size-full items-center justify-center bg-gray-600">
+						<span class="text-xl text-white">?</span>
+					</span>
+				{/if}
+			</span>
+		{/if}
+		{#if flagUrl}
+			<span
+				class="ring-secondary-800 h-5 w-5 shrink-0 rounded-full bg-size-[48px] bg-center bg-no-repeat ring-4"
+				style="background-image: url('{flagUrl}')"
+			></span>
+		{/if}
+		<PlayerLikeCount likeCount={matchPlayer.likeCount} class="shrink-0" />
+		{#if matchPlayer.steamId}
+			<a
+				href={playerHref(matchPlayer.steamId)}
+				class={cn(
+					interactive,
+					'hover:text-primary min-w-0 flex-1 truncate transition-colors',
+					isSelf && 'text-primary font-semibold'
+				)}
+			>
+				{matchPlayer.alias}
+			</a>
+		{:else}
+			<span class={cn('min-w-0 flex-1 truncate', isSelf && 'text-primary font-semibold')}>
+				{matchPlayer.alias}
+			</span>
+		{/if}
+		<PlayerLabels labels={matchPlayer.labels} class="shrink-0" />
+	</div>
+{/snippet}
+
 {#if matches.length === 0}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
 {:else}
@@ -106,7 +178,9 @@
 			{@const players = [...match.players].sort((a, b) => a.teamid - b.teamid)}
 			{@const href = detailsHref?.(match)}
 			<section class="border-secondary-800 border-b">
-				<div class="border-secondary-800 flex items-center gap-4 border-b px-4 py-2">
+				<div
+					class="border-secondary-800 flex min-w-0 flex-wrap items-center gap-4 border-b px-4 py-2"
+				>
 					<MapImage
 						small
 						map={match.mapname}
@@ -126,7 +200,7 @@
 							{/if}
 						</p>
 					</div>
-					<div class="flex shrink-0 items-center gap-4">
+					<div class="flex min-w-0 shrink-0 flex-wrap items-center gap-4">
 						{@render matchActions?.({ match })}
 						{#if href}
 							<a
@@ -146,7 +220,7 @@
 						</span>
 					</div>
 				</div>
-				<div class="overflow-x-auto">
+				<div class="hidden md:block overflow-x-auto">
 					<table class="w-full table-fixed text-sm">
 						<colgroup>
 							<col class="w-3/24" />
@@ -194,23 +268,7 @@
 								>
 									<td class="px-4 py-1.5">
 										<div class="flex w-full justify-center">
-											<span class="inline-flex items-center gap-0.5 text-sm tabular-nums">
-												{#if delta < 0}
-													<CaretDownIcon
-														class="text-destructive size-3.5 shrink-0"
-														weight="duotone"
-													/>
-													<span class="text-red-200">{Math.abs(delta)}</span>
-												{:else if delta > 0}
-													<CaretUpIcon
-														class="text-success size-3.5 shrink-0"
-														weight="duotone"
-													/>
-													<span class="text-green-200">{delta}</span>
-												{:else}
-													<MinusIcon class="text-secondary-500 size-3.5 shrink-0" />
-												{/if}
-											</span>
+											{@render ratingDeltaBadge(delta)}
 										</div>
 									</td>
 									<td class="px-4 py-1.5">
@@ -224,73 +282,11 @@
 									</td>
 									<td class="px-4 py-1.5">
 										<div class="flex w-full justify-center">
-											{#if elo == null}
-												<span class="text-secondary-500 text-xs font-normal">N/A</span>
-											{:else}
-												<span
-													class={cn(
-														'tabular-nums',
-														isEliteElo(elo) ? 'font-bold tracking-wide' : 'font-medium'
-													)}
-													style:color={getEloColor(elo)}
-													style:text-shadow={getEloTextShadow(elo)}
-												>
-													{elo}
-												</span>
-											{/if}
+											{@render eloValue(elo)}
 										</div>
 									</td>
 									<td class="px-4 py-1.5">
-										<div class="flex min-w-0 items-center gap-2">
-											{#if showAvatars}
-												<span
-													class="border-secondary-800 size-8 shrink-0 overflow-hidden rounded-lg border"
-												>
-													{#if matchPlayer.avatarUrl}
-														<img
-															src={resolveAvatarUrl(matchPlayer.avatarUrl)}
-															alt=""
-															class="size-full object-cover"
-														/>
-													{:else}
-														<span
-															class="flex size-full items-center justify-center bg-gray-600"
-														>
-															<span class="text-xl text-white">?</span>
-														</span>
-													{/if}
-												</span>
-											{/if}
-											{#if flagUrl}
-												<span
-													class="ring-secondary-800 h-5 w-5 shrink-0 rounded-full bg-size-[48px] bg-center bg-no-repeat ring-4"
-													style="background-image: url('{flagUrl}')"
-												></span>
-											{/if}
-											<PlayerLikeCount likeCount={matchPlayer.likeCount} class="shrink-0" />
-											{#if matchPlayer.steamId}
-												<a
-													href={playerHref(matchPlayer.steamId)}
-													class={cn(
-														interactive,
-														'hover:text-primary min-w-0 flex-1 truncate transition-colors',
-														isSelf && 'text-primary font-semibold'
-													)}
-												>
-													{matchPlayer.alias}
-												</a>
-											{:else}
-												<span
-													class={cn(
-														'min-w-0 flex-1 truncate',
-														isSelf && 'text-primary font-semibold'
-													)}
-												>
-													{matchPlayer.alias}
-												</span>
-											{/if}
-											<PlayerLabels labels={matchPlayer.labels} class="shrink-0" />
-										</div>
+										{@render playerIdentity(matchPlayer, isSelf, flagUrl)}
 									</td>
 									<td class="px-4 py-1.5">
 										<div class="flex w-full justify-center">
@@ -321,6 +317,40 @@
 							{/each}
 						</tbody>
 					</table>
+				</div>
+				<div class="md:hidden divide-y divide-secondary-800">
+					{#each players as matchPlayer (matchPlayer.profile_id)}
+						{@const isSelf = matchPlayer.profile_id === player.profileId}
+						{@const elo = displayElo(matchPlayer)}
+						{@const delta = ratingDelta(matchPlayer)}
+						{@const flagUrl = flagImageUrl(matchPlayer.country ?? null)}
+						<div
+							class={cn(
+								'space-y-2 px-4 py-3',
+								matchPlayer.outcome === 1 ? 'bg-success/5' : 'bg-destructive/5'
+							)}
+						>
+							{@render playerIdentity(matchPlayer, isSelf, flagUrl)}
+							<div
+								class="text-secondary-300 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm"
+							>
+								<img
+									src={resolveFactionFlag(matchPlayer.race_id)}
+									alt=""
+									class="h-auto w-6 shrink-0 object-contain ring-1 ring-black/40"
+								/>
+								<span class="inline-flex items-center gap-1.5">
+									{@render eloValue(elo)}
+									{@render ratingDeltaBadge(delta)}
+								</span>
+								<span class="{statWins} font-medium tabular-nums">{matchPlayer.wins}</span>
+								<span class="{statLosses} font-medium tabular-nums">{matchPlayer.losses}</span>
+								<span class="font-medium tabular-nums {streakClass(matchPlayer.streak)}">
+									{formatStreak(matchPlayer.streak)}
+								</span>
+							</div>
+						</div>
+					{/each}
 				</div>
 			</section>
 		{/each}

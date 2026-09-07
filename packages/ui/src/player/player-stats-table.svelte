@@ -57,7 +57,7 @@
 {#if stats.length === 0}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
 {:else}
-	<div class="overflow-x-auto">
+	<div class="hidden md:block overflow-x-auto">
 		<table class="w-full table-fixed text-sm">
 			<thead>
 				<tr class={tableHeadRow}>
@@ -183,5 +183,89 @@
 				{/each}
 			</tbody>
 		</table>
+	</div>
+
+	<div class="md:hidden divide-y divide-secondary-800">
+		{#each stats as stat (stat.leaderboard_id)}
+			{@const elo = getStoredEloForLeaderboard(player.elo, stat.leaderboard_id)}
+			{@const ranked = isRankedLeaderboard(stat.leaderboard_id)}
+			<div class="px-4 py-3 text-white">
+				<div class="flex min-w-0 items-center gap-2">
+					<img
+						src={getFactionFlagByLeaderboardId(stat.leaderboard_id)}
+						alt=""
+						class="w-6 shrink-0 ring-2 ring-black"
+					/>
+					<span class="min-w-0 truncate text-base whitespace-nowrap">
+						{getLeaderboardTypeLabel(stat.leaderboard_id)}
+					</span>
+					<div class="ml-auto flex shrink-0 items-center gap-3">
+						{#if elo == null}
+							<span class="text-secondary-500 text-xs">{notAvailableLabel}</span>
+						{:else}
+							<span
+								class={cn(
+									'tabular-nums',
+									isEliteElo(elo) ? 'font-bold tracking-wide' : 'font-medium'
+								)}
+								style:color={getEloColor(elo)}
+								style:text-shadow={getEloTextShadow(elo)}
+							>
+								{elo}
+							</span>
+						{/if}
+						<span class="inline-flex items-center gap-1 tabular-nums">
+							{#if stat.rank === 1}
+								<span class="relative -top-0.5">👑</span>
+							{/if}
+							<span class={cn(stat.rank === 1 && 'text-primary font-bold')}>
+								{positionLabel(stat.leaderboard_id, stat.rank)}
+							</span>
+						</span>
+					</div>
+				</div>
+				<div class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+					{#if ranked}
+						<span class="inline-flex items-center gap-2">
+							<img
+								src={getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel)}
+								alt=""
+								class="size-6 shrink-0 object-contain"
+							/>
+							<span class="font-semibold text-white tabular-nums">
+								{stat.ranklevel > 0 ? stat.ranklevel : '-'}
+							</span>
+						</span>
+					{/if}
+					<span class="inline-flex items-center gap-1">
+						{winsLabel}
+						<LeaderboardStatPill
+							type="wins"
+							wins={stat.wins}
+							losses={stat.losses}
+							streak={stat.streak}
+						/>
+					</span>
+					<span class="inline-flex items-center gap-1">
+						{lossesLabel}
+						<LeaderboardStatPill
+							type="losses"
+							wins={stat.wins}
+							losses={stat.losses}
+							streak={stat.streak}
+						/>
+					</span>
+					<span class="inline-flex items-center gap-1">
+						{streakLabel}
+						<LeaderboardStatPill
+							type="streak"
+							wins={stat.wins}
+							losses={stat.losses}
+							streak={stat.streak}
+						/>
+					</span>
+				</div>
+			</div>
+		{/each}
 	</div>
 {/if}
