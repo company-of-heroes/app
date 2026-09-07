@@ -1,3 +1,7 @@
+### v0.63.1
+
+- fix; always link live lobbies to their durable match so /live redirects to /replays
+
 ### v0.63.0
 
 - feat; edit account profile and verify email on the website and in the app
