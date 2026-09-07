@@ -1,5 +1,10 @@
 # @company-of-heroes/landing
 
+## 1.6.3
+
+- fix; always link live lobbies to their durable match so /live redirects to /replays
+- enhance; show the shared players overview (rating / cpm) on live lobby detail, matching replays
+
 ## 1.6.2
 
 - fix; website login and logout update the header immediately instead of waiting for a hard refresh
