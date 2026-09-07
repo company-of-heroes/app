@@ -7,6 +7,7 @@ import {
 	type LeaderboardsApi,
 	type LiveLobbiesApi,
 	type MatchSocialApi,
+	type PlayerCompareApi,
 	type PlayerSocialApi,
 	type PlayersApi,
 	type RatingsApi,
@@ -26,6 +27,7 @@ export type Services = {
 	leaderboards: () => LeaderboardsApi;
 	liveLobbies: () => LiveLobbiesApi;
 	matchSocial: () => MatchSocialApi;
+	playerCompare: () => PlayerCompareApi;
 	playerSocial: () => PlayerSocialApi;
 	players: () => PlayersApi;
 	ratings: () => RatingsApi;
@@ -50,6 +52,7 @@ export function createServices(deps: ServiceDeps): Services {
 		leaderboards: () => getApi().leaderboards,
 		liveLobbies: () => getApi().liveLobbies,
 		matchSocial: () => getApi().matchSocial,
+		playerCompare: () => getApi().playerCompare,
 		playerSocial: () => getApi().playerSocial,
 		players: () => getApi().players,
 		ratings: () => getApi().ratings,

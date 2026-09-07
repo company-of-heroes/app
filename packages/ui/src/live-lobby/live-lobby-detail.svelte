@@ -1,12 +1,30 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import MapImage from '../ui/map-image.svelte';
 	import * as List from '../ui/list';
 	import { LiveBadge } from '../ui/badge';
 	import { detailMetaGrid } from '@company-of-heroes/ui/variants';
 	import { getEloColor, getEloTextShadow } from '@company-of-heroes/ui/format/player-format';
-	import LiveLobbyPlayers from './live-lobby-players.svelte';
+	import Overview from '../replay/replay-overview.svelte';
+	import type {
+		CommunityMatchDetail,
+		CommunityPlayer,
+		ReplayData,
+		ReplayPlayer
+	} from '../replay/types';
 	import { formatMatchupGap, getLiveLobbyMatchup, hasLiveLobbyStats } from './stats';
-	import { defaultLiveLobbyPlayerLabel, type LiveLobby, type LiveLobbyPlayer } from './types';
+	import {
+		defaultLiveLobbyPlayerLabel,
+		isOccupiedLiveLobbyPlayer,
+		type LiveLobby,
+		type LiveLobbyPlayer
+	} from './types';
+
+	type NameExtraArgs = {
+		name: string;
+		steamId: string | null;
+		profileId: number | null;
+	};
 
 	type Props = {
 		lobby: LiveLobby;
@@ -17,8 +35,16 @@
 		formatMapName: (map: string) => string;
 		formatStarted: (createdAt: string) => string;
 		playerHref: (player: LiveLobbyPlayer) => string | null;
+		communityPlayerHref: (player: CommunityPlayer) => string | null;
 		playerLabel?: (player: LiveLobbyPlayer) => string;
+		flagImageUrl: (country: string | null | undefined) => string | null;
+		getCountryDisplayName: (country: string | null | undefined) => string | null;
+		raceFromReplayFaction: (faction: string) => number;
+		doctrineBannerUrl: (player: ReplayPlayer) => string | null;
+		playerCpm: (replay: ReplayData, playerId: number | null) => string | number;
+		getRankImage?: (race: number, rankLevel: number) => string;
 		formatGap?: (gap: number | null) => string;
+		nameExtra?: Snippet<[NameExtraArgs]>;
 		sessionLabel?: string;
 		matchTypeLabel?: string;
 		gameModeLabel?: string;
@@ -32,12 +58,10 @@
 		axisEloLabel?: string;
 		gapLabel?: string;
 		highestLabel?: string;
-		eloLabel?: string;
 		levelLabel?: string;
-		posLabel?: string;
-		winsLabel?: string;
-		lossesLabel?: string;
-		streakLabel?: string;
+		ratingLabel?: string;
+		cpmLabel?: string;
+		unknownDoctrineLabel?: string;
 		unknownHostLabel?: string;
 		rankedLabel?: string;
 		customLabel?: string;
@@ -54,8 +78,16 @@
 		formatMapName,
 		formatStarted,
 		playerHref,
+		communityPlayerHref,
 		playerLabel = defaultLiveLobbyPlayerLabel,
+		flagImageUrl,
+		getCountryDisplayName,
+		raceFromReplayFaction,
+		doctrineBannerUrl,
+		playerCpm,
+		getRankImage,
 		formatGap = (gap) => formatMatchupGap(gap),
+		nameExtra,
 		sessionLabel = 'Session',
 		matchTypeLabel = 'Match type',
 		gameModeLabel = 'Game mode',
@@ -69,12 +101,10 @@
 		axisEloLabel = 'Axis ELO',
 		gapLabel = 'Gap',
 		highestLabel = 'Highest',
-		eloLabel = 'ELO',
-		levelLabel = 'Level',
-		posLabel = 'Pos',
-		winsLabel = 'W',
-		lossesLabel = 'L',
-		streakLabel = 'Streak',
+		levelLabel = 'Lv',
+		ratingLabel = 'Rating',
+		cpmLabel = 'CPM',
+		unknownDoctrineLabel = 'Unknown doctrine',
 		unknownHostLabel = 'Unknown',
 		rankedLabel = 'Ranked',
 		customLabel = 'Custom',
@@ -86,6 +116,48 @@
 	const occupied = $derived(lobby.players.length);
 	const showStats = $derived(hasLiveLobbyStats(lobby.players));
 	const matchup = $derived(getLiveLobbyMatchup(lobby.players));
+
+	const overviewMatch = $derived.by((): CommunityMatchDetail => {
+		const players: CommunityPlayer[] = lobby.players
+			.filter(isOccupiedLiveLobbyPlayer)
+			.map((player) => ({
+				playerId: player.playerId,
+				steamId: player.steamId,
+				race: player.race,
+				likeCount: player.likeCount,
+				profile: {
+					profile_id: player.profileId ?? 0,
+					alias: player.alias
+				}
+			}));
+
+		return {
+			id: lobby.id,
+			map: lobby.map,
+			isRanked: lobby.isRanked,
+			createdAt: lobby.createdAt,
+			durationSeconds: null,
+			likeCount: 0,
+			downloadCount: 0,
+			players,
+			result: null
+		};
+	});
+
+	function isHighlightedName(name: string): boolean {
+		if (meSteamIds.length === 0) {
+			return false;
+		}
+
+		const key = name.trim().toLowerCase();
+		return lobby.players.some((player) => {
+			if (!player.steamId || !meSteamIds.includes(player.steamId)) {
+				return false;
+			}
+
+			return playerLabel(player).trim().toLowerCase() === key;
+		});
+	}
 </script>
 
 {#snippet eloValue(value: number | null, alias?: string | null)}
@@ -146,21 +218,27 @@
 		</div>
 	</div>
 	<div class="border-secondary-800 border-b">
-		<LiveLobbyPlayers
-			players={lobby.players}
-			{meSteamIds}
+		<Overview
+			match={overviewMatch}
+			livePlayers={lobby.players}
+			playerHref={communityPlayerHref}
+			livePlayerHref={playerHref}
+			livePlayerLabel={playerLabel}
+			{flagImageUrl}
+			{getCountryDisplayName}
 			{resolveFactionFlag}
-			{playerHref}
-			{playerLabel}
-			{showStats}
+			{raceFromReplayFaction}
+			{doctrineBannerUrl}
+			{playerCpm}
+			{getRankImage}
+			{levelLabel}
 			{alliesLabel}
 			{axisLabel}
-			{eloLabel}
-			{levelLabel}
-			{posLabel}
-			{winsLabel}
-			{lossesLabel}
-			{streakLabel}
+			{unknownDoctrineLabel}
+			{ratingLabel}
+			{cpmLabel}
+			{isHighlightedName}
+			{nameExtra}
 		/>
 	</div>
 </div>

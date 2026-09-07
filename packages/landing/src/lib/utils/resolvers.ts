@@ -11,6 +11,7 @@ import { getCountryDisplayName as countryDisplayName } from '$lib/utils/country'
 import { getMapImageFromName } from '$lib/utils/media/maps';
 import { flagImageUrl as flagImageUrlFromProxy, proxiedImageUrl } from '$lib/utils/media/proxy-image';
 import {
+	getFactionFlagByLeaderboardId,
 	getFactionFlagByRace,
 	getRankImageByLeaderboardId,
 	getRankImageByRace
@@ -30,6 +31,7 @@ export {
 	getSteamIdFromName,
 	getRankImageByLeaderboardId,
 	getRankImageByRace,
+	getFactionFlagByLeaderboardId,
 	proxiedImageUrl,
 	normalizeMapName,
 	playerHref,

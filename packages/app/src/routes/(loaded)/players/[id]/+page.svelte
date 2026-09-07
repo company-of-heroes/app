@@ -8,6 +8,7 @@
 	import { resource } from 'runed';
 	import * as Player from '$lib/components/player';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
+	import { Button } from '$lib/components/ui/button';
 	import { PlayerPerformance } from '$lib/components/player-performance';
 	import PlayerCompanionStaffDebug from '$lib/components/player/player-companion-staff-debug.svelte';
 	import CheaterAlert from '$lib/components/player/cheater-alert.svelte';
@@ -17,6 +18,7 @@
 	import { findCheaterBySteamId } from '$core/pocketbase/anti-cheat';
 	import { account } from '$core/account';
 	import { app } from '$core/app/context';
+	import { api, unwrapApi } from '$core/api';
 	import { getPlayerRating } from '$core/pocketbase/player-ratings';
 	import {
 		emptyPlayerPerformance,
@@ -31,6 +33,22 @@
 	const { t } = useI18n();
 
 	let currentTab = $state('stats');
+
+	const meProfileId = resource(
+		() => account.user.steamIds[0] ?? null,
+		async (steamId) => {
+			if (!steamId) {
+				return null;
+			}
+
+			if (app.game.profile?.steam.steamid === steamId) {
+				return app.game.profile.relic.profile_id;
+			}
+
+			const results = await unwrapApi(api.players.search(steamId));
+			return results[0]?.profileId ?? null;
+		}
+	);
 
 	const relicProfile = resource(
 		() => page.params.id,
@@ -226,6 +244,18 @@
 				/>
 				{#if extra?.cheater}
 					<CheaterAlert />
+				{/if}
+				<Button href={`/compare?b=${profile.profile_id}`} variant="secondary" size="sm">
+					{t('Compare')}
+				</Button>
+				{#if meProfileId.current && meProfileId.current !== profile.profile_id}
+					<Button
+						href={`/compare?a=${meProfileId.current}&b=${profile.profile_id}`}
+						variant="secondary"
+						size="sm"
+					>
+						{t('Compare with me')}
+					</Button>
 				{/if}
 			{/snippet}
 			{#snippet afterDetails()}

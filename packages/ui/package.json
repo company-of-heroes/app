@@ -43,6 +43,7 @@
 		"./player": "./src/player/index.ts",
 		"./player/types": "./src/player/types.ts",
 		"./player-performance": "./src/player-performance/index.ts",
+		"./player-compare": "./src/player-compare/index.ts",
 		"./replay": "./src/replay/index.ts",
 		"./replay/types": "./src/replay/types.ts",
 		"./replay/utils": "./src/replay/utils.ts",
