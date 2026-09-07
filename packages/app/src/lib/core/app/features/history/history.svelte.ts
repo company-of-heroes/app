@@ -220,12 +220,16 @@ export class History extends Feature<HistorySettings> {
 			}
 
 			const players = toPersistablePlayers(lobby.players);
+			const needsResult = !lobby.isSkirmish;
 			const payload = {
 				isRanked: lobby.isRanked,
 				title: lobby.type,
 				map: lobby.map || 'Unknown',
-				needsResult: !lobby.isSkirmish,
-				players
+				needsResult,
+				players,
+				// Reopen fill budget after the match ends — attempts must not
+				// count while the durable row was still linked from lobbies_live.
+				...(needsResult ? { hasFailed: false, resultAttempts: 0 } : {})
 			};
 
 			try {

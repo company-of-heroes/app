@@ -14,6 +14,17 @@ onRecordUpdate((e) => {
 	e.next();
 }, 'lobbies_live');
 
+// Match ended (or stale cleanup): reopen result-fill budget. Attempts must not
+// count while the game is still live — long matches used to hit hasFailed mid-game.
+onRecordDelete((e) => {
+	try {
+		require(`${__hooks}/lib/lobby-result-fill.js`).resetAttemptsForLiveRecord(e.record);
+	} catch (error) {
+		console.warn('[lobbies_live] reset result attempts failed:', error);
+	}
+	e.next();
+}, 'lobbies_live');
+
 // Orphaned rows linger when clients Alt+F4 / Exit to Windows without APP -- Game Stop.
 // Heartbeats refresh updatedAt every ~2 minutes; anything older than STALE_MS is dead.
 // Note: cron callbacks run in an isolated scope — require constants inside the callback.
