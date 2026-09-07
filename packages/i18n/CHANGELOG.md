@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.1.5
+
+- fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI
+
 ## 0.1.4
 
 - fix; steam and app website login no longer fail with an invalid or expired login link

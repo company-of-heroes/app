@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.4.3
+
+- fix; create and link durable matches only in the lobbies_live PocketBase hook; /live always redirects to /replays
+
 ## 0.4.2
 
 - enhance; show the shared players overview (rating / cpm) on live lobby detail, matching replays

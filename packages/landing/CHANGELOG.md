@@ -1,5 +1,10 @@
 # @company-of-heroes/landing
 
+## 1.6.4
+
+- fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI
+- fix; create and link durable matches only in the lobbies_live PocketBase hook; /live always redirects to /replays
+
 ## 1.6.3
 
 - fix; always link live lobbies to their durable match so /live redirects to /replays

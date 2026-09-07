@@ -1,5 +1,11 @@
 # @company-of-heroes/api
 
+## 0.2.2
+
+- fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI
+- fix; skip lobbies_live upserts when only replay placeholders are present so PocketBase does not reject empty players
+- fix; attach match replays after crash/alt-f4 and keep the largest participant upload
+
 ## 0.2.1
 
 - fix; steam and app website login no longer fail with an invalid or expired login link
