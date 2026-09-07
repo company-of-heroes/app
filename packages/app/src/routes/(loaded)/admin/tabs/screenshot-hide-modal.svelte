@@ -50,7 +50,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-4 p-4">
 	<div class="border-secondary-800 relative aspect-video overflow-clip rounded-md border">
 		<CaptureImage {capture} class="absolute inset-0 size-full object-cover" />
 	</div>

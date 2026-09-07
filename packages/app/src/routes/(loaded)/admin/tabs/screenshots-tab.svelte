@@ -2,18 +2,20 @@
 	import CaptureImage from '$lib/components/anti-cheat/capture-image.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
+	import { Checkbox, Input } from '$lib/components/ui/input';
 	import { Pagination } from '$lib/components/ui/pagination';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { interactive } from '$lib/components/ui/variants';
 	import { app } from '$core/app/context';
 	import {
 		deleteCapture,
+		deleteCaptures,
 		hideCapture,
 		listCaptures,
 		unhideCapture,
 		type CaptureRecord
 	} from '$core/pocketbase/anti-cheat';
+	import { tooltip } from '$lib/attachments';
 	import { cn, normalizeMapName } from '$lib/utils';
 	import dayjs from '$lib/dayjs';
 	import EyeIcon from 'phosphor-svelte/lib/EyeIcon';
@@ -23,8 +25,11 @@
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 	import { useI18n } from '$lib/i18n';
 	import { watch } from 'runed';
+	import ScreenshotBulkDeleteModal from './screenshot-bulk-delete-modal.svelte';
 	import ScreenshotDeleteModal from './screenshot-delete-modal.svelte';
 	import ScreenshotHideModal from './screenshot-hide-modal.svelte';
+
+	const overlayActionClass = 'bg-black/55 text-white backdrop-blur-sm hover:bg-black/75';
 
 	const { t } = useI18n();
 	const PER_PAGE = 12;
@@ -39,7 +44,11 @@
 	let loading = $state(false);
 	let loadToken = 0;
 	let actionId = $state<string | null>(null);
+	let selectedIds = $state.raw<string[]>([]);
 	let isFiltered = $derived(!!appliedQuery || !!appliedUserId);
+	let selectedCount = $derived(selectedIds.length);
+	let selectedOnPage = $derived(items.filter((item) => selectedIds.includes(item.id)).length);
+	let allPageSelected = $derived(items.length > 0 && selectedOnPage === items.length);
 
 	watch(
 		() => [app.account.isStaff, page, appliedQuery, appliedUserId] as const,
@@ -47,6 +56,13 @@
 			if (isStaff) {
 				void loadCaptures();
 			}
+		}
+	);
+
+	watch(
+		() => [appliedQuery, appliedUserId] as const,
+		() => {
+			selectedIds = [];
 		}
 	);
 
@@ -70,6 +86,43 @@
 		}
 
 		return parts.join(' · ');
+	}
+
+	function isSelected(id: string) {
+		return selectedIds.includes(id);
+	}
+
+	function setSelected(id: string, checked: boolean) {
+		if (checked) {
+			if (selectedIds.includes(id)) {
+				return;
+			}
+
+			selectedIds = [...selectedIds, id];
+			return;
+		}
+
+		selectedIds = selectedIds.filter((selectedId) => selectedId !== id);
+	}
+
+	function toggleSelectPage() {
+		if (allPageSelected) {
+			selectedIds = selectedIds.filter((id) => !items.some((item) => item.id === id));
+			return;
+		}
+
+		const next = [...selectedIds];
+		for (const item of items) {
+			if (!next.includes(item.id)) {
+				next.push(item.id);
+			}
+		}
+
+		selectedIds = next;
+	}
+
+	function clearSelection() {
+		selectedIds = [];
 	}
 
 	async function loadCaptures() {
@@ -188,7 +241,7 @@
 			description: [meta, captureDate(capture)].filter(Boolean).join('\n'),
 			props: {
 				capture,
-				class: 'w-full max-h-[calc(100vh-9rem)] rounded-md object-contain'
+				class: 'w-full max-h-[calc(100vh-9rem)] rounded-md object-contain p-4'
 			},
 			size: 'full'
 		});
@@ -253,6 +306,7 @@
 				onConfirm: async () => {
 					try {
 						await deleteCapture(capture.id);
+						selectedIds = selectedIds.filter((id) => id !== capture.id);
 						app.toast.success(t('Screenshot deleted.'));
 						app.modal.close();
 						if (items.length === 1 && page > 1) {
@@ -270,7 +324,73 @@
 		});
 		app.modal.open();
 	}
+
+	function askBulkDelete() {
+		const ids = [...selectedIds];
+		if (ids.length === 0) {
+			return;
+		}
+
+		app.modal.create({
+			title: t('Delete screenshots'),
+			size: 'md',
+			component: ScreenshotBulkDeleteModal,
+			props: {
+				count: ids.length,
+				onCancel: () => app.modal.close(),
+				onConfirm: async () => {
+					const { deletedIds, failedIds } = await deleteCaptures(ids);
+					const deleted = deletedIds.length;
+					const failed = failedIds.length;
+
+					if (failed > 0) {
+						console.error('[ADMIN]: bulk delete screenshots failed:', {
+							failed,
+							failedIds
+						});
+					}
+
+					selectedIds = selectedIds.filter((id) => !deletedIds.includes(id));
+
+					if (deleted > 0) {
+						app.toast.success(t('{count} screenshots deleted.', { count: deleted }));
+					}
+
+					if (failed > 0) {
+						app.toast.error(t('Could not delete screenshots.'));
+					}
+
+					app.modal.close();
+
+					const remainingOnPage = items.filter((item) => !deletedIds.includes(item.id)).length;
+					if (remainingOnPage === 0 && page > 1) {
+						page -= 1;
+						return;
+					}
+
+					await loadCaptures();
+				}
+			}
+		});
+		app.modal.open();
+	}
 </script>
+
+{#snippet paginationBar(extraClass = '')}
+	{#if totalItems > 0 && !loading}
+		<div
+			class={cn(
+				'border-secondary-800 flex flex-wrap items-center justify-end gap-2 px-4 py-2.5',
+				extraClass
+			)}
+		>
+			<p class="text-secondary-500 text-xs tabular-nums">
+				{t('{count} screenshots', { count: totalItems })}
+			</p>
+			<Pagination class="shrink-0" bind:page count={totalItems} perPage={PER_PAGE} />
+		</div>
+	{/if}
+{/snippet}
 
 <div class="border-secondary-800 flex flex-wrap items-center gap-2 border-b px-4 py-2.5">
 	<label class="sr-only" for="admin-screenshot-query">{t('Filter by player')}</label>
@@ -311,6 +431,29 @@
 			<XIcon size={16} />
 		</Button>
 	{/if}
+	{#if items.length > 0 && !loading}
+		<Button type="button" variant="ghost" size="sm" onclick={toggleSelectPage}>
+			{allPageSelected ? t('Clear selection') : t('Select all')}
+		</Button>
+	{/if}
+	{#if selectedCount > 0}
+		<p class="text-secondary-400 text-xs tabular-nums">
+			{t('{count} selected', { count: selectedCount })}
+		</p>
+		<Button type="button" variant="destructive" size="sm" onclick={askBulkDelete}>
+			<TrashIcon size={16} />
+			{t('Delete selected')}
+		</Button>
+		<Button
+			type="button"
+			variant="ghost"
+			size="icon-sm"
+			aria-label={t('Clear selection')}
+			onclick={clearSelection}
+		>
+			<XIcon size={16} />
+		</Button>
+	{/if}
 	{#if totalItems > 0 && !loading}
 		<p class="text-secondary-500 ms-auto text-xs tabular-nums">
 			{t('{count} screenshots', { count: totalItems })}
@@ -336,7 +479,13 @@
 		{#each items as capture (capture.id)}
 			{@const meta = captureMeta(capture)}
 			{@const owner = captureOwner(capture)}
-			<div class="group relative aspect-video overflow-clip">
+			{@const selected = isSelected(capture.id)}
+			<div
+				class={cn(
+					'group relative aspect-video overflow-clip',
+					selected && 'ring-primary ring-2 ring-inset'
+				)}
+			>
 				<button
 					type="button"
 					class={cn(
@@ -349,11 +498,27 @@
 				>
 					<CaptureImage {capture} class="absolute inset-0 size-full object-cover" />
 				</button>
-				{#if capture.hidden}
-					<div class="pointer-events-none absolute top-2 left-2 z-10">
-						<Badge variant="warning">{t('Hidden')}</Badge>
+				<div
+					class={cn(
+						'pointer-events-auto absolute top-2 left-2 z-10 flex items-center gap-1.5',
+						!selected &&
+							selectedCount === 0 &&
+							'opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100'
+					)}
+				>
+					<div class="bg-black/55 rounded-sm p-0.5 backdrop-blur-sm">
+						<Checkbox
+							size="sm"
+							class="border-white/50"
+							checked={selected}
+							aria-label={t('Select screenshot')}
+							onCheckedChange={(value) => setSelected(capture.id, value === true)}
+						/>
 					</div>
-				{/if}
+					{#if capture.hidden}
+						<Badge variant="warning">{t('Hidden')}</Badge>
+					{/if}
+				</div>
 				<div
 					class={cn(
 						'pointer-events-auto absolute top-2 right-2 z-10 flex flex-wrap justify-end gap-1',
@@ -363,36 +528,39 @@
 					{#if capture.hidden}
 						<Button
 							type="button"
-							variant="secondary"
-							size="sm"
-							class="bg-black/50"
+							variant="ghost"
+							size="icon-sm"
+							class={overlayActionClass}
 							loading={actionId === capture.id}
+							aria-label={t('Unhide')}
+							{@attach tooltip(t('Unhide'))}
 							onclick={(event) => void askUnhide(event, capture)}
 						>
 							<EyeIcon size={14} />
-							{t('Unhide')}
 						</Button>
 					{:else}
 						<Button
 							type="button"
-							variant="secondary"
-							size="sm"
-							class="bg-black/50"
+							variant="ghost"
+							size="icon-sm"
+							class={overlayActionClass}
+							aria-label={t('Hide')}
+							{@attach tooltip(t('Hide'))}
 							onclick={(event) => askHide(event, capture)}
 						>
 							<EyeSlashIcon size={14} />
-							{t('Hide')}
 						</Button>
 					{/if}
 					<Button
 						type="button"
-						variant="destructive"
-						size="sm"
-						class="bg-black/50"
+						variant="ghost"
+						size="icon-sm"
+						class={cn(overlayActionClass, 'hover:text-destructive')}
+						aria-label={t('Delete')}
+						{@attach tooltip(t('Delete'))}
 						onclick={(event) => askDelete(event, capture)}
 					>
 						<TrashIcon size={14} />
-						{t('Delete')}
 					</Button>
 				</div>
 				<div
@@ -444,4 +612,5 @@
 			</div>
 		{/each}
 	</div>
+	{@render paginationBar('border-t')}
 {/if}

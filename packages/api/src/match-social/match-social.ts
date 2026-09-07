@@ -37,6 +37,9 @@ export type LobbyComment = {
 	user: CommentAuthor;
 };
 
+/** Same shape as lobby comments; used for member replay threads. */
+export type ReplayComment = LobbyComment;
+
 export type MentionUser = {
 	id: string;
 	name: string;
@@ -94,6 +97,10 @@ export class MatchSocialApi {
 		return fromPbPromise(this.findMyLobbyVote(lobbyId), 'Failed to load vote.');
 	}
 
+	getMyReplayVote(replayId: string): ResultAsync<CommentVoteValue, ApiError> {
+		return fromPbPromise(this.findMyReplayVote(replayId), 'Failed to load vote.');
+	}
+
 	setLobbyVote(
 		lobbyId: string,
 		value: 1 | -1
@@ -109,6 +116,21 @@ export class MatchSocialApi {
 		);
 	}
 
+	setReplayVote(
+		replayId: string,
+		value: 1 | -1
+	): ResultAsync<{ vote: CommentVoteValue; likeCount: number }, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		return fromPbPromise(
+			this.setReplayVoteRecord(replayId, auth.value, value),
+			'Failed to update vote.'
+		);
+	}
+
 	listComments(lobbyId: string): ResultAsync<LobbyComment[], ApiError> {
 		const escaped = escapePocketBaseString(lobbyId);
 		return fromPbPromise(
@@ -120,7 +142,26 @@ export class MatchSocialApi {
 			'Failed to load comments.'
 		).andThen((response) =>
 			fromPbPromise(
-				this.listMyCommentVotes(response.items.map((item) => item.id)),
+				this.listMyCommentVotes(response.items.map((item) => item.id), 'lobby_comment_likes'),
+				'Failed to load comments.'
+			).map((votes) =>
+				response.items.map((item) => this.serializeComment(item, votes.get(item.id) ?? 0))
+			)
+		);
+	}
+
+	listReplayComments(replayId: string): ResultAsync<ReplayComment[], ApiError> {
+		const escaped = escapePocketBaseString(replayId);
+		return fromPbPromise(
+			this.deps.pocketbase.collection('replay_comments').getList(1, 200, pbOptions(this.deps, {
+				filter: `replay = "${escaped}"`,
+				sort: 'created',
+				expand: 'user'
+			})),
+			'Failed to load comments.'
+		).andThen((response) =>
+			fromPbPromise(
+				this.listMyCommentVotes(response.items.map((item) => item.id), 'replay_comment_likes'),
 				'Failed to load comments.'
 			).map((votes) =>
 				response.items.map((item) => this.serializeComment(item, votes.get(item.id) ?? 0))
@@ -160,6 +201,38 @@ export class MatchSocialApi {
 		).map((record) => this.serializeComment(record, 0));
 	}
 
+	createReplayComment(
+		replayId: string,
+		text: string,
+		parentId?: string
+	): ResultAsync<ReplayComment, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		const trimmed = text.trim();
+		if (!trimmed) {
+			return errAsync(apiError(400, 'Enter a comment.'));
+		}
+
+		const data: Record<string, string> = {
+			replay: replayId,
+			user: auth.value,
+			text: trimmed
+		};
+		if (parentId) {
+			data.parent = parentId;
+		}
+
+		return fromPbPromise(
+			this.deps.pocketbase
+				.collection('replay_comments')
+				.create(data, pbOptions(this.deps, { expand: 'user' })),
+			'Failed to post comment.'
+		).map((record) => this.serializeComment(record, 0));
+	}
+
 	setCommentVote(
 		commentId: string,
 		value: 1 | -1
@@ -170,7 +243,22 @@ export class MatchSocialApi {
 		}
 
 		return fromPbPromise(
-			this.setCommentVoteRecord(commentId, auth.value, value),
+			this.setCommentVoteRecord(commentId, auth.value, value, 'lobby'),
+			'Failed to update vote.'
+		);
+	}
+
+	setReplayCommentVote(
+		commentId: string,
+		value: 1 | -1
+	): ResultAsync<{ vote: CommentVoteValue; likeCount: number }, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		return fromPbPromise(
+			this.setCommentVoteRecord(commentId, auth.value, value, 'replay'),
 			'Failed to update vote.'
 		);
 	}
@@ -194,6 +282,25 @@ export class MatchSocialApi {
 		).map((record) => this.serializeComment(record, 0));
 	}
 
+	updateReplayComment(commentId: string, text: string): ResultAsync<ReplayComment, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		const trimmed = text.trim();
+		if (!trimmed) {
+			return errAsync(apiError(400, 'Enter a comment.'));
+		}
+
+		return fromPbPromise(
+			this.deps.pocketbase
+				.collection('replay_comments')
+				.update(commentId, { text: trimmed }, pbOptions(this.deps, { expand: 'user' })),
+			'Failed to update comment.'
+		).map((record) => this.serializeComment(record, 0));
+	}
+
 	deleteComment(commentId: string, note?: string): ResultAsync<LobbyComment, ApiError> {
 		const auth = requireAuth(this.deps);
 		if (auth.isErr()) {
@@ -208,6 +315,25 @@ export class MatchSocialApi {
 		return fromPbPromise(
 			this.deps.pocketbase
 				.collection('lobby_comments')
+				.update(commentId, data, pbOptions(this.deps, { expand: 'user' })),
+			'Failed to delete comment.'
+		).map((record) => this.serializeComment(record, 0));
+	}
+
+	deleteReplayComment(commentId: string, note?: string): ResultAsync<ReplayComment, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		const data: Record<string, unknown> = { deleted: true };
+		if (note) {
+			data.deletedNote = note;
+		}
+
+		return fromPbPromise(
+			this.deps.pocketbase
+				.collection('replay_comments')
 				.update(commentId, data, pbOptions(this.deps, { expand: 'user' })),
 			'Failed to delete comment.'
 		).map((record) => this.serializeComment(record, 0));
@@ -304,6 +430,29 @@ export class MatchSocialApi {
 		}
 	}
 
+	private async findMyReplayVote(replayId: string): Promise<CommentVoteValue> {
+		const userId = currentUserId(this.deps);
+		if (!userId) {
+			return 0;
+		}
+
+		try {
+			const existing = await this.deps.pocketbase
+				.collection('replay_likes')
+				.getFirstListItem(
+					`replay = "${escapePocketBaseString(replayId)}" && user = "${userId}"`,
+					pbOptions(this.deps, { fields: 'value' })
+				);
+			return voteFromRecord(existing.value);
+		} catch (error) {
+			if (error instanceof ClientResponseError && error.status === 404) {
+				return 0;
+			}
+
+			throw error;
+		}
+	}
+
 	private async setLobbyVoteRecord(
 		lobbyId: string,
 		userId: string,
@@ -353,7 +502,59 @@ export class MatchSocialApi {
 		}
 	}
 
-	private async listMyCommentVotes(commentIds: string[]): Promise<Map<string, 1 | -1>> {
+	private async setReplayVoteRecord(
+		replayId: string,
+		userId: string,
+		value: 1 | -1
+	): Promise<{ vote: CommentVoteValue; likeCount: number }> {
+		let vote: CommentVoteValue = value;
+		try {
+			const existing = await this.deps.pocketbase
+				.collection('replay_likes')
+				.getFirstListItem(
+					`replay = "${escapePocketBaseString(replayId)}" && user = "${userId}"`,
+					pbOptions(this.deps)
+				);
+			const current = voteFromRecord(existing.value);
+			if (current === value) {
+				await this.deps.pocketbase
+					.collection('replay_likes')
+					.delete(existing.id, pbOptions(this.deps));
+				vote = 0;
+			} else {
+				await this.deps.pocketbase
+					.collection('replay_likes')
+					.update(existing.id, { value }, pbOptions(this.deps));
+			}
+		} catch (error) {
+			if (!(error instanceof ClientResponseError) || error.status !== 404) {
+				throw error;
+			}
+
+			await this.deps.pocketbase.collection('replay_likes').create(
+				{
+					replay: replayId,
+					user: userId,
+					value
+				},
+				pbOptions(this.deps)
+			);
+		}
+
+		try {
+			const replay = await this.deps.pocketbase
+				.collection('replays')
+				.getOne(replayId, pbOptions(this.deps, { fields: 'likeCount' }));
+			return { vote, likeCount: Number(replay.likeCount) || 0 };
+		} catch {
+			return { vote, likeCount: 0 };
+		}
+	}
+
+	private async listMyCommentVotes(
+		commentIds: string[],
+		collection: 'lobby_comment_likes' | 'replay_comment_likes'
+	): Promise<Map<string, 1 | -1>> {
 		const userId = currentUserId(this.deps);
 		const votes = new Map<string, 1 | -1>();
 		if (!userId || commentIds.length === 0) {
@@ -363,7 +564,7 @@ export class MatchSocialApi {
 		const size = 40;
 		for (let i = 0; i < commentIds.length; i += size) {
 			const chunk = commentIds.slice(i, i + size);
-			const likes = await this.deps.pocketbase.collection('lobby_comment_likes').getFullList(
+			const likes = await this.deps.pocketbase.collection(collection).getFullList(
 				pbOptions(this.deps, {
 					filter: `user = "${userId}" && (${chunk.map((id) => `comment = "${id}"`).join(' || ')})`,
 					fields: 'comment,value'
@@ -380,12 +581,15 @@ export class MatchSocialApi {
 	private async setCommentVoteRecord(
 		commentId: string,
 		userId: string,
-		value: 1 | -1
+		value: 1 | -1,
+		target: 'lobby' | 'replay'
 	): Promise<{ vote: CommentVoteValue; likeCount: number }> {
+		const likesCollection = target === 'replay' ? 'replay_comment_likes' : 'lobby_comment_likes';
+		const commentsCollection = target === 'replay' ? 'replay_comments' : 'lobby_comments';
 		let vote: CommentVoteValue = value;
 		try {
 			const existing = await this.deps.pocketbase
-				.collection('lobby_comment_likes')
+				.collection(likesCollection)
 				.getFirstListItem(
 					`comment = "${commentId}" && user = "${userId}"`,
 					pbOptions(this.deps)
@@ -393,12 +597,12 @@ export class MatchSocialApi {
 			const current = voteFromRecord(existing.value);
 			if (current === value) {
 				await this.deps.pocketbase
-					.collection('lobby_comment_likes')
+					.collection(likesCollection)
 					.delete(existing.id, pbOptions(this.deps));
 				vote = 0;
 			} else {
 				await this.deps.pocketbase
-					.collection('lobby_comment_likes')
+					.collection(likesCollection)
 					.update(existing.id, { value }, pbOptions(this.deps));
 			}
 		} catch (error) {
@@ -406,7 +610,7 @@ export class MatchSocialApi {
 				throw error;
 			}
 
-			await this.deps.pocketbase.collection('lobby_comment_likes').create(
+			await this.deps.pocketbase.collection(likesCollection).create(
 				{
 					comment: commentId,
 					user: userId,
@@ -418,7 +622,7 @@ export class MatchSocialApi {
 
 		try {
 			const comment = await this.deps.pocketbase
-				.collection('lobby_comments')
+				.collection(commentsCollection)
 				.getOne(commentId, pbOptions(this.deps, { fields: 'likeCount' }));
 			return { vote, likeCount: Number(comment.likeCount) || 0 };
 		} catch {

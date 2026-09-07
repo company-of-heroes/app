@@ -104,7 +104,7 @@
 	function recentMatchTooltip(match: PerformanceRecentMatch): string {
 		const mode = match.matchtypeId != null ? modeLabel(match.matchtypeId) : t('Unknown');
 		if (match.raceId == null) return mode;
-		return `<span class="inline-flex items-center gap-1.5 leading-none"><span class="inline-flex p-[3px]"><img src="${getFactionFlagFromRace(match.raceId)}" alt="" class="ring-secondary-800 h-5 w-5 shrink-0 rounded-full object-cover ring-3" /></span>${mode}</span>`;
+		return `<span class="inline-flex items-center gap-1.5 leading-none"><span class="inline-flex p-[3px]"><img src="${getFactionFlagFromRace(match.raceId)}" alt="" class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4" /></span>${mode}</span>`;
 	}
 </script>
 

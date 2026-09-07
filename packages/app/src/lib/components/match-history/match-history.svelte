@@ -31,9 +31,10 @@
 	type Props = {
 		matches: TransformedMatch[];
 		showSessionId?: boolean;
+		class?: string;
 	};
 
-	let { matches, showSessionId = false }: Props = $props();
+	let { matches, showSessionId = false, class: className }: Props = $props();
 	const { t } = useI18n();
 
 	const orderedMatches = $derived(orderBy(matches, ['completiontime'], ['desc']));
@@ -231,9 +232,9 @@
 {/snippet}
 
 {#if visibleMatches.length === 0}
-	<p class="text-secondary-400 px-4 py-3 text-sm">{t('No recent matches found.')}</p>
+	<p class={cn('text-secondary-400 px-4 py-3 text-sm', className)}>{t('No recent matches found.')}</p>
 {:else}
-	<div>
+	<div class={className}>
 		{#each visibleMatches as match (match.id)}
 			{@const players = sortBy(match.players, ['teamid'])}
 			{@const savedId = savedBySession.current?.get(match.id)}

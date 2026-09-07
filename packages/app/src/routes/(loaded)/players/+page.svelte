@@ -87,8 +87,15 @@
 			bind:value={playersSearch.query}
 			disabled={loading}
 			aria-label={t('Find a player')}
+			size="sm"
 		/>
-		<Button type="submit" variant="secondary" class="w-fit shrink-0" {loading} disabled={!canSearch}>
+		<Button
+			type="submit"
+			variant="secondary"
+			class="w-fit shrink-0"
+			{loading}
+			disabled={!canSearch}
+		>
 			<MagnifyingGlassIcon size={16} />
 			{t('Search')}
 		</Button>

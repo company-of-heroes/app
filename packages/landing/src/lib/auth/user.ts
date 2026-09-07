@@ -10,6 +10,7 @@ export type AuthUserPublic = {
 	avatarUrl?: string;
 	steamIds?: string[];
 	role?: UserRole;
+	verified: boolean;
 };
 
 export function serializeAuthUser(pb: PocketBase, record: RecordModel | null): AuthUserPublic | null {
@@ -29,7 +30,8 @@ export function serializeAuthUser(pb: PocketBase, record: RecordModel | null): A
 		name: user.name,
 		avatarUrl,
 		steamIds: user.steamIds,
-		role: user.role
+		role: user.role,
+		verified: Boolean(user.verified)
 	};
 }
 

@@ -10,6 +10,7 @@ mod global_shortcuts;
 mod hold_bindings;
 mod input;
 mod migrations;
+mod module_check;
 mod process_check;
 mod replay_parser;
 mod steam;
@@ -57,6 +58,7 @@ pub fn run() {
             unzip::zip_directory,
             process_check::is_running,
             process_check::find_denylisted_processes,
+            module_check::find_unknown_game_modules,
             capture::capture_game_window,
             replay_parser::parse_replay,
             input::send_keys,

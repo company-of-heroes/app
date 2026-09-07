@@ -5,4 +5,4 @@
 '@company-of-heroes/pocketbase': patch
 ---
 
-feat; management overview to browse, hide, and delete fair-play screenshots
+feat; management overview to browse, hide, and bulk-delete fair-play screenshots

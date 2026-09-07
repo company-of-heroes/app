@@ -8,23 +8,31 @@
 	} from '@company-of-heroes/ui/comment';
 	import { loginRedirectHref } from '$lib/auth/user';
 	import { currentLocale, useI18n } from '$lib/i18n';
-	import { getMyVote, setLobbyVote } from '$lib/remote/match-social.remote';
+	import {
+		getMyReplayVote,
+		getMyVote,
+		setLobbyVote,
+		setReplayVote
+	} from '$lib/remote/match-social.remote';
 	import { resource, watch } from 'runed';
 
 	type Props = {
-		lobbyId: string;
+		lobbyId?: string;
+		replayId?: string;
 		likeCount?: number;
 	};
 
-	let { lobbyId, likeCount = 0 }: Props = $props();
+	let { lobbyId = '', replayId = '', likeCount = 0 }: Props = $props();
 	const { t } = useI18n();
 	const user = $derived(page.data.user);
 	const loginHref = $derived(
 		loginRedirectHref(`${page.url.pathname}${page.url.search}`, currentLocale())
 	);
+	const targetId = $derived(replayId || lobbyId);
+	const isReplay = $derived(Boolean(replayId));
 	const myVote = resource(
-		() => lobbyId,
-		(id) => getMyVote(id)
+		() => `${isReplay ? 'replay' : 'lobby'}:${targetId}`,
+		() => (isReplay ? getMyReplayVote(targetId) : getMyVote(targetId))
 	);
 
 	let vote = $state<CommentVoteValue>(0);
@@ -55,7 +63,7 @@
 	);
 
 	async function setVote(value: 1 | -1) {
-		if (!user || voting) {
+		if (!user || voting || !targetId) {
 			return;
 		}
 
@@ -66,7 +74,9 @@
 		voting = true;
 		errorMessage = '';
 		try {
-			const result = await setLobbyVote({ lobbyId, value });
+			const result = isReplay
+				? await setReplayVote({ replayId: targetId, value })
+				: await setLobbyVote({ lobbyId: targetId, value });
 			vote = result.vote;
 			count = result.likeCount;
 		} catch {

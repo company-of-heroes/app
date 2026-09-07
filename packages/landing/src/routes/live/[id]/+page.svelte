@@ -77,5 +77,6 @@
 	unknownHostLabel={t('Unknown')}
 	rankedLabel={t('Ranked')}
 	customLabel={t('Custom')}
+	liveLabel={t('Live')}
 	{teamsValue}
 />

@@ -257,6 +257,19 @@ function countFilteredMatches(hasPlayerFilter, numericPlayerIds, whereClause, bi
 	return Number(countRow.total) || 0;
 }
 
+function invalidateCommunityMatchCount() {
+	try {
+		const snapshot = $app.findRecordById('match_filter_snapshots', 'community');
+		snapshot.set('matchCount', 0);
+		$app.save(snapshot);
+	} catch (error) {
+		console.warn(
+			'[match-history] matchCount invalidate failed',
+			String(error?.message || error)
+		);
+	}
+}
+
 function readCommunityMatchCount() {
 	try {
 		const row = new DynamicModel({ matchCount: 0 });
@@ -284,28 +297,9 @@ function saveCommunityMatchCount(totalItems) {
 
 function ensureCommunityReplayIndex() {
 	try {
-		const existing = new DynamicModel({ sql: '' });
-		try {
-			$app
-				.db()
-				.newQuery(
-					"SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'idx_lobbies_community_replays'"
-				)
-				.one(existing);
-		} catch {
-			existing.sql = '';
-		}
-
-		const sql = String(existing.sql || '');
-		if (sql.includes('sessionId')) {
-			return;
-		}
-
-		if (sql) {
-			$app.db().newQuery('DROP INDEX IF EXISTS `idx_lobbies_community_replays`').execute();
-		}
-
-		// Include title + sessionId so COUNT can stay covering (no fat result blobs).
+		// Never DROP this index — recreating it on the large lobbies table blocks serve.
+		// CREATE INDEX IF NOT EXISTS is also expensive when missing; callers must run
+		// this off the onServe critical path (cron / deferred).
 		$app
 			.db()
 			.newQuery(
@@ -927,6 +921,7 @@ module.exports = {
 	countFilteredMatches,
 	readCommunityMatchCount,
 	saveCommunityMatchCount,
+	invalidateCommunityMatchCount,
 	ensureCommunityReplayIndex,
 	parseOptionalNumber,
 	buildRaceFilterClause,

@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { app } from '$core/app/context';
 	import { Alert } from '$lib/components/ui/alert';
-	import { Leaderboard, LeaderboardModeSummary } from '../leaderboard';
+	import { Leaderboard } from '../leaderboard';
 	import LeaderboardStatPill from '$lib/components/leaderboard/leaderboard-stat-pill.svelte';
 	import { MatchHistory } from '../match-history';
 	import { PlayerPerformance } from '$lib/components/player-performance';
 	import { relic, relicLeaderboardFingerprint } from '$lib/relic';
 	import { steam } from '$core/steam';
-	import { cn, getFactionFlagFromRace } from '$lib/utils';
+	import { cn, getFactionFlagFromRace, getRankImageByLeaderboardId, normalizeMapName } from '$lib/utils';
+	import { getFactionFlagFromLeaderboardId } from '$lib/utils/game';
 	import { interactive, statLosses, statWins, tabTrigger } from '$lib/components/ui/variants';
 	import { resource, watch } from 'runed';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import type { UnsubscribeFunc } from 'pocketbase';
 	import { fetch } from '$core/http/fetch';
 	import { exp } from '$core/pocketbase';
@@ -18,7 +19,8 @@
 	import { upperCase } from 'lodash-es';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import * as Player from '$lib/components/player';
-	import { Badge } from '$lib/components/ui/badge';
+	import * as List from '$lib/components/ui/list';
+	import { Badge, LiveBadge, PendingBadge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import {
 		collectTodayMatchSteamIds,
@@ -37,9 +39,22 @@
 		type PerformanceRecentMatch
 	} from '$core/pocketbase/player-performance';
 	import { MATCH_TYPES } from '$core/game/lobby';
-	import { getRaceLabel } from '$lib/components/leaderboard/leaderboard-utils';
+	import {
+		buildRankedModeRows,
+		getEloColor,
+		getEloTextShadow,
+		getRaceLabel,
+		getRaceLabelFromLeaderboardId,
+		getRatioColor,
+		isEliteElo,
+		pickBestMap,
+		pickFeaturedMode,
+		pickMainFaction
+	} from '$lib/components/leaderboard/leaderboard-utils';
 	import { tooltip } from '$lib/attachments';
 	import { resolve } from '$app/paths';
+
+	const PROFILE_POLL_MS = 90_000;
 
 	let activeTab = $state('stats');
 	let panelExpanded = $state(false);
@@ -47,6 +62,7 @@
 	let unsubscribeToday = $state<UnsubscribeFunc>();
 	let subscribeGeneration = 0;
 	let bumpTimer: ReturnType<typeof setTimeout> | null = null;
+	let profilePollTimer: ReturnType<typeof setInterval> | null = null;
 	const { t } = useI18n();
 
 	const steamId = $derived(
@@ -90,6 +106,47 @@
 			bumpTimer = null;
 			statsGeneration += 1;
 		}, 300);
+	}
+
+	async function refreshRelicLeaderboards() {
+		const id = steamId;
+		if (!id) {
+			return;
+		}
+
+		try {
+			const relicProfile = await relic.getProfileBySteamId(id);
+			if (!relicProfile) {
+				return;
+			}
+
+			const live = app.game.profile;
+			if (live) {
+				const previous = relicLeaderboardFingerprint(live.relic.leaderboardStats);
+				const next = relicLeaderboardFingerprint(relicProfile.leaderboardStats);
+				if (previous === next) {
+					return;
+				}
+
+				app.game.profile = { relic: relicProfile, steam: live.steam };
+				return;
+			}
+
+			const current = resolvedProfile.current;
+			if (!current) {
+				return;
+			}
+
+			const previous = relicLeaderboardFingerprint(current.relic.leaderboardStats);
+			const next = relicLeaderboardFingerprint(relicProfile.leaderboardStats);
+			if (previous === next) {
+				return;
+			}
+
+			resolvedProfile.mutate({ relic: relicProfile, steam: current.steam });
+		} catch (error) {
+			console.warn('[DASHBOARD]: relic profile refresh failed:', error);
+		}
 	}
 
 	const offLobbySaved = app.on('lobby.saved', bumpStats);
@@ -137,7 +194,7 @@
 
 	const trackedPerformance = resource(
 		() => [profileId, app.features.auth.userId, statsGeneration] as const,
-		async ([id, userId, generation]) => {
+		async ([id, userId]) => {
 			if (!id || !userId) {
 				return emptyPlayerPerformance();
 			}
@@ -146,13 +203,18 @@
 				profileId: id,
 				scope: 'user',
 				userId,
-				fresh: generation > 0
+				fresh: true
 			});
 		},
 		{ initialValue: emptyPlayerPerformance() }
 	);
 	const tracked = $derived(trackedPerformance.current ?? emptyPlayerPerformance());
-	const formMatches = $derived(tracked.recentMatches ?? []);
+	const formMatches = $derived((tracked.recentMatches ?? []).slice(0, 10));
+	const bestMap = $derived(pickBestMap(tracked.byMap ?? []));
+	const mainFaction = $derived(pickMainFaction(tracked.byFaction ?? []));
+
+	const modeRows = $derived(buildRankedModeRows(profile?.relic.leaderboardStats ?? [], playerElo));
+	const featuredMode = $derived(pickFeaturedMode(modeRows));
 
 	watch(
 		() => relicLeaderboardFingerprint(profile?.relic.leaderboardStats),
@@ -224,10 +286,20 @@
 		}
 	);
 
+	onMount(() => {
+		void refreshRelicLeaderboards();
+		profilePollTimer = setInterval(() => void refreshRelicLeaderboards(), PROFILE_POLL_MS);
+	});
+
 	onDestroy(() => {
 		subscribeGeneration += 1;
 		if (bumpTimer) {
 			clearTimeout(bumpTimer);
+		}
+
+		if (profilePollTimer) {
+			clearInterval(profilePollTimer);
+			profilePollTimer = null;
 		}
 
 		unsubscribeToday?.();
@@ -236,14 +308,16 @@
 		offLobbyDestroyed();
 	});
 
-	const statCell =
-		'border-secondary-800 flex h-full flex-col items-center justify-center px-2 py-3 text-center';
+	const metaList = 'grid-cols-[7.5rem_minmax(0,1fr)] content-start gap-x-4';
+	const valueRow = 'inline-flex min-w-0 flex-nowrap items-center gap-2 whitespace-nowrap';
 	const recentMatchBase =
-		'flex h-8 min-w-0 items-center justify-center text-xs font-semibold transition-colors duration-150';
+		'min-w-6 px-1.5 py-0.5 text-center font-semibold transition-colors duration-150';
 	const recentMatchWin =
-		'bg-success/20 text-success hover:bg-success/35 hover:text-green-300 focus-visible:bg-success/35 focus-visible:text-green-300';
+		'border-success/15 bg-success/5 text-success/45 group-hover:border-success/50 group-hover:bg-success/25 group-hover:text-green-300 group-focus-visible:border-success/50 group-focus-visible:bg-success/25 group-focus-visible:text-green-300';
 	const recentMatchLoss =
-		'bg-destructive/20 text-destructive hover:bg-destructive/35 hover:text-red-300 focus-visible:bg-destructive/35 focus-visible:text-red-300';
+		'border-destructive/15 bg-destructive/5 text-destructive/45 group-hover:border-destructive/50 group-hover:bg-destructive/25 group-hover:text-red-300 group-focus-visible:border-destructive/50 group-focus-visible:bg-destructive/25 group-focus-visible:text-red-300';
+
+	const avatarBorder = $derived(app.lobby ? 'border-green-500' : 'border-secondary-800');
 
 	function openTab(tab: string) {
 		activeTab = tab;
@@ -268,39 +342,50 @@
 			return mode;
 		}
 
-		return `<span class="inline-flex items-center gap-1.5 leading-none"><span class="inline-flex p-[3px]"><img src="${getFactionFlagFromRace(match.raceId)}" alt="" class="ring-secondary-800 h-5 w-5 shrink-0 rounded-full object-cover ring-3" /></span>${mode}</span>`;
+		return `<span class="inline-flex items-center gap-1.5 leading-none"><span class="inline-flex p-[3px]"><img src="${getFactionFlagFromRace(match.raceId)}" alt="" class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4" /></span>${mode}</span>`;
+	}
+
+	function winratePercent(wins: number, losses: number): string {
+		const total = wins + losses;
+		if (total === 0) {
+			return '—';
+		}
+
+		return `${Math.round((wins / total) * 100)}%`;
 	}
 </script>
 
 {#if profile}
 	{#key profile.relic.profile_id}
-		<div
-			class={cn(
-				'border-secondary-900 overflow-clip border-b',
-				'hover:border-secondary-700 transition-colors'
-			)}
-		>
-			<div class="border-secondary-800 border-b">
-				<div class="flex items-center gap-3 px-4 py-3">
-					<a
-						href={resolve('/(loaded)/players/[id]', { id: String(profile.relic.profile_id) })}
-						class={cn(interactive, 'shrink-0')}
-					>
-						<img
-							src={profile.steam.avatarfull}
-							alt={profile.relic.alias}
-							class={cn(
-								'size-10 rounded-full object-cover ring-2',
-								app.lobby ? 'ring-green-500' : 'ring-secondary-600'
-							)}
-						/>
-					</a>
-					<div class="flex min-w-0 flex-1 items-center gap-2">
+		<div class="border-secondary-900 overflow-clip border-b">
+			<div
+				class={cn(
+					'border-secondary-800 grid grid-cols-1 border-b',
+					'sm:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
+				)}
+			>
+				<a
+					href={resolve('/(loaded)/players/[id]', { id: String(profile.relic.profile_id) })}
+					class={cn(
+						interactive,
+						'aspect-square self-start overflow-clip border-b sm:border-r sm:border-b-0',
+						avatarBorder
+					)}
+				>
+					<img
+						src={profile.steam.avatarfull}
+						alt={profile.relic.alias}
+						class="h-full w-full object-cover"
+					/>
+				</a>
+
+				<div class="min-w-0 px-5 py-4">
+					<div class="mb-3 flex flex-wrap items-center gap-2.5">
 						<a
 							href={resolve('/(loaded)/players/[id]', { id: String(profile.relic.profile_id) })}
 							class={cn(
 								interactive,
-								'hover:text-primary flex min-w-0 items-center gap-2 transition-colors'
+								'hover:text-primary flex min-w-0 items-center gap-2.5 transition-colors'
 							)}
 						>
 							{#if profile.relic.country}
@@ -311,29 +396,95 @@
 								/>
 							{/if}
 							<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
-							<span class="font-heading truncate text-lg font-bold">{profile.relic.alias}</span>
+							<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span>
 						</a>
 						<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
 						{#if app.lobby}
-							<a
-								href={resolve('/(loaded)/current-game')}
-								class={cn(interactive, 'ml-auto shrink-0')}
-							>
-								<Badge variant="success">{t('In match')}</Badge>
+							<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
+								<LiveBadge label={t('In match')} />
 							</a>
 						{:else if !app.game.isRunning}
-							<Badge variant="default" class="ml-auto shrink-0">{t('Not running')}</Badge>
+							<Badge variant="default" class="shrink-0">{t('Not running')}</Badge>
 						{/if}
 					</div>
-				</div>
 
-				<dl class="border-secondary-800 grid min-w-0 grid-cols-6 border-t">
-					<LeaderboardModeSummary stats={profile.relic.leaderboardStats ?? []} elo={playerElo} />
-					<div class={cn(statCell, 'border-r')}>
-						<dt class="text-secondary-500 text-xs font-medium uppercase">{t('Record')}</dt>
-						<dd class="mt-1">
-							{#if tracked.matchCount > 0}
-								<span class="inline-flex flex-wrap items-center justify-center gap-1.5">
+					<div class="grid grid-cols-1 items-start gap-x-6 gap-y-1 sm:grid-cols-2">
+						<List.Root class={metaList}>
+							<List.Title>{t('Ladder:')}</List.Title>
+							<List.Value class={valueRow}>
+								{#if featuredMode}
+									<span class="text-secondary-400 text-xs font-medium uppercase">
+										{featuredMode.label}
+									</span>
+									<img
+										src={getFactionFlagFromLeaderboardId(featuredMode.stat.leaderboard_id)}
+										alt={getRaceLabelFromLeaderboardId(featuredMode.stat.leaderboard_id)}
+										class="size-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
+									/>
+									{#if featuredMode.rating == null}
+										<span class="text-secondary-500">{t('N/A')}</span>
+									{:else}
+										<span
+											class={cn(
+												'font-heading text-lg tabular-nums',
+												isEliteElo(featuredMode.rating) ? 'font-bold' : 'font-semibold'
+											)}
+											style:color={getEloColor(featuredMode.rating)}
+											style:text-shadow={getEloTextShadow(featuredMode.rating)}
+										>
+											{featuredMode.rating}
+										</span>
+									{/if}
+									{#if featuredMode.stat.ranklevel > 0}
+										<img
+											src={getRankImageByLeaderboardId(
+												featuredMode.stat.leaderboard_id,
+												featuredMode.stat.ranklevel
+											)}
+											alt={t('Rank {level}', { level: featuredMode.stat.ranklevel })}
+											class="h-6 w-auto shrink-0"
+										/>
+										<span class="text-secondary-200 text-sm font-medium tabular-nums">
+											{featuredMode.stat.ranklevel}
+										</span>
+									{/if}
+									{#if featuredMode.stat.rank > 0}
+										<span class="text-secondary-500 text-xs tabular-nums">
+											{t('#{rank} / {total}', {
+												rank: featuredMode.stat.rank,
+												total: featuredMode.stat.ranktotal
+											})}
+										</span>
+									{/if}
+								{:else}
+									<span class="text-secondary-400 text-sm">
+										{t('Play ranked to unlock your ladder spotlight.')}
+									</span>
+								{/if}
+							</List.Value>
+
+							<List.Title>{t('Today:')}</List.Title>
+							<List.Value class={valueRow}>
+								{#if todayRecord.wins + todayRecord.losses > 0}
+									<span class={statWins}>{t('{count}W', { count: todayRecord.wins })}</span>
+									<span class="text-secondary-600">·</span>
+									<span class={statLosses}>{t('{count}L', { count: todayRecord.losses })}</span>
+									{#if todayRecord.pending > 0}
+										<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
+									{/if}
+								{:else if todayRecord.pending > 0}
+									<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
+									<span class="text-secondary-400 text-sm">{t('Result pending')}</span>
+								{:else}
+									<span class={statWins}>{t('{count}W', { count: 0 })}</span>
+									<span class="text-secondary-600">·</span>
+									<span class={statLosses}>{t('{count}L', { count: 0 })}</span>
+								{/if}
+							</List.Value>
+
+							<List.Title>{t('Career:')}</List.Title>
+							<List.Value class={valueRow}>
+								{#if tracked.matchCount > 0}
 									<span class={statWins}>{t('{count}W', { count: tracked.wins })}</span>
 									<span class="text-secondary-600">·</span>
 									<span class={statLosses}>{t('{count}L', { count: tracked.losses })}</span>
@@ -343,54 +494,112 @@
 										losses={tracked.losses}
 										streak={0}
 									/>
-								</span>
-							{:else}
-								<span class="text-secondary-500 line-clamp-2 text-xs">
-									{t('Play with the companion running to build stats.')}
-								</span>
-							{/if}
-						</dd>
-					</div>
-					<div class={statCell}>
-						<dt class="text-secondary-500 text-xs font-medium uppercase">{t('Today')}</dt>
-						<dd class="mt-1 flex items-center gap-1.5">
-							{#if todayRecord.wins + todayRecord.losses > 0}
-								<span class={statWins}>{t('{count}W', { count: todayRecord.wins })}</span>
-								<span class="text-secondary-600">·</span>
-								<span class={statLosses}>{t('{count}L', { count: todayRecord.losses })}</span>
-							{:else if todayRecord.pending > 0}
-								<span class="text-secondary-500 text-xs">
-									{t('{count} pending', { count: todayRecord.pending })}
-								</span>
-							{/if}
-							<span class="text-secondary-200 tabular-nums">({todayRecord.total})</span>
-						</dd>
-					</div>
-				</dl>
+								{:else}
+									<span class="text-secondary-400 text-sm">
+										{t('Play with the companion running to build stats.')}
+									</span>
+								{/if}
+							</List.Value>
+						</List.Root>
 
-				{#if formMatches.length > 0}
-					<div
-						class="border-secondary-800 divide-secondary-800 grid divide-x overflow-clip border-t"
-						style:grid-template-columns="repeat({formMatches.length}, minmax(0, 1fr))"
-					>
-						{#each formMatches as match (match.id || match.sessionId)}
-							<a
-								href={resolve('/(loaded)/history/[id]', { id: match.id })}
-								class={cn(
-									interactive,
-									recentMatchBase,
-									match.outcome === 1 ? recentMatchWin : recentMatchLoss
-								)}
-								aria-label="{match.outcome === 1 ? t('Win') : t('Loss')} — {recentMatchLabel(
-									match
-								)}"
-								{@attach tooltip(recentMatchTooltip(match))}
-							>
-								{match.outcome === 1 ? t('W') : t('L')}
-							</a>
-						{/each}
+						<List.Root class={metaList}>
+							{#if featuredMode && featuredMode.stat.streak !== 0}
+								<List.Title>{t('Streak:')}</List.Title>
+								<List.Value class={valueRow}>
+									<LeaderboardStatPill
+										type="streak"
+										wins={featuredMode.stat.wins}
+										losses={featuredMode.stat.losses}
+										streak={featuredMode.stat.streak}
+									/>
+								</List.Value>
+							{/if}
+
+							{#if featuredMode && featuredMode.stat.highestranklevel > 0}
+								<List.Title>{t('Peak:')}</List.Title>
+								<List.Value class={valueRow}>
+									<img
+										src={getRankImageByLeaderboardId(
+											featuredMode.stat.leaderboard_id,
+											featuredMode.stat.highestranklevel
+										)}
+										alt={t('Rank {level}', { level: featuredMode.stat.highestranklevel })}
+										class="h-6 w-auto shrink-0"
+									/>
+									<span class="text-secondary-200 text-sm font-medium tabular-nums">
+										{featuredMode.stat.highestranklevel}
+									</span>
+									{#if featuredMode.stat.highestrank > 0}
+										<span class="text-secondary-500 text-xs tabular-nums">
+											{t('#{rank}', { rank: featuredMode.stat.highestrank })}
+										</span>
+									{/if}
+								</List.Value>
+							{/if}
+
+							{#if bestMap}
+								<List.Title>{t('Best map:')}</List.Title>
+								<List.Value class={valueRow}>
+									<span class="text-secondary-300 max-w-44 truncate">
+										{normalizeMapName(bestMap.map, false)}
+									</span>
+									<span class={statWins}>{t('{count}W', { count: bestMap.wins })}</span>
+									<span class="text-secondary-600">·</span>
+									<span class={statLosses}>{t('{count}L', { count: bestMap.losses })}</span>
+									<span
+										class="font-medium"
+										style:color={getRatioColor(bestMap.wins, bestMap.losses)}
+									>
+										{winratePercent(bestMap.wins, bestMap.losses)}
+									</span>
+								</List.Value>
+							{/if}
+
+							{#if mainFaction}
+								<List.Title>{t('Main faction:')}</List.Title>
+								<List.Value class={valueRow}>
+									<img
+										src={getFactionFlagFromRace(mainFaction.raceId)}
+										alt={getRaceLabel(mainFaction.raceId)}
+										class="size-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
+									/>
+									<span class="text-secondary-300">{getRaceLabel(mainFaction.raceId)}</span>
+									<span class={statWins}>{t('{count}W', { count: mainFaction.wins })}</span>
+									<span class="text-secondary-600">·</span>
+									<span class={statLosses}>{t('{count}L', { count: mainFaction.losses })}</span>
+								</List.Value>
+							{/if}
+
+							{#if formMatches.length > 0}
+								<List.Title>{t('Recent:')}</List.Title>
+								<List.Value
+									class="inline-flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto"
+								>
+									{#each formMatches as match (match.id || match.sessionId)}
+										<a
+											href={resolve('/(loaded)/history/[id]', { id: match.id })}
+											class={cn(interactive, 'group inline-flex shrink-0')}
+											aria-label="{match.outcome === 1
+												? t('Win')
+												: t('Loss')} — {recentMatchLabel(match)}"
+											{@attach tooltip(recentMatchTooltip(match))}
+										>
+											<Badge
+												variant={match.outcome === 1 ? 'success' : 'destructive'}
+												class={cn(
+													recentMatchBase,
+													match.outcome === 1 ? recentMatchWin : recentMatchLoss
+												)}
+											>
+												{match.outcome === 1 ? t('W') : t('L')}
+											</Badge>
+										</a>
+									{/each}
+								</List.Value>
+							{/if}
+						</List.Root>
 					</div>
-				{/if}
+				</div>
 			</div>
 
 			<div>

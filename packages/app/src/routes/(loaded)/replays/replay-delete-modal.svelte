@@ -29,7 +29,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-5">
+<div class="flex flex-col gap-5 p-4">
 	<p class="text-secondary-300 text-sm leading-relaxed">
 		{t('Choose what to remove for')}
 		<span class="text-secondary-100 font-medium">{title || t('this replay')}</span>.

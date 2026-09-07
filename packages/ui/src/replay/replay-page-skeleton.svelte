@@ -4,9 +4,30 @@
 	import ReplayTabsSkeleton from './replay-tabs-skeleton.svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
 
-	type Props = {} & HTMLAttributes<HTMLDivElement>;
+	type Props = {
+		/** Landing-style back + breadcrumb row. App uses layout breadcrumbs instead. */
+		showNav?: boolean;
+		overviewLabel?: string;
+		chatLabel?: string;
+		timelineLabel?: string;
+		alliesLabel?: string;
+		axisLabel?: string;
+		ratingLabel?: string;
+		cpmLabel?: string;
+	} & HTMLAttributes<HTMLDivElement>;
 
-	let { class: className, ...restProps }: Props = $props();
+	let {
+		showNav = true,
+		overviewLabel = 'Overview',
+		chatLabel = 'Chat',
+		timelineLabel = 'Timeline',
+		alliesLabel = 'Allies',
+		axisLabel = 'Axis',
+		ratingLabel = 'Rating',
+		cpmLabel = 'CPM',
+		class: className,
+		...restProps
+	}: Props = $props();
 </script>
 
 <div
@@ -14,10 +35,12 @@
 	class={cn('border-secondary-800 overflow-clip border-b', className)}
 	aria-busy="true"
 >
-	<div class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">
-		<Skeleton class="size-9 shrink-0 rounded-md" />
-		<Skeleton class="h-4 w-48" />
-	</div>
+	{#if showNav}
+		<div class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">
+			<Skeleton class="size-9 shrink-0 rounded-md" />
+			<Skeleton class="h-4 w-48" />
+		</div>
+	{/if}
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(220px,280px)_auto_minmax(0,1fr)]">
 		<Skeleton class="aspect-square w-full self-start rounded-none" />
 		<div class="flex items-start justify-center px-6 sm:px-0 sm:py-4">
@@ -45,5 +68,15 @@
 		</div>
 	</div>
 
-	<ReplayTabsSkeleton flush showTitle={false} />
+	<ReplayTabsSkeleton
+		flush
+		showTitle={false}
+		{overviewLabel}
+		{chatLabel}
+		{timelineLabel}
+		{alliesLabel}
+		{axisLabel}
+		{ratingLabel}
+		{cpmLabel}
+	/>
 </div>

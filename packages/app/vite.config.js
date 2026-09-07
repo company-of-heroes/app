@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PRODUCTION_PB_URL = 'https://api.coh1stats.com';
+const PRODUCTION_SITE_URL = 'https://coh1stats.com';
 
 // Custom plugin to handle ?base64 imports
 function base64Plugin() {
@@ -79,10 +80,11 @@ function whatsNewPlugin() {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-	// Production builds must never ship with a localhost PocketBase URL,
-	// even if packages/app/.env (or the shell) still points at local PB.
+	// Production builds must never ship with a localhost PocketBase / site URL,
+	// even if packages/app/.env (or the shell) still points at local hosts.
 	if (mode === 'production') {
 		process.env.PUBLIC_PB_URL = PRODUCTION_PB_URL;
+		process.env.PUBLIC_SITE_URL = PRODUCTION_SITE_URL;
 	}
 
 	const host = process.env.TAURI_DEV_HOST;

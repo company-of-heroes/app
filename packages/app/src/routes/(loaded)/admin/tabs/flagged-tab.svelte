@@ -283,7 +283,7 @@
 			description: dayjs(capture.captured_at || capture.created).format('D MMM YYYY HH:mm'),
 			props: {
 				capture,
-				class: 'w-full max-h-[calc(100vh-9rem)] rounded-md object-contain'
+				class: 'w-full max-h-[calc(100vh-9rem)] rounded-md object-contain p-4'
 			},
 			size: 'full'
 		});

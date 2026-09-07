@@ -41,6 +41,7 @@ export type MatchRecord = RecordModel & {
 	players?: unknown;
 	result?: unknown;
 	user?: string;
+	memberReplay?: string;
 };
 
 export type MatchCreateInput = {

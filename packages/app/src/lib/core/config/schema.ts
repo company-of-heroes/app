@@ -36,7 +36,9 @@ export const accountSettingsSchema = z
 	.object({
 		userId: z.string().default(''),
 		email: z.string().default(''),
-		password: z.string().default('')
+		password: z.string().default(''),
+		/** Set when an email change was requested; used to re-auth after website confirm. */
+		pendingEmail: z.string().default('')
 	})
 	.loose();
 

@@ -171,6 +171,18 @@ export class Replays {
 		return unwrapApi(api.replays.publish(id, description));
 	}
 
+	async publishFromMatch(
+		lobbyId: string,
+		input?: {
+			title?: string;
+			description?: string;
+			durationInSeconds?: number;
+			players?: unknown;
+		}
+	) {
+		return unwrapApi(api.replays.publishFromMatch(lobbyId, input));
+	}
+
 	async unpublish(id: string) {
 		return unwrapApi(api.replays.unpublish(id));
 	}

@@ -11,6 +11,8 @@ import { generatePassword, generateUniqueId } from '$lib/utils/password';
 import { steam } from '$core/steam';
 import { ensureAccountFlow, type AuthResult, type RecoveryOutcome } from './recovery';
 import { t } from '$lib/i18n';
+import { api } from '$core/api';
+import { canRequestEmailChange, isPlaceholderEmail } from '@company-of-heroes/api';
 
 export type User = UsersResponse<Record<string, any>, string[], Record<string, any>>;
 
@@ -18,6 +20,20 @@ export type AccountStatus = 'idle' | 'authenticating' | 'authenticated' | 'error
 
 function metaWithVersion(meta: Record<string, any> | null | undefined, version: string) {
 	return { ...(meta && typeof meta === 'object' ? meta : {}), version };
+}
+
+function fieldErrorMessage(error: ClientResponseError): string {
+	const data = error.data as
+		| { message?: string; data?: Record<string, { message?: string }> }
+		| undefined;
+	const fieldMessage = data?.data
+		? Object.values(data.data)
+				.map((field) => field?.message)
+				.filter(Boolean)
+				.join(' ')
+		: '';
+
+	return fieldMessage || data?.message || error.message;
 }
 
 /**
@@ -55,7 +71,8 @@ export class AccountService {
 			generateCredentials: () => ({
 				userId: generateUniqueId(),
 				email: crypto.randomUUID() + '@fknoobs.com',
-				password: generatePassword()
+				password: generatePassword(),
+				pendingEmail: ''
 			})
 		});
 
@@ -76,7 +93,10 @@ export class AccountService {
 			settings.tree.account.password !== outcome.credentials.password;
 
 		if (changed) {
-			settings.tree.account = { ...outcome.credentials };
+			settings.tree.account = {
+				...outcome.credentials,
+				pendingEmail: settings.tree.account.pendingEmail ?? ''
+			};
 			await settings.persistNow();
 		}
 
@@ -92,14 +112,48 @@ export class AccountService {
 	}
 
 	async #authenticate(credentials: AccountSettings): Promise<AuthResult> {
-		try {
+		const tryAuth = async (email: string) => {
 			const auth = await pocketbase
 				.collection('users')
-				.authWithPassword<User>(credentials.email, credentials.password, { fetch });
-
+				.authWithPassword<User>(email, credentials.password, { fetch });
 			this.#user = auth.record;
+			return auth;
+		};
+
+		try {
+			await tryAuth(credentials.email);
+			await this.#syncLocalEmailFromUser();
 			return 'ok';
 		} catch (error) {
+			const pending = credentials.pendingEmail?.trim();
+			if (
+				pending &&
+				pending !== credentials.email &&
+				error instanceof ClientResponseError &&
+				(error.status === 400 || error.status === 404)
+			) {
+				try {
+					await tryAuth(pending);
+					settings.tree.account = {
+						...settings.tree.account,
+						email: pending,
+						pendingEmail: ''
+					};
+					await settings.persistNow();
+					await settings.backup.backupNow('email-sync');
+					return 'ok';
+				} catch (pendingError) {
+					if (
+						pendingError instanceof ClientResponseError &&
+						(pendingError.status === 400 || pendingError.status === 404)
+					) {
+						return 'invalid';
+					}
+
+					throw pendingError;
+				}
+			}
+
 			if (error instanceof ClientResponseError && (error.status === 400 || error.status === 404)) {
 				return 'invalid';
 			}
@@ -199,7 +253,39 @@ export class AccountService {
 		const user = await pocketbase.collection('users').getOne<User>(id, { fetch });
 
 		this.#user = user;
+		await this.#syncLocalEmailFromUser();
 		return user;
+	}
+
+	/** When email was confirmed on the website, keep local credentials in sync. */
+	async #syncLocalEmailFromUser(): Promise<void> {
+		const user = this.#user;
+		if (!user?.email || this.isImpersonating) {
+			return;
+		}
+
+		const current = settings.tree.account;
+		if (user.email === current.email) {
+			if (!current.pendingEmail) {
+				return;
+			}
+
+			// Confirmed (or never pending for this address): clear stale pending.
+			if (current.pendingEmail === user.email) {
+				settings.tree.account = { ...current, pendingEmail: '' };
+				await settings.persistNow();
+			}
+
+			return;
+		}
+
+		settings.tree.account = {
+			...current,
+			email: user.email,
+			pendingEmail: ''
+		};
+		await settings.persistNow();
+		await settings.backup.backupNow('email-sync');
 	}
 
 	/**
@@ -274,16 +360,14 @@ export class AccountService {
 	}
 
 	/**
-	 * Updates display name, email, and password on PocketBase and in local settings.
-	 * Use the same credentials to log in on coh1stats.com.
+	 * Updates display name and password on PocketBase and in local settings.
+	 * Email changes use {@link requestEmailChange} (confirm on the website).
 	 */
 	async updateLoginCredentials({
 		name,
-		email,
 		password
 	}: {
 		name?: string;
-		email: string;
 		password: string;
 	}): Promise<string | null> {
 		if (this.isImpersonating) {
@@ -294,14 +378,7 @@ export class AccountService {
 			return t('Not signed in');
 		}
 
-		const trimmedEmail = email.trim();
 		const current = settings.tree.account;
-		const credentials: AccountSettings = {
-			userId: current.userId,
-			email: trimmedEmail,
-			password
-		};
-		const emailChanged = trimmedEmail !== current.email;
 		const passwordChanged = password !== current.password;
 
 		try {
@@ -309,10 +386,6 @@ export class AccountService {
 
 			if (name !== undefined) {
 				updatePayload.name = name.trim();
-			}
-
-			if (emailChanged) {
-				updatePayload.email = trimmedEmail;
 			}
 
 			if (passwordChanged) {
@@ -329,12 +402,14 @@ export class AccountService {
 				)) as User;
 			}
 
-			settings.tree.account = { ...credentials };
-			await settings.persistNow();
-			await settings.backup.backupNow('change');
+			if (passwordChanged) {
+				settings.tree.account = { ...current, password };
+				await settings.persistNow();
+				await settings.backup.backupNow('change');
 
-			if (emailChanged || passwordChanged) {
-				const authResult = await this.#authenticate(credentials);
+				const authResult = await this.#authenticate({
+					...settings.tree.account
+				});
 
 				if (authResult !== 'ok') {
 					return t('Credentials updated but re-authentication failed. Restart the app.');
@@ -344,23 +419,79 @@ export class AccountService {
 			return null;
 		} catch (error) {
 			if (error instanceof ClientResponseError) {
-				const data = error.data as
-					| { message?: string; data?: Record<string, { message?: string }> }
-					| undefined;
-				const fieldMessage = data?.data
-					? Object.values(data.data)
-							.map((field) => field?.message)
-							.filter(Boolean)
-							.join(' ')
-					: '';
-
-				return fieldMessage || data?.message || error.message;
+				return fieldErrorMessage(error);
 			}
 
 			console.error('[ACCOUNT]: updateLoginCredentials failed:', error);
 
 			return t('Failed to update account');
 		}
+	}
+
+	async requestVerificationEmail(): Promise<string | null> {
+		if (this.isImpersonating) {
+			return t('Cannot change credentials while impersonating another user');
+		}
+
+		if (!this.isAuthenticated || !this.#user) {
+			return t('Not signed in');
+		}
+
+		const email = this.#user.email;
+		if (isPlaceholderEmail(email)) {
+			return t('Set a real email address before verifying.');
+		}
+
+		const result = await api.auth.requestVerification(email);
+		if (result.isErr()) {
+			return t(result.error.message);
+		}
+
+		return null;
+	}
+
+	async requestEmailChange(newEmail: string): Promise<string | null> {
+		if (this.isImpersonating) {
+			return t('Cannot change credentials while impersonating another user');
+		}
+
+		if (!this.isAuthenticated || !this.#user) {
+			return t('Not signed in');
+		}
+
+		if (!canRequestEmailChange(this.#user)) {
+			return t('Verify your email before changing it.');
+		}
+
+		const result = await api.auth.requestEmailChange(newEmail);
+		if (result.isErr()) {
+			return t(result.error.message);
+		}
+
+		const trimmed = newEmail.trim();
+		settings.tree.account = {
+			...settings.tree.account,
+			pendingEmail: trimmed
+		};
+		await settings.persistNow();
+
+		return null;
+	}
+
+	get isEmailVerified(): boolean {
+		return Boolean(this.#user?.verified);
+	}
+
+	get canChangeEmail(): boolean {
+		if (!this.#user) {
+			return false;
+		}
+
+		return canRequestEmailChange(this.#user);
+	}
+
+	get isPlaceholderEmail(): boolean {
+		return this.#user ? isPlaceholderEmail(this.#user.email) : false;
 	}
 
 	get user() {
@@ -398,7 +529,7 @@ export class AccountService {
 	}
 
 	get email(): string {
-		return settings.tree.account.email;
+		return this.#user?.email ?? settings.tree.account.email;
 	}
 
 	get password(): string {

@@ -1028,7 +1028,11 @@ function handleUpdate(e) {
 	}
 
 	if (Object.prototype.hasOwnProperty.call(body, 'description')) {
-		record.set('description', bodyField(body, 'description').trim().slice(0, 2000));
+		const description = bodyField(body, 'description').trim();
+		if (!description) {
+			return jsonNoStore(e, 400, { message: 'Description is required.' });
+		}
+		record.set('description', description.slice(0, 2000));
 	}
 
 	if (Object.prototype.hasOwnProperty.call(body, 'players')) {
@@ -1175,6 +1179,9 @@ function handleCreate(e) {
 
 	const title = bodyField(body, 'title').trim() || '-';
 	const description = bodyField(body, 'description').trim().slice(0, 2000);
+	if (!description) {
+		return jsonNoStore(e, 400, { message: 'Description is required.' });
+	}
 	const mapFilenameRaw = bodyField(body, 'mapFilename').trim();
 	const mapNameRaw = bodyField(body, 'mapName').trim();
 	const mapFilename = mapFilenameRaw || mapNameRaw || 'Unknown';
@@ -1455,6 +1462,342 @@ function handlePreviewStats(e) {
 	}
 }
 
+function factionFromRaceId(raceId) {
+	const n = Number(raceId);
+	if (n === 1) {
+		return 'axis';
+	}
+	if (n === 2) {
+		return 'allies_commonwealth';
+	}
+	if (n === 3) {
+		return 'axis_panzerelite';
+	}
+	return 'allies';
+}
+
+function relationId(value) {
+	if (!value) {
+		return '';
+	}
+	if (typeof value === 'object' && value.id) {
+		return String(value.id);
+	}
+	return String(value).trim();
+}
+
+function playersFromLobbyForMember(lobby, result) {
+	const fromLobby = parsePlayersJson(lobby.get('players'));
+	if (fromLobby.length > 0) {
+		return fromLobby.map((player, index) => {
+			const alias =
+				String(player.name || player.alias || '').trim() || `Player ${index + 1}`;
+			return {
+				name: alias,
+				alias,
+				steamId: normalizeSteamId(player.steamId || player.name),
+				faction: String(player.faction || '').trim() || factionFromRaceId(player.race_id),
+				doctrineName: String(player.doctrineName || '').trim() || undefined,
+				id: Number(player.id || player.profile_id) || index + 1
+			};
+		});
+	}
+
+	const resultPlayers = result && Array.isArray(result.players) ? result.players : [];
+	return resultPlayers.map((player, index) => {
+		const alias = String(player.alias || player.name || '').trim() || `Player ${index + 1}`;
+		return {
+			name: alias,
+			alias,
+			steamId: normalizeSteamId(player.steamId || player.name),
+			faction: factionFromRaceId(player.race_id),
+			id: Number(player.profile_id) || index + 1
+		};
+	});
+}
+
+function statsSnapshotFromLobby(result, players, isRanked, durationInSeconds) {
+	if (result && Array.isArray(result.players) && result.players.length > 0) {
+		return {
+			matchtype_id:
+				Number(result.matchtype_id) ||
+				matchTypeIdFromPlayerCount(result.players.length, isRanked),
+			startgametime: Number(result.startgametime) || 0,
+			completiontime:
+				Number(result.completiontime) || (durationInSeconds > 0 ? durationInSeconds : 0),
+			players: resultPlayersForSerialize(result.players),
+			snappedAt: new Date().toISOString()
+		};
+	}
+
+	return buildStatsSnapshot(players, { isRanked, durationInSeconds });
+}
+
+function copyLobbyReplayToTemp(lobby) {
+	const replayName = String(lobby.get('replay') || '').trim();
+	if (!replayName) {
+		throw new Error('Replay file is required.');
+	}
+
+	const tempPath = `${$os.tempDir()}/member-from-match-${Date.now()}-${String(Math.random()).slice(2, 10)}.rec`;
+	const fsys = $app.newFilesystem();
+	let size = 0;
+	try {
+		const key = `${lobby.baseFilesPath()}/${replayName}`;
+		const reader = fsys.getReader(key);
+		try {
+			const bytes = toBytes(reader);
+			size = byteSize(bytes);
+			if (!size || size < 64) {
+				throw new Error('Replay file is empty or corrupt.');
+			}
+			if (size > MAX_FILE_BYTES) {
+				throw new Error('Replay file is too large.');
+			}
+			if (typeof bytes === 'string' && bytes.indexOf('[object Object]') === 0) {
+				throw new Error('Replay file is empty or corrupt.');
+			}
+			$os.writeFile(tempPath, bytes, 0o644);
+		} finally {
+			reader.close();
+		}
+	} finally {
+		fsys.close();
+	}
+
+	const written = byteSize($os.readFile(tempPath));
+	if (written < 64) {
+		try {
+			$os.remove(tempPath);
+		} catch {
+			// ignore
+		}
+		throw new Error('Replay file is empty or corrupt.');
+	}
+
+	const safeName = replayName.toLowerCase().endsWith('.rec')
+		? replayName.replace(/[^a-zA-Z0-9._-]+/g, '_')
+		: `${replayName.replace(/[^a-zA-Z0-9._-]+/g, '_')}.rec`;
+
+	return { tempPath, filename: safeName || 'replay.rec', size: written };
+}
+
+function handlePublishFromMatch(e) {
+	if (!e.auth || !e.auth.id) {
+		return jsonNoStore(e, 401, { message: 'Sign in to publish a member replay.' });
+	}
+
+	const lobbyId = e.request.pathValue('id');
+	if (!lobbyId) {
+		return jsonNoStore(e, 400, { message: 'Match id is required.' });
+	}
+
+	let lobby;
+	try {
+		lobby = $app.findRecordById('lobbies', lobbyId);
+	} catch {
+		return jsonNoStore(e, 404, { message: 'Match not found' });
+	}
+
+	const ownerId = relationId(lobby.get('user'));
+	if (!ownerId || ownerId !== String(e.auth.id)) {
+		return jsonNoStore(e, 403, { message: 'You can only publish your own matches.' });
+	}
+
+	const existingMemberReplay = relationId(lobby.get('memberReplay'));
+	if (existingMemberReplay) {
+		try {
+			const existing = $app.findRecordById('replays', existingMemberReplay);
+			return jsonNoStore(e, 200, serializeMemberReplay(existing, { detail: true }));
+		} catch {
+			return jsonNoStore(e, 409, { message: 'This match is already published.' });
+		}
+	}
+
+	const replayName = String(lobby.get('replay') || '').trim();
+	if (!replayName && !lobby.get('hasReplay')) {
+		return jsonNoStore(e, 400, { message: 'This match has no replay file.' });
+	}
+
+	let uploadTempPath = '';
+	let uploadSize = 0;
+	let filename = 'replay.rec';
+	try {
+		const copied = copyLobbyReplayToTemp(lobby);
+		uploadTempPath = copied.tempPath;
+		uploadSize = copied.size;
+		filename = copied.filename;
+	} catch (error) {
+		const message = String(error?.message || error);
+		console.warn('[member-replays] from-match file', message);
+		if (message.includes('too large')) {
+			return jsonNoStore(e, 400, { message: 'Replay file is too large.' });
+		}
+		return jsonNoStore(e, 400, { message: 'Replay file is required.' });
+	}
+
+	const body = e.requestInfo()?.body || {};
+	const mapRaw = String(lobby.get('map') || '').trim();
+	const mapFilename = mapRaw || 'Unknown';
+	const mapName = displayMapName(mapRaw, mapFilename);
+	const titleHint = bodyField(body, 'title').trim();
+	const lobbyTitle = String(lobby.get('title') || '').trim();
+	const title = titleHint || lobbyTitle || mapName || '-';
+	const description = bodyField(body, 'description').trim().slice(0, 2000);
+	if (!description) {
+		return jsonNoStore(e, 400, { message: 'Description is required.' });
+	}
+	const isRanked = !!lobby.get('isRanked');
+	const result = (() => {
+		try {
+			return require(`${__hooks}/lib/match-history.js`).parseResultField(lobby.get('result'));
+		} catch {
+			return null;
+		}
+	})();
+	// PocketBase required number fields treat 0 as blank — never save 0.
+	const bodyDuration = Number(body.durationInSeconds ?? bodyField(body, 'durationInSeconds'));
+	const storedDuration = Number(lobby.get('durationSeconds'));
+	let durationInSeconds = 0;
+	if (Number.isFinite(bodyDuration) && bodyDuration > 0) {
+		durationInSeconds = Math.floor(bodyDuration);
+	} else if (Number.isFinite(storedDuration) && storedDuration > 0) {
+		durationInSeconds = Math.floor(storedDuration);
+	} else if (result) {
+		const start = Number(result.startgametime);
+		const end = Number(result.completiontime);
+		if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+			durationInSeconds = Math.floor(end - start);
+		} else if (Number.isFinite(end) && end > 0) {
+			durationInSeconds = Math.floor(end);
+		}
+	}
+	if (!(durationInSeconds > 0)) {
+		durationInSeconds = 1;
+	}
+	const bodyPlayers = bodyJsonArray(body, 'players');
+	const players =
+		bodyPlayers.length > 0 ? bodyPlayers : playersFromLobbyForMember(lobby, result);
+	const statsSnapshot =
+		bodyPlayers.length > 0
+			? buildStatsSnapshot(players, { isRanked, durationInSeconds })
+			: statsSnapshotFromLobby(result, players, isRanked, durationInSeconds);
+	const gameDate = String(lobby.get('createdAt') || '').trim();
+
+	const namedTempPath = `${$os.tempDir()}/${filename}`;
+	try {
+		if (namedTempPath !== uploadTempPath) {
+			$os.writeFile(namedTempPath, $os.readFile(uploadTempPath), 0o644);
+			try {
+				$os.remove(uploadTempPath);
+			} catch {
+				// ignore
+			}
+			uploadTempPath = namedTempPath;
+		}
+	} catch (error) {
+		console.warn('[member-replays] from-match rename temp', String(error?.message || error));
+	}
+
+	const filesystemFile = $filesystem.fileFromPath(uploadTempPath);
+
+	try {
+		const collection = $app.findCollectionByNameOrId('replays');
+		const record = new Record(collection);
+		record.set('createdBy', e.auth.id);
+		record.set('visibility', 'member');
+		record.set('title', title);
+		record.set('description', description);
+		record.set('filename', filename);
+		record.set('mapName', mapName);
+		record.set('mapFilename', mapFilename);
+		record.set('durationInSeconds', durationInSeconds);
+		record.set('isRanked', isRanked);
+		record.set('isVpGame', false);
+		record.set('isRandomStart', false);
+		record.set('isHighResources', false);
+		record.set('vpCount', 0);
+		if (gameDate) {
+			record.set('gameDate', gameDate);
+		}
+		record.set('players', players);
+		record.set('messages', []);
+		record.set('likeCount', 0);
+		record.set('downloadCount', 0);
+		record.set('commentCount', 0);
+		record.set('statsSnapshot', statsSnapshot);
+		record.set('file', filesystemFile);
+		$app.save(record);
+
+		const savedName = String(record.get('file') || '');
+		if (!savedName || savedName === '[object Object]') {
+			console.warn('[member-replays] from-match saved invalid file name', savedName);
+			try {
+				$app.delete(record);
+			} catch {
+				// best-effort cleanup
+			}
+			return jsonNoStore(e, 500, { message: 'Failed to publish replay.' });
+		}
+
+		try {
+			const fsys = $app.newFilesystem();
+			try {
+				const key = `${record.baseFilesPath()}/${savedName}`;
+				const stored = fsys.getReader(key);
+				try {
+					const storedBytes = toBytes(stored);
+					const storedSize = byteSize(storedBytes);
+					if (storedSize < 64 || storedSize < uploadSize * 0.5) {
+						throw new Error(`stored file too small (${storedSize})`);
+					}
+					if (
+						typeof storedBytes === 'string' &&
+						storedBytes.indexOf('[object Object]') === 0
+					) {
+						throw new Error('stored file is [object Object]');
+					}
+				} finally {
+					stored.close();
+				}
+			} finally {
+				fsys.close();
+			}
+		} catch (error) {
+			console.warn('[member-replays] from-match stored file check', String(error?.message || error));
+			try {
+				$app.delete(record);
+			} catch {
+				// best-effort cleanup
+			}
+			return jsonNoStore(e, 500, { message: 'Failed to publish replay.' });
+		}
+
+		lobby.set('memberReplay', record.id);
+		$app.save(lobby);
+
+		try {
+			require(`${__hooks}/lib/match-history.js`).invalidateCommunityMatchCount();
+		} catch (error) {
+			console.warn(
+				'[member-replays] invalidate community count',
+				String(error?.message || error)
+			);
+		}
+
+		return jsonNoStore(e, 200, serializeMemberReplay(record, { detail: true }));
+	} catch (error) {
+		console.warn('[member-replays] from-match', String(error?.message || error));
+		return jsonNoStore(e, 500, { message: 'Failed to publish replay.' });
+	} finally {
+		try {
+			$os.remove(uploadTempPath);
+		} catch {
+			// ignore
+		}
+	}
+}
+
 module.exports = {
 	handleOptions,
 	handleList,
@@ -1465,6 +1808,7 @@ module.exports = {
 	handleDownload,
 	handleMaps,
 	handlePreviewStats,
+	handlePublishFromMatch,
 	loadMemberReplay,
 	serializeMemberReplay,
 	buildStatsSnapshot

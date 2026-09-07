@@ -16,6 +16,7 @@
 		downloadCount: number;
 		listHref: string;
 		resolveMapSrc: (map: string | undefined) => string | undefined;
+		resolveFallbackSrc?: () => string | undefined;
 		onDownloadClick?: () => void;
 		replaysLabel?: string;
 		downloadLabel?: string;
@@ -27,7 +28,10 @@
 		titleMeta?: Snippet;
 		details: Snippet;
 		actions?: Snippet;
+		afterActions?: Snippet;
 		afterDetails?: Snippet;
+		/** Landing-style back + breadcrumb row. App uses its own layout breadcrumbs. */
+		showNav?: boolean;
 	};
 
 	let {
@@ -39,47 +43,59 @@
 		downloadCount,
 		listHref,
 		resolveMapSrc,
+		resolveFallbackSrc,
 		onDownloadClick,
 		replaysLabel = 'Replays',
 		downloadLabel = 'Download replay',
 		backAriaLabel = 'Back to replays',
 		downloadsLabel = 'Downloads',
 		showDownload = true,
+		showNav = true,
 		vote,
 		title,
 		titleMeta,
 		details,
 		actions,
+		afterActions,
 		afterDetails
 	}: Props = $props();
 </script>
 
 <div class="border-secondary-800 border-b">
-	<div class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">
-		<a
-			href={listHref}
-			aria-label={backAriaLabel}
-			class={cn(
-				interactive,
-				'border-secondary-600 bg-secondary-800 hover:border-secondary-500 hover:bg-secondary-700 inline-flex size-9 shrink-0 items-center justify-center rounded-md border text-white'
-			)}
-		>
-			<ArrowLeftIcon class="size-4" weight="duotone" />
-		</a>
-		<nav aria-label="Breadcrumb" class="font-heading min-w-0 text-sm font-bold">
-			<ol class="flex items-center">
-				<li>
-					<a href={listHref} class={cn(interactive, 'text-secondary-400 hover:text-primary')}>
-						{replaysLabel}
-					</a>
-				</li>
-				<li aria-hidden="true" class="text-secondary-500 mx-2">/</li>
-				<li class="min-w-0 truncate text-white">{mapName}</li>
-			</ol>
-		</nav>
-	</div>
-	<div class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(220px,280px)_auto_minmax(0,1fr)]">
-		<MapImage {map} alt={mapName} flush {resolveMapSrc} />
+	{#if showNav}
+		<div class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">
+			<a
+				href={listHref}
+				aria-label={backAriaLabel}
+				class={cn(
+					interactive,
+					'border-secondary-600 bg-secondary-800 hover:border-secondary-500 hover:bg-secondary-700 inline-flex size-9 shrink-0 items-center justify-center rounded-md border text-white'
+				)}
+			>
+				<ArrowLeftIcon class="size-4" weight="duotone" />
+			</a>
+			<nav aria-label="Breadcrumb" class="font-heading min-w-0 text-sm font-bold">
+				<ol class="flex items-center">
+					<li>
+						<a href={listHref} class={cn(interactive, 'text-secondary-400 hover:text-primary')}>
+							{replaysLabel}
+						</a>
+					</li>
+					<li aria-hidden="true" class="text-secondary-500 mx-2">/</li>
+					<li class="min-w-0 truncate text-white">{mapName}</li>
+				</ol>
+			</nav>
+		</div>
+	{/if}
+	<div
+		class={cn(
+			'grid grid-cols-1 gap-4',
+			vote
+				? 'sm:grid-cols-[minmax(220px,280px)_auto_minmax(0,1fr)]'
+				: 'sm:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]'
+		)}
+	>
+		<MapImage {map} alt={mapName} flush {resolveMapSrc} {resolveFallbackSrc} />
 		{#if vote}
 			<div class="flex items-start justify-center px-6 sm:px-0 sm:py-4">
 				{@render vote()}
@@ -127,8 +143,11 @@
 						{/if}
 					</div>
 				{/if}
+				{@render afterActions?.()}
 			</div>
-			{@render afterDetails?.()}
+			{#if afterDetails}
+				{@render afterDetails()}
+			{/if}
 		</div>
 	</div>
 </div>

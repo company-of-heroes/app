@@ -337,6 +337,7 @@ function reassignLoser(loserId, keeperId) {
 	reassignField('replays', 'createdBy', loserId, keeperId);
 	reassignField('anti_cheat_captures', 'user', loserId, keeperId);
 	reassignField('anti_cheat_process_hits', 'user', loserId, keeperId);
+	reassignField('anti_cheat_module_hits', 'user', loserId, keeperId);
 	reassignField('anti_cheat_cheaters', 'user', loserId, keeperId);
 	reassignField('anti_cheat_cheaters', 'labeled_by', loserId, keeperId);
 	reassignField('notifications', 'createdBy', loserId, keeperId);

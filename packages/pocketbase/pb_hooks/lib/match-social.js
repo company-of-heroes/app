@@ -21,6 +21,21 @@ function adjustLobbyCounter(lobbyId, field, delta) {
 	}
 }
 
+function adjustReplayCounter(replayId, field, delta) {
+	if (!replayId || !field) {
+		return;
+	}
+
+	try {
+		const replay = $app.findRecordById('replays', replayId);
+		const current = Number(replay.get(field)) || 0;
+		replay.set(field, Math.max(0, current + delta));
+		$app.save(replay);
+	} catch (error) {
+		console.warn('[match_social] failed to update replay', field, String(error?.message || error));
+	}
+}
+
 function restoreCounterFields(e) {
 	try {
 		if (!e.hasSuperuserAuth()) {
@@ -189,6 +204,63 @@ function findPriorCommenterUserIds(lobbyId, excludeCommentId) {
 	}
 }
 
+function findPriorReplayCommenterUserIds(replayId, excludeCommentId) {
+	try {
+		const rows = arrayOf(new DynamicModel({ id: '' }));
+		$app
+			.db()
+			.newQuery(
+				`SELECT DISTINCT user AS id FROM replay_comments
+				 WHERE replay = {:replay}
+				 AND ({:exclude} = '' OR id != {:exclude})
+				 AND user IS NOT NULL AND user != ''`
+			)
+			.bind({ replay: replayId, exclude: excludeCommentId || '' })
+			.all(rows);
+		return rows.map((row) => String(row.id)).filter(Boolean);
+	} catch (error) {
+		console.warn('[match_social] prior replay commenters', String(error?.message || error));
+		return [];
+	}
+}
+
+function collectReplaySteamIds(replayId) {
+	const found = Object.create(null);
+	try {
+		const rows = arrayOf(new DynamicModel({ steamId: '' }));
+		$app
+			.db()
+			.newQuery(
+				`SELECT DISTINCT CAST(json_extract(p.value, '$.steamId') AS TEXT) AS steamId
+				 FROM json_each((
+					 SELECT CASE
+						 WHEN json_valid(players) AND json_type(players) = 'array' THEN players
+						 ELSE '[]'
+					 END
+					 FROM replays WHERE id = {:replay}
+				 )) AS p
+				 WHERE json_extract(p.value, '$.steamId') IS NOT NULL
+					 AND json_extract(p.value, '$.steamId') != ''`
+			)
+			.bind({ replay: replayId })
+			.all(rows);
+		for (const row of rows) addSteamId(found, row.steamId);
+	} catch (error) {
+		console.warn('[match_social] replay steam query', String(error?.message || error));
+	}
+	return Object.keys(found);
+}
+
+function replayUploaderId(replayId) {
+	const id = recordId(replayId);
+	if (!id) return '';
+	try {
+		return recordId($app.findRecordById('replays', id).get('createdBy'));
+	} catch {
+		return '';
+	}
+}
+
 function uniqueUserIds(ids, excludeId) {
 	const seen = Object.create(null);
 	const out = [];
@@ -262,6 +334,21 @@ function saveCommentNotification(payload) {
 	$app.save(record);
 }
 
+function saveReplayCommentNotification(payload) {
+	if (!payload.userIds.length) return;
+	const record = new Record($app.findCollectionByNameOrId('notifications'));
+	record.set('title', payload.title);
+	record.set('body', payload.body);
+	record.set('targetAll', false);
+	record.set('recipients', payload.userIds);
+	record.set('replay', payload.replayId);
+	if (payload.commentId) {
+		record.set('replayComment', payload.commentId);
+	}
+	record.set('createdBy', payload.commenterId);
+	$app.save(record);
+}
+
 function notifyMatchPlayers(comment) {
 	try {
 		const lobbyId = recordId(comment.get('lobby'));
@@ -318,9 +405,209 @@ function notifyMatchPlayers(comment) {
 	}
 }
 
+function notifyReplayPlayers(comment) {
+	try {
+		const replayId = recordId(comment.get('replay'));
+		const commenterId = recordId(comment.get('user'));
+		const commentId = recordId(comment.id);
+		if (!replayId || !commenterId) {
+			console.warn('[match_social] notify replay skip: missing replay or user');
+			return;
+		}
+		const steamIds = collectReplaySteamIds(replayId);
+		const uploaderId = replayUploaderId(replayId);
+		const mentionedIds = uniqueUserIds(
+			existingUserIds(parseMentionUserIds(comment.get('text'))),
+			commenterId
+		);
+		const mentioned = Object.create(null);
+		for (const id of mentionedIds) mentioned[id] = true;
+		const generalIds = uniqueUserIds(
+			[
+				uploaderId,
+				...findUserIdsBySteamIds(steamIds),
+				...findPriorReplayCommenterUserIds(replayId, commentId)
+			],
+			commenterId
+		).filter((id) => !mentioned[id]);
+		if (!mentionedIds.length && !generalIds.length) {
+			console.warn(
+				'[match_social] notify replay skip: no recipients',
+				replayId,
+				'steam',
+				steamIds.length
+			);
+			return;
+		}
+		const isReply = Boolean(parentId(comment));
+		const name = commenterName(commenterId);
+		const body =
+			commentSnippet(comment.get('text')) || (isReply ? 'New reply' : 'New comment');
+		const shared = { body, replayId, commentId, commenterId };
+		if (mentionedIds.length) {
+			saveReplayCommentNotification({
+				...shared,
+				title: `${name} mentioned you on a replay`,
+				userIds: mentionedIds
+			});
+		}
+		if (generalIds.length) {
+			saveReplayCommentNotification({
+				...shared,
+				title: isReply ? `${name} replied on a replay` : `${name} commented on a replay`,
+				userIds: generalIds
+			});
+		}
+		console.log(
+			'[match_social] notify replay',
+			replayId,
+			'recipients',
+			generalIds.length,
+			'mentions',
+			mentionedIds.length
+		);
+	} catch (error) {
+		console.warn('[match_social] notifyReplayPlayers', String(error?.message || error));
+	}
+}
+
+const MAX_COMMENT_DEPTH = 8;
+const COMMENT_PROTECTED_FIELDS = ['likeCount', 'parent', 'lobby', 'user'];
+const REPLAY_COMMENT_PROTECTED_FIELDS = ['likeCount', 'parent', 'replay', 'user'];
+
+function parentId(record) {
+	const value = record.get('parent');
+	if (!value) return '';
+	if (typeof value === 'object' && value.id) return String(value.id);
+	return String(value);
+}
+
+function commentDepth(commentId, collection) {
+	let depth = 0;
+	let current = commentId;
+	const seen = Object.create(null);
+	while (current && depth <= MAX_COMMENT_DEPTH) {
+		if (seen[current]) break;
+		seen[current] = true;
+		let record;
+		try {
+			record = $app.findRecordById(collection, current);
+		} catch {
+			break;
+		}
+		current = parentId(record);
+		if (current) depth += 1;
+	}
+	return depth;
+}
+
+function onCommentCreate(e) {
+	if (!e.record) return;
+	if (!e.hasSuperuserAuth()) {
+		e.record.set('likeCount', 0);
+		e.record.set('deleted', false);
+		e.record.set('deletedAt', '');
+		e.record.set('deletedBy', '');
+		e.record.set('deletedNote', '');
+	}
+	const parent = parentId(e.record);
+	if (!parent) return;
+	let parentRecord;
+	try {
+		parentRecord = $app.findRecordById('lobby_comments', parent);
+	} catch {
+		throw new BadRequestError('Parent comment not found');
+	}
+	if (parentRecord.get('deleted')) {
+		throw new BadRequestError('Cannot reply to a deleted comment');
+	}
+	if (String(parentRecord.get('lobby')) !== String(e.record.get('lobby'))) {
+		throw new BadRequestError('Reply must be on the same match');
+	}
+	if (commentDepth(parent, 'lobby_comments') + 1 > MAX_COMMENT_DEPTH) {
+		throw new BadRequestError('Reply is nested too deep');
+	}
+}
+
+function onReplayCommentCreate(e) {
+	if (!e.record) return;
+	if (!e.hasSuperuserAuth()) {
+		e.record.set('likeCount', 0);
+		e.record.set('deleted', false);
+		e.record.set('deletedAt', '');
+		e.record.set('deletedBy', '');
+		e.record.set('deletedNote', '');
+	}
+	const parent = parentId(e.record);
+	if (!parent) return;
+	let parentRecord;
+	try {
+		parentRecord = $app.findRecordById('replay_comments', parent);
+	} catch {
+		throw new BadRequestError('Parent comment not found');
+	}
+	if (parentRecord.get('deleted')) {
+		throw new BadRequestError('Cannot reply to a deleted comment');
+	}
+	if (String(parentRecord.get('replay')) !== String(e.record.get('replay'))) {
+		throw new BadRequestError('Reply must be on the same replay');
+	}
+	if (commentDepth(parent, 'replay_comments') + 1 > MAX_COMMENT_DEPTH) {
+		throw new BadRequestError('Reply is nested too deep');
+	}
+}
+
+function restoreCommentProtectedFields(e) {
+	if (e.hasSuperuserAuth()) {
+		e.next();
+		return;
+	}
+
+	const original = e.record.original();
+	for (const field of COMMENT_PROTECTED_FIELDS) {
+		e.record.set(field, original.get(field));
+	}
+
+	applyCommentSoftDelete(e, original);
+	const becomingDeleted = !Boolean(original.get('deleted')) && Boolean(e.record.get('deleted'));
+	const lobbyId = e.record.get('lobby');
+	e.next();
+	if (becomingDeleted) {
+		adjustLobbyCounter(lobbyId, 'commentCount', -1);
+		reputation().revokeCommentCreated(e.record);
+	}
+}
+
+function restoreReplayCommentProtectedFields(e) {
+	if (e.hasSuperuserAuth()) {
+		e.next();
+		return;
+	}
+
+	const original = e.record.original();
+	for (const field of REPLAY_COMMENT_PROTECTED_FIELDS) {
+		e.record.set(field, original.get(field));
+	}
+
+	applyCommentSoftDelete(e, original);
+	const becomingDeleted = !Boolean(original.get('deleted')) && Boolean(e.record.get('deleted'));
+	const replayId = e.record.get('replay');
+	e.next();
+	if (becomingDeleted) {
+		adjustReplayCounter(replayId, 'commentCount', -1);
+		reputation().revokeCommentCreated(e.record);
+	}
+}
+
 function onCommentCreated(e) {
 	adjustLobbyCounter(e.record.get('lobby'), 'commentCount', 1);
 	notifyMatchPlayers(e.record);
+	reputation().awardCommentCreated(e.record);
+}
+
+function onReplayCommentCreated(e) {
+	adjustReplayCounter(e.record.get('replay'), 'commentCount', 1);
+	notifyReplayPlayers(e.record);
 	reputation().awardCommentCreated(e.record);
 }
 
@@ -330,6 +617,15 @@ function onCommentDeleted(e) {
 	}
 
 	adjustLobbyCounter(e.record.get('lobby'), 'commentCount', -1);
+	reputation().revokeCommentCreated(e.record);
+}
+
+function onReplayCommentDeleted(e) {
+	if (e.record.get('deleted')) {
+		return;
+	}
+
+	adjustReplayCounter(e.record.get('replay'), 'commentCount', -1);
 	reputation().revokeCommentCreated(e.record);
 }
 
@@ -383,84 +679,6 @@ function applyCommentSoftDelete(e, original) {
 	e.record.set('deletedAt', new Date().toISOString());
 }
 
-const MAX_COMMENT_DEPTH = 8;
-const COMMENT_PROTECTED_FIELDS = ['likeCount', 'parent', 'lobby', 'user'];
-
-function parentId(record) {
-	const value = record.get('parent');
-	if (!value) return '';
-	if (typeof value === 'object' && value.id) return String(value.id);
-	return String(value);
-}
-
-function commentDepth(commentId) {
-	let depth = 0;
-	let current = commentId;
-	const seen = Object.create(null);
-	while (current && depth <= MAX_COMMENT_DEPTH) {
-		if (seen[current]) break;
-		seen[current] = true;
-		let record;
-		try {
-			record = $app.findRecordById('lobby_comments', current);
-		} catch {
-			break;
-		}
-		current = parentId(record);
-		if (current) depth += 1;
-	}
-	return depth;
-}
-
-function onCommentCreate(e) {
-	if (!e.record) return;
-	if (!e.hasSuperuserAuth()) {
-		e.record.set('likeCount', 0);
-		e.record.set('deleted', false);
-		e.record.set('deletedAt', '');
-		e.record.set('deletedBy', '');
-		e.record.set('deletedNote', '');
-	}
-	const parent = parentId(e.record);
-	if (!parent) return;
-	let parentRecord;
-	try {
-		parentRecord = $app.findRecordById('lobby_comments', parent);
-	} catch {
-		throw new BadRequestError('Parent comment not found');
-	}
-	if (parentRecord.get('deleted')) {
-		throw new BadRequestError('Cannot reply to a deleted comment');
-	}
-	if (String(parentRecord.get('lobby')) !== String(e.record.get('lobby'))) {
-		throw new BadRequestError('Reply must be on the same match');
-	}
-	if (commentDepth(parent) + 1 > MAX_COMMENT_DEPTH) {
-		throw new BadRequestError('Reply is nested too deep');
-	}
-}
-
-function restoreCommentProtectedFields(e) {
-	if (e.hasSuperuserAuth()) {
-		e.next();
-		return;
-	}
-
-	const original = e.record.original();
-	for (const field of COMMENT_PROTECTED_FIELDS) {
-		e.record.set(field, original.get(field));
-	}
-
-	applyCommentSoftDelete(e, original);
-	const becomingDeleted = !Boolean(original.get('deleted')) && Boolean(e.record.get('deleted'));
-	const lobbyId = e.record.get('lobby');
-	e.next();
-	if (becomingDeleted) {
-		adjustLobbyCounter(lobbyId, 'commentCount', -1);
-		reputation().revokeCommentCreated(e.record);
-	}
-}
-
 function voteValue(record) {
 	const raw = Number(record.get('value'));
 	if (raw === -1) {
@@ -470,14 +688,14 @@ function voteValue(record) {
 	return 1;
 }
 
-function requireLiveComment(commentId) {
+function requireLiveComment(commentId, collection) {
 	if (!commentId) {
 		throw new BadRequestError('Comment is required');
 	}
 
 	let comment;
 	try {
-		comment = $app.findRecordById('lobby_comments', commentId);
+		comment = $app.findRecordById(collection || 'lobby_comments', commentId);
 	} catch {
 		throw new BadRequestError('Comment not found');
 	}
@@ -490,7 +708,7 @@ function requireLiveComment(commentId) {
 }
 
 function onCommentLikeCreate(e) {
-	requireLiveComment(recordId(e.record.get('comment')));
+	requireLiveComment(recordId(e.record.get('comment')), 'lobby_comments');
 	const value = Number(e.record.get('value'));
 	e.record.set('value', value === -1 ? -1 : 1);
 }
@@ -500,7 +718,7 @@ function onCommentLikeUpdate(e) {
 	e.record.set('comment', original.get('comment'));
 	e.record.set('user', original.get('user'));
 	const commentId = recordId(e.record.get('comment'));
-	requireLiveComment(commentId);
+	requireLiveComment(commentId, 'lobby_comments');
 	const value = Number(e.record.get('value'));
 	if (value !== 1 && value !== -1) {
 		throw new BadRequestError('Vote must be 1 or -1');
@@ -511,17 +729,44 @@ function onCommentLikeUpdate(e) {
 	e.next();
 	const delta = value - oldValue;
 	if (delta) {
-		adjustCommentLikeCount(commentId, delta);
+		adjustCommentLikeCount(commentId, delta, 'lobby_comments');
 		reputation().syncCommentVote(e.record, value);
 	}
 }
 
-function adjustCommentLikeCount(commentId, delta) {
+function onReplayCommentLikeCreate(e) {
+	requireLiveComment(recordId(e.record.get('comment')), 'replay_comments');
+	const value = Number(e.record.get('value'));
+	e.record.set('value', value === -1 ? -1 : 1);
+}
+
+function onReplayCommentLikeUpdate(e) {
+	const original = e.record.original();
+	e.record.set('comment', original.get('comment'));
+	e.record.set('user', original.get('user'));
+	const commentId = recordId(e.record.get('comment'));
+	requireLiveComment(commentId, 'replay_comments');
+	const value = Number(e.record.get('value'));
+	if (value !== 1 && value !== -1) {
+		throw new BadRequestError('Vote must be 1 or -1');
+	}
+
+	e.record.set('value', value);
+	const oldValue = voteValue(original);
+	e.next();
+	const delta = value - oldValue;
+	if (delta) {
+		adjustCommentLikeCount(commentId, delta, 'replay_comments');
+		reputation().syncCommentVote(e.record, value);
+	}
+}
+
+function adjustCommentLikeCount(commentId, delta, collection) {
 	if (!commentId) {
 		return;
 	}
 	try {
-		const comment = $app.findRecordById('lobby_comments', commentId);
+		const comment = $app.findRecordById(collection || 'lobby_comments', commentId);
 		const current = Number(comment.get('likeCount')) || 0;
 		comment.set('likeCount', current + delta);
 		$app.save(comment);
@@ -531,12 +776,22 @@ function adjustCommentLikeCount(commentId, delta) {
 }
 
 function onCommentLikeCreated(e) {
-	adjustCommentLikeCount(e.record.get('comment'), voteValue(e.record));
+	adjustCommentLikeCount(e.record.get('comment'), voteValue(e.record), 'lobby_comments');
 	reputation().syncCommentVote(e.record, voteValue(e.record));
 }
 
 function onCommentLikeDeleted(e) {
-	adjustCommentLikeCount(e.record.get('comment'), -voteValue(e.record));
+	adjustCommentLikeCount(e.record.get('comment'), -voteValue(e.record), 'lobby_comments');
+	reputation().syncCommentVote(e.record, 0);
+}
+
+function onReplayCommentLikeCreated(e) {
+	adjustCommentLikeCount(e.record.get('comment'), voteValue(e.record), 'replay_comments');
+	reputation().syncCommentVote(e.record, voteValue(e.record));
+}
+
+function onReplayCommentLikeDeleted(e) {
+	adjustCommentLikeCount(e.record.get('comment'), -voteValue(e.record), 'replay_comments');
 	reputation().syncCommentVote(e.record, 0);
 }
 
@@ -605,19 +860,81 @@ function handleRecordDownload(e) {
 	return e.json(200, { downloadCount: Number(lobby.get('downloadCount')) || 1 });
 }
 
+function adjustReplayLikeCount(replayId, delta) {
+	if (!replayId || !delta) {
+		return;
+	}
+
+	try {
+		const replay = $app.findRecordById('replays', replayId);
+		const current = Number(replay.get('likeCount')) || 0;
+		replay.set('likeCount', current + delta);
+		$app.save(replay);
+	} catch (error) {
+		console.warn('[match_social] failed to update replay likeCount', String(error?.message || error));
+	}
+}
+
+function onReplayLikeCreate(e) {
+	const value = Number(e.record.get('value'));
+	e.record.set('value', value === -1 ? -1 : 1);
+}
+
+function onReplayLikeUpdate(e) {
+	const original = e.record.original();
+	e.record.set('replay', original.get('replay'));
+	e.record.set('user', original.get('user'));
+	const replayId = recordId(e.record.get('replay'));
+	const value = Number(e.record.get('value'));
+	if (value !== 1 && value !== -1) {
+		throw new BadRequestError('Vote must be 1 or -1');
+	}
+
+	e.record.set('value', value);
+	const oldValue = voteValue(original);
+	e.next();
+	const delta = value - oldValue;
+	if (delta) {
+		adjustReplayLikeCount(replayId, delta);
+		reputation().syncMemberReplayVote(e.record, value);
+	}
+}
+
+function onReplayLikeCreated(e) {
+	adjustReplayLikeCount(e.record.get('replay'), voteValue(e.record));
+	reputation().syncMemberReplayVote(e.record, voteValue(e.record));
+}
+
+function onReplayLikeDeleted(e) {
+	adjustReplayLikeCount(e.record.get('replay'), -voteValue(e.record));
+	reputation().syncMemberReplayVote(e.record, 0);
+}
+
 module.exports = {
 	restoreCounterFields,
 	restoreCommentProtectedFields,
+	restoreReplayCommentProtectedFields,
 	onLikeCreate,
 	onLikeUpdate,
 	onLikeCreated,
 	onLikeDeleted,
+	onReplayLikeCreate,
+	onReplayLikeUpdate,
+	onReplayLikeCreated,
+	onReplayLikeDeleted,
 	onCommentCreate,
 	onCommentCreated,
 	onCommentDeleted,
+	onReplayCommentCreate,
+	onReplayCommentCreated,
+	onReplayCommentDeleted,
 	onCommentLikeCreate,
 	onCommentLikeUpdate,
 	onCommentLikeCreated,
 	onCommentLikeDeleted,
+	onReplayCommentLikeCreate,
+	onReplayCommentLikeUpdate,
+	onReplayCommentLikeCreated,
+	onReplayCommentLikeDeleted,
 	handleRecordDownload
 };

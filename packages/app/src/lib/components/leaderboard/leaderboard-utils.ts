@@ -1,6 +1,72 @@
-import { getRaceFromLeaderboardId, Race } from '$lib/utils/game';
-import type { RelicProfile } from '@fknoobs/app';
+import { getRaceFromLeaderboardId, isRanked, Race } from '$lib/utils/game';
+import type { LeaderboardStat, RelicProfile } from '@fknoobs/app';
 import { getI18n, t } from '$lib/i18n';
+import { getStoredEloForLeaderboard, type PlayerEloMap } from '$lib/utils/player-elo';
+
+export const RANKED_MODE_GROUPS = [
+	{ label: '1v1', ids: [4, 5, 6, 7] },
+	{ label: '2v2', ids: [8, 9, 10, 11] },
+	{ label: '3v3', ids: [12, 13, 14, 15] },
+	{ label: '4v4', ids: [16, 17, 18, 19] }
+] as const;
+
+export type RankedModeRow = {
+	label: string;
+	stat: LeaderboardStat;
+	rating: number | null;
+};
+
+/** Per mode: faction with highest companion ELO, ties broken by Relic ranklevel. */
+export function buildRankedModeRows(
+	stats: LeaderboardStat[],
+	elo?: PlayerEloMap
+): RankedModeRow[] {
+	const result: RankedModeRow[] = [];
+	for (const group of RANKED_MODE_GROUPS) {
+		const candidates = stats.filter(
+			(stat) =>
+				isRanked(stat.leaderboard_id) &&
+				(group.ids as readonly number[]).includes(stat.leaderboard_id)
+		);
+		let best: LeaderboardStat | null = null;
+		let bestRating = Number.NEGATIVE_INFINITY;
+		let bestRank = Number.NEGATIVE_INFINITY;
+		for (const stat of candidates) {
+			const rating = getStoredEloForLeaderboard(elo, stat.leaderboard_id) ?? 0;
+			if (rating > bestRating || (rating === bestRating && stat.ranklevel > bestRank)) {
+				best = stat;
+				bestRating = rating;
+				bestRank = stat.ranklevel;
+			}
+		}
+		if (!best) {
+			continue;
+		}
+
+		result.push({
+			label: group.label,
+			stat: best,
+			rating: getStoredEloForLeaderboard(elo, best.leaderboard_id)
+		});
+	}
+	return result;
+}
+
+/** Featured = highest companion ELO among modes with data; ties by Relic ranklevel. */
+export function pickFeaturedMode(rows: RankedModeRow[]): RankedModeRow | null {
+	let featured: RankedModeRow | null = null;
+	let bestRating = Number.NEGATIVE_INFINITY;
+	let bestRank = Number.NEGATIVE_INFINITY;
+	for (const row of rows) {
+		const rating = row.rating ?? 0;
+		if (rating > bestRating || (rating === bestRating && row.stat.ranklevel > bestRank)) {
+			featured = row;
+			bestRating = rating;
+			bestRank = row.stat.ranklevel;
+		}
+	}
+	return featured;
+}
 
 export function getSteamIdFromProfile(profile: RelicProfile): string {
 	return profile.name.replace('/steam/', '');
@@ -38,6 +104,58 @@ export function getRaceLabelFromLeaderboardId(leaderboardId: number): string {
 export function getRatioValue(wins: number, losses: number): number {
 	if (losses === 0) return wins > 0 ? Infinity : 0;
 	return wins / losses;
+}
+
+export type PerformanceWlRow = {
+	wins: number;
+	losses: number;
+};
+
+/** Best map by winrate; prefer maps with at least 3 games when available. */
+export function pickBestMap<T extends PerformanceWlRow & { map: string }>(byMap: T[]): T | null {
+	const eligible = byMap.filter((map) => map.wins + map.losses >= 3);
+	const pool = eligible.length > 0 ? eligible : byMap;
+	return (
+		[...pool].sort(
+			(a, b) => getRatioValue(b.wins, b.losses) - getRatioValue(a.wins, a.losses)
+		)[0] ?? null
+	);
+}
+
+/** Main faction by games played; winrate breaks ties. */
+export function pickMainFaction<T extends PerformanceWlRow & { raceId: number }>(
+	byFaction: T[]
+): T | null {
+	return (
+		[...byFaction].sort((a, b) => {
+			const gamesA = a.wins + a.losses;
+			const gamesB = b.wins + b.losses;
+			if (gamesB !== gamesA) {
+				return gamesB - gamesA;
+			}
+
+			return getRatioValue(b.wins, b.losses) - getRatioValue(a.wins, a.losses);
+		})[0] ?? null
+	);
+}
+
+/** Current form streak from newest-first recent matches (+wins / −losses). */
+export function deriveFormStreak(matches: { outcome: 0 | 1 }[]): number {
+	if (matches.length === 0) {
+		return 0;
+	}
+
+	const first = matches[0]!.outcome;
+	let count = 0;
+	for (const match of matches) {
+		if (match.outcome !== first) {
+			break;
+		}
+
+		count += 1;
+	}
+
+	return first === 1 ? count : -count;
 }
 
 function lerp(min: number, max: number, t: number): number {

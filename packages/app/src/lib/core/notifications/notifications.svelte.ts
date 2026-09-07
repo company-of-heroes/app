@@ -99,6 +99,16 @@ export class NotificationsService {
 			return;
 		}
 
+		const memberReplayId = replayId(notification);
+		if (memberReplayId) {
+			const targetComment = replayCommentId(notification);
+			const path = resolve('/(loaded)/replays/[replayId]', { replayId: memberReplayId });
+			await goto(
+				targetComment ? `${path}?comment=${encodeURIComponent(targetComment)}` : path
+			);
+			return;
+		}
+
 		modal.create({
 			component: NotificationDetail,
 			title: notification.title,
@@ -169,6 +179,14 @@ function lobbyId(notification: NotificationItem): string {
 
 function commentId(notification: NotificationItem): string {
 	return relationId(notification.comment as unknown);
+}
+
+function replayId(notification: NotificationItem): string {
+	return relationId(notification.replay as unknown);
+}
+
+function replayCommentId(notification: NotificationItem): string {
+	return relationId(notification.replayComment as unknown);
 }
 
 export const notifications = new NotificationsService();

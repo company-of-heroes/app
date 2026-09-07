@@ -46,14 +46,27 @@
 	import { currentLocale, href, useI18n } from '$lib/i18n';
 	import {
 		previewMemberReplayRatings,
+		publishMatchAsMemberReplay,
 		searchPlayersForUpload,
 		uploadMemberReplay
 	} from '$lib/remote/replays.remote';
+	import { searchMentionUsers } from '$lib/remote/match-social.remote';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
 	import ArrowLeftIcon from 'phosphor-svelte/lib/ArrowLeftIcon';
+	import type { PageData } from './$types';
 
+	type UploadPageData = PageData & {
+		fromMatch: CommunityMatchDetail | null;
+	};
+
+	let { data }: { data: UploadPageData } = $props();
 	const { t } = useI18n();
 	const composerLabels = $derived({
+		searchingLabel: t('Searching...'),
+		noUsersLabel: t('No users found.'),
+		mentionHintLabel: t('Type a name to mention someone.'),
 		formattingLabel: t('Formatting'),
 		boldLabel: t('Bold'),
 		italicLabel: t('Italic'),
@@ -64,7 +77,11 @@
 		quoteLabel: t('Quote'),
 		mentionLabel: t('Mention')
 	});
+	const excludeUserId = $derived(page.data.user?.id ?? '');
 	const memberReplaysHref = $derived(href('/replays?tab=member'));
+	const fromMatchId = $derived(data.fromMatch?.id ?? '');
+	const matchHref = $derived(fromMatchId ? href(`/replays/${fromMatchId}`) : '');
+	const pageTitle = $derived(fromMatchId ? t('Publish replay') : t('Upload replay'));
 
 	let fileName = $state<string | null>(null);
 	let parseError = $state<string | null>(null);
@@ -78,6 +95,8 @@
 	let parsed = $state.raw<ParsedReplay | null>(null);
 	let isRanked = $state(false);
 	let linkedLabels = $state.raw<Record<string, string>>({});
+	let publishPending = $state(false);
+	let publishError = $state<string | null>(null);
 	let formMeta = $state({
 		filename: '',
 		mapName: 'Unknown',
@@ -98,15 +117,42 @@
 			return parseError;
 		}
 
+		if (publishError) {
+			return publishError;
+		}
+
 		const issue = uploadMemberReplay.fields.allIssues()?.[0]?.message;
 		return issue ? t(issue) : null;
 	});
 	const titleValid = $derived(title.trim().length > 0);
-	const canPublish = $derived(titleValid && !uploadMemberReplay.pending);
+	const descriptionValid = $derived(description.trim().length > 0);
+	const requiredFieldsHint = $derived.by(() => {
+		if (titleValid && descriptionValid) {
+			return null;
+		}
+
+		if (!titleValid && !descriptionValid) {
+			return t('Title and description are required.');
+		}
+
+		if (!titleValid) {
+			return t('Title is required.');
+		}
+
+		return t('Description is required.');
+	});
+	const canPublish = $derived(
+		titleValid &&
+			descriptionValid &&
+			!!parsed &&
+			!publishPending &&
+			!uploadMemberReplay.pending &&
+			(!fromMatchId || !!parsed)
+	);
 	const hasReplay = $derived(!!parsed);
 	const mapLabel = $derived.by(() => {
 		if (!parsed) {
-			return t('Upload replay');
+			return pageTitle;
 		}
 
 		const raw = parsed.mapFileName || parsed.mapName || 'Unknown';
@@ -410,6 +456,77 @@
 		}
 	}
 
+	async function loadFromMatch(match: CommunityMatchDetail) {
+		parseError = null;
+		publishError = null;
+		parsePending = true;
+		try {
+			const response = await fetch(`/api/replay-file/${match.id}`);
+			if (!response.ok) {
+				throw new Error(t('This match has no replay file.'));
+			}
+
+			const buffer = await response.arrayBuffer();
+			const name = match.replay || `${match.id}.rec`;
+			const nextFile = new File([buffer], name, { type: 'application/octet-stream' });
+			await onFilePicked(nextFile);
+			if (!title.trim()) {
+				title =
+					(match.title && match.title !== '-' ? match.title : '') ||
+					normalizeMapName(match.map) ||
+					t('Untitled replay');
+			}
+		} catch (error) {
+			parseError =
+				error instanceof Error ? error.message : t('Failed to publish replay.');
+			fileName = null;
+			parsed = null;
+		} finally {
+			parsePending = false;
+		}
+	}
+
+	async function onPublishFromMatch() {
+		if (!fromMatchId || !parsed || publishPending || !titleValid || !descriptionValid) {
+			return;
+		}
+
+		publishPending = true;
+		publishError = null;
+		try {
+			const published = await publishMatchAsMemberReplay({
+				lobbyId: fromMatchId,
+				title: title.trim() || '-',
+				description: description.trim(),
+				durationInSeconds: parsed.duration || 0,
+				players: parsed.players
+			});
+			await goto(href(`/replays/${published.id}`));
+		} catch (error) {
+			publishError =
+				error instanceof Error ? error.message : t('Failed to publish replay.');
+			publishPending = false;
+		}
+	}
+
+	$effect(() => {
+		const match = data.fromMatch;
+		if (!match) {
+			return;
+		}
+
+		let cancelled = false;
+		void loadFromMatch(match).then(() => {
+			if (cancelled) {
+				return;
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	});
+
 	$effect(() => {
 		if (tab !== 'timeline' || !parsed || parseId == null || actionsLoaded) {
 			return;
@@ -448,14 +565,27 @@
 </script>
 
 <svelte:head>
-	<title>{t('Upload replay')} | {t('Company of Heroes 1 Stats')}</title>
+	<title>{pageTitle} | {t('Company of Heroes 1 Stats')}</title>
 	<meta
 		name="description"
-		content={t('Upload a Company of Heroes .rec file to share it in Member replays.')}
+		content={fromMatchId
+			? t('Publish this match to Member replays. It will leave Community matches.')
+			: t('Upload a Company of Heroes .rec file to share it in Member replays.')}
 	/>
 </svelte:head>
 
-<form {...uploadMemberReplay} enctype="multipart/form-data">
+<form
+	{...fromMatchId ? {} : uploadMemberReplay}
+	enctype="multipart/form-data"
+	onsubmit={(event) => {
+		if (!fromMatchId) {
+			return;
+		}
+
+		event.preventDefault();
+		void onPublishFromMatch();
+	}}
+>
 	<!-- Remote form `.as('hidden', value)` uses the second arg as the submitted value (not fields.set). -->
 	<input {...uploadMemberReplay.fields.filename.as('hidden', formMeta.filename || '')} />
 	<input {...uploadMemberReplay.fields.title.as('hidden', title)} />
@@ -500,29 +630,35 @@
 						</a>
 					</li>
 					<li aria-hidden="true" class="text-secondary-500 mx-2">/</li>
-					<li class="min-w-0 truncate text-white">{t('Upload replay')}</li>
+					<li class="min-w-0 truncate text-white">{pageTitle}</li>
 				</ol>
 			</nav>
 		</div>
 		<div class="px-4 py-3">
 			<p class="text-secondary-400 text-sm">
-				{t('Upload a Company of Heroes .rec file to share it in Member replays.')}
+				{#if fromMatchId}
+					{t('Publish this match to Member replays. It will leave Community matches.')}
+				{:else}
+					{t('Upload a Company of Heroes .rec file to share it in Member replays.')}
+				{/if}
 			</p>
 		</div>
-		<div class={cn(composeLoading && 'hidden')}>
-			<FileDropzone
-				id="member-replay-file"
-				flush
-				{fileName}
-				busy={!!uploadMemberReplay.pending || parsePending}
-				label={t('Replay file')}
-				dropLabel={t('Drop a .rec file here')}
-				browseLabel={t('or click to browse')}
-				changeFileLabel={t('Change file')}
-				inputProps={uploadMemberReplay.fields.file.as('file')}
-				onFileChange={(file) => void onFilePicked(file)}
-			/>
-		</div>
+		{#if !fromMatchId}
+			<div class={cn(composeLoading && 'hidden')}>
+				<FileDropzone
+					id="member-replay-file"
+					flush
+					{fileName}
+					busy={!!uploadMemberReplay.pending || parsePending}
+					label={t('Replay file')}
+					dropLabel={t('Drop a .rec file here')}
+					browseLabel={t('or click to browse')}
+					changeFileLabel={t('Change file')}
+					inputProps={uploadMemberReplay.fields.file.as('file')}
+					onFileChange={(file) => void onFilePicked(file)}
+				/>
+			</div>
+		{/if}
 		{#if composeLoading}
 			<div class="border-secondary-800 border-t px-4 py-6">
 				<p class="text-secondary-400 text-sm">{t('Loading…')}</p>
@@ -572,21 +708,49 @@
 				</div>
 			{/snippet}
 			{#snippet actions()}
-				<Button type="submit" loading={!!uploadMemberReplay.pending} disabled={!canPublish}>
-					{t('Publish')}
-				</Button>
-				<Button
-					type="button"
-					variant="secondary"
-					disabled={!!uploadMemberReplay.pending}
-					onclick={resetSelection}
-				>
-					{t('Choose another file')}
-				</Button>
+				<div class="flex min-w-0 flex-col items-stretch gap-2 sm:items-end">
+					<div class="flex flex-wrap items-center gap-2">
+						<Button
+							type="submit"
+							loading={!!uploadMemberReplay.pending || publishPending}
+							disabled={!canPublish}
+						>
+							{t('Publish')}
+						</Button>
+						{#if fromMatchId && matchHref}
+							<Button
+								type="button"
+								variant="secondary"
+								disabled={!!uploadMemberReplay.pending || publishPending}
+								href={matchHref}
+							>
+								{t('Back to match')}
+							</Button>
+						{:else}
+							<Button
+								type="button"
+								variant="secondary"
+								disabled={!!uploadMemberReplay.pending || publishPending}
+								onclick={resetSelection}
+							>
+								{t('Choose another file')}
+							</Button>
+						{/if}
+					</div>
+					{#if requiredFieldsHint}
+						<p class="text-secondary-400 text-sm sm:text-right">{requiredFieldsHint}</p>
+					{/if}
+				</div>
 			{/snippet}
 		</DetailHeader>
 
-		<Form.Group label={t('Title')} inputId="member-replay-title" wide>
+		<Form.Group
+			label={t('Title')}
+			inputId="member-replay-title"
+			wide
+			required
+			requiredLabel={t('required')}
+		>
 			<Input
 				id="member-replay-title"
 				bind:value={title}
@@ -597,37 +761,47 @@
 			/>
 		</Form.Group>
 
-		<Form.Group label={t('Description')} inputId="member-replay-description" wide>
+		<Form.Group
+			label={t('Description')}
+			inputId="member-replay-description"
+			wide
+			required
+			requiredLabel={t('required')}
+		>
 			<CommentComposer
 				id="member-replay-description"
 				bind:value={description}
 				boxed
 				showSubmit={false}
 				placeholder={t('Write a description')}
+				searchMentions={searchMentionUsers}
+				{excludeUserId}
 				{...composerLabels}
 			/>
 		</Form.Group>
 
-		<PlayerSteamLinks
-			players={steamLinkPlayers}
-			onLink={linkPlayerSteam}
-			onSearchPlayers={searchPlayers}
-			{resolveFactionFlag}
-			raceFromFaction={raceFromReplayFaction}
-			{resolveAvatarUrl}
-			{flagImageUrl}
-			resolvePlayerHref={resolvePlayerProfileHref}
-			playersLabel={t('Players')}
-			hint={t(
-				'Link a Steam account when the replay has no Steam ID so ratings and flags can load.'
-			)}
-			searchPlaceholder={t('Search player...')}
-			linkedLabel={t('Linked')}
-			clearLabel={t('Clear')}
-			viewProfileLabel={t('View profile')}
-			noResultsLabel={t('No results found.')}
-			searchingLabel={t('Searching...')}
-		/>
+		{#if steamLinkPlayers.length > 0}
+			<PlayerSteamLinks
+				players={steamLinkPlayers}
+				onLink={linkPlayerSteam}
+				onSearchPlayers={searchPlayers}
+				{resolveFactionFlag}
+				raceFromFaction={raceFromReplayFaction}
+				{resolveAvatarUrl}
+				{flagImageUrl}
+				resolvePlayerHref={resolvePlayerProfileHref}
+				playersLabel={t('Players')}
+				hint={t(
+					'Link a Steam account when the replay has no Steam ID so ratings and flags can load.'
+				)}
+				searchPlaceholder={t('Search player...')}
+				linkedLabel={t('Linked')}
+				clearLabel={t('Clear')}
+				viewProfileLabel={t('View profile')}
+				noResultsLabel={t('No results found.')}
+				searchingLabel={t('Searching...')}
+			/>
+		{/if}
 
 		{#if formError}
 			<p class="text-destructive border-secondary-800 border-b px-4 py-3 text-sm">{formError}</p>

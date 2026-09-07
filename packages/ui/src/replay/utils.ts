@@ -66,6 +66,27 @@ export function formatDurationSeconds(seconds: number | null): string {
 	return `${minutes}m ${rest}s`;
 }
 
+/** Member replay detail wording (`X hrs Y mins Z secs`), matching the website header. */
+export function formatReplayDurationLabel(
+	seconds: number | null | undefined,
+	labels: { na?: string } = {}
+): string {
+	const na = labels.na ?? 'N/A';
+	if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) {
+		return na;
+	}
+
+	const total = Math.round(seconds);
+	const hours = Math.floor(total / 3600);
+	const minutes = Math.floor((total % 3600) / 60);
+	const rest = total % 60;
+	if (hours > 0) {
+		return `${hours} hrs ${minutes} mins ${rest} secs`;
+	}
+
+	return `${minutes} mins ${rest} secs`;
+}
+
 export function formatMatchDate(value: string | undefined, locale?: string): string {
 	if (!value) return '—';
 	const date = new Date(value);

@@ -21,7 +21,8 @@ export {
 	MatchSocialApi,
 	type CommentAuthor,
 	type LobbyComment,
-	type MentionUser
+	type MentionUser,
+	type ReplayComment
 } from './match-social';
 
 export { PlayerSocialApi } from './player-social';
@@ -36,7 +37,16 @@ export {
 	type HiddenMatchKeyword
 } from './hidden-matches';
 
-export { AuthApi, type AuthExchange, type AuthUser, type CompanionUserDebug, type UserRole } from './auth';
+export {
+	AuthApi,
+	canRequestEmailChange,
+	isPlaceholderEmail,
+	PLACEHOLDER_EMAIL_DOMAIN,
+	type AuthExchange,
+	type AuthUser,
+	type CompanionUserDebug,
+	type UserRole
+} from './auth';
 
 export {
 	PlayersApi,
@@ -77,6 +87,7 @@ export {
 	type MemberReplayUploader,
 	type MemberReplayRosterPlayer,
 	memberReplayRosterForEdit,
+	type PublishFromMatchInput,
 	type ReplaysQuery,
 	type HistoryMapOption
 } from './replays';

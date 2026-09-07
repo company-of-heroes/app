@@ -29,7 +29,8 @@
 	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
 
 	type Props = {
-		lobbyId: string;
+		lobbyId?: string;
+		replayId?: string;
 		highlightCommentId?: string;
 		class?: string;
 	};
@@ -46,11 +47,16 @@
 		ontoggle: () => void;
 	};
 
-	let { lobbyId, highlightCommentId, class: className }: Props = $props();
+	let { lobbyId, replayId, highlightCommentId, class: className }: Props = $props();
+	const targetId = $derived(replayId || lobbyId || '');
+	const isReplay = $derived(Boolean(replayId));
 	const { t } = useI18n();
 	const comments = resource(
-		() => lobbyId,
-		(id) => app.database.matchSocial.listComments(id)
+		() => `${isReplay ? 'replay' : 'lobby'}:${targetId}`,
+		() =>
+			isReplay
+				? app.database.matchSocial.listReplayComments(targetId)
+				: app.database.matchSocial.listComments(targetId)
 	);
 
 	let draft = $state('');
@@ -433,7 +439,9 @@
 
 		posting = true;
 		try {
-			const created = await app.database.matchSocial.createComment(lobbyId, text);
+			const created = isReplay
+				? await app.database.matchSocial.createReplayComment(targetId, text)
+				: await app.database.matchSocial.createComment(targetId, text);
 			draft = '';
 			comments.mutate([...(comments.current ?? []), created]);
 		} catch {
@@ -452,7 +460,9 @@
 
 		replyPosting = true;
 		try {
-			const created = await app.database.matchSocial.createComment(lobbyId, text, parent);
+			const created = isReplay
+				? await app.database.matchSocial.createReplayComment(targetId, text, parent)
+				: await app.database.matchSocial.createComment(targetId, text, parent);
 			replyDraft = '';
 			replyTo = null;
 			threadCollapsed[threadRootId(parent)] = false;
@@ -477,7 +487,9 @@
 			likeCount: nextCommentScore(prevCount, prevVote, value)
 		});
 		try {
-			const result = await app.database.matchSocial.setCommentVote(comment.id, value);
+			const result = isReplay
+				? await app.database.matchSocial.setReplayCommentVote(comment.id, value)
+				: await app.database.matchSocial.setCommentVote(comment.id, value);
 			patchComment(comment.id, { vote: result.vote, likeCount: result.likeCount });
 		} catch {
 			patchComment(comment.id, { vote: prevVote, likeCount: prevCount });
@@ -496,7 +508,9 @@
 
 		saving = true;
 		try {
-			const updated = await app.database.matchSocial.updateComment(id, text);
+			const updated = isReplay
+				? await app.database.matchSocial.updateReplayComment(id, text)
+				: await app.database.matchSocial.updateComment(id, text);
 			const previous = (comments.current ?? []).find((item) => item.id === id);
 			patchComment(id, {
 				text: updated.text,
@@ -530,10 +544,15 @@
 
 		deletingId = comment.id;
 		try {
-			const updated = await app.database.matchSocial.deleteComment(
-				comment.id,
-				app.account.isStaff ? note : undefined
-			);
+			const updated = isReplay
+				? await app.database.matchSocial.deleteReplayComment(
+						comment.id,
+						app.account.isStaff ? note : undefined
+					)
+				: await app.database.matchSocial.deleteComment(
+						comment.id,
+						app.account.isStaff ? note : undefined
+					);
 			if (replyTo === comment.id) {
 				replyTo = null;
 				replyDraft = '';

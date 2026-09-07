@@ -81,7 +81,7 @@
 			description: captureDate(capture),
 			props: {
 				capture,
-				class: 'w-full max-h-[calc(100vh-9rem)] rounded-md object-contain'
+				class: 'w-full max-h-[calc(100vh-9rem)] rounded-md object-contain p-4'
 			},
 			size: 'full'
 		});

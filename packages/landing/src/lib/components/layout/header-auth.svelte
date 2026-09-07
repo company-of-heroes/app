@@ -10,6 +10,7 @@
 	import { cn } from '$lib/utils/cn';
 	import { headerCellAction, interactive } from '$lib/utils/variants';
 	import { href, useI18n } from '$lib/i18n';
+	import GearIcon from 'phosphor-svelte/lib/GearIcon';
 	import SignOutIcon from 'phosphor-svelte/lib/SignOutIcon';
 	import UserIcon from 'phosphor-svelte/lib/UserIcon';
 
@@ -18,6 +19,7 @@
 	const isLoggedIn = $derived(user !== null);
 	const avatarSrc = $derived(user?.avatarUrl);
 	const displayName = $derived(user ? authDisplayName(user) : '');
+	const accountHref = $derived(href('/account'));
 	const profileHref = $derived(
 		user?.steamIds?.[0] ? href(`/players/${user.steamIds[0]}`) : undefined
 	);
@@ -84,6 +86,10 @@
 				<p class="truncate font-medium text-white">{displayName}</p>
 				<p class="text-secondary-400 truncate text-xs">{user.email}</p>
 			</Dropdown.Subheader>
+			<Dropdown.Item class={dropdownItemIcon} onSelect={() => goto(accountHref)}>
+				<GearIcon size={18} weight="duotone" class="text-primary shrink-0" />
+				{t('Account')}
+			</Dropdown.Item>
 			{#if profileHref}
 				<Dropdown.Item class={dropdownItemIcon} onSelect={() => goto(profileHref)}>
 					<UserIcon size={18} weight="duotone" class="text-primary shrink-0" />

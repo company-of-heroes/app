@@ -14,7 +14,7 @@
 
 <div
 	class={cn(
-		'prose prose-sm max-w-none text-secondary-200',
+		'prose prose-sm max-w-none p-4 text-secondary-200',
 		'prose-headings:font-heading prose-headings:font-bold prose-headings:text-white',
 		'prose-h2:text-secondary-200 prose-h2:mt-6 prose-h2:mb-2 prose-h2:text-sm prose-h2:tracking-wider prose-h2:uppercase',
 		'prose-h3:mt-5 prose-h3:mb-2 prose-h3:text-base',

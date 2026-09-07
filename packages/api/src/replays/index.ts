@@ -22,6 +22,7 @@ export {
 	type MemberReplayUploader,
 	type MemberReplayRosterPlayer,
 	memberReplayRosterForEdit,
+	type PublishFromMatchInput,
 	type ReplayAuthOptions,
 	type ReplayCatalogRecord,
 	type HistoryMapOption,

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
-	import { tableHeadRow } from '@company-of-heroes/ui/variants';
+	import { factionIcon, tableHeadRow } from '@company-of-heroes/ui/variants';
 
 	type Props = {
 		rowCount?: number;
@@ -40,9 +40,9 @@
 
 {#snippet teamCell()}
 	<td class="px-4 py-0">
-		<div class="flex items-center gap-1.5">
-			<Skeleton class="ring-secondary-800 size-5 rounded-full ring-3" />
-			<Skeleton class="ring-secondary-800 size-5 rounded-full ring-3" />
+		<div class="flex items-center gap-2">
+			<Skeleton class="{factionIcon} opacity-50" />
+			<Skeleton class="{factionIcon} opacity-50" />
 		</div>
 	</td>
 {/snippet}

@@ -2,10 +2,15 @@
 	import { Dialog } from 'bits-ui';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { Textarea } from '@company-of-heroes/ui/input';
-	import { H } from '@company-of-heroes/ui/h';
 	import { Label } from '@company-of-heroes/ui/label';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { overlayBackdrop, surfaceModal } from '@company-of-heroes/ui/variants';
+	import {
+		flushHeader,
+		flushHeaderDescription,
+		flushHeaderTitle,
+		overlayBackdrop,
+		surfaceModal
+	} from '@company-of-heroes/ui/variants';
 	import { watch } from 'runed';
 	import CloseIcon from 'phosphor-svelte/lib/XIcon';
 
@@ -97,28 +102,28 @@
 			class={cn(
 				'data-[state=open]:animate-in data-[state=open]:zoom-in absolute duration-75',
 				'data-[state=closed]:animate-out data-[state=closed]:zoom-out data-[state=closed]:fade-out',
-				'top-0 left-1/2 z-50 mx-auto mt-12 w-[480px] max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-xl outline-hidden',
+				'top-0 left-1/2 z-50 mx-auto mt-12 w-[480px] max-w-[calc(100%-2rem)] -translate-x-1/2 outline-hidden',
 				surfaceModal
 			)}
 		>
-			<Dialog.Title class="sticky top-0 z-10 p-6">
+			<Dialog.Title class={cn(flushHeader, 'sticky top-0 z-10 bg-gray-950')}>
 				<div class="flex items-start justify-between gap-4">
-					<div>
-						<H level="4">{title}</H>
-						<Dialog.Description class="text-secondary-400 mt-1 text-sm">
+					<div class="min-w-0">
+						<p class={flushHeaderTitle}>{title}</p>
+						<Dialog.Description class={cn(flushHeaderDescription, 'whitespace-pre-line')}>
 							{description}
 						</Dialog.Description>
 					</div>
 					<Dialog.Close
-						class="bg-secondary-800 hover:bg-secondary-700 cursor-pointer rounded-md p-1.5 transition outline-none"
+						class="bg-secondary-800 hover:bg-secondary-700 cursor-pointer rounded-md p-1 transition outline-none"
 						aria-label={closeLabel}
 					>
-						<CloseIcon size={24} />
+						<CloseIcon size={20} />
 					</Dialog.Close>
 				</div>
 			</Dialog.Title>
 			<form
-				class="flex flex-col gap-4 px-6 pb-6"
+				class="flex flex-col gap-4 p-4"
 				onsubmit={(event) => {
 					event.preventDefault();
 					void confirm();

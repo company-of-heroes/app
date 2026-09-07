@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MapImage from '../ui/map-image.svelte';
 	import * as List from '../ui/list';
+	import { LiveBadge } from '../ui/badge';
 	import { detailMetaGrid } from '@company-of-heroes/ui/variants';
 	import { getEloColor, getEloTextShadow } from '@company-of-heroes/ui/format/player-format';
 	import LiveLobbyPlayers from './live-lobby-players.svelte';
@@ -40,6 +41,7 @@
 		unknownHostLabel?: string;
 		rankedLabel?: string;
 		customLabel?: string;
+		liveLabel?: string;
 		teamsValue: string;
 	};
 
@@ -76,6 +78,7 @@
 		unknownHostLabel = 'Unknown',
 		rankedLabel = 'Ranked',
 		customLabel = 'Custom',
+		liveLabel = 'Live',
 		teamsValue
 	}: Props = $props();
 
@@ -108,7 +111,10 @@
 			<MapImage map={lobby.map} alt={mapName} flush {resolveMapSrc} {resolveFallbackSrc} />
 		</div>
 		<div class="min-w-0 px-6 py-4">
-			<span class="font-heading mb-3 block truncate text-3xl font-bold text-white">{mapName}</span>
+			<div class="mb-3 flex min-w-0 items-center gap-3">
+				<span class="font-heading min-w-0 truncate text-3xl font-bold text-white">{mapName}</span>
+				<LiveBadge label={liveLabel} />
+			</div>
 			<div class={detailMetaGrid}>
 				<List.Title>{sessionLabel}</List.Title>
 				<List.Value class="tabular-nums">{lobby.sessionId}</List.Value>

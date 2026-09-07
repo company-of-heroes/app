@@ -180,6 +180,7 @@ function ownerLabelFromRecord(record) {
 
 function loadMatchPage(id, options) {
 	const includeHidden = !!(options && options.includeHidden);
+	const auth = options && options.auth ? options.auth : null;
 	let record;
 	try {
 		record = $app.findRecordById('lobbies', id);
@@ -224,6 +225,16 @@ function loadMatchPage(id, options) {
 	require(`${__hooks}/lib/player-social.js`).attachLikeCountsToPlayers(players, likeCounts);
 	require(`${__hooks}/lib/player-social.js`).attachLikeCountsToPlayers(livePlayers, likeCounts);
 
+	const memberReplayRef = record.get('memberReplay');
+	const memberReplayId = memberReplayRef
+		? typeof memberReplayRef === 'object'
+			? String(memberReplayRef.id || '')
+			: String(memberReplayRef)
+		: '';
+	const userRef = record.get('user');
+	const ownerId = userRef && typeof userRef === 'object' ? userRef.id : userRef;
+	const isOwner = !!(auth && auth.id && ownerId && String(ownerId) === String(auth.id));
+
 	const body = {
 		id: record.id,
 		map: record.get('map') || '',
@@ -242,7 +253,9 @@ function loadMatchPage(id, options) {
 		submittedBy: submittedByFromRecord(record, result),
 		players,
 		livePlayers,
-		result
+		result,
+		memberReplayId: memberReplayId || null,
+		canPublish: !!(isOwner && hasReplay && !memberReplayId)
 	};
 
 	if (includeHidden) {
@@ -266,7 +279,7 @@ function handleGet(e) {
 
 	const includeHidden = isStaffAuth(e.auth);
 	try {
-		const body = loadMatchPage(id, { includeHidden });
+		const body = loadMatchPage(id, { includeHidden, auth: e.auth });
 		if (includeHidden) {
 			return jsonNoStore(e, 200, body);
 		}

@@ -30,6 +30,14 @@ export class MatchSocial {
 		}
 	}
 
+	async getMyReplayVote(replayId: string): Promise<CommentVoteValue> {
+		try {
+			return await unwrapApi(api.matchSocial.getMyReplayVote(replayId));
+		} catch {
+			return 0;
+		}
+	}
+
 	async setLobbyVote(
 		lobbyId: string,
 		value: 1 | -1
@@ -37,12 +45,31 @@ export class MatchSocial {
 		return unwrapApi(api.matchSocial.setLobbyVote(lobbyId, value));
 	}
 
+	async setReplayVote(
+		replayId: string,
+		value: 1 | -1
+	): Promise<{ vote: CommentVoteValue; likeCount: number }> {
+		return unwrapApi(api.matchSocial.setReplayVote(replayId, value));
+	}
+
 	async listComments(lobbyId: string): Promise<LobbyComment[]> {
 		return unwrapApi(api.matchSocial.listComments(lobbyId));
 	}
 
+	async listReplayComments(replayId: string): Promise<LobbyComment[]> {
+		return unwrapApi(api.matchSocial.listReplayComments(replayId));
+	}
+
 	async createComment(lobbyId: string, text: string, parentId?: string): Promise<LobbyComment> {
 		return unwrapApi(api.matchSocial.createComment(lobbyId, text, parentId));
+	}
+
+	async createReplayComment(
+		replayId: string,
+		text: string,
+		parentId?: string
+	): Promise<LobbyComment> {
+		return unwrapApi(api.matchSocial.createReplayComment(replayId, text, parentId));
 	}
 
 	async setCommentVote(
@@ -52,12 +79,27 @@ export class MatchSocial {
 		return unwrapApi(api.matchSocial.setCommentVote(commentId, value));
 	}
 
+	async setReplayCommentVote(
+		commentId: string,
+		value: 1 | -1
+	): Promise<{ vote: CommentVoteValue; likeCount: number }> {
+		return unwrapApi(api.matchSocial.setReplayCommentVote(commentId, value));
+	}
+
 	async updateComment(commentId: string, text: string): Promise<LobbyComment> {
 		return unwrapApi(api.matchSocial.updateComment(commentId, text));
 	}
 
+	async updateReplayComment(commentId: string, text: string): Promise<LobbyComment> {
+		return unwrapApi(api.matchSocial.updateReplayComment(commentId, text));
+	}
+
 	async deleteComment(commentId: string, note?: string): Promise<LobbyComment> {
 		return unwrapApi(api.matchSocial.deleteComment(commentId, note));
+	}
+
+	async deleteReplayComment(commentId: string, note?: string): Promise<LobbyComment> {
+		return unwrapApi(api.matchSocial.deleteReplayComment(commentId, note));
 	}
 
 	async recordDownload(lobbyId: string): Promise<number> {

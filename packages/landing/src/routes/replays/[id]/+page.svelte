@@ -38,7 +38,15 @@
 </svelte:head>
 
 {#await data.match}
-	<ReplayPageSkeleton />
+	<ReplayPageSkeleton
+		overviewLabel={t('Overview')}
+		chatLabel={t('Chat')}
+		timelineLabel={t('Timeline')}
+		alliesLabel={t('Allies')}
+		axisLabel={t('Axis')}
+		ratingLabel={t('Rating')}
+		cpmLabel={t('CPM')}
+	/>
 {:then match}
 	<ReplayViewer {match} />
 {/await}

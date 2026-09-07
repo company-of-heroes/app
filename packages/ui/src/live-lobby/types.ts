@@ -34,13 +34,17 @@ export type LiveLobby = {
 	modeLabel: string;
 };
 
-/** Relic logs closed/empty slots as Id -1 with Type 3 or 6. Real skirmish AI is Id -1 with Type 1. */
+/**
+ * Relic logs closed/empty slots as Id -1 with Type 3 or 6.
+ * Real skirmish AI is Id -1 with Type 1. Replay placeholders use Id 0.
+ * Keep in sync with packages/app `isOccupiedLobbySlot`.
+ */
 export function isOccupiedLiveLobbyPlayer(player: LiveLobbyPlayer): boolean {
 	if (player.playerId === -1) {
 		return player.type === 1;
 	}
 
-	return player.playerId > 0;
+	return true;
 }
 
 export function isCpuLiveLobbyPlayer(player: LiveLobbyPlayer): boolean {
@@ -65,12 +69,17 @@ export function teamPlayers(
 }
 
 export function defaultLiveLobbyPlayerLabel(player: LiveLobbyPlayer): string {
-	if (player.alias.trim()) {
-		return player.alias;
+	if (isCpuLiveLobbyPlayer(player)) {
+		const alias = player.alias.trim();
+		if (alias && /^cpu(\b|\s*[-–—])/i.test(alias)) {
+			return alias;
+		}
+
+		return 'CPU opponent';
 	}
 
-	if (player.playerId === -1) {
-		return 'CPU opponent';
+	if (player.alias.trim()) {
+		return player.alias;
 	}
 
 	return `Player ${player.index + 1}`;

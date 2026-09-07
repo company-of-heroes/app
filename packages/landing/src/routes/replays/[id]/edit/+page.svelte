@@ -15,6 +15,8 @@
 		searchPlayersForUpload,
 		updateMemberReplay
 	} from '$lib/remote/replays.remote';
+	import { searchMentionUsers } from '$lib/remote/match-social.remote';
+	import { page } from '$app/state';
 	import ArrowLeftIcon from 'phosphor-svelte/lib/ArrowLeftIcon';
 	import type { PageData } from './$types';
 
@@ -71,19 +73,20 @@
 	});
 
 	const composerLabels = $derived({
+		searchingLabel: t('Searching...'),
+		noUsersLabel: t('No users found.'),
+		mentionHintLabel: t('Type a name to mention someone.'),
 		formattingLabel: t('Formatting'),
 		boldLabel: t('Bold'),
 		italicLabel: t('Italic'),
 		strikethroughLabel: t('Strikethrough'),
 		codeLabel: t('Code'),
-		spoilerLabel: t('Spoiler'),
 		linkLabel: t('Link'),
+		highlightLabel: t('Highlight'),
 		quoteLabel: t('Quote'),
-		bulletListLabel: t('Bullet list'),
-		numberedListLabel: t('Numbered list'),
-		submitLabel: t('Send'),
-		cancelLabel: t('Cancel')
+		mentionLabel: t('Mention')
 	});
+	const excludeUserId = $derived(page.data.user?.id ?? '');
 
 	const formError = $derived.by(() => {
 		const issues = updateMemberReplay.fields.allIssues();
@@ -103,7 +106,26 @@
 		return issues.map((issue) => t(issue.message)).join(' ');
 	});
 
-	const canSave = $derived(title.trim().length > 0 && !updateMemberReplay.pending);
+	const canSave = $derived(
+		title.trim().length > 0 && description.trim().length > 0 && !updateMemberReplay.pending
+	);
+	const requiredFieldsHint = $derived.by(() => {
+		const titleOk = title.trim().length > 0;
+		const descriptionOk = description.trim().length > 0;
+		if (titleOk && descriptionOk) {
+			return null;
+		}
+
+		if (!titleOk && !descriptionOk) {
+			return t('Title and description are required.');
+		}
+
+		if (!titleOk) {
+			return t('Title is required.');
+		}
+
+		return t('Description is required.');
+	});
 
 	function linkPlayerSteam(key: string, steamId: string | null, label?: string | null) {
 		const index = Number(key);
@@ -211,7 +233,13 @@
 		<p class="text-destructive border-secondary-800 border-b px-4 py-3 text-sm">{formError}</p>
 	{/if}
 
-	<Form.Group label={t('Title')} inputId="edit-member-replay-title" wide>
+	<Form.Group
+		label={t('Title')}
+		inputId="edit-member-replay-title"
+		wide
+		required
+		requiredLabel={t('required')}
+	>
 		<input {...updateMemberReplay.fields.title.as('hidden', title)} />
 		<Input
 			id="edit-member-replay-title"
@@ -223,7 +251,13 @@
 		/>
 	</Form.Group>
 
-	<Form.Group label={t('Description')} inputId="edit-member-replay-description" wide>
+	<Form.Group
+		label={t('Description')}
+		inputId="edit-member-replay-description"
+		wide
+		required
+		requiredLabel={t('required')}
+	>
 		<input {...updateMemberReplay.fields.description.as('hidden', description)} />
 		<CommentComposer
 			id="edit-member-replay-description"
@@ -231,6 +265,8 @@
 			boxed
 			showSubmit={false}
 			placeholder={t('Write a description')}
+			searchMentions={searchMentionUsers}
+			{excludeUserId}
 			{...composerLabels}
 		/>
 	</Form.Group>
@@ -262,13 +298,18 @@
 		</p>
 	{/if}
 
-	<div class="border-secondary-800 flex flex-wrap items-center gap-3 border-t px-4 py-4">
-		<Button type="submit" loading={!!updateMemberReplay.pending} disabled={!canSave}>
-			{t('Save')}
-		</Button>
-		<Button type="button" variant="secondary" href={detailHref}>
-			{t('Cancel')}
-		</Button>
+	<div class="border-secondary-800 flex flex-col gap-2 border-t px-4 py-4">
+		<div class="flex flex-wrap items-center gap-3">
+			<Button type="submit" loading={!!updateMemberReplay.pending} disabled={!canSave}>
+				{t('Save')}
+			</Button>
+			<Button type="button" variant="secondary" href={detailHref}>
+				{t('Cancel')}
+			</Button>
+		</div>
+		{#if requiredFieldsHint}
+			<p class="text-secondary-400 text-sm">{requiredFieldsHint}</p>
+		{/if}
 	</div>
 </form>
 

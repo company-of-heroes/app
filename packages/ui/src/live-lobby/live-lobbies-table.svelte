@@ -99,19 +99,14 @@
 			{@const label = playerLabel(player)}
 			{@const isMe = Boolean(player.steamId && meSteamIds.includes(player.steamId))}
 			{#if href}
-				<a
-					{href}
-					title={label}
-					class={cn(
-						interactive,
-						'ring-secondary-800 shrink-0 rounded-full ring-3',
-						isMe && 'ring-primary'
-					)}
-				>
+				<a {href} title={label} class={cn(interactive, 'shrink-0 rounded-full')}>
 					<img
 						src={resolveFactionFlag(player.race)}
 						alt={label}
-						class="size-5 rounded-full object-cover"
+						class={cn(
+							'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4',
+							isMe && 'ring-primary'
+						)}
 					/>
 				</a>
 			{:else}
@@ -119,7 +114,10 @@
 					src={resolveFactionFlag(player.race)}
 					alt={label}
 					title={label}
-					class="size-6 shrink-0 rounded-full object-cover opacity-70"
+					class={cn(
+						'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4 opacity-70',
+						isMe && 'ring-primary'
+					)}
 				/>
 			{/if}
 		{/each}

@@ -55,7 +55,8 @@
 							size: 'full',
 							props: {
 								stats,
-								elo: rating?.elo ?? {}
+								elo: rating?.elo ?? {},
+								wrapperClass: 'p-4'
 							}
 						});
 						app.modal.open();
@@ -78,7 +79,8 @@
 								matches: await relic.getRecentMatchHistoryForProfile(
 									app.game.profile!.relic.profile_id
 								),
-								showSessionId: true
+								showSessionId: true,
+								class: 'p-4'
 							}
 						});
 						app.modal.open();

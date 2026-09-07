@@ -1,19 +1,23 @@
 <script lang="ts">
 	import { watch } from 'runed';
-	import { goto } from '$app/navigation';
 	import { Pagination } from '$lib/components/ui/pagination';
 	import { Button } from '$lib/components/ui/button';
-	import { List as ReplayList } from '@company-of-heroes/ui/replay';
+	import { List as ReplayList, ListSkeleton as ReplayListSkeleton } from '@company-of-heroes/ui/replay';
 	import { api, unwrapApi } from '$core/api';
-	import type { CommunityMatch, HistorySortField, ReplaysQuery } from '@company-of-heroes/api';
+	import type {
+		CommunityMatch,
+		CommunityPlayer,
+		HistorySortField,
+		ReplaysQuery
+	} from '@company-of-heroes/api';
 	import { getDefaultMapImage, getMapImageFromName, getString } from '$lib/utils/game';
 	import { getFactionFlagFromRace } from '$lib/utils';
+	import { getMeSteamIds } from '$lib/utils/player-me';
 	import { useI18n } from '$lib/i18n';
-	import { app } from '$core/app/context';
-	import MemberReplayUploadModal from './member-replay-upload-modal.svelte';
 
 	const { t } = useI18n();
 	const PER_PAGE = 30;
+	const mySteamIds = $derived(getMeSteamIds());
 
 	let items = $state<CommunityMatch[]>([]);
 	let page = $state(1);
@@ -80,48 +84,48 @@
 		sortDir = 'desc';
 	}
 
-	function openUpload() {
-		app.modal.create({
-			title: t('Upload replay'),
-			size: 'lg',
-			component: MemberReplayUploadModal,
-			props: {
-				onCancel: () => app.modal.close(),
-				onDone: (id: string) => {
-					app.modal.close();
-					void load();
-					if (id) {
-						void goto(`/replays/${id}`);
-					}
-				}
-			}
-		});
-		app.modal.open();
+	function playerHref(player: CommunityPlayer): string | null {
+		const id = player.profile?.profile_id;
+		if (id != null && id > 0) {
+			return `/players/${id}`;
+		}
+
+		return player.steamId ? `/players/${player.steamId}` : null;
 	}
 </script>
 
 <div class="border-secondary-800 flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5">
-	<p class="text-secondary-400 text-sm">
-		{t('Public replays uploaded by community members.')}
-	</p>
-	<div class="flex items-center gap-2">
-		<Button type="button" size="sm" onclick={openUpload}>{t('Upload replay')}</Button>
-		{#if totalItems > 0}
-			<Pagination bind:page perPage={PER_PAGE} count={totalItems} />
-		{/if}
+	<div class="flex flex-wrap items-center gap-3">
+		<p class="text-secondary-400 text-sm">
+			{t('Public replays uploaded by community members.')}
+		</p>
+		<Button href="/replays/upload" variant="secondary" size="sm">{t('Upload replay')}</Button>
 	</div>
+	{#if totalItems > 0}
+		<Pagination bind:page perPage={PER_PAGE} count={totalItems} />
+	{/if}
 </div>
 
 {#if loading && items.length === 0}
-	<p class="text-secondary-400 px-4 py-3 text-sm">{t('Loading…')}</p>
+	<ReplayListSkeleton
+		mapLabel={t('Title')}
+		alliesLabel={t('Allies')}
+		axisLabel={t('Axis')}
+		durationLabel={t('Duration')}
+		likesLabel={t('Likes')}
+		commentsLabel={t('Comments')}
+		downloadsLabel={t('Downloads')}
+		dateLabel={t('Date')}
+	/>
 {:else}
 	<ReplayList
 		matches={items}
+		meSteamIds={mySteamIds}
 		{sort}
 		{sortDir}
 		{onSort}
 		replayHref={(id) => `/replays/${id}`}
-		playerHref={() => null}
+		{playerHref}
 		resolveMapSrc={getMapImageFromName}
 		resolveFallbackSrc={getDefaultMapImage}
 		resolveFactionFlag={getFactionFlagFromRace}

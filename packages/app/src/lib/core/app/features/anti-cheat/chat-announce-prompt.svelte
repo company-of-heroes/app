@@ -11,7 +11,7 @@
 	const { t } = useI18n();
 </script>
 
-<div class="space-y-4">
+<div class="space-y-4 p-4">
 	<div class="text-secondary-300 space-y-3 text-sm leading-relaxed">
 		<p>
 			{t(

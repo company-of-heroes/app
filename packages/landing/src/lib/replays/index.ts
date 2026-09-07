@@ -145,6 +145,8 @@ export type CommunityMatchDetail = {
 	uploadedBy?: { id: string; alias: string } | null;
 	visibility?: 'private' | 'member' | 'deleted';
 	roster?: unknown[];
+	memberReplayId?: string | null;
+	canPublish?: boolean;
 };
 
 const SORT_FIELDS = new Set<HistorySortField>([

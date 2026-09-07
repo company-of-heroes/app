@@ -124,6 +124,7 @@ routerAdd('GET', '/api/match-history', (e) => {
 
 	if (scope === 'community') {
 		lobbyFilters.push('l.hasReplay = 1');
+		lobbyFilters.push("(l.memberReplay = '' OR l.memberReplay IS NULL)");
 	} else {
 		if (!userId) {
 			return e.json(400, { message: 'userId required for user scope' });
@@ -441,5 +442,8 @@ routerAdd('GET', '/api/match-history', (e) => {
 
 $app.onServe().bindFunc((e) => {
 	e.next();
-	require(`${__hooks}/lib/match-history.js`).ensureCommunityReplayIndex();
+	// Defer index ensure — CREATE INDEX on lobbies must not block listen.
+	cronAdd('community_replay_index_ensure', '9 * * * *', () => {
+		require(`${__hooks}/lib/match-history.js`).ensureCommunityReplayIndex();
+	});
 });

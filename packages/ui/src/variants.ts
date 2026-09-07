@@ -1,7 +1,15 @@
+import { cn } from './cn';
+
 export type SemanticVariant = 'default' | 'destructive' | 'warning' | 'success' | 'info';
 
+/** Circular faction flag — size-5 icon with ring-4. Use everywhere team/player flags appear. */
+export const factionIcon = cn(
+	'!size-5 shrink-0 rounded-full object-cover',
+	'ring-secondary-800 ring-4'
+);
+
 export const controlBase =
-	'border-secondary-800 bg-secondary-800/30 placeholder:text-secondary-500 focus:border-secondary-600 h-11 rounded-md border text-base font-medium text-white focus:outline-none';
+	'border-secondary-800 bg-secondary-800/30 placeholder:text-secondary-500 focus:border-secondary-600 h-9 rounded-md border text-base font-medium text-white focus:outline-none';
 
 export const fileDropzone =
 	'border-secondary-800 bg-secondary-800/30 focus-visible:border-secondary-600 flex h-auto min-h-24 w-full flex-col items-center justify-center gap-1 rounded-md border px-4 py-4 text-center text-base font-medium text-white transition-colors focus-visible:outline-none';
@@ -9,7 +17,7 @@ export const fileDropzone =
 export const fileDropzoneDragging = 'border-secondary-600 bg-secondary-800/50';
 
 export const adornedControl =
-	'border-secondary-800 bg-secondary-800/30 focus-within:border-secondary-600 flex h-11 w-full items-stretch overflow-hidden rounded-md border focus-within:outline-none';
+	'border-secondary-800 bg-secondary-800/30 focus-within:border-secondary-600 flex h-9 w-full items-stretch overflow-hidden rounded-md border focus-within:outline-none';
 
 export const adornedInput =
 	'placeholder:text-secondary-500 min-w-0 flex-1 border-0 bg-transparent px-3 py-0 text-base font-medium text-white focus:outline-none focus:ring-0';

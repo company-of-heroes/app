@@ -3,7 +3,13 @@
 	import MapImage from '../ui/map-image.svelte';
 	import { Badge } from '../ui/badge';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive, tableHeadRow, tableSortHeader } from '@company-of-heroes/ui/variants';
+	import {
+		factionIcon,
+		interactive,
+		tableHeadRow,
+		tableSortHeader
+	} from '@company-of-heroes/ui/variants';
+	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { CommunityMatch, CommunityPlayer, HistorySortDir, HistorySortField } from './types';
 	import {
 		formatDurationSeconds,
@@ -140,36 +146,35 @@
 {/snippet}
 
 {#snippet playerFlag(player: CommunityPlayer, className: string)}
+	{@const label = player.profile.alias}
 	<img
 		src={resolveFactionFlag(player.race ?? 0)}
-		alt={player.profile.alias}
-		title={player.profile.alias}
+		alt={label}
 		class={className}
+		{@attach tooltip(label)}
 	/>
 {/snippet}
 
 {#snippet teamCell(match: CommunityMatch, team: 'allies' | 'axis')}
 	<td class={cn('px-4 py-0', outcomeClass(teamOutcome(match, team)))}>
-		<div class="flex items-center gap-1.5">
+		<div class="flex items-center gap-2">
 			{#each teamPlayers(match, team) as player (player.profile.profile_id)}
 				{@const href = playerHref(player)}
 				{@const isMe = isMePlayer(player)}
 				{@const highlighted = highlightedPlayers.includes(String(player.profile.profile_id))}
+				{@const flagClass = cn(
+					factionIcon,
+					'hover:ring-secondary-700 transition-all hover:opacity-100 hover:grayscale-0',
+					isMe || highlighted ? 'grayscale-0' : 'opacity-50 grayscale-80',
+					isMe && 'ring-primary',
+					!isMe && highlighted && 'ring-info'
+				)}
 				{#if href}
-					<a
-						{href}
-						title={player.profile.alias}
-						class={cn(
-							interactive,
-							'ring-secondary-800 shrink-0 rounded-full ring-3',
-							isMe && 'ring-primary',
-							!isMe && highlighted && 'ring-primary-100'
-						)}
-					>
-						{@render playerFlag(player, 'size-5 rounded-full object-cover')}
+					<a {href} class={cn(interactive, 'shrink-0 rounded-full')}>
+						{@render playerFlag(player, flagClass)}
 					</a>
 				{:else}
-					{@render playerFlag(player, 'size-6 shrink-0 rounded-full object-cover opacity-70')}
+					{@render playerFlag(player, flagClass)}
 				{/if}
 			{/each}
 		</div>

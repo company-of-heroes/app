@@ -1,16 +1,12 @@
 import type { MatchExpanded } from '$core/app/database/matches';
-import {
-	replayHeaderMatchesLobby,
-	type Match,
-	type ReplayHeaderPlayer
-} from '$core/game/lobby';
+import { replayHeaderMatchesLobby, type Match, type ReplayHeaderPlayer } from '$core/game/lobby';
 import { app } from '$core/app/context';
 import { account } from '$core/account';
 import { Feature } from '../feature.svelte';
 import { relic, relicLeaderboardFingerprint } from '$lib/relic';
 import { join } from '@tauri-apps/api/path';
 import { exists, readDir, readFile, stat } from '@tauri-apps/plugin-fs';
-import { parseHeader, parseReplay } from '@fknoobs/replay-parser';
+import { parseHeader, parseReplay, type ReplayData } from '@fknoobs/replay-parser';
 import { download } from '@tauri-apps/plugin-upload';
 import { Matches } from './matches.svelte';
 import { extractPlayerRatingSnapshotsFromLobby, type PlayerEloMap } from '$lib/utils/player-elo';
@@ -73,12 +69,18 @@ export class History extends Feature {
 
 		this.#unsubscribers.push(
 			app.on('lobby.destroyed', ({ match, replay }) => {
-				if (match.isReplay) return;
+				if (match.isReplay) {
+					return;
+				}
+
 				void this.saveLobbyResult(match, replay?.file ?? null);
 				this.#scheduleProfileRefresh(PROFILE_REFRESH_DELAYS_MS);
 			}),
 			app.on('lobby.started', (match) => {
-				if (match.isReplay) return;
+				if (match.isReplay) {
+					return;
+				}
+
 				void this.ensureLobbyStarted(match);
 				void this.#harvestPlayerRatings(match);
 			}),
@@ -235,7 +237,10 @@ export class History extends Feature {
 
 	#queueNextProfileRefresh(): void {
 		const delay = this.#profileRefreshDelays.shift();
-		if (delay == null) return;
+		if (delay == null) {
+			return;
+		}
+
 		this.#profileRefreshTimer = setTimeout(() => void this.#runProfileRefresh(), delay);
 	}
 
@@ -248,15 +253,21 @@ export class History extends Feature {
 	async #refreshRelicProfile(): Promise<void> {
 		const existing = app.game.profile;
 		const steamId = existing?.steam.steamid ?? app.game.steamId;
-		if (!existing || !steamId) return;
+		if (!existing || !steamId) {
+			return;
+		}
 
 		try {
 			const relicProfile = await relic.getProfileBySteamId(steamId);
-			if (!relicProfile) return;
+			if (!relicProfile) {
+				return;
+			}
 
 			const previous = relicLeaderboardFingerprint(existing.relic.leaderboardStats);
 			const next = relicLeaderboardFingerprint(relicProfile.leaderboardStats);
-			if (previous === next) return;
+			if (previous === next) {
+				return;
+			}
 
 			app.game.profile = { relic: relicProfile, steam: existing.steam };
 		} catch (error) {
@@ -361,16 +372,52 @@ export class History extends Feature {
 		map?: string;
 		players: { race: number }[];
 	}): Promise<ReplayHeaderPlayer[] | null> {
-		if (!lobby.map || lobby.players.length === 0) return null;
-		const fromDisk = await this.#findLocalReplayHeader(lobby);
-		if (fromDisk) return fromDisk;
+		if (!lobby.map || lobby.players.length === 0) {
+			return null;
+		}
+
+		const bytes = await this.#findLocalReplayBytes(lobby);
+		if (bytes) {
+			try {
+				return parseHeader(bytes).players;
+			} catch (error) {
+				console.warn('[HISTORY]: failed to parse matched replay header:', error);
+			}
+		}
+
 		return this.#findStoredReplayHeader(lobby);
 	}
 
-	async #findLocalReplayHeader(lobby: {
+	/**
+	 * Fully parses the playback `.rec` that matches an in-game replay lobby
+	 * (doctrines, CPM actions, duration). Header-only name attach stays on
+	 * {@link findReplayHeaderPlayers}.
+	 */
+	async findPlaybackReplay(lobby: {
 		map?: string;
 		players: { race: number }[];
-	}): Promise<ReplayHeaderPlayer[] | null> {
+	}): Promise<ReplayData | null> {
+		if (!lobby.map || lobby.players.length === 0) {
+			return null;
+		}
+
+		const bytes = await this.#findLocalReplayBytes(lobby);
+		if (!bytes) {
+			return null;
+		}
+
+		try {
+			return parseReplay(bytes);
+		} catch (error) {
+			console.warn('[HISTORY]: failed to parse playback replay:', error);
+			return null;
+		}
+	}
+
+	async #findLocalReplayBytes(lobby: {
+		map?: string;
+		players: { race: number }[];
+	}): Promise<Uint8Array | null> {
 		let playbackDir: string;
 		try {
 			playbackDir = await app.paths.cohPlaybackDir();
@@ -384,7 +431,10 @@ export class History extends Feature {
 			const entries = await readDir(playbackDir);
 			const recs: { name: string; mtime: number }[] = [];
 			for (const entry of entries) {
-				if (!entry.isFile || !entry.name.toLowerCase().endsWith('.rec')) continue;
+				if (!entry.isFile || !entry.name.toLowerCase().endsWith('.rec')) {
+					continue;
+				}
+
 				const path = await join(playbackDir, entry.name);
 				let mtime = 0;
 				try {
@@ -404,10 +454,10 @@ export class History extends Feature {
 
 		for (const name of names) {
 			try {
-				const bytes = await readFile(await join(playbackDir, name));
-				const header = parseHeader(new Uint8Array(bytes));
+				const bytes = new Uint8Array(await readFile(await join(playbackDir, name)));
+				const header = parseHeader(bytes);
 				if (replayHeaderMatchesLobby(lobby, header)) {
-					return header.players;
+					return bytes;
 				}
 			} catch (error) {
 				console.warn('[HISTORY]: skipped replay header', name, error);
@@ -423,7 +473,10 @@ export class History extends Feature {
 	}): Promise<ReplayHeaderPlayer[] | null> {
 		const mapKey = lobby.map?.trim();
 		const userId = account.userId;
-		if (!mapKey || !userId) return null;
+		if (!mapKey || !userId) {
+			return null;
+		}
+
 		const escapedMap = mapKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 		const escapedUser = userId.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 		try {

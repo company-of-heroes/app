@@ -303,7 +303,7 @@
 							<img
 								src={resolveFactionFlag(factionRace(player.faction))}
 								alt=""
-								class="ring-secondary-800 size-4 shrink-0 rounded-full object-cover ring-4"
+								class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
 							/>
 						{/if}
 						<div class="min-w-0">

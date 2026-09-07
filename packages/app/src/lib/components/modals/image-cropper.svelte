@@ -38,7 +38,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-4 p-4">
 	<div class="relative h-[400px] w-full overflow-hidden rounded-lg bg-gray-800">
 		<Cropper {image} bind:crop bind:zoom aspect={1} oncropcomplete={handleCropComplete} />
 	</div>

@@ -8,11 +8,14 @@
 		type ReplayData
 	} from '@company-of-heroes/ui/replay';
 	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
+	import { playerCpmLabel } from '@fknoobs/replay-parser';
 	import * as List from '$lib/components/ui/list';
 	import * as PlayerUi from '$lib/components/player';
 	import MapImage from '$lib/components/ui/map-image.svelte';
+	import { LiveBadge } from '$lib/components/ui/badge';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
 	import { getFactionFlagFromRace, getRankImage, normalizeMapName } from '$lib/utils';
+	import { doctrineBannerUrl, raceFromReplayFaction } from '$lib/utils/replay-doctrine';
 	import { detailMetaGrid } from '$lib/components/ui/variants';
 	import { formatStreak } from '@company-of-heroes/ui/variants';
 	import { getPlayerRatings } from '$core/pocketbase/player-ratings';
@@ -25,6 +28,7 @@
 		getEloColor,
 		getEloTextShadow
 	} from '$lib/components/leaderboard/leaderboard-utils';
+	import { app } from '$core/app/context';
 	import { resource } from 'runed';
 	import {
 		getAlliesPlayers,
@@ -116,6 +120,28 @@
 	const cheaters = resource(
 		() => ratingsKey,
 		(key) => loadCheaterSteamIds(key ? key.split(',') : [])
+	);
+	const playbackReplay = resource(
+		() => {
+			if (!lobby.isReplay || !lobby.map || lobby.players.length === 0) {
+				return null;
+			}
+
+			return {
+				map: lobby.map,
+				races: lobby.players.map((player) => player.race).join(',')
+			};
+		},
+		async (key) => {
+			if (!key) {
+				return null;
+			}
+
+			return app.features.history.findPlaybackReplay({
+				map: key.map,
+				players: key.races.split(',').map((race) => ({ race: Number(race) }))
+			});
+		}
 	);
 
 	const matchup = $derived(
@@ -214,6 +240,28 @@
 		});
 	});
 
+	const overviewReplay = $derived.by((): ReplayData | null => {
+		const parsed = playbackReplay.current;
+		if (!parsed) {
+			return null;
+		}
+
+		return {
+			playerCount: parsed.playerCount,
+			duration: parsed.duration,
+			players: parsed.players.map((player) => ({
+				id: player.id ?? null,
+				name: player.name,
+				faction: player.faction,
+				doctrineName: player.doctrineName,
+				steamId: player.steamId ?? null,
+				doctrine: player.doctrine
+			})),
+			messages: parsed.messages,
+			actions: parsed.actions
+		} as ReplayData;
+	});
+
 	function resolveFactionFlag(raceId: number): string {
 		return getFactionFlagFromRace(raceId);
 	}
@@ -250,16 +298,8 @@
 		return player ? isHighlightedPlayer(player, highlightPlayerId) : false;
 	}
 
-	function raceFromReplayFaction(_faction: string): number {
-		return 0;
-	}
-
-	function doctrineBannerUrl(_player: { faction: string }): string | null {
-		return null;
-	}
-
-	function playerCpm(_replay: ReplayData, _playerId: number | null): string {
-		return '—';
+	function playerCpm(data: ReplayData, playerId: number | null): string {
+		return playerCpmLabel(data, playerId);
 	}
 </script>
 
@@ -311,7 +351,12 @@
 		</div>
 
 		<div class="min-w-0 px-6 py-4">
-			<span class="font-heading mb-3 block truncate text-3xl font-bold">{mapLabel}</span>
+			<div class="mb-3 flex min-w-0 items-center gap-3">
+				<span class="font-heading min-w-0 truncate text-3xl font-bold">{mapLabel}</span>
+				{#if !lobby.isReplay}
+					<LiveBadge label={t('Live')} />
+				{/if}
+			</div>
 
 			<div class={detailMetaGrid}>
 				<List.Title>{t('Session')}</List.Title>
@@ -356,6 +401,7 @@
 	<div class="border-secondary-800 border-b">
 		<Overview
 			match={overviewMatch}
+			replay={overviewReplay}
 			{livePlayers}
 			{playerHref}
 			{flagImageUrl}

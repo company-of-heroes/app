@@ -47,7 +47,7 @@
 	const hasReplay = $derived(match.hasReplay ?? Boolean(match.replay));
 	const livePlayers = $derived(match.livePlayers ?? []);
 	const replayData = $derived(replay as unknown as ReplayData | null);
-	const showComments = $derived(match.kind !== 'member');
+	const isMember = $derived(match.kind === 'member');
 
 	function doctrineBannerForPlayer(player: ReplayPlayer) {
 		return doctrineBannerUrl(player as ParsedReplayPlayer);
@@ -172,7 +172,9 @@
 				livePlayerHref={liveLobbyPlayerHref}
 				livePlayerLabel={(player) => liveLobbyPlayerLabel(player, t)}
 			/>
-			{#if showComments}
+			{#if isMember}
+				<ReplayComments replayId={match.id} />
+			{:else}
 				<ReplayComments lobbyId={match.id} />
 			{/if}
 		{/snippet}
@@ -214,13 +216,19 @@
 					livePlayerHref={liveLobbyPlayerHref}
 					livePlayerLabel={(player) => liveLobbyPlayerLabel(player, t)}
 				/>
-				{#if showComments}
+				{#if isMember}
+					<ReplayComments replayId={match.id} />
+				{:else}
 					<ReplayComments lobbyId={match.id} />
 				{/if}
 			{/snippet}
 		</Tabs>
-	{:else if showComments}
-		<ReplayComments lobbyId={match.id} />
+	{:else}
+		{#if isMember}
+			<ReplayComments replayId={match.id} />
+		{:else}
+			<ReplayComments lobbyId={match.id} />
+		{/if}
 	{/if}
 {:else if replay && replayData}
 	{@const parsedReplay = replay}
@@ -251,7 +259,9 @@
 				cpmLabel={t('CPM')}
 				livePlayerHref={liveLobbyPlayerHref}
 			/>
-			{#if showComments}
+			{#if isMember}
+				<ReplayComments replayId={match.id} />
+			{:else}
 				<ReplayComments lobbyId={match.id} />
 			{/if}
 		{/snippet}

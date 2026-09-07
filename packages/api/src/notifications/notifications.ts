@@ -12,6 +12,8 @@ export type NotificationRecord = RecordModel & {
 	createdBy?: string;
 	lobby?: string;
 	comment?: string;
+	replay?: string;
+	replayComment?: string;
 };
 
 export type NotificationReadRecord = RecordModel & {

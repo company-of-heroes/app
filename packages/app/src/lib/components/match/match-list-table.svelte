@@ -5,6 +5,7 @@
 	import MatchMapImage from './match-map-image.svelte';
 	import MatchMapName from './match-map-name.svelte';
 	import MatchProBadge from './match-pro-badge.svelte';
+	import MatchPendingBadge from './match-pending-badge.svelte';
 	import MatchPlayers from './match-players.svelte';
 	import MatchRating from './match-rating.svelte';
 	import MatchDate from './match-date.svelte';
@@ -152,6 +153,7 @@
 {#snippet cell_name({ row }: { row: MatchExpanded })}
 	<span class="flex min-w-0 items-center gap-2">
 		<MatchMapName class="text-secondary-300 min-w-0 truncate font-medium" />
+		<MatchPendingBadge />
 		<MatchProBadge />
 	</span>
 {/snippet}

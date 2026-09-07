@@ -14,6 +14,7 @@ import MatchLikeButton from './match-like-button.svelte';
 import MatchComments from './match-comments.svelte';
 import MatchSocialCounts from './match-social-counts.svelte';
 import MatchProBadge from './match-pro-badge.svelte';
+import MatchPendingBadge from './match-pending-badge.svelte';
 import MatchScreenshots from './match-screenshots.svelte';
 import MatchOverview from './match-overview.svelte';
 
@@ -36,6 +37,7 @@ export {
 	MatchComments as Comments,
 	MatchSocialCounts as SocialCounts,
 	MatchProBadge as ProBadge,
+	MatchPendingBadge as PendingBadge,
 	MatchScreenshots as Screenshots,
 	MatchOverview as Overview
 };

@@ -101,6 +101,18 @@ export class LandingReplaysService {
 		return this.replays.publish(id, description);
 	}
 
+	publishFromMatch(
+		lobbyId: string,
+		input?: {
+			title?: string;
+			description?: string;
+			durationInSeconds?: number;
+			players?: unknown;
+		}
+	) {
+		return this.replays.publishFromMatch(lobbyId, input);
+	}
+
 	getFile(id: string, clientIp: string): ResultAsync<ReplayFileDownload, AppError> {
 		const limited = allowReplayFileRequest(clientIp);
 		if (!limited.ok) {

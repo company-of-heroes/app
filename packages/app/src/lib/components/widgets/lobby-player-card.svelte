@@ -18,12 +18,7 @@
 	const stats = $derived(getLeaderboardStatsForPlayerByMatchType(matchType, player));
 	const isCpu = $derived(player.playerId === -1);
 
-	const factionClass = $derived(
-		cn(
-			'h-auto! w-6! shrink-0 rounded-none! object-contain! ring-1! ring-black/40',
-			isMe && 'ring-primary!'
-		)
-	);
+	const factionClass = $derived(cn(isMe && 'ring-primary'));
 </script>
 
 <Player.Root {player} {stats} race={player.race}>

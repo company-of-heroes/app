@@ -37,13 +37,21 @@
 	watch(
 		() => (app.account.isStaff ? steamId : ''),
 		(id) => {
-			if (id) void load();
+			if (id) {
+				void load();
+			}
 		}
 	);
 
 	function recordId(value: unknown) {
-		if (!value) return '';
-		if (typeof value === 'object' && 'id' in value) return String((value as { id: string }).id);
+		if (!value) {
+			return '';
+		}
+
+		if (typeof value === 'object' && 'id' in value) {
+			return String((value as { id: string }).id);
+		}
+
 		return String(value);
 	}
 
@@ -79,6 +87,7 @@
 					labelId: label.id
 				});
 			}
+
 			await load();
 		} catch (error) {
 			console.error('[PLAYER]: label toggle failed:', error);
@@ -97,7 +106,7 @@
 				type="button"
 				variant="ghost"
 				size="sm"
-				class={cn('text-secondary-400 hover:text-white h-8 px-2.5', className)}
+				class={cn('text-secondary-400 h-8 px-2.5 hover:text-white', className)}
 			>
 				<TagSimpleIcon size={16} />
 				{t('Edit labels')}

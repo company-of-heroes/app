@@ -30,6 +30,21 @@ routerAdd('POST', '/api/member-replays/preview-stats', (e) => {
 	return require(`${__hooks}/lib/member-replays.js`).handlePreviewStats(e);
 });
 
+// Nested under /publish so it does not conflict with /{id}/delete or /{id}/download
+// (Go mux treats from-match/{id} vs {id}/delete as ambiguous for .../from-match/delete).
+routerAdd('OPTIONS', '/api/member-replays/from-match/{id}/publish', (e) => {
+	return require(`${__hooks}/lib/member-replays.js`).handleOptions(e);
+});
+
+routerAdd(
+	'POST',
+	'/api/member-replays/from-match/{id}/publish',
+	(e) => {
+		return require(`${__hooks}/lib/member-replays.js`).handlePublishFromMatch(e);
+	},
+	$apis.requireAuth('users')
+);
+
 routerAdd('OPTIONS', '/api/member-replays/{id}', (e) => {
 	return require(`${__hooks}/lib/member-replays.js`).handleOptions(e);
 });

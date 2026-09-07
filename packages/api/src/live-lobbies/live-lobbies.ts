@@ -222,6 +222,22 @@ export class LiveLobbiesApi {
 		);
 	}
 
+	/** True when a fresh public live row still points at this saved match / session. */
+	isActiveForMatch(matchId: string, sessionId: number): ResultAsync<boolean, ApiError> {
+		if (!matchId || !sessionId) {
+			return okAsync(false);
+		}
+
+		const filter = `(${lobbiesLivePublicFilter()}) && (lobby="${matchId}" || sessionId=${sessionId})`;
+		return fromPbPromise(
+			this.deps.pocketbase.collection('lobbies_live').getList(1, 1, pbOptions(this.deps, {
+				filter,
+				fields: 'id'
+			})),
+			'Failed to check live lobby.'
+		).map((response) => response.items.length > 0);
+	}
+
 	subscribe(
 		topic: string,
 		callback: (event: RecordSubscription<LiveLobbyRow>) => void

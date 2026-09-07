@@ -21,7 +21,7 @@ const uploadMemberReplaySchema = z.object({
 		.trim()
 		.min(1, 'Title is required.')
 		.max(200),
-	description: z.string().trim().max(2000).optional().default(''),
+	description: z.string().trim().min(1, 'Description is required.').max(2000),
 	mapName: z.string().trim().min(1).max(200),
 	mapFilename: z.string().trim().min(1).max(200),
 	durationInSeconds: z.string().transform((value) => {
@@ -155,7 +155,7 @@ export const searchPlayersForUpload = query(searchPlayersForUploadSchema, async 
 const updateMemberReplaySchema = z.object({
 	id: z.string().min(1),
 	title: z.string().trim().min(1, 'Title is required.').max(200),
-	description: z.string().trim().max(2000).optional().default(''),
+	description: z.string().trim().min(1, 'Description is required.').max(2000),
 	players: z.string().transform((raw, ctx) => {
 		try {
 			return JSON.parse(raw || '[]') as unknown;
@@ -202,6 +202,33 @@ export const deleteMemberReplay = form(deleteMemberReplaySchema, async (data) =>
 
 	redirect(303, '/replays?tab=member');
 });
+
+const publishMatchAsMemberReplaySchema = z.object({
+	lobbyId: z.string().min(1),
+	title: z.string().trim().min(1, 'Title is required.').max(200),
+	description: z.string().trim().min(1, 'Description is required.').max(2000),
+	durationInSeconds: z.number().nonnegative().optional(),
+	players: z.array(z.unknown()).optional()
+});
+
+export const publishMatchAsMemberReplay = command(
+	publishMatchAsMemberReplaySchema,
+	async ({ lobbyId, title, description, durationInSeconds, players }) => {
+		const { locals } = getRequestEvent();
+		if (!locals.user) {
+			error(401, locals.t('Sign in to publish a member replay.'));
+		}
+
+		return unwrapAsync(
+			locals.services.replays().publishFromMatch(lobbyId, {
+				title,
+				description,
+				durationInSeconds,
+				players
+			})
+		);
+	}
+);
 
 const recordReplayDownloadSchema = z.object({
 	matchId: z.string().min(1),

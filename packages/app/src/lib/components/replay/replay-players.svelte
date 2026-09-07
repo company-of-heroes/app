@@ -6,26 +6,15 @@
 		Overview,
 		type CommunityMatchDetail,
 		type CommunityPlayer,
-		type ReplayData,
-		type ReplayPlayer
+		type ReplayData
 	} from '@company-of-heroes/ui/replay';
 	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
+	import { playerCpmLabel } from '@fknoobs/replay-parser';
 	import { useReplay } from '.';
 	import * as PlayerUi from '$lib/components/player';
-	import DoctrineAir from '$lib/files/ct_branchbanner_top_allied_airborne.png?url';
-	import DoctrineArmored from '$lib/files/ct_branchbanner_top_allied_armor.png?url';
-	import DoctrineInfantry from '$lib/files/ct_branchbanner_top_allied_infantry.png?url';
-	import DoctrineBlitz from '$lib/files/ct_branchbanner_top_axis_blitz.png?url';
-	import DoctrineTerror from '$lib/files/ct_branchbanner_top_axis_terror.png?url';
-	import DoctrineDefense from '$lib/files/ct_branchbanner_top_axis_defense.png?url';
-	import DoctrineCwAir from '$lib/files/ct_branchbanner_top_cmnw_airborne.png?url';
-	import DoctrineCwArmor from '$lib/files/ct_branchbanner_top_cmnw_armor.png?url';
-	import DoctrineCwInfantry from '$lib/files/ct_branchbanner_top_cmnw_infantry.png?url';
-	import DoctrineLuft from '$lib/files/ct_branchbanner_top_pnze_00.png?url';
-	import DoctrineSector from '$lib/files/ct_branchbanner_top_pnze_01.png?url';
-	import DoctrineTank from '$lib/files/ct_branchbanner_top_pnze_02.png?url';
 	import { cn, getFactionFlagFromRace, getRankImage } from '$lib/utils';
 	import { isMeReplayAlias } from '$lib/utils/player-me';
+	import { doctrineBannerUrl, raceFromReplayFaction } from '$lib/utils/replay-doctrine';
 	import { getLeaderboardStatsForPlayerByMatchType, getPlayerEloFromMatchHistory } from '$lib/utils/game';
 	import {
 		getLiveLobbyMatchType,
@@ -131,54 +120,6 @@
 
 	const replayData = $derived(replay as unknown as ReplayData);
 
-	function doctrineBannerUrl(player: ReplayPlayer & { doctrine?: number }): string | null {
-		const doctrine = player.doctrine;
-		if (doctrine == null) return null;
-		if (player.faction.startsWith('allies')) {
-			switch (doctrine) {
-				case 2:
-					return DoctrineAir;
-				case 9:
-					return DoctrineArmored;
-				case 17:
-					return DoctrineInfantry;
-				case 316:
-					return DoctrineCwInfantry;
-				case 323:
-					return DoctrineCwAir;
-				case 330:
-					return DoctrineCwArmor;
-				default:
-					return null;
-			}
-		}
-
-		switch (doctrine) {
-			case 186:
-				return DoctrineBlitz;
-			case 194:
-				return DoctrineDefense;
-			case 265:
-				return DoctrineTerror;
-			case 295:
-				return DoctrineLuft;
-			case 302:
-				return DoctrineSector;
-			case 309:
-				return DoctrineTank;
-			default:
-				return null;
-		}
-	}
-
-	function raceFromReplayFaction(faction: string): number {
-		const value = faction.toLowerCase();
-		if (value.includes('commonwealth')) return 2;
-		if (value.includes('panzer')) return 3;
-		if (value.startsWith('axis')) return 1;
-		return 0;
-	}
-
 	function resolveFactionFlag(raceId: number): string {
 		return getFactionFlagFromRace(raceId);
 	}
@@ -200,34 +141,7 @@
 	}
 
 	function playerCpm(data: ReplayData, playerId: number | null): string {
-		if (playerId == null || !(data.duration > 0)) return '0';
-
-		const excludedUnitCommands = new Set([0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xa8]);
-		const playerActions = data.actions.filter((action) => action.playerID === playerId);
-		const takeoverIndex = playerActions.findIndex(
-			(action) => action.command?.type === 'AI_TAKEOVER'
-		);
-		const window =
-			takeoverIndex >= 0 ? playerActions.slice(0, takeoverIndex) : playerActions;
-
-		const keys = new Set<string>();
-		for (const action of window) {
-			if (action.command?.type === 'AI_TAKEOVER') continue;
-			if (
-				action.commandID === 0x37 &&
-				excludedUnitCommands.has(action.objectID)
-			) {
-				continue;
-			}
-			keys.add(`${action.tick}|${action.commandID}|${action.objectID}`);
-		}
-		if (keys.size === 0) return '0';
-
-		const minutes =
-			takeoverIndex >= 0
-				? Math.max(playerActions[takeoverIndex].tick / 8 / 60, 1 / 60)
-				: Math.max(data.duration / 60, 1 / 60);
-		return String(Math.round(keys.size / minutes));
+		return playerCpmLabel(data, playerId);
 	}
 </script>
 
@@ -260,7 +174,7 @@
 		{getCountryDisplayName}
 		{resolveFactionFlag}
 		{raceFromReplayFaction}
-		doctrineBannerUrl={doctrineBannerUrl}
+		{doctrineBannerUrl}
 		{playerCpm}
 		formatStreakLabel={formatStreak}
 		getRankImage={getRankImage}

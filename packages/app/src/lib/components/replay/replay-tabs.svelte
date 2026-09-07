@@ -14,6 +14,7 @@
 		class?: string;
 		overviewExtra?: Snippet;
 		screenshots?: Snippet;
+		showScreenshots?: boolean;
 	};
 
 	let {
@@ -21,7 +22,8 @@
 		match = null,
 		class: className,
 		overviewExtra,
-		screenshots
+		screenshots,
+		showScreenshots = true
 	}: Props = $props();
 	const { t } = useI18n();
 	let activeTab = $state('overview');
@@ -54,14 +56,16 @@
 			>
 				{t('Timeline')}
 			</button>
-			<button
-				type="button"
-				class={tabTrigger}
-				data-state={activeTab === 'screenshots' ? 'active' : undefined}
-				onclick={() => (activeTab = 'screenshots')}
-			>
-				{t('Screenshots')}
-			</button>
+			{#if showScreenshots}
+				<button
+					type="button"
+					class={tabTrigger}
+					data-state={activeTab === 'screenshots' ? 'active' : undefined}
+					onclick={() => (activeTab = 'screenshots')}
+				>
+					{t('Screenshots')}
+				</button>
+			{/if}
 		</div>
 		<div>
 			{#if activeTab === 'overview'}
@@ -71,7 +75,7 @@
 				<ReplayChat flush class="grow" />
 			{:else if activeTab === 'timeline'}
 				<ReplayActions flush class="grow" />
-			{:else}
+			{:else if showScreenshots}
 				{@render screenshots?.()}
 			{/if}
 		</div>
@@ -83,7 +87,9 @@
 				<Tabs.Trigger value="overview">{t('Overview')}</Tabs.Trigger>
 				<Tabs.Trigger value="chat">{t('Chat')}</Tabs.Trigger>
 				<Tabs.Trigger value="timeline">{t('Timeline')}</Tabs.Trigger>
-				<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
+				{#if showScreenshots}
+					<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
+				{/if}
 			</Tabs.List>
 			<Tabs.Content value="overview" class="flex grow flex-col gap-4">
 				<ReplayPlayers {match} />
@@ -95,9 +101,11 @@
 			<Tabs.Content value="timeline" class="flex grow flex-col gap-4">
 				<ReplayActions />
 			</Tabs.Content>
-			<Tabs.Content value="screenshots" class="flex grow flex-col gap-4">
-				{@render screenshots?.()}
-			</Tabs.Content>
+			{#if showScreenshots}
+				<Tabs.Content value="screenshots" class="flex grow flex-col gap-4">
+					{@render screenshots?.()}
+				</Tabs.Content>
+			{/if}
 		</Tabs.Root>
 	</div>
 {/if}

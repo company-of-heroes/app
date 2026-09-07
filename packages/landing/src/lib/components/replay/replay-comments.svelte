@@ -19,11 +19,16 @@
 	import { currentLocale, useI18n } from '$lib/i18n';
 	import {
 		createComment,
+		createReplayComment,
 		deleteComment,
+		deleteReplayComment,
 		listComments,
+		listReplayComments,
 		searchMentionUsers,
 		setCommentVote,
-		updateComment
+		setReplayCommentVote,
+		updateComment,
+		updateReplayComment
 	} from '$lib/remote/match-social.remote';
 	import { resource, watch } from 'runed';
 	import { replaceState } from '$app/navigation';
@@ -34,7 +39,8 @@
 	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
 
 	type Props = {
-		lobbyId: string;
+		lobbyId?: string;
+		replayId?: string;
 		class?: string;
 	};
 
@@ -50,7 +56,9 @@
 		ontoggle: () => void;
 	};
 
-	let { lobbyId, class: className }: Props = $props();
+	let { lobbyId, replayId, class: className }: Props = $props();
+	const targetId = $derived(replayId || lobbyId || '');
+	const isReplay = $derived(Boolean(replayId));
 	const { t } = useI18n();
 	const user = $derived(page.data.user);
 	const loginHref = $derived(
@@ -73,8 +81,8 @@
 	});
 	const highlightCommentId = $derived(page.url.searchParams.get('comment') ?? undefined);
 	const comments = resource(
-		() => lobbyId,
-		(id) => listComments(id)
+		() => `${isReplay ? 'replay' : 'lobby'}:${targetId}`,
+		() => (isReplay ? listReplayComments(targetId) : listComments(targetId))
 	);
 
 	let draft = $state('');
@@ -442,7 +450,9 @@
 		posting = true;
 		errorMessage = '';
 		try {
-			const created = await createComment({ lobbyId, text });
+			const created = isReplay
+				? await createReplayComment({ replayId: targetId, text })
+				: await createComment({ lobbyId: targetId, text });
 			draft = '';
 			comments.mutate([...(comments.current ?? []), created]);
 		} catch {
@@ -462,7 +472,9 @@
 		replyPosting = true;
 		errorMessage = '';
 		try {
-			const created = await createComment({ lobbyId, text, parentId: parent });
+			const created = isReplay
+				? await createReplayComment({ replayId: targetId, text, parentId: parent })
+				: await createComment({ lobbyId: targetId, text, parentId: parent });
 			replyDraft = '';
 			replyTo = null;
 			threadCollapsed[threadRootId(parent)] = false;
@@ -488,7 +500,9 @@
 			likeCount: nextCommentScore(prevCount, prevVote, value)
 		});
 		try {
-			const result = await setCommentVote({ commentId: comment.id, value });
+			const result = isReplay
+				? await setReplayCommentVote({ commentId: comment.id, value })
+				: await setCommentVote({ commentId: comment.id, value });
 			patchComment(comment.id, { vote: result.vote, likeCount: result.likeCount });
 		} catch {
 			patchComment(comment.id, { vote: prevVote, likeCount: prevCount });
@@ -508,7 +522,9 @@
 		saving = true;
 		errorMessage = '';
 		try {
-			const updated = await updateComment({ commentId: id, text });
+			const updated = isReplay
+				? await updateReplayComment({ commentId: id, text })
+				: await updateComment({ commentId: id, text });
 			const previous = (comments.current ?? []).find((item) => item.id === id);
 			patchComment(id, {
 				text: updated.text,
@@ -543,10 +559,15 @@
 		deletingId = comment.id;
 		errorMessage = '';
 		try {
-			const updated = await deleteComment({
-				commentId: comment.id,
-				note: staff ? note : undefined
-			});
+			const updated = isReplay
+				? await deleteReplayComment({
+						commentId: comment.id,
+						note: staff ? note : undefined
+					})
+				: await deleteComment({
+						commentId: comment.id,
+						note: staff ? note : undefined
+					});
 			if (replyTo === comment.id) {
 				replyTo = null;
 				replyDraft = '';

@@ -13,7 +13,7 @@
 
 <div
 	class={cn(
-		'prose prose-sm max-w-none text-secondary-200',
+		'prose prose-sm max-w-none p-4 text-secondary-200',
 		'prose-headings:text-white prose-strong:text-white prose-code:text-white',
 		'prose-a:text-primary prose-a:no-underline hover:prose-a:underline',
 		'prose-blockquote:border-secondary-700 prose-blockquote:text-primary',

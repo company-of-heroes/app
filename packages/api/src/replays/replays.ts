@@ -133,6 +133,17 @@ export type CommunityMatchDetail = {
 	visibility?: 'private' | 'member' | 'deleted';
 	/** Raw replay roster (member detail) for owner edits. */
 	roster?: unknown[];
+	/** Linked member replay when this lobby was published from a community match. */
+	memberReplayId?: string | null;
+	/** True when the authenticated user owns this lobby and can publish it. */
+	canPublish?: boolean;
+};
+
+export type PublishFromMatchInput = {
+	title?: string;
+	description: string;
+	durationInSeconds?: number;
+	players?: unknown;
 };
 
 export type MemberReplayList = CommunityMatchList;
@@ -148,7 +159,7 @@ export type MemberReplayUploadInput = {
 	file: Blob;
 	filename: string;
 	title: string;
-	description?: string;
+	description: string;
 	mapName: string;
 	mapFilename: string;
 	durationInSeconds: number;
@@ -440,7 +451,9 @@ const communityMatchDetailSchema: z.ZodType<CommunityMatchDetail> = z
 		filename: z.string().optional(),
 		mapFilename: z.string().optional(),
 		visibility: z.enum(['private', 'member', 'deleted']).optional(),
-		roster: z.array(z.any()).optional()
+		roster: z.array(z.any()).optional(),
+		memberReplayId: z.string().nullable().optional(),
+		canPublish: z.boolean().optional()
 	})
 	.passthrough() as z.ZodType<CommunityMatchDetail>;
 
@@ -735,9 +748,7 @@ export class ReplaysApi {
 			);
 			formData.append('filename', input.filename);
 			formData.append('title', input.title || '-');
-			if (input.description) {
-				formData.append('description', input.description);
-			}
+			formData.append('description', input.description);
 			formData.append('mapName', input.mapName);
 			formData.append('mapFilename', input.mapFilename);
 			formData.append('durationInSeconds', String(input.durationInSeconds));
@@ -893,6 +904,63 @@ export class ReplaysApi {
 		);
 	}
 
+	publishFromMatch(
+		lobbyId: string,
+		input: PublishFromMatchInput = {},
+		options?: ReplayAuthOptions
+	): ResultAsync<MemberReplayDetail, ApiError> {
+		const body: Record<string, unknown> = {};
+		if (input.title !== undefined) {
+			body.title = input.title;
+		}
+		body.description = input.description;
+		if (input.durationInSeconds !== undefined) {
+			body.durationInSeconds = input.durationInSeconds;
+		}
+		if (input.players !== undefined) {
+			body.players = input.players;
+		}
+
+		return fetchJson(
+			this.deps.fetch,
+			`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays/from-match/${encodeURIComponent(lobbyId)}/publish`,
+			{
+				fallback: 'Failed to publish replay.',
+				schema: communityMatchDetailSchema,
+				timeoutMs: 120_000,
+				init: {
+					method: 'POST',
+					headers: {
+						...resolveAuthHeaders(this.deps, options?.headers),
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(body)
+				},
+				onStatus: (status) => {
+					if (status === 401) {
+						return apiError(401, 'Sign in to publish a member replay.');
+					}
+					if (status === 403) {
+						return apiError(403, 'You can only publish your own matches.');
+					}
+					if (status === 404) {
+						return apiError(404, 'Match not found');
+					}
+					if (status === 400) {
+						return apiError(400, 'This match has no replay file.');
+					}
+					if (status === 409) {
+						return apiError(409, 'This match is already published.');
+					}
+				}
+			}
+		).map((match) => ({
+			...match,
+			kind: 'member' as const,
+			hasReplay: true
+		}));
+	}
+
 	unpublish(id: string): ResultAsync<ReplayCatalogRecord, ApiError> {
 		return fromPbPromise(
 			this.deps.pocketbase.collection('replays').update<ReplayCatalogRecord>(
@@ -923,7 +991,10 @@ export class ReplaysApi {
 
 	getById(id: string): ResultAsync<ReplayCatalogRecord, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('replays').getOne<ReplayCatalogRecord>(id, pbOptions(this.deps)),
+			this.deps.pocketbase.collection('replays').getOne<ReplayCatalogRecord>(
+				id,
+				pbOptions(this.deps, { expand: 'createdBy' })
+			),
 			'Failed to load replay.'
 		);
 	}

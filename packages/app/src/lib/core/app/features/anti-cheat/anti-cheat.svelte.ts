@@ -1,5 +1,8 @@
 import type { Match } from '$core/game/lobby';
-import type { AntiCheatProcessDenylistResponse } from '$core/pocketbase/types';
+import type {
+	AntiCheatModuleAllowlistResponse,
+	AntiCheatProcessDenylistResponse
+} from '$core/pocketbase/types';
 import { invoke } from '@tauri-apps/api/core';
 import { dirname, join } from '@tauri-apps/api/path';
 import { watch } from 'runed';
@@ -27,6 +30,12 @@ type GameWindowCapture = {
 
 type DenylistedProcess = {
 	name: string;
+	pid: number;
+};
+
+type UnknownGameModule = {
+	name: string;
+	path: string;
 	pid: number;
 };
 
@@ -94,8 +103,9 @@ function base64ToJpegFile(base64: string): File {
 
 /**
  * Captures the Company of Heroes window during a live match, reports known
- * cheat processes from a server denylist, and can post a one-time all-chat
- * announce so other players can see that fair play is on.
+ * cheat processes from a server denylist, reports unknown DLLs loaded into the
+ * game process, and can post a one-time all-chat announce so other players can
+ * see that fair play is on.
  */
 export class AntiCheat extends Feature<AntiCheatSettings> {
 	name = 'anti-cheat';
@@ -111,7 +121,9 @@ export class AntiCheat extends Feature<AntiCheatSettings> {
 	#session: ActiveSession | null = null;
 	#sessionToken = 0;
 	#denylist: AntiCheatProcessDenylistResponse[] = [];
+	#moduleAllowlist: AntiCheatModuleAllowlistResponse[] = [];
 	#reportedHits = new Set<string>();
+	#reportedModuleHits = new Set<string>();
 	#chatAnnounced = false;
 	#chatAnnounceInFlight = false;
 	#lastChatAnnounceAt = 0;
@@ -344,7 +356,8 @@ export class AntiCheat extends Feature<AntiCheatSettings> {
 			map: match.map || match.mapName || 'Unknown'
 		};
 		this.#reportedHits.clear();
-		await this.#refreshDenylist();
+		this.#reportedModuleHits.clear();
+		await Promise.all([this.#refreshDenylist(), this.#refreshModuleAllowlist()]);
 		if (token !== this.#sessionToken || !this.#session) {
 			return;
 		}
@@ -698,7 +711,28 @@ export class AntiCheat extends Feature<AntiCheatSettings> {
 			console.warn('[ANTI-CHEAT]: process scan failed:', error);
 		}
 
+		try {
+			await this.#scanModules();
+		} catch (error) {
+			console.warn('[ANTI-CHEAT]: module scan failed:', error);
+		}
+
 		this.#scheduleProcessScan();
+	}
+
+	async #scanModules(): Promise<void> {
+		const allowlist = this.#moduleAllowlist
+			.filter((item) => item.enabled !== false)
+			.map((item) => item.name);
+		const gameRoot = app.settings.companyOfHeroesInstallationPath?.trim() || null;
+		const hits = await invoke<UnknownGameModule[]>('find_unknown_game_modules', {
+			processName: 'RelicCOH.exe',
+			gameRoot,
+			allowlist
+		});
+		for (const hit of hits) {
+			await this.#reportModuleHit(hit);
+		}
 	}
 
 	async #reportHit(hit: DenylistedProcess): Promise<void> {
@@ -732,6 +766,38 @@ export class AntiCheat extends Feature<AntiCheatSettings> {
 		}
 	}
 
+	async #reportModuleHit(hit: UnknownGameModule): Promise<void> {
+		const session = this.#session;
+		const userId = pocketbase.authStore.record?.id ?? account.userId;
+		if (!session || !userId) {
+			return;
+		}
+
+		const key = `${session.sessionId}:${hit.path.toLowerCase()}`;
+		if (this.#reportedModuleHits.has(key)) {
+			return;
+		}
+
+		this.#reportedModuleHits.add(key);
+
+		try {
+			await pocketbase.collection('anti_cheat_module_hits').create(
+				{
+					user: userId,
+					session_id: session.sessionId,
+					module_name: hit.name,
+					module_path: hit.path,
+					pid: hit.pid,
+					detected_at: new Date().toISOString()
+				},
+				{ fetch }
+			);
+		} catch (error) {
+			this.#reportedModuleHits.delete(key);
+			console.warn('[ANTI-CHEAT]: module hit upload failed:', error);
+		}
+	}
+
 	async #refreshDenylist(): Promise<void> {
 		try {
 			this.#denylist = await pocketbase
@@ -740,6 +806,17 @@ export class AntiCheat extends Feature<AntiCheatSettings> {
 		} catch (error) {
 			console.warn('[ANTI-CHEAT]: denylist fetch failed:', error);
 			this.#denylist = [];
+		}
+	}
+
+	async #refreshModuleAllowlist(): Promise<void> {
+		try {
+			this.#moduleAllowlist = await pocketbase
+				.collection('anti_cheat_module_allowlist')
+				.getFullList<AntiCheatModuleAllowlistResponse>({ fetch });
+		} catch (error) {
+			console.warn('[ANTI-CHEAT]: module allowlist fetch failed:', error);
+			this.#moduleAllowlist = [];
 		}
 	}
 }

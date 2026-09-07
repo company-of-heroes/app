@@ -85,6 +85,11 @@ export function crumbsFromPath(pathname: string, extra: Crumb[]): Crumb[] {
 					}
 				];
 
-	const href = parts[0] === 'replays' ? '/history?tab=replays' : `/${parts[0]}`;
+	const href =
+		parts[0] === 'replays'
+			? parts[1] === 'upload'
+				? '/history?tab=member'
+				: '/history?tab=replays'
+			: `/${parts[0]}`;
 	return [{ label: sectionLabel, href }, ...rest];
 }

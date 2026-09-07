@@ -396,7 +396,7 @@
 					<img
 						src={resolveFactionFlag(race ?? 0)}
 						alt=""
-						class="ring-secondary-800 size-4 shrink-0 rounded-full object-cover ring-4"
+						class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
 					/>
 					<span class="text-secondary-200 truncate">
 						{player.doctrineName || unknownDoctrineLabel}
@@ -506,7 +506,7 @@
 					<img
 						src={resolveFactionFlag(player.race)}
 						alt=""
-						class="ring-secondary-800 size-4 shrink-0 rounded-full object-cover ring-1"
+						class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
 					/>
 					<span class="text-secondary-400">—</span>
 					{#if !cpu}

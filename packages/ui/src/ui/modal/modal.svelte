@@ -1,9 +1,14 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { overlayBackdrop, surfaceModal } from '../../variants';
+	import {
+		flushHeader,
+		flushHeaderDescription,
+		flushHeaderTitle,
+		overlayBackdrop,
+		surfaceModal
+	} from '../../variants';
 	import { modal } from './modal.svelte.js';
-	import { H } from '../h';
 	import CloseIcon from 'phosphor-svelte/lib/XIcon';
 </script>
 
@@ -22,7 +27,7 @@
 			class={cn(
 				'data-[state=open]:animate-in data-[state=open]:zoom-in absolute duration-75',
 				'data-[state=closed]:animate-out data-[state=closed]:zoom-out data-[state=closed]:fade-out',
-				'top-0 left-1/2 z-50 mx-auto -translate-x-1/2 rounded-xl outline-hidden',
+				'top-0 left-1/2 z-50 mx-auto -translate-x-1/2 outline-hidden',
 				surfaceModal,
 				modal.size === 'sm' && 'mt-12 max-h-[calc(100vh-4rem)] w-[320px]',
 				modal.size === 'md' && 'mt-12 max-h-[calc(100vh-4rem)] w-[480px]',
@@ -33,29 +38,31 @@
 			{...modal.contentProps}
 		>
 			{#if modal.title}
-				<Dialog.Title class="sticky top-0 z-10 p-6">
+				<Dialog.Title class={cn(flushHeader, 'sticky top-0 z-10 bg-gray-950')}>
 					<div class="flex items-start justify-between gap-4">
-						<div>
+						<div class="min-w-0">
 							{#if typeof modal.title === 'function'}
 								{@render modal.title()}
 							{:else}
-								<H level="4">{modal.title}</H>
+								<p class={flushHeaderTitle}>{modal.title}</p>
 							{/if}
 							{#if modal.description}
-								<Dialog.Description class="text-secondary-400 mt-1">
+								<Dialog.Description
+									class={cn(flushHeaderDescription, 'whitespace-pre-line')}
+								>
 									{#if typeof modal.description === 'function'}
 										{@render modal.description()}
 									{:else}
-										{@html modal.description}
+										{modal.description}
 									{/if}
 								</Dialog.Description>
 							{/if}
 						</div>
 						{#if false === modal.hideCloseButton}
 							<Dialog.Close
-								class="bg-secondary-800 hover:bg-secondary-700 cursor-pointer rounded-md p-1.5 transition outline-none"
+								class="bg-secondary-800 hover:bg-secondary-700 cursor-pointer rounded-md p-1 transition outline-none"
 							>
-								<CloseIcon size={24} />
+								<CloseIcon size={20} />
 							</Dialog.Close>
 						{/if}
 					</div>
@@ -63,7 +70,7 @@
 			{/if}
 			<div
 				class={cn(
-					'overflow-y-auto px-6 pb-6',
+					'overflow-y-auto',
 					modal.size === 'full' ? 'max-h-[calc(100vh-7rem)]' : 'max-h-[calc(100vh-12rem)]'
 				)}
 			>

@@ -6,7 +6,7 @@
 	import { Badge } from '@company-of-heroes/ui/badge';
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as List from '@company-of-heroes/ui/list';
-	import { DetailHeader } from '@company-of-heroes/ui/replay';
+	import { DetailHeader, MemberDetailHeader, formatReplayDurationLabel } from '@company-of-heroes/ui/replay';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { detailMetaGrid, interactive } from '@company-of-heroes/ui/variants';
 	import {
@@ -36,7 +36,7 @@
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlash';
 	import HourglassIcon from 'phosphor-svelte/lib/HourglassIcon';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
-	import type { TranslateFn } from '@company-of-heroes/i18n';
+	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 
 	type Props = {
 		match: CommunityMatchDetail;
@@ -51,7 +51,14 @@
 		match.kind === 'member' && !!user?.id && match.uploadedBy?.id === user.id
 	);
 	const isDeleted = $derived(match.visibility === 'deleted');
+	const isMemberHeader = $derived(match.kind === 'member' || isDeleted);
 	const editHref = $derived(isOwner && !isDeleted ? href(`/replays/${match.id}/edit`) : null);
+	const canPublishReplay = $derived(!!match.canPublish && match.kind !== 'member');
+	const memberReplayId = $derived(match.memberReplayId || '');
+	const memberReplayHref = $derived(memberReplayId ? href(`/replays/${memberReplayId}`) : null);
+	const publishHref = $derived(
+		canPublishReplay ? href(`/replays/upload?fromMatch=${match.id}`) : null
+	);
 	let extraDownloads = $state(0);
 	let counting = $state(false);
 	let countedHere = $state(false);
@@ -79,12 +86,10 @@
 			? normalizeMapName(replay.mapFileName.split(/[/\\]/).pop() ?? match.map)
 			: normalizeMapName(match.map);
 	});
-	const duration = $derived(
-		formatDurationLabel(
-			replay?.duration && replay.duration > 0 ? replay.duration : matchDurationSeconds(match),
-			t
-		)
+	const durationSeconds = $derived(
+		replay?.duration && replay.duration > 0 ? replay.duration : matchDurationSeconds(match)
 	);
+	const duration = $derived(formatReplayDurationLabel(durationSeconds, { na: t('N/A') }));
 	const isRanked = $derived(
 		replay && (replay.players?.length ?? 0) > 0
 			? replay.matchType === 'automatch'
@@ -128,6 +133,9 @@
 	const titleValue = $derived(
 		isRanked ? match.title : match.result?.description || match.title || '—'
 	);
+	const uploadedBy = $derived(match.uploadedBy?.alias || '—');
+	const gameMode = $derived(isRanked ? t('Ranked') : t('Custom match'));
+	const statusPending = $derived(!!match.needsResult && !hasReplay);
 
 	function formatStaffDate(value?: string | null): string {
 		if (!value) {
@@ -221,155 +229,226 @@
 			hidePending = false;
 		}
 	}
-
-	function formatDurationLabel(seconds: number | null | undefined, translate: TranslateFn): string {
-		if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) {
-			return translate('N/A');
-		}
-
-		const total = Math.round(seconds);
-		const hours = Math.floor(total / 3600);
-		const minutes = Math.floor((total % 3600) / 60);
-		const rest = total % 60;
-		if (hours > 0) {
-			return `${hours} hrs ${minutes} mins ${rest} secs`;
-		}
-
-		return `${minutes} mins ${rest} secs`;
-	}
 </script>
 
-<DetailHeader
-	{mapName}
-	map={match.map}
-	{downloadHref}
-	{downloadFileName}
-	downloadDisabled={!hasReplay}
-	{downloadCount}
-	{listHref}
-	{resolveMapSrc}
-	replaysLabel={t('Replays')}
-	downloadLabel={t('Download replay')}
-	backAriaLabel={t('Go back')}
-	downloadsLabel={t('Downloads')}
-	onDownloadClick={() => void recordDownload()}
->
-	{#snippet vote()}
-		{#if match.kind !== 'member'}
-			<ReplayLikeButton lobbyId={match.id} likeCount={match.likeCount} />
-		{/if}
-	{/snippet}
-	{#snippet titleMeta()}
-		{#if isPro}
-			<span class="text-primary shrink-0 text-xs font-bold tracking-wide uppercase">{t('Pro')}</span>
-		{/if}
-		{#if isStaff && isHidden}
-			<Badge variant="warning">{t('Hidden')}</Badge>
-		{/if}
-		{#if isStaff && isDeleted}
-			<Badge variant="warning">{t('Deleted')}</Badge>
-		{/if}
-	{/snippet}
-	{#snippet details()}
-		<div class={detailMetaGrid}>
-			<List.Title>{t('Status')}</List.Title>
-			<List.Value class="flex items-center">
-				{#if match.needsResult && !hasReplay}
-					<span title={t('Result pending')}>
-						<HourglassIcon class="text-primary" />
-					</span>
-				{:else}
-					<span title={t('Result saved')}>
-						<ChecksIcon class="text-green-400" />
-					</span>
-				{/if}
-			</List.Value>
-			<List.Title>{t('Title')}</List.Title>
-			<List.Value>
-				{#if isRanked}
-					<span class="flex items-center" title={t('Ranked match')}>
-						<RankingIcon class="text-primary-100" weight="duotone" />
-					</span>
-				{:else}
-					<span class="truncate">{titleValue}</span>
-				{/if}
-			</List.Value>
-
-			<List.Title>{t('Submitted at')}</List.Title>
-			<List.Value>{submittedAt}</List.Value>
-			<List.Title>{t('Player count')}</List.Title>
-			<List.Value>{playerCount}</List.Value>
-
-			{#if submittedBy}
-				<List.Title>{t('Submitted by')}</List.Title>
-				<List.Value>
-					{#if submittedByHref}
-						<a href={submittedByHref} class={cn(interactive, 'hover:text-primary underline')}>
-							{submittedBy.alias || submittedBy.steamId || submittedBy.profileId}
-						</a>
+{#if isMemberHeader}
+	<MemberDetailHeader
+		title={mapName}
+		map={match.map}
+		{listHref}
+		{resolveMapSrc}
+		{isRanked}
+		{statusPending}
+		{titleValue}
+		{submittedAt}
+		{playerCount}
+		{uploadedBy}
+		{duration}
+		{gameMode}
+		{downloadHref}
+		{downloadFileName}
+		downloadDisabled={!hasReplay}
+		{downloadCount}
+		replaysLabel={t('Replays')}
+		downloadLabel={t('Download replay')}
+		backAriaLabel={t('Go back')}
+		downloadsLabel={t('Downloads')}
+		onDownloadClick={() => void recordDownload()}
+		description={match.description}
+		descriptionLabel={t('Description')}
+		statusLabel={t('Status')}
+		titleLabel={t('Title')}
+		submittedAtLabel={t('Submitted at')}
+		playerCountLabel={t('Player count')}
+		uploadedByLabel={t('Uploaded by')}
+		durationLabel={t('Duration')}
+		gameModeLabel={t('Game mode')}
+		resultSavedLabel={t('Result saved')}
+		resultPendingLabel={t('Result pending')}
+		rankedMatchLabel={t('Ranked match')}
+		deletedLabel={t('Deleted')}
+		showDeletedBadge={isStaff && isDeleted}
+	>
+		{#snippet vote()}
+			<ReplayLikeButton replayId={match.id} likeCount={match.likeCount} />
+		{/snippet}
+		{#snippet titleMeta()}
+			{#if isPro}
+				<span class="text-primary shrink-0 text-xs font-bold tracking-wide uppercase">{t('Pro')}</span>
+			{/if}
+			{#if isStaff && isHidden}
+				<Badge variant="warning">{t('Hidden')}</Badge>
+			{/if}
+		{/snippet}
+		{#snippet actions()}
+			{#if editHref}
+				<Button type="button" variant="secondary" href={editHref}>
+					{t('Edit')}
+				</Button>
+			{/if}
+			{#if isStaff && sessionId > 0}
+				<Button
+					type="button"
+					variant="secondary"
+					loading={hidePending}
+					title={hideError || undefined}
+					onclick={() => void toggleHidden()}
+				>
+					{#if isManuallyHidden}
+						<EyeIcon class="size-4" />
+						{t('Show match')}
 					{:else}
-						{submittedBy.alias || '—'}
+						<EyeSlashIcon class="size-4" />
+						{t('Hide match')}
+					{/if}
+				</Button>
+			{/if}
+		{/snippet}
+		{#snippet afterDetails()}
+			{#if isStaff}
+				<StaffDebug>
+					<div class={detailMetaGrid}>
+						<List.Title>{t('Match ID')}</List.Title>
+						<List.Value class="tabular-nums">{match.id}</List.Value>
+						<List.Title>{t('Session ID')}</List.Title>
+						<List.Value class="tabular-nums">{sessionId || '—'}</List.Value>
+						<List.Title>{t('Updated')}</List.Title>
+						<List.Value>{formatStaffDate(match.updatedAt)}</List.Value>
+						<List.Title>{t('Owner')}</List.Title>
+						<List.Value>{match.owner || '—'}</List.Value>
+					</div>
+				</StaffDebug>
+			{/if}
+		{/snippet}
+	</MemberDetailHeader>
+{:else}
+	<DetailHeader
+		{mapName}
+		map={match.map}
+		{downloadHref}
+		{downloadFileName}
+		downloadDisabled={!hasReplay}
+		{downloadCount}
+		{listHref}
+		{resolveMapSrc}
+		replaysLabel={t('Replays')}
+		downloadLabel={t('Download replay')}
+		backAriaLabel={t('Go back')}
+		downloadsLabel={t('Downloads')}
+		onDownloadClick={() => void recordDownload()}
+	>
+		{#snippet vote()}
+			<ReplayLikeButton lobbyId={match.id} likeCount={match.likeCount} />
+		{/snippet}
+		{#snippet titleMeta()}
+			{#if isPro}
+				<span class="text-primary shrink-0 text-xs font-bold tracking-wide uppercase">{t('Pro')}</span>
+			{/if}
+			{#if isStaff && isHidden}
+				<Badge variant="warning">{t('Hidden')}</Badge>
+			{/if}
+			{#if isStaff && isDeleted}
+				<Badge variant="warning">{t('Deleted')}</Badge>
+			{/if}
+		{/snippet}
+		{#snippet details()}
+			<div class={detailMetaGrid}>
+				<List.Title>{t('Status')}</List.Title>
+				<List.Value class="flex items-center">
+					{#if match.needsResult && !hasReplay}
+						<span title={t('Result pending')}>
+							<HourglassIcon class="text-primary" />
+						</span>
+					{:else}
+						<span title={t('Result saved')}>
+							<ChecksIcon class="text-green-400" />
+						</span>
 					{/if}
 				</List.Value>
-				<List.Title>{t('Duration')}</List.Title>
-				<List.Value>{duration}</List.Value>
+				<List.Title>{t('Title')}</List.Title>
+				<List.Value>
+					{#if isRanked}
+						<span class="flex items-center" title={t('Ranked match')}>
+							<RankingIcon class="text-primary-100" weight="duotone" />
+						</span>
+					{:else}
+						<span class="truncate">{titleValue}</span>
+					{/if}
+				</List.Value>
 
-				<List.Title>{t('Game mode')}</List.Title>
-				<List.Value>{isRanked ? t('Ranked') : t('Custom match')}</List.Value>
-			{:else if match.uploadedBy}
-				<List.Title>{t('Uploaded by')}</List.Title>
-				<List.Value>{match.uploadedBy.alias}</List.Value>
-				<List.Title>{t('Duration')}</List.Title>
-				<List.Value>{duration}</List.Value>
+				<List.Title>{t('Submitted at')}</List.Title>
+				<List.Value>{submittedAt}</List.Value>
+				<List.Title>{t('Player count')}</List.Title>
+				<List.Value>{playerCount}</List.Value>
 
-				<List.Title>{t('Game mode')}</List.Title>
-				<List.Value>{isRanked ? t('Ranked') : t('Custom match')}</List.Value>
-			{:else}
-				<List.Title>{t('Game mode')}</List.Title>
-				<List.Value>{isRanked ? t('Ranked') : t('Custom match')}</List.Value>
-				<List.Title>{t('Duration')}</List.Title>
-				<List.Value>{duration}</List.Value>
-			{/if}
-		</div>
-	{/snippet}
-	{#snippet actions()}
-		{#if editHref}
-			<Button type="button" variant="secondary" href={editHref}>
-				{t('Edit')}
-			</Button>
-		{/if}
-		{#if isStaff && sessionId > 0}
-			<Button
-				type="button"
-				variant="secondary"
-				loading={hidePending}
-				title={hideError || undefined}
-				onclick={() => void toggleHidden()}
-			>
-				{#if isManuallyHidden}
-					<EyeIcon class="size-4" />
-					{t('Show match')}
+				{#if submittedBy}
+					<List.Title>{t('Submitted by')}</List.Title>
+					<List.Value>
+						{#if submittedByHref}
+							<a href={submittedByHref} class={cn(interactive, 'hover:text-primary underline')}>
+								{submittedBy.alias || submittedBy.steamId || submittedBy.profileId}
+							</a>
+						{:else}
+							{submittedBy.alias || '—'}
+						{/if}
+					</List.Value>
+					<List.Title>{t('Duration')}</List.Title>
+					<List.Value>{duration}</List.Value>
+
+					<List.Title>{t('Game mode')}</List.Title>
+					<List.Value>{gameMode}</List.Value>
 				{:else}
-					<EyeSlashIcon class="size-4" />
-					{t('Hide match')}
+					<List.Title>{t('Game mode')}</List.Title>
+					<List.Value>{gameMode}</List.Value>
+					<List.Title>{t('Duration')}</List.Title>
+					<List.Value>{duration}</List.Value>
 				{/if}
-			</Button>
-		{/if}
-	{/snippet}
-	{#snippet afterDetails()}
-		{#if isStaff}
-			<StaffDebug>
-				<div class={detailMetaGrid}>
-					<List.Title>{t('Match ID')}</List.Title>
-					<List.Value class="tabular-nums">{match.id}</List.Value>
-					<List.Title>{t('Session ID')}</List.Title>
-					<List.Value class="tabular-nums">{sessionId || '—'}</List.Value>
-					<List.Title>{t('Updated')}</List.Title>
-					<List.Value>{formatStaffDate(match.updatedAt)}</List.Value>
-					<List.Title>{t('Owner')}</List.Title>
-					<List.Value>{match.owner || '—'}</List.Value>
-				</div>
-			</StaffDebug>
-		{/if}
-	{/snippet}
-</DetailHeader>
+			</div>
+		{/snippet}
+		{#snippet actions()}
+			{#if publishHref}
+				<Button type="button" variant="secondary" href={publishHref}>
+					<UploadSimpleIcon class="size-4" />
+					{t('Publish replay')}
+				</Button>
+			{:else if memberReplayHref}
+				<Button type="button" variant="secondary" href={memberReplayHref}>
+					{t('View member replay')}
+				</Button>
+			{/if}
+			{#if isStaff && sessionId > 0}
+				<Button
+					type="button"
+					variant="secondary"
+					loading={hidePending}
+					title={hideError || undefined}
+					onclick={() => void toggleHidden()}
+				>
+					{#if isManuallyHidden}
+						<EyeIcon class="size-4" />
+						{t('Show match')}
+					{:else}
+						<EyeSlashIcon class="size-4" />
+						{t('Hide match')}
+					{/if}
+				</Button>
+			{/if}
+		{/snippet}
+		{#snippet afterDetails()}
+			{#if isStaff}
+				<StaffDebug>
+					<div class={detailMetaGrid}>
+						<List.Title>{t('Match ID')}</List.Title>
+						<List.Value class="tabular-nums">{match.id}</List.Value>
+						<List.Title>{t('Session ID')}</List.Title>
+						<List.Value class="tabular-nums">{sessionId || '—'}</List.Value>
+						<List.Title>{t('Updated')}</List.Title>
+						<List.Value>{formatStaffDate(match.updatedAt)}</List.Value>
+						<List.Title>{t('Owner')}</List.Title>
+						<List.Value>{match.owner || '—'}</List.Value>
+					</div>
+				</StaffDebug>
+			{/if}
+		{/snippet}
+	</DetailHeader>
+{/if}

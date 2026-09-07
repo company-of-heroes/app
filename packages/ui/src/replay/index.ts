@@ -7,6 +7,7 @@ import ReplayListSkeleton from './replay-list-skeleton.svelte';
 import ReplayPageSkeleton from './replay-page-skeleton.svelte';
 import ReplayTabsSkeleton from './replay-tabs-skeleton.svelte';
 import ReplayDetailHeader from './replay-detail-header.svelte';
+import MemberReplayDetailHeader from './member-replay-detail-header.svelte';
 import ReplayFilters from './replay-filters.svelte';
 import ReplaySectionTabs from './replay-section-tabs.svelte';
 import ReplayUploadForm from './replay-upload-form.svelte';
@@ -23,6 +24,7 @@ export {
 	ReplayPageSkeleton as PageSkeleton,
 	ReplayTabsSkeleton as TabsSkeleton,
 	ReplayDetailHeader as DetailHeader,
+	MemberReplayDetailHeader as MemberDetailHeader,
 	ReplayFilters as Filters,
 	ReplaySectionTabs as SectionTabs,
 	ReplayUploadForm as UploadForm,
@@ -40,6 +42,7 @@ export type {
 export {
 	formatDurationSeconds,
 	formatMatchDate,
+	formatReplayDurationLabel,
 	isCpuPlayerName,
 	isCpuReplayPlayer,
 	matchDurationSeconds

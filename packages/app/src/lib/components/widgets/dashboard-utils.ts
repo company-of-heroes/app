@@ -2,16 +2,25 @@ import type { LobbyPlayer } from '@fknoobs/app';
 import type { LiveLobby } from '$core/app/database/lobbies-live';
 import type { MatchExpanded } from '$core/app/database/matches';
 import type { TransformedMatch } from '@fknoobs/app';
-import { Lobby, MATCH_TYPES, type Match, type MatchTypeId } from '$core/game/lobby';
-import { Race } from '$lib/utils/game';
+import {
+	isPlaceholderPlayerName,
+	Lobby,
+	MATCH_TYPES,
+	type Match,
+	type MatchTypeId
+} from '$core/game/lobby';
+import { getString, Race } from '$lib/utils/game';
 import { isMePlayer } from '$lib/utils/player-me';
 import { isValidSteamId } from '$lib/utils/player-elo';
+import { isCpuPlayerName } from '@company-of-heroes/ui/replay';
 import dayjs from '$lib/dayjs';
 import { sortBy, uniq } from 'lodash-es';
 import { t } from '$lib/i18n';
 
 export function formatMapDisplayName(map?: string): string {
-	if (!map) return t('Unknown Map');
+	if (!map) {
+		return t('Unknown Map');
+	}
 
 	const match = map.match(/^(\d+)p_(.+)$/);
 	if (!match) {
@@ -26,20 +35,41 @@ export function formatMapDisplayName(map?: string): string {
 	return `${formattedName} (${playerCount})`;
 }
 
-export function getLiveLobbyMatchType(players: LobbyPlayer[], isRanked?: boolean, matchType?: number | null): MatchTypeId {
+export function getLiveLobbyMatchType(
+	players: LobbyPlayer[],
+	isRanked?: boolean,
+	matchType?: number | null
+): MatchTypeId {
 	const isSkirmish = matchType === 14 || players.some((player) => player.playerId === -1);
 
-	if (isSkirmish) return 14;
+	if (isSkirmish) {
+		return 14;
+	}
+
 	if (typeof matchType === 'number' && matchType >= 0 && matchType <= 4) {
 		return matchType as MatchTypeId;
 	}
-	if (!isRanked) return 0;
+
+	if (!isRanked) {
+		return 0;
+	}
 
 	const humans = players.filter((player) => player.playerId !== -1);
-	if (humans.length === 2) return 1;
-	if (humans.length === 4) return 2;
-	if (humans.length === 6) return 3;
-	if (humans.length === 8) return 4;
+	if (humans.length === 2) {
+		return 1;
+	}
+
+	if (humans.length === 4) {
+		return 2;
+	}
+
+	if (humans.length === 6) {
+		return 3;
+	}
+
+	if (humans.length === 8) {
+		return 4;
+	}
 
 	return 0;
 }
@@ -62,18 +92,51 @@ export function getPlayerProfileId(player: LobbyPlayer): number | undefined {
 
 export function getPlayerRowKey(player: LobbyPlayer, rowIndex = 0): string {
 	const profileId = getPlayerProfileId(player);
-	if (profileId != null) return `profile:${profileId}`;
-	if (player.steamId) return `steam:${player.steamId}`;
-	if (player.index != null) return `index:${player.index}`;
+	if (profileId != null) {
+		return `profile:${profileId}`;
+	}
+
+	if (player.steamId) {
+		return `steam:${player.steamId}`;
+	}
+
+	if (player.index != null) {
+		return `index:${player.index}`;
+	}
+
 	return `row:${rowIndex}`;
 }
 
 export function getPlayerAlias(player: LobbyPlayer): string {
-	if (player.profile?.alias) return player.profile.alias;
-	if (player.name?.trim()) return player.name.trim();
-	if (player.index != null) return t('Player {n}', { n: player.index + 1 });
+	if (player.playerId === -1) {
+		const raw = player.name?.trim() || player.profile?.alias?.trim();
+		if (raw && !isPlaceholderPlayerName(raw)) {
+			const label = raw.startsWith('$') ? getString(raw) : raw;
+			if (label && (isCpuPlayerName(label) || label !== raw)) {
+				return label;
+			}
+		}
+
+		return t('CPU opponent');
+	}
+
+	if (player.profile?.alias) {
+		return player.profile.alias;
+	}
+
+	if (player.name?.trim()) {
+		return player.name.trim();
+	}
+
+	if (player.index != null) {
+		return t('Player {n}', { n: player.index + 1 });
+	}
+
 	const profileId = getPlayerProfileId(player);
-	if (profileId != null) return t('Player {n}', { n: profileId });
+	if (profileId != null) {
+		return t('Player {n}', { n: profileId });
+	}
+
 	return t('Unknown');
 }
 
@@ -84,12 +147,24 @@ export function getLobbyPlayerTeamId(
 	const profileId = getPlayerProfileId(player);
 	if (result?.players && profileId != null) {
 		const matchPlayer = result.players.find((entry) => entry.profile_id === profileId);
-		if (matchPlayer?.teamid != null) return matchPlayer.teamid;
+		if (matchPlayer?.teamid != null) {
+			return matchPlayer.teamid;
+		}
 	}
-	if (player.team != null) return player.team;
+
+	if (player.team != null) {
+		return player.team;
+	}
+
 	const race = player.race;
-	if (race === Race.US || race === Race.Commonwealth) return 0;
-	if (race === Race.Wehrmacht || race === Race.PanzerElite) return 1;
+	if (race === Race.US || race === Race.Commonwealth) {
+		return 0;
+	}
+
+	if (race === Race.Wehrmacht || race === Race.PanzerElite) {
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -104,8 +179,14 @@ export function orderLobbyPlayersByTeam(
 }
 
 export function isHighlightedPlayer(player: LobbyPlayer, highlightPlayerId?: number): boolean {
-	if (isMePlayer(player)) return true;
-	if (highlightPlayerId == null) return false;
+	if (isMePlayer(player)) {
+		return true;
+	}
+
+	if (highlightPlayerId == null) {
+		return false;
+	}
+
 	return getPlayerProfileId(player) === highlightPlayerId;
 }
 
@@ -136,10 +217,12 @@ function steamIdFromResultPlayer(player: {
 	if (player.steamId && isValidSteamId(player.steamId)) {
 		return player.steamId;
 	}
+
 	if (typeof player.name === 'string' && player.name.startsWith('/steam/')) {
 		const steamId = player.name.slice('/steam/'.length);
 		return isValidSteamId(steamId) ? steamId : null;
 	}
+
 	return null;
 }
 
@@ -172,6 +255,7 @@ function matchResultIncludesSubject(
 		if (profileId != null && player.profile_id === profileId) {
 			return true;
 		}
+
 		const steamId = steamIdFromResultPlayer(player);
 		if (steamId && steamIds?.includes(steamId)) {
 			return true;
@@ -197,19 +281,27 @@ export function countTodayRecord(
 		}
 
 		const result = match.result as TransformedMatch | null | undefined;
-		if (!result) continue;
+		if (!result) {
+			continue;
+		}
 
 		const player = result.players.find((entry) => {
 			if (profileId != null && entry.profile_id === profileId) {
 				return true;
 			}
+
 			const steamId = steamIdFromResultPlayer(entry);
 			return !!steamId && steamIds.includes(steamId);
 		});
-		if (!player) continue;
+		if (!player) {
+			continue;
+		}
 
-		if (player.outcome === 1) wins++;
-		else losses++;
+		if (player.outcome === 1) {
+			wins++;
+		} else {
+			losses++;
+		}
 	}
 
 	return { wins, losses, pending, total: matches.length };
@@ -279,7 +371,10 @@ export function todayPlayedMatchesFilter(steamIds: string[] = []): string {
 		who.push(`result ~ "${steamId}"`);
 	}
 
-	if (who.length === 0) return 'id=""';
+	if (who.length === 0) {
+		return 'id=""';
+	}
+
 	const clause = who.length === 1 ? who[0]! : `(${who.join(' || ')})`;
 	return `createdAt >= "${todayStartFilterValue()}" && ${clause}`;
 }

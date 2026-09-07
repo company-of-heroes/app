@@ -13,6 +13,7 @@
 		wrapMarkdownSelection,
 		type MarkdownSelectionEdit
 	} from './markdown';
+	import { createTextareaCaretVirtualElement } from './textarea-caret-rect';
 	import type { MentionUser } from './types';
 	import { Debounced, resource } from 'runed';
 	import { tick, type Snippet } from 'svelte';
@@ -98,10 +99,24 @@
 	let cursor = $state(0);
 	let mentionIndex = $state(0);
 	let mentionSuppressedAt = $state<number | null>(null);
+	/** Bumped on textarea scroll/resize so Floating UI re-reads the caret rect. */
+	let mentionAnchorTick = $state(0);
 	const canPost = $derived(value.trim().length > 0 && !posting);
 	const formatBtn = 'text-secondary-400 hover:text-white size-7';
 	const mention = $derived(mentionQueryAt(value, cursor));
 	const mentionOpen = $derived(!!mention && mention.start !== mentionSuppressedAt);
+	const mentionAnchor = $derived.by(() => {
+		mentionAnchorTick;
+		value;
+		cursor;
+		const el = composerEl;
+		const start = mention?.start;
+		if (!mentionOpen || !el || start == null) {
+			return null;
+		}
+
+		return createTextareaCaretVirtualElement(el, start);
+	});
 	const debouncedMentionQuery = new Debounced(() => mention?.query ?? '', 200);
 	const remoteMentions = resource(
 		() => [mentionOpen, debouncedMentionQuery.current] as const,
@@ -164,11 +179,18 @@
 
 	function grow(event: Event) {
 		resize(event.currentTarget as HTMLTextAreaElement);
+		refreshMentionAnchor();
 	}
 
 	function resize(el: HTMLTextAreaElement) {
 		el.style.height = 'auto';
 		el.style.height = `${el.scrollHeight}px`;
+	}
+
+	function refreshMentionAnchor() {
+		if (mentionOpen) {
+			mentionAnchorTick += 1;
+		}
 	}
 
 	function composer() {
@@ -179,7 +201,10 @@
 		composerEl = el;
 		cursor = el.selectionStart;
 		resize(el);
+		const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(refreshMentionAnchor) : null;
+		ro?.observe(el);
 		return () => {
+			ro?.disconnect();
 			if (composerEl === el) {
 				composerEl = undefined;
 			}
@@ -394,7 +419,7 @@
 			side="top"
 			align="start"
 			sideOffset={4}
-			customAnchor={composerEl ?? null}
+			customAnchor={mentionAnchor}
 			preventAutoFocus
 			trapFocus={false}
 			preventScroll={false}
@@ -470,6 +495,7 @@
 			onclick={syncCursor}
 			onkeyup={syncCursor}
 			onselect={syncCursor}
+			onscroll={refreshMentionAnchor}
 			class={cn('min-h-14 resize-none text-sm', name && 'mt-1 min-h-18')}
 		/>
 	</div>

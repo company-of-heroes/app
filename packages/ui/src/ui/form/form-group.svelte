@@ -22,6 +22,9 @@
 		layout?: Layout;
 		/** Drop max-w-xl so the field spans the page (e.g. markdown description). */
 		wide?: boolean;
+		/** Show a required marker next to the label. */
+		required?: boolean;
+		requiredLabel?: string;
 	} & HTMLAttributes<HTMLDivElement>;
 
 	let {
@@ -33,6 +36,8 @@
 		children,
 		layout = 'field',
 		wide = false,
+		required = false,
+		requiredLabel = 'required',
 		class: className,
 		...restProps
 	}: Props = $props();
@@ -44,18 +49,30 @@
 	const titleClass = $derived(hasBody ? flushHeaderTitle : flushSectionTitle);
 </script>
 
+{#snippet fieldLabel()}
+	{#if label}
+		{#if inputId}
+			<label for={inputId} class={titleClass}>
+				{label}{#if required}<span class="text-destructive" aria-hidden="true">*</span><span class="sr-only"
+						>({requiredLabel})</span
+					>{/if}
+			</label>
+		{:else}
+			<p class={titleClass}>
+				{label}{#if required}<span class="text-destructive" aria-hidden="true">*</span><span class="sr-only"
+						>({requiredLabel})</span
+					>{/if}
+			</p>
+		{/if}
+	{/if}
+{/snippet}
+
 <div {...restProps} class={cn('border-secondary-800 border-b', className)}>
 	{#if hasHeader && layout === 'band'}
 		<div class="px-4 py-3">
 			{#if label || hint}
 				<div class="flex w-full items-start gap-2">
-					{#if label}
-						{#if inputId}
-							<label for={inputId} class={titleClass}>{label}</label>
-						{:else}
-							<p class={titleClass}>{label}</p>
-						{/if}
-					{/if}
+					{@render fieldLabel()}
 					{@render hint?.()}
 				</div>
 			{/if}
@@ -84,13 +101,7 @@
 			{#if hasHeader}
 				{#if label || hint}
 					<div class="flex w-full items-start gap-2">
-						{#if label}
-							{#if inputId}
-								<label for={inputId} class={titleClass}>{label}</label>
-							{:else}
-								<p class={titleClass}>{label}</p>
-							{/if}
-						{/if}
+						{@render fieldLabel()}
 						{@render hint?.()}
 					</div>
 				{/if}

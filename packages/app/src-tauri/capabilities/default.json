@@ -59,6 +59,12 @@
 				},
 				{
 					"url": "https://*.coh1stats.com"
+				},
+				{
+					"url": "http://127.0.0.1:5174/*"
+				},
+				{
+					"url": "http://localhost:5174/*"
 				}
 			]
 		},

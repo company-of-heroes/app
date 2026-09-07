@@ -252,9 +252,6 @@ importers:
       tauri-plugin-cache-api:
         specifier: ^0.1.6
         version: 0.1.6
-      tippy.js:
-        specifier: ^6.3.7
-        version: 6.3.7
       try:
         specifier: ^1.0.3
         version: 1.0.3
@@ -510,6 +507,9 @@ importers:
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
+      tippy.js:
+        specifier: ^6.3.7
+        version: 6.3.7
     devDependencies:
       bits-ui:
         specifier: ^2.19.0

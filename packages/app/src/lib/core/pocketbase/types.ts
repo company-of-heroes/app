@@ -15,6 +15,8 @@ export const Collections = {
 	AntiCheatCheaters: "anti_cheat_cheaters",
 	AntiCheatProcessDenylist: "anti_cheat_process_denylist",
 	AntiCheatProcessHits: "anti_cheat_process_hits",
+	AntiCheatModuleAllowlist: "anti_cheat_module_allowlist",
+	AntiCheatModuleHits: "anti_cheat_module_hits",
 	AntiCheatReports: "anti_cheat_reports",
 	Attachments: "attachments",
 	HiddenMatchKeywords: "hidden_match_keywords",
@@ -30,6 +32,7 @@ export const Collections = {
 	LobbyPlayerIndex: "lobby_player_index",
 	Maps: "maps",
 	MatchFilterSnapshots: "match_filter_snapshots",
+	MemberReplayDownloadFingerprints: "member_replay_download_fingerprints",
 	NotificationReads: "notification_reads",
 	Notifications: "notifications",
 	PlayerLabelAssignments: "player_label_assignments",
@@ -38,6 +41,9 @@ export const Collections = {
 	PlayerVoteScores: "player_vote_scores",
 	Players: "players",
 	ReplayAggregation: "replay_aggregation",
+	ReplayCommentLikes: "replay_comment_likes",
+	ReplayComments: "replay_comments",
+	ReplayLikes: "replay_likes",
 	Replays: "replays",
 	ReputationTypes: "reputation_types",
 	SmurfWatch: "smurf_watch",
@@ -172,6 +178,27 @@ export type AntiCheatProcessHitsRecord = {
 	user: RecordIdString
 }
 
+export type AntiCheatModuleAllowlistRecord = {
+	created: IsoAutoDateString
+	enabled?: boolean
+	id: string
+	label?: string
+	name: string
+	updated: IsoAutoDateString
+}
+
+export type AntiCheatModuleHitsRecord = {
+	created: IsoAutoDateString
+	detected_at?: IsoDateString
+	id: string
+	module_name: string
+	module_path: string
+	pid?: number
+	session_id?: number
+	updated: IsoAutoDateString
+	user: RecordIdString
+}
+
 export const AntiCheatReportsStatusOptions = {
 	"pending": "pending",
 	"dismissed": "dismissed",
@@ -245,6 +272,7 @@ export type LobbiesRecord<TlobbyPlayers = unknown, Tplayers = unknown, Tresult =
 	title: string
 	updatedAt: IsoAutoDateString
 	user: RecordIdString
+	memberReplay?: RecordIdString
 }
 
 export type LobbiesLiveRecord<Tplayers = unknown> = {
@@ -341,6 +369,14 @@ export type MatchFilterSnapshotsRecord<Tmaps = unknown, Tplayers = unknown> = {
 	players?: null | Tplayers
 }
 
+export type MemberReplayDownloadFingerprintsRecord = {
+	created: IsoAutoDateString
+	fingerprint: string
+	id: string
+	replay: RecordIdString
+	updated: IsoAutoDateString
+}
+
 export type NotificationReadsRecord = {
 	id: string
 	notification: RecordIdString
@@ -356,6 +392,8 @@ export type NotificationsRecord = {
 	id: string
 	lobby?: RecordIdString
 	recipients?: RecordIdString[]
+	replay?: RecordIdString
+	replayComment?: RecordIdString
 	targetAll?: boolean
 	title: string
 	updated: IsoAutoDateString
@@ -415,12 +453,46 @@ export type ReplayAggregationRecord<Tmaps = unknown, Tplayers = unknown, Tuser =
 	user?: null | Tuser
 }
 
-export enum ReplaysVisibilityOptions {
-	"private" = "private",
-	"member" = "member",
-	"deleted" = "deleted",
+export type ReplayCommentLikesRecord = {
+	comment: RecordIdString
+	created: IsoAutoDateString
+	id: string
+	updated: IsoAutoDateString
+	user: RecordIdString
+	value: number
 }
-export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
+
+export type ReplayCommentsRecord = {
+	created: IsoAutoDateString
+	deleted?: boolean
+	deletedAt?: IsoDateString
+	deletedBy?: RecordIdString
+	deletedNote?: string
+	id: string
+	likeCount?: number
+	parent?: RecordIdString
+	replay: RecordIdString
+	text: string
+	updated: IsoAutoDateString
+	user: RecordIdString
+}
+
+export type ReplayLikesRecord = {
+	created: IsoAutoDateString
+	id: string
+	replay: RecordIdString
+	updated: IsoAutoDateString
+	user: RecordIdString
+	value: number
+}
+
+export const ReplaysVisibilityOptions = {
+	"private": "private",
+	"member": "member",
+	"deleted": "deleted",
+} as const
+export type ReplaysVisibilityOptions = typeof ReplaysVisibilityOptions[keyof typeof ReplaysVisibilityOptions]
+export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown, TstatsSnapshot = unknown> = {
 	commentCount?: number
 	createdAt: IsoAutoDateString
 	createdBy?: RecordIdString
@@ -440,6 +512,7 @@ export type ReplaysRecord<Tmessages = unknown, Tplayers = unknown> = {
 	mapName: string
 	messages?: null | Tmessages
 	players: null | Tplayers
+	statsSnapshot?: null | TstatsSnapshot
 	title: string
 	updatedAt: IsoAutoDateString
 	visibility?: ReplaysVisibilityOptions
@@ -610,6 +683,8 @@ export type AntiCheatCapturesResponse<Texpand = unknown> = Required<AntiCheatCap
 export type AntiCheatCheatersResponse<Texpand = unknown> = Required<AntiCheatCheatersRecord> & BaseSystemFields<Texpand>
 export type AntiCheatProcessDenylistResponse<Texpand = unknown> = Required<AntiCheatProcessDenylistRecord> & BaseSystemFields<Texpand>
 export type AntiCheatProcessHitsResponse<Texpand = unknown> = Required<AntiCheatProcessHitsRecord> & BaseSystemFields<Texpand>
+export type AntiCheatModuleAllowlistResponse<Texpand = unknown> = Required<AntiCheatModuleAllowlistRecord> & BaseSystemFields<Texpand>
+export type AntiCheatModuleHitsResponse<Texpand = unknown> = Required<AntiCheatModuleHitsRecord> & BaseSystemFields<Texpand>
 export type AntiCheatReportsResponse<Texpand = unknown> = Required<AntiCheatReportsRecord> & BaseSystemFields<Texpand>
 export type AttachmentsResponse<Texpand = unknown> = Required<AttachmentsRecord> & BaseSystemFields<Texpand>
 export type HiddenMatchKeywordsResponse<Texpand = unknown> = Required<HiddenMatchKeywordsRecord> & BaseSystemFields<Texpand>
@@ -625,6 +700,7 @@ export type LobbyLikesResponse<Texpand = unknown> = Required<LobbyLikesRecord> &
 export type LobbyPlayerIndexResponse<Texpand = unknown> = Required<LobbyPlayerIndexRecord> & BaseSystemFields<Texpand>
 export type MapsResponse<Texpand = unknown> = Required<MapsRecord> & BaseSystemFields<Texpand>
 export type MatchFilterSnapshotsResponse<Tmaps = unknown, Tplayers = unknown, Texpand = unknown> = Required<MatchFilterSnapshotsRecord<Tmaps, Tplayers>> & BaseSystemFields<Texpand>
+export type MemberReplayDownloadFingerprintsResponse<Texpand = unknown> = Required<MemberReplayDownloadFingerprintsRecord> & BaseSystemFields<Texpand>
 export type NotificationReadsResponse<Texpand = unknown> = Required<NotificationReadsRecord> & BaseSystemFields<Texpand>
 export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRecord> & BaseSystemFields<Texpand>
 export type PlayerLabelAssignmentsResponse<Texpand = unknown> = Required<PlayerLabelAssignmentsRecord> & BaseSystemFields<Texpand>
@@ -633,7 +709,10 @@ export type PlayerRatingsResponse<Telo = unknown, Texpand = unknown> = Required<
 export type PlayerVoteScoresResponse<Texpand = unknown> = Required<PlayerVoteScoresRecord> & BaseSystemFields<Texpand>
 export type PlayersResponse<Texpand = unknown> = Required<PlayersRecord> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
-export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers>> & BaseSystemFields<Texpand>
+export type ReplayCommentLikesResponse<Texpand = unknown> = Required<ReplayCommentLikesRecord> & BaseSystemFields<Texpand>
+export type ReplayCommentsResponse<Texpand = unknown> = Required<ReplayCommentsRecord> & BaseSystemFields<Texpand>
+export type ReplayLikesResponse<Texpand = unknown> = Required<ReplayLikesRecord> & BaseSystemFields<Texpand>
+export type ReplaysResponse<Tmessages = unknown, Tplayers = unknown, TstatsSnapshot = unknown, Texpand = unknown> = Required<ReplaysRecord<Tmessages, Tplayers, TstatsSnapshot>> & BaseSystemFields<Texpand>
 export type ReputationTypesResponse<Texpand = unknown> = Required<ReputationTypesRecord> & BaseSystemFields<Texpand>
 export type SmurfWatchResponse<Tmain_candidates = unknown, Tsignals = unknown, Texpand = unknown> = Required<SmurfWatchRecord<Tmain_candidates, Tsignals>> & BaseSystemFields<Texpand>
 export type UserLabelsResponse<Texpand = unknown> = Required<UserLabelsRecord> & BaseSystemFields<Texpand>
@@ -654,6 +733,8 @@ export type CollectionRecords = {
 	anti_cheat_cheaters: AntiCheatCheatersRecord
 	anti_cheat_process_denylist: AntiCheatProcessDenylistRecord
 	anti_cheat_process_hits: AntiCheatProcessHitsRecord
+	anti_cheat_module_allowlist: AntiCheatModuleAllowlistRecord
+	anti_cheat_module_hits: AntiCheatModuleHitsRecord
 	anti_cheat_reports: AntiCheatReportsRecord
 	attachments: AttachmentsRecord
 	hidden_match_keywords: HiddenMatchKeywordsRecord
@@ -669,6 +750,7 @@ export type CollectionRecords = {
 	lobby_player_index: LobbyPlayerIndexRecord
 	maps: MapsRecord
 	match_filter_snapshots: MatchFilterSnapshotsRecord
+	member_replay_download_fingerprints: MemberReplayDownloadFingerprintsRecord
 	notification_reads: NotificationReadsRecord
 	notifications: NotificationsRecord
 	player_label_assignments: PlayerLabelAssignmentsRecord
@@ -677,6 +759,9 @@ export type CollectionRecords = {
 	player_vote_scores: PlayerVoteScoresRecord
 	players: PlayersRecord
 	replay_aggregation: ReplayAggregationRecord
+	replay_comment_likes: ReplayCommentLikesRecord
+	replay_comments: ReplayCommentsRecord
+	replay_likes: ReplayLikesRecord
 	replays: ReplaysRecord
 	reputation_types: ReputationTypesRecord
 	smurf_watch: SmurfWatchRecord
@@ -697,6 +782,8 @@ export type CollectionResponses = {
 	anti_cheat_cheaters: AntiCheatCheatersResponse
 	anti_cheat_process_denylist: AntiCheatProcessDenylistResponse
 	anti_cheat_process_hits: AntiCheatProcessHitsResponse
+	anti_cheat_module_allowlist: AntiCheatModuleAllowlistResponse
+	anti_cheat_module_hits: AntiCheatModuleHitsResponse
 	anti_cheat_reports: AntiCheatReportsResponse
 	attachments: AttachmentsResponse
 	hidden_match_keywords: HiddenMatchKeywordsResponse
@@ -712,6 +799,7 @@ export type CollectionResponses = {
 	lobby_player_index: LobbyPlayerIndexResponse
 	maps: MapsResponse
 	match_filter_snapshots: MatchFilterSnapshotsResponse
+	member_replay_download_fingerprints: MemberReplayDownloadFingerprintsResponse
 	notification_reads: NotificationReadsResponse
 	notifications: NotificationsResponse
 	player_label_assignments: PlayerLabelAssignmentsResponse
@@ -720,6 +808,9 @@ export type CollectionResponses = {
 	player_vote_scores: PlayerVoteScoresResponse
 	players: PlayersResponse
 	replay_aggregation: ReplayAggregationResponse
+	replay_comment_likes: ReplayCommentLikesResponse
+	replay_comments: ReplayCommentsResponse
+	replay_likes: ReplayLikesResponse
 	replays: ReplaysResponse
 	reputation_types: ReputationTypesResponse
 	smurf_watch: SmurfWatchResponse

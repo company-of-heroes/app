@@ -1,3 +1,1 @@
-import { tooltip } from './tooltip.svelte';
-
-export { tooltip };
+export { tooltip } from '@company-of-heroes/ui/attachments';

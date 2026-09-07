@@ -8,7 +8,7 @@ pub struct DenylistedProcess {
     pub pid: u32,
 }
 
-fn process_name_matches(proc_name: &str, search_name: &str) -> bool {
+pub(crate) fn process_name_matches(proc_name: &str, search_name: &str) -> bool {
     let proc_name = proc_name.to_lowercase();
     let search_name = search_name.to_lowercase();
     let search_name = search_name.trim_end_matches(".exe");

@@ -21,6 +21,7 @@
 		skeletonRows?: number;
 		empty?: string;
 		class?: string;
+		wrapperClass?: string;
 	};
 
 	let {
@@ -29,7 +30,8 @@
 		loading = false,
 		skeletonRows = 5,
 		empty = 'No stats found.',
-		class: className
+		class: className,
+		wrapperClass
 	}: Props = $props();
 	const { t } = useI18n();
 
@@ -182,7 +184,7 @@
 	<LeaderboardStatPill type="streak" wins={row.wins} losses={row.losses} streak={row.streak} />
 {/snippet}
 
-<div class="overflow-x-auto">
+<div class={cn('overflow-x-auto', wrapperClass)}>
 	<DataTable
 		class={cn('w-full', className)}
 		data={sortedStats}

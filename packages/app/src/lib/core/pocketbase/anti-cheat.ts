@@ -56,6 +56,30 @@ export async function deleteCapture(id: string): Promise<void> {
 	await unwrapApi(api.antiCheat.deleteCapture(id));
 }
 
+export async function deleteCaptures(
+	ids: string[]
+): Promise<{ deletedIds: string[]; failedIds: string[] }> {
+	const deletedIds: string[] = [];
+	const failedIds: string[] = [];
+
+	for (const id of ids) {
+		try {
+			await deleteCapture(id);
+			deletedIds.push(id);
+		} catch (error) {
+			try {
+				await deleteCapture(id);
+				deletedIds.push(id);
+			} catch (retryError) {
+				console.error('[ADMIN]: delete screenshot failed:', retryError ?? error);
+				failedIds.push(id);
+			}
+		}
+	}
+
+	return { deletedIds, failedIds };
+}
+
 export async function hideCapture(id: string): Promise<void> {
 	await unwrapApi(api.antiCheat.hideCapture(id));
 }

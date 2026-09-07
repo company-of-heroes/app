@@ -11,6 +11,11 @@ export const listComments = query(lobbyIdSchema, (lobbyId) => {
 	return unwrapAsync(locals.services.matchSocial().listComments(lobbyId));
 });
 
+export const listReplayComments = query(lobbyIdSchema, (replayId) => {
+	const { locals } = getRequestEvent();
+	return unwrapAsync(locals.services.matchSocial().listReplayComments(replayId));
+});
+
 export const searchMentionUsers = query(v.pipe(v.string(), v.minLength(1)), (queryText) => {
 	const { locals } = getRequestEvent();
 	return unwrapAsync(locals.services.matchSocial().searchMentionUsers(queryText));
@@ -19,6 +24,11 @@ export const searchMentionUsers = query(v.pipe(v.string(), v.minLength(1)), (que
 export const getMyVote = query(lobbyIdSchema, (lobbyId) => {
 	const { locals } = getRequestEvent();
 	return unwrapAsync(locals.services.matchSocial().getMyVote(lobbyId));
+});
+
+export const getMyReplayVote = query(lobbyIdSchema, (replayId) => {
+	const { locals } = getRequestEvent();
+	return unwrapAsync(locals.services.matchSocial().getMyReplayVote(replayId));
 });
 
 export const setLobbyVote = command(
@@ -32,6 +42,17 @@ export const setLobbyVote = command(
 	}
 );
 
+export const setReplayVote = command(
+	v.object({
+		replayId: lobbyIdSchema,
+		value: v.union([v.literal(1), v.literal(-1)])
+	}),
+	({ replayId, value }) => {
+		const { locals } = getRequestEvent();
+		return unwrapAsync(locals.services.matchSocial().setReplayVote(replayId, value));
+	}
+);
+
 export const setCommentVote = command(
 	v.object({
 		commentId: commentIdSchema,
@@ -40,6 +61,17 @@ export const setCommentVote = command(
 	({ commentId, value }) => {
 		const { locals } = getRequestEvent();
 		return unwrapAsync(locals.services.matchSocial().setCommentVote(commentId, value));
+	}
+);
+
+export const setReplayCommentVote = command(
+	v.object({
+		commentId: commentIdSchema,
+		value: v.union([v.literal(1), v.literal(-1)])
+	}),
+	({ commentId, value }) => {
+		const { locals } = getRequestEvent();
+		return unwrapAsync(locals.services.matchSocial().setReplayCommentVote(commentId, value));
 	}
 );
 
@@ -55,6 +87,18 @@ export const createComment = command(
 	}
 );
 
+export const createReplayComment = command(
+	v.object({
+		replayId: lobbyIdSchema,
+		text: commentTextSchema,
+		parentId: v.optional(v.pipe(v.string(), v.minLength(1)))
+	}),
+	({ replayId, text, parentId }) => {
+		const { locals } = getRequestEvent();
+		return unwrapAsync(locals.services.matchSocial().createReplayComment(replayId, text, parentId));
+	}
+);
+
 export const updateComment = command(
 	v.object({
 		commentId: commentIdSchema,
@@ -66,6 +110,17 @@ export const updateComment = command(
 	}
 );
 
+export const updateReplayComment = command(
+	v.object({
+		commentId: commentIdSchema,
+		text: commentTextSchema
+	}),
+	({ commentId, text }) => {
+		const { locals } = getRequestEvent();
+		return unwrapAsync(locals.services.matchSocial().updateReplayComment(commentId, text));
+	}
+);
+
 export const deleteComment = command(
 	v.object({
 		commentId: commentIdSchema,
@@ -74,5 +129,16 @@ export const deleteComment = command(
 	({ commentId, note }) => {
 		const { locals } = getRequestEvent();
 		return unwrapAsync(locals.services.matchSocial().deleteComment(commentId, note));
+	}
+);
+
+export const deleteReplayComment = command(
+	v.object({
+		commentId: commentIdSchema,
+		note: v.optional(v.pipe(v.string(), v.maxLength(500)))
+	}),
+	({ commentId, note }) => {
+		const { locals } = getRequestEvent();
+		return unwrapAsync(locals.services.matchSocial().deleteReplayComment(commentId, note));
 	}
 );

@@ -11,15 +11,13 @@
 	import { cn, normalizeMapName } from '$lib/utils';
 	import { detailMetaGrid } from '$lib/components/ui/variants';
 	import { resource, watch } from 'runed';
-	import { tooltip } from '$lib/attachments';
 	import { bounceInOut } from 'svelte/easing';
 	import dayjs from '$lib/dayjs';
-	import HourglassIcon from 'phosphor-svelte/lib/HourglassIcon';
-	import ChecksIcon from 'phosphor-svelte/lib/ChecksIcon';
 	import DownloadIcon from 'phosphor-svelte/lib/DownloadIcon';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import EyeIcon from 'phosphor-svelte/lib/Eye';
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlash';
+	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { useI18n } from '$lib/i18n';
 	import { StaffDebug } from '$lib/components/staff';
@@ -33,6 +31,7 @@
 		titleMatchesHiddenKeyword,
 		unhideMatch
 	} from '$core/pocketbase/hidden-matches';
+	import { getMatchModeLabel } from '$lib/components/widgets/dashboard-utils';
 
 	const { t } = useI18n();
 	const match = resource(
@@ -78,6 +77,28 @@
 	const matchId = $derived(match.current?.id ?? page.params.id!);
 	const highlightCommentId = $derived(page.url.searchParams.get('comment') || undefined);
 	const sessionId = $derived(match.current?.sessionId ?? 0);
+	const ownerId = $derived.by(() => {
+		const user = match.current?.user;
+		if (!user) {
+			return '';
+		}
+		if (typeof user === 'string') {
+			return user;
+		}
+		return String(user.id || '');
+	});
+	const isMatchOwner = $derived(!!ownerId && ownerId === app.account.userId);
+	const memberReplayId = $derived.by(() => {
+		const linked = match.current?.memberReplay;
+		if (!linked) {
+			return '';
+		}
+		if (typeof linked === 'string') {
+			return linked;
+		}
+		return String((linked as { id?: string }).id || '');
+	});
+	const canPublishReplay = $derived(isMatchOwner && hasReplay && !memberReplayId);
 	let matchTab = $state('overview');
 	let hidePending = $state(false);
 	const isStaff = $derived(app.account.isStaff);
@@ -205,6 +226,7 @@
 				<div class="px-6 py-4 sm:pl-0">
 					<div class="mb-3 flex min-w-0 items-center gap-3">
 						<Match.MapName class="font-heading min-w-0 truncate text-3xl font-bold" />
+						<Match.PendingBadge allowLive />
 						<Match.ProBadge />
 						{#if isStaff && isHidden}
 							<Badge variant="warning">{t('Hidden')}</Badge>
@@ -214,11 +236,7 @@
 					<div class={detailMetaGrid}>
 						<List.Title>{t('Status')}</List.Title>
 						<List.Value class="flex items-center">
-							{#if match.current.needsResult}
-								<HourglassIcon class="text-primary" {@attach tooltip(t('Result pending'))} />
-							{:else}
-								<ChecksIcon class="text-green-400" {@attach tooltip(t('Result saved'))} />
-							{/if}
+							<Match.Status />
 						</List.Value>
 						<List.Title>{t('Title')}</List.Title>
 						<List.Value><Match.Title /></List.Value>
@@ -239,10 +257,10 @@
 							<List.Value>{duration}</List.Value>
 
 							<List.Title>{t('Game mode')}</List.Title>
-							<List.Value>{match.current.isRanked ? t('Ranked') : t('Custom match')}</List.Value>
+							<List.Value>{getMatchModeLabel(match.current)}</List.Value>
 						{:else}
 							<List.Title>{t('Game mode')}</List.Title>
-							<List.Value>{match.current.isRanked ? t('Ranked') : t('Custom match')}</List.Value>
+							<List.Value>{getMatchModeLabel(match.current)}</List.Value>
 							<List.Title>{t('Duration')}</List.Title>
 							<List.Value>{duration}</List.Value>
 						{/if}
@@ -292,6 +310,20 @@
 							<Button disabled>
 								<DownloadIcon class="mr-2" />
 								{t('Download replay')}
+							</Button>
+						{/if}
+						{#if canPublishReplay}
+							<Button
+								type="button"
+								variant="secondary"
+								href={`/replays/upload?fromMatch=${matchId}`}
+							>
+								<UploadSimpleIcon class="mr-2" />
+								{t('Publish replay')}
+							</Button>
+						{:else if memberReplayId}
+							<Button type="button" variant="secondary" href={`/replays/${memberReplayId}`}>
+								{t('View member replay')}
 							</Button>
 						{/if}
 						{#if isStaff && sessionId > 0}

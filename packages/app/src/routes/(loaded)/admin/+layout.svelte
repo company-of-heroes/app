@@ -6,6 +6,7 @@
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlashIcon';
 	import FlagIcon from 'phosphor-svelte/lib/FlagIcon';
 	import ImageIcon from 'phosphor-svelte/lib/ImageIcon';
+	import PackageIcon from 'phosphor-svelte/lib/PackageIcon';
 	import ProhibitIcon from 'phosphor-svelte/lib/ProhibitIcon';
 	import SealCheckIcon from 'phosphor-svelte/lib/SealCheckIcon';
 	import TagSimpleIcon from 'phosphor-svelte/lib/TagSimpleIcon';
@@ -66,7 +67,7 @@
 				{/if}
 
 				<div>
-					<Label class="text-secondary-400 px-4 text-xs font-semibold">{t('Moderation')}</Label>
+					<Label class="text-secondary-400 px-4 text-xs font-semibold">{t('Fair play')}</Label>
 					<Nav.Link href="/admin/flagged" class="gap-2 py-2 text-sm font-semibold">
 						<FlagIcon size={20} weight="duotone" />
 						{t('Flagged')}
@@ -79,6 +80,14 @@
 						<ProhibitIcon size={20} weight="duotone" />
 						{t('Denylist')}
 					</Nav.Link>
+					<Nav.Link href="/admin/modules" class="gap-2 py-2 text-sm font-semibold">
+						<PackageIcon size={20} weight="duotone" />
+						{t('Modules')}
+					</Nav.Link>
+				</div>
+
+				<div>
+					<Label class="text-secondary-400 px-4 text-xs font-semibold">{t('Moderation')}</Label>
 					<Nav.Link href="/admin/hidden-matches" class="gap-2 py-2 text-sm font-semibold">
 						<EyeSlashIcon size={20} weight="duotone" />
 						{t('Hidden matches')}

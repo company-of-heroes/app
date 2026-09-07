@@ -91,12 +91,17 @@
 	}
 
 	function playerLabel(player: LiveLobbyPlayer) {
-		if (player.alias.trim()) {
-			return player.alias;
+		if (player.playerId === -1) {
+			const alias = player.alias.trim();
+			if (alias && /^cpu(\b|\s*[-–—])/i.test(alias)) {
+				return alias;
+			}
+
+			return t('CPU opponent');
 		}
 
-		if (player.playerId === -1) {
-			return t('CPU opponent');
+		if (player.alias.trim()) {
+			return player.alias;
 		}
 
 		return t('Player {n}', { n: player.index + 1 });

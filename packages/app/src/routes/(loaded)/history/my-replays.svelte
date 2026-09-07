@@ -8,7 +8,6 @@
 	import { Alert } from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import { useI18n } from '$lib/i18n';
-	import MemberReplayUploadModal from './member-replay-upload-modal.svelte';
 
 	interface Props {
 		list: ReplayList;
@@ -68,28 +67,9 @@
 	{/if}
 </Alert>
 <div class="border-secondary-800 flex justify-end border-b px-4 py-2">
-	<Button
-		type="button"
-		size="sm"
-		onclick={() => {
-			app.modal.create({
-				title: t('Upload replay'),
-				size: 'lg',
-				component: MemberReplayUploadModal,
-				props: {
-					onCancel: () => app.modal.close(),
-					onDone: (id: string) => {
-						app.modal.close();
-						void list.loadMore({ reset: true });
-						if (id) {
-							void import('$app/navigation').then(({ goto }) => goto(`/replays/${id}`));
-						}
-					}
-				}
-			});
-			app.modal.open();
-		}}>{t('Upload to Member replays')}</Button
-	>
+	<Button href="/replays/upload" size="sm" variant="secondary">
+		{t('Upload to Member replays')}
+	</Button>
 </div>
 <ReplayFilters bind:list {mapsList} {playersList} />
 <ReplayTable {list} />

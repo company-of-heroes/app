@@ -224,6 +224,11 @@ function commentAuthorId(commentId) {
 	try {
 		return recordId($app.findRecordById('lobby_comments', id).get('user'));
 	} catch {
+		// try member replay comments
+	}
+	try {
+		return recordId($app.findRecordById('replay_comments', id).get('user'));
+	} catch {
 		return '';
 	}
 }
@@ -232,6 +237,29 @@ function syncReplayVote(likeRecord, value) {
 	setVoteReputation({
 		voterId: likeRecord.get('user'),
 		authorId: lobbyUploaderId(likeRecord.get('lobby')),
+		sourceId: likeRecord.id,
+		value,
+		prefix: 'replay'
+	});
+}
+
+function memberReplayUploaderId(replayId) {
+	const id = recordId(replayId);
+	if (!id) {
+		return '';
+	}
+
+	try {
+		return recordId($app.findRecordById('replays', id).get('createdBy'));
+	} catch {
+		return '';
+	}
+}
+
+function syncMemberReplayVote(likeRecord, value) {
+	setVoteReputation({
+		voterId: likeRecord.get('user'),
+		authorId: memberReplayUploaderId(likeRecord.get('replay')),
 		sourceId: likeRecord.id,
 		value,
 		prefix: 'replay'
@@ -376,6 +404,7 @@ module.exports = {
 	awardReplayDownload,
 	syncCommentVote,
 	syncReplayVote,
+	syncMemberReplayVote,
 	syncPlayerVote,
 	restoreUserReputation,
 	assertUniqueTrigger,

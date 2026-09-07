@@ -3,13 +3,19 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
-	import { CommentComposer } from '@company-of-heroes/ui/comment';
+	import {
+		CommentComposer,
+		type MentionUser as ComposerMentionUser
+	} from '@company-of-heroes/ui/comment';
 	import { PlayerSteamLinks, type ReplaySteamLinkPlayer } from '@company-of-heroes/ui/replay';
 	import { isValidSteamId, memberReplayRosterForEdit } from '@company-of-heroes/api';
 	import { api, unwrapApi } from '$core/api';
+	import { app } from '$core/app/context';
+	import { userAvatarSrc } from '$lib/components/user/user-avatar-src';
 	import { useI18n } from '$lib/i18n';
 	import { getFactionFlagFromRace } from '$lib/utils';
 	import type { ReplaysRecord } from '$core/pocketbase/types';
+	import type { MentionUser } from '$core/app/database/match-social';
 
 	type RosterPlayer = {
 		name?: string;
@@ -48,6 +54,25 @@
 	let busy = $state(false);
 	let confirmDelete = $state(false);
 	let loadingRoster = $state(initial.roster.length === 0);
+
+	const canSave = $derived(title.trim().length > 0 && description.trim().length > 0 && !busy);
+	const requiredFieldsHint = $derived.by(() => {
+		const titleOk = title.trim().length > 0;
+		const descriptionOk = description.trim().length > 0;
+		if (titleOk && descriptionOk) {
+			return null;
+		}
+
+		if (!titleOk && !descriptionOk) {
+			return t('Title and description are required.');
+		}
+
+		if (!titleOk) {
+			return t('Title is required.');
+		}
+
+		return t('Description is required.');
+	});
 
 	$effect(() => {
 		const id = replayId;
@@ -97,19 +122,34 @@
 	});
 
 	const composerLabels = $derived({
+		searchingLabel: t('Searching...'),
+		noUsersLabel: t('No users found.'),
+		mentionHintLabel: t('Type a name to mention someone.'),
 		formattingLabel: t('Formatting'),
 		boldLabel: t('Bold'),
 		italicLabel: t('Italic'),
 		strikethroughLabel: t('Strikethrough'),
 		codeLabel: t('Code'),
-		spoilerLabel: t('Spoiler'),
 		linkLabel: t('Link'),
+		highlightLabel: t('Highlight'),
 		quoteLabel: t('Quote'),
-		bulletListLabel: t('Bullet list'),
-		numberedListLabel: t('Numbered list'),
-		submitLabel: t('Send'),
-		cancelLabel: t('Cancel')
+		mentionLabel: t('Mention')
 	});
+
+	function toComposerUser(user: MentionUser): ComposerMentionUser {
+		return {
+			id: user.id,
+			name: user.name,
+			avatarUrl: userAvatarSrc(user),
+			steamIds: user.steamIds
+		};
+	}
+
+	function searchMentions(query: string) {
+		return app.database.matchSocial
+			.searchMentionUsers(query)
+			.then((users) => users.map(toComposerUser));
+	}
 
 	function raceFromFaction(faction: string) {
 		const value = faction.toLowerCase();
@@ -207,7 +247,7 @@
 	}
 
 	async function onSave() {
-		if (busy || !title.trim()) {
+		if (busy || !title.trim() || !description.trim()) {
 			return;
 		}
 
@@ -251,7 +291,13 @@
 		<p class="text-destructive text-sm">{error}</p>
 	{/if}
 
-	<Form.Group label={t('Title')} inputId="app-edit-member-title" wide>
+	<Form.Group
+		label={t('Title')}
+		inputId="app-edit-member-title"
+		wide
+		required
+		requiredLabel={t('required')}
+	>
 		<Input
 			id="app-edit-member-title"
 			bind:value={title}
@@ -262,13 +308,21 @@
 		/>
 	</Form.Group>
 
-	<Form.Group label={t('Description')} inputId="app-edit-member-description" wide>
+	<Form.Group
+		label={t('Description')}
+		inputId="app-edit-member-description"
+		wide
+		required
+		requiredLabel={t('required')}
+	>
 		<CommentComposer
 			id="app-edit-member-description"
 			bind:value={description}
 			boxed
 			showSubmit={false}
 			placeholder={t('Write a description')}
+			{searchMentions}
+			excludeUserId={app.account.userId}
 			{...composerLabels}
 		/>
 	</Form.Group>
@@ -301,13 +355,18 @@
 		<p class="text-secondary-400 text-sm">{t('No players found.')}</p>
 	{/if}
 
-	<div class="flex flex-wrap items-center gap-3">
-		<Button type="button" loading={busy} disabled={!title.trim()} onclick={() => void onSave()}>
-			{t('Save')}
-		</Button>
-		<Button type="button" variant="secondary" disabled={busy} onclick={onCancel}>
-			{t('Cancel')}
-		</Button>
+	<div class="flex flex-col gap-2">
+		<div class="flex flex-wrap items-center gap-3">
+			<Button type="button" loading={busy} disabled={!canSave} onclick={() => void onSave()}>
+				{t('Save')}
+			</Button>
+			<Button type="button" variant="secondary" disabled={busy} onclick={onCancel}>
+				{t('Cancel')}
+			</Button>
+		</div>
+		{#if requiredFieldsHint}
+			<p class="text-secondary-400 text-sm">{requiredFieldsHint}</p>
+		{/if}
 	</div>
 
 	<div class="border-secondary-800 border-t pt-4">

@@ -54,6 +54,11 @@ export class LobbiesLive {
 		return exp(record) as unknown as LiveLobby;
 	}
 
+	/** True when a fresh public live row still points at this saved match / session. */
+	async isActiveForMatch(matchId: string, sessionId: number): Promise<boolean> {
+		return unwrapApi(api.liveLobbies.isActiveForMatch(matchId, sessionId));
+	}
+
 	async subscribe(
 		callback: (event: RecordSubscription<LiveLobby>) => void
 	): Promise<UnsubscribeFunc>;
