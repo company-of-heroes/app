@@ -19,7 +19,7 @@
 		page = $bindable(),
 		count,
 		perPage = 1,
-		siblingCount = 2,
+		siblingCount = 1,
 		onPage,
 		pageNumberLabel = 'Page number',
 		class: className
@@ -51,13 +51,13 @@
 	onPageChange={handlePageChange}
 >
 	{#snippet children({ pages }: any)}
-		<div class="flex items-center gap-2">
+		<div class="flex flex-wrap items-center gap-2">
 			<Pagination.PrevButton
 				class={cn(tabTrigger, 'inline-flex size-8 items-center justify-center px-0 py-0')}
 			>
 				<CaretLeftIcon class="size-4" />
 			</Pagination.PrevButton>
-			<div class="flex items-center gap-1">
+			<div class="flex flex-wrap items-center gap-1">
 				{#each pages as pageItem (pageItem.key)}
 					{#if pageItem.type === 'ellipsis'}
 						<div class="text-secondary-400 text-sm font-medium select-none">...</div>
@@ -80,7 +80,7 @@
 			>
 				<CaretRightIcon class="size-4" />
 			</Pagination.NextButton>
-			<div class="text-secondary-400 ms-2 flex items-center gap-1.5 text-sm">
+			<div class="text-secondary-400 ms-0 hidden items-center gap-1.5 text-sm sm:ms-2 sm:flex">
 				<input
 					type="text"
 					inputmode="numeric"

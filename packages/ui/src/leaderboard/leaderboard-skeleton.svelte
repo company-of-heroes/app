@@ -23,7 +23,7 @@
 			</div>
 		{/each}
 	</div>
-	<div class="overflow-x-auto">
+	<div class="hidden overflow-x-auto md:block">
 		<table class="w-full table-fixed border-collapse text-sm">
 			<thead>
 				<tr class="{tableHeadRow} text-center">
@@ -62,5 +62,23 @@
 				{/each}
 			</tbody>
 		</table>
+	</div>
+	<div class="divide-secondary-800 divide-y md:hidden">
+		{#each rows as row (row)}
+			<div class="flex flex-col gap-2 px-4 py-3">
+				<div class="flex items-center gap-3">
+					<Skeleton class="h-4 w-6" />
+					<Skeleton class="size-6 shrink-0 rounded" />
+					<Skeleton class="h-4 w-28 grow" />
+					<Skeleton class="h-4 w-10" />
+				</div>
+				<div class="flex flex-wrap gap-3">
+					<Skeleton class="h-3.5 w-12" />
+					<Skeleton class="h-3.5 w-12" />
+					<Skeleton class="h-3.5 w-12" />
+					<Skeleton class="h-3.5 w-12" />
+				</div>
+			</div>
+		{/each}
 	</div>
 </div>

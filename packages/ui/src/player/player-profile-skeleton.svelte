@@ -40,13 +40,13 @@
 		</div>
 	</div>
 	<div class="border-secondary-800 border-b">
-		<div class="flex items-center gap-2 px-4 py-2.5">
+		<div class="flex min-w-0 flex-wrap items-center gap-2 px-4 py-2.5">
 			<Skeleton class="h-8 w-14 rounded-md" />
 			<Skeleton class="h-8 w-24 rounded-md" />
 			<Skeleton class="h-8 w-28 rounded-md" />
 		</div>
 		<div class="border-secondary-800 border-t">
-			<div class="overflow-x-auto">
+			<div class="hidden overflow-x-auto md:block">
 				<table class="w-full table-fixed border-collapse text-sm">
 					<thead>
 						<tr class="{tableHeadRow} text-center">
@@ -83,6 +83,23 @@
 						{/each}
 					</tbody>
 				</table>
+			</div>
+			<div class="divide-secondary-800 divide-y md:hidden">
+				{#each Array(8) as _, index (index)}
+					<div class="flex flex-col gap-2 px-4 py-3">
+						<div class="flex items-center gap-3">
+							<Skeleton class="h-4 w-6 shrink-0" />
+							<Skeleton class="h-4 w-28 grow" />
+							<Skeleton class="h-4 w-10" />
+							<Skeleton class="h-4 w-8" />
+						</div>
+						<div class="flex flex-wrap gap-2">
+							<Skeleton class="h-6 w-12 rounded-full" />
+							<Skeleton class="h-6 w-12 rounded-full" />
+							<Skeleton class="h-6 w-12 rounded-full" />
+						</div>
+					</div>
+				{/each}
 			</div>
 		</div>
 	</div>

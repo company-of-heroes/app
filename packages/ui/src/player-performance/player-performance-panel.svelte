@@ -141,6 +141,27 @@
 	</td>
 {/snippet}
 
+{#snippet statMeta(row: { wins: number; losses: number })}
+	<div class="text-secondary-400 mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+		<span>
+			{gamesLabel}
+			<span class="text-secondary-300 font-medium tabular-nums">{row.wins + row.losses}</span>
+		</span>
+		<span>
+			{winsLabel} <span class={cn('font-medium', statWins)}>{row.wins}</span>
+		</span>
+		<span>
+			{lossesLabel} <span class={cn('font-medium', statLosses)}>{row.losses}</span>
+		</span>
+		<span>
+			{winrateLabel}
+			<span class="font-medium tabular-nums" style:color={getRatioColor(row.wins, row.losses)}>
+				{winrate(row.wins, row.losses)}
+			</span>
+		</span>
+	</div>
+{/snippet}
+
 <PlayerPerformanceSection
 	title={eloHistoryTitle}
 	summary={trackedLobbyRatingsLabel}
@@ -150,7 +171,7 @@
 	{#if eloRows.length === 0}
 		<p class="text-secondary-400 px-4 py-6 text-sm">{emptyEloMessage}</p>
 	{:else}
-		<div class="overflow-x-auto">
+		<div class="hidden md:block overflow-x-auto">
 			<table class="w-full border-collapse text-sm">
 				<thead>
 					<tr class={headerRow}>
@@ -188,6 +209,34 @@
 				</tbody>
 			</table>
 		</div>
+
+		<div class="divide-secondary-800 divide-y md:hidden">
+			{#each eloRows as row (`${row.matchtypeId}-${row.raceId}`)}
+				<div class="px-4 py-3 text-white">
+					<div class="flex items-center gap-2">
+						<span class="min-w-0 flex-1 truncate font-medium">{getModeLabel(row.matchtypeId)}</span>
+						<span
+							class={cn(
+								'shrink-0 tabular-nums',
+								isEliteElo(row.rating) && 'font-bold tracking-wide'
+							)}
+							style:color={getEloColor(row.rating)}
+							style:text-shadow={getEloTextShadow(row.rating)}
+						>
+							{row.rating}
+						</span>
+					</div>
+					<div class="mt-2 flex min-w-0 items-center gap-2 text-sm">
+						<img
+							src={resolveFactionFlag(row.raceId)}
+							alt=""
+							class="w-6 shrink-0 ring-2 ring-black"
+						/>
+						<span class="text-secondary-300 min-w-0 truncate">{getRaceLabel(row.raceId)}</span>
+					</div>
+				</div>
+			{/each}
+		</div>
 	{/if}
 </PlayerPerformanceSection>
 
@@ -200,7 +249,7 @@
 		icon={MapTrifoldIcon}
 		bind:expanded={mapsExpanded}
 	>
-		<div class="overflow-x-auto">
+		<div class="hidden md:block overflow-x-auto">
 			<table class="w-full border-collapse text-sm">
 				<thead>
 					<tr class={headerRow}>
@@ -237,6 +286,29 @@
 				</tbody>
 			</table>
 		</div>
+
+		<div class="divide-secondary-800 divide-y md:hidden">
+			{#each stats.byMap as row (row.map)}
+				{@const players = mapCount(row.map)}
+				<div class="px-4 py-3 text-white">
+					<div class="flex min-w-0 items-center gap-3">
+						<MapImage
+							map={row.map}
+							{resolveMapSrc}
+							{resolveFallbackSrc}
+							alt={formatMapName(row.map)}
+						/>
+						<span class="min-w-0 truncate font-medium">
+							{formatMapName(row.map, false)}
+							{#if players}
+								<span class="text-secondary-400">({players})</span>
+							{/if}
+						</span>
+					</div>
+					{@render statMeta(row)}
+				</div>
+			{/each}
+		</div>
 	</PlayerPerformanceSection>
 
 	<PlayerPerformanceSection
@@ -245,7 +317,7 @@
 		icon={FlagIcon}
 		bind:expanded={factionExpanded}
 	>
-		<div class="overflow-x-auto">
+		<div class="hidden md:block overflow-x-auto">
 			<table class="w-full border-collapse text-sm">
 				<thead>
 					<tr class={headerRow}>
@@ -275,6 +347,22 @@
 				</tbody>
 			</table>
 		</div>
+
+		<div class="divide-secondary-800 divide-y md:hidden">
+			{#each stats.byFaction as row (row.raceId)}
+				<div class="px-4 py-3 text-white">
+					<div class="flex min-w-0 items-center gap-2">
+						<img
+							src={resolveFactionFlag(row.raceId)}
+							alt=""
+							class="w-6 shrink-0 ring-2 ring-black"
+						/>
+						<span class="min-w-0 truncate font-medium">{getRaceLabel(row.raceId)}</span>
+					</div>
+					{@render statMeta(row)}
+				</div>
+			{/each}
+		</div>
 	</PlayerPerformanceSection>
 
 	<PlayerPerformanceSection
@@ -283,7 +371,7 @@
 		icon={UsersThreeIcon}
 		bind:expanded={modeExpanded}
 	>
-		<div class="overflow-x-auto">
+		<div class="hidden md:block overflow-x-auto">
 			<table class="w-full border-collapse text-sm">
 				<thead>
 					<tr class={headerRow}>
@@ -303,6 +391,15 @@
 					{/each}
 				</tbody>
 			</table>
+		</div>
+
+		<div class="divide-secondary-800 divide-y md:hidden">
+			{#each byMode as row (row.matchtypeId)}
+				<div class="px-4 py-3 text-white">
+					<span class="font-medium">{getModeLabel(row.matchtypeId)}</span>
+					{@render statMeta(row)}
+				</div>
+			{/each}
 		</div>
 	</PlayerPerformanceSection>
 {/if}

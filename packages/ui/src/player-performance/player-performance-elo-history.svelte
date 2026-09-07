@@ -138,9 +138,11 @@
 		</div>
 
 		{#if raceIds.length > 0 && activeRace != null}
-			<div class="grid min-h-0 grid-cols-[minmax(0,13rem)_minmax(0,1fr)] items-stretch">
+			<div
+				class="grid min-h-0 grid-cols-1 items-stretch md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]"
+			>
 				<nav
-					class="border-secondary-800 divide-secondary-800 flex h-full min-h-0 flex-col divide-y border-r"
+					class="border-secondary-800 divide-secondary-800 flex h-full min-h-0 flex-col divide-y border-b md:border-r md:border-b-0"
 					aria-label={factionNavLabel}
 				>
 					{#each raceIds as raceId (raceId)}

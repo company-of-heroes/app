@@ -90,6 +90,20 @@
 
 		toggleExpanded(id);
 	}
+
+	function handleRowKeydown(event: KeyboardEvent, id: string) {
+		if (event.key !== 'Enter' && event.key !== ' ') {
+			return;
+		}
+
+		const target = event.target as HTMLElement;
+		if (target.closest('a, button')) {
+			return;
+		}
+
+		event.preventDefault();
+		toggleExpanded(id);
+	}
 </script>
 
 {#snippet factionFlags(players: LiveLobbyPlayer[])}
@@ -279,8 +293,11 @@
 					'hover:bg-secondary-950/60 hover:text-primary',
 					expanded && 'bg-secondary-950/60 text-primary'
 				)}
+				role="button"
+				tabindex="0"
 				aria-expanded={expanded}
 				onclick={(event) => handleRowClick(event, lobby.id)}
+				onkeydown={(event) => handleRowKeydown(event, lobby.id)}
 			>
 				<div class="flex gap-3 px-4 py-3">
 					<MapImage

@@ -1,21 +1,29 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Button } from '@company-of-heroes/ui/button';
 	import {
 		flushHeader,
 		flushHeaderTitle,
 		overlayBackdrop,
-		surfaceModal
+		surfaceModal,
+		tabTrigger
 	} from '@company-of-heroes/ui/variants';
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
-	import LocaleSwitcher from '$lib/components/layout/locale-switcher.svelte';
 	import { cn } from '$lib/utils/cn';
-	import { latestDownload } from '$lib/site/download.svelte';
 	import { rememberedReplaysListHref } from '$lib/replays';
-	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
+	import {
+		currentLocale,
+		href,
+		localeLabels,
+		locales,
+		localeSwitchHref,
+		unlocalizedPath,
+		useI18n,
+		type AppLocale
+	} from '$lib/i18n';
 	import { interactive } from '$lib/utils/variants';
 	import { Dialog } from 'bits-ui';
+	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import ListIcon from 'phosphor-svelte/lib/ListIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 
@@ -23,6 +31,7 @@
 
 	let open = $state(false);
 	let replaysListHref = $state('/replays');
+	const locale = $derived(currentLocale());
 
 	const navLinks = $derived([
 		{ href: '/players', label: t('Players') },
@@ -59,6 +68,16 @@
 		}
 
 		return false;
+	}
+
+	function selectLocale(next: AppLocale) {
+		if (next === locale) {
+			return;
+		}
+
+		window.location.assign(
+			localeSwitchHref(`${page.url.pathname}${page.url.search}${page.url.hash}`, next)
+		);
 	}
 </script>
 
@@ -108,7 +127,7 @@
 						href={navHref(link.href)}
 						class={cn(
 							interactive,
-							'border-secondary-800 border-b px-4 py-3 text-sm font-medium transition-colors',
+							'border-secondary-800 border-b px-4 py-3 text-left text-sm font-medium transition-colors',
 							isActive(link.href) ? 'text-primary' : 'hover:text-secondary-400 text-white'
 						)}
 						onclick={() => (open = false)}
@@ -117,28 +136,27 @@
 					</a>
 				{/each}
 				<DiscordMenu
-					class="border-secondary-800 hover:text-secondary-400 border-b px-4 py-3 text-sm font-medium text-white transition-colors"
+					class="border-secondary-800 hover:text-secondary-400 w-full border-b px-4 py-3 text-left text-sm font-medium text-white transition-colors"
 				>
 					Discord
 				</DiscordMenu>
-				<div class="border-secondary-800 flex items-center justify-between gap-3 border-b px-4 py-3">
+				<div class="border-secondary-800 flex flex-col gap-2 border-b px-4 py-3">
 					<span class="text-secondary-400 text-sm">{t('Language')}</span>
-					<LocaleSwitcher
-						side="bottom"
-						align="end"
-						class="hover:bg-secondary-800/40 h-auto rounded-md px-3 py-1.5"
-					/>
-				</div>
-				<div class="mt-auto border-t border-secondary-800 p-4">
-					<Button
-						href={latestDownload.url}
-						download={latestDownload.fileName}
-						variant="primary"
-						class="w-full"
-						onclick={() => (open = false)}
-					>
-						{t('Download for Windows')}
-					</Button>
+					<div class="flex flex-wrap gap-2">
+						{#each locales as item (item)}
+							<button
+								type="button"
+								class={cn(tabTrigger, 'inline-flex items-center gap-1.5')}
+								data-state={item === locale ? 'active' : undefined}
+								onclick={() => selectLocale(item)}
+							>
+								{#if item === locale}
+									<CheckIcon size={14} weight="bold" class="text-primary shrink-0" />
+								{/if}
+								{localeLabels[item]}
+							</button>
+						{/each}
+					</div>
 				</div>
 			</nav>
 		</Dialog.Content>
