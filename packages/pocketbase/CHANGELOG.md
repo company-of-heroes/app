@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.10.1
+
+- fix; steam and app website login no longer fail with an invalid or expired login link
+
 ## 0.10.0
 
 - feat; edit account profile and verify email on the website and in the app
