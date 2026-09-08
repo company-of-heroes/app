@@ -348,7 +348,14 @@ export class Lobby {
 			}
 			existing.playerId = player.playerId;
 			existing.type = player.type;
-			existing.race = player.race;
+			// Keep a resolved faction when a later Populate still has Race 6 (random).
+			const incomingRace = player.race;
+			const resolved =
+				existing.race >= 0 && existing.race <= 3 && (incomingRace < 0 || incomingRace > 3);
+			if (!resolved) {
+				existing.race = incomingRace;
+			}
+			// Relic Team is authoritative for Allies/Axis columns (especially skirmish).
 			existing.team = player.team;
 			if (player.name) existing.name = player.name;
 			return;
@@ -368,6 +375,8 @@ export class Lobby {
 	/**
 	 * Retrieves a player by their lobby slot number. The game assigns slots
 	 * in team-interleaved order, hence the per-size mappings.
+	 * Use max player index (map size), not occupied count — 3v4 skirmish still
+	 * uses the 8-slot layout even with an empty human slot.
 	 */
 	getPlayerBySlot(slot: number): LobbyPlayer | null {
 		const mappings: Record<number, number[]> = {
@@ -377,10 +386,13 @@ export class Lobby {
 			2: [0, 1]
 		};
 
-		const mapping = mappings[this.players.length];
+		const maxIndex = this.players.reduce((max, player) => Math.max(max, player.index), -1);
+		const sizeHint = Math.max(this.players.length, maxIndex + 1);
+		const padded = sizeHint <= 2 ? 2 : sizeHint <= 4 ? 4 : sizeHint <= 6 ? 6 : 8;
+		const mapping = mappings[padded];
 
 		if (!mapping) {
-			return null;
+			return this.players.find((player) => player.index === slot) ?? null;
 		}
 
 		const index = mapping.indexOf(slot);

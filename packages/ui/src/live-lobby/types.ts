@@ -12,6 +12,8 @@ export type LiveLobbyPlayer = {
 	playerId: number;
 	type?: number;
 	race: number;
+	/** Relic lobby team from PopulateGameInfo (0 Allies, 1 Axis). */
+	team?: number;
 	alias: string;
 	profileId: number | null;
 	steamId: string | null;
@@ -63,9 +65,17 @@ export function teamPlayers(
 	players: LiveLobbyPlayer[],
 	team: 'allies' | 'axis'
 ): LiveLobbyPlayer[] {
-	return players.filter(isOccupiedLiveLobbyPlayer).filter((player) =>
-		team === 'allies' ? isAlliesRace(player.race) : isAxisRace(player.race)
-	);
+	const wantTeam = team === 'allies' ? 0 : 1;
+
+	return players.filter(isOccupiedLiveLobbyPlayer).filter((player) => {
+		// Skirmish sides come from Relic Team, not race — a human can sit in an
+		// Allies slot while race is still wrong/unresolved (or Race 6 → fallback).
+		if (player.team === 0 || player.team === 1) {
+			return player.team === wantTeam;
+		}
+
+		return team === 'allies' ? isAlliesRace(player.race) : isAxisRace(player.race);
+	});
 }
 
 export function defaultLiveLobbyPlayerLabel(player: LiveLobbyPlayer): string {

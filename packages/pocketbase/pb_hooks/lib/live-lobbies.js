@@ -75,21 +75,26 @@ function slimPlayer(player, fallbackIndex) {
 	let race = toFiniteNumber(player.race);
 	const type = toFiniteNumber(player.type);
 	const index = toFiniteNumber(player.index) ?? fallbackIndex;
+	const teamRaw = toFiniteNumber(player.team);
+	const team = teamRaw === 0 || teamRaw === 1 ? teamRaw : null;
 	if (playerId == null) {
 		return null;
 	}
-	// Skirmish AI often starts as Race 6 (random) before Relic resolves the faction.
-	if (playerId === -1 && (race == null || race < 0 || race > 3)) {
-		race = 0;
-	}
+	// Unresolved Race 6 (random): place by Relic team when known; AI otherwise Allies.
 	if (race == null || race < 0 || race > 3) {
-		return null;
+		if (team != null) {
+			race = team === 1 ? 1 : 0;
+		} else if (playerId === -1) {
+			race = 0;
+		} else {
+			return null;
+		}
 	}
 	const profileIdRaw = player?.profile?.profile_id ?? (playerId > 0 ? playerId : null);
 	const profileId = toFiniteNumber(profileIdRaw);
 	const alias = String(player?.profile?.alias || player?.name || '').trim();
 	const country = String(player?.profile?.country || '').trim() || null;
-	return {
+	const slim = {
 		index,
 		playerId,
 		type: type ?? 0,
@@ -99,6 +104,10 @@ function slimPlayer(player, fallbackIndex) {
 		steamId: player?.steamId ? String(player.steamId) : null,
 		country
 	};
+	if (team != null) {
+		slim.team = team;
+	}
+	return slim;
 }
 
 function slimPlayerPairs(value) {

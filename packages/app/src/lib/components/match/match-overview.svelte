@@ -120,6 +120,7 @@
 				playerId: player.playerId,
 				type: player.type,
 				race: player.race,
+				team: player.team,
 				alias: getPlayerAlias(player),
 				profileId: !isCpu && profileId != null && profileId > 0 ? profileId : null,
 				steamId: isCpu ? null : (player.steamId ?? null),

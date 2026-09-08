@@ -258,6 +258,7 @@ export class LogSession extends Emittery<SessionEvents> {
 		this.#pendingReplayPlayers.set(index, { index, race, team: teamFromRace(race) });
 
 		// Live skirmish often logs Race 6 (random) first, then resolves via this line.
+		// Update race only — Relic Team from PopulateGameInfo owns Allies/Axis sides.
 		if (this.lobby && !this.lobby.isReplay) {
 			const player = this.lobby.players.find((entry) => entry.index === index);
 			if (!player || player.race === race) {

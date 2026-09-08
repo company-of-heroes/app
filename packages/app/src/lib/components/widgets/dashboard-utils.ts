@@ -191,13 +191,23 @@ export function isHighlightedPlayer(player: LobbyPlayer, highlightPlayerId?: num
 }
 
 export function getAlliesPlayers(players: LobbyPlayer[] = []): LobbyPlayer[] {
-	return players.filter((player) => player.race === Race.US || player.race === Race.Commonwealth);
+	return players.filter((player) => {
+		if (player.team === 0 || player.team === 1) {
+			return player.team === 0;
+		}
+
+		return player.race === Race.US || player.race === Race.Commonwealth;
+	});
 }
 
 export function getAxisPlayers(players: LobbyPlayer[] = []): LobbyPlayer[] {
-	return players.filter(
-		(player) => player.race === Race.Wehrmacht || player.race === Race.PanzerElite
-	);
+	return players.filter((player) => {
+		if (player.team === 0 || player.team === 1) {
+			return player.team === 1;
+		}
+
+		return player.race === Race.Wehrmacht || player.race === Race.PanzerElite;
+	});
 }
 
 export function liveLobbyToMatch(lobby: LiveLobby): Match {

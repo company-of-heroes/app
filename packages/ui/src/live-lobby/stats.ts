@@ -1,8 +1,7 @@
 import { getLiveLobbyMatchTypeId } from './slim';
 import {
-	isAlliesRace,
-	isAxisRace,
 	isOccupiedLiveLobbyPlayer,
+	teamPlayers,
 	type LiveLobbyPlayer,
 	type LiveLobbyPlayerStats
 } from './types';
@@ -211,9 +210,8 @@ export type LiveLobbyMatchup = {
  * player across both teams from resolved player stats.
  */
 export function getLiveLobbyMatchup(players: LiveLobbyPlayer[]): LiveLobbyMatchup {
-	const occupied = players.filter(isOccupiedLiveLobbyPlayer);
-	const allies = teamEloSummary(occupied.filter((player) => isAlliesRace(player.race)));
-	const axis = teamEloSummary(occupied.filter((player) => isAxisRace(player.race)));
+	const allies = teamEloSummary(teamPlayers(players, 'allies'));
+	const axis = teamEloSummary(teamPlayers(players, 'axis'));
 	const gap = allies.avg != null && axis.avg != null ? axis.avg - allies.avg : null;
 
 	let highest = allies.max;
