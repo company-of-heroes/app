@@ -14,6 +14,7 @@
 	import { getFactionFlagFromRace } from '$lib/utils';
 	import { getMeSteamIds } from '$lib/utils/player-me';
 	import { useI18n } from '$lib/i18n';
+	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 
 	const { t } = useI18n();
 	const PER_PAGE = 30;
@@ -94,16 +95,22 @@
 	}
 </script>
 
-<div class="border-secondary-800 flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5">
-	<div class="flex flex-wrap items-center gap-3">
-		<p class="text-secondary-400 text-sm">
-			{t('Public replays uploaded by community members.')}
+<div class="border-secondary-800 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
+	<div class="min-w-0">
+		<p class="font-medium text-white">{t('Share your replay')}</p>
+		<p class="text-secondary-400 mt-0.5 text-sm">
+			{t('Upload a .rec file to Member replays so others can watch your games.')}
 		</p>
-		<Button href="/replays/upload" variant="secondary" size="sm">{t('Upload replay')}</Button>
 	</div>
-	{#if totalItems > 0}
-		<Pagination bind:page perPage={PER_PAGE} count={totalItems} />
-	{/if}
+	<div class="flex flex-wrap items-center gap-3">
+		<Button href="/replays/upload" variant="primary">
+			<UploadSimpleIcon class="size-4" />
+			{t('Upload replay')}
+		</Button>
+		{#if totalItems > 0}
+			<Pagination bind:page perPage={PER_PAGE} count={totalItems} />
+		{/if}
+	</div>
 </div>
 
 {#if loading && items.length === 0}

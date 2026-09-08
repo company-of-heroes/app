@@ -2,23 +2,8 @@
 
 'use strict';
 
-/**
- * User-scoped history search must use the authenticated account.
- * Query userId is ignored so callers cannot enumerate another user's play graph.
- */
-function resolveHistoryUserId(e, scope) {
-	if (scope !== 'user') {
-		return { userId: '' };
-	}
-
-	if (!e.auth || !e.auth.id) {
-		return { error: e.json(401, { message: 'Unauthorized' }) };
-	}
-
-	return { userId: String(e.auth.id) };
-}
-
 routerAdd('GET', '/api/history-players', (e) => {
+	const { resolveHistoryUserId } = require(`${__hooks}/lib/history-filters.js`);
 	const { loadUserSteamIds, userPlayedLobbyClause } = require(`${__hooks}/lib/match-history.js`);
 	const query = e.request.url.query();
 	const scope = query.get('scope') || 'user';
@@ -82,6 +67,7 @@ routerAdd('GET', '/api/history-players', (e) => {
 });
 
 routerAdd('GET', '/api/history-maps', (e) => {
+	const { resolveHistoryUserId } = require(`${__hooks}/lib/history-filters.js`);
 	const { loadUserSteamIds, userPlayedLobbyClause } = require(`${__hooks}/lib/match-history.js`);
 	const query = e.request.url.query();
 	const scope = query.get('scope') || 'user';

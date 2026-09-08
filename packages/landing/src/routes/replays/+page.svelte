@@ -28,6 +28,7 @@
 	import { href, unlocalizedPath, currentLocale, useI18n } from '$lib/i18n';
 	import { meSteamIds } from '$lib/auth/user';
 	import { SITE_URL } from '$lib/site/urls';
+	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -39,6 +40,11 @@
 	const canonical = $derived(`${SITE_URL}${href(replaysHref(query, tab))}`);
 	const user = $derived(page.data.user);
 	const mySteamIds = $derived(meSteamIds(user));
+	const uploadHref = $derived(
+		user
+			? href('/replays/upload')
+			: href(`/login?redirect=${encodeURIComponent('/replays/upload')}`)
+	);
 
 	const tabs = $derived.by(() => {
 		const items = [
@@ -123,19 +129,10 @@
 	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2.5">
 		<div class="flex flex-wrap items-center gap-3">
 			<h1 class="font-heading text-xl font-bold text-white">{t('Replays')}</h1>
-			{#if user}
-				<Button href={href('/replays/upload')} variant="secondary" size="sm"
-					>{t('Upload replay')}</Button
-				>
-			{:else}
-				<Button
-					href={href(`/login?redirect=${encodeURIComponent('/replays/upload')}`)}
-					variant="secondary"
-					size="sm"
-				>
-					{t('Upload replay')}
-				</Button>
-			{/if}
+			<Button href={uploadHref} variant="primary" size="sm">
+				<UploadSimpleIcon class="size-4" />
+				{t('Upload replay')}
+			</Button>
 		</div>
 		{#await data.result}
 			<Skeleton class="ms-auto h-9 w-56 shrink-0" />
@@ -153,6 +150,22 @@
 		{/await}
 	</div>
 	<ReplaySectionTabs {tabs} active={tab} />
+	{#if tab === 'member'}
+		<div
+			class="border-secondary-800 from-secondary-950 to-secondary-900/80 flex flex-wrap items-center justify-between gap-3 border-t bg-linear-to-r px-4 py-3"
+		>
+			<div class="min-w-0">
+				<p class="font-medium text-white">{t('Share your replay')}</p>
+				<p class="text-secondary-400 mt-0.5 text-sm">
+					{t('Upload a .rec file to Member replays so others can watch your games.')}
+				</p>
+			</div>
+			<Button href={uploadHref} variant="primary">
+				<UploadSimpleIcon class="size-4" />
+				{t('Upload replay')}
+			</Button>
+		</div>
+	{/if}
 	<div class="border-secondary-800 flex flex-wrap items-center gap-2 border-t px-4 py-2.5">
 		{#await data.maps}
 			<ReplayFilters
