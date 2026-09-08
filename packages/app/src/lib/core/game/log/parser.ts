@@ -91,12 +91,8 @@ export const triggers: Record<TriggerName, RegExp> = {
 				oneOrMore(digit).or('-1').groupedAs('ranking')
 			)
 	),
-	'LOG:LOBBY:POPULATING:MATCH:TYPE': createRegExp(
-		exactly(
-			'RLINK -- GetRequestInfoBySearchID - matchType ',
-			oneOrMore(digit).groupedAs('type')
-		).or(exactly('Setting match type to ', oneOrMore(digit).groupedAs('type')))
-	),
+	'LOG:LOBBY:POPULATING:MATCH:TYPE':
+		/(?:RLINK -- GetRequestInfoBySearchID - matchType |TeamAutomatchUIInfo::Trace - matchType=\[|GameSetupForm - UpdateMatchType: Setting match type to )(?<type>\d+)/,
 	'LOG:LOBBY:POPULATING:COMPLETE': createRegExp(exactly('GAME -- *** Beginning mission')),
 	'LOG:LOBBY:PLAYER:RESULT': createRegExp(
 		exactly('ReportMatchResults - '),

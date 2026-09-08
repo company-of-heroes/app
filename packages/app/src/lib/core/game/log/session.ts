@@ -52,6 +52,10 @@ export class LogSession extends Emittery<SessionEvents> {
 	#deps: SessionDeps;
 	#pendingReplayPlayers = new Map<number, { index: number; race: number; team: number }>();
 	#pendingScenario: string | undefined;
+	/** Ranked automatch mode from Trace / GetRequestInfoBySearchID (1–4). */
+	#pendingAutomatchType: number | null = null;
+	/** Custom / skirmish mode from GameSetupForm UpdateMatchType (0, 14, …). */
+	#pendingGameSetupType: number | null = null;
 	#didEnrichLiveHistory = false;
 
 	constructor(deps: SessionDeps) {
@@ -64,6 +68,8 @@ export class LogSession extends Emittery<SessionEvents> {
 		this.lobby = undefined;
 		this.sessionId = null;
 		this.#didEnrichLiveHistory = false;
+		this.#pendingAutomatchType = null;
+		this.#pendingGameSetupType = null;
 		this.#clearReplayBuffer();
 	}
 
@@ -128,10 +134,12 @@ export class LogSession extends Emittery<SessionEvents> {
 	async #onPopulating({ startedAt, form }: TriggerEvents['LOG:LOBBY:POPULATING']): Promise<void> {
 		const time = startedAt.trim();
 		const isReplay = !isLiveGameForm(form);
+		const isRanked = form === 'AutoMatchForm';
 
 		if (this.lobby && this.#isSameLobby(time)) {
 			this.lobby.isReplay = isReplay;
-			this.lobby.isRanked = form === 'AutoMatchForm';
+			this.lobby.isRanked = isRanked;
+			this.#applyMatchTypeForForm(this.lobby, isRanked);
 			if (!this.lobby.startedAt) this.lobby.startedAt = time;
 			this.#resetLiveRoster(isReplay);
 			return;
@@ -139,10 +147,11 @@ export class LogSession extends Emittery<SessionEvents> {
 
 		if (this.lobby && !this.lobby.started && !this.lobby.startedAt) {
 			this.lobby.startedAt = time;
-			this.lobby.isRanked = form === 'AutoMatchForm';
+			this.lobby.isRanked = isRanked;
 			this.lobby.isReplay = isReplay;
 			this.lobby.sessionId = this.sessionId;
 			this.lobby.localSteamId = this.localSteamId;
+			this.#applyMatchTypeForForm(this.lobby, isRanked);
 			this.#resetLiveRoster(isReplay);
 
 			if (!isReplay) {
@@ -152,9 +161,10 @@ export class LogSession extends Emittery<SessionEvents> {
 			return;
 		}
 
-		this.lobby = new Lobby(time, form === 'AutoMatchForm', isReplay);
+		this.lobby = new Lobby(time, isRanked, isReplay);
 		this.lobby.localSteamId = this.localSteamId;
 		this.lobby.sessionId = this.sessionId;
+		this.#applyMatchTypeForForm(this.lobby, isRanked);
 
 		if (!isReplay) {
 			await this.emitSerial('lobby.joined', this.lobby);
@@ -267,8 +277,51 @@ export class LogSession extends Emittery<SessionEvents> {
 		void this.#refreshStartedReplay(this.lobby);
 	}
 
+	/**
+	 * Apply the match type that belongs to this form.
+	 * Automatch uses Trace / GetRequestInfo (1–4); never keep a stale GameSetup BASIC_MATCH (0).
+	 * Custom / skirmish uses GameSetupForm UpdateMatchType.
+	 */
+	#applyMatchTypeForForm(lobby: Lobby, isRanked: boolean): void {
+		if (isRanked) {
+			if (this.#pendingAutomatchType != null) {
+				lobby.logMatchType = this.#pendingAutomatchType;
+				return;
+			}
+
+			// Menu "Setting match type to 0: BASIC_MATCH" must not stick on ranked starts.
+			if (lobby.logMatchType === 0) {
+				lobby.logMatchType = null;
+			}
+
+			return;
+		}
+
+		if (this.#pendingGameSetupType != null) {
+			lobby.logMatchType = this.#pendingGameSetupType;
+		}
+	}
+
 	#onMatchType({ type }: TriggerEvents['LOG:LOBBY:POPULATING:MATCH:TYPE']): void {
-		const lobby = this.#ensureLobby();
+		const isAutomatchMode = type >= 1 && type <= 4;
+
+		if (isAutomatchMode) {
+			this.#pendingAutomatchType = type;
+		} else {
+			this.#pendingGameSetupType = type;
+		}
+
+		const lobby = this.lobby;
+		// Do not #ensureLobby() — menu GameSetup BASIC_MATCH would create an empty lobby
+		// that AutoMatchForm later reuses with a polluted logMatchType of 0.
+		if (!lobby || (!lobby.startedAt && !lobby.started)) {
+			return;
+		}
+
+		if (lobby.isRanked !== isAutomatchMode) {
+			return;
+		}
+
 		if (lobby.logMatchType === type) {
 			return;
 		}
