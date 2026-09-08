@@ -1,3 +1,7 @@
+### v0.63.4
+
+- fix; read ranked live lobby types from automatch log lines instead of stale basic match UI
+
 ### v0.63.3
 
 - fix; stop burning lobby result attempts while a match is still live
