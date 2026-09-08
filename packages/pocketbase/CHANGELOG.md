@@ -1,5 +1,10 @@
 # @company-of-heroes/pocketbase
 
+## 0.10.3
+
+- fix; let older app versions attach match replays when they are not the lobby owner
+- fix; stop burning lobby result attempts while a match is still live
+
 ## 0.10.2
 
 - fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI

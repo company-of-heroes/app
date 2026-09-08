@@ -1,5 +1,9 @@
 # @company-of-heroes/app
 
+## 0.63.3
+
+- fix; stop burning lobby result attempts while a match is still live
+
 ## 0.63.2
 
 - fix; fall back to the parent or dashboard when the header back button has no history
