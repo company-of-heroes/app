@@ -6,7 +6,7 @@ import type {
 	UsersResponse
 } from '$core/pocketbase/types';
 import type { Expand } from '@fknoobs/app';
-import type { Message, Player } from '@fknoobs/replay-parser';
+import type { Player } from '@fknoobs/replay-parser';
 import { setReplayName } from '@fknoobs/replay-parser';
 import type { ListResult } from 'pocketbase';
 import { exp, getFile, pocketbase } from '$core/pocketbase';
@@ -17,9 +17,11 @@ import { api, unwrapApi } from '$core/api';
 import { join } from '@tauri-apps/api/path';
 import { exists, writeFile, remove } from '@tauri-apps/plugin-fs';
 import { t } from '$lib/i18n';
+import { rewriteReplayMapPathsForLocalPlayback } from '$lib/utils/rewrite-replay-map-paths';
+import type { FlatReplayMessage } from '$lib/utils/flatten-replay';
 
 export type ReplaysExpanded = Expand<
-	ReplaysResponse<Message[], Player[], { createdBy: UsersResponse }>
+	ReplaysResponse<FlatReplayMessage[], Player[], { createdBy: UsersResponse }>
 >;
 
 export type ReplayDetail = {
@@ -58,7 +60,7 @@ export class Replays {
 	async getAll(): Promise<ReplaysExpanded[]> {
 		const response = await pocketbase
 			.collection('replays')
-			.getFullList<ReplaysResponse<Message[], Player[]>>(1000, {
+			.getFullList<ReplaysResponse<FlatReplayMessage[], Player[]>>(1000, {
 				expand: 'createdBy',
 				fetch
 			});
@@ -106,7 +108,10 @@ export class Replays {
 
 		try {
 			const localPath = await join(await app.paths.cohPlaybackDir(), localName);
-			await writeFile(localPath, bytes);
+			await writeFile(
+				localPath,
+				rewriteReplayMapPathsForLocalPlayback(bytes, await app.paths.cohDocumentsDir())
+			);
 		} catch (error) {
 			console.warn('[REPLAYS]: failed to write renamed local replay', localName, error);
 		}
@@ -157,7 +162,10 @@ export class Replays {
 		}
 
 		const bytes = await getFile(record, String(record.file));
-		await writeFile(await this.localPath(localName), bytes);
+		await writeFile(
+			await this.localPath(localName),
+			rewriteReplayMapPathsForLocalPlayback(bytes, await app.paths.cohDocumentsDir())
+		);
 		return { filename: localName, file: String(record.file) };
 	}
 

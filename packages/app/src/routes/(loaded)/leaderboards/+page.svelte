@@ -3,11 +3,21 @@
 	import { relic } from '$lib/relic';
 	import { resource, useDebounce, watch } from 'runed';
 	import { ToggleGroup } from '$lib/components/ui/toggle-group';
+	import { getRaceLabelFromLeaderboardId } from '$lib/components/leaderboard/leaderboard-utils';
 	import {
-		getRaceLabelFromLeaderboardId,
-		getSteamIdFromProfile
-	} from '$lib/components/leaderboard/leaderboard-utils';
-	import { LeaderboardPodium, LeaderboardList } from '$lib/components/leaderboard';
+		LeaderboardList,
+		LeaderboardPodium,
+		LeaderboardSkeleton
+	} from '@company-of-heroes/ui/leaderboard';
+	import type { LeaderboardStatRow } from '@company-of-heroes/ui/format/types';
+	import {
+		flagImageUrl,
+		getCountryDisplayName,
+		getRankImageByLeaderboardId,
+		getSteamIdFromName,
+		getSteamIdFromProfile,
+		playerHref
+	} from '$lib/utils/leaderboard-resolvers';
 	import {
 		getPlayerRatings,
 		harvestPlayerRatingsForProfiles,
@@ -20,6 +30,15 @@
 	import { isEmpty } from 'lodash-es';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
 	import { useI18n } from '$lib/i18n';
+	import { steam, type SteamPlayerSummary } from '$core/steam';
+	import {
+		labelsForSteamId,
+		preloadPlayerLabels
+	} from '$core/pocketbase/player-label-cache.svelte';
+	import {
+		likeCountForSteamId,
+		preloadPlayerLikeCounts
+	} from '$core/pocketbase/player-vote-cache.svelte';
 
 	let leaderboardId = $state(leaderboards[0].value);
 	let leaderboardFactionId = $state(leaderboards[0].leaderboardFationIds[0].value);
@@ -57,16 +76,32 @@
 		{ initialValue: new Map<string, PlayerRatingRecord>() }
 	);
 
-	const eloBySteamId = $derived.by(() => {
-		if (eloOverride) {
-			return eloOverride;
-		}
+	const steamProfiles = resource(
+		() => statsResource.current.map((stat) => stat.profile.profile_id).join(','),
+		async () => {
+			const steamIds = statsResource.current
+				.map((stat) => getSteamIdFromProfile(stat.profile))
+				.filter(Boolean);
+			if (steamIds.length === 0) {
+				return {} as Record<string, SteamPlayerSummary>;
+			}
 
-		const map = new Map<string, PlayerEloMap>();
-		for (const [steamId, record] of ratingsResource.current) {
-			map.set(steamId, record.elo);
-		}
-		return map;
+			const profiles = await steam.getUserProfiles(steamIds);
+			return Object.fromEntries(profiles.map((profile) => [profile.steamid, profile]));
+		},
+		{ initialValue: {} as Record<string, SteamPlayerSummary> }
+	);
+
+	const eloBySteamId = $derived.by(() => {
+		const map = eloOverride ?? (() => {
+			const next = new Map<string, PlayerEloMap>();
+			for (const [steamId, record] of ratingsResource.current) {
+				next.set(steamId, record.elo);
+			}
+			return next;
+		})();
+
+		return Object.fromEntries(map);
 	});
 
 	const filteredStats = $derived.by(() => {
@@ -84,9 +119,32 @@
 		);
 	});
 
+	const enrichedStats: LeaderboardStatRow[] = $derived.by(() => {
+		return filteredStats.map((stat) => {
+			const steamId = getSteamIdFromProfile(stat.profile);
+			return {
+				leaderboard_id: stat.leaderboard_id,
+				rank: stat.rank,
+				ranklevel: stat.ranklevel,
+				wins: stat.wins,
+				losses: stat.losses,
+				streak: stat.streak,
+				profile: {
+					profile_id: stat.profile.profile_id,
+					alias: stat.profile.alias,
+					country: stat.profile.country,
+					name: stat.profile.name,
+					avatarUrl: steamProfiles.current[steamId]?.avatarfull,
+					labels: labelsForSteamId(steamId),
+					likeCount: likeCountForSteamId(steamId) ?? 0
+				}
+			};
+		});
+	});
+
 	const isSearching = $derived(debouncedSearch.trim().length > 0);
-	let podiumStats = $derived(isSearching ? [] : filteredStats.slice(0, 3));
-	let listStats = $derived(isSearching ? filteredStats : filteredStats.slice(3));
+	let podiumStats = $derived(isSearching ? [] : enrichedStats.slice(0, 3));
+	let listStats = $derived(isSearching ? enrichedStats : enrichedStats.slice(3));
 
 	const searchPlayer = useDebounce(
 		() => {
@@ -102,6 +160,15 @@
 			if (!factions.some((faction) => faction.value === leaderboardFactionId)) {
 				leaderboardFactionId = factions[0].value;
 			}
+		}
+	);
+
+	watch(
+		() => statsResource.current,
+		(stats) => {
+			const steamIds = stats.map((stat) => getSteamIdFromProfile(stat.profile)).filter(Boolean);
+			preloadPlayerLabels(steamIds);
+			preloadPlayerLikeCounts(steamIds);
 		}
 	);
 
@@ -186,19 +253,42 @@
 	</Input>
 </div>
 
-{#if !isSearching}
-	<LeaderboardPodium
-		stats={podiumStats}
-		eloBySteamId={eloBySteamId}
-		loading={statsResource.loading}
+{#if statsResource.loading}
+	<LeaderboardSkeleton />
+{:else}
+	{#if !isSearching}
+		<LeaderboardPodium
+			stats={podiumStats}
+			{eloBySteamId}
+			{getSteamIdFromName}
+			{getCountryDisplayName}
+			{getRankImageByLeaderboardId}
+			{flagImageUrl}
+			{playerHref}
+			naLabel={t('N/A')}
+			formatLevel={(level) => t('Lvl {level}', { level })}
+			formatWins={(wins) => t('{count}W', { count: wins })}
+			formatLosses={(losses) => t('{count}L', { count: losses })}
+			formatStreakLabel={(streak) => t('{streak} streak', { streak })}
+		/>
+	{/if}
+
+	<LeaderboardList
+		stats={listStats}
+		{eloBySteamId}
+		{getSteamIdFromName}
+		{getCountryDisplayName}
+		{getRankImageByLeaderboardId}
+		{flagImageUrl}
+		{playerHref}
+		emptyMessage={filteredStats.length === 0 ? t('No players found.') : t('No more players to show.')}
+		rankColumnLabel={t('Rank')}
+		aliasColumnLabel={t('Alias')}
+		eloColumnLabel={t('ELO')}
+		winsColumnLabel={t('Wins')}
+		lossesColumnLabel={t('Losses')}
+		streakColumnLabel={t('Streak')}
+		ratioColumnLabel={t('Ratio')}
+		naLabel={t('N/A')}
 	/>
 {/if}
-
-<LeaderboardList
-	stats={listStats}
-	eloBySteamId={eloBySteamId}
-	loading={statsResource.loading}
-	empty={filteredStats.length === 0 ? t('No players found.') : t('No more players to show.')}
-	class="rounded-none border-0"
-	striped={false}
-/>

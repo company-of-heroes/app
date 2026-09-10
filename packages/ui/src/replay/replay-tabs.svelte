@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Tabs } from 'bits-ui';
-	import { tabTrigger } from '@company-of-heroes/ui/variants';
+	import * as Tabs from '@company-of-heroes/ui/tabs';
 
 	type Props = {
 		value?: string;
@@ -35,16 +34,16 @@
 </script>
 
 <Tabs.Root bind:value>
-	<Tabs.List class="border-secondary-800 flex items-center gap-2 border-t border-b px-4 py-2.5">
-		<Tabs.Trigger value="overview" class={tabTrigger}>{overviewLabel}</Tabs.Trigger>
+	<Tabs.List class="border-secondary-800 border-t border-b px-4 py-2.5">
+		<Tabs.Trigger value="overview">{overviewLabel}</Tabs.Trigger>
 		{#if showChat}
-			<Tabs.Trigger value="chat" class={tabTrigger}>{chatLabel}</Tabs.Trigger>
+			<Tabs.Trigger value="chat">{chatLabel}</Tabs.Trigger>
 		{/if}
 		{#if showTimeline}
-			<Tabs.Trigger value="timeline" class={tabTrigger}>{timelineLabel}</Tabs.Trigger>
+			<Tabs.Trigger value="timeline">{timelineLabel}</Tabs.Trigger>
 		{/if}
 		{#if showScreenshots}
-			<Tabs.Trigger value="screenshots" class={tabTrigger}>{screenshotsLabel}</Tabs.Trigger>
+			<Tabs.Trigger value="screenshots">{screenshotsLabel}</Tabs.Trigger>
 		{/if}
 	</Tabs.List>
 	<Tabs.Content value="overview">

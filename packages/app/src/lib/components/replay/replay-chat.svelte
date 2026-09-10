@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
-	import type { Message } from '@fknoobs/replay-parser';
+	import type { FlatReplayMessage } from '$lib/utils/flatten-replay';
 	import { useReplay } from '.';
 	import { watch } from 'runed';
 	import { cn } from '$lib/utils';
@@ -27,7 +27,7 @@
 	const messageRow =
 		'grid grid-cols-[4.5rem_minmax(0,auto)_1fr] items-start gap-x-3 gap-y-0.5 px-4 py-2.5';
 
-	function messageKey(message: Message, index: number) {
+	function messageKey(message: FlatReplayMessage, index: number) {
 		return `${message.playerID}-${index}`;
 	}
 
@@ -60,7 +60,7 @@
 		}
 	}
 
-	function messageTone(message: Message) {
+	function messageTone(message: FlatReplayMessage) {
 		if (message.sender === 'System') return 'text-secondary-400';
 		if (isMeReplayAlias(message.sender)) return mePlayerText;
 		if (message.recipient === 0) return 'text-primary';
@@ -83,7 +83,7 @@
 	);
 </script>
 
-{#snippet message(message: Message, index: number)}
+{#snippet message(message: FlatReplayMessage, index: number)}
 	{@const key = messageKey(message, index)}
 	{@const displayContent = translatedContents?.get(key) ?? message.content}
 	<div

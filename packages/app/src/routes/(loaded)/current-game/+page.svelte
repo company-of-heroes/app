@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ReplayData } from '@fknoobs/replay-parser';
+	import type { FlatReplay } from '$lib/utils/flatten-replay';
 	import type { Snapshot } from './$types';
 	import { dev } from '$app/environment';
 	import { app } from '$core/app/context';
@@ -11,7 +11,7 @@
 	let match = $derived(app.lobby ?? (dev ? CURRENT_GAME_TEST : null));
 	let replay = $state<{
 		file: File;
-		replay: ReplayData;
+		replay: FlatReplay;
 	} | null>(null);
 
 	$effect(() => {

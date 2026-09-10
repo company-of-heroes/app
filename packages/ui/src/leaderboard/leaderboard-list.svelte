@@ -29,6 +29,14 @@
 		flagImageUrl: (country: string | null | undefined) => string | null;
 		playerHref: (profileId: number) => string;
 		emptyMessage?: string;
+		rankColumnLabel?: string;
+		aliasColumnLabel?: string;
+		eloColumnLabel?: string;
+		winsColumnLabel?: string;
+		lossesColumnLabel?: string;
+		streakColumnLabel?: string;
+		ratioColumnLabel?: string;
+		naLabel?: string;
 	};
 
 	let {
@@ -39,7 +47,15 @@
 		getRankImageByLeaderboardId,
 		flagImageUrl,
 		playerHref,
-		emptyMessage = 'No players found.'
+		emptyMessage = 'No players found.',
+		rankColumnLabel = 'Rank',
+		aliasColumnLabel = 'Alias',
+		eloColumnLabel = 'ELO',
+		winsColumnLabel = 'Wins',
+		lossesColumnLabel = 'Losses',
+		streakColumnLabel = 'Streak',
+		ratioColumnLabel = 'Ratio',
+		naLabel = 'N/A'
 	}: Props = $props();
 
 	function eloForRow(stat: LeaderboardStatRow): number | null {
@@ -58,13 +74,13 @@
 			<thead>
 				<tr class="{tableHeadRow} text-center">
 					<th class="w-14 px-4 py-2">#</th>
-					<th class="w-26 px-4 py-2">Rank</th>
-					<th class="px-4 py-2 text-left">Alias</th>
-					<th class="w-22 px-4 py-2">ELO</th>
-					<th class="w-20 px-4 py-2">Wins</th>
-					<th class="w-22 px-4 py-2">Losses</th>
-					<th class="w-22 px-4 py-2">Streak</th>
-					<th class="w-22 px-4 py-2">Ratio</th>
+					<th class="w-26 px-4 py-2">{rankColumnLabel}</th>
+					<th class="px-4 py-2 text-left">{aliasColumnLabel}</th>
+					<th class="w-22 px-4 py-2">{eloColumnLabel}</th>
+					<th class="w-20 px-4 py-2">{winsColumnLabel}</th>
+					<th class="w-22 px-4 py-2">{lossesColumnLabel}</th>
+					<th class="w-22 px-4 py-2">{streakColumnLabel}</th>
+					<th class="w-22 px-4 py-2">{ratioColumnLabel}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -116,7 +132,7 @@
 							style:color={elo != null ? getEloColor(elo) : undefined}
 							style:text-shadow={getEloTextShadow(elo)}
 						>
-							{elo ?? 'N/A'}
+							{elo ?? naLabel}
 						</td>
 						<td class={cn('px-4 py-1.5 text-center font-medium', statWins)}>{stat.wins}</td>
 						<td class={cn('px-4 py-1.5 text-center font-medium', statLosses)}>{stat.losses}</td>
@@ -179,24 +195,24 @@
 						style:color={elo != null ? getEloColor(elo) : undefined}
 						style:text-shadow={getEloTextShadow(elo)}
 					>
-						{elo ?? 'N/A'}
+						{elo ?? naLabel}
 					</span>
 				</div>
 				<div class="text-secondary-400 mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
 					<span>
-						Wins <span class={cn('font-medium', statWins)}>{stat.wins}</span>
+						{winsColumnLabel} <span class={cn('font-medium', statWins)}>{stat.wins}</span>
 					</span>
 					<span>
-						Losses <span class={cn('font-medium', statLosses)}>{stat.losses}</span>
+						{lossesColumnLabel} <span class={cn('font-medium', statLosses)}>{stat.losses}</span>
 					</span>
 					<span>
-						Streak
+						{streakColumnLabel}
 						<span class={cn('font-medium', statStreakClass(stat.streak))}>
 							{formatStreak(stat.streak)}
 						</span>
 					</span>
 					<span>
-						Ratio
+						{ratioColumnLabel}
 						<span
 							class="font-medium tabular-nums"
 							style:color={getRatioColor(stat.wins, stat.losses)}

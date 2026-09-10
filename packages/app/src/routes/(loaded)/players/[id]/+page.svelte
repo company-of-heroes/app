@@ -23,7 +23,7 @@
 		getPlayerPerformance
 	} from '$core/pocketbase/player-performance';
 	import { eloMapForSteamId, mergeEloMaps } from '$lib/utils/player-elo';
-	import { tabTrigger } from '$lib/components/ui/variants';
+	import * as Tabs from '$lib/components/ui/tabs';
 	import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import { useI18n } from '$lib/i18n';
@@ -233,68 +233,43 @@
 			{/snippet}
 		</Player.ProfileHeader>
 
-		<div class="border-secondary-800 border-b">
-			<div class="flex items-center gap-2 px-4 py-2.5">
-				<button
-					type="button"
-					class={tabTrigger}
-					data-state={currentTab === 'stats' ? 'active' : undefined}
-					onclick={() => (currentTab = 'stats')}
-				>
-					{t('Stats')}
-				</button>
-				<button
-					type="button"
-					class={tabTrigger}
-					data-state={currentTab === 'performance' ? 'active' : undefined}
-					onclick={() => (currentTab = 'performance')}
-				>
-					{t('Performance')}
-				</button>
-				<button
-					type="button"
-					class={tabTrigger}
-					data-state={currentTab === 'match-history' ? 'active' : undefined}
-					onclick={() => (currentTab = 'match-history')}
-				>
-					{t('Match history')}
-				</button>
-				<button
-					type="button"
-					class={tabTrigger}
-					data-state={currentTab === 'screenshots' ? 'active' : undefined}
-					onclick={() => (currentTab = 'screenshots')}
-				>
-					{t('Screenshots')}
-				</button>
-			</div>
-
+		<Tabs.Root bind:value={currentTab} class="border-secondary-800 border-b">
+			<Tabs.List class="px-4 py-2.5">
+				<Tabs.Trigger value="stats">{t('Stats')}</Tabs.Trigger>
+				<Tabs.Trigger value="performance">{t('Performance')}</Tabs.Trigger>
+				<Tabs.Trigger value="match-history">{t('Match history')}</Tabs.Trigger>
+				<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
+			</Tabs.List>
 			<div class="border-secondary-800 border-t">
-				{#if currentTab === 'stats'}
+				<Tabs.Content value="stats">
 					<Player.StatsTable player={pagePlayer} />
-				{:else if currentTab === 'performance'}
+				</Tabs.Content>
+				<Tabs.Content value="performance">
 					<PlayerPerformance
 						profileId={profile.profile_id}
 						scope={isSelf ? 'user' : 'community'}
 						userId={isSelf ? account.userId : undefined}
+						performance={performance.current}
 						empty={isSelf ? 'self' : 'other'}
 						class="rounded-none border-0"
 					/>
-				{:else if currentTab === 'match-history'}
+				</Tabs.Content>
+				<Tabs.Content value="match-history">
 					{#if !extra}
 						<Leaderboard stats={[]} loading skeletonRows={10} class="rounded-none border-0" />
 					{:else}
 						<Player.MatchHistory player={pagePlayer} />
 					{/if}
-				{:else}
+				</Tabs.Content>
+				<Tabs.Content value="screenshots">
 					<PlayerScreenshots
 						steamId={user.steamid}
 						userId={isSelf ? account.userId : undefined}
 						profileId={profile.profile_id}
 					/>
-				{/if}
+				</Tabs.Content>
 			</div>
-		</div>
+		</Tabs.Root>
 
 		<div
 			class="text-secondary-400 bg-secondary-950/50 flex flex-wrap gap-x-4 gap-y-1 px-4 py-3 text-sm"

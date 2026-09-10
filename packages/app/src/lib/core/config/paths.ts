@@ -242,6 +242,19 @@ export class Paths {
 		return join(await this.cohConfigDir(), 'playback');
 	}
 
+	/**
+	 * Documents root that owns the CoH My Games tree (OneDrive-aware via cohConfigDir).
+	 */
+	async cohDocumentsDir(): Promise<string> {
+		const configDir = await this.cohConfigDir();
+		const idx = configDir.search(/[/\\]My Games[/\\]Company of Heroes/i);
+		if (idx > 0) {
+			return configDir.slice(0, idx);
+		}
+
+		return this.documentDir();
+	}
+
 	async cohInstallationDir(): Promise<string> {
 		const { gameDir } = this.#getCohPaths();
 

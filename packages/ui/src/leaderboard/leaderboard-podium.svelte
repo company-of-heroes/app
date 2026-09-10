@@ -29,6 +29,12 @@
 		playerHref: (profileId: number) => string;
 		resolveAvatarUrl?: (url: string) => string;
 		loading?: boolean;
+		class?: string;
+		naLabel?: string;
+		formatLevel?: (level: number) => string;
+		formatWins?: (wins: number) => string;
+		formatLosses?: (losses: number) => string;
+		formatStreakLabel?: (streak: string) => string;
 	};
 
 	let {
@@ -40,7 +46,13 @@
 		flagImageUrl,
 		playerHref,
 		resolveAvatarUrl = (url) => url,
-		loading = false
+		loading = false,
+		class: className,
+		naLabel = 'N/A',
+		formatLevel = (level) => `Lvl ${level}`,
+		formatWins = (wins) => `${wins}W`,
+		formatLosses = (losses) => `${losses}L`,
+		formatStreakLabel = (streak) => `${streak} streak`
 	}: Props = $props();
 
 	const podiumOrder = $derived.by(() => {
@@ -68,7 +80,10 @@
 </script>
 
 <div
-	class="border-secondary-800 sm:divide-secondary-800 grid grid-cols-1 border-b sm:grid-cols-3 sm:divide-x"
+	class={cn(
+		'border-secondary-800 sm:divide-secondary-800 grid grid-cols-1 border-b sm:grid-cols-3 sm:divide-x',
+		className
+	)}
 >
 	{#if loading}
 		{#each [2, 1, 3] as rank (rank)}
@@ -121,7 +136,9 @@
 						alt=""
 						class={cn('w-auto', stat.rank === 1 ? 'h-8' : 'h-7')}
 					/>
-					<span class="text-secondary-400 text-sm tabular-nums">Lvl {stat.ranklevel}</span>
+					<span class="text-secondary-400 text-sm tabular-nums"
+						>{formatLevel(stat.ranklevel)}</span
+					>
 				</div>
 				<div
 					class={cn(
@@ -142,7 +159,7 @@
 					<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
 				</div>
 				{#if elo == null}
-					<span class="text-secondary-500 text-xs">N/A</span>
+					<span class="text-secondary-500 text-xs">{naLabel}</span>
 				{:else}
 					<span
 						class={cn(
@@ -159,11 +176,13 @@
 				<div
 					class="text-secondary-400 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm"
 				>
-					<span class={statWins}>{stat.wins}W</span>
+					<span class={statWins}>{formatWins(stat.wins)}</span>
 					<span class="text-secondary-600">·</span>
-					<span class={statLosses}>{stat.losses}L</span>
+					<span class={statLosses}>{formatLosses(stat.losses)}</span>
 					<span class="text-secondary-600">·</span>
-					<span class={statStreakClass(stat.streak)}>{formatStreak(stat.streak)} streak</span>
+					<span class={statStreakClass(stat.streak)}
+						>{formatStreakLabel(formatStreak(stat.streak))}</span
+					>
 				</div>
 			</a>
 		{/each}

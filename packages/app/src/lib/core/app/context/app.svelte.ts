@@ -1,10 +1,10 @@
 import type { Features, RelicProfile } from '@fknoobs/app';
-import type { SteamPlayerSummary } from '$core/steam';
 import type { TypedPocketBase } from '$core/pocketbase/types';
-import type { ReplayData } from '@fknoobs/replay-parser';
+import type { FlatReplay } from '$lib/utils/flatten-replay';
 import type { MatchExpanded } from '../database/matches';
 import { dev } from '$app/environment';
 import { goto } from '$app/navigation';
+import type { SteamPlayerSummary } from '$core/steam';
 import Emittery from 'emittery';
 import { watch } from 'runed';
 import { toast } from '$lib/components/ui/toasts';
@@ -62,7 +62,7 @@ export type AppEvents = {
 		match: Match;
 		replay: {
 			file: File;
-			replay: ReplayData | null;
+			replay: FlatReplay | null;
 		} | null;
 	};
 	'lobby.saved': MatchExpanded;
@@ -526,7 +526,7 @@ export class AppContext extends Emittery<AppEvents> {
 		}
 
 		const match = this.lobby;
-		let replay: { file: File; replay: ReplayData | null } | null = null;
+		let replay: { file: File; replay: FlatReplay | null } | null = null;
 
 		if (!match.isReplay) {
 			try {

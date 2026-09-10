@@ -145,7 +145,8 @@
 			replay?.players?.length === match.players.length &&
 			match.players[index] &&
 			match.players[index].playerId !== -1 &&
-			!isCpuPlayerName(match.players[index].profile.alias)
+			!isCpuPlayerName(match.players[index].profile.alias) &&
+			match.players[index].profile.alias.trim() !== ''
 		) {
 			return match.players[index];
 		}

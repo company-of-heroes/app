@@ -118,22 +118,15 @@ function toSlimFromFull(replay: {
 
 /** Main-thread fallback when the worker cannot start (keeps detail pages usable). */
 async function parseReplayOnMainThread(bytes: ArrayBuffer | Uint8Array): Promise<ParseReplayResult> {
-	const { parseReplay, playerCpmLabel } = await import('@fknoobs/replay-parser');
+	const { parseReplay } = await import('@fknoobs/replay-parser');
+	const { flattenReplay, toSlimReplay } = await import('$lib/replays/flatten-replay');
 	// Let the loading skeleton paint before the sync parse blocks.
 	await new Promise<void>((resolve) => setTimeout(resolve, 0));
-	const replay = parseReplay(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
-	const cpmByPlayerId: Record<string, string> = {};
-	for (const player of replay.players ?? []) {
-		if (player.id == null) {
-			continue;
-		}
-
-		cpmByPlayerId[String(player.id)] = playerCpmLabel(replay, player.id);
-	}
+	const flat = flattenReplay(parseReplay(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)));
 
 	return {
 		parseId: null,
-		replay: toSlimFromFull({ ...replay, cpmByPlayerId })
+		replay: toSlimFromFull(toSlimReplay(flat))
 	};
 }
 

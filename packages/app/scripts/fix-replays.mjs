@@ -37,7 +37,7 @@ registerHooks({
 	}
 });
 
-const { parseReplay, parseHeader } = await import('@fknoobs/replay-parser');
+const { parseReplay, parseHeader, formatTickTimestamp } = await import('@fknoobs/replay-parser');
 
 dotenv.config();
 const adminEmail = process.env.PB_ADMIN_EMAIL;
@@ -216,7 +216,33 @@ async function processReplay(record) {
 	return true;
 }
 
-function buildPayloadFromReplay(replay, existing) {
+function flattenParsedReplay(replay) {
+	const header = replay.header ?? {};
+	return {
+		replayName: header.replayName ?? '',
+		matchType: header.matchType ?? '',
+		mapName: header.mapName ?? '',
+		mapFileName: header.mapFileName ?? '',
+		highResources: header.highResources,
+		randomStart: header.randomStart,
+		vpGame: header.vpGame,
+		vpCount: header.vpCount,
+		gameDate: header.gameDate ?? '',
+		duration: replay.durationSeconds ?? 0,
+		players: replay.players ?? [],
+		messages: (replay.chat ?? []).map((message) => ({
+			playerID: message.playerId,
+			sender: message.sender,
+			recipient: message.recipient,
+			timestamp: formatTickTimestamp(message.tick),
+			content: message.content,
+			tick: message.tick
+		}))
+	};
+}
+
+function buildPayloadFromReplay(parsed, existing) {
+	const replay = flattenParsedReplay(parsed);
 	const title = !replay.replayName ? '-' : replay.replayName;
 	const isRanked = replay.matchType?.toLowerCase().includes('automatch') ?? false;
 	const next = {

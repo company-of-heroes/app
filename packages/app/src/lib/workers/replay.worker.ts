@@ -1,5 +1,6 @@
 import { parseReplay } from '@fknoobs/replay-parser';
 import { fetch } from '$core/http/fetch';
+import { flattenReplay } from '$lib/utils/flatten-replay';
 
 onmessage = async ({ data }: MessageEvent) => {
 	const { id, type } = data;
@@ -8,7 +9,7 @@ onmessage = async ({ data }: MessageEvent) => {
 		if (type === 'process') {
 			const { content, fileName, userId, pbUrl, authToken } = data;
 
-			const replay = parseReplay(content);
+			const replay = flattenReplay(parseReplay(content));
 
 			const formData = new FormData();
 			formData.append('durationInSeconds', String(replay.duration));
@@ -46,7 +47,7 @@ onmessage = async ({ data }: MessageEvent) => {
 			postMessage({ id, success: true });
 		} else {
 			const { content, fileName } = data;
-			const replay = parseReplay(content);
+			const replay = flattenReplay(parseReplay(content));
 
 			const {
 				duration,
@@ -78,22 +79,18 @@ onmessage = async ({ data }: MessageEvent) => {
 				replayName
 			};
 
-			postMessage(
-				{
-					id,
-					success: true,
-					replay: simplifiedReplay,
-					content
-				},
-				{ transfer: [content.buffer] }
-			);
+			postMessage({
+				id,
+				success: true,
+				replay: simplifiedReplay,
+				fileName
+			});
 		}
 	} catch (error) {
-		console.error(`Worker failed:`, error);
 		postMessage({
 			id,
 			success: false,
-			error: String(error)
+			error: error instanceof Error ? error.message : String(error)
 		});
 	}
 };

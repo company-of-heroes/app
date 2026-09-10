@@ -1,62 +1,14 @@
 /// <reference lib="webworker" />
 
+import { flattenReplay, toSlimReplay, type FlatReplay } from '$lib/utils/flatten-replay';
+
 type ParseRequest = {
 	id: number;
 	type?: 'parse' | 'actions';
 	content?: ArrayBuffer;
 };
 
-type CachedReplay = {
-	duration: number;
-	gameDate?: string;
-	highResources?: boolean;
-	randomStart?: boolean;
-	mapFileName?: string;
-	mapName?: string;
-	matchType?: string;
-	vpGame?: boolean;
-	vpCount?: number;
-	players: Array<{
-		id?: number | null;
-		name?: string;
-		faction?: string;
-		doctrineName?: string;
-		steamId?: string | null;
-	}>;
-	messages: unknown[];
-	actions: Array<{
-		tick: number;
-		timestamp: string;
-		playerID?: number;
-		commandID?: number;
-		objectID?: number;
-		command?: { type?: string; name?: string; description?: string } | null;
-	}>;
-	replayName?: string;
-	playerCount?: number;
-};
-
-const cache = new Map<number, CachedReplay>();
-
-function toSlimReplay(replay: CachedReplay, cpmByPlayerId: Record<string, string>) {
-	return {
-		duration: replay.duration,
-		gameDate: replay.gameDate,
-		highResources: replay.highResources,
-		randomStart: replay.randomStart,
-		mapFileName: replay.mapFileName,
-		mapName: replay.mapName,
-		matchType: replay.matchType,
-		vpGame: replay.vpGame,
-		vpCount: replay.vpCount,
-		players: replay.players,
-		messages: replay.messages,
-		replayName: replay.replayName,
-		playerCount: replay.playerCount,
-		actions: [] as CachedReplay['actions'],
-		cpmByPlayerId
-	};
-}
+const cache = new Map<number, FlatReplay>();
 
 onmessage = async ({ data }: MessageEvent<ParseRequest>) => {
 	try {
@@ -94,19 +46,10 @@ onmessage = async ({ data }: MessageEvent<ParseRequest>) => {
 			return;
 		}
 
-		const { parseReplay, playerCpmLabel } = await import('@fknoobs/replay-parser');
-		const replay = parseReplay(new Uint8Array(data.content)) as CachedReplay;
-		const cpmByPlayerId: Record<string, string> = {};
-		for (const player of replay.players ?? []) {
-			if (player.id == null) {
-				continue;
-			}
-
-			cpmByPlayerId[String(player.id)] = playerCpmLabel(replay as never, player.id);
-		}
-
-		cache.set(data.id, replay);
-		postMessage({ id: data.id, success: true, replay: toSlimReplay(replay, cpmByPlayerId) });
+		const { parseReplay } = await import('@fknoobs/replay-parser');
+		const flat = flattenReplay(parseReplay(new Uint8Array(data.content)));
+		cache.set(data.id, flat);
+		postMessage({ id: data.id, success: true, replay: toSlimReplay(flat) });
 	} catch (error) {
 		postMessage({
 			id: data.id,

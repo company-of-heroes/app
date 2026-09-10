@@ -6,15 +6,15 @@
 	import PlayerProfileHeader from '$lib/components/player/player-profile-header.svelte';
 	import PlayerProfileSkeleton from '$lib/components/player/player-profile-skeleton.svelte';
 	import PlayerStatsTable from '$lib/components/player/player-stats-table.svelte';
+	import * as Tabs from '@company-of-heroes/ui/tabs';
 	import { formatRelative } from '$lib/utils/player/format';
 	import { SITE_URL } from '$lib/site/urls';
 	import { currentLocale, href, useI18n } from '$lib/i18n';
-	import { tabTrigger } from '$lib/utils/variants';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
-	let currentTab = $state<'stats' | 'performance' | 'match-history'>('stats');
+	let currentTab = $state('stats');
 </script>
 
 <svelte:head>
@@ -46,43 +46,24 @@
 				<PlayerCompanionStaffDebug steamId={player.steamId} />
 			{/snippet}
 		</PlayerProfileHeader>
-		<div class="border-secondary-800 border-b">
-			<div class="flex min-w-0 flex-wrap items-center gap-2 px-4 py-2.5">
-				<button
-					type="button"
-					class={tabTrigger}
-					data-state={currentTab === 'stats' ? 'active' : undefined}
-					onclick={() => (currentTab = 'stats')}
-				>
-					{t('Stats')}
-				</button>
-				<button
-					type="button"
-					class={tabTrigger}
-					data-state={currentTab === 'performance' ? 'active' : undefined}
-					onclick={() => (currentTab = 'performance')}
-				>
-					{t('Performance')}
-				</button>
-				<button
-					type="button"
-					class={tabTrigger}
-					data-state={currentTab === 'match-history' ? 'active' : undefined}
-					onclick={() => (currentTab = 'match-history')}
-				>
-					{t('Match history')}
-				</button>
-			</div>
+		<Tabs.Root bind:value={currentTab} class="border-secondary-800 border-b">
+			<Tabs.List class="min-w-0 flex-wrap px-4 py-2.5">
+				<Tabs.Trigger value="stats">{t('Stats')}</Tabs.Trigger>
+				<Tabs.Trigger value="performance">{t('Performance')}</Tabs.Trigger>
+				<Tabs.Trigger value="match-history">{t('Match history')}</Tabs.Trigger>
+			</Tabs.List>
 			<div class="border-secondary-800 border-t">
-				{#if currentTab === 'stats'}
+				<Tabs.Content value="stats">
 					<PlayerStatsTable {player} />
-				{:else if currentTab === 'performance'}
+				</Tabs.Content>
+				<Tabs.Content value="performance">
 					<PlayerPerformancePanel {player} />
-				{:else}
+				</Tabs.Content>
+				<Tabs.Content value="match-history">
 					<PlayerMatchHistory {player} />
-				{/if}
+				</Tabs.Content>
 			</div>
-		</div>
+		</Tabs.Root>
 		<div
 			class="text-secondary-400 bg-secondary-950/50 flex flex-wrap gap-x-4 gap-y-1 px-4 py-3 text-sm"
 		>

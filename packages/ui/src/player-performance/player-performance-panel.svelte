@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import MapImage from '../ui/map-image.svelte';
 	import type { PlayerEloMap } from '../format/types';
@@ -12,7 +13,7 @@
 		normalizeMapName,
 		winrate
 	} from '../format/player-format';
-	import { statLosses, statWins, tableHeadRow } from '@company-of-heroes/ui/variants';
+	import { interactive, statLosses, statWins, tableHeadRow } from '@company-of-heroes/ui/variants';
 	import ChartLineIcon from 'phosphor-svelte/lib/ChartLineIcon';
 	import MapTrifoldIcon from 'phosphor-svelte/lib/MapTrifoldIcon';
 	import FlagIcon from 'phosphor-svelte/lib/FlagIcon';
@@ -57,6 +58,12 @@
 		modeLabel?: string;
 		factionLabel?: string;
 		eloLabel?: string;
+		eloContent?: Snippet;
+		mapRowDetail?: Snippet<[row: { map: string; wins: number; losses: number }]>;
+		factionRowDetail?: Snippet<[row: { raceId: number; wins: number; losses: number }]>;
+		modeRowDetail?: Snippet<[row: { matchtypeId: number; wins: number; losses: number }]>;
+		includeSkirmish?: boolean;
+		eloExpanded?: boolean;
 	};
 
 	let {
@@ -83,16 +90,25 @@
 		winrateLabel = 'Winrate',
 		modeLabel = 'Mode',
 		factionLabel = 'Faction',
-		eloLabel = 'ELO'
+		eloLabel = 'ELO',
+		eloContent,
+		mapRowDetail,
+		factionRowDetail,
+		modeRowDetail,
+		includeSkirmish = false,
+		eloExpanded = $bindable(false)
 	}: Props = $props();
 
-	const byMode = $derived(stats.byMode.filter((mode) => mode.matchtypeId !== 14));
+	const byMode = $derived(
+		includeSkirmish ? stats.byMode : stats.byMode.filter((mode) => mode.matchtypeId !== 14)
+	);
 	const headerRow = tableHeadRow;
-
-	let eloExpanded = $state(false);
 	let mapsExpanded = $state(false);
 	let factionExpanded = $state(false);
 	let modeExpanded = $state(false);
+	let expandedMap = $state<string | null>(null);
+	let expandedFaction = $state<number | null>(null);
+	let expandedMode = $state<number | null>(null);
 
 	const mapGames = $derived(stats.byMap.reduce((total, row) => total + row.wins + row.losses, 0));
 	const factionGames = $derived(
@@ -125,6 +141,20 @@
 	function mapCount(mapName: string): string | null {
 		return mapName.match(/^(\d+)[pP][ _]/)?.[1] ?? null;
 	}
+
+	function toggleMapRow(row: { map: string }) {
+		expandedMap = expandedMap === row.map ? null : row.map;
+	}
+
+	function toggleFactionRow(row: { raceId: number }) {
+		expandedFaction = expandedFaction === row.raceId ? null : row.raceId;
+	}
+
+	function toggleModeRow(row: { matchtypeId: number }) {
+		expandedMode = expandedMode === row.matchtypeId ? null : row.matchtypeId;
+	}
+
+	const statColumnCount = 5;
 </script>
 
 {#snippet statCells(row: { wins: number; losses: number })}
@@ -162,13 +192,46 @@
 	</div>
 {/snippet}
 
+{#snippet mapMobileCard(row: { map: string; wins: number; losses: number }, players: string | null)}
+	<div class="flex min-w-0 items-center gap-3">
+		<MapImage
+			map={row.map}
+			{resolveMapSrc}
+			{resolveFallbackSrc}
+			alt={formatMapName(row.map)}
+		/>
+		<span class="min-w-0 truncate font-medium">
+			{formatMapName(row.map, false)}
+			{#if players}
+				<span class="text-secondary-400">({players})</span>
+			{/if}
+		</span>
+	</div>
+	{@render statMeta(row)}
+{/snippet}
+
+{#snippet factionMobileCard(row: { raceId: number; wins: number; losses: number })}
+	<div class="flex min-w-0 items-center gap-2">
+		<img src={resolveFactionFlag(row.raceId)} alt="" class="w-6 shrink-0 ring-2 ring-black" />
+		<span class="min-w-0 truncate font-medium">{getRaceLabel(row.raceId)}</span>
+	</div>
+	{@render statMeta(row)}
+{/snippet}
+
+{#snippet modeMobileCard(row: { matchtypeId: number; wins: number; losses: number })}
+	<span class="font-medium">{getModeLabel(row.matchtypeId)}</span>
+	{@render statMeta(row)}
+{/snippet}
+
 <PlayerPerformanceSection
 	title={eloHistoryTitle}
 	summary={trackedLobbyRatingsLabel}
 	icon={ChartLineIcon}
 	bind:expanded={eloExpanded}
 >
-	{#if eloRows.length === 0}
+	{#if eloContent}
+		{@render eloContent()}
+	{:else if eloRows.length === 0}
 		<p class="text-secondary-400 px-4 py-6 text-sm">{emptyEloMessage}</p>
 	{:else}
 		<div class="hidden md:block overflow-x-auto">
@@ -263,7 +326,11 @@
 				<tbody>
 					{#each stats.byMap as row (row.map)}
 						{@const players = mapCount(row.map)}
-						<tr class="border-secondary-800 border-b">
+						{@const mapExpanded = mapRowDetail !== undefined && expandedMap === row.map}
+						<tr
+							class={cn('border-secondary-800 border-b', mapRowDetail && interactive)}
+							onclick={mapRowDetail ? () => toggleMapRow(row) : undefined}
+						>
 							<td class="px-4 py-1.5">
 								<div class="flex min-w-0 items-center gap-3">
 									<MapImage
@@ -282,6 +349,13 @@
 							</td>
 							{@render statCells(row)}
 						</tr>
+						{#if mapExpanded && mapRowDetail}
+							<tr>
+								<td colspan={statColumnCount} class="border-secondary-800 border-b p-0">
+									{@render mapRowDetail(row)}
+								</td>
+							</tr>
+						{/if}
 					{/each}
 				</tbody>
 			</table>
@@ -290,23 +364,25 @@
 		<div class="divide-secondary-800 divide-y md:hidden">
 			{#each stats.byMap as row (row.map)}
 				{@const players = mapCount(row.map)}
-				<div class="px-4 py-3 text-white">
-					<div class="flex min-w-0 items-center gap-3">
-						<MapImage
-							map={row.map}
-							{resolveMapSrc}
-							{resolveFallbackSrc}
-							alt={formatMapName(row.map)}
-						/>
-						<span class="min-w-0 truncate font-medium">
-							{formatMapName(row.map, false)}
-							{#if players}
-								<span class="text-secondary-400">({players})</span>
-							{/if}
-						</span>
+				{@const mapExpanded = mapRowDetail !== undefined && expandedMap === row.map}
+				{#if mapRowDetail}
+					<button
+						type="button"
+						class={cn('block w-full px-4 py-3 text-left text-white', interactive)}
+						onclick={() => toggleMapRow(row)}
+					>
+						{@render mapMobileCard(row, players)}
+						{#if mapExpanded}
+							<div class="border-secondary-800 mt-3 border-t pt-3">
+								{@render mapRowDetail(row)}
+							</div>
+						{/if}
+					</button>
+				{:else}
+					<div class="px-4 py-3 text-white">
+						{@render mapMobileCard(row, players)}
 					</div>
-					{@render statMeta(row)}
-				</div>
+				{/if}
 			{/each}
 		</div>
 	</PlayerPerformanceSection>
@@ -330,7 +406,12 @@
 				</thead>
 				<tbody>
 					{#each stats.byFaction as row (row.raceId)}
-						<tr class="border-secondary-800 border-b">
+						{@const isFactionRowExpanded =
+							factionRowDetail !== undefined && expandedFaction === row.raceId}
+						<tr
+							class={cn('border-secondary-800 border-b', factionRowDetail && interactive)}
+							onclick={factionRowDetail ? () => toggleFactionRow(row) : undefined}
+						>
 							<td class="px-4 py-1.5">
 								<div class="flex min-w-0 items-center gap-2">
 									<img
@@ -343,6 +424,13 @@
 							</td>
 							{@render statCells(row)}
 						</tr>
+						{#if isFactionRowExpanded && factionRowDetail}
+							<tr>
+								<td colspan={statColumnCount} class="border-secondary-800 border-b p-0">
+									{@render factionRowDetail(row)}
+								</td>
+							</tr>
+						{/if}
 					{/each}
 				</tbody>
 			</table>
@@ -350,17 +438,26 @@
 
 		<div class="divide-secondary-800 divide-y md:hidden">
 			{#each stats.byFaction as row (row.raceId)}
-				<div class="px-4 py-3 text-white">
-					<div class="flex min-w-0 items-center gap-2">
-						<img
-							src={resolveFactionFlag(row.raceId)}
-							alt=""
-							class="w-6 shrink-0 ring-2 ring-black"
-						/>
-						<span class="min-w-0 truncate font-medium">{getRaceLabel(row.raceId)}</span>
+				{@const isFactionRowExpanded =
+					factionRowDetail !== undefined && expandedFaction === row.raceId}
+				{#if factionRowDetail}
+					<button
+						type="button"
+						class={cn('block w-full px-4 py-3 text-left text-white', interactive)}
+						onclick={() => toggleFactionRow(row)}
+					>
+						{@render factionMobileCard(row)}
+						{#if isFactionRowExpanded}
+							<div class="border-secondary-800 mt-3 border-t pt-3">
+								{@render factionRowDetail(row)}
+							</div>
+						{/if}
+					</button>
+				{:else}
+					<div class="px-4 py-3 text-white">
+						{@render factionMobileCard(row)}
 					</div>
-					{@render statMeta(row)}
-				</div>
+				{/if}
 			{/each}
 		</div>
 	</PlayerPerformanceSection>
@@ -384,10 +481,21 @@
 				</thead>
 				<tbody>
 					{#each byMode as row (row.matchtypeId)}
-						<tr class="border-secondary-800 border-b">
+						{@const modeRowExpanded = modeRowDetail !== undefined && expandedMode === row.matchtypeId}
+						<tr
+							class={cn('border-secondary-800 border-b', modeRowDetail && interactive)}
+							onclick={modeRowDetail ? () => toggleModeRow(row) : undefined}
+						>
 							<td class="px-4 py-1.5 text-white">{getModeLabel(row.matchtypeId)}</td>
 							{@render statCells(row)}
 						</tr>
+						{#if modeRowExpanded && modeRowDetail}
+							<tr>
+								<td colspan={statColumnCount} class="border-secondary-800 border-b p-0">
+									{@render modeRowDetail(row)}
+								</td>
+							</tr>
+						{/if}
 					{/each}
 				</tbody>
 			</table>
@@ -395,10 +503,25 @@
 
 		<div class="divide-secondary-800 divide-y md:hidden">
 			{#each byMode as row (row.matchtypeId)}
-				<div class="px-4 py-3 text-white">
-					<span class="font-medium">{getModeLabel(row.matchtypeId)}</span>
-					{@render statMeta(row)}
-				</div>
+				{@const modeRowExpanded = modeRowDetail !== undefined && expandedMode === row.matchtypeId}
+				{#if modeRowDetail}
+					<button
+						type="button"
+						class={cn('block w-full px-4 py-3 text-left text-white', interactive)}
+						onclick={() => toggleModeRow(row)}
+					>
+						{@render modeMobileCard(row)}
+						{#if modeRowExpanded}
+							<div class="border-secondary-800 mt-3 border-t pt-3">
+								{@render modeRowDetail(row)}
+							</div>
+						{/if}
+					</button>
+				{:else}
+					<div class="px-4 py-3 text-white">
+						{@render modeMobileCard(row)}
+					</div>
+				{/if}
 			{/each}
 		</div>
 	</PlayerPerformanceSection>

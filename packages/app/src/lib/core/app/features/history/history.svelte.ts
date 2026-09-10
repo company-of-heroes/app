@@ -5,14 +5,15 @@ import { account } from '$core/account';
 import { Feature } from '../feature.svelte';
 import { relic, relicLeaderboardFingerprint } from '$lib/relic';
 import { join } from '@tauri-apps/api/path';
-import { exists, readDir, readFile, stat } from '@tauri-apps/plugin-fs';
-import { parseHeader, parseReplay, type ReplayData } from '@fknoobs/replay-parser';
-import { download } from '@tauri-apps/plugin-upload';
+import { exists, readDir, readFile, stat, writeFile } from '@tauri-apps/plugin-fs';
+import { parseHeader, parseReplay } from '@fknoobs/replay-parser';
 import { Matches } from './matches.svelte';
 import { extractPlayerRatingSnapshotsFromLobby, type PlayerEloMap } from '$lib/utils/player-elo';
 import { ingestPlayerRatings } from '$core/pocketbase/player-ratings';
 import { toPersistablePlayers } from '$core/game/lobby-utils';
 import { embedSteamIdsInReplay } from '$lib/utils/replay-steam-ids';
+import { rewriteReplayMapPathsForLocalPlayback } from '$lib/utils/rewrite-replay-map-paths';
+import { flattenReplay, type FlatReplay } from '$lib/utils/flatten-replay';
 import { getFile } from '$core/pocketbase';
 import { t } from '$lib/i18n';
 
@@ -476,7 +477,7 @@ export class History extends Feature<HistorySettings> {
 	async findPlaybackReplay(lobby: {
 		map?: string;
 		players: { race: number }[];
-	}): Promise<ReplayData | null> {
+	}): Promise<FlatReplay | null> {
 		if (!lobby.map || lobby.players.length === 0) {
 			return null;
 		}
@@ -487,7 +488,7 @@ export class History extends Feature<HistorySettings> {
 		}
 
 		try {
-			return parseReplay(bytes);
+			return flattenReplay(parseReplay(bytes));
 		} catch (error) {
 			console.warn('[HISTORY]: failed to parse playback replay:', error);
 			return null;
@@ -535,8 +536,13 @@ export class History extends Feature<HistorySettings> {
 		for (const name of names) {
 			try {
 				const bytes = new Uint8Array(await readFile(await join(playbackDir, name)));
-				const header = parseHeader(bytes);
-				if (replayHeaderMatchesLobby(lobby, header)) {
+				const parsed = parseHeader(bytes);
+				if (
+					replayHeaderMatchesLobby(lobby, {
+						mapFileName: parsed.header.mapFileName,
+						players: parsed.players
+					})
+				) {
 					return bytes;
 				}
 			} catch (error) {
@@ -585,7 +591,7 @@ export class History extends Feature<HistorySettings> {
 	/** Reads the replay of the last finished match from the playback folder. */
 	async getLastMatchReplay(): Promise<{
 		file: File;
-		replay: ReplayData | null;
+		replay: FlatReplay | null;
 	} | null> {
 		let lastError: unknown = null;
 
@@ -611,9 +617,9 @@ export class History extends Feature<HistorySettings> {
 					return null;
 				}
 
-				let replay: ReplayData | null = null;
+				let replay: FlatReplay | null = null;
 				try {
-					replay = parseReplay(new Uint8Array(fileData));
+					replay = flattenReplay(parseReplay(new Uint8Array(fileData)));
 				} catch (error) {
 					console.warn(
 						'[HISTORY]: parseReplay failed; uploading raw temp.rec bytes:',
@@ -644,9 +650,11 @@ export class History extends Feature<HistorySettings> {
 	async downloadReplay(match: MatchExpanded): Promise<{ ok: boolean; downloadCount?: number }> {
 		try {
 			const path = await join(await app.paths.cohPlaybackDir(), match.replay);
-			const url = app.pocketbase.files.getURL(match, match.replay);
-
-			await download(url, path);
+			const bytes = await getFile(match, match.replay);
+			await writeFile(
+				path,
+				rewriteReplayMapPathsForLocalPlayback(bytes, await app.paths.cohDocumentsDir())
+			);
 			let downloadCount: number | undefined;
 			try {
 				downloadCount = await app.database.matchSocial.recordDownload(match.id);

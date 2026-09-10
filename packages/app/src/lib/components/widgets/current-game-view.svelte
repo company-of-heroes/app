@@ -8,7 +8,6 @@
 		type ReplayData
 	} from '@company-of-heroes/ui/replay';
 	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
-	import { playerCpmLabel } from '@fknoobs/replay-parser';
 	import * as List from '$lib/components/ui/list';
 	import * as PlayerUi from '$lib/components/player';
 	import MapImage from '$lib/components/ui/map-image.svelte';
@@ -260,7 +259,8 @@
 				doctrine: player.doctrine
 			})),
 			messages: parsed.messages,
-			actions: parsed.actions
+			actions: parsed.actions,
+			cpmByPlayerId: parsed.cpmByPlayerId
 		} as ReplayData;
 	});
 
@@ -301,7 +301,22 @@
 	}
 
 	function playerCpm(data: ReplayData, playerId: number | null): string {
-		return playerCpmLabel(data, playerId);
+		if (playerId == null) {
+			return '0';
+		}
+
+		const precomputed = (data as ReplayData & { cpmByPlayerId?: Record<string, string> })
+			.cpmByPlayerId?.[String(playerId)];
+		if (precomputed != null) {
+			return precomputed;
+		}
+
+		const parsed = playbackReplay.current;
+		if (!parsed) {
+			return '0';
+		}
+
+		return parsed.cpmByPlayerId[String(playerId)] ?? '0';
 	}
 </script>
 

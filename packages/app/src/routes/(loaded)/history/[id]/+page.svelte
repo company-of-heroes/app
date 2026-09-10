@@ -10,6 +10,7 @@
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
 	import { cn, normalizeMapName } from '$lib/utils';
 	import { detailMetaGrid } from '$lib/components/ui/variants';
+	import * as Tabs from '$lib/components/ui/tabs';
 	import { resource, watch } from 'runed';
 	import { bounceInOut } from 'svelte/easing';
 	import dayjs from '$lib/dayjs';
@@ -21,7 +22,6 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { useI18n } from '$lib/i18n';
 	import { StaffDebug } from '$lib/components/staff';
-	import { tabTrigger } from '$lib/components/ui/variants';
 	import { loadCheaterSteamIds } from '$core/pocketbase/anti-cheat';
 	import {
 		findHiddenMatch,
@@ -379,29 +379,16 @@
 		</div>
 
 		{#if !hasReplay}
-			<div class="border-secondary-800 border-b">
-				<div class="border-secondary-800 flex items-center gap-2 border-b px-4 py-2.5">
-					<button
-						type="button"
-						class={tabTrigger}
-						data-state={matchTab === 'overview' ? 'active' : undefined}
-						onclick={() => (matchTab = 'overview')}
-					>
-						{t('Overview')}
-					</button>
-					<button
-						type="button"
-						class={tabTrigger}
-						data-state={matchTab === 'screenshots' ? 'active' : undefined}
-						onclick={() => (matchTab = 'screenshots')}
-					>
-						{t('Screenshots')}
-					</button>
-				</div>
-				{#if matchTab === 'overview'}
+			<Tabs.Root bind:value={matchTab} class="border-secondary-800 border-b">
+				<Tabs.List class="border-secondary-800 border-b px-4 py-2.5">
+					<Tabs.Trigger value="overview">{t('Overview')}</Tabs.Trigger>
+					<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
+				</Tabs.List>
+				<Tabs.Content value="overview">
 					<Match.Overview match={match.current} cheaters={cheaters.current ?? new Set()} />
 					<Match.Comments lobbyId={matchId} {highlightCommentId} />
-				{:else}
+				</Tabs.Content>
+				<Tabs.Content value="screenshots">
 					<Match.Screenshots
 						{sessionId}
 						lobbyId={matchId}
@@ -409,8 +396,8 @@
 						resultPlayers={match.current.result?.players ?? []}
 						cheaters={cheaters.current ?? new Set()}
 					/>
-				{/if}
-			</div>
+				</Tabs.Content>
+			</Tabs.Root>
 		{/if}
 
 		{#if hasReplay}

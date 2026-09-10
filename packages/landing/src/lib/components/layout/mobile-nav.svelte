@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
+	import * as Dialog from '@company-of-heroes/ui/dialog';
 	import {
 		flushHeader,
 		flushHeaderTitle,
-		overlayBackdrop,
-		surfaceModal,
 		tabTrigger
 	} from '@company-of-heroes/ui/variants';
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
@@ -22,7 +21,6 @@
 		type AppLocale
 	} from '$lib/i18n';
 	import { interactive } from '$lib/utils/variants';
-	import { Dialog } from 'bits-ui';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import ListIcon from 'phosphor-svelte/lib/ListIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
@@ -92,21 +90,13 @@
 		<ListIcon size={22} weight="bold" />
 	</Dialog.Trigger>
 	<Dialog.Portal>
-		<Dialog.Overlay
-			class={cn(
-				overlayBackdrop,
-				'fixed inset-0 z-50',
-				'data-[state=open]:animate-in data-[state=open]:fade-in-0',
-				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0'
-			)}
-		/>
+		<Dialog.Overlay />
 		<Dialog.Content
 			class={cn(
 				'data-[state=open]:animate-in data-[state=open]:slide-in-from-right fixed',
 				'data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right',
 				'top-0 right-0 z-50 flex h-screen w-screen max-w-[calc(100%-2rem)] flex-col',
-				'text-secondary-100 rounded-l-md outline-hidden sm:max-w-[420px]',
-				surfaceModal
+				'text-secondary-100 rounded-l-md sm:max-w-[420px]'
 			)}
 		>
 			<div class={cn(flushHeader, 'flex items-center justify-between bg-gray-950')}>

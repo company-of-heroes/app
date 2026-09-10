@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { Attachment } from 'svelte/attachments';
+	import * as Dialog from '@company-of-heroes/ui/dialog';
 	import { cn } from '$lib/utils/cn';
 	import { COH_GLOBAL_DISCORD_URL, DISCORD_URL } from '$lib/site/urls';
-	import { interactive } from '$lib/utils/variants';
+	import { flushHeader, flushHeaderTitle, interactive } from '$lib/utils/variants';
 	import { useI18n } from '$lib/i18n';
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
@@ -15,15 +15,7 @@
 
 	let { class: className, children }: Props = $props();
 	const { t } = useI18n();
-
-	let dialog: HTMLDialogElement | undefined;
-
-	const attachDialog: Attachment<HTMLDialogElement> = (node) => {
-		dialog = node;
-		return () => {
-			if (dialog === node) dialog = undefined;
-		};
-	};
+	let open = $state(false);
 
 	const servers = $derived([
 		{
@@ -37,63 +29,55 @@
 			hint: t('The wider CoH community')
 		}
 	]);
-
-	function open() {
-		dialog?.showModal();
-	}
-
-	function close() {
-		dialog?.close();
-	}
-
-	function onBackdropClick(event: MouseEvent) {
-		if (event.target === dialog) close();
-	}
 </script>
 
-<button
-	type="button"
-	class={cn(interactive, className)}
-	aria-haspopup="dialog"
-	onclick={open}
->
-	{@render children()}
-</button>
-
-<dialog
-	{@attach attachDialog}
-	onclick={onBackdropClick}
-	class="bg-gray-950 m-auto w-[min(28rem,calc(100%-2rem))] border-secondary-800 border p-0 text-white backdrop:bg-black/70"
->
-	<div class="border-secondary-800 flex items-center justify-between border-b px-4 py-3">
-		<h2 class="font-heading text-xl font-bold">{t('Join Discord')}</h2>
-		<button
-			type="button"
-			class={cn(interactive, 'text-secondary-400 hover:text-white p-1')}
-			aria-label={t('Close')}
-			onclick={close}
+<Dialog.Root bind:open>
+	<button
+		type="button"
+		class={cn(interactive, className)}
+		aria-haspopup="dialog"
+		onclick={() => (open = true)}
+	>
+		{@render children()}
+	</button>
+	<Dialog.Portal>
+		<Dialog.Overlay class="flex items-center justify-center overflow-y-auto p-4" />
+		<Dialog.Content
+			class={cn(
+				'data-[state=open]:animate-in data-[state=open]:zoom-in absolute duration-75',
+				'data-[state=closed]:animate-out data-[state=closed]:zoom-out data-[state=closed]:fade-out',
+				'top-0 left-1/2 z-50 mx-auto mt-12 w-[min(28rem,calc(100%-2rem))] -translate-x-1/2'
+			)}
 		>
-			<XIcon size={16} weight="bold" />
-		</button>
-	</div>
-	<div>
-		{#each servers as server (server.href)}
-			<a
-				href={server.href}
-				target="_blank"
-				rel="noopener noreferrer"
-				class={cn(
-					interactive,
-					'border-secondary-800 hover:bg-secondary-950/50 flex items-start gap-3 border-b px-4 py-3 last:border-b-0'
-				)}
-				onclick={close}
-			>
-				<DiscordLogoIcon class="text-primary mt-0.5 size-5 shrink-0" weight="duotone" />
-				<span class="min-w-0">
-					<span class="block font-medium text-white">{server.name}</span>
-					<span class="text-secondary-400 text-sm">{server.hint}</span>
-				</span>
-			</a>
-		{/each}
-	</div>
-</dialog>
+			<div class={cn(flushHeader, 'flex items-center justify-between bg-gray-950')}>
+				<Dialog.Title class={flushHeaderTitle}>{t('Join Discord')}</Dialog.Title>
+				<Dialog.Close
+					class={cn(interactive, 'text-secondary-400 hover:text-white p-1')}
+					aria-label={t('Close')}
+				>
+					<XIcon size={16} weight="bold" />
+				</Dialog.Close>
+			</div>
+			<div>
+				{#each servers as server (server.href)}
+					<a
+						href={server.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						class={cn(
+							interactive,
+							'border-secondary-800 hover:bg-secondary-950/50 flex items-start gap-3 border-b px-4 py-3 last:border-b-0'
+						)}
+						onclick={() => (open = false)}
+					>
+						<DiscordLogoIcon class="text-primary mt-0.5 size-5 shrink-0" weight="duotone" />
+						<span class="min-w-0">
+							<span class="block font-medium text-white">{server.name}</span>
+							<span class="text-secondary-400 text-sm">{server.hint}</span>
+						</span>
+					</a>
+				{/each}
+			</div>
+		</Dialog.Content>
+	</Dialog.Portal>
+</Dialog.Root>

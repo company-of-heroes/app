@@ -5,10 +5,11 @@
 	let {
 		class: className,
 		children,
+		value = $bindable(),
 		...restProps
 	}: TabsRootPropsWithoutHTML & { class?: string } = $props();
 </script>
 
-<Tabs.Root {...restProps} class={cn('flex flex-col', className)}>
+<Tabs.Root {...restProps} bind:value class={cn('flex flex-col', className)}>
 	{@render children?.()}
 </Tabs.Root>

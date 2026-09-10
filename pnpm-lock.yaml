@@ -83,7 +83,7 @@ importers:
         version: 2.1.0
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/e583b9337b99b7a141cbbbf53cb4657f59259b2a
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -373,7 +373,7 @@ importers:
         version: link:../ui
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/e583b9337b99b7a141cbbbf53cb4657f59259b2a
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -1574,9 +1574,9 @@ packages:
   '@fabianlars/tauri-plugin-oauth@2.1.0':
     resolution: {integrity: sha512-KElVn5VWJ7FPTbWvZ38NNWsxTMQ4wKNnWSB75eIh/CwO0RLLNH1eL3POdulluiaS4f0TWGdkL9nlD2ZKhi8DIQ==}
 
-  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/e583b9337b99b7a141cbbbf53cb4657f59259b2a':
-    resolution: {tarball: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/e583b9337b99b7a141cbbbf53cb4657f59259b2a}
-    version: 1.10.0
+  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e':
+    resolution: {tarball: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e}
+    version: 2.0.0
 
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
@@ -3070,8 +3070,8 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
-  baseline-browser-mapping@2.11.21:
-    resolution: {integrity: sha512-uh8vpY/1/YyFkunIDFH/12p7/7VdPKA1hejMVEbdkEaWnUz0Hesvx5EbiU6XxjyHZIOju+ZMbQJkRh+es3/spQ==}
+  baseline-browser-mapping@2.11.22:
+    resolution: {integrity: sha512-pWc4w51fBFd7mav43/zKRC+RI6f4yfzQoVlfvE8dECePyfkn1bzLp01Fj0QACcyCZyFhiEMyD2qScfKRWgWibA==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -3390,8 +3390,8 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  electron-to-chromium@1.5.422:
-    resolution: {integrity: sha512-UvA/32XqrLDdZSn7Jllo1AYNcWji/G0d5M0GTViE7KoGBiMunw3a34Sb2KO4ZZyrSEhqsxFoVhWWJshdyfKqJA==}
+  electron-to-chromium@1.5.426:
+    resolution: {integrity: sha512-2Gcq6inCQs/AqfHP3f5ftCzk+pqeW2VlA1LgmPqEj2hfBO8HiZRspNYkD4HzFBe4u6lGqca4BspFr6Ix4Q400g==}
 
   emittery@1.2.1:
     resolution: {integrity: sha512-sFz64DCRjirhwHLxofFqxYQm6DCp6o0Ix7jwKQvuCHPn4GMRZNuBZyLPu9Ccmk/QSCAMZt6FOUqA8JZCQvA9fw==}
@@ -4255,8 +4255,8 @@ packages:
       encoding:
         optional: true
 
-  node-releases@2.0.54:
-    resolution: {integrity: sha512-YHs7BmmcsdAI5Ozuf8JZo6PT0mv2GIWC9vMfvUC3dp65M8hn7Ux8CPL+2oBI7juNuj9d0ndhTcznq2ODBps9cQ==}
+  node-releases@2.0.55:
+    resolution: {integrity: sha512-mIrE/Cw9y+9Au6dS5vDKDhQza9YvG6w+ZrS6X+ZzA7yFW/soAeaups4Qzn1bL6g5FVy8WtP79+0j82oPIbqRjQ==}
     engines: {node: '>=18'}
 
   object-inspect@1.13.4:
@@ -5050,8 +5050,8 @@ packages:
     resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
     engines: {node: '>=18.12.0'}
 
-  update-browserslist-db@1.3.2:
-    resolution: {integrity: sha512-UQ+MSxlhRm1bzjhU+DcuXfjFO1FzNtqhK5+9Yvlp90ItDLk5vT932A0rFu619nf7RVS+Y/VeaUW1jaRDqZ8VJw==}
+  update-browserslist-db@1.3.3:
+    resolution: {integrity: sha512-pJ2sYawQS0R/WI928Gj5GlPhTGzbMelq0+4INtSYNDV9ErKJcX6xjGWkoG/VnB3dpUm00zALaqkrUD77pO5TDQ==}
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
@@ -6322,7 +6322,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.11.1
 
-  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/e583b9337b99b7a141cbbbf53cb4657f59259b2a': {}
+  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e': {}
 
   '@floating-ui/core@1.8.0':
     dependencies:
@@ -7824,7 +7824,7 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
-  baseline-browser-mapping@2.11.21: {}
+  baseline-browser-mapping@2.11.22: {}
 
   better-path-resolve@1.0.0:
     dependencies:
@@ -7886,11 +7886,11 @@ snapshots:
 
   browserslist@4.28.9:
     dependencies:
-      baseline-browser-mapping: 2.11.21
+      baseline-browser-mapping: 2.11.22
       caniuse-lite: 1.0.30001810
-      electron-to-chromium: 1.5.422
-      node-releases: 2.0.54
-      update-browserslist-db: 1.3.2(browserslist@4.28.9)
+      electron-to-chromium: 1.5.426
+      node-releases: 2.0.55
+      update-browserslist-db: 1.3.3(browserslist@4.28.9)
 
   bytes@3.1.0: {}
 
@@ -8146,7 +8146,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  electron-to-chromium@1.5.422: {}
+  electron-to-chromium@1.5.426: {}
 
   emittery@1.2.1: {}
 
@@ -9155,7 +9155,7 @@ snapshots:
     dependencies:
       whatwg-url: 5.0.0
 
-  node-releases@2.0.54: {}
+  node-releases@2.0.55: {}
 
   object-inspect@1.13.4: {}
 
@@ -10119,7 +10119,7 @@ snapshots:
       picomatch: 4.0.7
       webpack-virtual-modules: 0.6.2
 
-  update-browserslist-db@1.3.2(browserslist@4.28.9):
+  update-browserslist-db@1.3.3(browserslist@4.28.9):
     dependencies:
       browserslist: 4.28.9
       escalade: 3.2.0

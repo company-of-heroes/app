@@ -9,7 +9,6 @@
 		type ReplayData
 	} from '@company-of-heroes/ui/replay';
 	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
-	import { playerCpmLabel } from '@fknoobs/replay-parser';
 	import { useReplay } from '.';
 	import * as PlayerUi from '$lib/components/player';
 	import { cn, getFactionFlagFromRace, getRankImage } from '$lib/utils';
@@ -142,7 +141,17 @@
 	}
 
 	function playerCpm(data: ReplayData, playerId: number | null): string {
-		return playerCpmLabel(data, playerId);
+		if (playerId == null) {
+			return '0';
+		}
+
+		const precomputed = (data as ReplayData & { cpmByPlayerId?: Record<string, string> })
+			.cpmByPlayerId?.[String(playerId)];
+		if (precomputed != null) {
+			return precomputed;
+		}
+
+		return '0';
 	}
 </script>
 

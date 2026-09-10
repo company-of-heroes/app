@@ -9,7 +9,8 @@
 	import { steam } from '$core/steam';
 	import { cn, getFactionFlagFromRace, getRankImageByLeaderboardId, normalizeMapName } from '$lib/utils';
 	import { getFactionFlagFromLeaderboardId } from '$lib/utils/game';
-	import { interactive, statLosses, statWins, tabTrigger } from '$lib/components/ui/variants';
+	import { interactive, statLosses, statWins } from '$lib/components/ui/variants';
+	import * as Tabs from '$lib/components/ui/tabs';
 	import { resource, watch } from 'runed';
 	import { onDestroy, onMount } from 'svelte';
 	import type { UnsubscribeFunc } from 'pocketbase';
@@ -603,76 +604,69 @@
 			</div>
 
 			<div>
-				<div class="flex items-center justify-between px-4 py-2.5">
-					<div class="flex items-center gap-2">
+				<Tabs.Root bind:value={activeTab}>
+					<div class="flex items-center justify-between px-4 py-2.5">
+						<Tabs.List
+							class={cn(
+								!panelExpanded &&
+									'[&_[data-state=active]]:border-transparent [&_[data-state=active]]:bg-transparent [&_[data-state=active]]:text-white'
+							)}
+						>
+							<Tabs.Trigger value="stats" onclick={() => openTab('stats')}>{t('Stats')}</Tabs.Trigger>
+							<Tabs.Trigger value="performance" onclick={() => openTab('performance')}>
+								{t('Performance')}
+							</Tabs.Trigger>
+							<Tabs.Trigger value="recent-games" onclick={() => openTab('recent-games')}>
+								{t('Recent games')}
+							</Tabs.Trigger>
+						</Tabs.List>
 						<button
 							type="button"
-							class={tabTrigger}
-							data-state={panelExpanded && activeTab === 'stats' ? 'active' : undefined}
-							onclick={() => openTab('stats')}
+							class={cn(interactive, 'text-secondary-400 hover:text-primary p-1 transition-colors')}
+							aria-expanded={panelExpanded}
+							aria-label={panelExpanded ? t('Collapse panel') : t('Expand panel')}
+							onclick={() => (panelExpanded = !panelExpanded)}
 						>
-							{t('Stats')}
-						</button>
-						<button
-							type="button"
-							class={tabTrigger}
-							data-state={panelExpanded && activeTab === 'performance' ? 'active' : undefined}
-							onclick={() => openTab('performance')}
-						>
-							{t('Performance')}
-						</button>
-						<button
-							type="button"
-							class={tabTrigger}
-							data-state={panelExpanded && activeTab === 'recent-games' ? 'active' : undefined}
-							onclick={() => openTab('recent-games')}
-						>
-							{t('Recent games')}
+							<CaretDownIcon
+								class={cn('size-4 transition-transform', panelExpanded && 'rotate-180')}
+							/>
 						</button>
 					</div>
-					<button
-						type="button"
-						class={cn(interactive, 'text-secondary-400 hover:text-primary p-1 transition-colors')}
-						aria-expanded={panelExpanded}
-						aria-label={panelExpanded ? t('Collapse panel') : t('Expand panel')}
-						onclick={() => (panelExpanded = !panelExpanded)}
-					>
-						<CaretDownIcon
-							class={cn('size-4 transition-transform', panelExpanded && 'rotate-180')}
-						/>
-					</button>
-				</div>
-
-				{#if panelExpanded}
-					<div class="border-secondary-800 border-t">
-						{#if activeTab === 'stats'}
-							<Leaderboard
-								stats={profile.relic.leaderboardStats ?? []}
-								elo={playerElo}
-								class="rounded-none border-0"
-							/>
-						{:else if activeTab === 'performance'}
-							<PlayerPerformance
-								profileId={profile.relic.profile_id}
-								scope="user"
-								userId={app.features.auth.userId}
-								refreshKey={statsGeneration}
-								empty="self"
-								class="rounded-none border-0"
-							/>
-						{:else if recentMatches.loading}
-							<div class="divide-secondary-800 border-secondary-800 divide-y border-t">
-								{#each Array(5) as _, index (index)}
-									<div class="px-4 py-3">
-										<Skeleton class="h-4 w-full" />
+					{#if panelExpanded}
+						<div class="border-secondary-800 border-t">
+							<Tabs.Content value="stats">
+								<Leaderboard
+									stats={profile.relic.leaderboardStats ?? []}
+									elo={playerElo}
+									class="rounded-none border-0"
+								/>
+							</Tabs.Content>
+							<Tabs.Content value="performance">
+								<PlayerPerformance
+									profileId={profile.relic.profile_id}
+									scope="user"
+									userId={app.features.auth.userId}
+									refreshKey={statsGeneration}
+									empty="self"
+									class="rounded-none border-0"
+								/>
+							</Tabs.Content>
+							<Tabs.Content value="recent-games">
+								{#if recentMatches.loading}
+									<div class="divide-secondary-800 border-secondary-800 divide-y border-t">
+										{#each Array(5) as _, index (index)}
+											<div class="px-4 py-3">
+												<Skeleton class="h-4 w-full" />
+											</div>
+										{/each}
 									</div>
-								{/each}
-							</div>
-						{:else}
-							<MatchHistory matches={recentMatches.current ?? []} showSessionId />
-						{/if}
-					</div>
-				{/if}
+								{:else}
+									<MatchHistory matches={recentMatches.current ?? []} showSessionId />
+								{/if}
+							</Tabs.Content>
+						</div>
+					{/if}
+				</Tabs.Root>
 			</div>
 		</div>
 	{/key}
