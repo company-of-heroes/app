@@ -1,4 +1,5 @@
 import type { PlayerLabel } from '../format/types';
+import type { LiveLobbyPlayerStats } from '../live-lobby/types';
 
 export type { PlayerLabel };
 
@@ -106,4 +107,28 @@ export type PlayerSearchResult = {
 	likeCount?: number;
 	/** Relic wins+losses across leaderboards; present on search results. */
 	matchCount?: number;
+};
+
+/** Compact fields shown in profile link previews. */
+export type PlayerPreviewData = {
+	steamId: string;
+	profileId: number;
+	alias: string;
+	country: string | null;
+	level: number;
+	avatarUrl: string;
+	likeCount?: number;
+};
+
+/** Local match-faction snapshot for square link previews (no profile fetch). */
+export type PlayerFactionPreview = {
+	alias: string;
+	race: number | null;
+	modeLabel?: string | null;
+	raceLabel?: string | null;
+	avatarUrl?: string | null;
+	country?: string | null;
+	stats?: LiveLobbyPlayerStats | null;
+	rankImageSrc?: string | null;
+	factionFlagSrc?: string | null;
 };

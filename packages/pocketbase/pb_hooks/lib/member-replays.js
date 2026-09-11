@@ -476,7 +476,10 @@ function buildStatsSnapshot(playersRaw, options) {
 				}
 
 				const leaderboardId = leaderboardIdForMatchRace(matchTypeId, race);
-				const stat = pickLeaderboardStat(relic.leaderboardStats, leaderboardId);
+				const stat =
+					leaderboardId != null
+						? pickLeaderboardStat(relic.leaderboardStats, leaderboardId)
+						: null;
 				if (stat) {
 					wins = Number(stat.wins) || 0;
 					losses = Number(stat.losses) || 0;
@@ -746,6 +749,13 @@ function serializeMemberReplay(record, options) {
 		snapshot && Array.isArray(snapshot.players) ? snapshot.players : [];
 	const resultPlayers = resultPlayersForSerialize(rawResultPlayers);
 	const livePlayers = livePlayersFromSnapshot(snapshot, players);
+	for (let i = 0; i < players.length; i++) {
+		const stats = livePlayers[i] && livePlayers[i].stats;
+		// Keep stats for hover previews; list UI still hides rank badges when unranked.
+		if (stats) {
+			players[i].stats = stats;
+		}
+	}
 	const mapFilename = record.get('mapFilename') || '';
 	const mapName = displayMapName(record.get('mapName'), mapFilename);
 	const body = {

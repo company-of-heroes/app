@@ -12,7 +12,7 @@
 	import { toUiMatchListRow } from './match-view';
 	import { app } from '$core/app/context';
 	import dayjs from '$lib/dayjs';
-	import { normalizeMapName, getFactionFlagFromRace } from '$lib/utils';
+	import { normalizeMapName, getFactionFlagFromRace, getRankImage } from '$lib/utils';
 	import { getDefaultMapImage, getMapImageFromName } from '$lib/utils/game';
 	import { useI18n } from '$lib/i18n';
 
@@ -157,6 +157,7 @@
 	resolveMapSrc={getMapImageFromName}
 	resolveFallbackSrc={getDefaultMapImage}
 	resolveFactionFlag={getFactionFlagFromRace}
+	getRankImage={getRankImage}
 	formatMapName={normalizeMapName}
 	{formatStarted}
 	{formatDate}

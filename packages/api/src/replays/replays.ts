@@ -6,7 +6,10 @@ import type {
 	HistoryMatchup,
 	ReplaysQuery
 } from '@company-of-heroes/ui/replay/types';
-import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby/types';
+import type {
+	LiveLobbyPlayer,
+	LiveLobbyPlayerStats
+} from '@company-of-heroes/ui/live-lobby/types';
 import { normalizeBaseUrl, resolveAuthHeaders, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
@@ -36,6 +39,8 @@ export type CommunityPlayer = {
 	faction?: string;
 	/** Doctrine label from the .rec (member uploads). */
 	doctrineName?: string;
+	/** Ladder stats when available on list/detail responses. */
+	stats?: LiveLobbyPlayerStats | null;
 	profile: {
 		profile_id: number;
 		alias: string;

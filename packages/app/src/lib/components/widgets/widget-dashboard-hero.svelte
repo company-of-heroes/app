@@ -20,6 +20,7 @@
 	import { upperCase } from 'lodash-es';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import * as Player from '$lib/components/player';
+	import { PlayerProfileLink, playerPreviewId } from '@company-of-heroes/ui/player';
 	import * as List from '$lib/components/ui/list';
 	import { Badge, LiveBadge, PendingBadge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
@@ -319,6 +320,19 @@
 		'border-destructive/15 bg-destructive/5 text-destructive/45 group-hover:border-destructive/50 group-hover:bg-destructive/25 group-hover:text-red-300 group-focus-visible:border-destructive/50 group-focus-visible:bg-destructive/25 group-focus-visible:text-red-300';
 
 	const avatarBorder = $derived(app.lobby ? 'border-green-500' : 'border-secondary-800');
+	const profileHref = $derived(
+		profileId != null
+			? resolve('/(loaded)/players/[id]', { id: String(profileId) })
+			: null
+	);
+	const previewId = $derived(
+		profile
+			? (playerPreviewId({
+					steamId: profile.steam.steamid,
+					profileId: profile.relic.profile_id
+				}) ?? String(profile.relic.profile_id))
+			: null
+	);
 
 	function openTab(tab: string) {
 		activeTab = tab;
@@ -365,30 +379,35 @@
 					'sm:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
 				)}
 			>
-				<a
-					href={resolve('/(loaded)/players/[id]', { id: String(profile.relic.profile_id) })}
-					class={cn(
-						interactive,
-						'aspect-square self-start overflow-clip border-b sm:border-r sm:border-b-0',
-						avatarBorder
-					)}
-				>
-					<img
-						src={profile.steam.avatarfull}
-						alt={profile.relic.alias}
-						class="h-full w-full object-cover"
-					/>
-				</a>
+				{#if profileHref && previewId}
+					<PlayerProfileLink
+						href={profileHref}
+						playerId={previewId}
+						class={cn(
+							interactive,
+							'aspect-square self-start overflow-clip border-b sm:border-r sm:border-b-0',
+							avatarBorder
+						)}
+					>
+						<img
+							src={profile.steam.avatarfull}
+							alt={profile.relic.alias}
+							class="h-full w-full object-cover"
+						/>
+					</PlayerProfileLink>
+				{/if}
 
 				<div class="min-w-0 px-5 py-4">
 					<div class="mb-3 flex flex-wrap items-center gap-2.5">
-						<a
-							href={resolve('/(loaded)/players/[id]', { id: String(profile.relic.profile_id) })}
-							class={cn(
-								interactive,
-								'hover:text-primary flex min-w-0 items-center gap-2.5 transition-colors'
-							)}
-						>
+						{#if profileHref && previewId}
+							<PlayerProfileLink
+								href={profileHref}
+								playerId={previewId}
+								class={cn(
+									interactive,
+									'hover:text-primary flex min-w-0 items-center gap-2.5 transition-colors'
+								)}
+							>
 							{#if profile.relic.country}
 								<img
 									class="h-5 w-auto shrink-0 rounded-xs"
@@ -396,9 +415,10 @@
 									alt={profile.relic.country}
 								/>
 							{/if}
-							<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
-							<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span>
-						</a>
+								<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
+								<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span>
+							</PlayerProfileLink>
+						{/if}
 						<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
 						{#if app.lobby}
 							<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>

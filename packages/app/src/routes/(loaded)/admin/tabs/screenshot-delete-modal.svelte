@@ -6,6 +6,7 @@
 	import { interactive } from '$lib/components/ui/variants';
 	import dayjs from '$lib/dayjs';
 	import { useI18n } from '$lib/i18n';
+	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 
 	type Props = {
 		capture: CaptureRecord;
@@ -58,15 +59,16 @@
 	<div class="min-w-0">
 		{#if owner || capture.steam_id}
 			{#if capture.steam_id}
-				<a
+				<PlayerProfileLink
 					href="/players/{capture.steam_id}"
+					playerId={capture.steam_id}
 					class={cn(
 						interactive,
 						'text-secondary-100 hover:text-primary block truncate text-sm font-medium'
 					)}
 				>
 					{owner || capture.steam_id}
-				</a>
+				</PlayerProfileLink>
 			{:else}
 				<p class="text-secondary-100 truncate text-sm font-medium">{owner}</p>
 			{/if}

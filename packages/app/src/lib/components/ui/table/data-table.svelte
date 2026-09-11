@@ -32,6 +32,8 @@
 		rowWrapper,
 		cells = {},
 		headers = {},
+		skeletons = {},
+		skeletonClasses = {},
 		tableLayout = 'fixed',
 		density = 'default',
 		striped = false
@@ -53,6 +55,14 @@
 			return headers[column.id]!;
 		}
 		return column.header;
+	}
+
+	function getSkeletonSnippet(column: ColumnDef<T>): Snippet | undefined {
+		return column.skeleton ?? skeletons[column.id];
+	}
+
+	function getSkeletonClass(column: ColumnDef<T>): string | undefined {
+		return column.skeletonClass ?? skeletonClasses[column.id];
 	}
 
 	function getCellContent(row: T, column: ColumnDef<T>): unknown {
@@ -84,7 +94,15 @@
 	{#each columns as column (column.id)}
 		{@const cellSnippet = getCellSnippet(column)}
 		{@const cellHref = column.href?.(row)}
-		<td class={cn(cellPad, 'relative h-full', column.cellClass?.(row), clickable && 'p-0!')}>
+		{@const usePad = column.pad !== false}
+		<td
+			class={cn(
+				usePad && cellPad,
+				'relative h-full',
+				column.cellClass?.(row),
+				clickable && 'p-0!'
+			)}
+		>
 			{#if clickable}
 				<button
 					type="button"
@@ -100,7 +118,7 @@
 						href={cellHref}
 						class={cn(
 							'hover:text-primary relative z-10 flex h-full min-w-0 items-center gap-4 transition-colors',
-							clickable && cellPad,
+							clickable && usePad && cellPad,
 							column.class
 						)}
 					>
@@ -111,7 +129,7 @@
 						class={cn(
 							overlayContent,
 							'flex h-full w-full min-w-0 items-center',
-							clickable && cellPad,
+							clickable && usePad && cellPad,
 							column.class
 						)}
 					>
@@ -148,11 +166,15 @@
 {#snippet skeletonRow()}
 	<tr class={cn(rowHeight, 'border-secondary-800 border-b', stripeClass, bodyRowClass)}>
 		{#each columns as column (column.id)}
-			<td class={cn(cellPad, column.hideSkeleton && 'p-0')}>
+			{@const skeletonSnippet = getSkeletonSnippet(column)}
+			{@const skeletonClass = getSkeletonClass(column)}
+			<td class={cn(skeletonClass ?? (column.hideSkeleton ? 'p-0' : cellPad))}>
 				{#if column.hideSkeleton}
 					<!-- spacer -->
+				{:else if skeletonSnippet}
+					{@render skeletonSnippet()}
 				{:else}
-					<Skeleton class="h-4 w-full" />
+					<Skeleton class="h-4 w-20 shrink-0" />
 				{/if}
 			</td>
 		{/each}
@@ -190,7 +212,12 @@
 {/snippet}
 
 <div class={cn(className)}>
-	<table class={cn('w-full', tableLayout === 'auto' ? 'table-auto' : 'table-fixed')}>
+	<table
+		class={cn(
+			'w-full border-collapse',
+			tableLayout === 'auto' ? 'table-auto' : 'table-fixed'
+		)}
+	>
 		<colgroup>
 			{#each columns as column (column.id)}
 				<col class={column.width} />

@@ -10,6 +10,7 @@ routerAdd('GET', '/api/match-history', (e) => {
 		summarizePlayersFromCsv,
 		loadPlayersByLobbyIds,
 		resolvePlayersForRow,
+		attachListPlayerStats,
 		parseResultField,
 		countFilteredMatches,
 		readCommunityMatchCount,
@@ -427,6 +428,8 @@ routerAdd('GET', '/api/match-history', (e) => {
 				players
 			});
 		}
+
+		attachListPlayerStats(items);
 
 		return e.json(200, {
 			page,

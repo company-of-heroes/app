@@ -171,11 +171,12 @@ function liveLobbyMatchTypeId(players, isRanked, matchType) {
 			return 14;
 		}
 	}
-	if (typeof matchType === 'number' && matchType >= 0 && matchType <= 4) {
-		return matchType;
-	}
+	// Custom / unranked always Basic Match — ignore size-like matchType 1–4.
 	if (!isRanked) {
 		return 0;
+	}
+	if (typeof matchType === 'number' && matchType >= 0 && matchType <= 4) {
+		return matchType;
 	}
 	const humans = players.filter(function (player) {
 		return player.playerId !== -1;

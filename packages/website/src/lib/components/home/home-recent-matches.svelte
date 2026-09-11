@@ -11,7 +11,8 @@
 		resolveFactionFlag,
 		resolveFallbackSrc,
 		resolveMapSrc,
-		resolvePlayerHref
+		resolvePlayerHref,
+		getRankImageByRace
 	} from '$lib/utils/resolvers';
 	import { currentLocale, href, useI18n } from '$lib/i18n';
 
@@ -59,10 +60,12 @@
 		{resolveMapSrc}
 		{resolveFallbackSrc}
 		{resolveFactionFlag}
+		getRankImage={getRankImageByRace}
 		formatMapName={normalizeMapName}
 		emptyMessage={error ? t('Could not load recent matches.') : t('No community replays found.')}
 		locale={currentLocale()}
 		mapLabel={t('Map')}
+		typeLabel={t('Type')}
 		alliesLabel={t('Allies')}
 		axisLabel={t('Axis')}
 		durationLabel={t('Duration')}

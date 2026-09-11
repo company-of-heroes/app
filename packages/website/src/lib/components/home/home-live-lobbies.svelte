@@ -19,7 +19,12 @@
 		toMatchListRow
 	} from '$lib/utils/live-lobby';
 	import { formatRelativeIso, normalizeMapName } from '$lib/utils/player/format';
-	import { resolveFactionFlag, resolveFallbackSrc, resolveMapSrc } from '$lib/utils/resolvers';
+	import {
+		resolveFactionFlag,
+		resolveFallbackSrc,
+		resolveMapSrc,
+		getRankImageByRace
+	} from '$lib/utils/resolvers';
 
 	type Props = {
 		lobbies: LiveLobbyRecord[];
@@ -115,6 +120,7 @@
 		{resolveMapSrc}
 		{resolveFallbackSrc}
 		{resolveFactionFlag}
+		getRankImage={getRankImageByRace}
 		playerHref={liveLobbyPlayerHref}
 		{playerLabel}
 		detailsHref={matchListDetailsHref}

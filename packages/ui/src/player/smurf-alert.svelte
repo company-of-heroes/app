@@ -3,6 +3,8 @@
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRightIcon';
 	import BinocularsIcon from 'phosphor-svelte/lib/BinocularsIcon';
+	import PlayerProfileLink from './player-profile-link.svelte';
+	import { playerPreviewId } from './player-preview-cache';
 
 	export type PlayerSmurf = {
 		lenderSteamId: string;
@@ -30,6 +32,12 @@
 	const lenderAvatar = $derived(
 		smurf.lenderAvatarUrl ? resolveAvatarUrl(smurf.lenderAvatarUrl) : null
 	);
+	const previewId = $derived(
+		playerPreviewId({
+			steamId: smurf.lenderSteamId,
+			profileId: smurf.lenderProfileId
+		}) ?? smurf.lenderSteamId
+	);
 </script>
 
 <span
@@ -39,8 +47,9 @@
 		<BinocularsIcon class="shrink-0" size={16} weight="bold" />
 		<span class="leading-none">{label}</span>
 	{/if}
-	<a
+	<PlayerProfileLink
 		href={lenderHref}
+		playerId={previewId}
 		class={cn(interactive, 'inline-flex h-5 items-center gap-1.5 leading-none hover:underline')}
 	>
 		{#if lenderAvatar}
@@ -48,5 +57,5 @@
 		{/if}
 		<span class="leading-none">{smurf.lenderAlias}</span>
 		<ArrowRightIcon class="shrink-0" size={12} weight="bold" />
-	</a>
+	</PlayerProfileLink>
 </span>

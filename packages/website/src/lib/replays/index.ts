@@ -52,6 +52,15 @@ export type CommunityPlayer = {
 	faction?: string;
 	/** Doctrine label from the .rec (member uploads). */
 	doctrineName?: string;
+	/** Ladder stats when available on list/detail responses. */
+	stats?: {
+		elo: number | null;
+		wins: number;
+		losses: number;
+		streak: number;
+		rank: number;
+		rankLevel: number;
+	} | null;
 	profile: {
 		profile_id: number;
 		alias: string;

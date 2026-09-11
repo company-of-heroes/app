@@ -15,6 +15,7 @@
 	import { Button } from '@company-of-heroes/ui/button';
 	import { cn } from '$lib/utils/cn';
 	import { interactive, mePlayerText, footerAction } from '$lib/utils/variants';
+	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 	import { authDisplayName, isStaffUser, loginRedirectHref } from '$lib/auth/user';
 	import { currentLocale, useI18n } from '$lib/i18n';
 	import {
@@ -808,16 +809,31 @@
 			<div class="min-w-0 flex-1">
 				<div class="flex min-w-0 flex-wrap items-center gap-2">
 					{#if href}
-						<a
-							{href}
-							class={cn(
-								interactive,
-								'shrink-0 font-semibold',
-								mine ? mePlayerText : 'hover:text-primary text-white'
-							)}
-						>
-							{comment.user.name}
-						</a>
+						{@const steamId = comment.user.steamIds?.[0]}
+						{#if steamId}
+							<PlayerProfileLink
+								{href}
+								playerId={steamId}
+								class={cn(
+									interactive,
+									'shrink-0 font-semibold',
+									mine ? mePlayerText : 'hover:text-primary text-white'
+								)}
+							>
+								{comment.user.name}
+							</PlayerProfileLink>
+						{:else}
+							<a
+								{href}
+								class={cn(
+									interactive,
+									'shrink-0 font-semibold',
+									mine ? mePlayerText : 'hover:text-primary text-white'
+								)}
+							>
+								{comment.user.name}
+							</a>
+						{/if}
 					{:else}
 						<span class={cn('shrink-0 font-semibold', mine ? mePlayerText : 'text-white')}>
 							{comment.user.name}

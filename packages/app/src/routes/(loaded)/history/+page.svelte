@@ -5,6 +5,7 @@
 	import { cn } from '$lib/utils';
 	import { tabTrigger } from '$lib/components/ui/variants';
 	import { Pagination } from '$lib/components/ui/pagination';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { app } from '$core/app/context';
 	import type { MatchExpanded } from '$core/app/database/matches';
 	import { useI18n } from '$lib/i18n';
@@ -69,7 +70,7 @@
 		{
 			id: 'map',
 			header: t('Map'),
-			width: 'w-6/24',
+			width: 'w-full',
 			class: 'flex h-full min-w-0 items-center gap-0',
 			cellClass: () => 'overflow-clip py-0 pr-0 pl-4',
 			href: (match) => `/history/${match.id}`
@@ -77,66 +78,39 @@
 		{
 			id: 'allies',
 			header: t('Allies'),
-			width: 'w-3/24',
-			class: 'flex h-full items-center overflow-visible',
-			cellClass: (row) => {
-				const outcome = Match.resolveTeamOutcome(row, 'allies');
-				return cn(
-					outcome === 'win' && 'bg-green-500/5',
-					outcome === 'loss' && 'bg-red-500/5'
-				);
-			}
+			class: 'flex items-center px-2',
+			pad: false,
+			cellClass: () => 'whitespace-nowrap',
+			headerCellClass: 'px-2 py-3 whitespace-nowrap'
 		},
 		{
 			id: 'axis',
 			header: t('Axis'),
-			width: 'w-3/24',
-			class: 'flex h-full items-center overflow-visible',
-			cellClass: (row) => {
-				const outcome = Match.resolveTeamOutcome(row, 'axis');
-				return cn(
-					outcome === 'win' && 'bg-green-500/5',
-					outcome === 'loss' && 'bg-red-500/5'
-				);
-			}
-		},
-		{ id: 'duration', header: t('Duration'), width: 'w-2/24' },
-		{
-			id: 'likes',
-			header: t('Likes'),
-			width: 'w-2/24',
-			class: 'flex items-center justify-end tabular-nums',
-			headerClass: 'justify-end',
-			sortable: true,
-			onSort: () => matches?.toggleSort('likeCount'),
-			sortDirection: matches?.sort === 'likeCount' ? matches.sortDir : null
+			class: 'flex items-center px-2',
+			pad: false,
+			cellClass: () => 'whitespace-nowrap',
+			headerCellClass: 'px-2 py-3 whitespace-nowrap'
 		},
 		{
-			id: 'comments',
-			header: t('Comments'),
-			width: 'w-2/24',
-			class: 'flex items-center justify-end tabular-nums',
-			headerClass: 'justify-end',
-			sortable: true,
-			onSort: () => matches?.toggleSort('commentCount'),
-			sortDirection: matches?.sort === 'commentCount' ? matches.sortDir : null
+			id: 'duration',
+			header: t('Duration'),
+			cellClass: () => 'whitespace-nowrap',
+			headerCellClass: 'whitespace-nowrap'
 		},
 		{
-			id: 'downloads',
-			header: t('Downloads'),
-			width: 'w-2/24',
-			class: 'flex items-center justify-end tabular-nums',
-			headerClass: 'justify-end',
-			sortable: true,
-			onSort: () => matches?.toggleSort('downloadCount'),
-			sortDirection: matches?.sort === 'downloadCount' ? matches.sortDir : null
+			id: 'engagement',
+			header: '',
+			class: 'flex items-center justify-end gap-3 tabular-nums',
+			cellClass: () => 'whitespace-nowrap',
+			headerCellClass: 'whitespace-nowrap'
 		},
 		{
 			id: 'date',
 			header: t('Date'),
-			width: 'w-4/24',
 			class: 'flex items-center',
-			headerClass: 'text-end'
+			headerClass: 'text-end',
+			cellClass: () => 'whitespace-nowrap',
+			headerCellClass: 'whitespace-nowrap text-end'
 		}
 	]);
 </script>
@@ -201,16 +175,16 @@
 			<Match.Title iconsOnly class="shrink-0" />
 		</div>
 	{/snippet}
-	{#snippet cell_allies({ row }: { row: MatchExpanded })}
+	{#snippet cell_allies({ row: _row }: { row: MatchExpanded })}
 		<Match.Players team="allies" highlightedPlayers={matches.filters.playerIds ?? []} />
 	{/snippet}
-	{#snippet cell_axis({ row }: { row: MatchExpanded })}
+	{#snippet cell_axis({ row: _row }: { row: MatchExpanded })}
 		<Match.Players team="axis" highlightedPlayers={matches.filters.playerIds ?? []} />
 	{/snippet}
 	{#snippet cell_duration({ row: _row }: { row: MatchExpanded })}
 		<Match.Duration class="text-secondary-400 text-sm" />
 	{/snippet}
-	{#snippet cell_likes({ row }: { row: MatchExpanded })}
+	{#snippet cell_engagement({ row }: { row: MatchExpanded })}
 		<span
 			class={cn(
 				'inline-flex items-center gap-1.5 text-sm tabular-nums',
@@ -220,14 +194,10 @@
 			<CaretUpIcon size={16} weight="fill" />
 			{row.likeCount ?? 0}
 		</span>
-	{/snippet}
-	{#snippet cell_comments({ row }: { row: MatchExpanded })}
 		<span class="text-secondary-400 inline-flex items-center gap-1.5 text-sm tabular-nums">
 			<ChatCircleIcon size={16} weight="duotone" />
 			{row.commentCount ?? 0}
 		</span>
-	{/snippet}
-	{#snippet cell_downloads({ row }: { row: MatchExpanded })}
 		<span class="text-secondary-400 inline-flex items-center gap-1.5 text-sm tabular-nums">
 			<DownloadIcon size={16} weight="duotone" />
 			{row.downloadCount ?? 0}
@@ -238,6 +208,37 @@
 			<Match.Rating />
 		{/if}
 		<Match.Date class="text-secondary-400 ms-auto text-sm" />
+	{/snippet}
+	{#snippet skeleton_map()}
+		<div class="flex h-11 items-center">
+			<Skeleton class="size-11 shrink-0 rounded-none" />
+			<div class="px-4">
+				<Skeleton class="h-4 w-36" />
+			</div>
+		</div>
+	{/snippet}
+	{#snippet skeleton_team()}
+		<div class="flex h-11 items-center gap-0">
+			<Skeleton class="size-11 shrink-0 rounded-none" />
+			<Skeleton class="size-11 shrink-0 rounded-none" />
+		</div>
+	{/snippet}
+	{#snippet skeleton_duration()}
+		<div class="flex h-11 items-center">
+			<Skeleton class="h-4 w-14" />
+		</div>
+	{/snippet}
+	{#snippet skeleton_engagement()}
+		<div class="flex h-11 items-center justify-end gap-3">
+			<Skeleton class="h-4 w-8" />
+			<Skeleton class="h-4 w-8" />
+			<Skeleton class="h-4 w-8" />
+		</div>
+	{/snippet}
+	{#snippet skeleton_date()}
+		<div class="flex h-11 items-center justify-end">
+			<Skeleton class="h-4 w-28" />
+		</div>
 	{/snippet}
 	{#snippet matchRowWrapper({
 		row,
@@ -262,6 +263,23 @@
 			rowKey={(match) => match.id}
 			loading
 			skeletonRows={matches.perPage}
+			tableLayout="auto"
+			skeletons={{
+				map: skeleton_map,
+				allies: skeleton_team,
+				axis: skeleton_team,
+				duration: skeleton_duration,
+				engagement: skeleton_engagement,
+				date: skeleton_date
+			}}
+			skeletonClasses={{
+				map: 'overflow-clip py-0 pr-0 pl-4',
+				allies: 'px-2 whitespace-nowrap',
+				axis: 'px-2 whitespace-nowrap',
+				duration: 'px-4 py-0 whitespace-nowrap',
+				engagement: 'px-4 py-0 whitespace-nowrap',
+				date: 'px-4 py-0 whitespace-nowrap text-end'
+			}}
 		/>
 	{:else if matches.displayedResult}
 		<div class={cn(matches.result.loading && 'pointer-events-none opacity-60 transition-opacity')}>
@@ -270,14 +288,13 @@
 				{columns}
 				rowKey={(match) => match.id}
 				rowWrapper={matchRowWrapper}
+				tableLayout="auto"
 				cells={{
 					map: cell_map,
 					allies: cell_allies,
 					axis: cell_axis,
 					duration: cell_duration,
-					likes: cell_likes,
-					comments: cell_comments,
-					downloads: cell_downloads,
+					engagement: cell_engagement,
 					date: cell_date
 				}}
 			/>

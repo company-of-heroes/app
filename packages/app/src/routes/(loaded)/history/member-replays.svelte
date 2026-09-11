@@ -11,7 +11,7 @@
 		ReplaysQuery
 	} from '@company-of-heroes/api';
 	import { getDefaultMapImage, getMapImageFromName, getString } from '$lib/utils/game';
-	import { getFactionFlagFromRace } from '$lib/utils';
+	import { getFactionFlagFromRace, getRankImage } from '$lib/utils';
 	import { getMeSteamIds } from '$lib/utils/player-me';
 	import { useI18n } from '$lib/i18n';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
@@ -116,12 +116,10 @@
 {#if loading && items.length === 0}
 	<ReplayListSkeleton
 		mapLabel={t('Title')}
+		typeLabel={t('Type')}
 		alliesLabel={t('Allies')}
 		axisLabel={t('Axis')}
 		durationLabel={t('Duration')}
-		likesLabel={t('Likes')}
-		commentsLabel={t('Comments')}
-		downloadsLabel={t('Downloads')}
 		dateLabel={t('Date')}
 	/>
 {:else}
@@ -136,9 +134,11 @@
 		resolveMapSrc={getMapImageFromName}
 		resolveFallbackSrc={getDefaultMapImage}
 		resolveFactionFlag={getFactionFlagFromRace}
+		getRankImage={getRankImage}
 		formatMapName={(map) => getString(map) || map}
 		emptyMessage={t('No member replays found.')}
 		mapLabel={t('Title')}
+		typeLabel={t('Type')}
 		alliesLabel={t('Allies')}
 		axisLabel={t('Axis')}
 		durationLabel={t('Duration')}

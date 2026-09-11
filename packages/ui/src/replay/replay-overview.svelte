@@ -28,6 +28,8 @@
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import MinusIcon from 'phosphor-svelte/lib/MinusIcon';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
+	import PlayerProfileLink from '../player/player-profile-link.svelte';
+	import { playerPreviewId } from '../player/player-preview-cache';
 
 	type NameExtraArgs = {
 		name: string;
@@ -382,9 +384,20 @@
 						<PlayerLikeCount likeCount={likeCountForSteamId(steamId)} class="shrink-0" />
 					{/if}
 					{#if href}
-						<a {href} class={cn(interactive, nameTextClass(player.name), 'hover:text-primary')}>
-							{player.name}
-						</a>
+						{@const previewId = playerPreviewId({ steamId, profileId })}
+						{#if previewId}
+							<PlayerProfileLink
+								{href}
+								playerId={previewId}
+								class={cn(interactive, nameTextClass(player.name), 'hover:text-primary')}
+							>
+								{player.name}
+							</PlayerProfileLink>
+						{:else}
+							<a {href} class={cn(interactive, nameTextClass(player.name), 'hover:text-primary')}>
+								{player.name}
+							</a>
+						{/if}
 					{:else}
 						<span class={nameTextClass(player.name)}>{player.name}</span>
 					{/if}
@@ -488,9 +501,23 @@
 						<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 					{/if}
 					{#if href}
-						<a {href} class={cn(interactive, nameTextClass(label), 'hover:text-primary')}>
-							{label}
-						</a>
+						{@const previewId = playerPreviewId({
+							steamId: player.steamId,
+							profileId: player.profileId
+						})}
+						{#if previewId}
+							<PlayerProfileLink
+								{href}
+								playerId={previewId}
+								class={cn(interactive, nameTextClass(label), 'hover:text-primary')}
+							>
+								{label}
+							</PlayerProfileLink>
+						{:else}
+							<a {href} class={cn(interactive, nameTextClass(label), 'hover:text-primary')}>
+								{label}
+							</a>
+						{/if}
 					{:else}
 						<span class={nameTextClass(label)}>{label}</span>
 					{/if}

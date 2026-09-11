@@ -17,6 +17,12 @@ export type ColumnDef<T> = {
 	sortDirection?: SortDirection;
 	headerCellClass?: string;
 	hideSkeleton?: boolean;
+	/** When false, skip the default cell padding (`px-4`). Default true. */
+	pad?: boolean;
+	/** Custom loading placeholder for this column (preferred over the default bar). */
+	skeleton?: Snippet;
+	/** Classes for the skeleton `<td>` (padding / width); defaults to cell padding. */
+	skeletonClass?: string;
 };
 
 export type DataTableDensity = 'default' | 'compact';
@@ -41,6 +47,10 @@ export type DataTableProps<T> = {
 	rowWrapper?: Snippet<[{ row: T; children: Snippet }]>;
 	cells?: Partial<Record<string, Snippet<[{ row: T }]>>>;
 	headers?: Partial<Record<string, Snippet>>;
+	/** Per-column loading placeholders (merged after `column.skeleton`). */
+	skeletons?: Partial<Record<string, Snippet>>;
+	/** Per-column skeleton `<td>` classes (merged after `column.skeletonClass`). */
+	skeletonClasses?: Partial<Record<string, string>>;
 	tableLayout?: 'fixed' | 'auto';
 	density?: DataTableDensity;
 	striped?: boolean;

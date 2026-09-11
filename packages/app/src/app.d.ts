@@ -126,6 +126,15 @@ declare module '@fknoobs/app' {
 		profile?: RelicProfile; // Computers dont have profiles
 		matchHistory?: TransformedMatch[];
 		storedElo?: PlayerEloMap;
+		/** Slim list stats from match-history / member-replays APIs. */
+		stats?: {
+			elo: number | null;
+			wins: number;
+			losses: number;
+			streak: number;
+			rank: number;
+			rankLevel: number;
+		} | null;
 	};
 
 	interface MatchHistoryPlayer {

@@ -1,5 +1,5 @@
 // Dev-only seed/clear for lobbies_live (local PocketBase).
-// Seeds from recent real `lobbies` rows so aliases/profiles are authentic.
+// Seeds ranked 1v1–4v4 from recent real `lobbies` rows so aliases/profiles are authentic.
 'use strict';
 
 const { parseJsonArray } = require(`${__hooks}/lib/match-filters.js`);
@@ -186,14 +186,56 @@ function hostNameFromLobby(lobby, players) {
 	return `Dev lobby ${lobby.id}`;
 }
 
+/** Relic ranked automatch titles → matchType 1–4. */
+function matchTypeFromTitle(title) {
+	const normalized = String(title || '')
+		.trim()
+		.toUpperCase()
+		.replace(/\s+/g, ' ');
+	if (normalized === '1 VS. 1') {
+		return 1;
+	}
+	if (normalized === '2 VS. 2') {
+		return 2;
+	}
+	if (normalized === '3 VS. 3') {
+		return 3;
+	}
+	if (normalized === '4 VS. 4') {
+		return 4;
+	}
+	return null;
+}
+
+function matchTypeFromHumans(humans) {
+	if (humans.length === 2) {
+		return 1;
+	}
+	if (humans.length === 4) {
+		return 2;
+	}
+	if (humans.length === 6) {
+		return 3;
+	}
+	if (humans.length === 8) {
+		return 4;
+	}
+	return null;
+}
+
+function rankedMatchType(lobby, humans) {
+	return matchTypeFromTitle(lobby.get('title')) ?? matchTypeFromHumans(humans);
+}
+
 function pickSourceLobbies(limit) {
 	let records = [];
 	try {
+		// Prefer real ranked automatch rows (1v1–4v4), not custom "Basic Match".
 		records = $app.findRecordsByFilter(
 			'lobbies',
-			'title != "Skirmish"',
+			'isRanked = true && (title = "1 VS. 1" || title = "2 VS. 2" || title = "3 VS. 3" || title = "4 VS. 4")',
 			'-createdAt',
-			Math.max(limit * 8, 40),
+			Math.max(limit * 12, 60),
 			0
 		);
 	} catch (error) {
@@ -202,26 +244,48 @@ function pickSourceLobbies(limit) {
 		return [];
 	}
 
+	const seedSessionMin = SEED_SESSION_BASE + 1;
+	const seedSessionMax = SEED_SESSION_BASE + SEED_COUNT + 10;
 	const seenSession = {};
+	const seenMatchType = {};
 	const picked = [];
+	const overflow = [];
 	for (let i = 0; i < records.length; i++) {
 		const lobby = records[i];
 		const sessionId = String(lobby.get('sessionId') || '');
+		const sessionNum = toFiniteNumber(lobby.get('sessionId'));
 		if (!sessionId || seenSession[sessionId]) {
+			continue;
+		}
+
+		// Skip durable rows created by a previous seed run.
+		if (sessionNum != null && sessionNum >= seedSessionMin && sessionNum <= seedSessionMax) {
 			continue;
 		}
 
 		const players = slimPlayersForLive(lobby.get('players'));
 		const humans = players.filter((player) => player.playerId > 0);
-		if (humans.length < 2) {
+		const matchType = rankedMatchType(lobby, humans);
+		if (matchType == null || humans.length < 2) {
 			continue;
 		}
 
 		seenSession[sessionId] = true;
-		picked.push({ lobby, players });
+		const entry = { lobby, players, matchType };
+		if (!seenMatchType[matchType]) {
+			seenMatchType[matchType] = true;
+			picked.push(entry);
+		} else {
+			overflow.push(entry);
+		}
+
 		if (picked.length >= limit) {
 			break;
 		}
+	}
+
+	for (let i = 0; i < overflow.length && picked.length < limit; i++) {
+		picked.push(overflow[i]);
 	}
 
 	return picked;
@@ -263,6 +327,7 @@ function upsertLiveLobby(userId, payload) {
 	record.set('sessionId', payload.sessionId);
 	record.set('map', payload.map);
 	record.set('isRanked', payload.isRanked);
+	record.set('matchType', payload.matchType);
 	record.set('isReplay', false);
 	record.set('players', payload.players);
 	if (payload.lobbyId) {
@@ -272,14 +337,23 @@ function upsertLiveLobby(userId, payload) {
 	return record;
 }
 
+function rankedTitle(matchType) {
+	if (matchType >= 1 && matchType <= 4) {
+		return `${matchType} VS. ${matchType}`;
+	}
+
+	return '1 VS. 1';
+}
+
 /** Durable in-progress lobbies row so Details can open /replays/{id}. */
 function ensureSeedLobby(payload) {
 	const sessionId = payload.sessionId;
+	const title = payload.title || rankedTitle(payload.matchType);
 	try {
 		const existing = $app.findFirstRecordByFilter('lobbies', `sessionId = ${sessionId}`);
 		existing.set('map', payload.map);
 		existing.set('isRanked', payload.isRanked);
-		existing.set('title', payload.title || '1 VS. 1');
+		existing.set('title', title);
 		existing.set('needsResult', true);
 		existing.set('players', payload.players);
 		if (payload.userId) {
@@ -294,7 +368,7 @@ function ensureSeedLobby(payload) {
 		record.set('sessionId', sessionId);
 		record.set('map', payload.map);
 		record.set('isRanked', payload.isRanked);
-		record.set('title', payload.title || '1 VS. 1');
+		record.set('title', title);
 		record.set('needsResult', true);
 		record.set('players', payload.players);
 		$app.save(record);
@@ -357,22 +431,26 @@ function handleSeed(e) {
 
 		const items = [];
 		for (let i = 0; i < sources.length; i++) {
-			const { lobby, players } = sources[i];
+			const { lobby, players, matchType } = sources[i];
 			const hostName = hostNameFromLobby(lobby, players);
 			const user = ensureSeedUser(i + 1, hostName);
 			const sessionId = SEED_SESSION_BASE + i + 1;
+			const map = String(lobby.get('map') || '');
+			const title = rankedTitle(matchType);
 			const durable = ensureSeedLobby({
 				userId: user.id,
 				sessionId,
-				map: String(lobby.get('map') || ''),
-				isRanked: Boolean(lobby.get('isRanked')),
-				title: String(lobby.get('title') || '1 VS. 1'),
+				map,
+				isRanked: true,
+				matchType,
+				title,
 				players
 			});
 			const record = upsertLiveLobby(user.id, {
 				sessionId,
-				map: String(lobby.get('map') || ''),
-				isRanked: Boolean(lobby.get('isRanked')),
+				map,
+				isRanked: true,
+				matchType,
 				players,
 				lobbyId: durable.id
 			});
@@ -380,7 +458,8 @@ function handleSeed(e) {
 				id: record.id,
 				lobbyId: durable.id,
 				sessionId,
-				map: String(lobby.get('map') || ''),
+				map,
+				matchType,
 				hostName,
 				sourceLobbyId: lobby.id,
 				players: players.length

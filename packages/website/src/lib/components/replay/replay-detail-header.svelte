@@ -27,6 +27,7 @@
 		replayDownloadVisitorId
 	} from '$lib/replays/downloads';
 	import { resolveMapSrc } from '$lib/utils/resolvers';
+	import { PlayerProfileLink, playerPreviewId } from '@company-of-heroes/ui/player';
 	import { currentLocale, href, unlocalizedPath, useI18n } from '$lib/i18n';
 	import { isStaffUser } from '$lib/auth/user';
 	import StaffDebug from '$lib/components/staff/staff-debug.svelte';
@@ -385,9 +386,26 @@
 					<List.Title>{t('Submitted by')}</List.Title>
 					<List.Value>
 						{#if submittedByHref}
-							<a href={submittedByHref} class={cn(interactive, 'hover:text-primary underline')}>
-								{submittedBy.alias || submittedBy.steamId || submittedBy.profileId}
-							</a>
+							{@const previewId =
+								playerPreviewId({
+									steamId: submittedBy.steamId,
+									profileId: submittedBy.profileId
+								}) ??
+								submittedBy.steamId ??
+								(submittedBy.profileId != null ? String(submittedBy.profileId) : '')}
+							{#if previewId}
+								<PlayerProfileLink
+									href={submittedByHref}
+									playerId={previewId}
+									class={cn(interactive, 'hover:text-primary underline')}
+								>
+									{submittedBy.alias || submittedBy.steamId || submittedBy.profileId}
+								</PlayerProfileLink>
+							{:else}
+								<a href={submittedByHref} class={cn(interactive, 'hover:text-primary underline')}>
+									{submittedBy.alias || submittedBy.steamId || submittedBy.profileId}
+								</a>
+							{/if}
 						{:else}
 							{submittedBy.alias || '—'}
 						{/if}

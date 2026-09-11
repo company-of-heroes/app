@@ -15,6 +15,7 @@
 		resolveMapSrc: (map: string | undefined) => string | undefined;
 		resolveFallbackSrc?: () => string | undefined;
 		resolveFactionFlag: (race: number) => string;
+		getRankImage?: (race: number, rankLevel: number) => string;
 		formatMapName: (map: string) => string;
 		formatStarted: (createdAt: string) => string;
 		playerHref: (player: LiveLobbyPlayer) => string | null;
@@ -45,6 +46,7 @@
 		resolveMapSrc,
 		resolveFallbackSrc,
 		resolveFactionFlag,
+		getRankImage,
 		formatMapName,
 		formatStarted,
 		playerHref,
@@ -90,6 +92,7 @@
 	{resolveMapSrc}
 	{resolveFallbackSrc}
 	{resolveFactionFlag}
+	{getRankImage}
 	{formatMapName}
 	{formatStarted}
 	{playerHref}

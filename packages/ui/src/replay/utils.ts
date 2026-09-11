@@ -5,6 +5,8 @@ import type {
 	MatchResultPlayer,
 	ReplayPlayer
 } from './types';
+import { getModeLabel } from '../format/player-format';
+import { getLiveLobbyMatchTypeId } from '../live-lobby/slim';
 
 /** CoH skirmish AI labels, e.g. "CPU - Expert". */
 export function isCpuPlayerName(name: string | null | undefined): boolean {
@@ -106,5 +108,20 @@ export function findResultPlayer(
 ): MatchResultPlayer | undefined {
 	return match.result?.players?.find(
 		(player) => player.profile_id === lobby.profile.profile_id
+	);
+}
+
+/** Ranked ladder / custom / skirmish label for community list rows. */
+export function matchModeLabel(match: CommunityMatch | CommunityMatchDetail): string {
+	const fromResult = Number(match.result?.matchtype_id);
+	const matchType = Number.isFinite(fromResult) ? fromResult : null;
+	return getModeLabel(
+		getLiveLobbyMatchTypeId(
+			match.players.map((player) => ({
+				playerId: player.playerId ?? 0
+			})),
+			match.isRanked,
+			matchType
+		)
 	);
 }

@@ -22,6 +22,7 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { useI18n } from '$lib/i18n';
 	import { StaffDebug } from '$lib/components/staff';
+	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 	import { loadCheaterSteamIds } from '$core/pocketbase/anti-cheat';
 	import {
 		findHiddenMatch,
@@ -249,9 +250,13 @@
 						{#if submittedBy}
 							<List.Title>{t('Submitted by')}</List.Title>
 							<List.Value>
-								<a href={`/players/${submittedBy.profile_id}`} class="hover:text-primary underline">
+								<PlayerProfileLink
+									href={`/players/${submittedBy.profile_id}`}
+									playerId={String(submittedBy.profile_id)}
+									class="hover:text-primary underline"
+								>
 									{submittedBy.alias}
-								</a>
+								</PlayerProfileLink>
 							</List.Value>
 							<List.Title>{t('Duration')}</List.Title>
 							<List.Value>{duration}</List.Value>

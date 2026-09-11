@@ -200,7 +200,8 @@ function lobbyPlayerToListPlayer(player: LobbyPlayer): LiveLobbyPlayer {
 		team: player.team,
 		alias: player.profile?.alias || player.name || '',
 		profileId: player.profile?.profile_id ?? (player.playerId > 0 ? player.playerId : null),
-		steamId: player.steamId ?? null
+		steamId: player.steamId ?? null,
+		stats: player.stats ?? null
 	};
 }
 

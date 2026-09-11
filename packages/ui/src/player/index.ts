@@ -6,6 +6,8 @@ import PlayerStatsTable from './player-stats-table.svelte';
 import PlayerMatchHistory from './player-match-history.svelte';
 import PlayerProfileSkeleton from './player-profile-skeleton.svelte';
 import PlayerSearchCard from './player-search-card.svelte';
+import PlayerPreviewCard from './player-preview-card.svelte';
+import PlayerProfileLink from './player-profile-link.svelte';
 
 export {
 	PlayerLabels,
@@ -15,8 +17,18 @@ export {
 	PlayerStatsTable,
 	PlayerMatchHistory,
 	PlayerProfileSkeleton,
-	PlayerSearchCard
+	PlayerSearchCard,
+	PlayerPreviewCard,
+	PlayerProfileLink
 };
+export { createPlayerPreview, usePlayerPreview } from './player-preview.context';
+export type { PlayerPreviewContext } from './player-preview.context';
+export {
+	clearPlayerPreviewCache,
+	getCachedPlayerPreview,
+	playerPreviewId,
+	toPlayerPreviewData
+} from './player-preview-cache';
 export type { PlayerSmurf } from './smurf-alert.svelte';
 export type {
 	PlayerPageData,
@@ -28,5 +40,7 @@ export type {
 	PlayerEloSlot,
 	PerformanceRecentMatch,
 	PlayerLabel,
-	PlayerSearchResult
+	PlayerSearchResult,
+	PlayerPreviewData,
+	PlayerFactionPreview
 } from './types';

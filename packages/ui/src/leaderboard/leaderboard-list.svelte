@@ -10,6 +10,8 @@
 	} from '@company-of-heroes/ui/variants';
 	import PlayerLabels from '../player/player-labels.svelte';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
+	import PlayerProfileLink from '../player/player-profile-link.svelte';
+	import { playerPreviewId } from '../player/player-preview-cache';
 	import type { LeaderboardStatRow, PlayerEloMap } from '../format/types';
 	import {
 		formatRatio,
@@ -103,8 +105,12 @@
 							</div>
 						</td>
 						<td class="px-4 py-1.5">
-							<a
+							<PlayerProfileLink
 								href={playerHref(stat.profile.profile_id)}
+								playerId={playerPreviewId({
+									steamId: getSteamIdFromName(stat.profile.name),
+									profileId: stat.profile.profile_id
+								}) ?? String(stat.profile.profile_id)}
 								class={cn(
 									interactive,
 									'flex min-w-0 items-center gap-2 font-medium hover:text-primary'
@@ -121,7 +127,7 @@
 								<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
 								<span class="truncate">{stat.profile.alias}</span>
 								<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
-							</a>
+							</PlayerProfileLink>
 						</td>
 						<td
 							class={cn(
@@ -167,8 +173,12 @@
 						/>
 						<span class="text-secondary-400 text-sm tabular-nums">{stat.ranklevel}</span>
 					</div>
-					<a
+					<PlayerProfileLink
 						href={playerHref(stat.profile.profile_id)}
+						playerId={playerPreviewId({
+							steamId: getSteamIdFromName(stat.profile.name),
+							profileId: stat.profile.profile_id
+						}) ?? String(stat.profile.profile_id)}
 						class={cn(
 							interactive,
 							'flex min-w-0 flex-1 items-center gap-2 font-medium hover:text-primary'
@@ -185,7 +195,7 @@
 						<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
 						<span class="truncate">{stat.profile.alias}</span>
 						<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
-					</a>
+					</PlayerProfileLink>
 					<span
 						class={cn(
 							'shrink-0 tabular-nums',

@@ -18,6 +18,7 @@
 	import { tooltip } from '$lib/attachments';
 	import { cn, normalizeMapName } from '$lib/utils';
 	import dayjs from '$lib/dayjs';
+	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 	import EyeIcon from 'phosphor-svelte/lib/EyeIcon';
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlashIcon';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
@@ -579,8 +580,9 @@
 						</button>
 						{#if capture.steam_id}
 							{#if owner}
-								<a
+								<PlayerProfileLink
 									href="/players/{capture.steam_id}"
+									playerId={capture.steam_id}
 									class={cn(
 										interactive,
 										'text-secondary-400 hover:text-primary pointer-events-auto block truncate text-xs tabular-nums'
@@ -588,10 +590,11 @@
 									onclick={(event) => event.stopPropagation()}
 								>
 									{capture.steam_id}
-								</a>
+								</PlayerProfileLink>
 							{:else}
-								<a
+								<PlayerProfileLink
 									href="/players/{capture.steam_id}"
+									playerId={capture.steam_id}
 									class={cn(
 										interactive,
 										'text-secondary-400 hover:text-primary pointer-events-auto block truncate text-xs'
@@ -600,7 +603,7 @@
 									aria-label={t('View profile')}
 								>
 									{t('View profile')}
-								</a>
+								</PlayerProfileLink>
 							{/if}
 						{/if}
 					{/if}

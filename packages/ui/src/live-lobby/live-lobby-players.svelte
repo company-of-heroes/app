@@ -10,6 +10,8 @@
 	import { getEloColor, getEloTextShadow } from '@company-of-heroes/ui/format/player-format';
 	import { hasLiveLobbyStats } from './stats';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
+	import PlayerProfileLink from '../player/player-profile-link.svelte';
+	import { playerPreviewId } from '../player/player-preview-cache';
 	import {
 		defaultLiveLobbyPlayerLabel,
 		playerRowKey,
@@ -72,16 +74,38 @@
 	{@const isMe = Boolean(!cpu && player.steamId && meSteamIds.includes(player.steamId))}
 	<div class="flex min-w-0 items-center gap-2.5">
 		{#if href}
-			<a {href} title={label} class={cn(interactive, 'shrink-0 rounded-full')}>
-				<img
-					src={resolveFactionFlag(player.race)}
-					alt=""
-					class={cn(
-						'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4',
-						isMe && 'ring-primary'
-					)}
-				/>
-			</a>
+			{@const previewId = playerPreviewId({
+				steamId: player.steamId,
+				profileId: player.profileId
+			})}
+			{#if previewId}
+				<PlayerProfileLink
+					{href}
+					playerId={previewId}
+					title={label}
+					class={cn(interactive, 'shrink-0 rounded-full')}
+				>
+					<img
+						src={resolveFactionFlag(player.race)}
+						alt=""
+						class={cn(
+							'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4',
+							isMe && 'ring-primary'
+						)}
+					/>
+				</PlayerProfileLink>
+			{:else}
+				<a {href} title={label} class={cn(interactive, 'shrink-0 rounded-full')}>
+					<img
+						src={resolveFactionFlag(player.race)}
+						alt=""
+						class={cn(
+							'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4',
+							isMe && 'ring-primary'
+						)}
+					/>
+				</a>
+			{/if}
 		{:else}
 			<img
 				src={resolveFactionFlag(player.race)}
@@ -97,9 +121,23 @@
 			<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 		{/if}
 		{#if href}
-			<a {href} class={cn(interactive, 'min-w-0 truncate text-sm font-medium text-white')}>
-				{label}
-			</a>
+			{@const previewId = playerPreviewId({
+				steamId: player.steamId,
+				profileId: player.profileId
+			})}
+			{#if previewId}
+				<PlayerProfileLink
+					{href}
+					playerId={previewId}
+					class={cn(interactive, 'min-w-0 truncate text-sm font-medium text-white')}
+				>
+					{label}
+				</PlayerProfileLink>
+			{:else}
+				<a {href} class={cn(interactive, 'min-w-0 truncate text-sm font-medium text-white')}>
+					{label}
+				</a>
+			{/if}
 		{:else}
 			<span class="text-secondary-300 min-w-0 truncate text-sm">{label}</span>
 		{/if}

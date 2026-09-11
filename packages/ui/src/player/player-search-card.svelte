@@ -4,6 +4,8 @@
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import type { PlayerSearchResult } from './types';
 	import PlayerLikeCount from './player-like-count.svelte';
+	import PlayerProfileLink from './player-profile-link.svelte';
+	import { playerPreviewId } from './player-preview-cache';
 
 	type Props = {
 		player: PlayerSearchResult;
@@ -22,11 +24,16 @@
 		steamIdLabel = 'Steam ID:',
 		profileIdLabel = 'Profile ID:'
 	}: Props = $props();
+
+	const previewId = $derived(
+		playerPreviewId({ steamId: player.steamId, profileId: player.profileId }) ??
+			String(player.profileId)
+	);
 </script>
 
 <div class="border-secondary-800 overflow-clip border-b">
 	<div class="flex gap-4 p-4">
-		<a {href} class={cn(interactive, 'shrink-0')}>
+		<PlayerProfileLink {href} playerId={previewId} class={cn(interactive, 'shrink-0')}>
 			{#if player.avatarUrl}
 				<img
 					src={resolveAvatarUrl(player.avatarUrl)}
@@ -36,10 +43,11 @@
 			{:else}
 				<div class="bg-secondary-800 size-16 rounded-xl border-3 border-gray-400"></div>
 			{/if}
-		</a>
+		</PlayerProfileLink>
 		<div class="min-w-0 grow py-1">
-			<a
+			<PlayerProfileLink
 				{href}
+				playerId={previewId}
 				class={cn(
 					interactive,
 					'hover:text-primary mb-2 flex min-w-0 items-center gap-2 transition-colors'
@@ -50,7 +58,7 @@
 				{/if}
 				<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 				<span class="font-heading truncate text-xl font-bold text-white">{player.alias}</span>
-			</a>
+			</PlayerProfileLink>
 			<List.Root class="gap-x-4">
 				<List.Title>{steamIdLabel}</List.Title>
 				<List.Value>{player.steamId || '—'}</List.Value>

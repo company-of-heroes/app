@@ -14,9 +14,11 @@
 		initialQuery?: string;
 		hint?: Snippet;
 		class?: string;
+		/** Compact chrome-less field for home; leave off on /players. */
+		prominent?: boolean;
 	};
 
-	let { initialQuery = '', hint, class: className }: Props = $props();
+	let { initialQuery = '', hint, class: className, prominent = false }: Props = $props();
 	const { t } = useI18n();
 
 	let query = $state('');
@@ -51,36 +53,51 @@
 	}
 </script>
 
-<Form.Root onsubmit={handleSubmit}>
-	<Form.Group
-		inputId="player-search"
-		label={t('Find a player')}
-		description={t('Search for a player by Steam ID, profile ID, or in-game name.')}
-		{hint}
-		class={className}
+{#snippet searchControls()}
+	<Input
+		id="player-search"
+		type="text"
+		autocomplete="off"
+		placeholder={t('Steam ID, profile ID, or player name')}
+		bind:value={query}
+		disabled={pending}
+		aria-label={t('Find a player')}
+		class={prominent ? 'min-w-0 flex-1' : undefined}
+	/>
+	<Button
+		type="submit"
+		variant={prominent ? 'primary' : 'secondary'}
+		class="w-fit shrink-0"
+		loading={pending}
+		disabled={!canSearch}
 	>
-		<Input
-			id="player-search"
-			type="text"
-			autocomplete="off"
-			placeholder={t('Steam ID, profile ID, or player name')}
-			bind:value={query}
-			disabled={pending}
-			aria-label={t('Find a player')}
-		/>
-		<Button
-			type="submit"
-			variant="secondary"
-			class="w-fit shrink-0"
-			loading={pending}
-			disabled={!canSearch}
+		<MagnifyingGlassIcon size={16} />
+		{t('Search')}
+	</Button>
+{/snippet}
+
+<Form.Root onsubmit={handleSubmit}>
+	{#if prominent}
+		<div class="flex w-full min-w-0 max-w-2xl flex-wrap items-center gap-3">
+			{@render searchControls()}
+		</div>
+	{:else}
+		<Form.Group
+			inputId="player-search"
+			label={t('Find a player')}
+			description={t('Search for a player by Steam ID, profile ID, or in-game name.')}
+			{hint}
+			class={className}
 		>
-			<MagnifyingGlassIcon size={16} />
-			{t('Search')}
-		</Button>
-	</Form.Group>
+			{@render searchControls()}
+		</Form.Group>
+	{/if}
 	{#if validationError}
-		<p class="text-destructive border-secondary-800 border-b px-4 py-2 text-sm">
+		<p
+			class="text-destructive {prominent
+				? 'mt-2 text-sm'
+				: 'border-secondary-800 border-b px-4 py-2 text-sm'}"
+		>
 			{validationError}
 		</p>
 	{/if}

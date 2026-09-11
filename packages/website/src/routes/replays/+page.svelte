@@ -15,7 +15,8 @@
 		replayHref,
 		resolveFactionFlag,
 		resolveMapSrc,
-		resolvePlayerHref
+		resolvePlayerHref,
+		getRankImageByRace
 	} from '$lib/utils/resolvers';
 	import {
 		REPLAYS_PER_PAGE,
@@ -103,12 +104,10 @@
 {#snippet listSkeleton()}
 	<ReplayListSkeleton
 		mapLabel={nameColumnLabel}
+		typeLabel={t('Type')}
 		alliesLabel={t('Allies')}
 		axisLabel={t('Axis')}
 		durationLabel={t('Duration')}
-		likesLabel={t('Likes')}
-		commentsLabel={t('Comments')}
-		downloadsLabel={t('Downloads')}
 		dateLabel={t('Date')}
 	/>
 {/snippet}
@@ -204,10 +203,12 @@
 			playerHref={resolvePlayerHref}
 			{resolveMapSrc}
 			{resolveFactionFlag}
+			getRankImage={getRankImageByRace}
 			formatMapName={normalizeMapName}
 			{emptyMessage}
 			locale={currentLocale()}
 			mapLabel={nameColumnLabel}
+			typeLabel={t('Type')}
 			alliesLabel={t('Allies')}
 			axisLabel={t('Axis')}
 			durationLabel={t('Duration')}

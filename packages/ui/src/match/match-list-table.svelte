@@ -12,16 +12,12 @@
 	import { hasLiveLobbyStats } from '../live-lobby/stats';
 	import {
 		defaultLiveLobbyPlayerLabel,
-		playerRowKey,
 		teamPlayers,
 		type LiveLobbyPlayer
 	} from '../live-lobby/types';
-	import {
-		DEFAULT_MATCH_LIST_COLUMNS,
-		type MatchListColumnId,
-		type MatchListRow
-	} from './types';
+	import { DEFAULT_MATCH_LIST_COLUMNS, type MatchListColumnId, type MatchListRow } from './types';
 	import { defaultFormatDuration } from './utils';
+	import TeamPlayerSkills from './team-player-skills.svelte';
 
 	type Props = {
 		rows: MatchListRow[];
@@ -32,6 +28,7 @@
 		resolveMapSrc: (map: string | undefined) => string | undefined;
 		resolveFallbackSrc?: () => string | undefined;
 		resolveFactionFlag: (race: number) => string;
+		getRankImage?: (race: number, rankLevel: number) => string;
 		formatMapName: (map: string) => string;
 		formatStarted?: (createdAt: string) => string;
 		formatDate?: (createdAt: string) => string;
@@ -72,6 +69,7 @@
 		resolveMapSrc,
 		resolveFallbackSrc,
 		resolveFactionFlag,
+		getRankImage,
 		formatMapName,
 		formatStarted = (createdAt) => createdAt,
 		formatDate,
@@ -125,21 +123,6 @@
 		expand: ''
 	});
 
-	const widthById: Record<MatchListColumnId, string> = {
-		map: 'w-2/24',
-		name: 'w-4/24',
-		type: 'w-3/24',
-		allies: 'w-3/24',
-		axis: 'w-3/24',
-		host: 'w-3/24',
-		started: 'w-3/24',
-		date: 'w-3/24',
-		duration: 'w-3/24',
-		rating: 'w-2/24',
-		actions: 'w-2/24',
-		expand: 'w-1/24'
-	};
-
 	function toggleExpanded(id: string) {
 		if (!canExpand) {
 			return;
@@ -170,78 +153,32 @@
 		event.preventDefault();
 		toggleExpanded(id);
 	}
-
-	function outcomeClass(outcome: 'win' | 'loss' | undefined) {
-		if (outcome === 'win') {
-			return 'bg-green-500/5';
-		}
-
-		if (outcome === 'loss') {
-			return 'bg-red-500/5';
-		}
-
-		return '';
-	}
-
-	function isHighlighted(player: LiveLobbyPlayer) {
-		if (!highlightedPlayers.length) {
-			return false;
-		}
-
-		const ids = [
-			player.playerId?.toString(),
-			player.profileId?.toString(),
-			player.steamId ?? undefined
-		].filter(Boolean) as string[];
-
-		if (ids.some((id) => highlightedPlayers.includes(id))) {
-			return true;
-		}
-
-		const alias = player.alias.trim().toLowerCase();
-		if (!alias) {
-			return false;
-		}
-
-		return highlightedPlayers.some((entry) => entry.toLowerCase() === alias);
-	}
 </script>
 
-{#snippet factionFlags(players: LiveLobbyPlayer[])}
-	<span class="flex items-center gap-1.5">
-		{#each players as player, rowIndex (playerRowKey(player, rowIndex))}
-			{@const href = playerHref(player)}
-			{@const label = playerLabel(player)}
-			{@const isMe = Boolean(player.steamId && meSteamIds.includes(player.steamId))}
-			{@const highlighted = isHighlighted(player)}
-			{#if href}
-				<a {href} title={label} class={cn(interactive, 'shrink-0 rounded-full')}>
-					<img
-						src={resolveFactionFlag(player.race)}
-						alt={label}
-						class={cn(
-							'ring-secondary-800 !size-5 shrink-0 rounded-full object-cover ring-4',
-							isMe || highlighted ? 'grayscale-0' : 'opacity-50 grayscale-80',
-							isMe && 'ring-primary',
-							!isMe && highlighted && 'ring-info'
-						)}
-					/>
-				</a>
-			{:else}
-				<img
-					src={resolveFactionFlag(player.race)}
-					alt={label}
-					title={label}
-					class={cn(
-						'ring-secondary-800 !size-5 shrink-0 rounded-full object-cover ring-4',
-						isMe || highlighted ? 'grayscale-0' : 'opacity-70 grayscale-80',
-						isMe && 'ring-primary',
-						!isMe && highlighted && 'ring-info'
-					)}
-				/>
-			{/if}
-		{/each}
-	</span>
+{#snippet factionFlags(
+		players: LiveLobbyPlayer[],
+		outcome?: 'win' | 'loss' | null,
+		isRanked = true,
+		modeLabel?: string | null
+	)}
+	<TeamPlayerSkills
+		players={players.map((player) => ({
+			race: player.race,
+			alias: playerLabel(player),
+			steamId: player.steamId,
+			profileId: player.profileId,
+			stats: player.stats,
+			href: playerHref(player),
+			country: player.country
+		}))}
+		{resolveFactionFlag}
+		{getRankImage}
+		{meSteamIds}
+		{highlightedPlayers}
+		{outcome}
+		{modeLabel}
+		showRankBadges={isRanked}
+	/>
 {/snippet}
 
 {#snippet ratingCell(row: MatchListRow)}
@@ -287,7 +224,7 @@
 
 {#snippet desktopCell(column: MatchListColumnId, row: MatchListRow, expanded: boolean)}
 	{#if column === 'map'}
-		<td class="h-11 overflow-clip py-0 pr-0 pl-4">
+		<td class="h-11 w-px overflow-clip py-0 pr-0 pl-4">
 			<MapImage
 				small
 				flush
@@ -298,35 +235,47 @@
 			/>
 		</td>
 	{:else if column === 'name'}
-		<td class="truncate px-4 font-medium text-white">{formatMapName(row.map)}</td>
+		<td class="w-full truncate py-0 pr-4 pl-2 font-medium text-white">{formatMapName(row.map)}</td>
 	{:else if column === 'type'}
-		<td class="text-secondary-400 truncate px-4">{row.modeLabel ?? ''}</td>
+		<td class="text-secondary-400 h-11 truncate px-4 py-0 whitespace-nowrap">{row.modeLabel ?? ''}</td>
 	{:else if column === 'allies'}
-		<td class={cn('overflow-hidden px-4', outcomeClass(row.alliesOutcome))}>
-			{@render factionFlags(teamPlayers(row.players, 'allies'))}
+		<td class="px-2 py-0 whitespace-nowrap">
+			{@render factionFlags(
+				teamPlayers(row.players, 'allies'),
+				row.alliesOutcome,
+				row.isRanked !== false,
+				row.modeLabel
+			)}
 		</td>
 	{:else if column === 'axis'}
-		<td class={cn('overflow-hidden px-4', outcomeClass(row.axisOutcome))}>
-			{@render factionFlags(teamPlayers(row.players, 'axis'))}
+		<td class="px-2 py-0 whitespace-nowrap">
+			{@render factionFlags(
+				teamPlayers(row.players, 'axis'),
+				row.axisOutcome,
+				row.isRanked !== false,
+				row.modeLabel
+			)}
 		</td>
 	{:else if column === 'host'}
-		<td class="text-secondary-400 truncate px-4">{row.hostName || unknownHostLabel}</td>
+		<td class="text-secondary-400 h-11 truncate px-4 py-0 whitespace-nowrap">
+			{row.hostName || unknownHostLabel}
+		</td>
 	{:else if column === 'started'}
-		<td class="text-secondary-500 truncate px-4 text-xs tabular-nums">
+		<td class="text-secondary-500 h-11 truncate px-4 py-0 text-xs whitespace-nowrap tabular-nums">
 			{formatStarted(row.createdAt)}
 		</td>
 	{:else if column === 'date'}
-		<td class="text-secondary-400 truncate px-4 text-sm">
+		<td class="text-secondary-400 truncate px-4 text-sm whitespace-nowrap">
 			{(formatDate ?? formatStarted)(row.createdAt)}
 		</td>
 	{:else if column === 'duration'}
-		<td class="text-secondary-400 truncate px-4 text-sm">
+		<td class="text-secondary-400 truncate px-4 text-sm whitespace-nowrap">
 			{formatDuration(row.durationSeconds)}
 		</td>
 	{:else if column === 'rating'}
-		<td class="px-4">{@render ratingCell(row)}</td>
+		<td class="px-4 whitespace-nowrap">{@render ratingCell(row)}</td>
 	{:else if column === 'actions'}
-		<td class="px-4">
+		<td class="px-4 whitespace-nowrap">
 			{#if detailsHref}
 				{@const detailUrl = detailsHref(row)}
 				{#if detailUrl}
@@ -337,8 +286,79 @@
 			{/if}
 		</td>
 	{:else if column === 'expand'}
-		<td class="px-4">
+		<td class="px-4 whitespace-nowrap">
 			<CaretDownIcon class={cn('size-4 transition-transform', expanded && 'rotate-180')} />
+		</td>
+	{/if}
+{/snippet}
+
+{#snippet factionFlagsSkeleton()}
+	<span class="flex h-11 items-center gap-0">
+		<Skeleton class="size-11 shrink-0 rounded-none" />
+		<Skeleton class="size-11 shrink-0 rounded-none" />
+	</span>
+{/snippet}
+
+{#snippet desktopSkeletonCell(column: MatchListColumnId)}
+	{#if column === 'map'}
+		<td class="h-11 w-px overflow-clip py-0 pr-0 pl-4">
+			<div class="flex h-11 items-center">
+				<Skeleton class="size-11 shrink-0 rounded-none" />
+			</div>
+		</td>
+	{:else if column === 'name'}
+		<td class="w-full truncate py-0 pr-4 pl-2">
+			<div class="flex h-11 items-center">
+				<Skeleton class="h-4 w-36" />
+			</div>
+		</td>
+	{:else if column === 'type'}
+		<td class="px-4 py-0 whitespace-nowrap">
+			<div class="flex h-11 items-center">
+				<Skeleton class="h-4 w-16" />
+			</div>
+		</td>
+	{:else if column === 'allies'}
+		<td class="px-2 py-0 whitespace-nowrap">
+			<div class="flex h-11 items-center">
+				{@render factionFlagsSkeleton()}
+			</div>
+		</td>
+	{:else if column === 'axis'}
+		<td class="px-2 py-0 whitespace-nowrap">
+			<div class="flex h-11 items-center">
+				{@render factionFlagsSkeleton()}
+			</div>
+		</td>
+	{:else if column === 'host' || column === 'started' || column === 'rating'}
+		<td class="px-4 py-0 whitespace-nowrap">
+			<div class="flex h-11 items-center">
+				<Skeleton class="h-4 w-20" />
+			</div>
+		</td>
+	{:else if column === 'date'}
+		<td class="px-4 py-0 whitespace-nowrap">
+			<div class="flex h-11 items-center">
+				<Skeleton class="h-4 w-28" />
+			</div>
+		</td>
+	{:else if column === 'duration'}
+		<td class="px-4 py-0 whitespace-nowrap">
+			<div class="flex h-11 items-center">
+				<Skeleton class="h-4 w-14" />
+			</div>
+		</td>
+	{:else if column === 'actions'}
+		<td class="px-4 py-0 whitespace-nowrap">
+			<div class="flex h-11 items-center">
+				<Skeleton class="h-7 w-16" />
+			</div>
+		</td>
+	{:else if column === 'expand'}
+		<td class="px-4 py-0 whitespace-nowrap">
+			<div class="flex h-11 items-center">
+				<Skeleton class="size-4" />
+			</div>
 		</td>
 	{/if}
 {/snippet}
@@ -346,21 +366,32 @@
 <div class={className}>
 	{#if loading}
 		<div class="hidden md:block">
-			<table class="w-full table-fixed">
+			<table class="w-full table-auto">
 				<thead class="border-secondary-800 border-b">
 					<tr class="{tableHeadRow} text-left">
 						{#each columns as column (column)}
-							<th class="px-4 py-3">{headerById[column]}</th>
+							<th
+								class={cn(
+									'py-3',
+									column === 'map'
+										? 'w-px px-0 pl-4'
+										: column === 'name'
+											? 'w-full pr-4 pl-2'
+									: column === 'allies' || column === 'axis'
+										? 'px-2 py-3 whitespace-nowrap'
+										: 'px-4 whitespace-nowrap'
+								)}
+							>
+								{headerById[column]}
+							</th>
 						{/each}
 					</tr>
 				</thead>
 				<tbody>
 					{#each Array(3) as _, index (index)}
 						<tr class="border-secondary-800 h-11 border-b">
-							{#each Array(columnCount) as _, cellIndex (cellIndex)}
-								<td class="px-4">
-									<Skeleton class="h-4 w-full rounded-none" />
-								</td>
+							{#each columns as column (column)}
+								{@render desktopSkeletonCell(column)}
 							{/each}
 						</tr>
 					{/each}
@@ -369,16 +400,24 @@
 		</div>
 		<div class="md:hidden">
 			{#each Array(3) as _, index (index)}
-				<div class="border-secondary-800 space-y-3 border-b px-4 py-3">
-					<div class="flex items-center gap-3">
-						<Skeleton class="size-10 shrink-0 rounded" />
-						<div class="min-w-0 flex-1 space-y-2">
-							<Skeleton class="h-4 w-2/3 rounded-none" />
-							<Skeleton class="h-3 w-1/3 rounded-none" />
+				<div class="border-secondary-800 border-b px-4 py-3">
+					<div class="flex gap-3">
+						<Skeleton class="size-11 shrink-0 rounded-none" />
+						<div class="min-w-0 flex-1">
+							<div class="space-y-2">
+								<Skeleton class="h-4 w-36" />
+								<Skeleton class="h-3 w-16" />
+							</div>
+							<div class="mt-2.5 flex items-center gap-3">
+								{@render factionFlagsSkeleton()}
+								{@render factionFlagsSkeleton()}
+							</div>
+							<div class="mt-2 flex items-center gap-3">
+								<Skeleton class="h-3 w-20" />
+								<Skeleton class="h-3 w-14" />
+							</div>
 						</div>
 					</div>
-					<Skeleton class="h-5 w-1/2 rounded-none" />
-					<Skeleton class="h-3 w-2/5 rounded-none" />
 				</div>
 			{/each}
 		</div>
@@ -386,15 +425,20 @@
 		<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
 	{:else}
 		<div class="hidden overflow-x-auto md:block">
-			<table class="w-full table-fixed border-collapse text-sm">
+			<table class="w-full table-auto border-collapse text-sm">
 				<thead class="border-secondary-800 border-b">
 					<tr class="{tableHeadRow} text-left">
 						{#each columns as column (column)}
 							<th
 								class={cn(
-									'px-4 py-3',
-									widthById[column],
-									column === 'started' && 'whitespace-nowrap'
+									'py-3',
+									column === 'map'
+										? 'w-px px-0 pl-4'
+										: column === 'name'
+											? 'w-full pr-4 pl-2'
+									: column === 'allies' || column === 'axis'
+										? 'px-2 py-3 whitespace-nowrap'
+										: 'px-4 whitespace-nowrap'
 								)}
 							>
 								{headerById[column]}
@@ -489,20 +533,32 @@
 									{/if}
 								</div>
 							</div>
-							<div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-								{#if columns.includes('allies')}
-									<div class="flex min-w-0 items-center gap-1.5">
-										<span class="text-secondary-500 text-xs">{alliesLabel}</span>
-										{@render factionFlags(teamPlayers(row.players, 'allies'))}
-									</div>
-								{/if}
-								{#if columns.includes('axis')}
-									<div class="flex min-w-0 items-center gap-1.5">
-										<span class="text-secondary-500 text-xs">{axisLabel}</span>
-										{@render factionFlags(teamPlayers(row.players, 'axis'))}
-									</div>
-								{/if}
-							</div>
+							{#if columns.includes('allies') || columns.includes('axis')}
+								<div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+									{#if columns.includes('allies')}
+										<div class="flex min-w-0 items-center gap-1.5">
+											<span class="text-secondary-500 text-xs">{alliesLabel}</span>
+											{@render factionFlags(
+												teamPlayers(row.players, 'allies'),
+												row.alliesOutcome,
+												row.isRanked !== false,
+												row.modeLabel
+											)}
+										</div>
+									{/if}
+									{#if columns.includes('axis')}
+										<div class="flex min-w-0 items-center gap-1.5">
+											<span class="text-secondary-500 text-xs">{axisLabel}</span>
+											{@render factionFlags(
+												teamPlayers(row.players, 'axis'),
+												row.axisOutcome,
+												row.isRanked !== false,
+												row.modeLabel
+											)}
+										</div>
+									{/if}
+								</div>
+							{/if}
 							<div
 								class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
 							>
@@ -510,7 +566,8 @@
 									<span class="truncate">{row.hostName || unknownHostLabel}</span>
 								{/if}
 								{#if columns.includes('started')}
-									<span class="text-secondary-500 tabular-nums">{formatStarted(row.createdAt)}</span>
+									<span class="text-secondary-500 tabular-nums">{formatStarted(row.createdAt)}</span
+									>
 								{/if}
 								{#if columns.includes('date')}
 									<span class="text-secondary-500 tabular-nums"

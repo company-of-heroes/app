@@ -1,31 +1,23 @@
 <script lang="ts">
-	import type { Component } from 'svelte';
 	import MapImage from '../ui/map-image.svelte';
 	import { Badge } from '../ui/badge';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import {
-		factionIcon,
-		interactive,
-		tableHeadRow,
-		tableSortHeader
-	} from '@company-of-heroes/ui/variants';
-	import { tooltip } from '../attachments/tooltip.svelte';
+	import { interactive, tableHeadRow } from '@company-of-heroes/ui/variants';
 	import type { CommunityMatch, CommunityPlayer, HistorySortDir, HistorySortField } from './types';
 	import {
 		formatDurationSeconds,
 		formatMatchDate,
 		matchDurationSeconds,
+		matchModeLabel,
 		teamOutcome,
 		teamPlayers
 	} from './utils';
 	import { scoreClassName } from '../comment/vote';
+	import TeamPlayerSkills from '../match/team-player-skills.svelte';
 	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
 	import DownloadIcon from 'phosphor-svelte/lib/DownloadIcon';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
 	import ChatCircleIcon from 'phosphor-svelte/lib/ChatCircleIcon';
-	import ArrowDownIcon from 'phosphor-svelte/lib/ArrowDownIcon';
-	import ArrowUpIcon from 'phosphor-svelte/lib/ArrowUpIcon';
-	import ArrowsDownUpIcon from 'phosphor-svelte/lib/ArrowsDownUpIcon';
 
 	type Props = {
 		matches: CommunityMatch[];
@@ -39,10 +31,12 @@
 		resolveMapSrc: (map: string | undefined) => string | undefined;
 		resolveFallbackSrc?: () => string | undefined;
 		resolveFactionFlag: (race: number) => string;
+		getRankImage?: (race: number, rankLevel: number) => string;
 		formatMapName: (map: string) => string;
 		emptyMessage?: string;
 		locale?: string;
 		mapLabel?: string;
+		typeLabel?: string;
 		alliesLabel?: string;
 		axisLabel?: string;
 		durationLabel?: string;
@@ -58,60 +52,30 @@
 		matches,
 		highlightedPlayers = [],
 		meSteamIds = [],
-		sort,
-		sortDir,
-		onSort,
+		sort: _sort,
+		sortDir: _sortDir,
+		onSort: _onSort,
 		replayHref,
 		playerHref,
 		resolveMapSrc,
 		resolveFallbackSrc,
 		resolveFactionFlag,
+		getRankImage,
 		formatMapName,
 		emptyMessage = 'No community replays found.',
 		locale,
 		mapLabel = 'Map',
+		typeLabel = 'Type',
 		alliesLabel = 'Allies',
 		axisLabel = 'Axis',
 		durationLabel = 'Duration',
-		likesLabel = 'Likes',
-		commentsLabel = 'Comments',
-		downloadsLabel = 'Downloads',
+		likesLabel: _likesLabel = 'Likes',
+		commentsLabel: _commentsLabel = 'Comments',
+		downloadsLabel: _downloadsLabel = 'Downloads',
 		dateLabel = 'Date',
-		sortByLabel = 'Sort by {label}',
+		sortByLabel: _sortByLabel = 'Sort by {label}',
 		deletedLabel = 'Deleted'
 	}: Props = $props();
-
-	function isMePlayer(player: CommunityPlayer) {
-		return Boolean(player.steamId && meSteamIds.includes(player.steamId));
-	}
-
-	function outcomeClass(outcome: 'win' | 'loss' | null) {
-		if (outcome === 'win') {
-			return 'bg-green-500/5';
-		}
-
-		if (outcome === 'loss') {
-			return 'bg-red-500/5';
-		}
-
-		return '';
-	}
-
-	function sortIcon(field: HistorySortField) {
-		if (sort !== field) {
-			return 'none' as const;
-		}
-
-		return sortDir;
-	}
-
-	function sortAria(field: HistorySortField) {
-		if (sort !== field) {
-			return 'none' as const;
-		}
-
-		return sortDir === 'asc' ? 'ascending' : 'descending';
-	}
 
 	function rowLabel(match: CommunityMatch) {
 		if (match.kind === 'member') {
@@ -125,104 +89,65 @@
 	}
 </script>
 
-{#snippet sortHeader(field: HistorySortField, label: string)}
-	<th class="w-2/24 px-4 py-2" aria-sort={sortAria(field)}>
-		<button
-			type="button"
-			class={cn(tableSortHeader, 'justify-end gap-1')}
-			aria-label={sortByLabel.replace('{label}', label)}
-			onclick={() => onSort(field)}
-		>
-			{label}
-			{#if sortIcon(field) === 'desc'}
-				<ArrowDownIcon size={14} class="shrink-0" weight="duotone" />
-			{:else if sortIcon(field) === 'asc'}
-				<ArrowUpIcon size={14} class="shrink-0" weight="duotone" />
-			{:else}
-				<ArrowsDownUpIcon size={14} class="shrink-0" weight="duotone" />
-			{/if}
-		</button>
-	</th>
-{/snippet}
-
-{#snippet playerFlag(player: CommunityPlayer, className: string)}
-	{@const label = player.profile.alias}
-	<img
-		src={resolveFactionFlag(player.race ?? 0)}
-		alt={label}
-		class={className}
-		{@attach tooltip(label)}
+{#snippet teamFlags(match: CommunityMatch, team: 'allies' | 'axis')}
+	<TeamPlayerSkills
+		players={teamPlayers(match, team).map((player) => ({
+			race: player.race,
+			alias: player.profile.alias,
+			steamId: player.steamId,
+			profileId: player.profile.profile_id,
+			// Basic Match — badges off via showRankBadges; stats stay for preview.
+			stats: player.stats,
+			href: playerHref(player)
+		}))}
+		{resolveFactionFlag}
+		{getRankImage}
+		{meSteamIds}
+		{highlightedPlayers}
+		outcome={teamOutcome(match, team)}
+		modeLabel={matchModeLabel(match)}
+		showRankBadges={match.isRanked}
 	/>
 {/snippet}
 
-{#snippet teamFlags(match: CommunityMatch, team: 'allies' | 'axis')}
-	<div class="flex items-center gap-2">
-		{#each teamPlayers(match, team) as player (player.profile.profile_id)}
-			{@const href = playerHref(player)}
-			{@const isMe = isMePlayer(player)}
-			{@const highlighted = highlightedPlayers.includes(String(player.profile.profile_id))}
-			{@const flagClass = cn(
-				factionIcon,
-				'hover:ring-secondary-700 transition-all hover:opacity-100 hover:grayscale-0',
-				isMe || highlighted ? 'grayscale-0' : 'opacity-50 grayscale-80',
-				isMe && 'ring-primary',
-				!isMe && highlighted && 'ring-info'
-			)}
-			{#if href}
-				<a {href} class={cn(interactive, 'shrink-0 rounded-full')}>
-					{@render playerFlag(player, flagClass)}
-				</a>
-			{:else}
-				{@render playerFlag(player, flagClass)}
-			{/if}
-		{/each}
-	</div>
-{/snippet}
-
-{#snippet teamCell(match: CommunityMatch, team: 'allies' | 'axis')}
-	<td class={cn('px-4 py-0', outcomeClass(teamOutcome(match, team)))}>
-		{@render teamFlags(match, team)}
-	</td>
-{/snippet}
-
-{#snippet scoreCell(count: number)}
-	<td class="px-4 py-0 text-right tabular-nums">
-		<span
-			class={cn(
-				'inline-flex items-center justify-end gap-1.5',
-				scoreClassName(count, 'text-secondary-400')
-			)}
-		>
-			<CaretUpIcon size={16} weight="fill" />
-			{count}
-		</span>
-	</td>
-{/snippet}
-
-{#snippet countCell(count: number, Icon: Component)}
-	<td class="text-secondary-400 px-4 py-0 text-right tabular-nums">
-		<span class="inline-flex items-center justify-end gap-1.5">
-			<Icon size={16} weight="duotone" />
-			{count}
-		</span>
+{#snippet engagementCell(match: CommunityMatch)}
+	<td class="px-4 py-0 text-right whitespace-nowrap tabular-nums">
+		<div class="text-secondary-400 inline-flex items-center justify-end gap-3">
+			<span
+				class={cn(
+					'inline-flex items-center gap-1.5',
+					scoreClassName(match.likeCount ?? 0, 'text-secondary-400')
+				)}
+			>
+				<CaretUpIcon size={16} weight="fill" />
+				{match.likeCount ?? 0}
+			</span>
+			<span class="inline-flex items-center gap-1.5">
+				<ChatCircleIcon size={16} weight="duotone" />
+				{match.commentCount ?? 0}
+			</span>
+			<span class="inline-flex items-center gap-1.5">
+				<DownloadIcon size={16} weight="duotone" />
+				{match.downloadCount ?? 0}
+			</span>
+		</div>
 	</td>
 {/snippet}
 
 {#if matches.length === 0}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
 {:else}
-	<div class="hidden md:block overflow-x-auto">
-		<table class="w-full table-fixed border-collapse text-sm">
+	<div class="hidden overflow-x-auto md:block">
+		<table class="w-full table-auto border-collapse text-sm">
 			<thead class="border-secondary-800 border-b">
 				<tr class="{tableHeadRow} text-left">
-					<th class="w-6/24 px-4 py-2">{mapLabel}</th>
-					<th class="w-3/24 px-4 py-2">{alliesLabel}</th>
-					<th class="w-3/24 px-4 py-2">{axisLabel}</th>
-					<th class="w-2/24 px-4 py-2">{durationLabel}</th>
-					{@render sortHeader('likeCount', likesLabel)}
-					{@render sortHeader('commentCount', commentsLabel)}
-					{@render sortHeader('downloadCount', downloadsLabel)}
-					<th class="w-4/24 px-4 py-2 text-end">{dateLabel}</th>
+					<th class="w-full px-4 py-2">{mapLabel}</th>
+					<th class="px-4 py-2 whitespace-nowrap">{typeLabel}</th>
+					<th class="px-2 py-2 whitespace-nowrap">{alliesLabel}</th>
+					<th class="px-2 py-2 whitespace-nowrap">{axisLabel}</th>
+					<th class="px-4 py-2 whitespace-nowrap">{durationLabel}</th>
+					<th class="px-4 py-2 whitespace-nowrap"></th>
+					<th class="px-4 py-2 text-end whitespace-nowrap">{dateLabel}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -233,7 +158,7 @@
 							match.visibility === 'deleted' && 'opacity-50'
 						)}
 					>
-						<td class="overflow-clip py-0 pr-0 pl-4">
+						<td class="w-full overflow-clip py-0 pr-0 pl-4">
 							<a
 								href={replayHref(match.id)}
 								class={cn(interactive, 'flex h-11 min-w-0 items-center gap-0')}
@@ -257,17 +182,24 @@
 								</div>
 							</a>
 						</td>
-						{@render teamCell(match, 'allies')}
-						{@render teamCell(match, 'axis')}
-						<td class="text-secondary-400 px-4 py-0 tabular-nums">
+						<td class="text-secondary-400 px-4 py-0 whitespace-nowrap">
+							{matchModeLabel(match)}
+						</td>
+						<td class="px-2 py-0 whitespace-nowrap">
+							{@render teamFlags(match, 'allies')}
+						</td>
+						<td class="px-2 py-0 whitespace-nowrap">
+							{@render teamFlags(match, 'axis')}
+						</td>
+						<td class="text-secondary-400 px-4 py-0 whitespace-nowrap tabular-nums">
 							<a href={replayHref(match.id)} class={cn(interactive, 'hover:text-white')}>
 								{formatDurationSeconds(matchDurationSeconds(match))}
 							</a>
 						</td>
-						{@render scoreCell(match.likeCount ?? 0)}
-						{@render countCell(match.commentCount ?? 0, ChatCircleIcon)}
-						{@render countCell(match.downloadCount ?? 0, DownloadIcon)}
-						<td class="text-secondary-400 px-4 py-0 text-end text-sm tabular-nums">
+						{@render engagementCell(match)}
+						<td
+							class="text-secondary-400 px-4 py-0 text-end text-sm whitespace-nowrap tabular-nums"
+						>
 							{formatMatchDate(match.createdAt, locale)}
 						</td>
 					</tr>
@@ -276,18 +208,10 @@
 		</table>
 	</div>
 
-	<div class="md:hidden divide-y divide-secondary-800">
+	<div class="divide-secondary-800 divide-y md:hidden">
 		{#each matches as match (match.id)}
-			<div
-				class={cn(
-					'px-4 py-3 text-white',
-					match.visibility === 'deleted' && 'opacity-50'
-				)}
-			>
-				<a
-					href={replayHref(match.id)}
-					class={cn(interactive, 'flex min-w-0 items-center gap-0')}
-				>
+			<div class={cn('px-4 py-3 text-white', match.visibility === 'deleted' && 'opacity-50')}>
+				<a href={replayHref(match.id)} class={cn(interactive, 'flex min-w-0 items-center gap-0')}>
 					<MapImage
 						map={match.map}
 						{resolveMapSrc}
@@ -307,14 +231,13 @@
 					</div>
 				</a>
 				<div class="mt-2 flex items-center gap-4">
-					<div class={cn('rounded px-1 py-0.5', outcomeClass(teamOutcome(match, 'allies')))}>
-						{@render teamFlags(match, 'allies')}
-					</div>
-					<div class={cn('rounded px-1 py-0.5', outcomeClass(teamOutcome(match, 'axis')))}>
-						{@render teamFlags(match, 'axis')}
-					</div>
+					{@render teamFlags(match, 'allies')}
+					{@render teamFlags(match, 'axis')}
 				</div>
-				<div class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tabular-nums">
+				<div
+					class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tabular-nums"
+				>
+					<span>{matchModeLabel(match)}</span>
 					<a href={replayHref(match.id)} class={cn(interactive, 'hover:text-white')}>
 						{formatDurationSeconds(matchDurationSeconds(match))}
 					</a>

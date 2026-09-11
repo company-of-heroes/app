@@ -26,6 +26,7 @@
 	import { cn } from '$lib/utils';
 	import dayjs from '$lib/dayjs';
 	import { useI18n } from '$lib/i18n';
+	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 
 	const { t } = useI18n();
@@ -293,12 +294,13 @@
 
 {#snippet cell_player({ row }: { row: ReportRow })}
 	{#if accusedSteamId(row)}
-		<a
+		<PlayerProfileLink
 			href="/players/{accusedSteamId(row)}"
+			playerId={accusedSteamId(row)}
 			class={cn(interactive, 'text-secondary-300 hover:text-primary min-w-0 truncate font-medium')}
 		>
 			{accusedLabel(row)}
-		</a>
+		</PlayerProfileLink>
 	{:else}
 		<span class="min-w-0 truncate">{accusedLabel(row)}</span>
 	{/if}

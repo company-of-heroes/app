@@ -45,5 +45,6 @@ export {
 	formatReplayDurationLabel,
 	isCpuPlayerName,
 	isCpuReplayPlayer,
-	matchDurationSeconds
+	matchDurationSeconds,
+	matchModeLabel
 } from './utils';

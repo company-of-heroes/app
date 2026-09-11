@@ -18,6 +18,7 @@
 	import { useI18n } from '$lib/i18n';
 	import { cn } from '$lib/utils';
 	import { footerAction, interactive } from '$lib/components/ui/variants';
+	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 
 	const { t } = useI18n();
 
@@ -157,15 +158,16 @@
 							<User.Root user={row} class="flex min-w-0 flex-col">
 								<span class="flex min-w-0 flex-wrap items-center gap-2">
 									{#if steamId}
-										<a
+										<PlayerProfileLink
 											href={resolve('/(loaded)/players/[id]', { id: steamId })}
+											playerId={steamId}
 											class={cn(
 												interactive,
 												'hover:text-primary min-w-0 font-medium transition-colors'
 											)}
 										>
 											<User.Name class="font-medium" />
-										</a>
+										</PlayerProfileLink>
 									{:else}
 										<User.Name class="font-medium" />
 									{/if}

@@ -11,6 +11,7 @@
 	import { useI18n } from '$lib/i18n';
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
+	import { PlayerProfileLink, playerPreviewId } from '@company-of-heroes/ui/player';
 
 	type Props = {
 		player: Profile;
@@ -25,20 +26,29 @@
 		() => (statsExpanded ? player.steam.steamid : null),
 		(steamId) => (steamId ? getPlayerRating(steamId) : Promise.resolve(null))
 	);
+
+	const href = $derived(`/players/${player.relic.profile_id}`);
+	const previewId = $derived(
+		playerPreviewId({
+			steamId: player.steam.steamid,
+			profileId: player.relic.profile_id
+		}) ?? String(player.relic.profile_id)
+	);
 </script>
 
 <div class="border-secondary-800 overflow-clip border-b">
 	<div class="border-secondary-800 flex gap-4 border-b p-4">
-		<a href="/players/{player.relic.profile_id}" class={cn(interactive, 'shrink-0')}>
+		<PlayerProfileLink {href} playerId={previewId} class={cn(interactive, 'shrink-0')}>
 			<img
 				src={player.steam.avatarfull}
 				alt={player.relic.alias}
 				class="size-16 rounded-xl border-3 border-gray-400 object-cover"
 			/>
-		</a>
+		</PlayerProfileLink>
 		<div class="min-w-0 grow py-1">
-			<a
-				href="/players/{player.relic.profile_id}"
+			<PlayerProfileLink
+				{href}
+				playerId={previewId}
 				class={cn(
 					interactive,
 					'hover:text-primary mb-2 flex min-w-0 items-center gap-2 transition-colors'
@@ -54,7 +64,7 @@
 				<PlayerLikeCount steamId={player.steam.steamid} class="shrink-0" />
 				<span class="font-heading truncate text-xl font-bold">{player.relic.alias}</span>
 				<PlayerLabels steamId={player.steam.steamid} class="shrink-0" />
-			</a>
+			</PlayerProfileLink>
 			<List.Root class="gap-x-4">
 				<List.Title>{t('Steam ID:')}</List.Title>
 				<List.Value>{player.steam.steamid}</List.Value>

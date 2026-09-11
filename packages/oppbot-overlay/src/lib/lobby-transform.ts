@@ -27,8 +27,9 @@ function groupByTeam(players: Player[]) {
 
 function getMatchType(players: Player[], isRanked?: boolean, matchType?: number | null): number {
 	if (matchType === 14 || players.some((player) => player.playerId === -1)) return 14;
-	if (typeof matchType === 'number' && matchType >= 0 && matchType <= 4) return matchType;
+	// Custom / unranked always Basic Match — ignore size-like matchType 1–4.
 	if (!isRanked) return 0;
+	if (typeof matchType === 'number' && matchType >= 0 && matchType <= 4) return matchType;
 	const humans = players.filter((player) => player.playerId !== -1);
 	if (humans.length === 2) return 1;
 	if (humans.length === 4) return 2;

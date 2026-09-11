@@ -4,6 +4,7 @@
 	import Header from '$lib/components/layout/header.svelte';
 	import Footer from '$lib/components/layout/footer.svelte';
 	import I18nBoot from '$lib/components/i18n/i18n-boot.svelte';
+	import PlayerPreviewBoot from '$lib/components/player/player-preview-boot.svelte';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
 	import { loadLatestDownload } from '$lib/site/download.svelte';
 	import { pageShell } from '$lib/utils/variants';
@@ -49,25 +50,27 @@
 </svelte:head>
 
 <I18nBoot {locale}>
-	<div class="min-h-screen font-sans">
-		<div aria-hidden="true" class="pointer-events-none fixed inset-0">
-			<div class="absolute inset-y-0 left-0 w-[max(0px,calc((100%-72rem)/2))] overflow-hidden">
-				<img src={pageBackgroundImage} alt="" class="size-full object-cover object-left" />
-				<div class="absolute inset-0 bg-gray-950/95 mix-blend-color"></div>
-				<div class="absolute inset-0 bg-gray-950/85"></div>
+	<PlayerPreviewBoot>
+		<div class="min-h-screen font-sans">
+			<div aria-hidden="true" class="pointer-events-none fixed inset-0">
+				<div class="absolute inset-y-0 left-0 w-[max(0px,calc((100%-72rem)/2))] overflow-hidden">
+					<img src={pageBackgroundImage} alt="" class="size-full object-cover object-left" />
+					<div class="absolute inset-0 bg-gray-950/95 mix-blend-color"></div>
+					<div class="absolute inset-0 bg-gray-950/85"></div>
+				</div>
+				<div class="absolute inset-y-0 right-0 w-[max(0px,calc((100%-72rem)/2))] overflow-hidden">
+					<img src={pageBackgroundImage} alt="" class="size-full object-cover object-right" />
+					<div class="absolute inset-0 bg-gray-950/95 mix-blend-color"></div>
+					<div class="absolute inset-0 bg-gray-950/85"></div>
+				</div>
 			</div>
-			<div class="absolute inset-y-0 right-0 w-[max(0px,calc((100%-72rem)/2))] overflow-hidden">
-				<img src={pageBackgroundImage} alt="" class="size-full object-cover object-right" />
-				<div class="absolute inset-0 bg-gray-950/95 mix-blend-color"></div>
-				<div class="absolute inset-0 bg-gray-950/85"></div>
+			<div class={pageShell}>
+				<Header />
+				<div class="flex-1">
+					{@render children()}
+				</div>
+				<Footer />
 			</div>
 		</div>
-		<div class={pageShell}>
-			<Header />
-			<div class="flex-1">
-				{@render children()}
-			</div>
-			<Footer />
-		</div>
-	</div>
+	</PlayerPreviewBoot>
 </I18nBoot>

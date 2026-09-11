@@ -20,6 +20,8 @@
 	import type { MatchHistoryPlayer, PlayerPageData, TransformedMatch } from './types';
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
+	import PlayerProfileLink from './player-profile-link.svelte';
+	import { playerPreviewId } from './player-preview-cache';
 
 	type Props = {
 		player: PlayerPageData;
@@ -151,8 +153,12 @@
 		{/if}
 		<PlayerLikeCount likeCount={matchPlayer.likeCount} class="shrink-0" />
 		{#if matchPlayer.steamId}
-			<a
+			<PlayerProfileLink
 				href={playerHref(matchPlayer.steamId)}
+				playerId={playerPreviewId({
+					steamId: matchPlayer.steamId,
+					profileId: matchPlayer.profile_id
+				}) ?? matchPlayer.steamId}
 				class={cn(
 					interactive,
 					'hover:text-primary min-w-0 flex-1 truncate transition-colors',
@@ -160,7 +166,7 @@
 				)}
 			>
 				{matchPlayer.alias}
-			</a>
+			</PlayerProfileLink>
 		{:else}
 			<span class={cn('min-w-0 flex-1 truncate', isSelf && 'text-primary font-semibold')}>
 				{matchPlayer.alias}

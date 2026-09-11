@@ -78,14 +78,16 @@ export function getFactionFlagFromRace(
 
 /**
  * Eagerly load rank images — Vite cannot resolve fully dynamic import() paths.
+ * Relative glob (not kit alias) so Rolldown/Vite always expands the files.
  */
-const rankModules = import.meta.glob<{ default: string }>('$lib/files/ranks/*.png', {
-	eager: true
-});
+const rankModules = import.meta.glob<{ default: string }>(
+	'../../../shared-assets/ranks/*.png',
+	{ eager: true }
+);
 
 const rankImagesByFilename = new Map(
 	Object.entries(rankModules).map(([path, module]) => {
-		const filename = path.split('/').pop() ?? path;
+		const filename = path.replace(/^.*[\\/]/, '');
 		return [filename, module.default] as const;
 	})
 );

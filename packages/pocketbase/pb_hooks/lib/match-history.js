@@ -32,7 +32,7 @@ function summarizePlayersFromLobbyField(lobbyPlayersRaw) {
 			continue;
 		}
 
-		players.push({
+		const entry = {
 			playerId: player?.playerId != null ? Number(player.playerId) : null,
 			steamId: player?.steamId ?? null,
 			race: player?.race != null ? Number(player.race) : null,
@@ -40,10 +40,320 @@ function summarizePlayersFromLobbyField(lobbyPlayersRaw) {
 				profile_id: profileId,
 				alias: player?.alias ?? player?.profile?.alias ?? ''
 			}
-		});
+		};
+
+		const stats = normalizeListPlayerStats(player?.stats);
+		if (stats) {
+			entry.stats = stats;
+		}
+
+		players.push(entry);
 	}
 
 	return players;
+}
+
+function toFiniteNumber(value) {
+	const n = Number(value);
+	return Number.isFinite(n) ? n : null;
+}
+
+/** Keep in sync with packages/ui/src/live-lobby/stats.ts and live-lobbies.js. */
+function leaderboardIdForMatchRace(matchTypeId, race) {
+	if (!Number.isInteger(race) || race < 0 || race > 3) {
+		return null;
+	}
+	if (matchTypeId === 14) {
+		return 42 + race;
+	}
+	if (!Number.isInteger(matchTypeId) || matchTypeId < 0 || matchTypeId > 4) {
+		return null;
+	}
+	return matchTypeId * 4 + race;
+}
+
+/**
+ * Ladder match type for list rank badges. Prefer Relic ranked 1–4 / skirmish 14
+ * from the result; otherwise infer from human count. Unranked/custom (Basic Match)
+ * never uses size-based ranked ladders — no rank badges for those games.
+ */
+function matchTypeIdFromResultAndPlayers(result, players, isRanked) {
+	const fromResult = toFiniteNumber(result?.matchtype_id);
+	if (fromResult === 14) {
+		return 14;
+	}
+
+	if (!isRanked) {
+		return 0;
+	}
+
+	if (fromResult != null && fromResult >= 1 && fromResult <= 4) {
+		return fromResult;
+	}
+
+	const humans = (players || []).filter((player) => {
+		const id = toFiniteNumber(player?.playerId ?? player?.profile_id);
+		return id == null || id !== -1;
+	});
+
+	if (humans.length === 2) {
+		return 1;
+	}
+	if (humans.length === 4) {
+		return 2;
+	}
+	if (humans.length === 6) {
+		return 3;
+	}
+	if (humans.length === 8) {
+		return 4;
+	}
+
+	return 0;
+}
+
+function normalizeListPlayerStats(raw) {
+	if (!raw || typeof raw !== 'object') {
+		return null;
+	}
+
+	const elo = toFiniteNumber(raw.elo);
+	const wins = toFiniteNumber(raw.wins) ?? 0;
+	const losses = toFiniteNumber(raw.losses) ?? 0;
+	const streak = toFiniteNumber(raw.streak) ?? 0;
+	const rank = toFiniteNumber(raw.rank) ?? 0;
+	const rankLevel = toFiniteNumber(raw.rankLevel ?? raw.ranklevel) ?? 0;
+	const resolvedElo = elo != null && elo >= 1 ? elo : null;
+
+	if (resolvedElo == null && wins === 0 && losses === 0 && rank === 0 && rankLevel === 0) {
+		return null;
+	}
+
+	return {
+		elo: resolvedElo,
+		wins,
+		losses,
+		streak,
+		rank: rank > 0 ? rank : 0,
+		rankLevel: rankLevel > 0 ? rankLevel : 0
+	};
+}
+
+function eloByProfileFromResult(result) {
+	const byProfile = {};
+	const players = Array.isArray(result?.players) ? result.players : [];
+
+	for (let i = 0; i < players.length; i++) {
+		const player = players[i];
+		const profileId = toFiniteNumber(player?.profile_id);
+		if (profileId == null || profileId <= 0) {
+			continue;
+		}
+
+		const previous = toFiniteNumber(player?.oldrating);
+		const next = toFiniteNumber(player?.newrating);
+		const elo =
+			previous != null && previous >= 1
+				? previous
+				: next != null && next >= 1
+					? next
+					: null;
+		if (elo != null) {
+			byProfile[profileId] = elo;
+		}
+	}
+
+	return byProfile;
+}
+
+function pickStatsFromRawLobbyPlayer(rawPlayer, matchTypeId, eloByProfile) {
+	if (!rawPlayer || typeof rawPlayer !== 'object') {
+		return null;
+	}
+
+	const race = toFiniteNumber(rawPlayer.race);
+	if (race == null) {
+		return null;
+	}
+
+	const leaderboardId = leaderboardIdForMatchRace(matchTypeId, race);
+	const leaderboardStats =
+		rawPlayer.profile && Array.isArray(rawPlayer.profile.leaderboardStats)
+			? rawPlayer.profile.leaderboardStats
+			: [];
+	let stat = null;
+	if (leaderboardId != null) {
+		for (let i = 0; i < leaderboardStats.length; i++) {
+			if (toFiniteNumber(leaderboardStats[i].leaderboard_id) === leaderboardId) {
+				stat = leaderboardStats[i];
+				break;
+			}
+		}
+	}
+
+	const profileId =
+		toFiniteNumber(rawPlayer.profile?.profile_id) ??
+		(toFiniteNumber(rawPlayer.playerId) != null && toFiniteNumber(rawPlayer.playerId) > 0
+			? toFiniteNumber(rawPlayer.playerId)
+			: null);
+	const eloFromResult =
+		profileId != null && Object.prototype.hasOwnProperty.call(eloByProfile, profileId)
+			? eloByProfile[profileId]
+			: null;
+
+	return normalizeListPlayerStats({
+		elo: eloFromResult,
+		wins: stat ? stat.wins : 0,
+		losses: stat ? stat.losses : 0,
+		streak: stat ? stat.streak : 0,
+		rank: stat ? stat.rank : 0,
+		rankLevel: stat ? (stat.ranklevel ?? stat.rankLevel) : 0
+	});
+}
+
+function findRawLobbyPlayer(rawPlayers, listPlayer) {
+	const profileId = toFiniteNumber(listPlayer?.profile?.profile_id);
+	const steamId = listPlayer?.steamId ? String(listPlayer.steamId) : '';
+
+	for (let i = 0; i < rawPlayers.length; i++) {
+		const raw = rawPlayers[i];
+		const rawProfileId =
+			toFiniteNumber(raw?.profile?.profile_id) ??
+			(toFiniteNumber(raw?.playerId) != null && toFiniteNumber(raw.playerId) > 0
+				? toFiniteNumber(raw.playerId)
+				: null);
+		if (profileId != null && rawProfileId === profileId) {
+			return raw;
+		}
+		if (steamId && raw?.steamId && String(raw.steamId) === steamId) {
+			return raw;
+		}
+	}
+
+	return null;
+}
+
+function loadRawLobbyPlayersByIds(lobbyIds) {
+	if (!lobbyIds || lobbyIds.length === 0) {
+		return {};
+	}
+
+	const bindings = {};
+	const clauses = [];
+	for (let i = 0; i < lobbyIds.length; i++) {
+		const key = `id${i}`;
+		bindings[key] = lobbyIds[i];
+		clauses.push(`{:${key}}`);
+	}
+
+	const rows = arrayOf(
+		new DynamicModel({
+			id: '',
+			players: '',
+			result: '',
+			isRanked: false
+		})
+	);
+
+	$app
+		.db()
+		.newQuery(
+			`SELECT id, COALESCE(players, '[]') AS players, COALESCE(result, '') AS result, isRanked
+       FROM lobbies
+       WHERE id IN (${clauses.join(', ')})`
+		)
+		.bind(bindings)
+		.all(rows);
+
+	const byId = {};
+	for (let i = 0; i < rows.length; i++) {
+		const row = rows[i];
+		byId[row.id] = {
+			players: parseLobbyPlayersField(row.players),
+			result: parseResultField(row.result),
+			isRanked: !!row.isRanked
+		};
+	}
+
+	return byId;
+}
+
+/**
+ * Attach rank/level/elo onto list players from dual-written lobbyPlayers.stats
+ * or, when missing, from lobbies.players.profile.leaderboardStats (one batch read).
+ * Basic Match uses ladder id 0 (faction basic boards) for hover previews; the UI
+ * still shows faction icons only (no rank badges) for unranked rows.
+ */
+function attachListPlayerStats(items) {
+	if (!items || items.length === 0) {
+		return items;
+	}
+
+	const needsRaw = [];
+	for (let i = 0; i < items.length; i++) {
+		const item = items[i];
+		const players = item.players || [];
+		let missing = false;
+
+		if (!item.isRanked) {
+			for (let j = 0; j < players.length; j++) {
+				if (!normalizeListPlayerStats(players[j].stats)) {
+					missing = true;
+					break;
+				}
+			}
+		} else {
+			for (let j = 0; j < players.length; j++) {
+				const existing = normalizeListPlayerStats(players[j].stats);
+				if (!existing || (existing.rank <= 0 && existing.rankLevel <= 0)) {
+					missing = true;
+					break;
+				}
+			}
+		}
+
+		if (missing) {
+			needsRaw.push(item.id);
+		}
+	}
+
+	const rawById = loadRawLobbyPlayersByIds(needsRaw);
+
+	for (let i = 0; i < items.length; i++) {
+		const item = items[i];
+		const players = item.players || [];
+		const rawBundle = rawById[item.id];
+		const rawPlayers = rawBundle ? rawBundle.players : [];
+		const result = rawBundle ? rawBundle.result : item.result || null;
+		const isRanked = rawBundle ? rawBundle.isRanked : !!item.isRanked;
+
+		const matchTypeId = matchTypeIdFromResultAndPlayers(
+			result,
+			rawPlayers.length > 0 ? rawPlayers : players,
+			isRanked
+		);
+		const eloByProfile = eloByProfileFromResult(result);
+
+		for (let j = 0; j < players.length; j++) {
+			const existing = normalizeListPlayerStats(players[j].stats);
+			if (isRanked && existing && (existing.rank > 0 || existing.rankLevel > 0)) {
+				players[j].stats = existing;
+				continue;
+			}
+
+			const raw = findRawLobbyPlayer(rawPlayers, players[j]);
+			const stats = pickStatsFromRawLobbyPlayer(raw, matchTypeId, eloByProfile);
+			if (stats) {
+				players[j].stats = stats;
+			} else if (existing) {
+				players[j].stats = existing;
+			} else {
+				players[j].stats = null;
+			}
+		}
+	}
+
+	return items;
 }
 
 function loadPlayerAliasMap(scope, userId) {
@@ -918,6 +1228,7 @@ module.exports = {
 	summarizePlayersFromResult,
 	loadPlayersByLobbyIds,
 	resolvePlayersForRow,
+	attachListPlayerStats,
 	countFilteredMatches,
 	readCommunityMatchCount,
 	saveCommunityMatchCount,

@@ -22,6 +22,7 @@
 	import { interactive } from '$lib/components/ui/variants';
 	import { cn } from '$lib/utils';
 	import { useI18n } from '$lib/i18n';
+	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 	import { ClientResponseError } from 'pocketbase';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 
@@ -261,12 +262,13 @@
 	<span class="flex min-w-0 items-center gap-2">
 		<PlayerLikeCount steamId={row.steamId} class="shrink-0" />
 		{#if row.profileId}
-			<a
+			<PlayerProfileLink
 				href="/players/{row.profileId}"
+				playerId={String(row.profileId)}
 				class={cn(interactive, 'text-secondary-300 hover:text-primary min-w-0 truncate font-medium')}
 			>
 				{row.alias}
-			</a>
+			</PlayerProfileLink>
 		{:else}
 			<span class="min-w-0 truncate">{row.alias}</span>
 		{/if}

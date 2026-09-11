@@ -1,3 +1,5 @@
+import type { LiveLobbyPlayerStats } from '../live-lobby/types';
+
 export type ReplayMessage = {
 	playerID: number;
 	sender: string;
@@ -78,6 +80,8 @@ export type CommunityPlayer = {
 	faction?: string;
 	/** Doctrine label from the .rec (member uploads). */
 	doctrineName?: string;
+	/** Ladder stats when available on list/detail responses. */
+	stats?: LiveLobbyPlayerStats | null;
 	profile: {
 		profile_id: number;
 		alias: string;

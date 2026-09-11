@@ -72,9 +72,147 @@ function slimLobbyPlayers(players) {
 	return { players: slimmed, changed };
 }
 
-function summarizeLobbyPlayers(players) {
+function toFiniteNumber(value) {
+	const n = Number(value);
+	return Number.isFinite(n) ? n : null;
+}
+
+/** Keep in sync with packages/ui/src/live-lobby/stats.ts and match-history.js. */
+function leaderboardIdForMatchRace(matchTypeId, race) {
+	if (!Number.isInteger(race) || race < 0 || race > 3) {
+		return null;
+	}
+	if (matchTypeId === 14) {
+		return 42 + race;
+	}
+	if (!Number.isInteger(matchTypeId) || matchTypeId < 0 || matchTypeId > 4) {
+		return null;
+	}
+	return matchTypeId * 4 + race;
+}
+
+function matchTypeIdForSummarize(players, isRanked, resultMatchTypeId) {
+	const fromResult = toFiniteNumber(resultMatchTypeId);
+	if (fromResult === 14) {
+		return 14;
+	}
+
+	// Custom / Basic Match — do not dual-write size-based ranked ladder badges.
+	if (!isRanked) {
+		return 0;
+	}
+
+	if (fromResult != null && fromResult >= 1 && fromResult <= 4) {
+		return fromResult;
+	}
+
+	const humans = (players || []).filter((player) => {
+		const id = toFiniteNumber(player?.playerId);
+		return id == null || id !== -1;
+	});
+
+	if (humans.length === 2) {
+		return 1;
+	}
+	if (humans.length === 4) {
+		return 2;
+	}
+	if (humans.length === 6) {
+		return 3;
+	}
+	if (humans.length === 8) {
+		return 4;
+	}
+	return 0;
+}
+
+function summaryStatsFromPlayer(player, matchTypeId, eloByProfile) {
+	const race = toFiniteNumber(player?.race);
+	if (race == null) {
+		return null;
+	}
+
+	const leaderboardId = leaderboardIdForMatchRace(matchTypeId, race);
+	const leaderboardStats =
+		player?.profile && Array.isArray(player.profile.leaderboardStats)
+			? player.profile.leaderboardStats
+			: [];
+	let stat = null;
+	if (leaderboardId != null) {
+		for (let i = 0; i < leaderboardStats.length; i++) {
+			if (toFiniteNumber(leaderboardStats[i].leaderboard_id) === leaderboardId) {
+				stat = leaderboardStats[i];
+				break;
+			}
+		}
+	}
+
+	const profileId =
+		toFiniteNumber(player?.profile?.profile_id) ??
+		(toFiniteNumber(player?.playerId) != null && toFiniteNumber(player.playerId) > 0
+			? toFiniteNumber(player.playerId)
+			: null);
+	const eloFromResult =
+		profileId != null && Object.prototype.hasOwnProperty.call(eloByProfile || {}, profileId)
+			? eloByProfile[profileId]
+			: null;
+	const elo = eloFromResult != null && eloFromResult >= 1 ? eloFromResult : null;
+	const wins = stat ? (toFiniteNumber(stat.wins) ?? 0) : 0;
+	const losses = stat ? (toFiniteNumber(stat.losses) ?? 0) : 0;
+	const streak = stat ? (toFiniteNumber(stat.streak) ?? 0) : 0;
+	// Basic ladder ids 0–3 are not ranked ladders — never dual-write rank badges.
+	const rankedLadder = (matchTypeId >= 1 && matchTypeId <= 4) || matchTypeId === 14;
+	const rank = rankedLadder && stat ? (toFiniteNumber(stat.rank) ?? 0) : 0;
+	const rankLevel =
+		rankedLadder && stat ? (toFiniteNumber(stat.ranklevel ?? stat.rankLevel) ?? 0) : 0;
+
+	if (elo == null && wins === 0 && losses === 0 && rank === 0 && rankLevel === 0) {
+		return null;
+	}
+
+	return {
+		elo,
+		wins,
+		losses,
+		streak,
+		rank: rank > 0 ? rank : 0,
+		rankLevel: rankLevel > 0 ? rankLevel : 0
+	};
+}
+
+function eloByProfileFromResultRaw(result) {
+	const byProfile = {};
+	const players = Array.isArray(result?.players) ? result.players : [];
+	for (let i = 0; i < players.length; i++) {
+		const player = players[i];
+		const profileId = toFiniteNumber(player?.profile_id);
+		if (profileId == null || profileId <= 0) {
+			continue;
+		}
+		const previous = toFiniteNumber(player?.oldrating);
+		const next = toFiniteNumber(player?.newrating);
+		const elo =
+			previous != null && previous >= 1
+				? previous
+				: next != null && next >= 1
+					? next
+					: null;
+		if (elo != null) {
+			byProfile[profileId] = elo;
+		}
+	}
+	return byProfile;
+}
+
+function summarizeLobbyPlayers(players, options = {}) {
 	const summaries = [];
 	const ids = [];
+	const matchTypeId = matchTypeIdForSummarize(
+		players,
+		!!options.isRanked,
+		options.matchTypeId
+	);
+	const eloByProfile = options.eloByProfile || {};
 
 	for (const player of players) {
 		const fromProfile = player?.profile?.profile_id;
@@ -85,13 +223,18 @@ function summarizeLobbyPlayers(players) {
 		}
 
 		ids.push(profileId);
-		summaries.push({
+		const summary = {
 			profile_id: profileId,
 			alias: player?.profile?.alias ?? '',
 			playerId: player?.playerId ?? null,
 			steamId: player?.steamId ?? null,
 			race: player?.race ?? null
-		});
+		};
+		const stats = summaryStatsFromPlayer(player, matchTypeId, eloByProfile);
+		if (stats) {
+			summary.stats = stats;
+		}
+		summaries.push(summary);
 	}
 
 	return {
@@ -569,7 +712,12 @@ function processLobbyRecord(e) {
 		e.record.set('players', slim.players);
 	}
 
-	const { summaries, csv, ids } = summarizeLobbyPlayers(slim.players);
+	const result = parseResultObject(e.record.get('result'));
+	const { summaries, csv, ids } = summarizeLobbyPlayers(slim.players, {
+		isRanked: !!e.record.get('isRanked'),
+		matchTypeId: result?.matchtype_id,
+		eloByProfile: eloByProfileFromResultRaw(result)
+	});
 
 	// Never wipe populated filter fields when players failed to parse (e.g. multipart
 	// edge cases). Empty summaries would otherwise clear lobbyPlayers on every update.

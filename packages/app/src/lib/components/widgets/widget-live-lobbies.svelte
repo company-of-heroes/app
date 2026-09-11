@@ -21,7 +21,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { useI18n } from '$lib/i18n';
 	import dayjs from '$lib/dayjs';
-	import { getFactionFlagFromRace, normalizeMapName } from '$lib/utils';
+	import { getFactionFlagFromRace, getRankImage, normalizeMapName } from '$lib/utils';
 	import { getDefaultMapImage, getMapImageFromName } from '$lib/utils/game';
 
 	const { t } = useI18n();
@@ -193,6 +193,7 @@
 		resolveMapSrc={getMapImageFromName}
 		resolveFallbackSrc={getDefaultMapImage}
 		resolveFactionFlag={getFactionFlagFromRace}
+		getRankImage={getRankImage}
 		formatMapName={normalizeMapName}
 		formatStarted={(createdAt: string) => dayjs(createdAt).fromNow()}
 		{playerHref}

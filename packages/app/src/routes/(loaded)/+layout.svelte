@@ -36,6 +36,7 @@
 	import NotificationBell from '$lib/components/notifications/notification-bell.svelte';
 	import HeaderSteamPlayers from '$lib/components/layout/header-steam-players.svelte';
 	import * as User from '$lib/components/user';
+	import PlayerPreviewBoot from '$lib/components/player/player-preview-boot.svelte';
 	import { useI18n } from '$lib/i18n';
 
 	import '$lib/fonts/TT Mussels/style.css';
@@ -125,7 +126,8 @@
 
 <svelte:boundary>
 	{#snippet pending()}{/snippet}
-	<div class="flex h-screen w-screen overflow-hidden">
+	<PlayerPreviewBoot>
+		<div class="flex h-screen w-screen overflow-hidden">
 		<div
 			class="border-secondary-800 bg-secondary-950 flex min-w-[300px] flex-col gap-8 border-r text-white"
 		>
@@ -294,6 +296,7 @@
 			</main>
 		</div>
 	</div>
+	</PlayerPreviewBoot>
 </svelte:boundary>
 
 <Dialog />

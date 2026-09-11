@@ -11,6 +11,8 @@
 	import CrownIcon from 'phosphor-svelte/lib/CrownIcon';
 	import PlayerLabels from '../player/player-labels.svelte';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
+	import PlayerProfileLink from '../player/player-profile-link.svelte';
+	import { playerPreviewId } from '../player/player-preview-cache';
 	import type { LeaderboardStatRow, PlayerEloMap } from '../format/types';
 	import {
 		getEloColor,
@@ -99,7 +101,14 @@
 			{@const elo = eloForStat(stat)}
 			{@const countryName = getCountryDisplayName(stat.profile.country)}
 			{@const flagUrl = flagImageUrl(stat.profile.country)}
-			<a href={playerHref(stat.profile.profile_id)} class={podiumCellClass(stat.rank)}>
+			<PlayerProfileLink
+				href={playerHref(stat.profile.profile_id)}
+				playerId={playerPreviewId({
+					steamId: getSteamIdFromName(stat.profile.name),
+					profileId: stat.profile.profile_id
+				}) ?? String(stat.profile.profile_id)}
+				class={podiumCellClass(stat.rank)}
+			>
 				<div class="flex w-full items-center justify-between gap-2">
 					<span
 						class={cn(
@@ -184,7 +193,7 @@
 						>{formatStreakLabel(formatStreak(stat.streak))}</span
 					>
 				</div>
-			</a>
+			</PlayerProfileLink>
 		{/each}
 	{/if}
 </div>
