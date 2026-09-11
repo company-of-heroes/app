@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { fileURLToPath } from 'node:url';
 
-const landingRoot = fileURLToPath(new URL('.', import.meta.url));
+const websiteRoot = fileURLToPath(new URL('.', import.meta.url));
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 export default defineConfig({
@@ -28,7 +28,7 @@ export default defineConfig({
 		port: 5174,
 		fs: {
 			allow: [
-				searchForWorkspaceRoot(landingRoot),
+				searchForWorkspaceRoot(websiteRoot),
 				repoRoot,
 				'../app/src/lib/fonts',
 				'../app/src/lib/files/maps'

@@ -1,6 +1,6 @@
 ---
 description: Prefer existing $lib/components over custom HTML markup
-globs: packages/{app,landing}/src/**/*.{svelte,svelte.ts}
+globs: packages/{app,website}/src/**/*.{svelte,svelte.ts}
 alwaysApply: true
 ---
 

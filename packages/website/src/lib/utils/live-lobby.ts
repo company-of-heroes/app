@@ -5,6 +5,7 @@ import {
 	type LiveLobby,
 	type LiveLobbyPlayer
 } from '@company-of-heroes/ui/live-lobby';
+import { toMatchListRowFromLiveLobby, type MatchListRow } from '@company-of-heroes/ui/match';
 import { MATCH_TYPES } from '$lib/utils/player/format';
 import { profileHref } from '$lib/utils/resolvers';
 
@@ -17,6 +18,10 @@ export function toLiveLobby(lobby: LiveLobbyRecord, t: TranslateFn): LiveLobby {
 			] ?? 'Custom Game'
 		)
 	};
+}
+
+export function toMatchListRow(lobby: LiveLobby): MatchListRow {
+	return toMatchListRowFromLiveLobby(lobby);
 }
 
 export function liveLobbyPlayerHref(player: LiveLobbyPlayer) {
@@ -53,4 +58,12 @@ export function liveLobbyDetailsHref(lobby: LiveLobby) {
 	}
 
 	return href(`/replays/${lobby.lobbyId}`);
+}
+
+export function matchListDetailsHref(row: MatchListRow) {
+	if (!row.lobbyId) {
+		return null;
+	}
+
+	return href(`/replays/${row.lobbyId}`);
 }

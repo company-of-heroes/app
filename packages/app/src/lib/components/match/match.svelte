@@ -1,17 +1,17 @@
 <script lang="ts">
-	import type { MatchExpanded } from '$core/app/database/matches';
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import type { Snippet } from 'svelte';
-	import { createMatch } from '.';
 	import { isEmpty } from 'lodash-es';
+	import { createMatch } from '.';
+	import { toMatchView, type MatchInput } from './match-view';
 
 	type Props = {
-		match: MatchExpanded;
+		match: MatchInput;
 		children: Snippet;
 	} & HTMLAnchorAttributes;
 
 	let { match, children, ...restProps }: Props = $props();
-	createMatch(() => match);
+	createMatch(() => toMatchView(match));
 </script>
 
 {#if false === isEmpty(restProps)}

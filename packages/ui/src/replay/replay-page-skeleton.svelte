@@ -5,7 +5,7 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 
 	type Props = {
-		/** Landing-style back + breadcrumb row. App uses layout breadcrumbs instead. */
+		/** Website-style back + breadcrumb row. App uses layout breadcrumbs instead. */
 		showNav?: boolean;
 		overviewLabel?: string;
 		chatLabel?: string;

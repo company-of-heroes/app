@@ -55,7 +55,7 @@ export async function loadLatestDownload(): Promise<void> {
 		);
 		applyAsset(linuxDownload, pickAsset(assets, /\.AppImage$/i));
 	} catch (error) {
-		console.warn('[landing] failed to resolve latest downloads:', error);
+		console.warn('[website] failed to resolve latest downloads:', error);
 	} finally {
 		latestDownload.loading = false;
 		linuxDownload.loading = false;

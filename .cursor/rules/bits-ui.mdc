@@ -1,6 +1,6 @@
 ---
-description: Use bits-ui for interactive primitives in app and landing
-globs: packages/{app,landing}/src/**/*.{svelte,svelte.ts}
+description: Use bits-ui for interactive primitives in app and website
+globs: packages/{app,website}/src/**/*.{svelte,svelte.ts}
 alwaysApply: false
 ---
 
@@ -14,7 +14,7 @@ Pagination, tabs, dialogs, popovers, combobox/select, command palettes, and simi
 
 ## How
 
-Wrap bits-ui in **`packages/ui`**, not per-app copies. Import from `@company-of-heroes/ui/*` in app and landing.
+Wrap bits-ui in **`packages/ui`**, not per-app copies. Import from `@company-of-heroes/ui/*` in app and website.
 
 ```svelte
 <script lang="ts">

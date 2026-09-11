@@ -26,7 +26,7 @@ export type FlatReplayAction = {
 };
 
 /**
- * Flat v1-shaped replay used by app/landing UI and upload payloads.
+ * Flat v1-shaped replay used by app/website UI and upload payloads.
  * Built from `@fknoobs/replay-parser` v2 {@link Replay}.
  */
 export type FlatReplay = {

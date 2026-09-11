@@ -157,7 +157,7 @@ This is a **pnpm + Turbo monorepo**. Packages:
 | Package | Role |
 |---|---|
 | `packages/app` | Tauri desktop app (SvelteKit, adapter-static) |
-| `packages/landing` | Public site [coh1stats.com](https://coh1stats.com) (Cloudflare) |
+| `packages/website` | Public site [coh1stats.com](https://coh1stats.com) (Cloudflare) |
 | `packages/ui` | Shared presentational UI |
 | `packages/api` | Shared PocketBase / API client (`createApi`) |
 | `packages/i18n` | Shared `en` / `es` / `ko` dictionaries |
@@ -184,10 +184,10 @@ pnpm dev
 
 This starts PocketBase on `http://localhost:8090` and launches the Tauri dev window. PocketBase data is stored in `packages/pocketbase/pb_data`.
 
-Landing site (separate from the desktop app):
+Website (separate from the desktop app):
 
 ```bash
-pnpm landing:dev
+pnpm website:dev
 ```
 
 ### Environment
@@ -214,7 +214,7 @@ Optionally create an admin user at `http://localhost:8090/_/`.
 
 ```bash
 pnpm build              # production Tauri build (Windows)
-pnpm landing:build      # production landing site build
+pnpm website:build      # production website build
 ```
 
 Platform-specific desktop builds:

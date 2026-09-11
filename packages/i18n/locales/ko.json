@@ -9,6 +9,7 @@
 	"{count} matches": "{count}경기",
 	"{count} pending": "{count}개 대기",
 	"{count} played": "{count}경기 플레이",
+	"{count} playing": "{count}명 플레이 중",
 	"{count} player found": "플레이어 {count}명 찾음",
 	"{count} players found": "플레이어 {count}명 찾음",
 	"{count} recipient(s)": "수신자 {count}명",

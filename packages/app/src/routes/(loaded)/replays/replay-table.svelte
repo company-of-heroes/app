@@ -1,11 +1,11 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
-	import MapImage from '$lib/components/ui/map-image.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { cn, getFactionFlagFromRace } from '$lib/utils';
-	import { getString } from '$lib/utils/game';
+	import { cn } from '$lib/utils';
 	import { tooltip } from '$lib/attachments';
 	import { interactive } from '$lib/components/ui/variants';
+	import * as Match from '$lib/components/match';
 	import SortAscendingIcon from 'phosphor-svelte/lib/ArrowDownIcon';
 	import SortDescendingIcon from 'phosphor-svelte/lib/ArrowUpIcon';
 	import SortableIcon from 'phosphor-svelte/lib/ArrowsDownUpIcon';
@@ -14,7 +14,6 @@
 	import DownloadIcon from 'phosphor-svelte/lib/DownloadIcon';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
-	import dayjs from '$lib/dayjs';
 	import type { ReplaysExpanded } from '$core/app/database/replays';
 	import type { ReplayList } from './replay-list.svelte';
 	import { app } from '$core/app/context';
@@ -50,6 +49,8 @@
 		...(localPresence.current ?? {}),
 		...confirmedLocalIds
 	});
+
+	const highlightedPlayers = $derived(list.filters.players);
 
 	const columns: ColumnDef<ReplaysExpanded>[] = [
 		{ id: 'title', header: t('Title'), width: 'w-3/24', class: 'truncate', accessor: (item) => item.title },
@@ -95,19 +96,24 @@
 			localPresence.mutate({ ...localPresence.current, [id]: false });
 		}
 	}
+
 	function viewport(node: HTMLElement) {
 		const observer = new IntersectionObserver((entries) => {
-			if (!entries[0]?.isIntersecting) return;
-			if (list.isLoading || !list.hasMore) return;
+			if (!entries[0]?.isIntersecting) {
+				return;
+			}
+
+			if (list.isLoading || !list.hasMore) {
+				return;
+			}
+
 			list.loadMore();
 		});
 
 		observer.observe(node);
 
-		return {
-			destroy() {
-				observer.disconnect();
-			}
+		return () => {
+			observer.disconnect();
 		};
 	}
 
@@ -127,11 +133,6 @@
 		} else {
 			list.filters.sort.gameDate = 'gameDate';
 		}
-	}
-
-	function isFilteredPlayer(name: string) {
-		const normalized = name.toLowerCase();
-		return list.filters.players.some((player) => player.toLowerCase() === normalized);
 	}
 
 	function openRename(row: ReplaysExpanded) {
@@ -274,52 +275,20 @@
 	</span>
 {/snippet}
 {#snippet cell_allies({ row }: { row: ReplaysExpanded })}
-	{@const allies = row.players?.filter((p) => p.faction.startsWith('allies')) || []}
-	<span class="flex items-center gap-2">
-		{#each allies as player (player.id)}
-			<img
-				src={getFactionFlagFromRace(
-					player.faction as 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
-				)}
-				alt={player.faction}
-				class={cn(
-					'h-4 w-4 rounded-full object-cover ring-4',
-					isFilteredPlayer(player.name) ? 'ring-primary' : 'ring-secondary-800'
-				)}
-				{@attach tooltip(player.name)}
-			/>
-		{/each}
-	</span>
+	<Match.Players team="allies" {highlightedPlayers} />
 {/snippet}
 {#snippet cell_axis({ row }: { row: ReplaysExpanded })}
-	{@const axis = row.players?.filter((p) => p.faction.startsWith('axis')) || []}
-	<span class="flex items-center gap-2">
-		{#each axis as player (player.id)}
-			<img
-				src={getFactionFlagFromRace(
-					player.faction as 'allies' | 'axis' | 'allies_commonwealth' | 'axis_panzer_elite'
-				)}
-				alt={player.faction}
-				class={cn(
-					'h-4 w-4 rounded-full object-cover ring-4',
-					isFilteredPlayer(player.name) ? 'ring-primary' : 'ring-secondary-800'
-				)}
-				{@attach tooltip(player.name)}
-			/>
-		{/each}
-	</span>
+	<Match.Players team="axis" {highlightedPlayers} />
 {/snippet}
 {#snippet cell_duration({ row }: { row: ReplaysExpanded })}
-	{dayjs
-		.duration(row.durationInSeconds, 'seconds')
-		.format(row.durationInSeconds < 3600 ? t('m[min]') : t('H[hr] m[min]'))}
+	<Match.Duration />
 {/snippet}
 {#snippet cell_map({ row }: { row: ReplaysExpanded })}
-	<MapImage small flush map={row.mapFilename.split(/[/\\]/).pop()} />
-	<span class="truncate">{getString(row.mapName)}</span>
+	<Match.MapImage small flush />
+	<Match.MapName />
 {/snippet}
 {#snippet cell_date({ row }: { row: ReplaysExpanded })}
-	{dayjs(row.gameDate).format('YYYY-MM-DD HH:mm')}
+	<Match.Date />
 {/snippet}
 {#snippet cell_actions({ row }: { row: ReplaysExpanded })}
 	{@const isDownloading = !!downloadingIds[row.id]}
@@ -388,9 +357,14 @@
 		<TrashIcon size={16} />
 	</Button>
 {/snippet}
+{#snippet replayRowWrapper({ row, children }: { row: ReplaysExpanded; children: Snippet })}
+	<Match.Root match={row}>
+		{@render children()}
+	</Match.Root>
+{/snippet}
 {#snippet tableFooter()}
 	{#if list.replays.length > 0 || !list.isLoading}
-		<div use:viewport class="text-secondary-400 text-sm">
+		<div {@attach viewport} class="text-secondary-400 text-sm">
 			{#if list.replays.length > 0}
 				{t('Showing {count} replays', { count: list.replays.length })}
 				{#if list.isLoading}
@@ -409,6 +383,7 @@
 	rowKey={(item) => item.id}
 	rowHref={(item) => `/replays/${item.id}`}
 	rowClass={() => 'text-secondary-300'}
+	rowWrapper={replayRowWrapper}
 	loading={list.isLoading && list.replays.length === 0}
 	skeletonRows={10}
 	empty=""

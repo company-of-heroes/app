@@ -30,7 +30,7 @@
 		actions?: Snippet;
 		afterActions?: Snippet;
 		afterDetails?: Snippet;
-		/** Landing-style back + breadcrumb row. App uses its own layout breadcrumbs. */
+		/** Website-style back + breadcrumb row. App uses its own layout breadcrumbs. */
 		showNav?: boolean;
 	};
 

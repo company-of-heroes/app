@@ -26,7 +26,7 @@ alwaysApply: false
 
 ```typescript
 // ❌ BAD — import { pocketbase } from '$core/pocketbase' inside packages/ui
-// ✅ GOOD — accept player/map data as props; app/landing fetch
+// ✅ GOOD — accept player/map data as props; app/website fetch
 ```
 
-App may re-export from `$lib/components/ui/*` for app-only wrappers (Avatar, Table). Do not duplicate a shared component in landing or app when this package already exports it.
+App may re-export from `$lib/components/ui/*` for app-only wrappers (Avatar, Table). Do not duplicate a shared component in website or app when this package already exports it.

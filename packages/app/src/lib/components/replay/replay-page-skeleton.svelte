@@ -4,7 +4,7 @@
 	import { useI18n } from '$lib/i18n';
 
 	type Props = {
-		/** App uses layout breadcrumbs; keep false unless you need landing-style nav. */
+		/** App uses layout breadcrumbs; keep false unless you need website-style nav. */
 		showNav?: boolean;
 	} & HTMLAttributes<HTMLDivElement>;
 

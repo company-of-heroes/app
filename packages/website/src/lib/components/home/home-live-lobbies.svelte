@@ -1,17 +1,22 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
-	import { Table as LiveLobbiesTable, type LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
+	import {
+		ListTable as MatchListTable,
+		LIVE_MATCH_LIST_COLUMNS
+	} from '@company-of-heroes/ui/match';
+	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
 	import type { LiveLobbyRecord } from '@company-of-heroes/api';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { meSteamIds } from '$lib/auth/user';
 	import { currentLocale, useI18n } from '$lib/i18n';
 	import { API_URL } from '$lib/site/urls';
 	import {
-		liveLobbyDetailsHref,
 		liveLobbyPlayerHref,
 		liveLobbyPlayerLabel,
-		toLiveLobby
+		matchListDetailsHref,
+		toLiveLobby,
+		toMatchListRow
 	} from '$lib/utils/live-lobby';
 	import { formatRelativeIso, normalizeMapName } from '$lib/utils/player/format';
 	import { resolveFactionFlag, resolveFallbackSrc, resolveMapSrc } from '$lib/utils/resolvers';
@@ -29,7 +34,7 @@
 	let seeding = $state(false);
 	let seedError = $state<string | null>(null);
 
-	const rows = $derived(lobbies.map((lobby) => toLiveLobby(lobby, t)));
+	const rows = $derived(lobbies.map((lobby) => toMatchListRow(toLiveLobby(lobby, t))));
 	const loadError = $derived(error || seedError);
 
 	function playerLabel(player: LiveLobbyPlayer) {
@@ -102,16 +107,17 @@
 			{seedError ?? t('Could not load live lobbies.')}
 		</p>
 	{/if}
-	<LiveLobbiesTable
-		lobbies={rows}
+	<MatchListTable
+		{rows}
 		{loading}
+		columns={LIVE_MATCH_LIST_COLUMNS}
 		meSteamIds={mySteamIds}
 		{resolveMapSrc}
 		{resolveFallbackSrc}
 		{resolveFactionFlag}
 		playerHref={liveLobbyPlayerHref}
 		{playerLabel}
-		detailsHref={liveLobbyDetailsHref}
+		detailsHref={matchListDetailsHref}
 		formatMapName={normalizeMapName}
 		formatStarted={(createdAt) => formatRelativeIso(createdAt, currentLocale())}
 		emptyMessage={loadError

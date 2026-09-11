@@ -27,7 +27,7 @@
 		},
 		getLocale: () => locale,
 		setLocale: () => {
-			/* locale is URL-driven on landing */
+			/* locale is URL-driven on website */
 		},
 		get t() {
 			return createTranslate(() => locale);

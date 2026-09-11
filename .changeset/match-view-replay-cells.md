@@ -4,4 +4,4 @@
 '@company-of-heroes/ui': patch
 ---
 
-enhance; reuse shared tabs, dialog, leaderboard, and player-performance ui across app and website
+enhance; share match list cells for live lobbies and match tables across app and website

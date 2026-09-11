@@ -52,6 +52,8 @@
 		"./live-lobby/slim": "./src/live-lobby/slim.ts",
 		"./live-lobby/stats": "./src/live-lobby/stats.ts",
 		"./live-lobby/types": "./src/live-lobby/types.ts",
+		"./match": "./src/match/index.ts",
+		"./match/types": "./src/match/types.ts",
 		"./twitch": "./src/twitch/index.ts",
 		"./twitch/types": "./src/twitch/types.ts"
 	},

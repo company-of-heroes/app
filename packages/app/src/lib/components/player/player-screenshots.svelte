@@ -226,8 +226,8 @@
 	class="bg-gray-950/90"
 	{detailsHref}
 >
-	{#snippet expandContent({ row }: { row: MatchExpanded })}
-		{@const captures = capturesBySession[row.sessionId] ?? []}
+	{#snippet expandContent({ match }: { row: import('@company-of-heroes/ui/match').MatchListRow; match: MatchExpanded })}
+		{@const captures = capturesBySession[match.sessionId] ?? []}
 		{#if captures.length === 0}
 			<p class="text-secondary-400 px-4 py-3 text-sm">
 				{t(

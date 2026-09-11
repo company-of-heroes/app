@@ -1,4 +1,4 @@
-# @company-of-heroes/landing
+# @company-of-heroes/website
 
 ## 1.6.4
 

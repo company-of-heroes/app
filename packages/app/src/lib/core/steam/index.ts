@@ -455,6 +455,26 @@ export class SteamAPI {
 	}
 
 	/**
+	 * Concurrent players currently in a Steam app (Company of Heroes = 228200).
+	 */
+	async getCurrentPlayerCount(appId = 228200): Promise<number | null> {
+		try {
+			const data = await this.request<{
+				response: { player_count: number; result: number };
+			}>('/ISteamUserStats/GetNumberOfCurrentPlayers/v1/', { appid: appId });
+
+			if (data.response?.result !== 1 || typeof data.response.player_count !== 'number') {
+				return null;
+			}
+
+			return data.response.player_count;
+		} catch (error) {
+			console.error(`Failed to get current player count for app ${appId}:`, error);
+			return null;
+		}
+	}
+
+	/**
 	 * Clear the cache
 	 */
 	clearCache(): void {

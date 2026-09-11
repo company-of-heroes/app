@@ -1,16 +1,16 @@
 ---
-description: Landing services return neverthrow Result; loads unwrap to Kit errors
-globs: packages/landing/src/**/*.{ts,svelte}
+description: Website services return neverthrow Result; loads unwrap to Kit errors
+globs: packages/website/src/**/*.{ts,svelte}
 alwaysApply: false
 ---
 
 # neverthrow
 
-PocketBase / `api.coh1stats.com` I/O lives in **`@company-of-heroes/api`** (`createApi`) and returns `Result` / `ResultAsync`. Landing `locals.services.*()` are thin factories over that client. Do not throw for expected HTTP failures (404, 400, 429, upstream 500).
+PocketBase / `api.coh1stats.com` I/O lives in **`@company-of-heroes/api`** (`createApi`) and returns `Result` / `ResultAsync`. Website `locals.services.*()` are thin factories over that client. Do not throw for expected HTTP failures (404, 400, 429, upstream 500).
 
 ## Services / api
 
-Map failures to `AppError` / `ApiError` (`status` + user-facing `message`). Prefer calling `@company-of-heroes/api` over new `pocketbase.collection` or `fetchJson` in landing.
+Map failures to `AppError` / `ApiError` (`status` + user-facing `message`). Prefer calling `@company-of-heroes/api` over new `pocketbase.collection` or `fetchJson` in website.
 
 ```typescript
 // ❌ BAD — try/catch that returns a string, or inline PB in a route
@@ -55,4 +55,4 @@ export const load = ({ locals, params }) => ({
 - Catch PocketBase / `fetch` errors and return `string | null`
 - Throw raw `Error` from a service or load for a known status
 - Leak `Result` into `+page.svelte` — unwrap on the server (loads, remotes)
-- Duplicate collection/HTTP logic in landing that already exists in `@company-of-heroes/api`
+- Duplicate collection/HTTP logic in website that already exists in `@company-of-heroes/api`

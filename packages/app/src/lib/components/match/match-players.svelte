@@ -8,58 +8,92 @@
 	import { isMePlayer } from '$lib/utils/player-me';
 	import { intersection } from 'lodash-es';
 	import { useI18n } from '$lib/i18n';
+	import type { LobbyPlayer } from '@fknoobs/app';
 
 	type Props = {
 		team: 'allies' | 'axis';
-		outcome?: 'win' | 'loss';
 		highlightedPlayers?: string[];
 	} & HTMLAttributes<HTMLSpanElement>;
 
-	let { team, outcome = $bindable(), highlightedPlayers = [], ...restProps }: Props = $props();
+	let { team, highlightedPlayers = [], ...restProps }: Props = $props();
 	const { t } = useI18n();
-	let match = useMatch();
-	let players = $derived(
-		team === 'allies'
-			? match.players?.filter((p) => p.race === Race.US || p.race === Race.Commonwealth) || []
-			: match.players?.filter((p) => p.race === Race.Wehrmacht || p.race === Race.PanzerElite) || []
-	);
+	const match = useMatch();
 
-	$effect(() => {
-		const player = match.result?.players.find((p) =>
-			players.find((pl) => pl.playerId === p.profile_id)
-		);
-
-		if (player) {
-			const newOutcome = player.outcome === 0 ? 'loss' : 'win';
-			if (outcome !== newOutcome) {
-				outcome = newOutcome;
-			}
+	function onTeam(player: LobbyPlayer, side: 'allies' | 'axis') {
+		if (player.team === 0 || player.team === 1) {
+			return side === 'allies' ? player.team === 0 : player.team === 1;
 		}
-	});
+
+		if (side === 'allies') {
+			return player.race === Race.US || player.race === Race.Commonwealth;
+		}
+
+		return player.race === Race.Wehrmacht || player.race === Race.PanzerElite;
+	}
+
+	const players = $derived(match.players?.filter((player) => onTeam(player, team)) || []);
+
+	function playerHref(player: LobbyPlayer) {
+		if (player.playerId === -1) {
+			return null;
+		}
+
+		if (player.profile?.profile_id) {
+			return `/players/${player.profile.profile_id}`;
+		}
+
+		if (player.steamId) {
+			return `/players/${player.steamId}`;
+		}
+
+		return null;
+	}
+
+	function isHighlighted(player: LobbyPlayer) {
+		if (!highlightedPlayers.length) {
+			return false;
+		}
+
+		const ids = [
+			player.playerId?.toString(),
+			player.profile?.profile_id?.toString(),
+			player.steamId
+		].filter(Boolean) as string[];
+
+		if (intersection(highlightedPlayers, ids).length > 0) {
+			return true;
+		}
+
+		const name = player.profile?.alias || player.name;
+		if (!name) {
+			return false;
+		}
+
+		const normalized = name.toLowerCase();
+		return highlightedPlayers.some((entry) => entry.toLowerCase() === normalized);
+	}
 </script>
 
 <span {...restProps} class={cn('flex items-center gap-2', restProps.class)}>
-	{#each players as player}
-		{@const isHighlighted =
-			intersection(highlightedPlayers, [
-				player.playerId?.toString(),
-				player.profile?.profile_id?.toString(),
-				player.steamId
-			]).length > 0}
+	{#each players as player (player.playerId ?? player.index)}
+		{@const highlighted = isHighlighted(player)}
 		{@const isMe = isMePlayer(player)}
-
+		{@const label = player.profile?.alias || player.name || t('Unknown')}
+		{@const href = playerHref(player)}
+		{@const factionClass = cn(
+			isMe || highlighted ? 'grayscale-0' : 'opacity-50 grayscale-80',
+			isMe && 'ring-primary',
+			!isMe && highlighted && 'ring-info',
+			'hover:opacity-100 hover:grayscale-0'
+		)}
 		<Player.Root {player}>
-			<a href={`/players/${player.steamId}`}>
-				<Player.Faction
-					{@attach tooltip(player.profile?.alias || t('Unknown'))}
-					class={cn(
-						isMe || isHighlighted ? 'grayscale-0' : 'opacity-50 grayscale-80',
-						isMe && 'ring-primary',
-						!isMe && isHighlighted && 'ring-info',
-						'hover:opacity-100 hover:grayscale-0'
-					)}
-				/>
-			</a>
+			{#if href}
+				<a {href} class="cursor-pointer">
+					<Player.Faction {@attach tooltip(label)} class={factionClass} />
+				</a>
+			{:else}
+				<Player.Faction {@attach tooltip(label)} class={factionClass} />
+			{/if}
 		</Player.Root>
 	{/each}
 </span>

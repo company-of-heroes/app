@@ -1,19 +1,12 @@
 <script lang="ts">
-	import MapImage from '../ui/map-image.svelte';
-	import { Button } from '../ui/button';
-	import { Skeleton } from '../ui/skeleton';
-	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive, tableHeadRow } from '@company-of-heroes/ui/variants';
-	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
-	import LiveLobbyPlayers from './live-lobby-players.svelte';
-	import { hasLiveLobbyStats } from './stats';
 	import {
-		defaultLiveLobbyPlayerLabel,
-		playerRowKey,
-		teamPlayers,
-		type LiveLobby,
-		type LiveLobbyPlayer
-	} from './types';
+		ListTable as SharedMatchListTable,
+		LIVE_MATCH_LIST_COLUMNS,
+		toMatchListRowFromLiveLobby,
+		type MatchListColumnId,
+		type MatchListRow
+	} from '@company-of-heroes/ui/match';
+	import type { LiveLobby, LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
 
 	type Props = {
 		lobbies: LiveLobby[];
@@ -55,305 +48,67 @@
 		formatMapName,
 		formatStarted,
 		playerHref,
-		playerLabel = defaultLiveLobbyPlayerLabel,
+		playerLabel,
 		detailsHref,
-		emptyMessage = 'No community members are in a match right now.',
-		mapLabel = 'Map',
-		nameLabel = 'Name',
-		typeLabel = 'Type',
-		alliesLabel = 'Allies',
-		axisLabel = 'Axis',
-		hostLabel = 'Host',
-		startedLabel = 'Started at',
-		unknownHostLabel = 'Unknown',
-		detailsLabel = 'Details',
-		eloLabel = 'ELO',
-		levelLabel = 'Level',
-		posLabel = 'Pos',
-		winsLabel = 'W',
-		lossesLabel = 'L',
-		streakLabel = 'Streak'
+		emptyMessage,
+		mapLabel,
+		nameLabel,
+		typeLabel,
+		alliesLabel,
+		axisLabel,
+		hostLabel,
+		startedLabel,
+		unknownHostLabel,
+		detailsLabel,
+		eloLabel,
+		levelLabel,
+		posLabel,
+		winsLabel,
+		lossesLabel,
+		streakLabel
 	}: Props = $props();
 
-	let expandedId = $state<string | null>(null);
-	const columnCount = $derived(detailsHref ? 9 : 8);
+	const rows = $derived(lobbies.map(toMatchListRowFromLiveLobby));
+	const lobbyById = $derived(new Map(lobbies.map((lobby) => [lobby.id, lobby])));
+	const columns: MatchListColumnId[] = LIVE_MATCH_LIST_COLUMNS;
 
-	function toggleExpanded(id: string) {
-		expandedId = expandedId === id ? null : id;
-	}
-
-	function handleRowClick(event: MouseEvent, id: string) {
-		const target = event.target as HTMLElement;
-		if (target.closest('a, button')) {
-			return;
+	function rowDetailsHref(row: MatchListRow) {
+		const lobby = lobbyById.get(row.id);
+		if (!lobby || !detailsHref) {
+			return null;
 		}
 
-		toggleExpanded(id);
-	}
-
-	function handleRowKeydown(event: KeyboardEvent, id: string) {
-		if (event.key !== 'Enter' && event.key !== ' ') {
-			return;
-		}
-
-		const target = event.target as HTMLElement;
-		if (target.closest('a, button')) {
-			return;
-		}
-
-		event.preventDefault();
-		toggleExpanded(id);
+		return detailsHref(lobby);
 	}
 </script>
 
-{#snippet factionFlags(players: LiveLobbyPlayer[])}
-	<span class="flex items-center gap-1.5">
-		{#each players as player, rowIndex (playerRowKey(player, rowIndex))}
-			{@const href = playerHref(player)}
-			{@const label = playerLabel(player)}
-			{@const isMe = Boolean(player.steamId && meSteamIds.includes(player.steamId))}
-			{#if href}
-				<a {href} title={label} class={cn(interactive, 'shrink-0 rounded-full')}>
-					<img
-						src={resolveFactionFlag(player.race)}
-						alt={label}
-						class={cn(
-							'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4',
-							isMe && 'ring-primary'
-						)}
-					/>
-				</a>
-			{:else}
-				<img
-					src={resolveFactionFlag(player.race)}
-					alt={label}
-					title={label}
-					class={cn(
-						'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4 opacity-70',
-						isMe && 'ring-primary'
-					)}
-				/>
-			{/if}
-		{/each}
-	</span>
-{/snippet}
-
-{#snippet lobbyPlayers(lobby: LiveLobby)}
-	<LiveLobbyPlayers
-		players={lobby.players}
-		{meSteamIds}
-		{resolveFactionFlag}
-		{playerHref}
-		{playerLabel}
-		showStats={hasLiveLobbyStats(lobby.players)}
-		{alliesLabel}
-		{axisLabel}
-		{eloLabel}
-		{levelLabel}
-		{posLabel}
-		{winsLabel}
-		{lossesLabel}
-		{streakLabel}
-	/>
-{/snippet}
-
-{#if loading}
-	<div class="hidden md:block">
-		<table class="w-full table-fixed">
-			<thead class="border-secondary-800 border-b">
-				<tr class="{tableHeadRow} text-left">
-					<th class="px-4 py-3">{mapLabel}</th>
-					<th class="px-4 py-3">{nameLabel}</th>
-					<th class="px-4 py-3">{typeLabel}</th>
-					<th class="px-4 py-3">{alliesLabel}</th>
-					<th class="px-4 py-3">{axisLabel}</th>
-					<th class="px-4 py-3">{hostLabel}</th>
-					<th class="px-4 py-3 whitespace-nowrap">{startedLabel}</th>
-					{#if detailsHref}
-						<th class="px-4 py-3"></th>
-					{/if}
-					<th class="px-4 py-3"></th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each Array(3) as _, index (index)}
-					<tr class="border-secondary-800 h-11 border-b">
-						{#each Array(columnCount) as _, cellIndex (cellIndex)}
-							<td class="px-4">
-								<Skeleton class="h-4 w-full rounded-none" />
-							</td>
-						{/each}
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
-	<div class="md:hidden">
-		{#each Array(3) as _, index (index)}
-			<div class="border-secondary-800 space-y-3 border-b px-4 py-3">
-				<div class="flex items-center gap-3">
-					<Skeleton class="size-10 shrink-0 rounded" />
-					<div class="min-w-0 flex-1 space-y-2">
-						<Skeleton class="h-4 w-2/3 rounded-none" />
-						<Skeleton class="h-3 w-1/3 rounded-none" />
-					</div>
-				</div>
-				<Skeleton class="h-5 w-1/2 rounded-none" />
-				<Skeleton class="h-3 w-2/5 rounded-none" />
-			</div>
-		{/each}
-	</div>
-{:else if lobbies.length === 0}
-	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
-{:else}
-	<div class="hidden overflow-x-auto md:block">
-		<table class="w-full table-fixed border-collapse text-sm">
-			<thead class="border-secondary-800 border-b">
-				<tr class="{tableHeadRow} text-left">
-					<th class="w-2/24 px-4 py-3">{mapLabel}</th>
-					<th class="w-4/24 px-4 py-3">{nameLabel}</th>
-					<th class="w-3/24 px-4 py-3">{typeLabel}</th>
-					<th class="w-3/24 px-4 py-3">{alliesLabel}</th>
-					<th class="w-3/24 px-4 py-3">{axisLabel}</th>
-					<th class="w-3/24 px-4 py-3">{hostLabel}</th>
-					<th class="w-3/24 px-4 py-3 whitespace-nowrap">{startedLabel}</th>
-					{#if detailsHref}
-						<th class="w-2/24 px-4 py-3"></th>
-					{/if}
-					<th class="w-1/24 px-4 py-3"></th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each lobbies as lobby (lobby.id)}
-					{@const expanded = expandedId === lobby.id}
-					<tr
-						class={cn(
-							interactive,
-							'border-secondary-800 text-secondary-300 h-11 border-b transition-colors',
-							'hover:bg-secondary-950/60 hover:text-primary',
-							expanded && 'bg-secondary-950/60 text-primary'
-						)}
-						aria-expanded={expanded}
-						onclick={(event) => handleRowClick(event, lobby.id)}
-					>
-						<td class="h-11 overflow-clip py-0 pr-0 pl-4">
-							<MapImage
-								small
-								flush
-								map={lobby.map}
-								{resolveMapSrc}
-								{resolveFallbackSrc}
-								alt={formatMapName(lobby.map)}
-							/>
-						</td>
-						<td class="truncate px-4 font-medium text-white">{formatMapName(lobby.map)}</td>
-						<td class="text-secondary-400 truncate px-4">{lobby.modeLabel}</td>
-						<td class="overflow-hidden px-4">
-							{@render factionFlags(teamPlayers(lobby.players, 'allies'))}
-						</td>
-						<td class="overflow-hidden px-4">
-							{@render factionFlags(teamPlayers(lobby.players, 'axis'))}
-						</td>
-						<td class="text-secondary-400 truncate px-4">{lobby.hostName || unknownHostLabel}</td>
-						<td class="text-secondary-500 truncate px-4 text-xs tabular-nums">
-							{formatStarted(lobby.createdAt)}
-						</td>
-						{#if detailsHref}
-							{@const detailUrl = detailsHref(lobby)}
-							<td class="px-4">
-								{#if detailUrl}
-									<Button href={detailUrl} size="sm" variant="secondary" class="h-7 px-2.5 text-xs">
-										{detailsLabel}
-									</Button>
-								{/if}
-							</td>
-						{/if}
-						<td class="px-4">
-							<CaretDownIcon class={cn('size-4 transition-transform', expanded && 'rotate-180')} />
-						</td>
-					</tr>
-					{#if expanded}
-						<tr>
-							<td colspan={columnCount} class="p-0">
-								{@render lobbyPlayers(lobby)}
-							</td>
-						</tr>
-					{/if}
-				{/each}
-			</tbody>
-		</table>
-	</div>
-	<div class="md:hidden">
-		{#each lobbies as lobby (lobby.id)}
-			{@const expanded = expandedId === lobby.id}
-			<div
-				class={cn(
-					interactive,
-					'border-secondary-800 text-secondary-300 border-b transition-colors',
-					'hover:bg-secondary-950/60 hover:text-primary',
-					expanded && 'bg-secondary-950/60 text-primary'
-				)}
-				role="button"
-				tabindex="0"
-				aria-expanded={expanded}
-				onclick={(event) => handleRowClick(event, lobby.id)}
-				onkeydown={(event) => handleRowKeydown(event, lobby.id)}
-			>
-				<div class="flex gap-3 px-4 py-3">
-					<MapImage
-						small
-						map={lobby.map}
-						{resolveMapSrc}
-						{resolveFallbackSrc}
-						alt={formatMapName(lobby.map)}
-					/>
-					<div class="min-w-0 flex-1">
-						<div class="flex items-start justify-between gap-2">
-							<div class="min-w-0">
-								<p class="truncate font-medium text-white">{formatMapName(lobby.map)}</p>
-								<p class="text-secondary-400 truncate text-sm">{lobby.modeLabel}</p>
-							</div>
-							<div class="flex shrink-0 items-center gap-2">
-								{#if detailsHref}
-									{@const detailUrl = detailsHref(lobby)}
-									{#if detailUrl}
-										<Button
-											href={detailUrl}
-											size="sm"
-											variant="secondary"
-											class="h-7 px-2.5 text-xs"
-										>
-											{detailsLabel}
-										</Button>
-									{/if}
-								{/if}
-								<CaretDownIcon
-									class={cn('size-4 transition-transform', expanded && 'rotate-180')}
-								/>
-							</div>
-						</div>
-						<div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-							<div class="flex min-w-0 items-center gap-1.5">
-								<span class="text-secondary-500 text-xs">{alliesLabel}</span>
-								{@render factionFlags(teamPlayers(lobby.players, 'allies'))}
-							</div>
-							<div class="flex min-w-0 items-center gap-1.5">
-								<span class="text-secondary-500 text-xs">{axisLabel}</span>
-								{@render factionFlags(teamPlayers(lobby.players, 'axis'))}
-							</div>
-						</div>
-						<div
-							class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
-						>
-							<span class="truncate">{lobby.hostName || unknownHostLabel}</span>
-							<span class="text-secondary-500 tabular-nums">{formatStarted(lobby.createdAt)}</span>
-						</div>
-					</div>
-				</div>
-				{#if expanded}
-					{@render lobbyPlayers(lobby)}
-				{/if}
-			</div>
-		{/each}
-	</div>
-{/if}
+<SharedMatchListTable
+	{rows}
+	{loading}
+	{columns}
+	{meSteamIds}
+	{resolveMapSrc}
+	{resolveFallbackSrc}
+	{resolveFactionFlag}
+	{formatMapName}
+	{formatStarted}
+	{playerHref}
+	{playerLabel}
+	detailsHref={detailsHref ? rowDetailsHref : undefined}
+	{emptyMessage}
+	{mapLabel}
+	{nameLabel}
+	{typeLabel}
+	{alliesLabel}
+	{axisLabel}
+	{hostLabel}
+	{startedLabel}
+	{unknownHostLabel}
+	{detailsLabel}
+	{eloLabel}
+	{levelLabel}
+	{posLabel}
+	{winsLabel}
+	{lossesLabel}
+	{streakLabel}
+/>

@@ -1,12 +1,12 @@
 ---
-description: Component file and folder naming — kebab-case everywhere in ui, app, and landing
-globs: packages/{ui,app,landing}/**/*.{svelte,svelte.ts,ts}
+description: Component file and folder naming — kebab-case everywhere in ui, app, and website
+globs: packages/{ui,app,website}/**/*.{svelte,svelte.ts,ts}
 alwaysApply: false
 ---
 
 # Component Naming
 
-Follow [`packages/app/src/lib/components/`](packages/app/src/lib/components/) — same rules apply to [`packages/ui`](packages/ui) and [`packages/landing/src/lib/components/`](packages/landing/src/lib/components/).
+Follow [`packages/app/src/lib/components/`](packages/app/src/lib/components/) — same rules apply to [`packages/ui`](packages/ui) and [`packages/website/src/lib/components/`](packages/website/src/lib/components/).
 
 ## Files and folders
 
@@ -16,9 +16,9 @@ Follow [`packages/app/src/lib/components/`](packages/app/src/lib/components/) �
 - Context modules: `context.ts`, `context.svelte.ts`, or `{domain}.context.svelte.ts`
 - Barrels: always `index.ts`
 
-## Landing marketing components
+## Website marketing components
 
-Landing-only site chrome lives under `packages/landing/src/lib/components/` with the **same kebab-case rules**, grouped by folder — no PascalCase leftovers, no loose files on the components root:
+Website-only site chrome lives under `packages/website/src/lib/components/` with the **same kebab-case rules**, grouped by folder — no PascalCase leftovers, no loose files on the components root:
 
 | Folder | Files |
 |---|---|
@@ -44,7 +44,7 @@ import * as Match from '$lib/components/match';
 import { Button } from '@company-of-heroes/ui/button';
 import { LeaderboardList } from '@company-of-heroes/ui/leaderboard';
 
-// ✅ landing marketing — folder + kebab path, PascalCase binding
+// ✅ website marketing — folder + kebab path, PascalCase binding
 import Header from '$lib/components/layout/header.svelte';
 import DownloadSection from '$lib/components/home/download-section.svelte';
 ```
@@ -52,9 +52,9 @@ import DownloadSection from '$lib/components/home/download-section.svelte';
 ## Do not
 
 - PascalCase filenames in `components/` or `packages/ui/src/`
-- Loose domain files at the landing `components/` root — put chrome in `layout/` or `home/`
-- Duplicate shared UI in landing/app when `@company-of-heroes/ui` already has it
+- Loose domain files at the website `components/` root — put chrome in `layout/` or `home/`
+- Duplicate shared UI in website/app when `@company-of-heroes/ui` already has it
 
 ## New shared components
 
-Add to **`packages/ui`** first (presentational, no `$lib` / `$core` / `$app`). Host-specific fetch, i18n, and navigation stay in thin adapters under `packages/app` or landing route containers.
+Add to **`packages/ui`** first (presentational, no `$lib` / `$core` / `$app`). Host-specific fetch, i18n, and navigation stay in thin adapters under `packages/app` or website route containers.

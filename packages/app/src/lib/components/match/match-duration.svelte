@@ -5,16 +5,33 @@
 
 	type Props = {} & HTMLAttributes<HTMLSpanElement>;
 
-	const { result } = useMatch();
+	const match = useMatch();
 	const { ...restProps }: Props = $props();
+
+	const duration = $derived.by(() => {
+		const result = match.result;
+		if (result && 'startgametime' in result && 'completiontime' in result) {
+			const start = result.startgametime;
+			const end = result.completiontime;
+			if (typeof start === 'number' && typeof end === 'number') {
+				return dayjs.duration((end - start) * 1000);
+			}
+		}
+
+		const seconds = match.durationSeconds;
+		if (typeof seconds === 'number' && Number.isFinite(seconds) && seconds >= 0) {
+			return dayjs.duration(seconds, 'seconds');
+		}
+
+		return null;
+	});
 </script>
 
-{#if result && result.startgametime && result.completiontime}
-	{@const diff = dayjs.duration((result.completiontime - result.startgametime) * 1000)}
+{#if duration}
 	<span {...restProps}>
-		{#if diff.hours() > 0}
-			{diff.hours()}h
+		{#if duration.hours() > 0}
+			{duration.hours()}h
 		{/if}
-		{diff.minutes()}m {diff.seconds()}s
+		{duration.minutes()}m {duration.seconds()}s
 	</span>
 {/if}

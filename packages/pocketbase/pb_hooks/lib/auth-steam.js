@@ -81,7 +81,7 @@ function apiPublicBase(e) {
 	return `${scheme}://${host}`;
 }
 
-function isAllowedLandingOrigin(origin) {
+function isAllowedWebsiteOrigin(origin) {
 	return ALLOWED_LANDING_ORIGINS.includes(String(origin || '').replace(/\/$/, ''));
 }
 
@@ -133,7 +133,7 @@ function parseState(raw) {
 		return null;
 	}
 
-	if (!isAllowedLandingOrigin(origin)) {
+	if (!isAllowedWebsiteOrigin(origin)) {
 		return null;
 	}
 
@@ -322,7 +322,7 @@ function findOrCreateUser(steamId) {
 	return createUserForSteam(steamId);
 }
 
-function landingErrorRedirect(origin, message) {
+function websiteErrorRedirect(origin, message) {
 	const base = origin || ALLOWED_LANDING_ORIGINS[0];
 	return `${base}/login?error=${encodeURIComponent(message)}`;
 }
@@ -330,7 +330,7 @@ function landingErrorRedirect(origin, message) {
 function handleStart(e) {
 	const query = e.request.url.query();
 	const originRaw = String(query.get('origin') || ALLOWED_LANDING_ORIGINS[0]).replace(/\/$/, '');
-	if (!isAllowedLandingOrigin(originRaw)) {
+	if (!isAllowedWebsiteOrigin(originRaw)) {
 		throw new BadRequestError('Invalid origin.');
 	}
 
@@ -349,7 +349,7 @@ function handleCallback(e) {
 
 	try {
 		if (!state) {
-			return e.redirect(302, landingErrorRedirect(origin, 'Invalid or expired Steam login.'));
+			return e.redirect(302, websiteErrorRedirect(origin, 'Invalid or expired Steam login.'));
 		}
 
 		const steamId = verifySteamOpenId(e);
@@ -368,7 +368,7 @@ function handleCallback(e) {
 				? error.message
 				: 'Steam login failed. Please try again.';
 		console.warn('[auth_steam] callback failed', String(error?.message || error));
-		return e.redirect(302, landingErrorRedirect(origin, message));
+		return e.redirect(302, websiteErrorRedirect(origin, message));
 	}
 }
 

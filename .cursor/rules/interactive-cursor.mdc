@@ -1,6 +1,6 @@
 ---
 description: Clickable elements must show a pointer cursor
-globs: packages/{app,landing}/src/**/*.{svelte,svelte.ts}
+globs: packages/{app,website}/src/**/*.{svelte,svelte.ts}
 alwaysApply: true
 ---
 

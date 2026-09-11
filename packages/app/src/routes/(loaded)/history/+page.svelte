@@ -79,22 +79,26 @@
 			header: t('Allies'),
 			width: 'w-3/24',
 			class: 'flex h-full items-center overflow-visible',
-			cellClass: (row) =>
-				cn(
-					row.alliesOutcome === 'win' && 'bg-green-500/5',
-					row.alliesOutcome === 'loss' && 'bg-red-500/5'
-				)
+			cellClass: (row) => {
+				const outcome = Match.resolveTeamOutcome(row, 'allies');
+				return cn(
+					outcome === 'win' && 'bg-green-500/5',
+					outcome === 'loss' && 'bg-red-500/5'
+				);
+			}
 		},
 		{
 			id: 'axis',
 			header: t('Axis'),
 			width: 'w-3/24',
 			class: 'flex h-full items-center overflow-visible',
-			cellClass: (row) =>
-				cn(
-					row.axisOutcome === 'win' && 'bg-green-500/5',
-					row.axisOutcome === 'loss' && 'bg-red-500/5'
-				)
+			cellClass: (row) => {
+				const outcome = Match.resolveTeamOutcome(row, 'axis');
+				return cn(
+					outcome === 'win' && 'bg-green-500/5',
+					outcome === 'loss' && 'bg-red-500/5'
+				);
+			}
 		},
 		{ id: 'duration', header: t('Duration'), width: 'w-2/24' },
 		{
@@ -198,18 +202,10 @@
 		</div>
 	{/snippet}
 	{#snippet cell_allies({ row }: { row: MatchExpanded })}
-		<Match.Players
-			team="allies"
-			bind:outcome={row.alliesOutcome}
-			highlightedPlayers={matches.filters.playerIds ?? []}
-		/>
+		<Match.Players team="allies" highlightedPlayers={matches.filters.playerIds ?? []} />
 	{/snippet}
 	{#snippet cell_axis({ row }: { row: MatchExpanded })}
-		<Match.Players
-			team="axis"
-			bind:outcome={row.axisOutcome}
-			highlightedPlayers={matches.filters.playerIds ?? []}
-		/>
+		<Match.Players team="axis" highlightedPlayers={matches.filters.playerIds ?? []} />
 	{/snippet}
 	{#snippet cell_duration({ row: _row }: { row: MatchExpanded })}
 		<Match.Duration class="text-secondary-400 text-sm" />

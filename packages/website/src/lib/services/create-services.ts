@@ -14,7 +14,7 @@ import {
 	type TwitchApi
 } from '@company-of-heroes/api';
 import { API_URL } from '$lib/site/urls';
-import { LandingReplaysService } from './replays-host';
+import { WebsiteReplaysService } from './replays-host';
 
 export type ServiceDeps = {
 	pocketbase: PocketBase;
@@ -31,7 +31,7 @@ export type Services = {
 	playerSocial: () => PlayerSocialApi;
 	players: () => PlayersApi;
 	ratings: () => RatingsApi;
-	replays: () => LandingReplaysService;
+	replays: () => WebsiteReplaysService;
 	twitch: () => TwitchApi;
 };
 
@@ -44,7 +44,7 @@ export function createServices(deps: ServiceDeps): Services {
 			baseUrl: API_URL
 		}));
 
-	let replays: LandingReplaysService | undefined;
+	let replays: WebsiteReplaysService | undefined;
 
 	return {
 		auth: () => getApi().auth,
@@ -57,7 +57,7 @@ export function createServices(deps: ServiceDeps): Services {
 		players: () => getApi().players,
 		ratings: () => getApi().ratings,
 		replays: () =>
-			(replays ??= new LandingReplaysService(getApi().replays, deps.fetch, API_URL)),
+			(replays ??= new WebsiteReplaysService(getApi().replays, deps.fetch, API_URL)),
 		twitch: () => getApi().twitch
 	};
 }

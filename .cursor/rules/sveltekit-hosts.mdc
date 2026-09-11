@@ -1,6 +1,6 @@
 ---
-description: App is adapter-static SPA; landing is Cloudflare and may use server loads
-globs: packages/{app,landing}/src/routes/**
+description: App is adapter-static SPA; website is Cloudflare and may use server loads
+globs: packages/{app,website}/src/routes/**
 alwaysApply: false
 ---
 
@@ -12,18 +12,18 @@ The two SvelteKit apps are not interchangeable.
 
 `adapter-static`, `ssr = false`, SPA fallback `index.html`. **No** `+server.ts` or `+page.server.ts`. Data loads in the client (`+page.ts` / components / `$core`). Path aliases: `$core/*`, `$features/*`, `$workers/*`. HTTP via `fetch` from `$core/http/fetch`. New dynamic routes go in `svelte.config.js` `prerender.entries` when they use param placeholders.
 
-## `packages/landing` (coh1stats.com)
+## `packages/website` (coh1stats.com)
 
-`adapter-cloudflare`. `+page.server.ts` / `+server.ts` / remote functions (`$lib/remote/*.remote.ts`) are allowed. Hooks boot `locals.pocketbase`, `locals.services`, and per-request `locals.locale` / `locals.t` (`$lib/hooks`). Page loads and remotes call `locals.services.*()`, not inline `fetch` against `API_URL`. Prefer **remote `query` / `command` / `form` with Zod v4** over classic `actions` (see `landing-remote-functions.mdc`). Set cache headers on public pages. No `$core`, no Tauri.
+`adapter-cloudflare`. `+page.server.ts` / `+server.ts` / remote functions (`$lib/remote/*.remote.ts`) are allowed. Hooks boot `locals.pocketbase`, `locals.services`, and per-request `locals.locale` / `locals.t` (`$lib/hooks`). Page loads and remotes call `locals.services.*()`, not inline `fetch` against `API_URL`. Prefer **remote `query` / `command` / `form` with Zod v4** over classic `actions` (see `website-remote-functions.mdc`). Set cache headers on public pages. No `$core`, no Tauri.
 
-Landing `$lib` layout: `auth/`, `player/`, `leaderboards/`, `replays/`, `site/` (urls, features, privacy, download), `utils/` (cn, variants, player format/steam-id, media, resolvers), plus `components/`, `services/`, `hooks/`, `errors/`, `remote/`, `i18n.ts`. Do not dump new helpers on the `$lib` root — put pure helpers in `utils/` with a domain subfolder when they belong together.
+Website `$lib` layout: `auth/`, `player/`, `leaderboards/`, `replays/`, `site/` (urls, features, privacy, download), `utils/` (cn, variants, player format/steam-id, media, resolvers), plus `components/`, `services/`, `hooks/`, `errors/`, `remote/`, `i18n.ts`. Do not dump new helpers on the `$lib` root — put pure helpers in `utils/` with a domain subfolder when they belong together.
 
 User copy through `t()` from `$lib/i18n` (shared `@company-of-heroes/i18n`). English stays on unprefixed URLs; Spanish/Korean use `/es/...` and `/ko/...`. Per-request locale on `locals` — never a module-level i18n singleton. Internal links use `localizeHref` / `href()`. No `$core`, no Tauri, no app Feature classes.
 
 ```typescript
 // ❌ BAD — packages/app/src/routes/api/foo/+server.ts
-// ❌ BAD — landing +page.server.ts fetch(`${API_URL}/api/player/${id}`)
-// ❌ BAD — new landing mutations via export const actions
-// ✅ GOOD — public API in PocketBase hooks; landing load uses locals.services.players().get(id)
-// ✅ GOOD — landing writes via $lib/remote/*.remote.ts + Zod
+// ❌ BAD — website +page.server.ts fetch(`${API_URL}/api/player/${id}`)
+// ❌ BAD — new website mutations via export const actions
+// ✅ GOOD — public API in PocketBase hooks; website load uses locals.services.players().get(id)
+// ✅ GOOD — website writes via $lib/remote/*.remote.ts + Zod
 ```

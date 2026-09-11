@@ -1,12 +1,16 @@
 <script lang="ts">
 	import {
-		Table as LiveLobbiesTable,
 		attachLiveLobbyStats,
 		getLiveLobbyMatchTypeId,
 		toLiveLobbyRecord,
 		type LiveLobby,
 		type LiveLobbyPlayer
 	} from '@company-of-heroes/ui/live-lobby';
+	import {
+		ListTable as MatchListTable,
+		LIVE_MATCH_LIST_COLUMNS,
+		toMatchListRowFromLiveLobby
+	} from '@company-of-heroes/ui/match';
 	import type { LiveLobby as AppLiveLobby } from '$core/app/database/lobbies-live';
 	import WidgetPanel from './widget-panel.svelte';
 	import { LiveLobbiesFeed } from './live-lobbies.svelte';
@@ -25,10 +29,16 @@
 	const isDev = import.meta.env.DEV;
 	let seeding = $state(false);
 
-	const rows = $derived(
+	const lobbies = $derived(
 		feed.items
 			.map((lobby) => toUiLiveLobby(lobby))
 			.filter((lobby): lobby is LiveLobby => lobby != null)
+	);
+
+	const rows = $derived(lobbies.map(toMatchListRowFromLiveLobby));
+
+	const meSteamIds = $derived(
+		(app.features.auth.user.steamIds ?? []).filter(Boolean) as string[]
 	);
 
 	$effect(() => {
@@ -101,18 +111,18 @@
 		}
 
 		if (player.alias.trim()) {
-			return player.alias;
+			return player.alias.trim();
 		}
 
 		return t('Player {n}', { n: player.index + 1 });
 	}
 
-	function detailsHref(lobby: LiveLobby) {
-		if (!lobby.lobbyId) {
+	function detailsHref(row: { lobbyId?: string | null }) {
+		if (!row.lobbyId) {
 			return null;
 		}
 
-		return `/history/${lobby.lobbyId}`;
+		return `/history/${row.lobbyId}`;
 	}
 
 	function seedUrl() {
@@ -175,17 +185,19 @@
 			{t('Could not load live lobbies.')}
 		</p>
 	{/if}
-	<LiveLobbiesTable
-		lobbies={rows}
+	<MatchListTable
+		{rows}
 		loading={feed.isLoading}
+		columns={LIVE_MATCH_LIST_COLUMNS}
+		{meSteamIds}
 		resolveMapSrc={getMapImageFromName}
 		resolveFallbackSrc={getDefaultMapImage}
 		resolveFactionFlag={getFactionFlagFromRace}
+		formatMapName={normalizeMapName}
+		formatStarted={(createdAt: string) => dayjs(createdAt).fromNow()}
 		{playerHref}
 		{playerLabel}
 		{detailsHref}
-		formatMapName={normalizeMapName}
-		formatStarted={(createdAt: string) => dayjs(createdAt).fromNow()}
 		emptyMessage={feed.error
 			? t('Could not load live lobbies.')
 			: t('No community members are in a match right now.')}

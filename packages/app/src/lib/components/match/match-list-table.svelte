@@ -1,23 +1,19 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { MatchExpanded } from '$core/app/database/matches';
-	import type { MatchListColumnId } from './match-list-columns';
-	import MatchRoot from './match.svelte';
-	import MatchMapImage from './match-map-image.svelte';
-	import MatchMapName from './match-map-name.svelte';
-	import MatchProBadge from './match-pro-badge.svelte';
-	import MatchPendingBadge from './match-pending-badge.svelte';
-	import MatchPlayers from './match-players.svelte';
-	import MatchRating from './match-rating.svelte';
-	import MatchDate from './match-date.svelte';
-	import MatchDuration from './match-duration.svelte';
-	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
-	import { Button } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils';
-	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
+	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
+	import {
+		ListTable as SharedMatchListTable,
+		type MatchListColumnId,
+		type MatchListRow
+	} from '@company-of-heroes/ui/match';
 	import MatchLobbyPlayers from '$lib/components/widgets/match-lobby-players.svelte';
 	import { getMatchModeLabel } from '$lib/components/widgets/dashboard-utils';
-	import type { Snippet } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { toUiMatchListRow } from './match-view';
+	import { app } from '$core/app/context';
+	import dayjs from '$lib/dayjs';
+	import { normalizeMapName, getFactionFlagFromRace } from '$lib/utils';
+	import { getDefaultMapImage, getMapImageFromName } from '$lib/utils/game';
 	import { useI18n } from '$lib/i18n';
 
 	type Props = {
@@ -31,8 +27,8 @@
 		emptyMessage?: string;
 		class?: string;
 		footer?: Snippet;
-		expandContent?: Snippet<[{ row: MatchExpanded }]>;
-		detailsHref?: (row: MatchExpanded) => string | undefined;
+		expandContent?: Snippet<[{ row: MatchListRow; match: MatchExpanded }]>;
+		detailsHref?: (row: MatchExpanded) => string | undefined | null;
 	};
 
 	let {
@@ -51,10 +47,19 @@
 	}: Props = $props();
 	const { t } = useI18n();
 
-	let expandedId = $state<string | null>(null);
+	const meSteamIds = $derived(
+		(app.features.auth.user.steamIds ?? []).filter(Boolean) as string[]
+	);
 
-	const resolvedColumnIds = $derived.by((): MatchListColumnId[] => {
-		if (columnIds?.length) return columnIds;
+	const matchById = $derived(new Map(matches.map((match) => [match.id, match])));
+
+	const resolvedColumns = $derived.by((): MatchListColumnId[] => {
+		if (columnIds?.length) {
+			return columnIds.includes('expand') || !expandable
+				? columnIds
+				: [...columnIds, 'expand'];
+		}
+
 		const ids: MatchListColumnId[] = [];
 		if (showMap) ids.push('map');
 		ids.push('name', 'type', 'allies', 'axis', 'duration');
@@ -63,198 +68,121 @@
 		if (expandable) ids.push('expand');
 		return ids;
 	});
-	const canExpand = $derived(resolvedColumnIds.includes('expand'));
-	const columnDefs = $derived.by(() => {
-		const defs: Record<MatchListColumnId, ColumnDef<MatchExpanded>> = {
-			map: {
-				id: 'map',
-				header: t('Map'),
-				width: 'w-2/24',
-				class: 'flex h-full items-center',
-				cellClass: () => 'overflow-clip py-0 pr-0 pl-4'
-			},
-			name: {
-				id: 'name',
-				header: t('Name'),
-				width: 'w-5/24',
-				class: 'min-w-0 truncate font-medium'
-			},
-			type: {
-				id: 'type',
-				header: t('Type'),
-				width: 'w-2/24',
-				class: 'text-secondary-400 truncate text-sm'
-			},
-			allies: {
-				id: 'allies',
-				header: t('Allies'),
-				width: 'w-3/24',
-				class: 'flex h-full items-center overflow-visible',
-				cellClass: (row) =>
-					cn(
-						row.alliesOutcome === 'win' && 'bg-green-500/5',
-						row.alliesOutcome === 'loss' && 'bg-red-500/5'
-					)
-			},
-			axis: {
-				id: 'axis',
-				header: t('Axis'),
-				width: 'w-3/24',
-				class: 'flex h-full items-center overflow-visible',
-				cellClass: (row) =>
-					cn(
-						row.axisOutcome === 'win' && 'bg-green-500/5',
-						row.axisOutcome === 'loss' && 'bg-red-500/5'
-					)
-			},
-			duration: {
-				id: 'duration',
-				header: t('Duration'),
-				width: 'w-3/24',
-				class: 'text-secondary-400 truncate text-sm'
-			},
-			rating: { id: 'rating', header: t('Rating'), width: 'w-3/24' },
-			date: {
-				id: 'date',
-				header: t('Date'),
-				width: 'w-3/24',
-				class: 'text-secondary-400 truncate text-sm'
-			},
-			actions: { id: 'actions', header: '', width: 'w-3/24', hideSkeleton: true },
-			expand: {
-				id: 'expand',
-				header: '',
-				width: 'w-1/24',
-				headerCellClass: 'p-0',
-				cellClass: () => 'p-0',
-				class: 'flex w-full justify-center',
-				hideSkeleton: true
-			}
-		};
-		return resolvedColumnIds.map((id) => defs[id]);
-	});
 
-	function toggleExpanded(id: string) {
-		if (!canExpand) return;
-		expandedId = expandedId === id ? null : id;
+	const rows = $derived(
+		matches.map((match) =>
+			toUiMatchListRow(match, {
+				profileId: highlightedPlayers[0],
+				modeLabel: getMatchModeLabel(match)
+			})
+		)
+	);
+
+	function playerHref(player: LiveLobbyPlayer) {
+		if (player.playerId === -1) {
+			return null;
+		}
+
+		if (player.profileId) {
+			return `/players/${player.profileId}`;
+		}
+
+		if (player.steamId) {
+			return `/players/${player.steamId}`;
+		}
+
+		return null;
 	}
 
-	function openDetails(event: MouseEvent, href: string) {
-		event.stopPropagation();
-		if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-		event.preventDefault();
-		void goto(href);
+	function playerLabel(player: LiveLobbyPlayer) {
+		if (player.playerId === -1) {
+			const alias = player.alias.trim();
+			if (alias && /^cpu(\b|\s*[-–—])/i.test(alias)) {
+				return alias;
+			}
+
+			return t('CPU opponent');
+		}
+
+		if (player.alias.trim()) {
+			return player.alias.trim();
+		}
+
+		return t('Player {n}', { n: player.index + 1 });
+	}
+
+	function rowDetailsHref(row: MatchListRow) {
+		const match = matchById.get(row.id);
+		if (!match) {
+			return null;
+		}
+
+		if (detailsHref) {
+			return detailsHref(match) ?? null;
+		}
+
+		return `/history/${match.id}`;
+	}
+
+	function formatStarted(createdAt: string) {
+		return dayjs(createdAt).fromNow();
+	}
+
+	function formatDate(createdAt: string) {
+		return new Date(createdAt).toLocaleDateString(undefined, {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
 	}
 </script>
 
-{#snippet cell_map({ row }: { row: MatchExpanded })}
-	<MatchMapImage small flush />
-{/snippet}
-{#snippet cell_name({ row }: { row: MatchExpanded })}
-	<span class="flex min-w-0 items-center gap-2">
-		<MatchMapName class="text-secondary-300 min-w-0 truncate font-medium" />
-		<MatchPendingBadge />
-		<MatchProBadge />
-	</span>
-{/snippet}
-{#snippet cell_type({ row }: { row: MatchExpanded })}
-	{getMatchModeLabel(row)}
-{/snippet}
-{#snippet cell_allies({ row }: { row: MatchExpanded })}
-	<MatchPlayers
-		team="allies"
-		bind:outcome={row.alliesOutcome}
-		{highlightedPlayers}
-		class="flex items-center gap-1.5 overflow-visible"
-	/>
-{/snippet}
-{#snippet cell_axis({ row }: { row: MatchExpanded })}
-	<MatchPlayers
-		team="axis"
-		bind:outcome={row.axisOutcome}
-		{highlightedPlayers}
-		class="flex items-center gap-1.5 overflow-visible"
-	/>
-{/snippet}
-{#snippet cell_duration({ row }: { row: MatchExpanded })}
-	<MatchDuration />
-{/snippet}
-{#snippet cell_rating({ row }: { row: MatchExpanded })}
-	<MatchRating class="text-sm" profileId={highlightedPlayers[0]} />
-{/snippet}
-{#snippet cell_date({ row }: { row: MatchExpanded })}
-	<MatchDate class="text-sm" />
-{/snippet}
-{#snippet cell_actions({ row }: { row: MatchExpanded })}
-	{@const href = detailsHref ? detailsHref(row) : `/history/${row.id}`}
-	{#if href}
-		<Button
-			{href}
-			size="sm"
-			variant="secondary"
-			class="h-7 px-2.5 text-xs"
-			onclick={(event) => openDetails(event, href)}
-		>
-			{t('Details')}
-		</Button>
+{#snippet defaultExpand({ row }: { row: MatchListRow })}
+	{@const match = matchById.get(row.id)}
+	{#if expandContent && match}
+		{@render expandContent({ row, match })}
+	{:else if match}
+		<MatchLobbyPlayers {match} />
 	{/if}
-{/snippet}
-{#snippet cell_expand({ row }: { row: MatchExpanded })}
-	<CaretDownIcon
-		class={cn(
-			'pointer-events-none size-4 transition-transform',
-			expandedId === row.id && 'rotate-180'
-		)}
-	/>
-{/snippet}
-{#snippet matchRowWrapper({ row, children }: { row: MatchExpanded; children: Snippet })}
-	{@const expanded = canExpand && expandedId === row.id}
-	<MatchRoot match={row}>
-		{@render children()}
-		{#if expanded}
-			<tr class="border-secondary-800 border-b">
-				<td colspan={columnDefs.length} class="p-0">
-					{#if expandContent}
-						{@render expandContent({ row })}
-					{:else}
-						<MatchLobbyPlayers match={row} />
-					{/if}
-				</td>
-			</tr>
-		{/if}
-	</MatchRoot>
 {/snippet}
 
-<div class={className}>
-	{#if !loading && matches.length === 0 && emptyMessage}
-		<p class="text-secondary-400 px-4 py-2 text-sm">{t(emptyMessage)}</p>
-	{:else}
-		<DataTable
-			data={matches}
-			columns={columnDefs}
-			rowKey={(match) => match.id}
-			onRowClick={canExpand ? (match) => toggleExpanded(match.id) : undefined}
-			isRowExpanded={(match) => canExpand && expandedId === match.id}
-			rowWrapper={matchRowWrapper}
-			{loading}
-			skeletonRows={3}
-			striped={false}
-			empty={emptyMessage ?? t('No matches.')}
-			cells={{
-				map: cell_map,
-				name: cell_name,
-				type: cell_type,
-				allies: cell_allies,
-				axis: cell_axis,
-				duration: cell_duration,
-				rating: cell_rating,
-				date: cell_date,
-				actions: cell_actions,
-				expand: cell_expand
-			}}
-		/>
-	{/if}
-	{#if footer}
-		{@render footer()}
-	{/if}
-</div>
+<SharedMatchListTable
+	{rows}
+	{loading}
+	columns={resolvedColumns}
+	{meSteamIds}
+	{highlightedPlayers}
+	resolveMapSrc={getMapImageFromName}
+	resolveFallbackSrc={getDefaultMapImage}
+	resolveFactionFlag={getFactionFlagFromRace}
+	formatMapName={normalizeMapName}
+	{formatStarted}
+	{formatDate}
+	{playerHref}
+	{playerLabel}
+	detailsHref={rowDetailsHref}
+	expandContent={expandable ? defaultExpand : undefined}
+	{emptyMessage}
+	class={className}
+	{footer}
+	mapLabel={t('Map')}
+	nameLabel={t('Name')}
+	typeLabel={t('Type')}
+	alliesLabel={t('Allies')}
+	axisLabel={t('Axis')}
+	hostLabel={t('Host')}
+	startedLabel={t('Started at')}
+	dateLabel={t('Date')}
+	durationLabel={t('Duration')}
+	ratingLabel={t('Rating')}
+	unknownHostLabel={t('Unknown')}
+	detailsLabel={t('Details')}
+	eloLabel={t('ELO')}
+	levelLabel={t('Level')}
+	posLabel={t('Pos')}
+	winsLabel={t('W')}
+	lossesLabel={t('L')}
+	streakLabel={t('Streak')}
+/>

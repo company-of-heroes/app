@@ -34,6 +34,7 @@
 	import CommandIcon from 'phosphor-svelte/lib/CommandIcon';
 	import BriefcaseIcon from 'phosphor-svelte/lib/BriefcaseIcon';
 	import NotificationBell from '$lib/components/notifications/notification-bell.svelte';
+	import HeaderSteamPlayers from '$lib/components/layout/header-steam-players.svelte';
 	import * as User from '$lib/components/user';
 	import { useI18n } from '$lib/i18n';
 
@@ -274,17 +275,20 @@
 						</Button>
 					</Alert>
 				{/if}
-				<header class="border-secondary-800 flex items-center gap-3 border-b p-4">
-					{#if showBack}
-						<ButtonBack
-							iconOnly
-							href={backHref}
-							useHistory={hasClientHistory}
-							aria-label={t('Go back to previous page')}
-							title={t('Go back')}
-						/>
-					{/if}
-					<Breadcrumb />
+				<header class="border-secondary-800 flex items-center justify-between gap-3 border-b p-4">
+					<div class="flex items-center gap-3">
+						{#if showBack}
+							<ButtonBack
+								iconOnly
+								href={backHref}
+								useHistory={hasClientHistory}
+								aria-label={t('Go back to previous page')}
+								title={t('Go back')}
+							/>
+						{/if}
+						<Breadcrumb />
+					</div>
+					<HeaderSteamPlayers />
 				</header>
 				{@render children()}
 			</main>

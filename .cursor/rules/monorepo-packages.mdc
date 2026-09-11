@@ -1,5 +1,5 @@
 ---
-description: Put code in the right package — app, landing, ui, pocketbase, overlay, worker
+description: Put code in the right package — app, website, ui, pocketbase, overlay, worker
 alwaysApply: true
 ---
 
@@ -13,17 +13,17 @@ pnpm + Turbo. Edit the package that owns the concern; do not copy UI or API logi
 | `packages/i18n` | Shared `en`/`es`/`ko` dictionaries, `createI18n`, and locale path helpers (`localizeHref`, `parseLocaleFromPath`). |
 | `packages/api` | Shared PocketBase + `api.coh1stats.com` client (`createApi`). neverthrow + zod. No Svelte/Tauri/`$lib`. |
 | `packages/app` | Tauri desktop (adapter-static). Features, `$core`, game, account. Module-singleton `t()`. |
-| `packages/landing` | Public site (Cloudflare). Fetches `api.coh1stats.com`. Per-request `t()` + `/es` `/ko` URL prefixes. No Tauri / `$core`. |
+| `packages/website` | Public site (Cloudflare). Fetches `api.coh1stats.com`. Per-request `t()` + `/es` `/ko` URL prefixes. No Tauri / `$core`. |
 | `packages/pocketbase` | Schema migrations + JS hooks. Public HTTP APIs live here. |
 | `packages/oppbot-overlay` | Overlay source. `pnpm overlays:build` copies dist into PocketBase public. |
-| `packages/smurf-worker` | Cloudflare Worker for smurf scoring. Not app/landing code. |
+| `packages/smurf-worker` | Cloudflare Worker for smurf scoring. Not app/website code. |
 | `packages/shared-assets` | Screenshots and static assets. |
 
 ```typescript
-// ❌ BAD — duplicate Button in landing, or fetch Relic from a ui component
-// ❌ BAD — pocketbase.collection(...) in app/landing outside thin facades — use @company-of-heroes/api
-// ✅ GOOD — Button in packages/ui; app/landing import @company-of-heroes/ui/button
-// ✅ GOOD — new public /api/player field → PocketBase hook, then createApi method in packages/api, thin UI in ui/app/landing
+// ❌ BAD — duplicate Button in website, or fetch Relic from a ui component
+// ❌ BAD — pocketbase.collection(...) in app/website outside thin facades — use @company-of-heroes/api
+// ✅ GOOD — Button in packages/ui; app/website import @company-of-heroes/ui/button
+// ✅ GOOD — new public /api/player field → PocketBase hook, then createApi method in packages/api, thin UI in ui/app/website
 ```
 
 Do not hand-edit hashed overlay files under `packages/pocketbase/pb_hooks/public/overlay-default/`. Change `packages/oppbot-overlay` and rebuild.

@@ -1,6 +1,6 @@
 ---
 description: Reuse and build components from shared UI and $lib/components with runed and bits-ui
-globs: packages/{ui,app,landing}/src/**/*.{svelte,svelte.ts}
+globs: packages/{ui,app,website}/src/**/*.{svelte,svelte.ts}
 alwaysApply: false
 ---
 
@@ -12,7 +12,7 @@ Before building UI, check **`@company-of-heroes/ui`** then **`packages/app/src/l
 
 | Layer      | Path                                            | Use for                         |
 | ---------- | ----------------------------------------------- | ------------------------------- |
-| Shared     | `@company-of-heroes/ui/*`                       | Primitives + presentational domain UI used by app and landing |
+| Shared     | `@company-of-heroes/ui/*`                       | Primitives + presentational domain UI used by app and website |
 | Primitives | `ui/` — Button, Dialog, Popover, Tabs, Input, … | Generic building blocks (app re-exports shared) |
 | Domain     | `match/`, `player/`, `lobby/`, `replay/`, …     | App-only or host adapters (fetch, i18n, Tauri) |
 | Widgets    | `widgets/`                                      | Dashboard / status surfaces     |

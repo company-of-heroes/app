@@ -1,6 +1,6 @@
 ---
 description: Phosphor icon imports must use an Icon suffix
-globs: packages/{app,landing,ui}/src/**/*.{svelte,svelte.ts}
+globs: packages/{app,website,ui}/src/**/*.{svelte,svelte.ts}
 alwaysApply: false
 ---
 

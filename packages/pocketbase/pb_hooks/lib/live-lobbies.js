@@ -1,7 +1,7 @@
 // Public live companion lobbies for coh1stats.com.
 // Thin HTTP shim: same filter/dedupe/slim as the companion collection read.
 // Stats/Elo for the website come from embedded player fields via packages/ui
-// (landing LiveLobbiesService). Do not query the lobbies table or player_ratings
+// (website LiveLobbiesService). Do not query the lobbies table or player_ratings
 // on the list path — that made /api/live-lobbies take 15s+.
 'use strict';
 

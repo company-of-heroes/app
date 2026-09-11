@@ -16,8 +16,8 @@ export type ReplayFileDownload = {
 	filename: string;
 };
 
-/** Landing-only wrapper: api.replays + rate-limited getFile with REPLAY_PROXY_SECRET. */
-export class LandingReplaysService {
+/** Website-only wrapper: api.replays + rate-limited getFile with REPLAY_PROXY_SECRET. */
+export class WebsiteReplaysService {
 	constructor(
 		private replays: ReplaysApi,
 		private fetchFn: typeof fetch,

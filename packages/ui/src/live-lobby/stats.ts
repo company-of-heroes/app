@@ -126,7 +126,7 @@ function findRawLiveLobbyPlayer(
 
 /**
  * Attaches per-player stats (storedElo + Relic leaderboardStats) onto slim
- * live-lobby players. Shared by the app widget and PocketBase/landing path.
+ * live-lobby players. Shared by the app widget and PocketBase/website path.
  */
 export function attachLiveLobbyStats(
 	slimPlayers: LiveLobbyPlayer[],

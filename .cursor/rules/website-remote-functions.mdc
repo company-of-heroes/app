@@ -1,12 +1,12 @@
 ---
-description: Prefer landing remote functions with Zod v4 over classic form actions
-globs: packages/landing/src/**/*.{ts,svelte}
+description: Prefer website remote functions with Zod v4 over classic form actions
+globs: packages/website/src/**/*.{ts,svelte}
 alwaysApply: false
 ---
 
-# Landing remotes over form actions
+# Website remotes over form actions
 
-On `packages/landing`, prefer **SvelteKit remote functions** (`$lib/remote/*.remote.ts`) with **Zod v4** over classic `export const actions` in `+page.server.ts`.
+On `packages/website`, prefer **SvelteKit remote functions** (`$lib/remote/*.remote.ts`) with **Zod v4** over classic `export const actions` in `+page.server.ts`.
 
 ## Prefer
 
@@ -16,7 +16,7 @@ On `packages/landing`, prefer **SvelteKit remote functions** (`$lib/remote/*.rem
 - Call `locals.services.*()` inside remotes; unwrap with `unwrapAsync` / `invalid` / `error` / `redirect`
 
 ```typescript
-// ✅ GOOD — packages/landing/src/lib/remote/example.remote.ts
+// ✅ GOOD — packages/website/src/lib/remote/example.remote.ts
 import { form, getRequestEvent } from '$app/server';
 import { invalid, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
@@ -50,7 +50,7 @@ export const saveThing = form(
 ## Avoid
 
 ```typescript
-// ❌ BAD — new classic form actions for landing mutations
+// ❌ BAD — new classic form actions for website mutations
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const form = await request.formData();
@@ -68,4 +68,4 @@ import * as v from 'valibot';
 
 - Keep auth gates / cache headers in `+page.server.ts` `load` when needed; put writes in remotes
 - Match login/register flush `Form.Group` + `Input` layout for account-style pages
-- Do not invent a second validation stack; Zod is the default for new landing remotes
+- Do not invent a second validation stack; Zod is the default for new website remotes

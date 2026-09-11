@@ -1,5 +1,5 @@
 ---
-'@company-of-heroes/landing': patch
+'@company-of-heroes/website': patch
 '@company-of-heroes/app': patch
 ---
 

@@ -25,6 +25,6 @@ module.exports = { handleGet };
 
 - Always `require(\`${__hooks}/lib/…\`)` — never `import` / relative ESM.
 - Keep `onServe` non-blocking (`e.next()` first). Heavy work = cron backfill (see `pocketbase-backfill-cron.mdc`).
-- Public APIs used by landing must CORS-allow `https://coh1stats.com` and local landing (`localhost:5174`).
+- Public APIs used by website must CORS-allow `https://coh1stats.com` and local website (`localhost:5174`).
 - After collection/field changes: schema-only migration, then `pnpm --filter pocketbase typegen`. Do not hand-edit `packages/app/src/lib/core/pocketbase/types.ts`.
 - Do not edit `pb_hooks/public/overlay-default/` by hand.

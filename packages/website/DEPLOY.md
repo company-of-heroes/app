@@ -1,6 +1,6 @@
 # Deploying coh1stats.com (Cloudflare Workers)
 
-The landing site is a **SvelteKit** app in `packages/landing` with `@sveltejs/adapter-cloudflare`.
+The website is a **SvelteKit** app in `packages/website` with `@sveltejs/adapter-cloudflare`.
 
 ## Prerequisites
 
@@ -13,14 +13,14 @@ From the repo root:
 
 ```bash
 pnpm install
-pnpm landing:build
+pnpm website:build
 ```
 
-Output: `packages/landing/.svelte-kit/cloudflare/`
+Output: `packages/website/.svelte-kit/cloudflare/`
 
 ## Deploy with Wrangler
 
-From `packages/landing`:
+From `packages/website`:
 
 ```bash
 pnpm deploy
@@ -32,18 +32,29 @@ This runs `vite build && wrangler deploy` using [`wrangler.toml`](./wrangler.tom
 
 In the Cloudflare dashboard:
 
-1. **Workers & Pages** → **coh1stats-landing** → **Settings** → **Domains & Routes**
+1. **Workers & Pages** → **coh1stats-website** → **Settings** → **Domains & Routes**
 2. Add `coh1stats.com` and `www.coh1stats.com`
 
-The API stays on `api.coh1stats.com` (PocketBase). Do not serve the landing page from the API host.
+The API stays on `api.coh1stats.com` (PocketBase). Do not serve the website from the API host.
+
+### First deploy after rename from `coh1stats-landing`
+
+Changing `name` in `wrangler.toml` creates a **new** Worker script; it does not rename the old one in place.
+
+1. Deploy so `coh1stats-website` exists (`pnpm website:build` then `pnpm --filter @company-of-heroes/website deploy`).
+2. Move `coh1stats.com` / `www.coh1stats.com` from `coh1stats-landing` to `coh1stats-website` (or add on the new Worker, then remove from the old).
+3. Copy any Worker vars/secrets (`PUBLIC_API_URL`, `REPLAY_PROXY_SECRET`, …) onto `coh1stats-website` if they did not transfer.
+4. Delete or disable `coh1stats-landing` once the new Worker is healthy.
+
+Until domains are moved, the old Worker keeps serving production traffic.
 
 ## CI (optional)
 
 A typical workflow would:
 
-1. Trigger on push to `master` when `packages/landing/**` or `packages/shared-assets/**` changes
-2. Run `pnpm install` and `pnpm landing:build`
-3. Run `pnpm --filter @company-of-heroes/landing deploy`
+1. Trigger on push to `master` when `packages/website/**` or `packages/shared-assets/**` changes
+2. Run `pnpm install` and `pnpm website:build`
+3. Run `pnpm --filter @company-of-heroes/website deploy`
 
 Store `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets.
 
@@ -52,7 +63,7 @@ Store `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets.
 Dev server:
 
 ```bash
-pnpm landing:dev
+pnpm website:dev
 ```
 
 http://localhost:5174
@@ -60,7 +71,7 @@ http://localhost:5174
 Production-like preview (after build):
 
 ```bash
-pnpm --filter @company-of-heroes/landing preview
+pnpm --filter @company-of-heroes/website preview
 ```
 
 ## Environment variables
@@ -70,7 +81,7 @@ pnpm --filter @company-of-heroes/landing preview
 | `PUBLIC_API_URL` | `.env` / Cloudflare Worker vars | PocketBase API base URL (default: `https://api.coh1stats.com`) |
 | `REPLAY_PROXY_SECRET` | PocketBase `.env` and Cloudflare Worker vars (optional) | Shared secret so the website can fetch replay files without sharing one IP quota with every visitor |
 
-For local player card API testing, create `packages/landing/.env`:
+For local player card API testing, create `packages/website/.env`:
 
 ```
 PUBLIC_API_URL=http://127.0.0.1:8090

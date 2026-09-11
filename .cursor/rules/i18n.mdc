@@ -1,12 +1,12 @@
 ---
 description: Never hardcode user-facing strings — always use t() and shared locale JSON
-globs: packages/{app,landing,i18n,ui}/**/*.{svelte,svelte.ts,ts,json}
+globs: packages/{app,website,i18n,ui}/**/*.{svelte,svelte.ts,ts,json}
 alwaysApply: false
 ---
 
 # i18n — no hardcoded UI copy
 
-**Never** put user-visible English (or any language) as a raw string in markup, props, toasts, errors, placeholders, `aria-label`, `title`, or button labels in `packages/app` or `packages/landing`. Always wrap with `t()` and add the key to all three locale files.
+**Never** put user-visible English (or any language) as a raw string in markup, props, toasts, errors, placeholders, `aria-label`, `title`, or button labels in `packages/app` or `packages/website`. Always wrap with `t()` and add the key to all three locale files.
 
 The **English sentence is the key**. Locales: `en`, `es`, `ko` in `packages/i18n/locales/`.
 
@@ -38,16 +38,16 @@ The **English sentence is the key**. Locales: `en`, `es`, `ko` in `packages/i18n
 
 ## Checklist (every new/changed user string)
 
-1. Call `t('English key')` (or `locals.t` on landing server)
+1. Call `t('English key')` (or `locals.t` on website server)
 2. Add the key to **en.json, es.json, and ko.json**
 3. Translate es/ko; if unsure, copy English so the key exists
 4. Params use `{name}` in the key, passed as `{ name }` to `t()`
 
 ## Hosts vs `packages/ui`
 
-- **App / landing**: always `t()` — never hardcode
+- **App / website**: always `t()` — never hardcode
 - **`packages/ui`**: English default label props only; hosts pass `t('…')` when wrapping. Do not import `$lib/i18n` inside `ui`
-- App: module singleton (`ssr = false`). Landing: per-request on `locals` (never a module singleton)
+- App: module singleton (`ssr = false`). Website: per-request on `locals` (never a module singleton)
 
 ## Allowed without `t()`
 
@@ -59,4 +59,4 @@ The **English sentence is the key**. Locales: `en`, `es`, `ko` in `packages/i18n
 
 - Ship UI copy only in a Svelte file without locale keys
 - Invent a second i18n system or translate only `en.json`
-- Hardcode strings in app/landing “temporarily” and skip locales
+- Hardcode strings in app/website “temporarily” and skip locales
