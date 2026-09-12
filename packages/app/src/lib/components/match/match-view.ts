@@ -224,11 +224,15 @@ function ratingChangeForMatch(
 	}
 
 	const id = profileId != null && profileId !== '' ? Number(profileId) : NaN;
-	const entry = Number.isFinite(id)
+	let entry = Number.isFinite(id)
 		? players.find((player) => player.profile_id === id)
-		: steamIds?.length
-			? players.find((player) => steamIds.includes(player.steamId))
-			: undefined;
+		: undefined;
+
+	if (!entry && steamIds?.length) {
+		entry = players.find(
+			(player) => !!player.steamId && steamIds.includes(player.steamId)
+		);
+	}
 
 	if (
 		!entry ||
