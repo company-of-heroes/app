@@ -83,7 +83,7 @@ importers:
         version: 2.1.0
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/51b256fc2be9085926cfba1c396b8eed33671c3c
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -458,7 +458,7 @@ importers:
         version: link:../ui
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/51b256fc2be9085926cfba1c396b8eed33671c3c
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -1574,8 +1574,8 @@ packages:
   '@fabianlars/tauri-plugin-oauth@2.1.0':
     resolution: {integrity: sha512-KElVn5VWJ7FPTbWvZ38NNWsxTMQ4wKNnWSB75eIh/CwO0RLLNH1eL3POdulluiaS4f0TWGdkL9nlD2ZKhi8DIQ==}
 
-  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e':
-    resolution: {tarball: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e}
+  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/51b256fc2be9085926cfba1c396b8eed33671c3c':
+    resolution: {tarball: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/51b256fc2be9085926cfba1c396b8eed33671c3c}
     version: 2.0.0
 
   '@floating-ui/core@1.8.0':
@@ -6484,7 +6484,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.11.1
 
-  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/1408cda121a21bbb933d97a00c5da2d780edcf8e': {}
+  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/51b256fc2be9085926cfba1c396b8eed33671c3c': {}
 
   '@floating-ui/core@1.8.0':
     dependencies:

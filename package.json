@@ -31,8 +31,7 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
-			"esbuild",
-			"@fknoobs/replay-parser"
+			"esbuild"
 		],
 		"overrides": {
 			"svelte": "^5.57.0"
