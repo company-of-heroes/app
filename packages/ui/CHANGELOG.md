@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.5.1
+
+- fix; show gray chip backgrounds on Basic Match faction icons in match lists
+
 ## 0.5.0
 
 - enhance; darken skeleton shimmer for loading placeholders

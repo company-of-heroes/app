@@ -1,5 +1,9 @@
 # @company-of-heroes/api
 
+## 0.3.1
+
+- fix; allow slower cold player-page loads before timing out
+
 ## 0.3.0
 
 - enhance; show player rank and level in community and member match lists
