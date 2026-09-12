@@ -1,5 +1,10 @@
 # @company-of-heroes/app
 
+## 0.64.2
+
+- fix; show your own rating change in Matches played today, not an opponent's
+- fix; fall back to Relic match times when stored duration is 0
+
 ## 0.64.1
 
 - fix; show gray chip backgrounds on Basic Match faction icons in match lists
