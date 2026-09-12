@@ -1,5 +1,37 @@
 # @company-of-heroes/website
 
+## 1.7.0
+
+- enhance; make home player search more prominent
+- enhance; show rank icons in player match history
+- enhance; tighten match history column order and alignment
+- enhance; use View match button instead of details link
+- fix; match history loading skeleton to the real table layout
+- enhance; show player rank and level in community and member match lists
+- enhance; use shared rank assets and show unranked badge when level is missing
+- enhance; show match roster as compact rank chips instead of bordered tiles
+- enhance; enlarge match-list rank and faction icons for readability
+- fix; never show rank badges on Basic Match / unranked rows (faction flags only)
+- fix; drop chip background behind faction-only match-list icons
+- enhance; combine likes, comments, and downloads into one match-list column
+- enhance; show match type in community replay lists
+- fix; show Basic Match for custom/unranked lobbies instead of size-based 1v1–4v4
+- fix; match history and live-lobby loading skeletons to the real table layout
+- fix; fall back to faction flags when match-list players have no stats
+- enhance; hover rank/faction chips over the full control, not only the icon
+- enhance; share match list cells for live lobbies and match tables across app and website
+- feat; show a compact player card when hovering profile links
+- enhance; show faction match stats on rank/faction square previews
+- enhance; include basic match leaderboard stats in faction square previews
+- fix; show Pro gameplay badges on replay list rows again
+- feat; replace sidebar filters with a rule-row query builder (AND/OR) backed by a filter AST API; persist history list filters across match navigation; app and website open filters in a left sheet so the list stays full-width; list sort controls (date/likes/downloads/comments) beside Filters
+- fix; prepare downloaded replays for local CoH with parser v2 prepareForLocalCoh
+- fix; link replay overview players to the correct profiles when lobby stubs lack names
+- enhance; highlight member replay upload with a clearer CTA on the replays list
+- enhance; reuse shared tabs, dialog, leaderboard, and player-performance ui across app and website
+- fix; place skirmish live lobby players by Relic team instead of race alone
+- enhance; widen the site container so tables fit better on desktop
+
 ## 1.6.4
 
 - fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI

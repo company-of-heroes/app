@@ -1,5 +1,21 @@
 # @company-of-heroes/api
 
+## 0.3.0
+
+- enhance; show player rank and level in community and member match lists
+- enhance; use shared rank assets and show unranked badge when level is missing
+- enhance; show match roster as compact rank chips instead of bordered tiles
+- enhance; enlarge match-list rank and faction icons for readability
+- fix; never show rank badges on Basic Match / unranked rows (faction flags only)
+- fix; drop chip background behind faction-only match-list icons
+- enhance; combine likes, comments, and downloads into one match-list column
+- enhance; show match type in community replay lists
+- fix; show Basic Match for custom/unranked lobbies instead of size-based 1v1–4v4
+- fix; match history and live-lobby loading skeletons to the real table layout
+- fix; fall back to faction flags when match-list players have no stats
+- enhance; hover rank/faction chips over the full control, not only the icon
+- feat; replace sidebar filters with a rule-row query builder (AND/OR) backed by a filter AST API; persist history list filters across match navigation; app and website open filters in a left sheet so the list stays full-width; list sort controls (date/likes/downloads/comments) beside Filters
+
 ## 0.2.2
 
 - fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI
