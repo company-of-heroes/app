@@ -1,6 +1,7 @@
 <script lang="ts">
 	import UsersIcon from 'phosphor-svelte/lib/UsersIcon';
 	import { steam } from '$core/steam';
+	import { Badge } from '$lib/components/ui/badge';
 	import { useI18n } from '$lib/i18n';
 
 	const { t } = useI18n();
@@ -31,8 +32,9 @@
 </script>
 
 {#if count !== null}
-	<span class="text-secondary-400 flex items-center gap-1.5 text-sm tabular-nums">
-		<UsersIcon size={16} weight="duotone" />
-		{t('{count} playing', { count: count.toLocaleString() })}
-	</span>
+	<Badge variant="success" class="inline-flex items-center gap-1.5 text-sm tabular-nums">
+		<span class="bg-success size-1.5 shrink-0 animate-pulse rounded-full" aria-hidden="true"></span>
+		<UsersIcon size={14} weight="duotone" />
+		<span class="font-semibold">{t('{count} playing', { count: count.toLocaleString() })}</span>
+	</Badge>
 {/if}
