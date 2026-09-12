@@ -1,5 +1,14 @@
 # @company-of-heroes/i18n
 
+## 0.1.6
+
+- feat; show Steam concurrent player count in the app header
+- enhance; show rank icons in player match history
+- enhance; tighten match history column order and alignment
+- enhance; use View match button instead of details link
+- fix; match history loading skeleton to the real table layout
+- feat; replace sidebar filters with a rule-row query builder (AND/OR) backed by a filter AST API; persist history list filters across match navigation; app and website open filters in a left sheet so the list stays full-width; list sort controls (date/likes/downloads/comments) beside Filters
+
 ## 0.1.5
 
 - fix; harden auth cookie and history filters; surface live/home load failures instead of empty UI
