@@ -82,6 +82,8 @@ export class PlayersApi {
 			{
 				fallback: 'Failed to load player stats. Please try again later.',
 				schema: playerPageSchema,
+				// Cold loads pull Relic + Steam + match-history enrichment and often exceed 8s.
+				timeoutMs: 45_000,
 				onStatus: (status) => {
 					if (status === 404) {
 						return apiError(

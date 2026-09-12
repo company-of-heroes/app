@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { factionIcon, interactive } from '@company-of-heroes/ui/variants';
+	import { interactive } from '@company-of-heroes/ui/variants';
 	import { getRaceLabel } from '../format/player-format';
 	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { LiveLobbyPlayerStats } from '../live-lobby/types';
@@ -109,20 +109,13 @@
 		return parts.filter(Boolean).join(' · ');
 	}
 
-	function tileClass(focus: boolean, ranked: boolean) {
-		const hasOutcome = outcome === 'win' || outcome === 'loss';
-		// Faction-only stays bare unless there is a win/loss (or focus) tint to show.
-		if (!ranked && !hasOutcome && !focus) {
-			return 'group inline-flex shrink-0 items-center justify-center';
-		}
-
+	function tileClass(focus: boolean) {
 		return cn(
 			'group inline-flex size-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-none transition-colors',
 			focus && 'bg-primary/10',
 			!focus && outcome === 'win' && 'bg-green-500/5 hover:bg-green-500/10',
 			!focus && outcome === 'loss' && 'bg-red-500/5 hover:bg-red-500/10',
 			!focus &&
-				ranked &&
 				outcome !== 'win' &&
 				outcome !== 'loss' &&
 				'bg-secondary-900/60 hover:bg-secondary-800/50'
@@ -147,7 +140,7 @@
 			ranked,
 			src,
 			levelText: ranked ? (ranking > 0 ? `#${ranking}` : levelFallback) : null,
-			className: cn(href && interactive, tileClass(focus, ranked)),
+			className: cn(href && interactive, tileClass(focus)),
 			iconClass: cn(
 				focus ? 'opacity-100 grayscale-0' : 'opacity-70 grayscale-50',
 				'group-hover:opacity-100 group-hover:grayscale-0'
@@ -174,11 +167,7 @@
 	<img
 		src={chip.src}
 		alt={chip.ranked ? '' : chip.label}
-		class={cn(
-			chip.ranked ? 'size-5' : factionIcon,
-			chip.iconClass,
-			!chip.ranked && 'transition-all'
-		)}
+		class={cn('size-5', chip.iconClass, !chip.ranked && 'transition-all')}
 	/>
 	{#if chip.levelText}
 		<span
