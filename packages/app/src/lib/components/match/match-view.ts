@@ -74,6 +74,15 @@ function durationFromResult(result: LobbyMatch | null | undefined): number | nul
 	return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
 }
 
+function resolveDurationSeconds(match: MatchExpanded): number | null {
+	const stored = match.durationSeconds;
+	if (typeof stored === 'number' && Number.isFinite(stored) && stored > 0) {
+		return stored;
+	}
+
+	return durationFromResult(match.result as LobbyMatch | null | undefined);
+}
+
 function profileFromAlias(alias: string, profileId: number) {
 	return {
 		alias,
@@ -126,8 +135,7 @@ function livePlayerToLobby(player: LiveLobbyPlayer): LobbyPlayer {
 }
 
 export function fromMatchExpanded(match: MatchExpanded): MatchView {
-	const durationSeconds =
-		match.durationSeconds ?? durationFromResult(match.result as LobbyMatch | null | undefined);
+	const durationSeconds = resolveDurationSeconds(match);
 
 	return {
 		id: match.id,
@@ -207,7 +215,8 @@ function lobbyPlayerToListPlayer(player: LobbyPlayer): LiveLobbyPlayer {
 
 function ratingChangeForMatch(
 	match: MatchExpanded,
-	profileId?: string | number | null
+	profileId?: string | number | null,
+	steamIds?: string[]
 ): number | null {
 	const players = match.result?.players;
 	if (!players?.length) {
@@ -217,7 +226,9 @@ function ratingChangeForMatch(
 	const id = profileId != null && profileId !== '' ? Number(profileId) : NaN;
 	const entry = Number.isFinite(id)
 		? players.find((player) => player.profile_id === id)
-		: players[0];
+		: steamIds?.length
+			? players.find((player) => steamIds.includes(player.steamId))
+			: undefined;
 
 	if (
 		!entry ||
@@ -233,10 +244,13 @@ function ratingChangeForMatch(
 /** Map a saved lobby match to the shared ui MatchListRow shape. */
 export function toUiMatchListRow(
 	match: MatchExpanded,
-	options: { profileId?: string | number | null; modeLabel?: string } = {}
+	options: {
+		profileId?: string | number | null;
+		steamIds?: string[];
+		modeLabel?: string;
+	} = {}
 ): import('@company-of-heroes/ui/match').MatchListRow {
-	const durationSeconds =
-		match.durationSeconds ?? durationFromResult(match.result as LobbyMatch | null | undefined);
+	const durationSeconds = resolveDurationSeconds(match);
 
 	return {
 		id: match.id,
@@ -245,7 +259,7 @@ export function toUiMatchListRow(
 		createdAt: match.createdAt,
 		players: (match.players ?? []).map(lobbyPlayerToListPlayer),
 		durationSeconds,
-		ratingChange: ratingChangeForMatch(match, options.profileId),
+		ratingChange: ratingChangeForMatch(match, options.profileId, options.steamIds),
 		alliesOutcome: resolveTeamOutcome(match, 'allies'),
 		axisOutcome: resolveTeamOutcome(match, 'axis'),
 		lobbyId: match.id,

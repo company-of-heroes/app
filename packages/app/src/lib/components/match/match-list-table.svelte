@@ -73,6 +73,7 @@
 		matches.map((match) =>
 			toUiMatchListRow(match, {
 				profileId: highlightedPlayers[0],
+				steamIds: meSteamIds,
 				modeLabel: getMatchModeLabel(match)
 			})
 		)

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive } from '@company-of-heroes/ui/variants';
+	import { factionIcon, interactive } from '@company-of-heroes/ui/variants';
 	import { getRaceLabel } from '../format/player-format';
 	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { LiveLobbyPlayerStats } from '../live-lobby/types';
@@ -167,7 +167,7 @@
 	<img
 		src={chip.src}
 		alt={chip.ranked ? '' : chip.label}
-		class={cn('size-5', chip.iconClass, !chip.ranked && 'transition-all')}
+		class={cn(chip.ranked ? 'size-5' : factionIcon, chip.iconClass, !chip.ranked && 'transition-all')}
 	/>
 	{#if chip.levelText}
 		<span
