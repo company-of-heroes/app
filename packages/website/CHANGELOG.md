@@ -1,5 +1,10 @@
 # @company-of-heroes/website
 
+## 1.7.1
+
+- fix; show gray chip backgrounds on Basic Match faction icons in match lists
+- fix; allow slower cold player-page loads before timing out
+
 ## 1.7.0
 
 - enhance; make home player search more prominent

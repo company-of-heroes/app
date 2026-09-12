@@ -1,3 +1,8 @@
+### v0.64.1
+
+- fix; show gray chip backgrounds on Basic Match faction icons in match lists
+- fix; allow slower cold player-page loads before timing out
+
 ### v0.64.0
 
 - feat; show Steam concurrent player count in the app header
