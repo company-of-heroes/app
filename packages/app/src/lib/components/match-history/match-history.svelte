@@ -2,8 +2,7 @@
 	import type { LobbyPlayer, MatchHistoryPlayer, TransformedMatch } from '@fknoobs/app';
 	import type { Snippet } from 'svelte';
 	import dayjs from '$lib/dayjs';
-	import { interactive } from '$lib/components/ui/variants';
-	import { cn, normalizeMapName } from '$lib/utils';
+	import { cn, getRankImage, normalizeMapName } from '$lib/utils';
 	import * as Player from '$lib/components/player';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import MapImage from '$lib/components/ui/map-image.svelte';
@@ -76,50 +75,56 @@
 		{
 			id: 'change',
 			header: t('Change'),
-			width: 'w-3/24',
+			width: 'w-14',
 			headerClass: 'text-center',
-			class: 'flex w-full justify-center'
-		},
-		{
-			id: 'team',
-			header: t('Team'),
-			width: 'w-2/24',
-			headerClass: 'text-center',
-			class: 'flex w-full justify-center'
+			class: 'flex w-full justify-center px-2'
 		},
 		{
 			id: 'elo',
 			header: t('ELO'),
-			width: 'w-2/24',
+			width: 'w-14',
 			headerClass: 'text-center',
-			class: 'flex w-full justify-center'
+			class: 'flex w-full justify-center px-2'
+		},
+		{
+			id: 'rank',
+			header: t('Rank'),
+			width: 'w-[4.5rem]',
+			headerClass: 'text-center',
+			class: 'flex w-full justify-center px-2'
+		},
+		{
+			id: 'team',
+			header: t('Team'),
+			width: 'w-12',
+			headerClass: 'text-center',
+			class: 'flex w-full justify-center px-2'
 		},
 		{
 			id: 'player',
 			header: t('Player'),
-			width: 'w-9/24',
 			class: 'flex min-w-0 items-center gap-2'
 		},
 		{
 			id: 'wins',
 			header: t('Wins'),
-			width: 'w-2/24',
+			width: 'w-14',
 			headerClass: 'text-center',
-			class: 'flex w-full justify-center'
+			class: 'flex w-full justify-center px-2'
 		},
 		{
 			id: 'losses',
 			header: t('Losses'),
-			width: 'w-3/24',
+			width: 'w-14',
 			headerClass: 'text-center',
-			class: 'flex w-full justify-center'
+			class: 'flex w-full justify-center px-2'
 		},
 		{
 			id: 'streak',
 			header: t('Streak'),
-			width: 'w-3/24',
+			width: 'w-14',
 			headerClass: 'text-center',
-			class: 'flex w-full justify-center'
+			class: 'flex w-full justify-center px-2'
 		}
 	]);
 
@@ -202,6 +207,20 @@
 {#snippet cell_elo({ row }: { row: MatchHistoryPlayer })}
 	<Player.Rating class="text-center font-medium tabular-nums" />
 {/snippet}
+{#snippet cell_rank({ row }: { row: MatchHistoryPlayer })}
+	{#if (row.ranklevel ?? 0) > 0}
+		<span class="flex items-center justify-center gap-2">
+			<img
+				src={getRankImage(row.race_id, row.ranklevel ?? 0)}
+				alt=""
+				class="size-6 shrink-0 object-contain"
+			/>
+			<span class="font-semibold tabular-nums">{row.ranklevel}</span>
+		</span>
+	{:else}
+		<span class="text-secondary-400 tabular-nums">-</span>
+	{/if}
+{/snippet}
 {#snippet cell_change({ row }: { row: MatchHistoryPlayer })}
 	<Player.RatingChange />
 {/snippet}
@@ -277,16 +296,10 @@
 							</Button>
 						{/if}
 						{#if savedId}
-							<a
-								href="/history/{savedId}"
-								class={cn(
-									interactive,
-									'text-primary inline-flex items-center gap-1.5 text-sm whitespace-nowrap hover:underline'
-								)}
-							>
+							<Button href="/history/{savedId}" size="sm" variant="secondary">
 								<ChecksIcon class="size-4 text-green-400" {@attach tooltip(t('Result saved'))} />
-								{t('View details')}
-							</a>
+								{t('View match')}
+							</Button>
 						{/if}
 						<span class="text-secondary-300 flex items-center gap-2 text-sm font-medium">
 							<ClockIcon class="size-4" />
@@ -305,8 +318,9 @@
 					class="rounded-none border-0"
 					cells={{
 						change: cell_change,
-						team: cell_team,
 						elo: cell_elo,
+						rank: cell_rank,
+						team: cell_team,
 						player: cell_player,
 						wins: cell_wins,
 						losses: cell_losses,

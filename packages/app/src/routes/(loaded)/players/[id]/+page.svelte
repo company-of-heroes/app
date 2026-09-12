@@ -1,12 +1,12 @@
 <script lang="ts">
 	import dayjs from '$lib/dayjs';
-	import { Leaderboard } from '$lib/components/leaderboard';
 	import { page } from '$app/state';
 	import { steam } from '$core/steam';
 	import { relic } from '$lib/relic';
 	import { isSteamId } from '$lib/utils';
 	import { resource } from 'runed';
 	import * as Player from '$lib/components/player';
+	import { PlayerMatchHistorySkeleton } from '@company-of-heroes/ui/player';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
 	import { PlayerPerformance } from '$lib/components/player-performance';
 	import PlayerCompanionStaffDebug from '$lib/components/player/player-companion-staff-debug.svelte';
@@ -88,7 +88,7 @@
 			if (!key || !profile || !id) {
 				return null;
 			}
-			const [matchHistory, playerRating, cheater, smurf, likeCount] = await Promise.all([
+			const [matchHistoryRaw, playerRating, cheater, smurf, likeCount] = await Promise.all([
 				relic.getRecentMatchHistoryForProfile(profile.profile_id, {
 					includeHidden: true
 				}),
@@ -97,6 +97,12 @@
 				loadSmurfAlert(id, profile.profile_id),
 				app.database.playerSocial.getLikeCount(id)
 			]);
+			const { enrichMatchHistoryRankLevels } = await import('$lib/player/match-history-ranks');
+			const matchHistory = await enrichMatchHistoryRankLevels(
+				matchHistoryRaw,
+				profile.profile_id,
+				profile.leaderboardStats
+			);
 			return {
 				key,
 				matchHistory,
@@ -256,7 +262,16 @@
 				</Tabs.Content>
 				<Tabs.Content value="match-history">
 					{#if !extra}
-						<Leaderboard stats={[]} loading skeletonRows={10} class="rounded-none border-0" />
+						<PlayerMatchHistorySkeleton
+							changeLabel={t('Change')}
+							eloLabel={t('ELO')}
+							rankLabel={t('Rank')}
+							teamLabel={t('Team')}
+							playerLabel={t('Player')}
+							winsLabel={t('Wins')}
+							lossesLabel={t('Losses')}
+							streakLabel={t('Streak')}
+						/>
 					{:else}
 						<Player.MatchHistory player={pagePlayer} />
 					{/if}

@@ -22,6 +22,7 @@
 	} from '$lib/components/widgets/dashboard-utils';
 	import { getCountryDisplayName } from '$lib/components/leaderboard/leaderboard-utils';
 	import { loadCheaterSteamIds } from '$core/pocketbase/anti-cheat';
+	import { preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 	import {
 		likeCountForSteamId,
 		preloadPlayerLikeCounts
@@ -51,6 +52,7 @@
 	$effect(() => {
 		const ids = (match?.players ?? []).map((player) => player.steamId).filter(Boolean) as string[];
 		if (ids.length > 0) {
+			preloadPlayerLabels(ids);
 			preloadPlayerLikeCounts(ids);
 		}
 	});

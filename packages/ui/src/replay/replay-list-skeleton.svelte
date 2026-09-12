@@ -55,32 +55,32 @@
 							<div class="flex h-11 min-w-0 items-center gap-0">
 								<Skeleton class="size-11 shrink-0 rounded-none" />
 								<div class="flex min-w-0 items-center gap-2 px-4">
-									<Skeleton class="h-4 w-36" />
+									<Skeleton class="h-3.5 w-32" />
 								</div>
 							</div>
 						</td>
 						<td class="px-4 py-0 whitespace-nowrap">
 							<div class="flex h-11 items-center">
-								<Skeleton class="h-4 w-16" />
+								<Skeleton class="h-3.5 w-14" />
 							</div>
 						</td>
 						{@render teamCell()}
 						{@render teamCell()}
 						<td class="px-4 py-0 whitespace-nowrap">
 							<div class="flex h-11 items-center">
-								<Skeleton class="h-4 w-14" />
+								<Skeleton class="h-3.5 w-12" />
 							</div>
 						</td>
 						<td class="px-4 py-0 whitespace-nowrap">
-							<div class="flex h-11 items-center justify-end gap-3">
-								<Skeleton class="h-4 w-8" />
-								<Skeleton class="h-4 w-8" />
-								<Skeleton class="h-4 w-8" />
+							<div class="flex h-11 items-center justify-end gap-2">
+								<Skeleton class="h-3 w-6" />
+								<Skeleton class="h-3 w-6" />
+								<Skeleton class="h-3 w-6" />
 							</div>
 						</td>
 						<td class="px-4 py-0 text-end whitespace-nowrap">
 							<div class="flex h-11 items-center justify-end">
-								<Skeleton class="h-4 w-28" />
+								<Skeleton class="h-3.5 w-24" />
 							</div>
 						</td>
 					</tr>
@@ -90,21 +90,32 @@
 	</div>
 	<div class="divide-secondary-800 divide-y md:hidden">
 		{#each rows as row (row)}
-			<div class="flex flex-col gap-2 px-4 py-3">
-				<div class="flex items-center gap-3">
+			<div class="px-4 py-3">
+				<div class="flex h-11 min-w-0 items-center gap-0">
 					<Skeleton class="size-11 shrink-0 rounded-none" />
-					<Skeleton class="h-4 w-40" />
+					<div class="flex min-w-0 items-center gap-2 px-3">
+						<Skeleton class="h-3.5 w-32" />
+					</div>
 				</div>
-				<div class="flex items-center gap-0">
-					<Skeleton class="size-11 shrink-0 rounded-none" />
-					<Skeleton class="size-11 shrink-0 rounded-none" />
-					<Skeleton class="ms-2 size-11 shrink-0 rounded-none" />
-					<Skeleton class="size-11 shrink-0 rounded-none" />
+				<div class="mt-2 flex items-center gap-4">
+					<div class="flex items-center gap-0">
+						<Skeleton class="size-11 shrink-0 rounded-none" />
+						<Skeleton class="size-11 shrink-0 rounded-none" />
+					</div>
+					<div class="flex items-center gap-0">
+						<Skeleton class="size-11 shrink-0 rounded-none" />
+						<Skeleton class="size-11 shrink-0 rounded-none" />
+					</div>
 				</div>
-				<div class="flex flex-wrap items-center gap-3">
-					<Skeleton class="h-3.5 w-14" />
-					<Skeleton class="h-3.5 w-14" />
+				<div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+					<Skeleton class="h-3.5 w-12" />
+					<Skeleton class="h-3.5 w-12" />
 					<Skeleton class="h-3.5 w-20" />
+				</div>
+				<div class="mt-1.5 flex items-center gap-2">
+					<Skeleton class="h-3 w-6" />
+					<Skeleton class="h-3 w-6" />
+					<Skeleton class="h-3 w-6" />
 				</div>
 			</div>
 		{/each}

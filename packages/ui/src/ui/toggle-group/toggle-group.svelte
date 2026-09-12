@@ -15,9 +15,23 @@
 			label: Snippet | string;
 		}[];
 		type?: 'single' | 'multiple';
-	} & Omit<ToggleGroupRootProps, 'type' | 'value' | 'value' | 'children'>;
+		size?: 'sm' | 'md';
+		class?: string;
+	} & Omit<ToggleGroupRootProps, 'type' | 'value' | 'children' | 'class'>;
 
-	let { value = $bindable(), items, ...restProps }: Props = $props();
+	let {
+		value = $bindable(),
+		items,
+		size = 'md',
+		class: className,
+		...restProps
+	}: Props = $props();
+
+	const itemClass = $derived(
+		size === 'sm'
+			? 'h-7 px-3 text-xs font-semibold tracking-wide uppercase'
+			: 'h-11 px-4'
+	);
 
 	watch(
 		() => value,
@@ -32,16 +46,18 @@
 <ToggleGroup.Root
 	type="single"
 	bind:value
+	{...restProps}
 	class={cn(
 		'border-secondary-700 flex items-center overflow-clip rounded-md border',
-		restProps.class
+		className
 	)}
 >
-	{#each items as item}
+	{#each items as item (item.value)}
 		<ToggleGroup.Item
 			value={item.value}
 			class={cn(
-				'h-11 px-4 transition-colors',
+				itemClass,
+				'transition-colors',
 				'not-disabled:hover:bg-secondary-950/50 not-disabled:hover:cursor-pointer',
 				'data-[state=on]:text-primary data-[state=on]:bg-secondary-950 data-[state=on]:hover:bg-secondary-900'
 			)}

@@ -864,6 +864,16 @@ function parseListQuery(e) {
 				.filter(Boolean)
 		: [];
 
+	let filterAst = null;
+	const filterRaw = String(q.get('filter') || '').trim();
+	if (filterRaw) {
+		try {
+			filterAst = JSON.parse(filterRaw);
+		} catch {
+			filterAst = null;
+		}
+	}
+
 	const sortRaw = String(q.get('sort') || 'createdAt').trim();
 	const sortDir = String(q.get('sortDir') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 	const sortColumn =
@@ -875,7 +885,60 @@ function parseListQuery(e) {
 					? 'commentCount'
 					: 'createdAt';
 
-	return { page, perPage, ranked, title, maps, sortColumn, sortDir };
+	return { page, perPage, ranked, title, maps, filterAst, sortColumn, sortDir };
+}
+
+function compileMemberLeaf(leaf, params) {
+	if (!leaf || typeof leaf.field !== 'string') {
+		return null;
+	}
+
+	if (leaf.field === 'ranked' && leaf.op === 'eq') {
+		return leaf.value ? 'isRanked = true' : 'isRanked = false';
+	}
+
+	if (leaf.field === 'map') {
+		const values = leaf.op === 'eq' ? [leaf.value] : leaf.value;
+		if (!Array.isArray(values) || values.length === 0) {
+			return null;
+		}
+		const parts = [];
+		for (let i = 0; i < values.length; i++) {
+			const key = `fmap${Object.keys(params).length}`;
+			params[key] = values[i];
+			parts.push(`mapName = {:${key}}`);
+		}
+		return parts.length === 1 ? parts[0] : `(${parts.join(' || ')})`;
+	}
+
+	return null;
+}
+
+function compileMemberAst(node, params) {
+	if (!node) {
+		return null;
+	}
+	if (node.field) {
+		return compileMemberLeaf(node, params);
+	}
+	if ((node.op === 'and' || node.op === 'or') && Array.isArray(node.children)) {
+		const parts = [];
+		for (let i = 0; i < node.children.length; i++) {
+			const sql = compileMemberAst(node.children[i], params);
+			if (sql) {
+				parts.push(sql);
+			}
+		}
+		if (parts.length === 0) {
+			return null;
+		}
+		if (parts.length === 1) {
+			return parts[0];
+		}
+		const joiner = node.op === 'or' ? ' || ' : ' && ';
+		return `(${parts.join(joiner)})`;
+	}
+	return null;
 }
 
 function handleList(e) {
@@ -894,26 +957,33 @@ function handleList(e) {
 			params.visibility = 'member';
 		}
 
-		if (query.ranked) {
-			filters.push('isRanked = true');
-		}
-
-		if (query.title) {
-			filters.push('title ~ {:title}');
-			params.title = query.title;
-		}
-
-		if (query.maps.length === 1) {
-			filters.push('mapName = {:map0}');
-			params.map0 = query.maps[0];
-		} else if (query.maps.length > 1) {
-			const parts = [];
-			for (let i = 0; i < query.maps.length; i++) {
-				const key = `map${i}`;
-				parts.push(`mapName = {:${key}}`);
-				params[key] = query.maps[i];
+		if (query.filterAst) {
+			const astFilter = compileMemberAst(query.filterAst, params);
+			if (astFilter) {
+				filters.push(astFilter);
 			}
-			filters.push(`(${parts.join(' || ')})`);
+		} else {
+			if (query.ranked) {
+				filters.push('isRanked = true');
+			}
+
+			if (query.title) {
+				filters.push('title ~ {:title}');
+				params.title = query.title;
+			}
+
+			if (query.maps.length === 1) {
+				filters.push('mapName = {:map0}');
+				params.map0 = query.maps[0];
+			} else if (query.maps.length > 1) {
+				const parts = [];
+				for (let i = 0; i < query.maps.length; i++) {
+					const key = `map${i}`;
+					parts.push(`mapName = {:${key}}`);
+					params[key] = query.maps[i];
+				}
+				filters.push(`(${parts.join(' || ')})`);
+			}
 		}
 
 		const filter = filters.join(' && ');

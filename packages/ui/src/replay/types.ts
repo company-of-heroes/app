@@ -1,4 +1,5 @@
 import type { LiveLobbyPlayerStats } from '../live-lobby/types';
+import type { FilterAst } from './filter-ast';
 
 export type ReplayMessage = {
 	playerID: number;
@@ -67,6 +68,8 @@ export type ReplaysQuery = {
 	positions: string[];
 	elo: CompareFilter | null;
 	duration: CompareFilter | null;
+	/** Query-builder AST; when set, servers prefer this over flat filter fields. */
+	filter?: FilterAst | null;
 	sort: HistorySortField;
 	sortDir: HistorySortDir;
 };
@@ -105,6 +108,7 @@ export type MatchResultPlayer = {
 export type MatchResult = {
 	startgametime?: number;
 	completiontime?: number;
+	matchtype_id?: number;
 	players?: MatchResultPlayer[];
 } | null;
 

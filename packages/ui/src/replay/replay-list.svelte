@@ -14,6 +14,7 @@
 	} from './utils';
 	import { scoreClassName } from '../comment/vote';
 	import TeamPlayerSkills from '../match/team-player-skills.svelte';
+	import ReplayProBadge from './replay-pro-badge.svelte';
 	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
 	import DownloadIcon from 'phosphor-svelte/lib/DownloadIcon';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
@@ -46,6 +47,8 @@
 		dateLabel?: string;
 		sortByLabel?: string;
 		deletedLabel?: string;
+		proLabel?: string;
+		proTooltipLabel?: (elo: number) => string;
 	};
 
 	let {
@@ -74,7 +77,9 @@
 		downloadsLabel: _downloadsLabel = 'Downloads',
 		dateLabel = 'Date',
 		sortByLabel: _sortByLabel = 'Sort by {label}',
-		deletedLabel = 'Deleted'
+		deletedLabel = 'Deleted',
+		proLabel = 'Pro',
+		proTooltipLabel
 	}: Props = $props();
 
 	function rowLabel(match: CommunityMatch) {
@@ -176,6 +181,7 @@
 									{#if match.isRanked}
 										<RankingIcon class="text-primary-100 shrink-0" weight="duotone" />
 									{/if}
+									<ReplayProBadge {match} label={proLabel} tooltipLabel={proTooltipLabel} />
 									{#if match.visibility === 'deleted'}
 										<Badge variant="warning" class="shrink-0">{deletedLabel}</Badge>
 									{/if}
@@ -225,6 +231,7 @@
 						{#if match.isRanked}
 							<RankingIcon class="text-primary-100 shrink-0" weight="duotone" />
 						{/if}
+						<ReplayProBadge {match} label={proLabel} tooltipLabel={proTooltipLabel} />
 						{#if match.visibility === 'deleted'}
 							<Badge variant="warning" class="shrink-0">{deletedLabel}</Badge>
 						{/if}

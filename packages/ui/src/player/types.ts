@@ -50,6 +50,8 @@ export type MatchHistoryPlayer = {
 	outcome: number;
 	oldrating: number;
 	newrating: number;
+	/** Current Relic ladder level for this match's mode + race (not historical). */
+	ranklevel?: number;
 	country?: string;
 	avatarUrl?: string | null;
 	labels?: PlayerLabel[];

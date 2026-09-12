@@ -42,20 +42,32 @@ export function toUiMatchHistory(matches: AppTransformedMatch[]): TransformedMat
 		completiontime: match.completiontime,
 		outcome: match.outcome,
 		description: match.description,
-		players: match.players.map((player) => ({
-			profile_id: player.profile_id,
-			alias: player.alias,
-			steamId: player.steamId,
-			teamid: player.teamid,
-			race_id: player.race_id,
-			wins: player.wins,
-			losses: player.losses,
-			streak: player.streak,
-			outcome: player.outcome,
-			oldrating: player.oldrating,
-			newrating: player.newrating,
-			country: player.country
-		}))
+		players: match.players.map((player) => {
+			const enriched = player as typeof player & {
+				labels?: PlayerLabel[];
+				likeCount?: number;
+				avatarUrl?: string | null;
+			};
+
+			return {
+				profile_id: enriched.profile_id,
+				alias: enriched.alias,
+				steamId: enriched.steamId,
+				teamid: enriched.teamid,
+				race_id: enriched.race_id,
+				wins: enriched.wins,
+				losses: enriched.losses,
+				streak: enriched.streak,
+				outcome: enriched.outcome,
+				oldrating: enriched.oldrating,
+				newrating: enriched.newrating,
+				ranklevel: enriched.ranklevel,
+				country: enriched.country,
+				labels: enriched.labels,
+				likeCount: enriched.likeCount,
+				avatarUrl: enriched.avatarUrl
+			};
+		})
 	}));
 }
 

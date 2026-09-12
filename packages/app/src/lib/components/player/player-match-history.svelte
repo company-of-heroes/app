@@ -17,12 +17,20 @@
 		titleMatchesHiddenKeyword,
 		unhideMatch
 	} from '$core/pocketbase/hidden-matches';
+	import {
+		labelsForSteamId,
+		preloadPlayerLabels
+	} from '$core/pocketbase/player-label-cache.svelte';
+	import {
+		likeCountForSteamId,
+		preloadPlayerLikeCounts
+	} from '$core/pocketbase/player-vote-cache.svelte';
 	import { steam } from '$core/steam';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import dayjs from '$lib/dayjs';
 	import { useI18n } from '$lib/i18n';
-	import { getFactionFlagFromRace, normalizeMapName } from '$lib/utils';
+	import { getFactionFlagFromRace, getRankImage, normalizeMapName } from '$lib/utils';
 	import { getMapImageFromName } from '$lib/utils/game';
 
 	type Props = {
@@ -98,6 +106,16 @@
 		{ initialValue: new Map<string, string>() }
 	);
 
+	$effect(() => {
+		if (!steamIdsKey) {
+			return;
+		}
+
+		const ids = steamIdsKey.split(',');
+		preloadPlayerLabels(ids);
+		preloadPlayerLikeCounts(ids);
+	});
+
 	const visiblePlayer = $derived.by(() => {
 		const avatars = avatarBySteamId.current ?? new Map<string, string>();
 		return {
@@ -108,7 +126,9 @@
 					...matchPlayer,
 					avatarUrl:
 						matchPlayer.avatarUrl ??
-						(matchPlayer.steamId ? (avatars.get(matchPlayer.steamId) ?? null) : null)
+						(matchPlayer.steamId ? (avatars.get(matchPlayer.steamId) ?? null) : null),
+					labels: matchPlayer.labels ?? labelsForSteamId(matchPlayer.steamId),
+					likeCount: matchPlayer.likeCount ?? likeCountForSteamId(matchPlayer.steamId) ?? undefined
 				}))
 			}))
 		};
@@ -242,6 +262,7 @@
 	{playerHref}
 	{resolveFactionFlag}
 	{resolveMapSrc}
+	{getRankImage}
 	{formatTimestamp}
 	formatMapName={normalizeMapName}
 	showAvatars
@@ -249,13 +270,14 @@
 	changeLabel={t('Change')}
 	teamLabel={t('Team')}
 	eloLabel={t('ELO')}
+	rankLabel={t('Rank')}
 	playerLabel={t('Player')}
 	winsLabel={t('Wins')}
 	lossesLabel={t('Losses')}
 	streakLabel={t('Streak')}
 	showSessionId
 	{detailsHref}
-	detailsLabel={t('View details')}
+	detailsLabel={t('View match')}
 	{formatSessionId}
 	{matchActions}
 />

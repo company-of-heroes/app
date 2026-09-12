@@ -21,9 +21,11 @@ routerAdd('GET', '/api/match-history', (e) => {
 		parseCompareOp,
 		parseOptionalNumber,
 		compareClause,
+		comparePlayerEloClause,
 		loadUserSteamIds,
 		userPlayedLobbyClause
 	} = require(`${__hooks}/lib/match-history.js`);
+	const { parseFilterParam, compileFilterAst } = require(`${__hooks}/lib/filter-ast.js`);
 
 	const query = e.request.url.query();
 
@@ -34,6 +36,9 @@ routerAdd('GET', '/api/match-history', (e) => {
 	const page = Math.max(1, parseInt(query.get('page') || '1', 10) || 1);
 
 	const perPage = Math.min(50, Math.max(1, parseInt(query.get('perPage') || '15', 10) || 15));
+
+	const filterAst = parseFilterParam(query.get('filter') || '');
+	const useAstFilter = !!filterAst;
 
 	const ranked = query.get('ranked') === 'true';
 	const pro = query.get('pro') === 'true';
@@ -134,15 +139,27 @@ routerAdd('GET', '/api/match-history', (e) => {
 		bindings.userId = userId;
 	}
 
-	if (ranked) {
+	let astSql = null;
+	if (useAstFilter) {
+		astSql = compileFilterAst(filterAst, bindings, {
+			buildProFilterClause,
+			compareClause,
+			comparePlayerEloClause
+		});
+		if (astSql) {
+			lobbyFilters.push(astSql);
+		}
+	}
+
+	if (!useAstFilter && ranked) {
 		lobbyFilters.push('l.isRanked = 1');
 	}
 
-	if (pro) {
+	if (!useAstFilter && pro) {
 		lobbyFilters.push(buildProFilterClause());
 	}
 
-	if (maps.length > 0) {
+	if (!useAstFilter && maps.length > 0) {
 		const mapClauses = [];
 
 		for (let i = 0; i < maps.length; i++) {
@@ -154,7 +171,7 @@ routerAdd('GET', '/api/match-history', (e) => {
 		lobbyFilters.push(`(${mapClauses.join(' OR ')})`);
 	}
 
-	if (matchtypes.length > 0) {
+	if (!useAstFilter && matchtypes.length > 0) {
 		const matchtypeClauses = [];
 		const playerCountKeys = [];
 		const playerCountByType = {
@@ -200,24 +217,26 @@ routerAdd('GET', '/api/match-history', (e) => {
 		}
 	}
 
-	if (durationOp && Number.isFinite(durationSeconds)) {
+	if (!useAstFilter && durationOp && Number.isFinite(durationSeconds)) {
 		lobbyFilters.push(compareClause('l.durationSeconds', durationOp, 'durationSeconds', durationSeconds, bindings));
 	}
 
 	const numericPlayerIds = [];
 	const numericPlayerIdValues = [];
 
-	for (let i = 0; i < playerIds.length; i++) {
-		const profileId = Number(playerIds[i]);
+	if (!useAstFilter) {
+		for (let i = 0; i < playerIds.length; i++) {
+			const profileId = Number(playerIds[i]);
 
-		if (Number.isNaN(profileId)) {
-			continue;
+			if (Number.isNaN(profileId)) {
+				continue;
+			}
+
+			const key = `pid${i}`;
+			bindings[key] = profileId;
+			numericPlayerIds.push(`{:${key}}`);
+			numericPlayerIdValues.push(profileId);
 		}
-
-		const key = `pid${i}`;
-		bindings[key] = profileId;
-		numericPlayerIds.push(`{:${key}}`);
-		numericPlayerIdValues.push(profileId);
 	}
 
 	const subjectProfileId = Number(query.get('profileId') || '');
@@ -238,20 +257,23 @@ routerAdd('GET', '/api/match-history', (e) => {
 				? { steamIds: userSteamIds, profileIds: userProfileIds }
 				: { steamIds: [], profileIds: [] };
 
-	const indexConditions = buildIndexPlayerConditions(
-		{
-			races,
-			slots,
-			eloOp,
-			eloValue,
-			steamIds: indexSubjects.steamIds,
-			profileIds: indexSubjects.profileIds
-		},
-		bindings,
-		{
-			allowAnyPlayer: hasPlayerFilter || scope === 'community'
-		}
-	);
+	const indexConditions =
+		useAstFilter
+			? null
+			: buildIndexPlayerConditions(
+					{
+						races,
+						slots,
+						eloOp,
+						eloValue,
+						steamIds: indexSubjects.steamIds,
+						profileIds: indexSubjects.profileIds
+					},
+					bindings,
+					{
+						allowAnyPlayer: hasPlayerFilter || scope === 'community'
+					}
+				);
 
 	let joinExtra = '';
 	if (indexConditions) {
@@ -265,9 +287,10 @@ routerAdd('GET', '/api/match-history', (e) => {
 	}
 
 	const hasRaceOrEloFilter = !!indexConditions;
-	const hasMatchtypeFilter = matchtypes.length > 0;
-	const hasDurationFilter = !!(durationOp && Number.isFinite(durationSeconds));
+	const hasMatchtypeFilter = !useAstFilter && matchtypes.length > 0;
+	const hasDurationFilter = !useAstFilter && !!(durationOp && Number.isFinite(durationSeconds));
 	const hasExtraFilters =
+		useAstFilter ||
 		hasPlayerFilter ||
 		maps.length > 0 ||
 		ranked ||
@@ -311,7 +334,12 @@ routerAdd('GET', '/api/match-history', (e) => {
 			? whereClause
 			: `${whereClause} AND ${notHiddenTitleClause(lobbyDescriptionSql('l'))}`;
 
-		if (totalItems === null) {
+		// Filtered COUNT(*) over lobbies stalls for seconds under write load (harvests)
+		// and tripped the client 8s timeout. Probe hasMore with perPage+1 instead.
+		const skipExactCount = hasExtraFilters && totalItems === null;
+		const fetchLimit = skipExactCount ? perPage + 1 : perPage;
+
+		if (totalItems === null && !skipExactCount) {
 			totalItems = countFilteredMatches(
 				hasPlayerFilter,
 				numericPlayerIds,
@@ -357,19 +385,23 @@ routerAdd('GET', '/api/match-history', (e) => {
            ${joinExtra}
            AND ${selectWhere}
          ORDER BY ${orderBy}
-         LIMIT ${perPage} OFFSET ${offset}`;
+         LIMIT ${fetchLimit} OFFSET ${offset}`;
 		} else {
 			selectSql = `SELECT
            ${selectColumns}
          FROM lobbies l
          WHERE ${selectWhere}
          ORDER BY ${orderBy}
-         LIMIT ${perPage} OFFSET ${offset}`;
+         LIMIT ${fetchLimit} OFFSET ${offset}`;
 		}
 
 		$app.db().newQuery(selectSql).bind(bindings).all(itemRows);
 
-		const pageRows = itemRows;
+		const hasMore = skipExactCount && itemRows.length > perPage;
+		const pageRows = hasMore ? itemRows.slice(0, perPage) : itemRows;
+		if (totalItems === null) {
+			totalItems = offset + pageRows.length + (hasMore ? 1 : 0);
+		}
 
 		const unresolvedLobbyIds = [];
 
@@ -388,13 +420,16 @@ routerAdd('GET', '/api/match-history', (e) => {
 		for (const row of pageRows) {
 			const players = resolvePlayersForRow(row, aliasMap, playersByLobby);
 			const result = parseResultField(row.result);
-			// List UI only needs outcomes for team win/loss tint — drop the fat result blob.
+			// Slim result for list rows: outcomes (team tint) + ratings/matchtype (Pro badge).
 			const slimResult =
 				result && Array.isArray(result.players)
 					? {
+							matchtype_id: result.matchtype_id,
 							players: result.players.map((player) => ({
 								profile_id: player.profile_id,
-								outcome: player.outcome
+								outcome: player.outcome,
+								oldrating: player.oldrating,
+								newrating: player.newrating
 							}))
 						}
 					: null;

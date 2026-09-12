@@ -29,10 +29,19 @@
 		selectFactions: t('Select factions'),
 		selectGameModes: t('Select game modes'),
 		selectPositions: t('Select positions'),
-		selectedCount: t('{count} selected'),
-		remove: t('Remove'),
 		changeOperator: t('Change operator'),
-		minutes: t('min')
+		minutes: t('min'),
+		clearFilters: t('Clear filters'),
+		apply: t('Apply'),
+		addCondition: t('Add condition'),
+		and: t('And'),
+		or: t('Or'),
+		contains: t('Contains'),
+		equals: t('Equals'),
+		is: t('Is'),
+		removeCondition: t('Remove condition'),
+		trueLabel: t('True'),
+		falseLabel: t('False')
 	});
 
 	function historySearchParams(q: string, limit: string) {

@@ -4,6 +4,7 @@ import SmurfAlert from './smurf-alert.svelte';
 import PlayerProfileHeader from './player-profile-header.svelte';
 import PlayerStatsTable from './player-stats-table.svelte';
 import PlayerMatchHistory from './player-match-history.svelte';
+import PlayerMatchHistorySkeleton from './player-match-history-skeleton.svelte';
 import PlayerProfileSkeleton from './player-profile-skeleton.svelte';
 import PlayerSearchCard from './player-search-card.svelte';
 import PlayerPreviewCard from './player-preview-card.svelte';
@@ -16,6 +17,7 @@ export {
 	PlayerProfileHeader,
 	PlayerStatsTable,
 	PlayerMatchHistory,
+	PlayerMatchHistorySkeleton,
 	PlayerProfileSkeleton,
 	PlayerSearchCard,
 	PlayerPreviewCard,
@@ -44,3 +46,9 @@ export type {
 	PlayerPreviewData,
 	PlayerFactionPreview
 } from './types';
+export {
+	attachMatchHistoryRankLevels,
+	collectMatchHistoryProfileIds,
+	isRankedMatchType,
+	rankLevelForMatchPlayer
+} from './match-history-ranks';

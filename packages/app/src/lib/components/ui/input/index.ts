@@ -1,5 +1,6 @@
 export {
 	Input,
+	CompareInput,
 	Checkbox,
 	RadioGroup,
 	Selection,
@@ -7,6 +8,8 @@ export {
 	Textarea,
 	FileDropzone,
 	type InputProps,
+	type CompareInputProps,
+	type CompareOperatorOption,
 	type TextareaProps,
 	type FileDropzoneProps
 } from '@company-of-heroes/ui/input';

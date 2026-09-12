@@ -3,7 +3,7 @@ import { cn } from './cn';
 export * from '@company-of-heroes/ui/variants';
 
 export const pageShell = cn(
-	'border-secondary-800 relative mx-auto flex min-h-screen max-w-6xl flex-col border-x bg-gray-950'
+	'border-secondary-800 relative mx-auto flex min-h-screen max-w-7xl flex-col border-x bg-gray-950'
 );
 
 export const headerCellAction = cn(

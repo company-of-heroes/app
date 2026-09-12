@@ -7,6 +7,7 @@
 	import ChecksIcon from 'phosphor-svelte/lib/ChecksIcon';
 	import ClockIcon from 'phosphor-svelte/lib/ClockIcon';
 	import MinusIcon from 'phosphor-svelte/lib/MinusIcon';
+	import { Button } from '../ui/button';
 	import MapImage from '../ui/map-image.svelte';
 	import {
 		formatDuration,
@@ -18,6 +19,7 @@
 	} from '../format/player-format';
 	import { formatStreak, streakClass } from '../format/ranks';
 	import type { MatchHistoryPlayer, PlayerPageData, TransformedMatch } from './types';
+	import { isRankedMatchType } from './match-history-ranks';
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
@@ -30,6 +32,7 @@
 		resolveFactionFlag: (raceId: number) => string;
 		resolveMapSrc: (map: string | undefined) => string | undefined;
 		resolveAvatarUrl?: (url: string) => string;
+		getRankImage?: (raceId: number, rankLevel: number) => string;
 		formatMapName?: (map: string, includePlayerCount?: boolean) => string;
 		formatTimestamp?: (unixSeconds: number) => string;
 		locale?: string;
@@ -37,6 +40,7 @@
 		changeLabel?: string;
 		teamLabel?: string;
 		eloLabel?: string;
+		rankLabel?: string;
 		playerLabel?: string;
 		winsLabel?: string;
 		lossesLabel?: string;
@@ -56,6 +60,7 @@
 		resolveFactionFlag,
 		resolveMapSrc,
 		resolveAvatarUrl = (url) => url,
+		getRankImage,
 		formatMapName = normalizeMapName,
 		formatTimestamp,
 		locale,
@@ -63,6 +68,7 @@
 		changeLabel = 'Change',
 		teamLabel = 'Team',
 		eloLabel = 'ELO',
+		rankLabel = 'Rank',
 		playerLabel = 'Player',
 		winsLabel = 'Wins',
 		lossesLabel = 'Losses',
@@ -70,7 +76,7 @@
 		showAvatars = false,
 		showSessionId = false,
 		detailsHref,
-		detailsLabel = 'View details',
+		detailsLabel = 'View match',
 		formatSessionId = (id) => `ID: ${id}`,
 		matchActions
 	}: Props = $props();
@@ -124,6 +130,23 @@
 			style:text-shadow={getEloTextShadow(elo)}
 		>
 			{elo}
+		</span>
+	{/if}
+{/snippet}
+
+{#snippet rankBadge(matchPlayer: MatchHistoryPlayer, matchTypeId: number)}
+	{#if !isRankedMatchType(matchTypeId) || !getRankImage}
+		<span class="text-secondary-400 tabular-nums">-</span>
+	{:else}
+		<span class="flex items-center justify-center gap-2">
+			<img
+				src={getRankImage(matchPlayer.race_id, matchPlayer.ranklevel ?? 0)}
+				alt=""
+				class="size-6 shrink-0 object-contain"
+			/>
+			<span class="font-semibold tabular-nums">
+				{(matchPlayer.ranklevel ?? 0) > 0 ? matchPlayer.ranklevel : '-'}
+			</span>
 		</span>
 	{/if}
 {/snippet}
@@ -209,16 +232,10 @@
 					<div class="flex min-w-0 shrink-0 flex-wrap items-center gap-4">
 						{@render matchActions?.({ match })}
 						{#if href}
-							<a
-								{href}
-								class={cn(
-									interactive,
-									'text-primary inline-flex items-center gap-1.5 text-sm whitespace-nowrap hover:underline'
-								)}
-							>
+							<Button {href} size="sm" variant="secondary">
 								<ChecksIcon class="size-4 text-green-400" />
 								{detailsLabel}
-							</a>
+							</Button>
 						{/if}
 						<span class="text-secondary-300 flex items-center gap-2 text-sm font-medium">
 							<ClockIcon class="size-4" />
@@ -226,38 +243,28 @@
 						</span>
 					</div>
 				</div>
-				<div class="hidden md:block overflow-x-auto">
+				<div class="hidden overflow-x-auto md:block">
 					<table class="w-full table-fixed text-sm">
 						<colgroup>
-							<col class="w-3/24" />
-							<col class="w-2/24" />
-							<col class="w-2/24" />
-							<col class="w-9/24" />
-							<col class="w-2/24" />
-							<col class="w-3/24" />
-							<col class="w-3/24" />
+							<col class="w-14" />
+							<col class="w-14" />
+							<col class="w-[4.5rem]" />
+							<col class="w-12" />
+							<col />
+							<col class="w-14" />
+							<col class="w-14" />
+							<col class="w-14" />
 						</colgroup>
 						<thead>
 							<tr class={tableHeadRow}>
-								<th class="px-4 py-2">
-									<div class="flex w-full justify-center">{changeLabel}</div>
-								</th>
-								<th class="px-4 py-2">
-									<div class="flex w-full justify-center">{teamLabel}</div>
-								</th>
-								<th class="px-4 py-2">
-									<div class="flex w-full justify-center">{eloLabel}</div>
-								</th>
-								<th class="px-4 py-2 text-left">{playerLabel}</th>
-								<th class="px-4 py-2">
-									<div class="flex w-full justify-center">{winsLabel}</div>
-								</th>
-								<th class="px-4 py-2">
-									<div class="flex w-full justify-center">{lossesLabel}</div>
-								</th>
-								<th class="px-4 py-2">
-									<div class="flex w-full justify-center">{streakLabel}</div>
-								</th>
+								<th class="px-2 py-2 text-center">{changeLabel}</th>
+								<th class="px-2 py-2 text-center">{eloLabel}</th>
+								<th class="px-2 py-2 text-center">{rankLabel}</th>
+								<th class="px-2 py-2 text-center">{teamLabel}</th>
+								<th class="px-3 py-2 text-left">{playerLabel}</th>
+								<th class="px-2 py-2 text-center">{winsLabel}</th>
+								<th class="px-2 py-2 text-center">{lossesLabel}</th>
+								<th class="px-2 py-2 text-center">{streakLabel}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -272,12 +279,22 @@
 										matchPlayer.outcome === 1 ? 'bg-success/5' : 'bg-destructive/5'
 									)}
 								>
-									<td class="px-4 py-1.5">
+									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
 											{@render ratingDeltaBadge(delta)}
 										</div>
 									</td>
-									<td class="px-4 py-1.5">
+									<td class="px-2 py-1.5 text-center">
+										<div class="flex w-full justify-center">
+											{@render eloValue(elo)}
+										</div>
+									</td>
+									<td class="px-2 py-1.5 text-center">
+										<div class="flex w-full justify-center">
+											{@render rankBadge(matchPlayer, match.matchtype_id)}
+										</div>
+									</td>
+									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
 											<img
 												src={resolveFactionFlag(matchPlayer.race_id)}
@@ -286,29 +303,24 @@
 											/>
 										</div>
 									</td>
-									<td class="px-4 py-1.5">
-										<div class="flex w-full justify-center">
-											{@render eloValue(elo)}
-										</div>
-									</td>
-									<td class="px-4 py-1.5">
+									<td class="px-3 py-1.5 text-left">
 										{@render playerIdentity(matchPlayer, isSelf, flagUrl)}
 									</td>
-									<td class="px-4 py-1.5">
+									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
 											<span class="{statWins} text-center font-medium tabular-nums">
 												{matchPlayer.wins}
 											</span>
 										</div>
 									</td>
-									<td class="px-4 py-1.5">
+									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
 											<span class="{statLosses} text-center font-medium tabular-nums">
 												{matchPlayer.losses}
 											</span>
 										</div>
 									</td>
-									<td class="px-4 py-1.5">
+									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
 											<span
 												class="text-center font-medium tabular-nums {streakClass(
@@ -324,7 +336,7 @@
 						</tbody>
 					</table>
 				</div>
-				<div class="md:hidden divide-y divide-secondary-800">
+				<div class="divide-secondary-800 divide-y md:hidden">
 					{#each players as matchPlayer (matchPlayer.profile_id)}
 						{@const isSelf = matchPlayer.profile_id === player.profileId}
 						{@const elo = displayElo(matchPlayer)}
@@ -340,15 +352,14 @@
 							<div
 								class="text-secondary-300 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm"
 							>
+								{@render ratingDeltaBadge(delta)}
+								{@render eloValue(elo)}
+								{@render rankBadge(matchPlayer, match.matchtype_id)}
 								<img
 									src={resolveFactionFlag(matchPlayer.race_id)}
 									alt=""
 									class="h-auto w-6 shrink-0 object-contain ring-1 ring-black/40"
 								/>
-								<span class="inline-flex items-center gap-1.5">
-									{@render eloValue(elo)}
-									{@render ratingDeltaBadge(delta)}
-								</span>
 								<span class="{statWins} font-medium tabular-nums">{matchPlayer.wins}</span>
 								<span class="{statLosses} font-medium tabular-nums">{matchPlayer.losses}</span>
 								<span class="font-medium tabular-nums {streakClass(matchPlayer.streak)}">

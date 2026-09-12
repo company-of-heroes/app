@@ -771,7 +771,9 @@ function buildIndexPlayerConditions(
 			bindings[key] = slots[i];
 			slotPlaceholders.push(`{:${key}}`);
 		}
-		parts.push(`${playerSlotExpr()} IN (${slotPlaceholders.join(', ')})`);
+		// Use indexed column only — COALESCE+json_each fallback made EXISTS scans multi-second.
+		// Rows with slot still 0 (pre-backfill) are omitted until history_catalog_backfill fills them.
+		parts.push(`i.slot IN (${slotPlaceholders.join(', ')})`);
 	}
 
 	if (hasElo) {
@@ -1123,6 +1125,67 @@ function transformMatchHistory(data, profileId) {
 	return transformed;
 }
 
+/** Ranked automatch (1–4) or skirmish (14); Basic Match (0) has no rank badges. */
+function isRankedMatchType(matchTypeId) {
+	const id = Number(matchTypeId);
+	return (Number.isInteger(id) && id >= 1 && id <= 4) || id === 14;
+}
+
+function rankLevelForMatchPlayer(leaderboardStats, matchTypeId, raceId) {
+	if (!isRankedMatchType(matchTypeId) || !Array.isArray(leaderboardStats)) {
+		return 0;
+	}
+
+	const leaderboardId = leaderboardIdForMatchRace(matchTypeId, raceId);
+	if (leaderboardId == null) {
+		return 0;
+	}
+
+	const stat = leaderboardStats.find(
+		(entry) => toFiniteNumber(entry?.leaderboard_id) === leaderboardId
+	);
+	const level = toFiniteNumber(stat?.ranklevel ?? stat?.rankLevel);
+	return level != null && level > 0 ? level : 0;
+}
+
+/** Unique positive profile ids across match history (for batch personalstat). */
+function collectMatchHistoryProfileIds(matches) {
+	const seen = {};
+	const ids = [];
+
+	for (let i = 0; i < (matches || []).length; i++) {
+		const players = matches[i]?.players || [];
+		for (let j = 0; j < players.length; j++) {
+			const id = Number(players[j]?.profile_id);
+			if (!Number.isInteger(id) || id <= 0 || seen[id]) {
+				continue;
+			}
+
+			seen[id] = true;
+			ids.push(id);
+		}
+	}
+
+	return ids;
+}
+
+/**
+ * Attaches current Relic `ranklevel` on each match player from
+ * statsByProfileId (profile_id → leaderboardStats[]).
+ */
+function attachMatchHistoryRankLevels(matches, statsByProfileId) {
+	const lookup = statsByProfileId || {};
+
+	return (matches || []).map((match) => ({
+		...match,
+		players: (match.players || []).map((player) => {
+			const stats = lookup[player.profile_id] || lookup[String(player.profile_id)];
+			const ranklevel = rankLevelForMatchPlayer(stats, match.matchtype_id, player.race_id);
+			return Object.assign({}, player, { ranklevel: ranklevel > 0 ? ranklevel : 0 });
+		})
+	}));
+}
+
 /**
  * Prefer completed result, then newest createdAt among hasReplay lobbies.
  */
@@ -1242,9 +1305,14 @@ module.exports = {
 	parseCompareOp,
 	compareClause,
 	comparePlayerEloClause,
+	playerSlotExpr,
 	loadUserSteamIds,
 	userPlayedLobbyClause,
 	asList,
 	transformMatchHistory,
-	attachReplayLobbyIds
+	attachReplayLobbyIds,
+	collectMatchHistoryProfileIds,
+	attachMatchHistoryRankLevels,
+	isRankedMatchType,
+	rankLevelForMatchPlayer
 };

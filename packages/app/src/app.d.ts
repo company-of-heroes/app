@@ -167,6 +167,8 @@ declare module '@fknoobs/app' {
 		oldrating: number;
 		newrating: number;
 		reporttype: number;
+		/** Current Relic ladder level for this match's mode + race (not historical). */
+		ranklevel?: number;
 	}
 
 	interface TransformedMatch {

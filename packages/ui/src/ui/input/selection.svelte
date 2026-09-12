@@ -81,11 +81,11 @@
 	}: Props = $props();
 
 	const controlSize = $derived(
-		size === 'sm' ? 'h-8 text-sm' : size === 'lg' ? 'h-14 text-lg' : 'h-11 text-base'
+		size === 'sm' ? 'h-9 text-sm' : size === 'lg' ? 'h-14 text-lg' : 'h-11 text-base'
 	);
 	const controlPad = $derived(size === 'sm' ? 'px-3' : size === 'lg' ? 'px-5' : 'px-4');
 	const buttonSize = $derived(
-		size === 'sm' ? 'h-8 px-3 text-sm' : size === 'lg' ? 'h-14 px-8 text-lg' : 'h-9 px-6 text-base'
+		size === 'sm' ? 'h-9 px-3 text-sm' : size === 'lg' ? 'h-14 px-8 text-lg' : 'h-9 px-6 text-base'
 	);
 	const caretSize = $derived(size === 'sm' ? 14 : size === 'lg' ? 20 : 16);
 

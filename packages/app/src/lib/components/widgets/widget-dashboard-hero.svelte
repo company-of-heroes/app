@@ -175,7 +175,16 @@
 
 	const recentMatches = resource(
 		() => [profileId, statsGeneration] as const,
-		async ([id]) => (id ? relic.getRecentMatchHistoryForProfile(id) : []),
+		async ([id]) => {
+			if (!id) {
+				return [];
+			}
+
+			const matches = await relic.getRecentMatchHistoryForProfile(id);
+			const { enrichMatchHistoryRankLevels } = await import('$lib/player/match-history-ranks');
+			const ownerStats = app.game.profile?.relic.leaderboardStats;
+			return enrichMatchHistoryRankLevels(matches, id, ownerStats);
+		},
 		{ initialValue: [] }
 	);
 

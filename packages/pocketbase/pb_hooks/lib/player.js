@@ -303,6 +303,101 @@ function relicPersonalStatUrlById(profileId) {
 	);
 }
 
+function relicPersonalStatUrlByIds(profileIds) {
+	return (
+		`${RELIC_API_BASE}/community/leaderboard/getpersonalstat?title=coh1&profile_ids=` +
+		encodeURIComponent(JSON.stringify(profileIds.map(Number)))
+	);
+}
+
+const PERSONAL_STAT_BATCH = 20;
+
+/** Parse batch getpersonalstat → profile_id → leaderboardStats[]. */
+function statsByProfileIdFromPersonalStat(data) {
+	const byId = {};
+	const allStats = data?.leaderboardStats ?? [];
+	const groups = data?.statGroups ?? [];
+
+	for (let i = 0; i < groups.length; i++) {
+		const member = groups[i]?.members?.[0];
+		if (!member) {
+			continue;
+		}
+
+		const id = Number(member.profile_id);
+		if (!Number.isInteger(id) || id <= 0) {
+			continue;
+		}
+
+		byId[id] = allStats.filter((stat) => stat?.statgroup_id === member.personal_statgroup_id);
+	}
+
+	return byId;
+}
+
+/**
+ * Fetch leaderboardStats for opponent profile ids (chunked Relic personalstat).
+ * `seed` may already include the page owner's stats.
+ */
+function fetchLeaderboardStatsByProfileIds(profileIds, seed) {
+	const byId = Object.assign({}, seed || {});
+	const missing = [];
+
+	for (let i = 0; i < (profileIds || []).length; i++) {
+		const id = Number(profileIds[i]);
+		if (!Number.isInteger(id) || id <= 0 || byId[id]) {
+			continue;
+		}
+
+		missing.push(id);
+	}
+
+	if (missing.length === 0) {
+		return byId;
+	}
+
+	const urls = [];
+	for (let i = 0; i < missing.length; i += PERSONAL_STAT_BATCH) {
+		urls.push(relicPersonalStatUrlByIds(missing.slice(i, i + PERSONAL_STAT_BATCH)));
+	}
+
+	const byUrl = fetchJsonMany(urls, { upstream: 'personalstat-batch', count: missing.length });
+	for (let i = 0; i < urls.length; i++) {
+		const body = byUrl[urls[i]];
+		if (!body) {
+			continue;
+		}
+
+		Object.assign(byId, statsByProfileIdFromPersonalStat(body));
+	}
+
+	return byId;
+}
+
+function enrichMatchHistoryWithRankLevels(matches, ownerProfileId, ownerStats) {
+	if (!matches || matches.length === 0) {
+		return matches || [];
+	}
+
+	const profileIds = matchHistory.collectMatchHistoryProfileIds(matches);
+	const seed = {};
+	const ownerId = Number(ownerProfileId);
+	if (Number.isInteger(ownerId) && ownerId > 0 && Array.isArray(ownerStats)) {
+		seed[ownerId] = ownerStats;
+	}
+
+	try {
+		const statsByProfileId = fetchLeaderboardStatsByProfileIds(profileIds, seed);
+		return matchHistory.attachMatchHistoryRankLevels(matches, statsByProfileId);
+	} catch (error) {
+		logWarn('Match history rank enrichment failed', {
+			ownerProfileId,
+			error: error instanceof Error ? error.message : String(error)
+		});
+		return matchHistory.attachMatchHistoryRankLevels(matches, seed);
+	}
+}
+
 function relicMatchHistoryUrl(profileId) {
 	return (
 		`${RELIC_API_BASE}/community/leaderboard/getrecentmatchhistorybyprofileid` +
@@ -732,9 +827,16 @@ function loadPlayerPage(id, options) {
 				likeCountsBySteamId
 			)
 		: labeledMatches;
-	const matchHistoryWithLobbies = extras
-		? matchHistory.attachReplayLobbyIds(matchHistoryWithScores)
+	const matchHistoryWithRanks = extras
+		? enrichMatchHistoryWithRankLevels(
+				matchHistoryWithScores,
+				relicProfile.profile_id,
+				relicProfile.leaderboardStats
+			)
 		: matchHistoryWithScores;
+	const matchHistoryWithLobbies = extras
+		? matchHistory.attachReplayLobbyIds(matchHistoryWithRanks)
+		: matchHistoryWithRanks;
 
 	const page = {
 		steamId,

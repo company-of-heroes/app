@@ -1,5 +1,6 @@
 import { Context } from 'runed';
 import { t } from '$lib/i18n';
+import { rememberedHistoryListHref } from '$core/app/features/history/history-url';
 
 export type Crumb = {
 	label: string;
@@ -90,6 +91,8 @@ export function crumbsFromPath(pathname: string, extra: Crumb[]): Crumb[] {
 			? parts[1] === 'upload'
 				? '/history?tab=member'
 				: '/history?tab=replays'
-			: `/${parts[0]}`;
+			: parts[0] === 'history'
+				? rememberedHistoryListHref()
+				: `/${parts[0]}`;
 	return [{ label: sectionLabel, href }, ...rest];
 }

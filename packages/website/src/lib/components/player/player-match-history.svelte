@@ -3,7 +3,7 @@
 	import type { PlayerPageData, TransformedMatch } from '$lib/player';
 	import { currentLocale, href, useI18n } from '$lib/i18n';
 	import { normalizeMapName } from '$lib/utils/player/format';
-	import { flagImageUrl, resolveFactionFlag, resolveMapSrc } from '$lib/utils/resolvers';
+	import { flagImageUrl, resolveFactionFlag, resolveMapSrc, getRankImageByRace } from '$lib/utils/resolvers';
 
 	type Props = {
 		player: PlayerPageData;
@@ -50,6 +50,7 @@
 	{playerHref}
 	resolveFactionFlag={resolveFactionFlag}
 	resolveMapSrc={resolveMapSrc}
+	getRankImage={getRankImageByRace}
 	formatMapName={normalizeMapName}
 	{formatTimestamp}
 	locale={currentLocale()}
@@ -58,12 +59,13 @@
 	changeLabel={t('Change')}
 	teamLabel={t('Team')}
 	eloLabel={t('ELO')}
+	rankLabel={t('Rank')}
 	playerLabel={t('Player')}
 	winsLabel={t('Wins')}
 	lossesLabel={t('Losses')}
 	streakLabel={t('Streak')}
 	showSessionId
 	{detailsHref}
-	detailsLabel={t('View details')}
+	detailsLabel={t('View match')}
 	{formatSessionId}
 />

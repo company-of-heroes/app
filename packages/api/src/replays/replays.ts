@@ -285,17 +285,16 @@ export function matchtypesForMatchups(matchups: string[]): number[] {
 	return [...ids];
 }
 
-/** CoH slots are team-interleaved; UI position N maps to both teams. Stored slots are 1-based. */
+/** Starting lobby slots are 1-based (1–8 in 4v4). */
 export function slotsForPositions(positions: string[]): number[] {
 	const slots = new Set<number>();
 	for (const value of positions) {
-		const position = Number(value);
-		if (!Number.isInteger(position) || position < 1 || position > 4) {
+		const slot = Number(value);
+		if (!Number.isInteger(slot) || slot < 1 || slot > 8) {
 			continue;
 		}
 
-		slots.add((position - 1) * 2 + 1);
-		slots.add((position - 1) * 2 + 2);
+		slots.add(slot);
 	}
 
 	return [...slots];
@@ -327,44 +326,48 @@ export function buildMatchHistoryUrl(
 		params.set('profileId', String(options.profileId));
 	}
 
-	if (query.ranked) {
-		params.set('ranked', 'true');
-	}
+	if (query.filter != null) {
+		params.set('filter', JSON.stringify(query.filter));
+	} else {
+		if (query.ranked) {
+			params.set('ranked', 'true');
+		}
 
-	if (query.pro) {
-		params.set('pro', 'true');
-	}
+		if (query.pro) {
+			params.set('pro', 'true');
+		}
 
-	const matchtypes = matchtypesForMatchups(query.matchups);
-	if (matchtypes.length > 0) {
-		params.set('matchtypes', matchtypes.join(','));
-	}
+		const matchtypes = matchtypesForMatchups(query.matchups);
+		if (matchtypes.length > 0) {
+			params.set('matchtypes', matchtypes.join(','));
+		}
 
-	if (query.playerIds.length > 0) {
-		params.set('playerIds', query.playerIds.join(','));
-	}
+		if (query.playerIds.length > 0) {
+			params.set('playerIds', query.playerIds.join(','));
+		}
 
-	if (query.maps.length > 0) {
-		params.set('maps', query.maps.join(','));
-	}
+		if (query.maps.length > 0) {
+			params.set('maps', query.maps.join(','));
+		}
 
-	if (query.races.length > 0) {
-		params.set('races', query.races.join(','));
-	}
+		if (query.races.length > 0) {
+			params.set('races', query.races.join(','));
+		}
 
-	const slots = slotsForPositions(query.positions);
-	if (slots.length > 0) {
-		params.set('slots', slots.join(','));
-	}
+		const slots = slotsForPositions(query.positions);
+		if (slots.length > 0) {
+			params.set('slots', slots.join(','));
+		}
 
-	if (query.elo) {
-		params.set('eloOp', query.elo.op);
-		params.set('elo', String(query.elo.value));
-	}
+		if (query.elo) {
+			params.set('eloOp', query.elo.op);
+			params.set('elo', String(query.elo.value));
+		}
 
-	if (query.duration) {
-		params.set('durationOp', query.duration.op);
-		params.set('duration', String(query.duration.value * 60));
+		if (query.duration) {
+			params.set('durationOp', query.duration.op);
+			params.set('duration', String(query.duration.value * 60));
+		}
 	}
 
 	if (query.sort !== 'createdAt') {
@@ -399,12 +402,16 @@ export function buildMemberReplaysUrl(
 		page: String(query.page),
 		perPage: String(perPage)
 	});
-	if (query.ranked) {
-		params.set('ranked', 'true');
-	}
+	if (query.filter != null) {
+		params.set('filter', JSON.stringify(query.filter));
+	} else {
+		if (query.ranked) {
+			params.set('ranked', 'true');
+		}
 
-	if (query.maps.length > 0) {
-		params.set('maps', query.maps.join(','));
+		if (query.maps.length > 0) {
+			params.set('maps', query.maps.join(','));
+		}
 	}
 
 	if (query.sort !== 'createdAt') {
@@ -498,7 +505,9 @@ export class ReplaysApi {
 					scope === 'user'
 						? 'Failed to load your matches. Please try again later.'
 						: 'Failed to load community replays. Please try again later.',
-				schema: communityMatchListSchema
+				schema: communityMatchListSchema,
+				// Filtered list COUNT used to take >8s under local write load.
+				timeoutMs: 30_000
 			}
 		);
 	}
@@ -514,6 +523,7 @@ export class ReplaysApi {
 			{
 				fallback: 'Failed to load member replays. Please try again later.',
 				schema: communityMatchListSchema,
+				timeoutMs: 30_000,
 				init: {
 					headers: resolveAuthHeaders(this.deps, options?.headers)
 				}

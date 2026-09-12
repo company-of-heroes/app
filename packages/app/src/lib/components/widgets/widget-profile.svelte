@@ -71,14 +71,22 @@
 					class="justify-center"
 					onclick={async () => {
 						isLoadingRecentGames = true;
+						const profileId = app.game.profile!.relic.profile_id;
+						const matches = await relic.getRecentMatchHistoryForProfile(profileId);
+						const { enrichMatchHistoryRankLevels } = await import(
+							'$lib/player/match-history-ranks'
+						);
+						const enriched = await enrichMatchHistoryRankLevels(
+							matches,
+							profileId,
+							app.game.profile?.relic.leaderboardStats
+						);
 						app.modal.create({
 							title: t('Profile Stats'),
 							component: MatchHistory,
 							size: 'full',
 							props: {
-								matches: await relic.getRecentMatchHistoryForProfile(
-									app.game.profile!.relic.profile_id
-								),
+								matches: enriched,
 								showSessionId: true,
 								class: 'p-4'
 							}

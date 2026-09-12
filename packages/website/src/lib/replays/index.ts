@@ -1,13 +1,14 @@
 import { API_URL } from '$lib/site/urls';
 import { unlocalizedPath } from '@company-of-heroes/i18n';
-import type {
-	CompareFilter,
-	FilterOperator,
-	HistoryMapOption,
-	HistoryMatchup,
-	HistorySortDir,
-	HistorySortField,
-	ReplaysQuery
+import {
+	playerIdsFromAst,
+	type CompareFilter,
+	type FilterOperator,
+	type HistoryMapOption,
+	type HistoryMatchup,
+	type HistorySortDir,
+	type HistorySortField,
+	type ReplaysQuery
 } from '@company-of-heroes/ui/replay';
 
 export type {
@@ -177,14 +178,13 @@ export function matchtypesForMatchups(matchups: string[]): number[] {
 	return [...ids];
 }
 
-/** CoH slots are team-interleaved; UI position N maps to both teams. Stored slots are 1-based. */
+/** Starting lobby slots are 1-based (1–8 in 4v4). */
 export function slotsForPositions(positions: string[]): number[] {
 	const slots = new Set<number>();
 	for (const value of positions) {
-		const position = Number(value);
-		if (!Number.isInteger(position) || position < 1 || position > 4) continue;
-		slots.add((position - 1) * 2 + 1);
-		slots.add((position - 1) * 2 + 2);
+		const slot = Number(value);
+		if (!Number.isInteger(slot) || slot < 1 || slot > 8) continue;
+		slots.add(slot);
 	}
 	return [...slots];
 }
@@ -211,17 +211,29 @@ export function parseReplaysQuery(search: URLSearchParams): ReplaysQuery {
 		? (sortRaw as HistorySortField)
 		: 'createdAt';
 	const sortDir = search.get('sortDir') === 'asc' ? 'asc' : 'desc';
+	let filter: ReplaysQuery['filter'] = null;
+	const filterRaw = search.get('filter');
+	if (filterRaw) {
+		try {
+			filter = JSON.parse(filterRaw) as ReplaysQuery['filter'];
+		} catch {
+			filter = null;
+		}
+	}
+	const flatPlayerIds = splitCsv(search.get('players'));
 	return {
 		page,
 		ranked: search.get('ranked') === '1' || search.get('ranked') === 'true',
 		pro: search.get('pro') === '1' || search.get('pro') === 'true',
 		matchups,
-		playerIds: splitCsv(search.get('players')),
+		// Filter AST owns the query; keep playerIds for row highlighting.
+		playerIds: filter != null ? playerIdsFromAst(filter) : flatPlayerIds,
 		maps: splitCsv(search.get('maps')),
 		races: splitCsv(search.get('races')),
 		positions: splitCsv(search.get('positions')),
 		elo: parseCompare(search, 'eloOp', 'elo'),
 		duration: parseCompare(search, 'durationOp', 'duration'),
+		filter,
 		sort,
 		sortDir
 	};
@@ -230,20 +242,24 @@ export function parseReplaysQuery(search: URLSearchParams): ReplaysQuery {
 export function replaysSearchParams(query: ReplaysQuery): URLSearchParams {
 	const params = new URLSearchParams();
 	if (query.page > 1) params.set('page', String(query.page));
-	if (query.ranked) params.set('ranked', '1');
-	if (query.pro) params.set('pro', '1');
-	if (query.matchups.length > 0) params.set('modes', query.matchups.join(','));
-	if (query.playerIds.length > 0) params.set('players', query.playerIds.join(','));
-	if (query.maps.length > 0) params.set('maps', query.maps.join(','));
-	if (query.races.length > 0) params.set('races', query.races.join(','));
-	if (query.positions.length > 0) params.set('positions', query.positions.join(','));
-	if (query.elo) {
-		params.set('eloOp', query.elo.op);
-		params.set('elo', String(query.elo.value));
-	}
-	if (query.duration) {
-		params.set('durationOp', query.duration.op);
-		params.set('duration', String(query.duration.value));
+	if (query.filter != null) {
+		params.set('filter', JSON.stringify(query.filter));
+	} else {
+		if (query.ranked) params.set('ranked', '1');
+		if (query.pro) params.set('pro', '1');
+		if (query.matchups.length > 0) params.set('modes', query.matchups.join(','));
+		if (query.playerIds.length > 0) params.set('players', query.playerIds.join(','));
+		if (query.maps.length > 0) params.set('maps', query.maps.join(','));
+		if (query.races.length > 0) params.set('races', query.races.join(','));
+		if (query.positions.length > 0) params.set('positions', query.positions.join(','));
+		if (query.elo) {
+			params.set('eloOp', query.elo.op);
+			params.set('elo', String(query.elo.value));
+		}
+		if (query.duration) {
+			params.set('durationOp', query.duration.op);
+			params.set('duration', String(query.duration.value));
+		}
 	}
 	if (query.sort !== 'createdAt') params.set('sort', query.sort);
 	if (query.sortDir === 'asc') params.set('sortDir', 'asc');
@@ -315,6 +331,7 @@ export function recentCommunityQuery(): ReplaysQuery {
 		positions: [],
 		elo: null,
 		duration: null,
+		filter: null,
 		sort: 'createdAt',
 		sortDir: 'desc'
 	};
@@ -326,22 +343,26 @@ export function buildMatchHistoryUrl(query: ReplaysQuery, perPage = REPLAYS_PER_
 		page: String(query.page),
 		perPage: String(perPage)
 	});
-	if (query.ranked) params.set('ranked', 'true');
-	if (query.pro) params.set('pro', 'true');
-	const matchtypes = matchtypesForMatchups(query.matchups);
-	if (matchtypes.length > 0) params.set('matchtypes', matchtypes.join(','));
-	if (query.playerIds.length > 0) params.set('playerIds', query.playerIds.join(','));
-	if (query.maps.length > 0) params.set('maps', query.maps.join(','));
-	if (query.races.length > 0) params.set('races', query.races.join(','));
-	const slots = slotsForPositions(query.positions);
-	if (slots.length > 0) params.set('slots', slots.join(','));
-	if (query.elo) {
-		params.set('eloOp', query.elo.op);
-		params.set('elo', String(query.elo.value));
-	}
-	if (query.duration) {
-		params.set('durationOp', query.duration.op);
-		params.set('duration', String(query.duration.value * 60));
+	if (query.filter != null) {
+		params.set('filter', JSON.stringify(query.filter));
+	} else {
+		if (query.ranked) params.set('ranked', 'true');
+		if (query.pro) params.set('pro', 'true');
+		const matchtypes = matchtypesForMatchups(query.matchups);
+		if (matchtypes.length > 0) params.set('matchtypes', matchtypes.join(','));
+		if (query.playerIds.length > 0) params.set('playerIds', query.playerIds.join(','));
+		if (query.maps.length > 0) params.set('maps', query.maps.join(','));
+		if (query.races.length > 0) params.set('races', query.races.join(','));
+		const slots = slotsForPositions(query.positions);
+		if (slots.length > 0) params.set('slots', slots.join(','));
+		if (query.elo) {
+			params.set('eloOp', query.elo.op);
+			params.set('elo', String(query.elo.value));
+		}
+		if (query.duration) {
+			params.set('durationOp', query.duration.op);
+			params.set('duration', String(query.duration.value * 60));
+		}
 	}
 	if (query.sort !== 'createdAt') {
 		params.set('sort', query.sort);

@@ -13,6 +13,8 @@ import ReplaySectionTabs from './replay-section-tabs.svelte';
 import ReplayUploadForm from './replay-upload-form.svelte';
 import ReplayPlayerSteamLinks from './replay-player-steam-links.svelte';
 import ReplayFileDropzone from './replay-file-dropzone.svelte';
+import ReplayProBadge from './replay-pro-badge.svelte';
+import ReplaySort from './replay-sort.svelte';
 
 export {
 	ReplayChat as Chat,
@@ -29,7 +31,9 @@ export {
 	ReplaySectionTabs as SectionTabs,
 	ReplayUploadForm as UploadForm,
 	ReplayPlayerSteamLinks as PlayerSteamLinks,
-	ReplayFileDropzone as FileDropzone
+	ReplayFileDropzone as FileDropzone,
+	ReplayProBadge as ProBadge,
+	ReplaySort as Sort
 };
 
 export type * from './types';
@@ -43,8 +47,32 @@ export {
 	formatDurationSeconds,
 	formatMatchDate,
 	formatReplayDurationLabel,
+	getMatchAverageElo,
+	getProGameplayEloThreshold,
 	isCpuPlayerName,
 	isCpuReplayPlayer,
+	isProGameplayMatch,
 	matchDurationSeconds,
-	matchModeLabel
+	matchModeLabel,
+	RANKED_1V1_PRO_GAMEPLAY_ELO,
+	RANKED_PRO_GAMEPLAY_ELO
 } from './utils';
+export {
+	astToRules,
+	defaultLeafForField,
+	emptyFilterRule,
+	flatFiltersToAst,
+	isFilterGroup,
+	isFilterLeaf,
+	isLeafComplete,
+	newRuleId,
+	playerIdsFromAst,
+	rulesToAst,
+	type FilterAst,
+	type FilterCombinator,
+	type FilterField,
+	type FilterLeaf,
+	type FilterLeafOp,
+	type FilterRule,
+	type FlatHistoryFilters
+} from './filter-ast';

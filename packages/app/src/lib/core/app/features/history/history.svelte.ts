@@ -8,6 +8,7 @@ import { join } from '@tauri-apps/api/path';
 import { exists, readDir, readFile, stat, writeFile } from '@tauri-apps/plugin-fs';
 import { parseHeader, parseReplay } from '@fknoobs/replay-parser';
 import { Matches } from './matches.svelte';
+import type { ReplaysQuery } from '@company-of-heroes/ui/replay';
 import { extractPlayerRatingSnapshotsFromLobby, type PlayerEloMap } from '$lib/utils/player-elo';
 import { ingestPlayerRatings } from '$core/pocketbase/player-ratings';
 import { toPersistablePlayers } from '$core/game/lobby-utils';
@@ -41,6 +42,21 @@ export class History extends Feature<HistorySettings> {
 	name = 'history';
 
 	matches!: Matches;
+	memberQuery = $state<ReplaysQuery>({
+		page: 1,
+		ranked: false,
+		pro: false,
+		matchups: [],
+		playerIds: [],
+		maps: [],
+		races: [],
+		positions: [],
+		elo: null,
+		duration: null,
+		filter: null,
+		sort: 'createdAt',
+		sortDir: 'desc'
+	});
 
 	#pollTimer: ReturnType<typeof setTimeout> | null = null;
 	#pollDelay = POLL_INITIAL_MS;

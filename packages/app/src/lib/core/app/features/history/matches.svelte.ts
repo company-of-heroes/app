@@ -8,6 +8,7 @@ import type {
 	HistorySortField,
 	MatchExpanded
 } from '$core/app/database/matches';
+import type { FilterAst } from '@company-of-heroes/ui/replay';
 import { md5 } from '$lib/utils';
 import { dev } from '$app/environment';
 
@@ -39,42 +40,42 @@ export function matchtypesForMatchups(matchups: string[]): number[] {
 }
 
 /**
- * CoH lobby slots are team-interleaved: allies 0/2/4/6, axis 1/3/5/7.
- * UI Position N is the Nth row on either team (1–4). Stored slots are 1-based.
+ * Starting lobby slots are 1-based (1–8 in 4v4).
  */
 export function slotsForPositions(positions: string[]): number[] {
 	const slots = new Set<number>();
 	for (const value of positions) {
-		const position = Number(value);
-		if (!Number.isInteger(position) || position < 1 || position > 4) continue;
-		slots.add((position - 1) * 2 + 1);
-		slots.add((position - 1) * 2 + 2);
+		const slot = Number(value);
+		if (!Number.isInteger(slot) || slot < 1 || slot > 8) continue;
+		slots.add(slot);
 	}
 	return [...slots];
 }
 
 export type MatchesFilterState = {
-	playerIds?: string[];
-	maps?: string[];
-	races?: string[];
-	matchups?: string[];
-	positions?: string[];
-	ranked?: boolean;
-	pro?: boolean;
+	playerIds: string[];
+	maps: string[];
+	races: string[];
+	matchups: string[];
+	positions: string[];
+	ranked: boolean;
+	pro: boolean;
 	elo?: CompareFilter;
 	duration?: CompareFilter;
+	filter?: FilterAst | null;
 };
 
 const EMPTY_FILTERS: MatchesFilterState = {
-	playerIds: undefined,
-	maps: undefined,
-	races: undefined,
-	matchups: undefined,
-	positions: undefined,
+	playerIds: [],
+	maps: [],
+	races: [],
+	matchups: [],
+	positions: [],
 	ranked: false,
 	pro: false,
 	elo: undefined,
-	duration: undefined
+	duration: undefined,
+	filter: undefined
 };
 
 export class Matches {
@@ -99,6 +100,93 @@ export class Matches {
 		this.mapOptions = [];
 		this.#debouncedFilters.setImmediately($state.snapshot(this.filters));
 	}
+
+	/** Set scope without wiping filters (URL / snapshot hydrate). */
+	public setScopePreservingFilters(value: 'user' | 'community') {
+		if (this._scope === value) {
+			return;
+		}
+
+		this._scope = value;
+		this.#awaitingScopeFetch = true;
+	}
+
+	public applyListState(state: {
+		page: number;
+		sort: HistorySortField;
+		sortDir: 'asc' | 'desc';
+		filters: MatchesFilterState;
+	}) {
+		this.filters = {
+			playerIds: [...state.filters.playerIds],
+			maps: [...state.filters.maps],
+			races: [...state.filters.races],
+			matchups: [...state.filters.matchups],
+			positions: [...state.filters.positions],
+			ranked: state.filters.ranked,
+			pro: state.filters.pro,
+			elo: state.filters.elo ? { ...state.filters.elo } : undefined,
+			duration: state.filters.duration ? { ...state.filters.duration } : undefined,
+			filter: state.filters.filter ?? undefined
+		};
+		this.sort = state.sort;
+		this.sortDir = state.sortDir;
+		this.page = state.page;
+		this.#debouncedFilters.setImmediately($state.snapshot(this.filters));
+	}
+
+	public capture(): {
+		scope: 'user' | 'community';
+		page: number;
+		sort: HistorySortField;
+		sortDir: 'asc' | 'desc';
+		filters: MatchesFilterState;
+		playerOptions: { label: string; value: string }[];
+		mapOptions: { label: string; value: string }[];
+	} {
+		return {
+			scope: this.scope,
+			page: this.page,
+			sort: this.sort,
+			sortDir: this.sortDir,
+			filters: {
+				playerIds: [...this.filters.playerIds],
+				maps: [...this.filters.maps],
+				races: [...this.filters.races],
+				matchups: [...this.filters.matchups],
+				positions: [...this.filters.positions],
+				ranked: this.filters.ranked,
+				pro: this.filters.pro,
+				elo: this.filters.elo ? { ...this.filters.elo } : undefined,
+				duration: this.filters.duration ? { ...this.filters.duration } : undefined,
+				filter: this.filters.filter ?? undefined
+			},
+			playerOptions: this.playerOptions.map((option) => ({ ...option })),
+			mapOptions: this.mapOptions.map((option) => ({ ...option }))
+		};
+	}
+
+	public restore(
+		state: {
+			scope: 'user' | 'community';
+			page: number;
+			sort: HistorySortField;
+			sortDir: 'asc' | 'desc';
+			filters: MatchesFilterState;
+			playerOptions: { label: string; value: string }[];
+			mapOptions: { label: string; value: string }[];
+		} | null
+	) {
+		if (!state) {
+			return;
+		}
+
+		this.setScopePreservingFilters(state.scope);
+		this.applyListState(state);
+		this.playerOptions = state.playerOptions.map((option) => ({ ...option }));
+		this.mapOptions = state.mapOptions.map((option) => ({ ...option }));
+	}
+
 	public page = $state(1);
 	public perPage = $state(15);
 
@@ -142,7 +230,7 @@ export class Matches {
 	);
 
 	public query = $derived.by((): HistoryListQuery => {
-		const { playerIds, maps, races, matchups, positions, ranked, pro, elo, duration } =
+		const { playerIds, maps, races, matchups, positions, ranked, pro, elo, duration, filter } =
 			this.#debouncedFilters.current;
 
 		return {
@@ -150,18 +238,19 @@ export class Matches {
 			userId: this.scope === 'user' ? app.features.auth.userId : undefined,
 			profileId:
 				this.scope === 'user' ? (app.game.profile?.relic.profile_id ?? undefined) : undefined,
-			ranked: ranked ?? false,
-			pro: pro ?? false,
-			playerIds: playerIds ?? [],
-			maps: maps ?? [],
-			races: races ?? [],
-			matchtypes: matchtypesForMatchups(matchups ?? []),
-			slots: slotsForPositions(positions ?? []),
+			ranked,
+			pro,
+			playerIds,
+			maps,
+			races,
+			matchtypes: matchtypesForMatchups(matchups),
+			slots: slotsForPositions(positions),
 			includeSkirmish: dev,
 			eloOp: elo?.op,
 			elo: elo?.value != null ? Number(elo.value) : undefined,
 			durationOp: duration?.op,
 			duration: duration != null ? Number(duration.value) * 60 : undefined,
+			filter: filter ?? undefined,
 			sort: this.sort,
 			sortDir: this.sortDir
 		};
@@ -286,6 +375,7 @@ export class Matches {
 
 	getMatches(signal?: AbortSignal) {
 		const hasFilters =
+			this.query.filter != null ||
 			(this.query.playerIds?.length ?? 0) > 0 ||
 			(this.query.maps?.length ?? 0) > 0 ||
 			(this.query.races?.length ?? 0) > 0 ||

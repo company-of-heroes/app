@@ -6,12 +6,16 @@
 	import { Badge } from '@company-of-heroes/ui/badge';
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as List from '@company-of-heroes/ui/list';
-	import { DetailHeader, MemberDetailHeader, formatReplayDurationLabel } from '@company-of-heroes/ui/replay';
+	import {
+		DetailHeader,
+		MemberDetailHeader,
+		formatReplayDurationLabel,
+		isProGameplayMatch
+	} from '@company-of-heroes/ui/replay';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { detailMetaGrid, interactive } from '@company-of-heroes/ui/variants';
 	import {
 		formatSubmittedAt,
-		isProGameplayMatch,
 		matchDurationSeconds,
 		rememberReplaysListHref,
 		rememberedReplaysListHref,

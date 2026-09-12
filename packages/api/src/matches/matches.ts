@@ -26,6 +26,8 @@ export type HistoryListQuery = {
 	elo?: number;
 	durationOp?: FilterOperator;
 	duration?: number;
+	/** Query-builder AST JSON; when set, preferred over flat filter fields. */
+	filter?: unknown;
 	sort?: HistorySortField;
 	sortDir?: 'asc' | 'desc';
 };
@@ -204,30 +206,36 @@ export class MatchesApi {
 			params.set('profileId', String(query.profileId));
 		}
 
-		if (query.pro) {
+		const hasAst = query.filter != null;
+		if (hasAst) {
+			params.set('filter', JSON.stringify(query.filter));
+			params.set('ranked', 'false');
+		}
+
+		if (!hasAst && query.pro) {
 			params.set('pro', 'true');
 		}
 
-		if (query.playerIds && query.playerIds.length > 0) {
+		if (!hasAst && query.playerIds && query.playerIds.length > 0) {
 			params.set('playerIds', query.playerIds.join(','));
 		}
 
-		if (query.maps && query.maps.length > 0) {
+		if (!hasAst && query.maps && query.maps.length > 0) {
 			params.set('maps', query.maps.join(','));
 		}
 
-		if (query.races && query.races.length > 0) {
+		if (!hasAst && query.races && query.races.length > 0) {
 			params.set('races', query.races.join(','));
 		}
 
-		if (query.matchtypes && query.matchtypes.length > 0) {
+		if (!hasAst && query.matchtypes && query.matchtypes.length > 0) {
 			params.set('matchtypes', query.matchtypes.join(','));
 			if (query.exactMatchtypes) {
 				params.set('exactMatchtypes', 'true');
 			}
 		}
 
-		if (query.slots && query.slots.length > 0) {
+		if (!hasAst && query.slots && query.slots.length > 0) {
 			params.set('slots', query.slots.join(','));
 		}
 
@@ -235,12 +243,12 @@ export class MatchesApi {
 			params.set('includeSkirmish', 'true');
 		}
 
-		if (query.eloOp && query.elo != null && Number.isFinite(query.elo)) {
+		if (!hasAst && query.eloOp && query.elo != null && Number.isFinite(query.elo)) {
 			params.set('eloOp', query.eloOp);
 			params.set('elo', String(query.elo));
 		}
 
-		if (query.durationOp && query.duration != null && Number.isFinite(query.duration)) {
+		if (!hasAst && query.durationOp && query.duration != null && Number.isFinite(query.duration)) {
 			params.set('durationOp', query.durationOp);
 			params.set('duration', String(query.duration));
 		}
