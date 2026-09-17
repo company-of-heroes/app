@@ -433,6 +433,7 @@
 	"Failed to load live lobby.": "Failed to load live lobby.",
 	"Failed to load player stats. Please try again later.": "Failed to load player stats. Please try again later.",
 	"Failed to load replay data.": "Failed to load replay data.",
+	"Failed to load this replay. Please try again later.": "Failed to load this replay. Please try again later.",
 	"Failed to load replay.": "Failed to load replay.",
 	"Failed to load settings: {message}": "Failed to load settings: {message}",
 	"Failed to load vote.": "Failed to load vote.",

@@ -9,7 +9,8 @@ const jobState = require(`${__hooks}/lib/job-state.js`);
  * pure SQL so the ~438 KB blobs never cross into the JS runtime.
  *
  * Self-draining: it repeatedly picks the next rows that still contain a heavy
- * key, so it is safe to re-run and needs no page cursor.
+ * key, so it is safe to re-run and needs no page cursor. The cron reopens after
+ * complete when new fat rows appear.
  */
 const MATCHES_HEAVY = `(players LIKE '%"matchHistory"%' OR players LIKE '%"storedElo"%')`;
 

@@ -433,6 +433,7 @@
 	"Failed to load live lobby.": "No se pudo cargar el lobby en vivo.",
 	"Failed to load player stats. Please try again later.": "No se pudieron cargar las estadísticas del jugador. Inténtalo de nuevo más tarde.",
 	"Failed to load replay data.": "No se pudieron cargar los datos del replay.",
+	"Failed to load this replay. Please try again later.": "No se pudo cargar este replay. Inténtalo de nuevo más tarde.",
 	"Failed to load replay.": "No se pudo cargar el replay.",
 	"Failed to load settings: {message}": "No se pudieron cargar los ajustes: {message}",
 	"Failed to load vote.": "No se pudo cargar el voto.",

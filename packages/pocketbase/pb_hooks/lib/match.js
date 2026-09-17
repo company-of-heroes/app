@@ -216,7 +216,11 @@ function loadMatchPage(id, options) {
 	const aliasMap = loadPlayerAliasMap('community', '');
 	const playersByLobby = loadPlayersByLobbyIds([record.id], aliasMap);
 	const players = resolvePlayersForRow(row, aliasMap, playersByLobby);
-	const livePlayers = livePlayersForInProgress(record.get('players'), !!record.get('isRanked'));
+	// Finished matches already have roster in lobbyPlayers/result — never parse the
+	// fat `players` blob (can include Relic matchHistory and hang Goja for 15s+).
+	const livePlayers = needsResult
+		? livePlayersForInProgress(record.get('players'), !!record.get('isRanked'))
+		: [];
 	const likeCounts = require(`${__hooks}/lib/player-social.js`).loadLikeCountsBySteamIds(
 		[]
 			.concat(players.map((player) => player?.steamId).filter(Boolean))

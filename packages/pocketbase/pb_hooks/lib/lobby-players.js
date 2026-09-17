@@ -1,25 +1,56 @@
 'use strict';
 
+function bytesToString(raw) {
+	if (!Array.isArray(raw) || raw.length === 0 || typeof raw[0] !== 'number') {
+		return '';
+	}
+
+	const chunk = 0x8000;
+	let text = '';
+	for (let i = 0; i < raw.length; i += chunk) {
+		text += String.fromCharCode.apply(null, raw.slice(i, i + chunk));
+	}
+
+	return text;
+}
+
 function parsePlayers(raw) {
 	if (Array.isArray(raw)) {
-		return raw;
+		// goja may expose JSON text as a byte/char-code array — do not treat as players.
+		if (raw.length > 0 && typeof raw[0] === 'number') {
+			raw = bytesToString(raw);
+		} else {
+			return raw;
+		}
 	}
 
 	if (raw && typeof raw === 'object') {
 		try {
 			const asArray = Array.from(raw);
 			if (asArray.length > 0 || (typeof raw.length === 'number' && raw.length === 0)) {
-				return asArray;
+				// Byte arrays can also look like objects with numeric keys.
+				if (typeof asArray[0] === 'number') {
+					raw = bytesToString(asArray);
+				} else {
+					return asArray;
+				}
 			}
 		} catch {
 			// not iterable
 		}
 
-		const keys = Object.keys(raw);
-		if (keys.length > 0 && keys.every((key) => /^\d+$/.test(key))) {
-			return keys
-				.sort((a, b) => Number(a) - Number(b))
-				.map((key) => raw[key]);
+		if (typeof raw !== 'string') {
+			const keys = Object.keys(raw);
+			if (keys.length > 0 && keys.every((key) => /^\d+$/.test(key))) {
+				const values = keys
+					.sort((a, b) => Number(a) - Number(b))
+					.map((key) => raw[key]);
+				if (values.length > 0 && typeof values[0] === 'number') {
+					raw = bytesToString(values);
+				} else {
+					return values;
+				}
+			}
 		}
 	}
 

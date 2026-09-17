@@ -1,5 +1,20 @@
 'use strict';
 
+/** Decode goja byte/char-code arrays without O(n²) string +=. */
+function bytesToString(raw) {
+	if (!Array.isArray(raw) || raw.length === 0 || typeof raw[0] !== 'number') {
+		return '';
+	}
+
+	const chunk = 0x8000;
+	let text = '';
+	for (let i = 0; i < raw.length; i += chunk) {
+		text += String.fromCharCode.apply(null, raw.slice(i, i + chunk));
+	}
+
+	return text;
+}
+
 function parseJsonArray(raw) {
 	if (raw == null || raw === '' || raw === '[]' || raw === 'null') {
 		return [];
@@ -8,11 +23,7 @@ function parseJsonArray(raw) {
 	// goja may expose JSON text as a byte/char-code array
 	if (typeof raw !== 'string') {
 		if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'number') {
-			let text = '';
-			for (let i = 0; i < raw.length; i++) {
-				text += String.fromCharCode(raw[i]);
-			}
-			raw = text;
+			raw = bytesToString(raw);
 		} else if (Array.isArray(raw)) {
 			// Already a real JS array of values/objects
 			return raw;

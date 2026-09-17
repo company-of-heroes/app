@@ -433,6 +433,7 @@
 	"Failed to load live lobby.": "라이브 로비를 불러오지 못했습니다.",
 	"Failed to load player stats. Please try again later.": "플레이어 통계를 불러오지 못했습니다. 잠시 후 다시 시도하세요.",
 	"Failed to load replay data.": "리플레이 데이터를 불러오지 못했습니다.",
+	"Failed to load this replay. Please try again later.": "이 리플레이를 불러오지 못했습니다. 나중에 다시 시도해 주세요.",
 	"Failed to load replay.": "리플레이를 불러오지 못했습니다.",
 	"Failed to load settings: {message}": "설정을 불러오지 못했습니다: {message}",
 	"Failed to load vote.": "투표를 불러오지 못했습니다.",

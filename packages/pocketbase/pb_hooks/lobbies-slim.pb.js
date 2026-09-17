@@ -9,8 +9,13 @@ $app.onServe().bindFunc((e) => {
 	// short-circuits once every row is slim.
 	cronAdd('lobbies_slim_backfill', '*/2 * * * *', () => {
 		const backfill = require(`${__hooks}/lib/lobbies-slim-backfill.js`);
+		// New fat rows can appear after a prior "complete" (live lobby ingest).
 		if (backfill.isComplete()) {
-			return;
+			if (backfill.countPending() === 0) {
+				return;
+			}
+
+			backfill.reset();
 		}
 
 		const result = backfill.runBatch();

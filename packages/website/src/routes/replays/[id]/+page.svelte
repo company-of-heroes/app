@@ -1,8 +1,10 @@
 <script lang="ts">
 	import ReplayViewer from '$lib/components/replay/replay-viewer.svelte';
+	import ErrorState from '$lib/components/ui/error-state.svelte';
 	import { PageSkeleton as ReplayPageSkeleton } from '@company-of-heroes/ui/replay';
 	import { SITE_URL } from '$lib/site/urls';
 	import { normalizeMapName } from '$lib/utils/player/format';
+	import { rememberedReplaysListHref } from '$lib/replays';
 	import { href, useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -34,6 +36,8 @@
 		/>
 		<meta property="og:url" content="{SITE_URL}{href(`/replays/${match.id}`)}" />
 		<meta property="og:title" content="{pageTitle(match)} — {t('CoH replay')}" />
+	{:catch}
+		<title>{t('Could not load replay')} | {t('Company of Heroes 1 Stats')}</title>
 	{/await}
 </svelte:head>
 
@@ -49,4 +53,11 @@
 	/>
 {:then match}
 	<ReplayViewer {match} />
+{:catch error}
+	<ErrorState
+		title={error?.status === 404 ? t('Replay not found') : t('Could not load replay')}
+		message={t(error?.message ?? 'Failed to load this replay. Please try again later.')}
+		href={href(rememberedReplaysListHref())}
+		linkLabel={t('Back to community replays')}
+	/>
 {/await}
