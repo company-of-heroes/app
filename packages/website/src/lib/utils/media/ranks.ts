@@ -1,7 +1,6 @@
 import {
 	formatStreak,
-	getFactionFlagByLeaderboardId,
-	getFactionFlagByRace,
+	getFactionFlagFilenameByRace,
 	getLeaderboardTypeLabel,
 	streakClass
 } from '@company-of-heroes/ui/format/ranks';
@@ -45,6 +44,22 @@ const LEADERBOARD_RACE_MAP: Record<number, Race> = {
 	3: Race.PanzerElite,
 	45: Race.PanzerElite
 };
+
+/**
+ * Eagerly load faction flags from shared-assets.
+ * Relative glob (not kit alias) so Rolldown/Vite always expands the files.
+ */
+const factionModules = import.meta.glob<{ default: string }>(
+	'../../../../../shared-assets/factions/*.png',
+	{ eager: true }
+);
+
+const factionImagesByFilename = new Map(
+	Object.entries(factionModules).map(([path, module]) => {
+		const filename = path.replace(/^.*[\\/]/, '');
+		return [filename, module.default] as const;
+	})
+);
 
 /**
  * Eagerly load rank images from shared-assets.
@@ -113,10 +128,13 @@ export function getRankImageByLeaderboardId(leaderboardId: number, ranklevel?: n
 	return getRankImageByRace(getRace(leaderboardId), ranklevel);
 }
 
-export {
-	formatStreak,
-	getFactionFlagByLeaderboardId,
-	getFactionFlagByRace,
-	getLeaderboardTypeLabel,
-	streakClass
-};
+export function getFactionFlagByRace(raceId: number): string {
+	const filename = getFactionFlagFilenameByRace(raceId);
+	return factionImagesByFilename.get(filename) ?? factionImagesByFilename.get('us.png') ?? '';
+}
+
+export function getFactionFlagByLeaderboardId(leaderboardId: number): string {
+	return getFactionFlagByRace(getRace(leaderboardId));
+}
+
+export { formatStreak, getLeaderboardTypeLabel, streakClass };

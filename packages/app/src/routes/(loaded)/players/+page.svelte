@@ -87,7 +87,6 @@
 			bind:value={playersSearch.query}
 			disabled={loading}
 			aria-label={t('Find a player')}
-			size="sm"
 		/>
 		<Button
 			type="submit"

@@ -356,9 +356,9 @@
 		</div>
 	{/snippet}
 	{#snippet skeleton_team()}
-		<div class="flex h-11 items-center gap-0">
-			<Skeleton class="size-11 shrink-0 rounded-none" />
-			<Skeleton class="size-11 shrink-0 rounded-none" />
+		<div class="flex h-11 items-center gap-1">
+			<Skeleton class="size-11 shrink-0 rounded-md" />
+			<Skeleton class="size-11 shrink-0 rounded-md" />
 		</div>
 	{/snippet}
 	{#snippet skeleton_duration()}

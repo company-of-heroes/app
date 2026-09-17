@@ -293,9 +293,9 @@
 {/snippet}
 
 {#snippet factionFlagsSkeleton()}
-	<span class="flex h-11 items-center gap-0">
-		<Skeleton class="size-11 shrink-0 rounded-none" />
-		<Skeleton class="size-11 shrink-0 rounded-none" />
+	<span class="flex h-11 items-center gap-1">
+		<Skeleton class="size-11 shrink-0 rounded-md" />
+		<Skeleton class="size-11 shrink-0 rounded-md" />
 	</span>
 {/snippet}
 

@@ -23,7 +23,6 @@
 [data-popover-content],
 [data-select-content] {
 	background-color: var(--color-gray-950);
-	border-radius: 0;
 	box-shadow: none;
 }
 

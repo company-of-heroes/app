@@ -53,36 +53,61 @@
 	const highlightedPlayers = $derived(list.filters.players);
 
 	const columns: ColumnDef<ReplaysExpanded>[] = [
-		{ id: 'title', header: t('Title'), width: 'w-3/24', class: 'truncate', accessor: (item) => item.title },
-		{ id: 'allies', header: t('Allies'), width: 'w-3/24', class: 'flex gap-2' },
-		{ id: 'axis', header: t('Axis'), width: 'w-3/24', class: 'flex gap-2' },
+		{
+			id: 'title',
+			header: t('Title'),
+			width: 'w-full',
+			class: 'min-w-0 truncate',
+			accessor: (item) => item.title
+		},
+		{
+			id: 'allies',
+			header: t('Allies'),
+			class: 'flex items-center',
+			pad: false,
+			cellClass: () => 'px-2 whitespace-nowrap',
+			headerCellClass: 'px-2 py-3 whitespace-nowrap'
+		},
+		{
+			id: 'axis',
+			header: t('Axis'),
+			class: 'flex items-center',
+			pad: false,
+			cellClass: () => 'px-2 whitespace-nowrap',
+			headerCellClass: 'px-2 py-3 whitespace-nowrap'
+		},
 		{
 			id: 'duration',
 			header: t('Duration'),
-			width: 'w-3/24',
 			sortable: true,
 			onSort: toggleDurationSort,
-			headerClass: 'flex items-center select-none'
+			headerClass: 'flex items-center select-none',
+			cellClass: () => 'whitespace-nowrap',
+			headerCellClass: 'whitespace-nowrap'
 		},
 		{
-			id: 'players',
-			header: t('Players'),
-			width: 'w-2/24',
-			class: 'text-center',
-			headerClass: 'text-center',
-			accessor: (item) => item.players?.length
+			id: 'map',
+			header: t('Map'),
+			class: 'flex items-center gap-4',
+			cellClass: () => 'whitespace-nowrap',
+			headerCellClass: 'whitespace-nowrap'
 		},
-		{ id: 'map', header: t('Map'), width: 'w-4/24', class: 'flex items-center gap-4' },
 		{
 			id: 'date',
 			header: t('Date'),
-			width: 'w-3/24',
 			class: 'truncate',
 			sortable: true,
 			onSort: toggleDateSort,
-			headerClass: 'flex items-center select-none'
+			headerClass: 'flex items-center select-none',
+			cellClass: () => 'whitespace-nowrap',
+			headerCellClass: 'whitespace-nowrap'
 		},
-		{ id: 'actions', header: '', width: 'w-4/24', class: 'justify-end gap-0.5' }
+		{
+			id: 'actions',
+			header: '',
+			class: 'justify-end gap-0.5',
+			cellClass: () => 'whitespace-nowrap'
+		}
 	];
 
 	function markLocalPresent(id: string) {
@@ -387,6 +412,7 @@
 	loading={list.isLoading && list.replays.length === 0}
 	skeletonRows={10}
 	empty=""
+	tableLayout="auto"
 	headers={{ duration: header_duration, date: header_date }}
 	cells={{
 		allies: cell_allies,

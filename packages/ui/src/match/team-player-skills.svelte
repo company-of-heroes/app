@@ -111,7 +111,7 @@
 
 	function tileClass(focus: boolean) {
 		return cn(
-			'group inline-flex size-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-none transition-colors',
+			'group inline-flex size-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md transition-colors',
 			focus && 'bg-primary/10',
 			!focus && outcome === 'win' && 'bg-green-500/5 hover:bg-green-500/10',
 			!focus && outcome === 'loss' && 'bg-red-500/5 hover:bg-red-500/10',
@@ -181,7 +181,7 @@
 	{/if}
 {/snippet}
 
-<span class="inline-flex items-center gap-0">
+<span class="inline-flex items-center gap-1">
 	{#each chips as chip (chip.key)}
 		{#if chip.href && chip.previewId}
 			<PlayerProfileLink

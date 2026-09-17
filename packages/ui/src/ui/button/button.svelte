@@ -34,7 +34,7 @@
 		size === 'icon' && 'size-11 justify-center p-0',
 		size === 'icon-sm' && 'size-8 justify-center p-0 text-sm',
 		variant === 'primary' &&
-			'bg-primary border-primary-500 text-secondary-950 hover:bg-primary/90 hover:border-primary-600',
+			'bg-primary border-0 text-secondary-950 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.4)] hover:bg-primary/90',
 		variant === 'secondary' &&
 			'border-secondary-700 bg-secondary-950 hover:border-secondary-600 hover:bg-secondary-800 text-white',
 		variant === 'destructive' && 'bg-destructive border-destructive text-destructive-foreground',

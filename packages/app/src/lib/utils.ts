@@ -3,10 +3,6 @@ import type { ChatMessage } from '@twurple/chat';
 import { twMerge } from 'tailwind-merge';
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '$core/http/fetch';
-import WMFlag from '$lib/files/wm-2.png';
-import PEFlag from '$lib/files/pe.png';
-import CWFlag from '$lib/files/cw.png';
-import USFlag from '$lib/files/us.png';
 import { isBoolean, isString } from 'lodash-es';
 import dayjs from '$lib/dayjs';
 
@@ -20,6 +16,27 @@ export enum Race {
 	Commonwealth = 2,
 	PanzerElite = 3
 }
+
+/**
+ * Eagerly load faction flags — Vite cannot resolve fully dynamic import() paths.
+ * Relative glob (not kit alias) so Rolldown/Vite always expands the files.
+ */
+const factionModules = import.meta.glob<{ default: string }>(
+	'../../../shared-assets/factions/*.png',
+	{ eager: true }
+);
+
+const factionImagesByFilename = new Map(
+	Object.entries(factionModules).map(([path, module]) => {
+		const filename = path.replace(/^.*[\\/]/, '');
+		return [filename, module.default] as const;
+	})
+);
+
+const USFlag = factionImagesByFilename.get('us.png') ?? '';
+const WMFlag = factionImagesByFilename.get('wm.png') ?? '';
+const CWFlag = factionImagesByFilename.get('cw.png') ?? '';
+const PEFlag = factionImagesByFilename.get('pe.png') ?? '';
 
 /**
  * Utility function for merging CSS classes using clsx and tailwind-merge

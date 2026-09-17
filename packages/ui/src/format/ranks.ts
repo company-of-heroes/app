@@ -71,11 +71,12 @@ const LEADERBOARD_TYPE_LABELS: Record<number, string> = {
 	55: 'Operation: Stonewall'
 };
 
-const RACE_FLAG: Record<Race, string> = {
-	[Race.US]: '/factions/us.png',
-	[Race.Wehrmacht]: '/factions/wm.png',
-	[Race.Commonwealth]: '/factions/cw.png',
-	[Race.PanzerElite]: '/factions/pe.png'
+/** Filename under `@company-of-heroes/shared-assets/factions`. Hosts resolve to a URL. */
+const RACE_FLAG_FILENAME: Record<Race, string> = {
+	[Race.US]: 'us.png',
+	[Race.Wehrmacht]: 'wm.png',
+	[Race.Commonwealth]: 'cw.png',
+	[Race.PanzerElite]: 'pe.png'
 };
 
 function getRace(leaderboardId: number): Race {
@@ -121,12 +122,19 @@ export function getRankImageByRace(raceId: number, ranklevel?: number): string {
 	return `/ranks/${prefix}_${ranklevel.toString().padStart(2, '0')}.png`;
 }
 
-export function getFactionFlagByLeaderboardId(leaderboardId: number): string {
-	return RACE_FLAG[getRace(leaderboardId)];
+export function getFactionFlagFilenameByLeaderboardId(leaderboardId: number): string {
+	return RACE_FLAG_FILENAME[getRace(leaderboardId)];
 }
 
-export function getFactionFlagByRace(raceId: number): string {
-	return RACE_FLAG[(raceId as Race) ?? Race.US] ?? RACE_FLAG[Race.US];
+export function getFactionFlagFilenameByRace(raceId: number): string {
+	const race =
+		raceId === Race.US ||
+		raceId === Race.Wehrmacht ||
+		raceId === Race.Commonwealth ||
+		raceId === Race.PanzerElite
+			? raceId
+			: Race.US;
+	return RACE_FLAG_FILENAME[race];
 }
 
 export function getLeaderboardTypeLabel(leaderboardId: number, fallback = 'Unknown'): string {

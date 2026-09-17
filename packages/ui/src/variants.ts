@@ -75,7 +75,7 @@ export const overlayBackdrop = 'bg-gray-950/80 backdrop-blur-md';
 export const surfaceModal = surfaceOverlay;
 
 export const dropdownPanel =
-	'border-secondary-800 bg-gray-950 overflow-hidden rounded-none border p-0 shadow-none';
+	'border-secondary-800 bg-gray-950 overflow-hidden rounded-md border p-0 shadow-none';
 
 export const dropdownHeader =
 	'border-secondary-800 flex items-center justify-between border-b px-4 py-3';
