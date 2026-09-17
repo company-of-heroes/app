@@ -1,5 +1,11 @@
 # @company-of-heroes/ui
 
+## 0.5.2
+
+- enhance; give primary buttons a subtle top light edge instead of a flat outline
+- enhance; restore subtle rounded corners via theme radius tokens
+- enhance; soften match player skill chips with rounded corners and spacing
+
 ## 0.5.1
 
 - fix; show gray chip backgrounds on Basic Match faction icons in match lists
