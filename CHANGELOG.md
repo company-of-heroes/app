@@ -1,3 +1,11 @@
+### v0.64.3
+
+- fix; remove players column from my replays and let team columns size to content
+- fix; match player search input and button heights
+- enhance; give primary buttons a subtle top light edge instead of a flat outline
+- enhance; restore subtle rounded corners via theme radius tokens
+- enhance; soften match player skill chips with rounded corners and spacing
+
 ### v0.64.2
 
 - fix; show your own rating change in Matches played today, not an opponent's
