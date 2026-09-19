@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.1.7
+
+- fix; stop community replay pages from hanging on fat lobby player payloads
+
 ## 0.1.6
 
 - feat; show Steam concurrent player count in the app header

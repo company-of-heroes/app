@@ -1,3 +1,8 @@
+### v0.64.4
+
+- fix; load opponent rank badges in player match history (relic personalstat batch limit)
+- fix; stop replay actions tab crashing when player seats have no linked id
+
 ### v0.64.3
 
 - fix; remove players column from my replays and let team columns size to content

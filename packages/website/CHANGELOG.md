@@ -1,5 +1,10 @@
 # @company-of-heroes/website
 
+## 1.7.3
+
+- fix; stream home page sections so navigating to `/` updates immediately
+- fix; stop community replay pages from hanging on fat lobby player payloads
+
 ## 1.7.2
 
 - enhance; give primary buttons a subtle top light edge instead of a flat outline
