@@ -99,30 +99,43 @@ export class RelicClient {
 
 	/**
 	 * Fetches the personal stat for a given list of profile ids.
+	 * Relic only accepts 1–10 profile_ids per request; larger lists are chunked.
 	 *
 	 * @param ids - The profile ids (array of numbers)
 	 * @returns The matching StatMembers or an empty array if not found
 	 */
 	async getProfileByIds(ids: number[]): Promise<RelicProfile[]> {
-		const result = await this.request<PersonalStat>(
-			['community', 'leaderboard', 'getpersonalstat'],
-			{
-				title: 'coh1',
-				profile_ids: JSON.stringify(ids)
-			}
-		);
+		const unique = [...new Set(ids.filter((id) => Number.isInteger(id) && id > 0))];
+		if (unique.length === 0) {
+			return [];
+		}
 
-		const members = result.statGroups?.map((statGroup) => statGroup.members.at(0)!) ?? [];
-		const filteredMembers = members.filter((m) => ids.includes(m.profile_id));
+		const MAX_PER_REQUEST = 10;
+		const out: RelicProfile[] = [];
 
-		// Add leaderboardStats to each member
-		filteredMembers.forEach((member) => {
-			member.leaderboardStats = result.leaderboardStats.filter(
-				(stat) => stat.statgroup_id === member.personal_statgroup_id
+		for (let i = 0; i < unique.length; i += MAX_PER_REQUEST) {
+			const chunk = unique.slice(i, i + MAX_PER_REQUEST);
+			const result = await this.request<PersonalStat>(
+				['community', 'leaderboard', 'getpersonalstat'],
+				{
+					title: 'coh1',
+					profile_ids: JSON.stringify(chunk)
+				}
 			);
-		});
 
-		return filteredMembers;
+			const members = result.statGroups?.map((statGroup) => statGroup.members.at(0)!) ?? [];
+			const filteredMembers = members.filter((m) => chunk.includes(m.profile_id));
+
+			filteredMembers.forEach((member) => {
+				member.leaderboardStats = result.leaderboardStats.filter(
+					(stat) => stat.statgroup_id === member.personal_statgroup_id
+				);
+			});
+
+			out.push(...filteredMembers);
+		}
+
+		return out;
 	}
 
 	/**

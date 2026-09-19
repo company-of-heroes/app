@@ -68,6 +68,12 @@ export class Replays {
 		return response.map(exp) as unknown as ReplaysExpanded[];
 	}
 
+	async getLobbyDetail(id: string): Promise<ReplayDetail> {
+		const lobby = await pocketbase.collection('lobbies').getOne(id, { fetch });
+		const bytes = await getFile(lobby, lobby.replay);
+		return { bytes, record: null };
+	}
+
 	async getDetail(id: string): Promise<ReplayDetail> {
 		try {
 			const record = await unwrapApi(api.replays.getById(id));
@@ -82,14 +88,18 @@ export class Replays {
 				throw error;
 			}
 
-			const lobby = await pocketbase.collection('lobbies').getOne(id, { fetch });
-			const bytes = await getFile(lobby, lobby.replay);
-			return { bytes, record: null };
+			return this.getLobbyDetail(id);
 		}
 	}
 
 	async getById(id: string): Promise<Uint8Array> {
 		const { bytes } = await this.getDetail(id);
+		return bytes;
+	}
+
+	/** Load replay bytes from a lobby id without probing the `replays` collection. */
+	async getByLobbyId(id: string): Promise<Uint8Array> {
+		const { bytes } = await this.getLobbyDetail(id);
 		return bytes;
 	}
 

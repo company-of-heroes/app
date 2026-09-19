@@ -310,7 +310,8 @@ function relicPersonalStatUrlByIds(profileIds) {
 	);
 }
 
-const PERSONAL_STAT_BATCH = 20;
+/** Relic getpersonalstat only accepts 1–10 profile_ids per request. */
+const PERSONAL_STAT_BATCH = 10;
 
 /** Parse batch getpersonalstat → profile_id → leaderboardStats[]. */
 function statsByProfileIdFromPersonalStat(data) {

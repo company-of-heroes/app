@@ -639,7 +639,7 @@
 				return;
 			}
 
-			const detail = await app.database.replays.getDetail(lobbyId);
+			const detail = await app.database.replays.getLobbyDetail(lobbyId);
 			const name = String(match.replay || `${lobbyId}.rec`);
 			const nextFile = new File([detail.bytes], name, {
 				type: 'application/octet-stream'

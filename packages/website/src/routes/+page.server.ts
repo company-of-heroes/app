@@ -24,22 +24,20 @@ async function loadSection<T>(result: ResultAsync<T[], AppError>): Promise<Secti
 	return { items: settled.value, error: null };
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
-	// Auth chrome lives in the root layout; do not public-cache this HTML.
-	// Shared caches ignore Vary: Cookie and would keep serving the anonymous shell.
+/** Stream each section so client nav to `/` is not blocked on Twitch / match APIs. */
+export const load: PageServerLoad = ({ locals }) => {
 	const replays = locals.services.replays();
-	const [liveLobbies, recentMatches, recentMemberUploads, streams] = await Promise.all([
-		loadSection(locals.services.liveLobbies().list()),
-		loadSection(
+
+	return {
+		liveLobbies: loadSection(locals.services.liveLobbies().list()),
+		recentMatches: loadSection(
 			replays.getHistory(recentCommunityQuery(), HOME_RECENT_MATCHES).map((list) => list.items)
 		),
-		loadSection(
+		recentMemberUploads: loadSection(
 			replays
 				.getMemberHistory(recentMemberQuery(), HOME_RECENT_MEMBER_UPLOADS)
 				.map((list) => list.items)
 		),
-		locals.services.twitch().listStreams().unwrapOr([])
-	]);
-
-	return { liveLobbies, recentMatches, recentMemberUploads, streams };
+		streams: locals.services.twitch().listStreams().unwrapOr([])
+	};
 };

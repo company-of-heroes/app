@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { List as ReplayList } from '@company-of-heroes/ui/replay';
+	import { List as ReplayList, ListSkeleton as ReplayListSkeleton } from '@company-of-heroes/ui/replay';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { goto } from '$app/navigation';
 	import { meSteamIds } from '$lib/auth/user';
-	import { recentCommunityQuery, replaysHref, type CommunityMatch, type HistorySortField } from '$lib/replays';
+	import {
+		HOME_RECENT_MATCHES,
+		recentCommunityQuery,
+		replaysHref,
+		type CommunityMatch,
+		type HistorySortField
+	} from '$lib/replays';
 	import {
 		normalizeMapName,
 		replayHref,
@@ -18,10 +24,11 @@
 
 	type Props = {
 		matches: CommunityMatch[];
+		loading?: boolean;
 		error?: string | null;
 	};
 
-	let { matches, error = null }: Props = $props();
+	let { matches, loading = false, error = null }: Props = $props();
 	const { t } = useI18n();
 	const mySteamIds = $derived(meSteamIds(page.data.user));
 
@@ -49,30 +56,42 @@
 			{t('Could not load recent matches.')}
 		</p>
 	{/if}
-	<ReplayList
-		{matches}
-		meSteamIds={mySteamIds}
-		sort="createdAt"
-		sortDir="desc"
-		{onSort}
-		{replayHref}
-		playerHref={resolvePlayerHref}
-		{resolveMapSrc}
-		{resolveFallbackSrc}
-		{resolveFactionFlag}
-		getRankImage={getRankImageByRace}
-		formatMapName={normalizeMapName}
-		emptyMessage={error ? t('Could not load recent matches.') : t('No community replays found.')}
-		locale={currentLocale()}
-		mapLabel={t('Map')}
-		typeLabel={t('Type')}
-		alliesLabel={t('Allies')}
-		axisLabel={t('Axis')}
-		durationLabel={t('Duration')}
-		likesLabel={t('Likes')}
-		commentsLabel={t('Comments')}
-		downloadsLabel={t('Downloads')}
-		dateLabel={t('Date')}
-		sortByLabel={t('Sort by {label}')}
-	/>
+	{#if loading}
+		<ReplayListSkeleton
+			rowCount={HOME_RECENT_MATCHES}
+			mapLabel={t('Map')}
+			typeLabel={t('Type')}
+			alliesLabel={t('Allies')}
+			axisLabel={t('Axis')}
+			durationLabel={t('Duration')}
+			dateLabel={t('Date')}
+		/>
+	{:else}
+		<ReplayList
+			{matches}
+			meSteamIds={mySteamIds}
+			sort="createdAt"
+			sortDir="desc"
+			{onSort}
+			{replayHref}
+			playerHref={resolvePlayerHref}
+			{resolveMapSrc}
+			{resolveFallbackSrc}
+			{resolveFactionFlag}
+			getRankImage={getRankImageByRace}
+			formatMapName={normalizeMapName}
+			emptyMessage={error ? t('Could not load recent matches.') : t('No community replays found.')}
+			locale={currentLocale()}
+			mapLabel={t('Map')}
+			typeLabel={t('Type')}
+			alliesLabel={t('Allies')}
+			axisLabel={t('Axis')}
+			durationLabel={t('Duration')}
+			likesLabel={t('Likes')}
+			commentsLabel={t('Comments')}
+			downloadsLabel={t('Downloads')}
+			dateLabel={t('Date')}
+			sortByLabel={t('Sort by {label}')}
+		/>
+	{/if}
 </section>

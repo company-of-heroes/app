@@ -183,7 +183,7 @@
 				<H level="5" class={sectionTitle}>{t('CPM Over Time')}</H>
 			{/if}
 			<div class="flex flex-wrap gap-x-4 gap-y-2">
-				{#each replay.players as player (player.id)}
+				{#each replay.players as player, i (`${player.id ?? player.name ?? 'player'}-${i}`)}
 					<Checkbox
 						size="sm"
 						label={player.name}
@@ -291,7 +291,7 @@
 				)}
 				aria-label={t('Select player')}
 			>
-				{#each replay.players as player (player.id)}
+				{#each replay.players as player, i (`${player.id ?? player.name ?? 'player'}-${i}`)}
 					{@const isSelected = selectedPlayerValue === String(player.id)}
 					<button
 						type="button"

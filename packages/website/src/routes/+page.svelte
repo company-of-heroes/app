@@ -59,15 +59,33 @@
 <main>
 	<Hero />
 	<HomePlayerSearch />
-	<HomeLiveLobbies
-		lobbies={data.liveLobbies.items}
-		error={data.liveLobbies.error}
-	/>
-	<HomeRecentMatches matches={data.recentMatches.items} error={data.recentMatches.error} />
-	<HomeMemberUploads
-		matches={data.recentMemberUploads.items}
-		error={data.recentMemberUploads.error}
-	/>
-	<HomeLiveStreams streams={data.streams} />
+	{#await data.liveLobbies}
+		<HomeLiveLobbies lobbies={[]} loading />
+	{:then liveLobbies}
+		<HomeLiveLobbies lobbies={liveLobbies.items} error={liveLobbies.error} />
+	{:catch}
+		<HomeLiveLobbies lobbies={[]} error={t('Could not load live lobbies.')} />
+	{/await}
+	{#await data.recentMatches}
+		<HomeRecentMatches matches={[]} loading />
+	{:then recentMatches}
+		<HomeRecentMatches matches={recentMatches.items} error={recentMatches.error} />
+	{:catch}
+		<HomeRecentMatches matches={[]} error={t('Could not load recent matches.')} />
+	{/await}
+	{#await data.recentMemberUploads}
+		<HomeMemberUploads matches={[]} loading />
+	{:then recentMemberUploads}
+		<HomeMemberUploads matches={recentMemberUploads.items} error={recentMemberUploads.error} />
+	{:catch}
+		<HomeMemberUploads matches={[]} error={t('Could not load member uploads.')} />
+	{/await}
+	{#await data.streams}
+		<HomeLiveStreams streams={[]} loading />
+	{:then streams}
+		<HomeLiveStreams {streams} />
+	{:catch}
+		<HomeLiveStreams streams={[]} />
+	{/await}
 	<DonationSection />
 </main>

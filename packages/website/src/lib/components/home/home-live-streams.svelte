@@ -4,9 +4,10 @@
 
 	type Props = {
 		streams: LiveStream[];
+		loading?: boolean;
 	};
 
-	let { streams }: Props = $props();
+	let { streams, loading = false }: Props = $props();
 	const { t } = useI18n();
 
 	function streamHref(userName: string) {
@@ -24,10 +25,13 @@
 				{t('Company of Heroes channels currently live on Twitch.')}
 			</p>
 		</div>
-		<span class="text-secondary-400 text-sm">{t('{count} live', { count: streams.length })}</span>
+		{#if !loading}
+			<span class="text-secondary-400 text-sm">{t('{count} live', { count: streams.length })}</span>
+		{/if}
 	</div>
 	<LiveStreamTiles
 		items={streams}
+		{loading}
 		compact
 		{streamHref}
 		emptyMessage={t('No one is streaming Company of Heroes right now.')}

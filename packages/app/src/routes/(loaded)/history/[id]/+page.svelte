@@ -46,7 +46,7 @@
 
 	const replayFile = resource(
 		() => (hasReplay ? page.params.id : null),
-		(id) => app.database.replays.getById(id!)
+		(id) => app.database.replays.getByLobbyId(id!)
 	);
 
 	let isDownloading = $state(false);
