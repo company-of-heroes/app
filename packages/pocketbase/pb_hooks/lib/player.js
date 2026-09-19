@@ -102,6 +102,7 @@ function steamIdFromName(name) {
 	if (typeof name !== 'string') {
 		return '';
 	}
+
 	return name.replace('/steam/', '');
 }
 
@@ -148,6 +149,7 @@ function applyCors(e) {
 		e.response.header().set('Access-Control-Allow-Origin', origin);
 		e.response.header().set('Vary', 'Origin');
 	}
+
 	e.response.header().set('Access-Control-Allow-Methods', 'GET, OPTIONS');
 	e.response.header().set('Access-Control-Allow-Headers', 'Content-Type');
 }
@@ -157,6 +159,7 @@ function jsonWithCors(e, status, body, cacheControl) {
 	if (cacheControl) {
 		e.response.header().set('Cache-Control', cacheControl);
 	}
+
 	return e.json(status, body);
 }
 
@@ -202,6 +205,7 @@ function fetchRelicJsonInsecure(url, context) {
 		if (!raw) {
 			throw new Error('Empty HTTP body');
 		}
+
 		return JSON.parse(raw);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -221,6 +225,7 @@ function fetchJsonMany(urls, context) {
 		if (!url || seen[url]) {
 			continue;
 		}
+
 		seen[url] = true;
 		unique.push(url);
 	}
@@ -235,7 +240,9 @@ function fetchJsonMany(urls, context) {
 
 	try {
 		const raw = toString(
-			$os.cmd('python3', `${__hooks}/lib/fetch-insecure.py`, '--ndjson', JSON.stringify(unique)).output()
+			$os
+				.cmd('python3', `${__hooks}/lib/fetch-insecure.py`, '--ndjson', JSON.stringify(unique))
+				.output()
 		);
 		const byUrl = {};
 		const lines = String(raw || '').split('\n');
@@ -243,6 +250,7 @@ function fetchJsonMany(urls, context) {
 			if (!line.trim()) {
 				continue;
 			}
+
 			try {
 				const row = JSON.parse(line);
 				if (row?.ok && row.url) {
@@ -264,6 +272,7 @@ function fetchJsonMany(urls, context) {
 		if (Object.keys(byUrl).length === 0) {
 			return fetchJsonManySequential(unique, context);
 		}
+
 		return byUrl;
 	} catch (error) {
 		logError('Player parallel fetch failed', {
@@ -544,6 +553,7 @@ function loadElo(profileId) {
 		if (!record) {
 			return {};
 		}
+
 		return ratings.serializeRecord(record)?.elo ?? {};
 	} catch (error) {
 		logWarn('Player ratings lookup failed', {
@@ -629,6 +639,7 @@ function selectCardStats(stats) {
 		if (aRanked !== bRanked) {
 			return aRanked - bRanked;
 		}
+
 		return (b.ranklevel ?? 0) - (a.ranklevel ?? 0);
 	});
 
@@ -660,6 +671,7 @@ function readPageCache(key) {
 		delete pageCache[key];
 		return null;
 	}
+
 	return hit.value;
 }
 
@@ -669,6 +681,7 @@ function writePageCache(key, value) {
 	if (keys.length <= PAGE_CACHE_MAX) {
 		return;
 	}
+
 	keys.sort((a, b) => (pageCache[a].at || 0) - (pageCache[b].at || 0));
 	const remove = keys.length - PAGE_CACHE_MAX;
 	for (let i = 0; i < remove; i++) {
@@ -737,6 +750,7 @@ function loadPlayerPage(id, options) {
 			firstPlaytimeUrl = steamPlaytimeUrl(String(id), apiKey);
 			urls.push(firstPlaytimeUrl);
 		}
+
 		const byUrl = fetchJsonMany(urls, { steamId: String(id) });
 		relicProfile = memberFromPersonalStat(byUrl[relicUrl], String(id), null);
 		steamProfile = steamPlayerFromBody(byUrl[summaryUrl]);
@@ -771,12 +785,15 @@ function loadPlayerPage(id, options) {
 	if (!steamProfile) {
 		followUp.push(summaryUrl);
 	}
+
 	if (extras && !playtimeFetched) {
 		followUp.push(playtimeUrl);
 	}
+
 	if (extras) {
 		followUp.push(historyUrl);
 	}
+
 	if (lenderSteamId) {
 		lenderSummaryUrl = steamSummariesUrl(lenderSteamId, apiKey);
 		followUp.push(lenderSummaryUrl);
@@ -787,12 +804,15 @@ function loadPlayerPage(id, options) {
 		if (!steamProfile) {
 			steamProfile = steamPlayerFromBody(byUrl[summaryUrl]);
 		}
+
 		if (extras && !playtimeFetched) {
 			playtime = steamPlaytimeFromBody(byUrl[playtimeUrl]);
 		}
+
 		if (extras) {
 			matchBody = byUrl[historyUrl] || null;
 		}
+
 		if (lenderSummaryUrl) {
 			lenderSteam = steamPlayerFromBody(byUrl[lenderSummaryUrl]);
 		}
@@ -805,7 +825,9 @@ function loadPlayerPage(id, options) {
 	}
 
 	const elo = extras ? loadElo(relicProfile.profile_id) : {};
-	const performance = extras ? loadCommunityPerformance(relicProfile.profile_id) : emptyPerformance();
+	const performance = extras
+		? loadCommunityPerformance(relicProfile.profile_id)
+		: emptyPerformance();
 	const matches = extras
 		? matchBody
 			? matchesFromRelicBody(matchBody, relicProfile.profile_id)
@@ -821,7 +843,9 @@ function loadPlayerPage(id, options) {
 				...playerLabels.steamIdsFromMatches(matches)
 			])
 		: {};
-	const labeledMatches = extras ? playerLabels.attachLabelsToMatches(matches, labelsBySteamId) : matches;
+	const labeledMatches = extras
+		? playerLabels.attachLabelsToMatches(matches, labelsBySteamId)
+		: matches;
 	const matchHistoryWithScores = extras
 		? require(`${__hooks}/lib/player-social.js`).attachLikeCountsToMatches(
 				labeledMatches,
@@ -924,15 +948,20 @@ function handleCardGet(e) {
 			alias: data.alias,
 			statCount: data.leaderboardStats.length
 		});
-		return jsonWithCors(e, 200, {
-			steamId: data.steamId,
-			profileId: data.profileId,
-			alias: data.alias,
-			country: data.country,
-			level: data.level,
-			avatarUrl: data.avatarUrl,
-			stats: selectCardStats(data.leaderboardStats)
-		}, PAGE_CACHE_CONTROL);
+		return jsonWithCors(
+			e,
+			200,
+			{
+				steamId: data.steamId,
+				profileId: data.profileId,
+				alias: data.alias,
+				country: data.country,
+				level: data.level,
+				avatarUrl: data.avatarUrl,
+				stats: selectCardStats(data.leaderboardStats)
+			},
+			PAGE_CACHE_CONTROL
+		);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		const status = error?.status || (message.includes('STEAM_API_KEY') ? 503 : 500);

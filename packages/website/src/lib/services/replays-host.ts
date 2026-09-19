@@ -6,12 +6,13 @@ import {
 	type ReplaysApi,
 	type ReplaysQuery
 } from '@company-of-heroes/api';
+import { resetReplayMetadata } from '@fknoobs/replay-parser';
 import { errAsync, ok, ResultAsync } from 'neverthrow';
 import { appError, fromUnknown, type AppError } from '$lib/errors/app-error';
 import { allowReplayFileRequest } from '$lib/utils/rate-limit';
 
 export type ReplayFileDownload = {
-	body: ReadableStream<Uint8Array>;
+	body: ReadableStream<Uint8Array> | Uint8Array;
 	contentType: string;
 	filename: string;
 };
@@ -113,7 +114,11 @@ export class WebsiteReplaysService {
 		return this.replays.publishFromMatch(lobbyId, input);
 	}
 
-	getFile(id: string, clientIp: string): ResultAsync<ReplayFileDownload, AppError> {
+	getFile(
+		id: string,
+		clientIp: string,
+		stripMetadata = false
+	): ResultAsync<ReplayFileDownload, AppError> {
 		const limited = allowReplayFileRequest(clientIp);
 		if (!limited.ok) {
 			return errAsync(
@@ -157,11 +162,23 @@ export class WebsiteReplaysService {
 					);
 				}
 
-				return ok({
-					body: file.body,
-					contentType: file.headers.get('Content-Type') ?? 'application/octet-stream',
-					filename: match.filename || match.replay || `${match.id}.rec`
-				});
+				const contentType = file.headers.get('Content-Type') ?? 'application/octet-stream';
+				const filename = match.filename || match.replay || `${match.id}.rec`;
+				if (!stripMetadata) {
+					return ok({
+						body: file.body,
+						contentType,
+						filename
+					});
+				}
+
+				return ResultAsync.fromPromise(file.arrayBuffer(), (error) =>
+					fromUnknown(error, 'Failed to download replay')
+				).map((buffer) => ({
+					body: resetReplayMetadata(new Uint8Array(buffer)),
+					contentType,
+					filename
+				}));
 			});
 		});
 	}

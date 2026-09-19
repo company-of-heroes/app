@@ -11,8 +11,13 @@ function errorResponse(status: number, message: string, retryAfter?: number): Re
 	return new Response(message, { status, headers });
 }
 
-export const GET: RequestHandler = async ({ locals, params, getClientAddress }) => {
-	const result = await locals.services.replays().getFile(params.id, getClientAddress());
+export const GET: RequestHandler = async ({ locals, params, url, getClientAddress }) => {
+	const stripMetadata = url.searchParams.get('download') === '1';
+	const result = await locals.services.replays().getFile(
+		params.id,
+		getClientAddress(),
+		stripMetadata
+	);
 	if (result.isErr()) {
 		return errorResponse(result.error.status, result.error.message, result.error.retryAfter);
 	}

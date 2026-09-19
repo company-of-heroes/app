@@ -63,12 +63,15 @@ function leaderboardIdForMatchRace(matchTypeId, race) {
 	if (!Number.isInteger(race) || race < 0 || race > 3) {
 		return null;
 	}
+
 	if (matchTypeId === 14) {
 		return 42 + race;
 	}
+
 	if (!Number.isInteger(matchTypeId) || matchTypeId < 0 || matchTypeId > 4) {
 		return null;
 	}
+
 	return matchTypeId * 4 + race;
 }
 
@@ -99,12 +102,15 @@ function matchTypeIdFromResultAndPlayers(result, players, isRanked) {
 	if (humans.length === 2) {
 		return 1;
 	}
+
 	if (humans.length === 4) {
 		return 2;
 	}
+
 	if (humans.length === 6) {
 		return 3;
 	}
+
 	if (humans.length === 8) {
 		return 4;
 	}
@@ -153,11 +159,7 @@ function eloByProfileFromResult(result) {
 		const previous = toFiniteNumber(player?.oldrating);
 		const next = toFiniteNumber(player?.newrating);
 		const elo =
-			previous != null && previous >= 1
-				? previous
-				: next != null && next >= 1
-					? next
-					: null;
+			previous != null && previous >= 1 ? previous : next != null && next >= 1 ? next : null;
 		if (elo != null) {
 			byProfile[profileId] = elo;
 		}
@@ -225,6 +227,7 @@ function findRawLobbyPlayer(rawPlayers, listPlayer) {
 		if (profileId != null && rawProfileId === profileId) {
 			return raw;
 		}
+
 		if (steamId && raw?.steamId && String(raw.steamId) === steamId) {
 			return raw;
 		}
@@ -573,17 +576,17 @@ function invalidateCommunityMatchCount() {
 		snapshot.set('matchCount', 0);
 		$app.save(snapshot);
 	} catch (error) {
-		console.warn(
-			'[match-history] matchCount invalidate failed',
-			String(error?.message || error)
-		);
+		console.warn('[match-history] matchCount invalidate failed', String(error?.message || error));
 	}
 }
 
 function readCommunityMatchCount() {
 	try {
 		const row = new DynamicModel({ matchCount: 0 });
-		$app.db().newQuery("SELECT matchCount FROM match_filter_snapshots WHERE id = 'community'").one(row);
+		$app
+			.db()
+			.newQuery("SELECT matchCount FROM match_filter_snapshots WHERE id = 'community'")
+			.one(row);
 		const value = Number(row.matchCount);
 		return Number.isFinite(value) && value > 0 ? value : null;
 	} catch {
@@ -595,9 +598,7 @@ function saveCommunityMatchCount(totalItems) {
 	try {
 		$app
 			.db()
-			.newQuery(
-				"UPDATE match_filter_snapshots SET matchCount = {:total} WHERE id = 'community'"
-			)
+			.newQuery("UPDATE match_filter_snapshots SET matchCount = {:total} WHERE id = 'community'")
 			.bind({ total: Number(totalItems) || 0 })
 			.execute();
 	} catch (error) {
@@ -637,6 +638,7 @@ function parseOptionalNumber(raw) {
 	if (raw == null || raw === '') {
 		return NaN;
 	}
+
 	const value = Number(raw);
 	return Number.isFinite(value) ? value : NaN;
 }
@@ -746,8 +748,7 @@ function buildIndexPlayerConditions(
 		return null;
 	}
 
-	const hasIdentity =
-		(steamIds && steamIds.length > 0) || (profileIds && profileIds.length > 0);
+	const hasIdentity = (steamIds && steamIds.length > 0) || (profileIds && profileIds.length > 0);
 	if (!hasIdentity && !allowAnyPlayer) {
 		return null;
 	}
@@ -810,6 +811,7 @@ function buildSortClause(sort, sortDir) {
 	if (column === 'l.createdAt') {
 		return `l.createdAt ${direction}`;
 	}
+
 	return `${column} ${direction}, l.createdAt DESC`;
 }
 
@@ -832,8 +834,7 @@ function buildRaceFilterClause(
 		return null;
 	}
 
-	const hasIdentity =
-		(steamIds && steamIds.length > 0) || (profileIds && profileIds.length > 0);
+	const hasIdentity = (steamIds && steamIds.length > 0) || (profileIds && profileIds.length > 0);
 
 	if (!hasIdentity && !allowAnyPlayer) {
 		return null;
@@ -892,9 +893,7 @@ function buildRaceFilterClause(
 		lobbyIdentity.push(
 			`(CAST(json_extract(p.value, '$.profile_id') AS INTEGER) = {:${key}} OR CAST(json_extract(p.value, '$.profile.profile_id') AS INTEGER) = {:${key}})`
 		);
-		resultIdentity.push(
-			`CAST(json_extract(rp.value, '$.profile_id') AS INTEGER) = {:${key}}`
-		);
+		resultIdentity.push(`CAST(json_extract(rp.value, '$.profile_id') AS INTEGER) = {:${key}}`);
 	}
 
 	const lobbyIdentityClause = `(${lobbyIdentity.join(' OR ')})`;
@@ -937,9 +936,11 @@ function userPlayedLobbyClause(lobbyAlias, { steamIds = [], profileIds = [] } = 
 			FROM json_each(COALESCE((SELECT steamIds FROM users WHERE id = {:userId}), '[]'))
 		)`);
 	}
+
 	if (played.length === 0) {
 		return `${alias}.user = {:userId}`;
 	}
+
 	return `(${alias}.user = {:userId} OR EXISTS (
 		SELECT 1 FROM lobby_player_index pi
 		WHERE pi.lobby = ${alias}.id AND (${played.join(' OR ')})
@@ -1217,6 +1218,7 @@ function attachReplayLobbyIds(matches) {
 		if (!Number.isInteger(sessionId) || sessionId <= 0 || seen[sessionId]) {
 			continue;
 		}
+
 		seen[sessionId] = true;
 		sessionIds.push(sessionId);
 	}
@@ -1267,6 +1269,7 @@ function attachReplayLobbyIds(matches) {
 		if (!Number.isInteger(sessionId) || sessionId <= 0 || !row.id) {
 			continue;
 		}
+
 		const current = bySession[sessionId];
 		if (!current || isPreferredReplayLobby(row, current)) {
 			bySession[sessionId] = row;

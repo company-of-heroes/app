@@ -102,7 +102,7 @@
 	);
 	const isPro = $derived(isProGameplayMatch(match));
 	const hasReplay = $derived(match.hasReplay ?? Boolean(match.replay));
-	const downloadHref = $derived(hasReplay ? `/api/replay-file/${match.id}` : null);
+	const downloadHref = $derived(hasReplay ? `/api/replay-file/${match.id}?download=1` : null);
 	const downloadFileName = $derived(match.replay || `${match.id}.rec`);
 	const submittedAt = $derived(
 		formatSubmittedAt(
