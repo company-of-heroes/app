@@ -1,5 +1,10 @@
 # @company-of-heroes/pocketbase
 
+## 0.11.1
+
+- fix; load opponent rank badges in player match history (relic personalstat batch limit)
+- fix; stop community replay pages from hanging on fat lobby player payloads
+
 ## 0.11.0
 
 - fix; resolve history player/map search auth helper under PocketBase JSVM scope
