@@ -9,6 +9,8 @@ import PlayerProfileSkeleton from './player-profile-skeleton.svelte';
 import PlayerSearchCard from './player-search-card.svelte';
 import PlayerPreviewCard from './player-preview-card.svelte';
 import PlayerProfileLink from './player-profile-link.svelte';
+import TwitchLogo from './twitch-logo.svelte';
+import YoutubeLogo from './youtube-logo.svelte';
 
 export {
 	PlayerLabels,
@@ -21,7 +23,9 @@ export {
 	PlayerProfileSkeleton,
 	PlayerSearchCard,
 	PlayerPreviewCard,
-	PlayerProfileLink
+	PlayerProfileLink,
+	TwitchLogo,
+	YoutubeLogo
 };
 export { createPlayerPreview, usePlayerPreview } from './player-preview.context';
 export type { PlayerPreviewContext } from './player-preview.context';

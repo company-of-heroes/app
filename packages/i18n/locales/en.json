@@ -1247,5 +1247,6 @@
 	"Your overlay is hosted at the URL above. To customize it, open the overlay folder, edit files in src/, then build and publish:": "Your overlay is hosted at the URL above. To customize it, open the overlay folder, edit files in src/, then build and publish:",
 	"Your profile, today’s matches, and live lobbies from other companion users. Open replays or the current game from here.": "Your profile, today’s matches, and live lobbies from other companion users. Open replays or the current game from here.",
 	"Your settings and account are automatically backed up to {dir}, outside the app's data folder. They survive updates, even when you choose to remove all app data.": "Your settings and account are automatically backed up to {dir}, outside the app's data folder. They survive updates, even when you choose to remove all app data.",
+	"YouTube": "YouTube",
 	"YouTube URL": "YouTube URL"
 }

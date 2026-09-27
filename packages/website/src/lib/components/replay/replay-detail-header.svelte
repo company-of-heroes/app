@@ -166,8 +166,9 @@
 	});
 
 	afterNavigate(({ from }) => {
-		if (unlocalizedPath(from?.url.pathname ?? '') === '/replays') {
-			const next = `${from?.url.pathname}${from?.url.search}`;
+		const path = from?.url?.pathname;
+		if (path && unlocalizedPath(path) === '/replays') {
+			const next = `${path}${from.url.search}`;
 			rememberReplaysListHref(next);
 			listHref = href(next);
 			return;

@@ -7,4 +7,4 @@
 '@company-of-heroes/i18n': patch
 ---
 
-feat; add public player profile customization (bio, links, background)
+feat; add public player profile customization (bio, links, background), including dashboard hero

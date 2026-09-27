@@ -82,8 +82,8 @@
 	const BOOT_ROUTES = new Set(['/splashscreen', '/setup']);
 	let hasClientHistory = $state(false);
 	afterNavigate(({ from }) => {
-		const fromPath = from?.url.pathname ?? '';
-		hasClientHistory = Boolean(from) && !BOOT_ROUTES.has(fromPath);
+		const fromPath = from?.url?.pathname ?? '';
+		hasClientHistory = Boolean(from?.url) && !BOOT_ROUTES.has(fromPath);
 	});
 	let returning = $state(false);
 	const impersonatedName = $derived(

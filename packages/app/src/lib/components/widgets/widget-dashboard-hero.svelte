@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { api } from '$core/api';
 	import { app } from '$core/app/context';
 	import { Alert } from '$lib/components/ui/alert';
 	import { Leaderboard } from '../leaderboard';
@@ -7,7 +8,12 @@
 	import { PlayerPerformance } from '$lib/components/player-performance';
 	import { relic, relicLeaderboardFingerprint } from '$lib/relic';
 	import { steam } from '$core/steam';
-	import { cn, getFactionFlagFromRace, getRankImageByLeaderboardId, normalizeMapName } from '$lib/utils';
+	import {
+		cn,
+		getFactionFlagFromRace,
+		getRankImageByLeaderboardId,
+		normalizeMapName
+	} from '$lib/utils';
 	import { getFactionFlagFromLeaderboardId } from '$lib/utils/game';
 	import { interactive, statLosses, statWins } from '$lib/components/ui/variants';
 	import * as Tabs from '$lib/components/ui/tabs';
@@ -19,8 +25,14 @@
 	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/matches';
 	import { upperCase } from 'lodash-es';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
+	import LinkIcon from 'phosphor-svelte/lib/LinkIcon';
 	import * as Player from '$lib/components/player';
-	import { PlayerProfileLink, playerPreviewId } from '@company-of-heroes/ui/player';
+	import {
+		PlayerProfileLink,
+		playerPreviewId,
+		TwitchLogo,
+		YoutubeLogo
+	} from '@company-of-heroes/ui/player';
 	import * as List from '$lib/components/ui/list';
 	import { Badge, LiveBadge, PendingBadge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
@@ -54,6 +66,7 @@
 		pickMainFaction
 	} from '$lib/components/leaderboard/leaderboard-utils';
 	import { tooltip } from '$lib/attachments';
+	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 
@@ -71,6 +84,31 @@
 	const steamId = $derived(
 		app.game.profile?.steam.steamid ?? app.features.auth.user.steamIds[0] ?? null
 	);
+
+	const customization = resource(
+		() => steamId,
+		async (id) => {
+			if (!id) {
+				return null;
+			}
+
+			const result = await api.players.getCustomization(id);
+			return result.isOk() ? result.value : null;
+		}
+	);
+
+	afterNavigate(({ from }) => {
+		if (from?.url?.pathname?.includes('/account/profile')) {
+			void customization.refetch();
+		}
+	});
+
+	const hasBackground = $derived(Boolean(customization.current?.backgroundUrl));
+	const bio = $derived.by(() => {
+		const value = customization.current?.bio?.trim();
+		return value ? value : null;
+	});
+	const links = $derived(customization.current?.links ?? []);
 
 	const resolvedProfile = resource(
 		() => [app.game.profile ?? null, steamId] as const,
@@ -338,9 +376,7 @@
 				: null
 	);
 	const updateProfileHref = $derived(
-		steamId
-			? `/account/profile?steamId=${encodeURIComponent(steamId)}`
-			: '/account/profile'
+		steamId ? `/account/profile?steamId=${encodeURIComponent(steamId)}` : '/account/profile'
 	);
 	const previewId = $derived(
 		profile
@@ -390,260 +426,330 @@
 {#if profile}
 	{#key profile.relic.profile_id}
 		<div class="border-secondary-900 overflow-clip border-b">
-			<div
-				class={cn(
-					'border-secondary-800 grid grid-cols-1 border-b',
-					'sm:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
-				)}
-			>
-				{#if profileHref && previewId}
-					<PlayerProfileLink
-						href={profileHref}
-						playerId={previewId}
-						class={cn(
-							interactive,
-							'aspect-square self-start overflow-clip border-b sm:border-r sm:border-b-0',
-							avatarBorder
-						)}
-					>
-						<img
-							src={profile.steam.avatarfull}
-							alt={profile.relic.alias}
-							class="h-full w-full object-cover"
-						/>
-					</PlayerProfileLink>
+			<div class="relative overflow-clip">
+				{#if hasBackground}
+					<img
+						src={customization.current!.backgroundUrl!}
+						alt=""
+						class="absolute inset-0 h-full w-full object-cover"
+					/>
+					<div
+						class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/75 to-black/60"
+					></div>
 				{/if}
+				<div
+					class={cn(
+						'border-secondary-800 relative z-10 grid grid-cols-1 border-b',
+						'sm:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
+					)}
+				>
+					{#if profileHref && previewId}
+						<PlayerProfileLink
+							href={profileHref}
+							playerId={previewId}
+							class={cn(
+								interactive,
+								'aspect-square self-start overflow-clip border-b',
+								!hasBackground && 'sm:border-r sm:border-b-0',
+								hasBackground && 'border-2',
+								avatarBorder
+							)}
+						>
+							<img
+								src={profile.steam.avatarfull}
+								alt={profile.relic.alias}
+								class="h-full w-full object-cover"
+							/>
+						</PlayerProfileLink>
+					{/if}
 
-				<div class="min-w-0 px-5 py-4">
-					<div class="mb-3 flex flex-wrap items-center gap-2.5">
-						{#if profileHref && previewId}
-							<PlayerProfileLink
-								href={profileHref}
-								playerId={previewId}
-								class={cn(
-									interactive,
-									'hover:text-primary flex min-w-0 items-center gap-2.5 transition-colors'
-								)}
-							>
-							{#if profile.relic.country}
-								<img
-									class="h-5 w-auto shrink-0 rounded-xs"
-									src="https://flagsapi.com/{upperCase(profile.relic.country)}/shiny/64.png"
-									alt={profile.relic.country}
-								/>
+					<div class="min-w-0 px-5 py-4">
+						<div class="mb-3 flex flex-wrap items-center gap-2.5">
+							{#if profileHref && previewId}
+								<PlayerProfileLink
+									href={profileHref}
+									playerId={previewId}
+									class={cn(
+										interactive,
+										'hover:text-primary flex min-w-0 items-center gap-2.5 transition-colors'
+									)}
+								>
+									{#if profile.relic.country}
+										<img
+											class="h-5 w-auto shrink-0 rounded-xs"
+											src="https://flagsapi.com/{upperCase(profile.relic.country)}/shiny/64.png"
+											alt={profile.relic.country}
+										/>
+									{/if}
+									<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
+									<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span>
+								</PlayerProfileLink>
 							{/if}
-								<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
-								<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span>
-							</PlayerProfileLink>
-						{/if}
-						<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
-						{#if profileHref}
-							<Button href={profileHref} variant="secondary" size="sm" class="shrink-0">
-								{t('View profile')}
+							<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
+							{#if profileHref}
+								<Button href={profileHref} variant="secondary" size="sm" class="shrink-0">
+									{t('View profile')}
+								</Button>
+							{/if}
+							<Button href={updateProfileHref} variant="secondary" size="sm" class="shrink-0">
+								{t('Update profile')}
 							</Button>
-						{/if}
-						<Button href={updateProfileHref} variant="secondary" size="sm" class="shrink-0">
-							{t('Update profile')}
-						</Button>
-						{#if app.lobby}
-							<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
-								<LiveBadge label={t('In match')} />
-							</a>
-						{:else if !app.game.isRunning}
-							<Badge variant="default" class="shrink-0">{t('Not running')}</Badge>
-						{/if}
-					</div>
+							{#if app.lobby}
+								<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
+									<LiveBadge label={t('In match')} />
+								</a>
+							{:else if !app.game.isRunning}
+								<Badge variant="default" class="shrink-0">{t('Not running')}</Badge>
+							{/if}
+						</div>
 
-					<div class="grid grid-cols-1 items-start gap-x-6 gap-y-1 sm:grid-cols-2">
-						<List.Root class={metaList}>
-							<List.Title>{t('Ladder:')}</List.Title>
-							<List.Value class={valueRow}>
-								{#if featuredMode}
-									<span class="text-secondary-400 text-xs font-medium uppercase">
-										{featuredMode.label}
-									</span>
-									<img
-										src={getFactionFlagFromLeaderboardId(featuredMode.stat.leaderboard_id)}
-										alt={getRaceLabelFromLeaderboardId(featuredMode.stat.leaderboard_id)}
-										class="size-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
-									/>
-									{#if featuredMode.rating == null}
-										<span class="text-secondary-500">{t('N/A')}</span>
+						{#if bio || links.length > 0}
+							<div class="my-4">
+								{#if bio}
+									<p class="text-secondary-400 mb-3 max-w-2xl text-sm whitespace-pre-wrap">{bio}</p>
+								{/if}
+								{#if links.length > 0}
+									<div class="mb-3 flex flex-wrap items-center gap-4">
+										{#each links as link (link.url)}
+											{#if link.type === 'twitch'}
+												<a
+													href={link.url}
+													target="_blank"
+													rel="noopener noreferrer"
+													class={cn(
+														interactive,
+														'inline-flex items-center gap-2 text-sm font-medium underline'
+													)}
+												>
+													<TwitchLogo size={20} class="text-[#9146FF]" />
+													<span>{t('Twitch')}</span>
+												</a>
+											{:else if link.type === 'youtube'}
+												<a
+													href={link.url}
+													target="_blank"
+													rel="noopener noreferrer"
+													class={cn(
+														interactive,
+														'inline-flex items-center gap-2 text-sm font-medium underline'
+													)}
+												>
+													<YoutubeLogo size={20} />
+													<span>{t('YouTube')}</span>
+												</a>
+											{:else}
+												<a
+													href={link.url}
+													target="_blank"
+													rel="noopener noreferrer"
+													class={cn(
+														interactive,
+														'text-secondary-300 hover:text-primary inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm transition-colors'
+													)}
+												>
+													<LinkIcon size={18} />
+													{#if link.label}
+														<span>{link.label}</span>
+													{/if}
+												</a>
+											{/if}
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{/if}
+
+						<div class="grid grid-cols-1 items-start gap-x-6 gap-y-1 sm:grid-cols-2">
+							<List.Root class={metaList}>
+								<List.Title>{t('Ladder:')}</List.Title>
+								<List.Value class={valueRow}>
+									{#if featuredMode}
+										<span class="text-secondary-400 text-xs font-medium uppercase">
+											{featuredMode.label}
+										</span>
+										<img
+											src={getFactionFlagFromLeaderboardId(featuredMode.stat.leaderboard_id)}
+											alt={getRaceLabelFromLeaderboardId(featuredMode.stat.leaderboard_id)}
+											class="size-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
+										/>
+										{#if featuredMode.rating == null}
+											<span class="text-secondary-500">{t('N/A')}</span>
+										{:else}
+											<span
+												class={cn(
+													'font-heading text-lg tabular-nums',
+													isEliteElo(featuredMode.rating) ? 'font-bold' : 'font-semibold'
+												)}
+												style:color={getEloColor(featuredMode.rating)}
+												style:text-shadow={getEloTextShadow(featuredMode.rating)}
+											>
+												{featuredMode.rating}
+											</span>
+										{/if}
+										{#if featuredMode.stat.ranklevel > 0}
+											<img
+												src={getRankImageByLeaderboardId(
+													featuredMode.stat.leaderboard_id,
+													featuredMode.stat.ranklevel
+												)}
+												alt={t('Rank {level}', { level: featuredMode.stat.ranklevel })}
+												class="h-6 w-auto shrink-0"
+											/>
+											<span class="text-secondary-200 text-sm font-medium tabular-nums">
+												{featuredMode.stat.ranklevel}
+											</span>
+										{/if}
+										{#if featuredMode.stat.rank > 0}
+											<span class="text-secondary-500 text-xs tabular-nums">
+												{t('#{rank} / {total}', {
+													rank: featuredMode.stat.rank,
+													total: featuredMode.stat.ranktotal
+												})}
+											</span>
+										{/if}
 									{:else}
-										<span
-											class={cn(
-												'font-heading text-lg tabular-nums',
-												isEliteElo(featuredMode.rating) ? 'font-bold' : 'font-semibold'
-											)}
-											style:color={getEloColor(featuredMode.rating)}
-											style:text-shadow={getEloTextShadow(featuredMode.rating)}
-										>
-											{featuredMode.rating}
+										<span class="text-secondary-400 text-sm">
+											{t('Play ranked to unlock your ladder spotlight.')}
 										</span>
 									{/if}
-									{#if featuredMode.stat.ranklevel > 0}
+								</List.Value>
+
+								<List.Title>{t('Today:')}</List.Title>
+								<List.Value class={valueRow}>
+									{#if todayRecord.wins + todayRecord.losses > 0}
+										<span class={statWins}>{t('{count}W', { count: todayRecord.wins })}</span>
+										<span class="text-secondary-600">·</span>
+										<span class={statLosses}>{t('{count}L', { count: todayRecord.losses })}</span>
+										{#if todayRecord.pending > 0}
+											<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
+										{/if}
+									{:else if todayRecord.pending > 0}
+										<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
+										<span class="text-secondary-400 text-sm">{t('Result pending')}</span>
+									{:else}
+										<span class={statWins}>{t('{count}W', { count: 0 })}</span>
+										<span class="text-secondary-600">·</span>
+										<span class={statLosses}>{t('{count}L', { count: 0 })}</span>
+									{/if}
+								</List.Value>
+
+								<List.Title>{t('Career:')}</List.Title>
+								<List.Value class={valueRow}>
+									{#if tracked.matchCount > 0}
+										<span class={statWins}>{t('{count}W', { count: tracked.wins })}</span>
+										<span class="text-secondary-600">·</span>
+										<span class={statLosses}>{t('{count}L', { count: tracked.losses })}</span>
+										<LeaderboardStatPill
+											type="ratio"
+											wins={tracked.wins}
+											losses={tracked.losses}
+											streak={0}
+										/>
+									{:else}
+										<span class="text-secondary-400 text-sm">
+											{t('Play with the companion running to build stats.')}
+										</span>
+									{/if}
+								</List.Value>
+							</List.Root>
+
+							<List.Root class={metaList}>
+								{#if featuredMode && featuredMode.stat.streak !== 0}
+									<List.Title>{t('Streak:')}</List.Title>
+									<List.Value class={valueRow}>
+										<LeaderboardStatPill
+											type="streak"
+											wins={featuredMode.stat.wins}
+											losses={featuredMode.stat.losses}
+											streak={featuredMode.stat.streak}
+										/>
+									</List.Value>
+								{/if}
+
+								{#if featuredMode && featuredMode.stat.highestranklevel > 0}
+									<List.Title>{t('Peak:')}</List.Title>
+									<List.Value class={valueRow}>
 										<img
 											src={getRankImageByLeaderboardId(
 												featuredMode.stat.leaderboard_id,
-												featuredMode.stat.ranklevel
+												featuredMode.stat.highestranklevel
 											)}
-											alt={t('Rank {level}', { level: featuredMode.stat.ranklevel })}
+											alt={t('Rank {level}', { level: featuredMode.stat.highestranklevel })}
 											class="h-6 w-auto shrink-0"
 										/>
 										<span class="text-secondary-200 text-sm font-medium tabular-nums">
-											{featuredMode.stat.ranklevel}
+											{featuredMode.stat.highestranklevel}
 										</span>
-									{/if}
-									{#if featuredMode.stat.rank > 0}
-										<span class="text-secondary-500 text-xs tabular-nums">
-											{t('#{rank} / {total}', {
-												rank: featuredMode.stat.rank,
-												total: featuredMode.stat.ranktotal
-											})}
+										{#if featuredMode.stat.highestrank > 0}
+											<span class="text-secondary-500 text-xs tabular-nums">
+												{t('#{rank}', { rank: featuredMode.stat.highestrank })}
+											</span>
+										{/if}
+									</List.Value>
+								{/if}
+
+								{#if bestMap}
+									<List.Title>{t('Best map:')}</List.Title>
+									<List.Value class={valueRow}>
+										<span class="text-secondary-300 max-w-44 truncate">
+											{normalizeMapName(bestMap.map, false)}
 										</span>
-									{/if}
-								{:else}
-									<span class="text-secondary-400 text-sm">
-										{t('Play ranked to unlock your ladder spotlight.')}
-									</span>
-								{/if}
-							</List.Value>
-
-							<List.Title>{t('Today:')}</List.Title>
-							<List.Value class={valueRow}>
-								{#if todayRecord.wins + todayRecord.losses > 0}
-									<span class={statWins}>{t('{count}W', { count: todayRecord.wins })}</span>
-									<span class="text-secondary-600">·</span>
-									<span class={statLosses}>{t('{count}L', { count: todayRecord.losses })}</span>
-									{#if todayRecord.pending > 0}
-										<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
-									{/if}
-								{:else if todayRecord.pending > 0}
-									<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
-									<span class="text-secondary-400 text-sm">{t('Result pending')}</span>
-								{:else}
-									<span class={statWins}>{t('{count}W', { count: 0 })}</span>
-									<span class="text-secondary-600">·</span>
-									<span class={statLosses}>{t('{count}L', { count: 0 })}</span>
-								{/if}
-							</List.Value>
-
-							<List.Title>{t('Career:')}</List.Title>
-							<List.Value class={valueRow}>
-								{#if tracked.matchCount > 0}
-									<span class={statWins}>{t('{count}W', { count: tracked.wins })}</span>
-									<span class="text-secondary-600">·</span>
-									<span class={statLosses}>{t('{count}L', { count: tracked.losses })}</span>
-									<LeaderboardStatPill
-										type="ratio"
-										wins={tracked.wins}
-										losses={tracked.losses}
-										streak={0}
-									/>
-								{:else}
-									<span class="text-secondary-400 text-sm">
-										{t('Play with the companion running to build stats.')}
-									</span>
-								{/if}
-							</List.Value>
-						</List.Root>
-
-						<List.Root class={metaList}>
-							{#if featuredMode && featuredMode.stat.streak !== 0}
-								<List.Title>{t('Streak:')}</List.Title>
-								<List.Value class={valueRow}>
-									<LeaderboardStatPill
-										type="streak"
-										wins={featuredMode.stat.wins}
-										losses={featuredMode.stat.losses}
-										streak={featuredMode.stat.streak}
-									/>
-								</List.Value>
-							{/if}
-
-							{#if featuredMode && featuredMode.stat.highestranklevel > 0}
-								<List.Title>{t('Peak:')}</List.Title>
-								<List.Value class={valueRow}>
-									<img
-										src={getRankImageByLeaderboardId(
-											featuredMode.stat.leaderboard_id,
-											featuredMode.stat.highestranklevel
-										)}
-										alt={t('Rank {level}', { level: featuredMode.stat.highestranklevel })}
-										class="h-6 w-auto shrink-0"
-									/>
-									<span class="text-secondary-200 text-sm font-medium tabular-nums">
-										{featuredMode.stat.highestranklevel}
-									</span>
-									{#if featuredMode.stat.highestrank > 0}
-										<span class="text-secondary-500 text-xs tabular-nums">
-											{t('#{rank}', { rank: featuredMode.stat.highestrank })}
-										</span>
-									{/if}
-								</List.Value>
-							{/if}
-
-							{#if bestMap}
-								<List.Title>{t('Best map:')}</List.Title>
-								<List.Value class={valueRow}>
-									<span class="text-secondary-300 max-w-44 truncate">
-										{normalizeMapName(bestMap.map, false)}
-									</span>
-									<span class={statWins}>{t('{count}W', { count: bestMap.wins })}</span>
-									<span class="text-secondary-600">·</span>
-									<span class={statLosses}>{t('{count}L', { count: bestMap.losses })}</span>
-									<span
-										class="font-medium"
-										style:color={getRatioColor(bestMap.wins, bestMap.losses)}
-									>
-										{winratePercent(bestMap.wins, bestMap.losses)}
-									</span>
-								</List.Value>
-							{/if}
-
-							{#if mainFaction}
-								<List.Title>{t('Main faction:')}</List.Title>
-								<List.Value class={valueRow}>
-									<img
-										src={getFactionFlagFromRace(mainFaction.raceId)}
-										alt={getRaceLabel(mainFaction.raceId)}
-										class="size-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
-									/>
-									<span class="text-secondary-300">{getRaceLabel(mainFaction.raceId)}</span>
-									<span class={statWins}>{t('{count}W', { count: mainFaction.wins })}</span>
-									<span class="text-secondary-600">·</span>
-									<span class={statLosses}>{t('{count}L', { count: mainFaction.losses })}</span>
-								</List.Value>
-							{/if}
-
-							{#if formMatches.length > 0}
-								<List.Title>{t('Recent:')}</List.Title>
-								<List.Value
-									class="inline-flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto"
-								>
-									{#each formMatches as match (match.id || match.sessionId)}
-										<a
-											href={resolve('/(loaded)/history/[id]', { id: match.id })}
-											class={cn(interactive, 'group inline-flex shrink-0')}
-											aria-label="{match.outcome === 1
-												? t('Win')
-												: t('Loss')} — {recentMatchLabel(match)}"
-											{@attach tooltip(recentMatchTooltip(match))}
+										<span class={statWins}>{t('{count}W', { count: bestMap.wins })}</span>
+										<span class="text-secondary-600">·</span>
+										<span class={statLosses}>{t('{count}L', { count: bestMap.losses })}</span>
+										<span
+											class="font-medium"
+											style:color={getRatioColor(bestMap.wins, bestMap.losses)}
 										>
-											<Badge
-												variant={match.outcome === 1 ? 'success' : 'destructive'}
-												class={cn(
-													recentMatchBase,
-													match.outcome === 1 ? recentMatchWin : recentMatchLoss
-												)}
+											{winratePercent(bestMap.wins, bestMap.losses)}
+										</span>
+									</List.Value>
+								{/if}
+
+								{#if mainFaction}
+									<List.Title>{t('Main faction:')}</List.Title>
+									<List.Value class={valueRow}>
+										<img
+											src={getFactionFlagFromRace(mainFaction.raceId)}
+											alt={getRaceLabel(mainFaction.raceId)}
+											class="size-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
+										/>
+										<span class="text-secondary-300">{getRaceLabel(mainFaction.raceId)}</span>
+										<span class={statWins}>{t('{count}W', { count: mainFaction.wins })}</span>
+										<span class="text-secondary-600">·</span>
+										<span class={statLosses}>{t('{count}L', { count: mainFaction.losses })}</span>
+									</List.Value>
+								{/if}
+
+								{#if formMatches.length > 0}
+									<List.Title>{t('Recent:')}</List.Title>
+									<List.Value
+										class="inline-flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto"
+									>
+										{#each formMatches as match (match.id || match.sessionId)}
+											<a
+												href={resolve('/(loaded)/history/[id]', { id: match.id })}
+												class={cn(interactive, 'group inline-flex shrink-0')}
+												aria-label="{match.outcome === 1
+													? t('Win')
+													: t('Loss')} — {recentMatchLabel(match)}"
+												{@attach tooltip(recentMatchTooltip(match))}
 											>
-												{match.outcome === 1 ? t('W') : t('L')}
-											</Badge>
-										</a>
-									{/each}
-								</List.Value>
-							{/if}
-						</List.Root>
+												<Badge
+													variant={match.outcome === 1 ? 'success' : 'destructive'}
+													class={cn(
+														recentMatchBase,
+														match.outcome === 1 ? recentMatchWin : recentMatchLoss
+													)}
+												>
+													{match.outcome === 1 ? t('W') : t('L')}
+												</Badge>
+											</a>
+										{/each}
+									</List.Value>
+								{/if}
+							</List.Root>
+						</div>
 					</div>
 				</div>
 			</div>

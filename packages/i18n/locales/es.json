@@ -1247,5 +1247,6 @@
 	"Your overlay is hosted at the URL above. To customize it, open the overlay folder, edit files in src/, then build and publish:": "Tu overlay está alojado en la URL de arriba. Para personalizarlo, abre la carpeta del overlay, edita los archivos en src/, luego genera el build y publícalo:",
 	"Your profile, today’s matches, and live lobbies from other companion users. Open replays or the current game from here.": "Tu perfil, las partidas de hoy y los lobbies en vivo de otros usuarios del Companion. Abre replays o la partida actual desde aquí.",
 	"Your settings and account are automatically backed up to {dir}, outside the app's data folder. They survive updates, even when you choose to remove all app data.": "Tus ajustes y tu cuenta se respaldan automáticamente en {dir}, fuera de la carpeta de datos de la app. Sobreviven a las actualizaciones, incluso si eliges borrar todos los datos de la app.",
+	"YouTube": "YouTube",
 	"YouTube URL": "URL de YouTube"
 }

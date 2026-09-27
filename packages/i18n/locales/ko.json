@@ -1247,5 +1247,6 @@
 	"Your overlay is hosted at the URL above. To customize it, open the overlay folder, edit files in src/, then build and publish:": "오버레이는 위 URL에서 호스팅됩니다. 사용자 지정하려면 오버레이 폴더를 열고 src/의 파일을 편집한 뒤 빌드하고 게시하세요:",
 	"Your profile, today’s matches, and live lobbies from other companion users. Open replays or the current game from here.": "프로필, 오늘 경기, 다른 Companion 사용자의 실시간 로비. 여기서 리플레이나 현재 경기를 엽니다.",
 	"Your settings and account are automatically backed up to {dir}, outside the app's data folder. They survive updates, even when you choose to remove all app data.": "설정과 계정은 앱 데이터 폴더 밖의 {dir}에 자동 백업됩니다. 업데이트를 거쳐도, 앱 데이터를 모두 지워도 남습니다.",
+	"YouTube": "YouTube",
 	"YouTube URL": "YouTube URL"
 }
