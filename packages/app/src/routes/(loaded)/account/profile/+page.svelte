@@ -31,7 +31,6 @@
 	let previewUrl = $state<string | null>(null);
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
-	let saveSuccess = $state(false);
 
 	const steamId = $derived(
 		pickOwnedSteamId(app.features.auth.user.steamIds, [
@@ -129,7 +128,6 @@
 		backgroundFile = file;
 		previewUrl = URL.createObjectURL(file);
 		clearBackground = false;
-		saveSuccess = false;
 	}
 
 	async function saveProfile() {
@@ -138,7 +136,6 @@
 		}
 
 		saveError = null;
-		saveSuccess = false;
 		const links = buildProfileLinks({ twitchUrl, youtubeUrl, others: otherLinks });
 		if (links.isErr()) {
 			saveError = t(links.error.message);
@@ -167,7 +164,7 @@
 
 		backgroundFile = null;
 		clearBackground = false;
-		saveSuccess = true;
+		app.toast.success(t('Profile updated.'));
 	}
 </script>
 
@@ -289,9 +286,6 @@
 					</Button>
 					{#if saveError}
 						<p class="text-destructive text-sm">{saveError}</p>
-					{/if}
-					{#if saveSuccess}
-						<p class="text-success text-sm">{t('Profile updated.')}</p>
 					{/if}
 				</div>
 			{/snippet}

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Form from '@company-of-heroes/ui/form';
 	import { Input, Textarea } from '@company-of-heroes/ui/input';
@@ -10,10 +12,12 @@
 		splitProfileLinks
 	} from '@company-of-heroes/api';
 	import { href, useI18n } from '$lib/i18n';
+	import { toast } from '$lib/components/ui/toasts';
 	import {
 		loadProfileCustomization,
 		updateProfileCustomization
 	} from '$lib/remote/profile-customization.remote';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -37,10 +41,21 @@
 
 	const canAddOtherLink = $derived(otherLinks.length < PROFILE_OTHER_LINKS_MAX);
 	const formIssue = $derived(updateProfileCustomization.fields.allIssues()?.[0]?.message);
-	const saved = $derived(data.saved === '1');
+	const saving = $derived(Boolean(updateProfileCustomization.pending));
 	const otherLinksPayload = $derived(
 		JSON.stringify(otherLinks.map(({ label, url }) => ({ label, url })))
 	);
+
+	onMount(() => {
+		if (data.saved !== '1') {
+			return;
+		}
+
+		toast.success(t('Profile updated.'));
+		const next = new URL(page.url);
+		next.searchParams.delete('saved');
+		replaceState(`${next.pathname}${next.search}`, {});
+	});
 
 	function addOtherLink() {
 		if (!canAddOtherLink) {
@@ -81,12 +96,6 @@
 		{/if}
 	</div>
 </div>
-
-{#if saved}
-	<p class="text-success border-secondary-800 border-b px-4 py-3 text-sm">
-		{t('Profile updated.')}
-	</p>
-{/if}
 
 {#if !steamId}
 	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
@@ -211,7 +220,7 @@
 
 		<Form.Group>
 			{#snippet footer()}
-				<Button type="submit">{t('Save profile')}</Button>
+				<Button type="submit" loading={saving} disabled={saving}>{t('Save profile')}</Button>
 			{/snippet}
 		</Form.Group>
 	</form>

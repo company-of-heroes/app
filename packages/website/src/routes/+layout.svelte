@@ -5,6 +5,7 @@
 	import Footer from '$lib/components/layout/footer.svelte';
 	import I18nBoot from '$lib/components/i18n/i18n-boot.svelte';
 	import PlayerPreviewBoot from '$lib/components/player/player-preview-boot.svelte';
+	import { Toaster } from '$lib/components/ui/toasts';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
 	import { loadLatestDownload } from '$lib/site/download.svelte';
 	import { pageShell } from '$lib/utils/variants';
@@ -71,6 +72,7 @@
 				</div>
 				<Footer />
 			</div>
+			<Toaster />
 		</div>
 	</PlayerPreviewBoot>
 </I18nBoot>
