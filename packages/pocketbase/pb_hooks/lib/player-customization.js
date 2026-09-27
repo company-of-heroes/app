@@ -9,7 +9,6 @@ const MAX_BIO = 500;
 const MAX_LINKS = 6;
 const MAX_LABEL = 40;
 const MAX_FILE_BYTES = 5_242_880;
-const BACKGROUND_THUMB = '1600x0';
 const ALLOWED_MIME = {
 	'image/jpeg': true,
 	'image/jpg': true,
@@ -269,13 +268,20 @@ function filePublicUrl(record, filename, thumb) {
 		params.push(`thumb=${encodeURIComponent(thumb)}`);
 	}
 
-	// Bust browser image cache when the file is replaced (filename often stays similar).
+	// Bust browser image cache when the file is replaced.
 	const updated = record.get('updated');
 	if (updated) {
 		params.push(`v=${encodeURIComponent(String(updated))}`);
 	}
 
-	let path = `/api/files/${COLLECTION}/${record.id}/${encodeURIComponent(filename)}`;
+	const collectionId = (() => {
+		try {
+			return String(record.collection().id || COLLECTION);
+		} catch {
+			return COLLECTION;
+		}
+	})();
+	let path = `/api/files/${collectionId}/${record.id}/${encodeURIComponent(filename)}`;
 	if (params.length > 0) {
 		path += `?${params.join('&')}`;
 	}
@@ -295,10 +301,11 @@ function serializeRecord(record) {
 	const bio = String(record.get('bio') || '').trim();
 	const background = String(record.get('background') || '').trim();
 
+	// Serve the original file (not a thumb) so a failed thumb gen never breaks the preview.
 	return {
 		bio: bio || null,
 		links: linksFromRecord(record.get('links')),
-		backgroundUrl: filePublicUrl(record, background, BACKGROUND_THUMB)
+		backgroundUrl: filePublicUrl(record, background, '')
 	};
 }
 
@@ -462,65 +469,7 @@ function extensionForMime(mime, fallbackName) {
 		return 'webp';
 	}
 
-	// Prefer .jpeg so OS/PB mime maps never invent non-standard image/jpg.
 	return 'jpeg';
-}
-
-function byteAt(bytes, index) {
-	if (bytes == null || index < 0) {
-		return -1;
-	}
-
-	const value = bytes[index];
-	if (typeof value === 'number') {
-		return value & 0xff;
-	}
-
-	if (typeof bytes.charCodeAt === 'function') {
-		return bytes.charCodeAt(index) & 0xff;
-	}
-
-	return -1;
-}
-
-function sniffImageMime(bytes) {
-	const size = byteSize(bytes);
-	if (size < 3) {
-		return '';
-	}
-
-	// JPEG
-	if (byteAt(bytes, 0) === 0xff && byteAt(bytes, 1) === 0xd8 && byteAt(bytes, 2) === 0xff) {
-		return 'image/jpeg';
-	}
-
-	// PNG
-	if (
-		size >= 8 &&
-		byteAt(bytes, 0) === 0x89 &&
-		byteAt(bytes, 1) === 0x50 &&
-		byteAt(bytes, 2) === 0x4e &&
-		byteAt(bytes, 3) === 0x47
-	) {
-		return 'image/png';
-	}
-
-	// WEBP: RIFF....WEBP
-	if (
-		size >= 12 &&
-		byteAt(bytes, 0) === 0x52 &&
-		byteAt(bytes, 1) === 0x49 &&
-		byteAt(bytes, 2) === 0x46 &&
-		byteAt(bytes, 3) === 0x46 &&
-		byteAt(bytes, 8) === 0x57 &&
-		byteAt(bytes, 9) === 0x45 &&
-		byteAt(bytes, 10) === 0x42 &&
-		byteAt(bytes, 11) === 0x50
-	) {
-		return 'image/webp';
-	}
-
-	return '';
 }
 
 function mimeFromFilename(name) {
@@ -553,26 +502,8 @@ function readUploadedBackground(e) {
 	}
 
 	const uploaded = files[0];
-	const fallbackName = String(uploaded.name || 'background.jpeg').trim() || 'background.jpeg';
-	const declaredSize = Number(uploaded.size) || 0;
-	if (declaredSize > MAX_FILE_BYTES) {
-		throw new Error('Background must be 5 MB or smaller.');
-	}
-
-	// Prefer multipart → File so binary stays intact (toBytes/writeFile can corrupt images).
-	// Fall back to temp path + magic-byte sniff when we can read bytes.
-	const reader = uploaded.reader.open();
-	let bytes = null;
-	try {
-		if (typeof toBytes === 'function') {
-			bytes = toBytes(reader);
-		}
-	} finally {
-		reader.close();
-	}
-
-	const size = bytes != null ? byteSize(bytes) : declaredSize;
-	if (!size) {
+	const size = Number(uploaded.size) || 0;
+	if (size < 1) {
 		throw new Error('Background image is empty.');
 	}
 
@@ -580,30 +511,18 @@ function readUploadedBackground(e) {
 		throw new Error('Background must be 5 MB or smaller.');
 	}
 
-	const sniffed = bytes != null ? sniffImageMime(bytes) : '';
+	const fallbackName = String(uploaded.name || 'background.jpeg').trim() || 'background.jpeg';
 	const rawMime = String(uploaded.contentType || uploaded.type || '').toLowerCase();
 	const mime =
-		sniffed ||
 		(ALLOWED_MIME[rawMime] ? (rawMime === 'image/jpg' ? 'image/jpeg' : rawMime) : '') ||
 		mimeFromFilename(fallbackName);
 
-	if (!mime || !ALLOWED_MIME[mime === 'image/jpg' ? 'image/jpeg' : mime]) {
+	if (!mime) {
 		throw new Error('Background must be a jpeg, png, or webp image.');
 	}
 
-	const normalizedMime = mime === 'image/jpg' ? 'image/jpeg' : mime;
-	const ext = extensionForMime(normalizedMime, fallbackName);
-
-	if (bytes != null) {
-		const tempPath = `${$os.tempDir()}/player-bg-${Date.now()}-${String(Math.random()).slice(2, 10)}.${ext}`;
-		$os.writeFile(tempPath, bytes, 0o644);
-		return { tempPath, fallbackName: `background.${ext}` };
-	}
-
-	return {
-		file: $filesystem.fileFromMultipart(uploaded),
-		fallbackName: `background.${ext}`
-	};
+	// Keep the multipart file intact — rewriting via toBytes/temp corrupted images.
+	return { file: $filesystem.fileFromMultipart(uploaded) };
 }
 
 function handleGet(e) {

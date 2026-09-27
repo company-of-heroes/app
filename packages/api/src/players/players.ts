@@ -109,6 +109,34 @@ function normalizeBackgroundMime(type: string | undefined, filename: string): st
 	return backgroundMimeFromName(filename);
 }
 
+function absolutizeBackgroundUrl(url: string | null | undefined, baseUrl: string): string | null {
+	if (!url) {
+		return null;
+	}
+
+	const trimmed = url.trim();
+	if (!trimmed) {
+		return null;
+	}
+
+	if (/^https?:\/\//i.test(trimmed)) {
+		return trimmed;
+	}
+
+	const base = normalizeBaseUrl(baseUrl).replace(/\/$/, '');
+	return trimmed.startsWith('/') ? `${base}${trimmed}` : `${base}/${trimmed}`;
+}
+
+function withAbsoluteBackground(
+	customization: PlayerCustomization,
+	baseUrl: string
+): PlayerCustomization {
+	return {
+		...customization,
+		backgroundUrl: absolutizeBackgroundUrl(customization.backgroundUrl, baseUrl)
+	};
+}
+
 export class PlayersApi {
 	constructor(private deps: ApiDeps) {}
 
@@ -171,7 +199,7 @@ export class PlayersApi {
 					}
 				}
 			}
-		);
+		).map((data) => withAbsoluteBackground(data, this.deps.baseUrl));
 	}
 
 	updateCustomization(
@@ -226,7 +254,7 @@ export class PlayersApi {
 						);
 					}
 				}
-			});
+			}).map((data) => withAbsoluteBackground(data, this.deps.baseUrl));
 
 		if (!input.background) {
 			return post(buildForm());

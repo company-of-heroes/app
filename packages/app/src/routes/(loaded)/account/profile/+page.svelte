@@ -117,12 +117,6 @@
 				.filter((link) => link.type === 'other')
 				.map((link) => ({ id: crypto.randomUUID(), label: link.label ?? '', url: link.url }));
 			clearBackground = false;
-			if (previewUrl) {
-				URL.revokeObjectURL(previewUrl);
-			}
-
-			previewUrl = null;
-			backgroundFile = null;
 		}
 	);
 
@@ -241,6 +235,13 @@
 		}
 
 		customization.mutate(result.value);
+		if (previewUrl) {
+			URL.revokeObjectURL(previewUrl);
+			previewUrl = null;
+		}
+
+		backgroundFile = null;
+		clearBackground = false;
 		saveSuccess = true;
 	}
 </script>
