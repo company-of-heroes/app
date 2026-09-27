@@ -490,12 +490,29 @@ function readUploadedBackground(e) {
 	}
 
 	const uploaded = files[0];
-	const mime = String(uploaded.contentType || uploaded.type || '').toLowerCase();
-	if (mime && !ALLOWED_MIME[mime]) {
+	const fallbackName = String(uploaded.name || 'background.jpg').trim() || 'background.jpg';
+	const rawMime = String(uploaded.contentType || uploaded.type || '').toLowerCase();
+	const mimeFromName = (() => {
+		const lower = fallbackName.toLowerCase();
+		if (lower.endsWith('.png')) {
+			return 'image/png';
+		}
+
+		if (lower.endsWith('.webp')) {
+			return 'image/webp';
+		}
+
+		if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+			return 'image/jpeg';
+		}
+
+		return '';
+	})();
+	const mime = ALLOWED_MIME[rawMime] ? rawMime : mimeFromName;
+	if (!mime || !ALLOWED_MIME[mime]) {
 		throw new Error('Background must be a jpeg, png, or webp image.');
 	}
 
-	const fallbackName = String(uploaded.name || 'background.jpg').trim() || 'background.jpg';
 	const ext = extensionForMime(mime, fallbackName);
 	const tempPath = `${$os.tempDir()}/player-bg-${Date.now()}-${String(Math.random()).slice(2, 10)}.${ext}`;
 
@@ -534,7 +551,8 @@ function applyCustomizationFields(record, authId, steamId, bio, links, options) 
 	record.set('steam_id', steamId);
 	record.set('user', authId);
 	record.set('bio', bio);
-	record.set('links', links);
+	// JSON fields are more reliable as a string in the JSVM.
+	record.set('links', JSON.stringify(links));
 
 	if (options.clearBackground && !options.uploadTempPath) {
 		record.set('background', null);
@@ -688,7 +706,13 @@ function handleUpdate(e) {
 		}
 
 		console.warn('[player-customization] save', String(error?.message || error));
-		return jsonNoStore(e, 500, { message: 'Could not update your profile.' });
+		const detail = String(error?.message || error || '').trim();
+		return jsonNoStore(e, 500, {
+			message:
+				detail && detail.length < 180 && !/stack|goroutine|panic/i.test(detail)
+					? detail
+					: 'Could not update your profile.'
+		});
 	}
 }
 

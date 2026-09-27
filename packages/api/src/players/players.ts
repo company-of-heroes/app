@@ -80,6 +80,35 @@ const playerCustomizationSchema: z.ZodType<PlayerCustomization> = z.object({
 
 const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
 
+const ALLOWED_BACKGROUND_MIME: Record<string, string> = {
+	'image/jpeg': 'image/jpeg',
+	'image/jpg': 'image/jpeg',
+	'image/png': 'image/png',
+	'image/webp': 'image/webp'
+};
+
+function backgroundMimeFromName(name: string): string {
+	const lower = name.toLowerCase();
+	if (lower.endsWith('.png')) {
+		return 'image/png';
+	}
+
+	if (lower.endsWith('.webp')) {
+		return 'image/webp';
+	}
+
+	return 'image/jpeg';
+}
+
+function normalizeBackgroundMime(type: string | undefined, filename: string): string {
+	const normalized = ALLOWED_BACKGROUND_MIME[String(type || '').toLowerCase().trim()];
+	if (normalized) {
+		return normalized;
+	}
+
+	return backgroundMimeFromName(filename);
+}
+
 export class PlayersApi {
 	constructor(private deps: ApiDeps) {}
 
@@ -196,10 +225,6 @@ export class PlayersApi {
 							'Link this Steam ID to your account before editing that profile.'
 						);
 					}
-
-					if (status === 400) {
-						return apiError(400, 'Could not update your profile.');
-					}
 				}
 			});
 
@@ -219,8 +244,9 @@ export class PlayersApi {
 				return errAsync(apiError(400, 'Background must be 5 MB or smaller.'));
 			}
 
-			const file = new File([bytes], input.background!.name || 'background.jpg', {
-				type: input.background!.type || 'image/jpeg'
+			const filename = input.background!.name || 'background.jpg';
+			const file = new File([bytes], filename, {
+				type: normalizeBackgroundMime(input.background!.type, filename)
 			});
 			return post(buildForm(file));
 		});

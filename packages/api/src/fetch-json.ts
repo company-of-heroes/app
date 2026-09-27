@@ -4,6 +4,15 @@ import { apiError, type ApiError } from './errors';
 
 const DEFAULT_TIMEOUT_MS = 8_000;
 
+function messageFromBody(json: unknown, fallback: string): string {
+	if (typeof json !== 'object' || json === null) {
+		return fallback;
+	}
+
+	const message = (json as { message?: unknown }).message;
+	return typeof message === 'string' && message.trim() ? message.trim() : fallback;
+}
+
 export function fetchJson<T>(
 	fetchFn: typeof fetch,
 	url: string,
@@ -20,13 +29,22 @@ export function fetchJson<T>(
 	return ResultAsync.fromPromise(fetchFn(url, { ...options.init, signal }), () =>
 		apiError(500, options.fallback)
 	).andThen((response) => {
-		const mapped = options.onStatus?.(response.status);
-		if (mapped) {
-			return errAsync(mapped);
-		}
-
 		if (!response.ok) {
-			return errAsync(apiError(500, options.fallback));
+			return ResultAsync.fromSafePromise(
+				response.json().then(
+					(json) => json as unknown,
+					() => null as unknown
+				)
+			).andThen((json) => {
+				const mapped = options.onStatus?.(response.status);
+				if (mapped) {
+					return errAsync(apiError(mapped.status, messageFromBody(json, mapped.message)));
+				}
+
+				return errAsync(
+					apiError(response.status || 500, messageFromBody(json, options.fallback))
+				);
+			});
 		}
 
 		return ResultAsync.fromPromise(response.json() as Promise<unknown>, () =>

@@ -107,10 +107,34 @@ const updateProfileCustomizationSchema = z.object({
 			message: 'Background must be 5 MB or smaller.'
 		})
 		.refine(
-			(file) =>
-				!file ||
-				file.size === 0 ||
-				['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type),
+			(file) => {
+				if (!file || file.size === 0) {
+					return true;
+				}
+
+				const type = String(file.type || '').toLowerCase();
+				if (
+					type === 'image/jpeg' ||
+					type === 'image/jpg' ||
+					type === 'image/png' ||
+					type === 'image/webp'
+				) {
+					return true;
+				}
+
+				// Cloudflare / some browsers send octet-stream; accept by extension.
+				if (type && type !== 'application/octet-stream') {
+					return false;
+				}
+
+				const name = file.name.toLowerCase();
+				return (
+					name.endsWith('.jpg') ||
+					name.endsWith('.jpeg') ||
+					name.endsWith('.png') ||
+					name.endsWith('.webp')
+				);
+			},
 			{ message: 'Background must be a jpeg, png, or webp image.' }
 		)
 });
@@ -141,9 +165,24 @@ export const updateProfileCustomization = form(updateProfileCustomizationSchema,
 
 	const background =
 		data.background && data.background.size > 0
-			? new File([data.background], data.background.name || 'background.jpg', {
-					type: data.background.type || 'image/jpeg'
-				})
+			? (() => {
+					const name = data.background.name || 'background.jpg';
+					const type = String(data.background.type || '').toLowerCase();
+					const allowed =
+						type === 'image/jpeg' ||
+						type === 'image/jpg' ||
+						type === 'image/png' ||
+						type === 'image/webp';
+					const lower = name.toLowerCase();
+					const fromName = lower.endsWith('.png')
+						? 'image/png'
+						: lower.endsWith('.webp')
+							? 'image/webp'
+							: 'image/jpeg';
+					return new File([data.background], name, {
+						type: allowed ? (type === 'image/jpg' ? 'image/jpeg' : type) : fromName
+					});
+				})()
 			: undefined;
 
 	const result = await locals.services.players().updateCustomization({
