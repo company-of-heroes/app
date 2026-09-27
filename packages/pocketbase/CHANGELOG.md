@@ -1,5 +1,11 @@
 # @company-of-heroes/pocketbase
 
+## 0.12.0
+
+- fix; save match replay on abrupt game exit and prefer longer participant replays
+- feat; add public player profile customization (bio, links, background), including dashboard hero
+- fix; close match-history and ELO ingest holes, stop fake empty performance, and harden replay/log save paths
+
 ## 0.11.1
 
 - fix; load opponent rank badges in player match history (relic personalstat batch limit)

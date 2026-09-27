@@ -1,5 +1,11 @@
 # @company-of-heroes/api
 
+## 0.4.0
+
+- fix; save match replay on abrupt game exit and prefer longer participant replays
+- feat; add public player profile customization (bio, links, background), including dashboard hero
+- fix; close match-history and ELO ingest holes, stop fake empty performance, and harden replay/log save paths
+
 ## 0.3.1
 
 - fix; allow slower cold player-page loads before timing out
