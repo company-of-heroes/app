@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.6.1
+
+- fix; keep the account menu above page content so its actions stay clickable
+
 ## 0.6.0
 
 - fix; scroll the leaderboard top 3 away with the rest of the page
