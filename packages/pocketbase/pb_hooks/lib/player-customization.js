@@ -489,40 +489,127 @@ function mimeFromFilename(name) {
 	return '';
 }
 
-function readUploadedBackground(e) {
-	let files;
-	try {
-		files = e.findUploadedFiles('background');
-	} catch {
+function byteAt(bytes, index) {
+	if (bytes == null || index < 0) {
+		return -1;
+	}
+
+	const value = bytes[index];
+	if (typeof value === 'number') {
+		return value & 0xff;
+	}
+
+	if (typeof bytes.charCodeAt === 'function') {
+		return bytes.charCodeAt(index) & 0xff;
+	}
+
+	return -1;
+}
+
+function sniffImageMime(bytes) {
+	const size = byteSize(bytes);
+	if (size < 3) {
+		return '';
+	}
+
+	if (byteAt(bytes, 0) === 0xff && byteAt(bytes, 1) === 0xd8 && byteAt(bytes, 2) === 0xff) {
+		return 'image/jpeg';
+	}
+
+	if (
+		size >= 8 &&
+		byteAt(bytes, 0) === 0x89 &&
+		byteAt(bytes, 1) === 0x50 &&
+		byteAt(bytes, 2) === 0x4e &&
+		byteAt(bytes, 3) === 0x47
+	) {
+		return 'image/png';
+	}
+
+	if (
+		size >= 12 &&
+		byteAt(bytes, 0) === 0x52 &&
+		byteAt(bytes, 1) === 0x49 &&
+		byteAt(bytes, 2) === 0x46 &&
+		byteAt(bytes, 3) === 0x46 &&
+		byteAt(bytes, 8) === 0x57 &&
+		byteAt(bytes, 9) === 0x45 &&
+		byteAt(bytes, 10) === 0x42 &&
+		byteAt(bytes, 11) === 0x50
+	) {
+		return 'image/webp';
+	}
+
+	return '';
+}
+
+/** Decode standard base64 into a number[] suitable for $filesystem.fileFromBytes. */
+function base64ToBytes(b64) {
+	const cleaned = String(b64 || '')
+		.replace(/^data:[^;]+;base64,/i, '')
+		.replace(/\s+/g, '');
+	if (!cleaned) {
 		return null;
 	}
 
-	if (!files || !files.length) {
+	const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+	const bytes = [];
+	let buffer = 0;
+	let bits = 0;
+
+	for (let i = 0; i < cleaned.length; i++) {
+		const ch = cleaned.charAt(i);
+		if (ch === '=') {
+			break;
+		}
+
+		const val = alphabet.indexOf(ch);
+		if (val < 0) {
+			continue;
+		}
+
+		buffer = (buffer << 6) | val;
+		bits += 6;
+		if (bits >= 8) {
+			bits -= 8;
+			bytes.push((buffer >> bits) & 0xff);
+		}
+	}
+
+	return bytes.length > 0 ? bytes : null;
+}
+
+/**
+ * Background uploads arrive as base64 fields (not multipart).
+ * Multipart + requestInfo().body races delete PB's temp file before save.
+ */
+function readBackgroundFromBody(body) {
+	const b64 = bodyField(body, 'backgroundBase64').trim();
+	if (!b64) {
 		return null;
 	}
 
-	const uploaded = files[0];
-	const size = Number(uploaded.size) || 0;
-	if (size < 1) {
+	const bytes = base64ToBytes(b64);
+	if (!bytes || !bytes.length) {
 		throw new Error('Background image is empty.');
 	}
 
-	if (size > MAX_FILE_BYTES) {
+	if (bytes.length > MAX_FILE_BYTES) {
 		throw new Error('Background must be 5 MB or smaller.');
 	}
 
-	const fallbackName = String(uploaded.name || 'background.jpeg').trim() || 'background.jpeg';
-	const rawMime = String(uploaded.contentType || uploaded.type || '').toLowerCase();
-	const mime =
-		(ALLOWED_MIME[rawMime] ? (rawMime === 'image/jpg' ? 'image/jpeg' : rawMime) : '') ||
-		mimeFromFilename(fallbackName);
-
-	if (!mime) {
+	const fallbackName = bodyField(body, 'backgroundName').trim() || 'background.jpeg';
+	const sniffed = sniffImageMime(bytes);
+	const mime = sniffed || mimeFromFilename(fallbackName);
+	if (!mime || !ALLOWED_MIME[mime]) {
 		throw new Error('Background must be a jpeg, png, or webp image.');
 	}
 
-	// Keep the multipart file intact — rewriting via toBytes/temp corrupted images.
-	return { file: $filesystem.fileFromMultipart(uploaded) };
+	const ext = extensionForMime(mime, fallbackName);
+	return {
+		bytes,
+		name: `background.${ext}`
+	};
 }
 
 function handleGet(e) {
@@ -531,7 +618,6 @@ function handleGet(e) {
 		return jsonWithCors(e, 400, { message: 'Enter a valid Steam ID64.' }, 'no-store');
 	}
 
-	// Owner-edited fields; never serve a stale bio/links/background after a save.
 	return jsonWithCors(e, 200, loadCustomization(steamId), 'no-store');
 }
 
@@ -539,15 +625,14 @@ function applyCustomizationFields(record, authId, steamId, bio, links, options) 
 	record.set('steam_id', steamId);
 	record.set('user', authId);
 	record.set('bio', bio);
-	// JSON fields are more reliable as a string in the JSVM.
 	record.set('links', JSON.stringify(links));
 
-	if (options.clearBackground && !options.uploadTempPath && !options.uploadFile) {
+	if (options.clearBackground && !options.uploadBytes) {
 		record.set('background', null);
 	}
 
-	if (options.uploadFile) {
-		record.set('background', options.uploadFile);
+	if (options.uploadBytes && options.uploadName) {
+		record.set('background', $filesystem.fileFromBytes(options.uploadBytes, options.uploadName));
 	} else if (options.uploadTempPath) {
 		record.set('background', $filesystem.fileFromPath(options.uploadTempPath));
 	}
@@ -582,39 +667,23 @@ function handleUpdate(e) {
 		return jsonNoStore(e, 401, { message: 'Log in to update your profile.' });
 	}
 
-	let upload = null;
-	try {
-		upload = readUploadedBackground(e);
-	} catch (error) {
-		return jsonNoStore(e, 400, { message: String(error?.message || error) });
-	}
-
 	const body = e.requestInfo()?.body || {};
 	const steamId = parseSteamId(bodyField(body, 'steamId'));
 	if (!steamId) {
-		if (upload?.tempPath) {
-			try {
-				$os.remove(upload.tempPath);
-			} catch {
-				// ignore
-			}
-		}
-
 		return jsonNoStore(e, 400, { message: 'Enter a valid Steam ID64.' });
 	}
 
 	if (!authOwnsSteamId(e.auth, steamId)) {
-		if (upload?.tempPath) {
-			try {
-				$os.remove(upload.tempPath);
-			} catch {
-				// ignore
-			}
-		}
-
 		return jsonNoStore(e, 403, {
 			message: 'Link this Steam ID to your account before editing that profile.'
 		});
+	}
+
+	let upload = null;
+	try {
+		upload = readBackgroundFromBody(body);
+	} catch (error) {
+		return jsonNoStore(e, 400, { message: String(error?.message || error) });
 	}
 
 	let links = [];
@@ -626,14 +695,6 @@ function handleUpdate(e) {
 			links = parseLinks(linksRaw);
 		}
 	} catch (error) {
-		if (upload?.tempPath) {
-			try {
-				$os.remove(upload.tempPath);
-			} catch {
-				// ignore
-			}
-		}
-
 		return jsonNoStore(e, 400, { message: String(error?.message || error) });
 	}
 
@@ -643,8 +704,9 @@ function handleUpdate(e) {
 		bodyField(body, 'clearBackground') === 'true';
 	const fieldOptions = {
 		clearBackground,
-		uploadTempPath: upload && upload.tempPath ? upload.tempPath : '',
-		uploadFile: upload && upload.file ? upload.file : null
+		uploadBytes: upload ? upload.bytes : null,
+		uploadName: upload ? upload.name : '',
+		uploadTempPath: ''
 	};
 
 	try {
@@ -658,20 +720,16 @@ function handleUpdate(e) {
 		$app.save(record);
 
 		let copiedBackground = '';
-		// Don't reuse the multipart File across records — copy from the saved primary.
 		const syncOptions = {
 			clearBackground,
-			uploadTempPath: '',
-			uploadFile: null
+			uploadBytes: fieldOptions.uploadBytes,
+			uploadName: fieldOptions.uploadName,
+			uploadTempPath: ''
 		};
-		if (!clearBackground) {
-			if (fieldOptions.uploadTempPath) {
-				syncOptions.uploadTempPath = fieldOptions.uploadTempPath;
-			} else {
-				copiedBackground = backgroundTempFromRecord(record);
-				if (copiedBackground) {
-					syncOptions.uploadTempPath = copiedBackground;
-				}
+		if (!clearBackground && !syncOptions.uploadBytes) {
+			copiedBackground = backgroundTempFromRecord(record);
+			if (copiedBackground) {
+				syncOptions.uploadTempPath = copiedBackground;
 			}
 		}
 
@@ -687,24 +745,8 @@ function handleUpdate(e) {
 			}
 		}
 
-		if (upload?.tempPath) {
-			try {
-				$os.remove(upload.tempPath);
-			} catch {
-				// ignore
-			}
-		}
-
 		return jsonNoStore(e, 200, serializeRecord(record));
 	} catch (error) {
-		if (upload?.tempPath) {
-			try {
-				$os.remove(upload.tempPath);
-			} catch {
-				// ignore
-			}
-		}
-
 		console.warn('[player-customization] save', String(error?.message || error));
 		const detail = String(error?.message || error || '').trim();
 		return jsonNoStore(e, 500, {

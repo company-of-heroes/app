@@ -1,7 +1,8 @@
 ---
 '@company-of-heroes/app': patch
+'@company-of-heroes/website': patch
 '@company-of-heroes/api': patch
 '@company-of-heroes/pocketbase': patch
 ---
 
-fix; reliably upload and show profile background images
+fix; upload profile backgrounds as base64 instead of multipart (avoids PocketBase temp-file races)

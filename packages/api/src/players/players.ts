@@ -210,7 +210,7 @@ export class PlayersApi {
 			return errAsync(apiError(400, 'Enter a valid Steam ID64.'));
 		}
 
-		const buildForm = (background?: File) => {
+		const buildForm = (background?: { base64: string; name: string }) => {
 			const formData = new FormData();
 			formData.append('steamId', steamId);
 			if (input.bio !== undefined) {
@@ -226,7 +226,8 @@ export class PlayersApi {
 			}
 
 			if (background) {
-				formData.append('background', background, background.name || 'background.jpg');
+				formData.append('backgroundBase64', background.base64);
+				formData.append('backgroundName', background.name);
 			}
 
 			return formData;
@@ -272,23 +273,30 @@ export class PlayersApi {
 				return errAsync(apiError(400, 'Background must be 5 MB or smaller.'));
 			}
 
-			const filename = input.background!.name || 'background.jpg';
-			const mime = normalizeBackgroundMime(input.background!.type, filename);
-			const lower = filename.toLowerCase();
+			const mime = normalizeBackgroundMime(
+				input.background!.type,
+				input.background!.name || 'background.jpg'
+			);
 			const safeName =
 				mime === 'image/png'
-					? lower.endsWith('.png')
-						? filename
-						: 'background.png'
+					? 'background.png'
 					: mime === 'image/webp'
-						? lower.endsWith('.webp')
-							? filename
-							: 'background.webp'
-						: lower.endsWith('.jpeg') || lower.endsWith('.jpg')
-							? filename.replace(/\.jpg$/i, '.jpeg')
-							: 'background.jpeg';
-			const file = new File([bytes], safeName, { type: mime });
-			return post(buildForm(file));
+						? 'background.webp'
+						: 'background.jpeg';
+
+			// Avoid multipart file fields — PB hooks race and delete the temp before save.
+			let binary = '';
+			const chunk = 0x8000;
+			for (let i = 0; i < bytes.length; i += chunk) {
+				binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+			}
+
+			return post(
+				buildForm({
+					base64: btoa(binary),
+					name: safeName
+				})
+			);
 		});
 	}
 }

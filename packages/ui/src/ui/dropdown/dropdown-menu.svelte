@@ -76,7 +76,7 @@
 			{alignOffset}
 			class={cn(
 				dropdownPanel,
-				'z-50',
+				'relative z-50',
 				'w-[229px]',
 				'data-[state=closed]:pointer-events-none data-[state=closed]:hidden',
 				className
