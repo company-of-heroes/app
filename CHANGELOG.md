@@ -1,3 +1,11 @@
+### v0.65.0
+
+- fix; keep navigation client-side after a refresh
+- fix; save match replay on abrupt game exit and prefer longer participant replays
+- fix; scroll the leaderboard top 3 away with the rest of the page
+- feat; add public player profile customization (bio, links, background), including dashboard hero
+- fix; close match-history and ELO ingest holes, stop fake empty performance, and harden replay/log save paths
+
 ### v0.64.4
 
 - fix; load opponent rank badges in player match history (relic personalstat batch limit)

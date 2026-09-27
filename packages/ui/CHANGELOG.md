@@ -1,5 +1,11 @@
 # @company-of-heroes/ui
 
+## 0.6.0
+
+- fix; scroll the leaderboard top 3 away with the rest of the page
+- feat; add public player profile customization (bio, links, background), including dashboard hero
+- fix; close match-history and ELO ingest holes, stop fake empty performance, and harden replay/log save paths
+
 ## 0.5.2
 
 - enhance; give primary buttons a subtle top light edge instead of a flat outline

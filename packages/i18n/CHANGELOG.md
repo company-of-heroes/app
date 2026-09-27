@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.1.8
+
+- feat; add public player profile customization (bio, links, background), including dashboard hero
+
 ## 0.1.7
 
 - fix; stop community replay pages from hanging on fat lobby player payloads

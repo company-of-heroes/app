@@ -1,5 +1,12 @@
 # @company-of-heroes/website
 
+## 1.8.0
+
+- fix; keep navigation client-side after a refresh
+- feat; add public player profile customization (bio, links, background), including dashboard hero
+- fix; strip custom replay metadata from website downloads
+- fix; close match-history and ELO ingest holes, stop fake empty performance, and harden replay/log save paths
+
 ## 1.7.3
 
 - fix; stream home page sections so navigating to `/` updates immediately
