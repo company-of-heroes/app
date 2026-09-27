@@ -269,9 +269,7 @@ function toCommunityPlayers(rawPlayers) {
 		const steamId = normalizeSteamId(player.steamId);
 		const faction = String(player.faction || '').trim();
 		const doctrineName = String(player.doctrineName || '').trim();
-		const localId = Number(player.id);
-		let profileId =
-			Number.isFinite(localId) && localId > 0 && localId < 1000 ? localId : i + 1;
+		let profileId = 0;
 
 		if (steamId) {
 			try {
@@ -283,12 +281,12 @@ function toCommunityPlayers(rawPlayers) {
 					}
 				}
 			} catch {
-				// keep fallback profile id
+				// no rating row — leave profile unset
 			}
 		}
 
 		out.push({
-			playerId: profileId,
+			playerId: profileId > 0 ? profileId : -1,
 			steamId,
 			race: raceFromFaction(faction),
 			faction: faction || undefined,
@@ -1463,13 +1461,19 @@ function handleDownload(e) {
 				counted: false
 			});
 		}
-		const next = count + 1;
-		record.set('downloadCount', next);
-		$app.save(record);
+		$app
+			.db()
+			.newQuery(
+				'UPDATE replays SET downloadCount = COALESCE(downloadCount, 0) + 1 WHERE id = {:id}'
+			)
+			.bind({ id })
+			.execute();
+		const fresh = $app.findRecordById('replays', id);
+		const next = Number(fresh.get('downloadCount')) || 0;
 		if (saved.firstId) {
 			try {
 				require(`${__hooks}/lib/reputation.js`).awardReplayDownload({
-					uploaderId: record.get('createdBy'),
+					uploaderId: fresh.get('createdBy'),
 					downloaderId: '',
 					sourceId: saved.firstId
 				});

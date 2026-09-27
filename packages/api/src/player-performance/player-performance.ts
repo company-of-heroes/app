@@ -1,4 +1,4 @@
-import { ok, ResultAsync } from 'neverthrow';
+import { err, ok, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
 import type { ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
@@ -116,13 +116,14 @@ export class PlayerPerformanceApi {
 				fetch: this.deps.fetch
 			}),
 			() => apiError(500, 'Failed to load player performance.')
-		)
-			.map((value) => {
-				const parsed = performanceSchema.safeParse(value);
-				const result = parsed.success ? parsed.data : emptyPlayerPerformance();
-				performanceCache.set(key, { at: Date.now(), value: result });
-				return result;
-			})
-			.orElse(() => ok(emptyPlayerPerformance()));
+		).andThen((value) => {
+			const parsed = performanceSchema.safeParse(value);
+			if (!parsed.success) {
+				return err(apiError(500, 'Failed to load player performance.'));
+			}
+
+			performanceCache.set(key, { at: Date.now(), value: parsed.data });
+			return ok(parsed.data);
+		});
 	}
 }

@@ -199,12 +199,44 @@ function metaFilters(scope, steamIds, bindings) {
 	return filters;
 }
 
+function profileBelongsToSteamIds(profileId, steamIds) {
+	const id = Number(profileId);
+	if (!Number.isInteger(id) || id <= 0 || !steamIds || steamIds.length === 0) {
+		return false;
+	}
+
+	try {
+		const record = require(`${__hooks}/lib/player-ratings.js`).findByProfileId(id);
+		if (!record) {
+			return false;
+		}
+
+		const steamId = String(record.get('steamId') || '');
+		return steamIds.indexOf(steamId) !== -1;
+	} catch {
+		return false;
+	}
+}
+
 function userIndexIdentity(steamIds, bindings) {
 	const parts = [];
 	if (steamIds.length > 0) {
 		parts.push(steamIdClause(steamIds, bindings));
 	}
-	parts.push('i.profile_id = {:profileId}');
+
+	const profileId = Number(bindings.profileId);
+	const allowProfile =
+		Number.isInteger(profileId) &&
+		profileId > 0 &&
+		(steamIds.length === 0 || profileBelongsToSteamIds(profileId, steamIds));
+	if (allowProfile) {
+		parts.push('i.profile_id = {:profileId}');
+	}
+
+	if (parts.length === 0) {
+		return '1 = 0';
+	}
+
 	return `(${parts.join(' OR ')})`;
 }
 
@@ -265,19 +297,29 @@ function jsonMatchesSql(scope, profileId, bindings, steamIds) {
 		notHiddenSessionClause('l.sessionId'),
 		notHiddenTitleClause(lobbyDescriptionSql('l'))
 	];
-	const playerClauses = ["CAST(json_extract(p.value, '$.profile_id') AS INTEGER) = {:profileId}"];
+	const playerClauses = [];
 
 	if (scope === 'community') {
 		bindings.csvNeedle = `%,${profileId},%`;
 		lobbyFilters.push('l.playerProfileIdsCsv LIKE {:csvNeedle}');
+		playerClauses.push("CAST(json_extract(p.value, '$.profile_id') AS INTEGER) = {:profileId}");
 	} else {
+		const allowProfile =
+			profileId &&
+			((steamIds || []).length === 0 || profileBelongsToSteamIds(profileId, steamIds || []));
 		lobbyFilters.push(
 			userPlayedLobbyClause(
 				'l',
-				{ steamIds: steamIds || [], profileIds: profileId ? [profileId] : [] },
+				{
+					steamIds: steamIds || [],
+					profileIds: allowProfile ? [profileId] : []
+				},
 				bindings
 			)
 		);
+		if (allowProfile) {
+			playerClauses.push("CAST(json_extract(p.value, '$.profile_id') AS INTEGER) = {:profileId}");
+		}
 		playerClauses.push(`json_extract(p.value, '$.steamId') IN (
 			SELECT json_each.value
 			FROM json_each((SELECT steamIds FROM users WHERE id = {:userId}))
@@ -497,8 +539,14 @@ function loadRecentMatches(profileId, scope, userId, steamIds) {
 
 	const { userPlayedLobbyClause } = require(`${__hooks}/lib/match-history.js`);
 	const bindings = { profileId, userId, lobbyLimit: 50, formLimit: FORM_LIMIT * 4 };
-	const playerClauses = [
-		"CAST(json_extract(p.value, '$.profile_id') AS INTEGER) = {:profileId}",
+	const allowProfile =
+		profileId &&
+		((steamIds || []).length === 0 || profileBelongsToSteamIds(profileId, steamIds || []));
+	const playerClauses = [];
+	if (allowProfile) {
+		playerClauses.push("CAST(json_extract(p.value, '$.profile_id') AS INTEGER) = {:profileId}");
+	}
+	playerClauses.push(
 		`json_extract(p.value, '$.steamId') IN (
 			SELECT json_each.value
 			FROM json_each((SELECT steamIds FROM users WHERE id = {:userId}))
@@ -507,11 +555,11 @@ function loadRecentMatches(profileId, scope, userId, steamIds) {
 			SELECT '/steam/' || json_each.value
 			FROM json_each((SELECT steamIds FROM users WHERE id = {:userId}))
 		)`
-	];
+	);
 	const hidden = require(`${__hooks}/lib/hidden-matches.js`);
 	const played = userPlayedLobbyClause(
 		's',
-		{ steamIds, profileIds: profileId ? [profileId] : [] },
+		{ steamIds, profileIds: allowProfile ? [profileId] : [] },
 		bindings
 	);
 

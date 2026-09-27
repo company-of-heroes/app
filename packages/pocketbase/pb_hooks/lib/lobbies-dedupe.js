@@ -92,6 +92,148 @@ function deleteLobby(id) {
 	}
 }
 
+function relationId(value) {
+	if (!value) {
+		return '';
+	}
+
+	if (typeof value === 'object') {
+		return String(value.id || '');
+	}
+
+	return String(value);
+}
+
+/**
+ * Copy replay / engagement fields from losers onto the keeper before delete,
+ * so a completed row without a file does not erase a sibling's .rec.
+ */
+function mergeIntoKeeper(keeperId, loserIds) {
+	if (!keeperId || !loserIds || loserIds.length === 0) {
+		return;
+	}
+
+	let keeper;
+	try {
+		keeper = $app.findRecordById('lobbies', keeperId);
+	} catch (error) {
+		console.warn('[lobbies_dedupe] keeper missing', keeperId, String(error?.message || error));
+		return;
+	}
+
+	let dirty = false;
+	let downloadTotal = Number(keeper.get('downloadCount')) || 0;
+	let likeCount = Number(keeper.get('likeCount')) || 0;
+	let keeperHasReplay = !!keeper.get('hasReplay') || !!String(keeper.get('replay') || '').trim();
+	let keeperMember = relationId(keeper.get('memberReplay'));
+
+	for (let i = 0; i < loserIds.length; i++) {
+		let loser;
+		try {
+			loser = $app.findRecordById('lobbies', loserIds[i]);
+		} catch {
+			continue;
+		}
+
+		downloadTotal += Number(loser.get('downloadCount')) || 0;
+		const loserLikes = Number(loser.get('likeCount')) || 0;
+		if (loserLikes > likeCount) {
+			likeCount = loserLikes;
+		}
+
+		const loserReplayName = String(loser.get('replay') || '').trim();
+		const loserHasReplay = !!loser.get('hasReplay') || !!loserReplayName;
+		if (!keeperHasReplay && loserHasReplay && loserReplayName) {
+			let tempPath = '';
+			const fsys = $app.newFilesystem();
+			try {
+				tempPath = `${$os.tempDir()}/dedupe-replay-${Date.now()}-${String(Math.random()).slice(2, 10)}.rec`;
+				const key = `${loser.baseFilesPath()}/${loserReplayName}`;
+				const reader = fsys.getReader(key);
+				try {
+					const bytes = toBytes(reader);
+					if (bytes && byteSize(bytes) >= 64) {
+						$os.writeFile(tempPath, bytes, 0o644);
+						keeper.set('replay', $filesystem.fileFromPath(tempPath));
+						keeper.set('hasReplay', true);
+						keeperHasReplay = true;
+						dirty = true;
+					}
+				} finally {
+					reader.close();
+				}
+			} catch (error) {
+				console.warn(
+					'[lobbies_dedupe] replay copy failed',
+					loser.id,
+					String(error?.message || error)
+				);
+			} finally {
+				fsys.close();
+				if (tempPath) {
+					try {
+						$os.remove(tempPath);
+					} catch {
+						// ignore
+					}
+				}
+			}
+		}
+
+		const loserMember = relationId(loser.get('memberReplay'));
+		if (!keeperMember && loserMember) {
+			keeper.set('memberReplay', loserMember);
+			keeperMember = loserMember;
+			dirty = true;
+		}
+
+		const loserDuration = Number(loser.get('durationSeconds')) || 0;
+		const keeperDuration = Number(keeper.get('durationSeconds')) || 0;
+		if (loserDuration > keeperDuration) {
+			keeper.set('durationSeconds', loserDuration);
+			dirty = true;
+		}
+	}
+
+	if (downloadTotal !== (Number(keeper.get('downloadCount')) || 0)) {
+		keeper.set('downloadCount', downloadTotal);
+		dirty = true;
+	}
+
+	if (likeCount !== (Number(keeper.get('likeCount')) || 0)) {
+		keeper.set('likeCount', likeCount);
+		dirty = true;
+	}
+
+	if (dirty) {
+		try {
+			$app.save(keeper);
+		} catch (error) {
+			console.warn('[lobbies_dedupe] merge save failed', keeperId, String(error?.message || error));
+		}
+	}
+}
+
+function byteSize(value) {
+	if (!value) {
+		return 0;
+	}
+
+	if (typeof value === 'string') {
+		return value.length;
+	}
+
+	if (typeof value.byteLength === 'number') {
+		return value.byteLength;
+	}
+
+	if (typeof value.length === 'number') {
+		return value.length;
+	}
+
+	return 0;
+}
+
 function loadRowsForSessions(sessionIds) {
 	if (sessionIds.length === 0) {
 		return [];
@@ -159,8 +301,14 @@ function runBatch() {
 			continue;
 		}
 		copies.sort(compareLobbies);
+		const keeperId = copies[0].id;
+		const loserIds = [];
 		for (let j = 1; j < copies.length; j++) {
-			if (deleteLobby(copies[j].id)) {
+			loserIds.push(copies[j].id);
+		}
+		mergeIntoKeeper(keeperId, loserIds);
+		for (let j = 0; j < loserIds.length; j++) {
+			if (deleteLobby(loserIds[j])) {
 				deleted += 1;
 			}
 		}

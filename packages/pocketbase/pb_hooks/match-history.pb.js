@@ -30,8 +30,13 @@ routerAdd('GET', '/api/match-history', (e) => {
 	const query = e.request.url.query();
 
 	const scope = query.get('scope') || 'user';
+	const { resolveHistoryUserId } = require(`${__hooks}/lib/history-filters.js`);
+	const resolved = resolveHistoryUserId(e, scope);
+	if (resolved.error) {
+		return resolved.error;
+	}
 
-	const userId = query.get('userId') || '';
+	const userId = resolved.userId;
 
 	const page = Math.max(1, parseInt(query.get('page') || '1', 10) || 1);
 
@@ -132,10 +137,6 @@ routerAdd('GET', '/api/match-history', (e) => {
 		lobbyFilters.push('l.hasReplay = 1');
 		lobbyFilters.push("(l.memberReplay = '' OR l.memberReplay IS NULL)");
 	} else {
-		if (!userId) {
-			return e.json(400, { message: 'userId required for user scope' });
-		}
-
 		bindings.userId = userId;
 	}
 

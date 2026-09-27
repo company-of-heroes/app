@@ -2,6 +2,7 @@ import { form, getRequestEvent } from '$app/server';
 import { error, invalid, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import { canRequestEmailChange, isPlaceholderEmail } from '@company-of-heroes/api';
+import { localizeHref } from '@company-of-heroes/i18n';
 import { syncLocalsUser } from '$lib/hooks/boot';
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
@@ -48,7 +49,7 @@ export const updateProfile = form(updateProfileSchema, async (data) => {
 	}
 
 	syncLocalsUser(event);
-	redirect(303, '/account?saved=profile');
+	redirect(303, localizeHref('/account?saved=profile', locals.locale));
 });
 
 const updatePasswordSchema = z.object({
@@ -77,7 +78,7 @@ export const updatePassword = form(updatePasswordSchema, async (data) => {
 	}
 
 	syncLocalsUser(event);
-	redirect(303, '/account?saved=password');
+	redirect(303, localizeHref('/account?saved=password', locals.locale));
 });
 
 const requestVerificationSchema = z.object({
@@ -99,7 +100,7 @@ export const requestVerification = form(requestVerificationSchema, async (data) 
 		invalid(locals.t(result.error.message));
 	}
 
-	redirect(303, '/account?sent=verification');
+	redirect(303, localizeHref('/account?sent=verification', locals.locale));
 });
 
 const requestEmailChangeSchema = z.object({
@@ -121,7 +122,7 @@ export const requestEmailChange = form(requestEmailChangeSchema, async (data) =>
 		invalid(locals.t(result.error.message));
 	}
 
-	redirect(303, '/account?sent=email-change');
+	redirect(303, localizeHref('/account?sent=email-change', locals.locale));
 });
 
 const confirmEmailChangeSchema = z.object({
@@ -139,5 +140,5 @@ export const confirmEmailChange = form(confirmEmailChangeSchema, async (data) =>
 	}
 
 	syncLocalsUser(event);
-	redirect(303, '/account?saved=email');
+	redirect(303, localizeHref('/account?saved=email', locals.locale));
 });

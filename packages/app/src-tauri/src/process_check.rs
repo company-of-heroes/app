@@ -17,23 +17,25 @@ pub(crate) fn process_name_matches(proc_name: &str, search_name: &str) -> bool {
         return false;
     }
 
-    proc_name == search_name
-        || proc_name == format!("{}.exe", search_name)
-        || proc_name.starts_with(search_name)
+    proc_name == search_name || proc_name == format!("{}.exe", search_name)
 }
 
 #[tauri::command]
 pub async fn is_running(process_name: String) -> Result<bool, String> {
-    let mut system = System::new_all();
-    system.refresh_processes();
+    tokio::task::spawn_blocking(move || {
+        let mut system = System::new_all();
+        system.refresh_processes();
 
-    for (_pid, process) in system.processes() {
-        if process_name_matches(process.name(), &process_name) {
-            return Ok(true);
+        for (_pid, process) in system.processes() {
+            if process_name_matches(process.name(), &process_name) {
+                return Ok(true);
+            }
         }
-    }
 
-    Ok(false)
+        Ok(false)
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]

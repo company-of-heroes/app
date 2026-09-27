@@ -13,6 +13,7 @@
 	import { useI18n } from '$lib/i18n';
 	import { page } from '$app/state';
 	import { beforeNavigate, goto } from '$app/navigation';
+	import { scheduleGoto } from '$core/runtime/schedule-goto';
 	import { watch } from 'runed';
 	import HistoryFilters from './history-filters.svelte';
 	import MyReplays from './my-replays.svelte';
@@ -127,7 +128,7 @@
 			}
 
 			rememberHistoryListHref(href);
-			void goto(href, {
+			scheduleGoto(href, {
 				replaceState: true,
 				keepFocus: true,
 				noScroll: true

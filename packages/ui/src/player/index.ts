@@ -44,7 +44,10 @@ export type {
 	PlayerLabel,
 	PlayerSearchResult,
 	PlayerPreviewData,
-	PlayerFactionPreview
+	PlayerFactionPreview,
+	PlayerCustomization,
+	PlayerProfileLink,
+	PlayerProfileLinkType
 } from './types';
 export {
 	attachMatchHistoryRankLevels,

@@ -71,7 +71,7 @@
 {#if stats.length === 0}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
 {:else}
-	<div class="hidden overflow-x-auto md:block">
+	<div class="hidden shrink-0 overflow-x-auto md:block">
 		<table class="w-full table-fixed border-collapse text-sm">
 			<thead>
 				<tr class="{tableHeadRow} text-center">

@@ -67,6 +67,11 @@
 			{t('These credentials work on the website and in the desktop app.')}
 			<a href={href('/privacy')} class="text-primary hover:underline">{t('Privacy policy')}</a>
 		</p>
+		<p class="mt-2 text-sm">
+			<a href={href('/account/profile')} class="text-primary hover:underline"
+				>{t('Customize public player profile')}</a
+			>
+		</p>
 	</div>
 </div>
 

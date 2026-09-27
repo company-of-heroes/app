@@ -55,6 +55,7 @@
 	} from '$lib/components/leaderboard/leaderboard-utils';
 	import { tooltip } from '$lib/attachments';
 	import { resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
 
 	const PROFILE_POLL_MS = 90_000;
 
@@ -332,7 +333,14 @@
 	const profileHref = $derived(
 		profileId != null
 			? resolve('/(loaded)/players/[id]', { id: String(profileId) })
-			: null
+			: steamId
+				? resolve('/(loaded)/players/[id]', { id: steamId })
+				: null
+	);
+	const updateProfileHref = $derived(
+		steamId
+			? `/account/profile?steamId=${encodeURIComponent(steamId)}`
+			: '/account/profile'
 	);
 	const previewId = $derived(
 		profile
@@ -429,6 +437,14 @@
 							</PlayerProfileLink>
 						{/if}
 						<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
+						{#if profileHref}
+							<Button href={profileHref} variant="secondary" size="sm" class="shrink-0">
+								{t('View profile')}
+							</Button>
+						{/if}
+						<Button href={updateProfileHref} variant="secondary" size="sm" class="shrink-0">
+							{t('Update profile')}
+						</Button>
 						{#if app.lobby}
 							<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
 								<LiveBadge label={t('In match')} />

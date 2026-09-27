@@ -1,6 +1,7 @@
 import { form, command, query, getRequestEvent } from '$app/server';
 import { error, invalid, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
+import { localizeHref } from '@company-of-heroes/i18n';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import type { MemberReplayPreviewPlayer } from '$lib/replays/member-rating-preview';
 
@@ -83,7 +84,7 @@ export const uploadMemberReplay = form(uploadMemberReplaySchema, async (data) =>
 		invalid(locals.t(result.error.message));
 	}
 
-	redirect(303, `/replays/${result.value.id}`);
+	redirect(303, localizeHref(`/replays/${result.value.id}`, locals.locale));
 });
 
 const previewMemberReplayRatingsSchema = z.object({
@@ -182,7 +183,7 @@ export const updateMemberReplay = form(updateMemberReplaySchema, async (data) =>
 		invalid(locals.t(result.error.message));
 	}
 
-	redirect(303, `/replays/${result.value.id}`);
+	redirect(303, localizeHref(`/replays/${result.value.id}`, locals.locale));
 });
 
 const deleteMemberReplaySchema = z.object({
@@ -200,7 +201,7 @@ export const deleteMemberReplay = form(deleteMemberReplaySchema, async (data) =>
 		invalid(locals.t(result.error.message));
 	}
 
-	redirect(303, '/replays?tab=member');
+	redirect(303, localizeHref('/replays?tab=member', locals.locale));
 });
 
 const publishMatchAsMemberReplaySchema = z.object({

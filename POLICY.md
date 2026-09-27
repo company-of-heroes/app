@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date:** September 7, 2026
+**Effective date:** September 27, 2026
 
 This Privacy Policy explains how **Code IT** (“we”, “us”) collects, uses, shares, and protects information when you use **Company of Heroes Companion** (also called the FKNOOBS App), the website at [https://coh1stats.com](https://coh1stats.com), and the API at [https://api.coh1stats.com](https://api.coh1stats.com) (together, the “Service”).
 
@@ -37,6 +37,8 @@ Website login keeps you signed in with a PocketBase session cookie in your brows
 
 You can update your display name, avatar, email, and password on the website and in the desktop app. When you verify an email or change to a new one, we send a one-time confirmation message to that address so only you can complete the change. We do not use those messages for marketing.
 
+If you link a Steam ID to your account, you can also customize your **public player profile**: an optional bio, links (for example Twitch, YouTube, or other URLs), and an optional background image. That customization is stored with your Steam ID and shown on your public player page on the website and in the desktop app.
+
 ### b) Match, replay, and community data
 
 To provide match history, scouting, leaderboards, and player pages we store:
@@ -53,7 +55,7 @@ Game logs such as `warnings.log` are read **on your device** so the app can dete
 
 ### c) Public player pages, leaderboards, and replays
 
-The website and API publish ranked stats, match history, performance breakdowns, community replays, live matches that companion users are in, a public catalog of Company of Heroes Twitch streams, and (where available) Steam profile details such as avatar, alias, online/last-seen status, and playtime. That information comes from Relic and Steam public multiplayer/profile APIs, from matches recorded by the community, from the desktop companion while a user is in a game, and from Twitch’s public stream API.
+The website and API publish ranked stats, match history, performance breakdowns, community replays, live matches that companion users are in, a public catalog of Company of Heroes Twitch streams, and (where available) Steam profile details such as avatar, alias, online/last-seen status, and playtime. Player pages may also show optional profile customization you choose to publish (bio, links, and background image). That information comes from Relic and Steam public multiplayer/profile APIs, from matches recorded by the community, from the desktop companion while a user is in a game, from Twitch’s public stream API, and from profile fields you save when logged in.
 
 The homepage lists those live companion lobbies (map, players, and host display name), current CoH streams, recent community matches with a replay, and latest **member replay** uploads. On the website we also show community matches that include a replay file, and member replays that an account holder explicitly uploads or publishes: map and player metadata, a required description, in-game chat parsed from the replay, action timelines, and a download of the `.rec` file. When a member replay includes Steam IDs, we store a snapshot of each player’s current Relic ladder stats at publish time (rating, country, wins/losses, streak, and rank/level for the match mode) so Overview stays fixed for that upload (those fields are not refreshed later from live stats; editing Steam links on an upload rebuilds that snapshot). Account holders can also publish one of their own community matches (a finished lobby with a replay file) into **Member replays**; we copy that replay into the member catalog and stop listing that match under Community matches (it remains under My matches for the owner). Soft-deleted member uploads are hidden from public pages and lists; staff can still open them for moderation. Public downloads of those files are counted and shown on replay pages. Community match pages also show community comments and up/down votes; posting a comment, voting on a comment, or voting on a community match replay requires an account. Player profile pages also show a net community vote score; voting on a player requires an account. If you delete a comment we keep it for moderation: other users no longer see the text (they may see “Comment has been deleted” when replies remain). Staff can still see the original comment, a staff-only deleted badge, and, when a moderator removed it, the reason they entered. To keep those counts honest we store a one-way hash of the download request (network address and an anonymous browser token in local storage) and ignore repeat clicks from the same visitor. We do not use that hash to identify you. We also limit how often a network address can fetch replay files so the Service stays available. We do not publish personal playback-folder libraries unless you explicitly upload or publish a replay to **Member replays**. Hidden matches stay off those public listings.
 

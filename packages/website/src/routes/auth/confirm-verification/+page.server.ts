@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { localizeHref } from '@company-of-heroes/i18n';
 import { syncLocalsUser } from '$lib/hooks/boot';
 import type { PageServerLoad } from './$types';
 
@@ -30,7 +31,7 @@ export const load: PageServerLoad = async (event) => {
 		}
 
 		syncLocalsUser(event);
-		redirect(303, '/account?saved=verified');
+		redirect(303, localizeHref('/account?saved=verified', locals.locale));
 	}
 
 	return {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { scheduleGoto } from '$core/runtime/schedule-goto';
 	import { watch } from 'runed';
 	import { app } from '$core/app/context';
 	import { useI18n } from '$lib/i18n';
@@ -12,7 +12,7 @@
 		(isAdmin) => {
 			if (!isAdmin) {
 				app.toast.error(t('You do not have access to this page.'));
-				void goto('/admin/notifications');
+				scheduleGoto('/admin/notifications');
 			}
 		}
 	);

@@ -77,6 +77,20 @@ export type PlayerSmurf = {
 	lenderAvatarUrl: string | null;
 };
 
+export type PlayerProfileLinkType = 'twitch' | 'youtube' | 'other';
+
+export type PlayerProfileLink = {
+	type: PlayerProfileLinkType;
+	url: string;
+	label?: string;
+};
+
+export type PlayerCustomization = {
+	bio: string | null;
+	links: PlayerProfileLink[];
+	backgroundUrl: string | null;
+};
+
 export type PlayerPageData = {
 	steamId: string;
 	profileId: number;
@@ -92,11 +106,12 @@ export type PlayerPageData = {
 	playtime2weeks: number | null;
 	leaderboardStats: LeaderboardStat[];
 	elo: PlayerEloMap;
-	performance: PlayerPerformance;
+	performance: PlayerPerformance | null;
 	matchHistory: TransformedMatch[];
 	smurf?: PlayerSmurf | null;
 	labels?: PlayerLabel[];
 	likeCount?: number;
+	customization?: PlayerCustomization | null;
 };
 
 export type PlayerSearchResult = {

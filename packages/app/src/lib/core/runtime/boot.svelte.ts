@@ -81,16 +81,19 @@ export class Boot {
 
 	/**
 	 * Drives the boot state machine. Called from the root layout on every
-	 * navigation; navigates to /setup or / depending on state.
+	 * navigation. Returns a path when the caller should leave this URL.
+	 * Does not navigate itself: `goto` inside `load` starts a second
+	 * navigation before the click router exists, and later links then do a
+	 * full document reload.
 	 */
-	async advance(pathname: string): Promise<void> {
+	async advance(pathname: string): Promise<string | null> {
 		if (this.phase === 'ready') {
 			if (pathname === '/setup') {
-				await goto('/');
+				return '/';
 			}
 
 			// /splashscreen dismisses itself after the intro animation finishes.
-			return;
+			return null;
 		}
 
 		try {
@@ -98,10 +101,10 @@ export class Boot {
 		} catch {
 			// Error state is shown on the splashscreen (with retry).
 			if (pathname !== '/splashscreen') {
-				await goto('/splashscreen');
+				return '/splashscreen';
 			}
 
-			return;
+			return null;
 		}
 
 		this.needsOnboarding = !(await app.isConfigured());
@@ -115,22 +118,24 @@ export class Boot {
 			}
 
 			if (pathname !== '/setup') {
-				await goto('/setup');
+				return '/setup';
 			}
 
-			return;
+			return null;
 		}
 
 		const ready = await this.#ensureStarted();
 
 		if (ready && pathname === '/setup') {
-			await goto('/');
+			return '/';
 		}
 
 		// Boot failed: surface the error state on the splashscreen.
 		if (!ready && pathname !== '/splashscreen') {
-			await goto('/splashscreen');
+			return '/splashscreen';
 		}
+
+		return null;
 	}
 
 	/** Called by the setup wizard once both paths validate. */
@@ -152,7 +157,10 @@ export class Boot {
 		this.#startPromise = null;
 		this.resetSplashIntro();
 
-		await this.advance('/splashscreen');
+		const next = await this.advance('/splashscreen');
+		if (next) {
+			await goto(next);
+		}
 	}
 
 	async #ensureSettingsLoaded(): Promise<void> {

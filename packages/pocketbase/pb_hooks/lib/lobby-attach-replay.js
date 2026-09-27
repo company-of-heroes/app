@@ -1,6 +1,7 @@
 /**
  * Attach a local CoH temp.rec to a durable lobbies row.
- * Any authenticated match participant may upload; byte size wins (strictly larger replaces).
+ * Any authenticated match participant may upload; longer duration wins when
+ * both sides have a parseable duration, otherwise byte size wins.
  */
 'use strict';
 
@@ -72,6 +73,40 @@ function byteSize(bytes) {
 	}
 
 	return 0;
+}
+
+function parseDurationSeconds(value) {
+	const n = Number(value);
+	if (!Number.isFinite(n) || n < 0) {
+		return 0;
+	}
+
+	return Math.floor(n);
+}
+
+function bodyField(body, key) {
+	if (!body || typeof body !== 'object') {
+		return '';
+	}
+
+	const value = body[key];
+	if (value == null) {
+		return '';
+	}
+
+	return String(value);
+}
+
+/**
+ * Prefer longer duration when both sides have a parseable duration; otherwise
+ * larger byte size. Tie keeps the existing file.
+ */
+function shouldReplaceReplay(uploadSize, uploadDuration, storedSize, storedDuration) {
+	if (uploadDuration > 0 && storedDuration > 0) {
+		return uploadDuration > storedDuration;
+	}
+
+	return uploadSize > storedSize;
 }
 
 function parsePlayers(raw) {
@@ -256,6 +291,11 @@ function readUploadedReplay(e) {
 }
 
 function storedReplaySize(lobby) {
+	const storedBytes = parseDurationSeconds(lobby.get('replayBytes'));
+	if (storedBytes > 0) {
+		return storedBytes;
+	}
+
 	const replayName = String(lobby.get('replay') || '').trim();
 	if (!replayName) {
 		return 0;
@@ -306,6 +346,8 @@ const NON_OWNER_LOCKED_FIELDS = [
 	'downloadCount',
 	'commentCount',
 	'durationSeconds',
+	'replayDurationSeconds',
+	'replayBytes',
 	'avgElo',
 	'memberReplay',
 	'lobbyPlayers',
@@ -349,7 +391,7 @@ function restoreLockedFields(record, fieldNames) {
 /**
  * Back-compat for older apps that PATCH lobbies with a replay file instead of
  * POST /attach-replay. Widened updateRule lets the request through; this guard
- * keeps non-owners to larger-replay attach only.
+ * keeps non-owners to longer/larger-replay attach only.
  */
 function guardLegacyCollectionUpdate(e) {
 	if (typeof e.hasSuperuserAuth === 'function' && e.hasSuperuserAuth()) {
@@ -365,6 +407,8 @@ function guardLegacyCollectionUpdate(e) {
 	const ownerId = relationId(original.get('user'));
 	const isOwner = !!(ownerId && ownerId === String(e.auth.id));
 	const uploadSize = uploadedReplaySize(e);
+	const uploadDuration = parseDurationSeconds(e.record.get('replayDurationSeconds'));
+	const storedDuration = parseDurationSeconds(original.get('replayDurationSeconds'));
 
 	if (!isOwner) {
 		if (!authIsParticipant(e.auth, original)) {
@@ -380,8 +424,13 @@ function guardLegacyCollectionUpdate(e) {
 
 	if (uploadSize > 0) {
 		const storedSize = storedReplaySize(original);
-		if (uploadSize <= storedSize) {
+		if (!shouldReplaceReplay(uploadSize, uploadDuration, storedSize, storedDuration)) {
 			e.record.set('replay', original.get('replay'));
+			e.record.set('replayDurationSeconds', original.get('replayDurationSeconds'));
+			e.record.set('replayBytes', original.get('replayBytes'));
+		} else {
+			e.record.set('replayDurationSeconds', uploadDuration);
+			e.record.set('replayBytes', uploadSize);
 		}
 	}
 
@@ -415,6 +464,10 @@ function handleAttach(e) {
 		return jsonNoStore(e, 400, { message: 'Replay file is required.' });
 	}
 
+	// Read duration after the file — requestInfo().body can consume multipart.
+	const body = e.requestInfo()?.body || {};
+	const uploadDuration = parseDurationSeconds(bodyField(body, 'durationSeconds'));
+
 	const cleanup = () => {
 		if (!uploadTempPath) {
 			return;
@@ -440,7 +493,7 @@ function handleAttach(e) {
 		return jsonNoStore(e, 403, { message: 'Only match participants can attach a replay.' });
 	}
 
-	// Re-load just before compare so concurrent uploads keep the largest file.
+	// Re-load just before compare so concurrent uploads keep the best file.
 	try {
 		lobby = $app.findRecordById('lobbies', id);
 	} catch {
@@ -449,13 +502,15 @@ function handleAttach(e) {
 	}
 
 	const storedSize = storedReplaySize(lobby);
-	if (uploadSize <= storedSize) {
+	const storedDuration = parseDurationSeconds(lobby.get('replayDurationSeconds'));
+	if (!shouldReplaceReplay(uploadSize, uploadDuration, storedSize, storedDuration)) {
 		cleanup();
 		return jsonNoStore(e, 200, {
 			id: String(lobby.id),
 			attached: false,
 			keptExisting: true,
-			replaySize: storedSize
+			replaySize: storedSize,
+			replayDurationSeconds: storedDuration
 		});
 	}
 
@@ -480,6 +535,8 @@ function handleAttach(e) {
 	try {
 		const filesystemFile = $filesystem.fileFromPath(uploadTempPath);
 		lobby.set('replay', filesystemFile);
+		lobby.set('replayDurationSeconds', uploadDuration);
+		lobby.set('replayBytes', uploadSize);
 		$app.save(lobby);
 
 		const savedName = String(lobby.get('replay') || '');
@@ -493,7 +550,8 @@ function handleAttach(e) {
 			id: String(lobby.id),
 			attached: true,
 			keptExisting: false,
-			replaySize: uploadSize
+			replaySize: uploadSize,
+			replayDurationSeconds: uploadDuration
 		});
 	} catch (error) {
 		cleanup();

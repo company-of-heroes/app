@@ -1,4 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
+import { loginRedirectHref } from '$lib/auth/user';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import type { PageServerLoad } from './$types';
 
@@ -6,7 +7,7 @@ export const prerender = false;
 
 export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (!locals.user) {
-		redirect(303, `/login?redirect=${encodeURIComponent(url.pathname)}`);
+		redirect(303, loginRedirectHref(url.pathname, locals.locale));
 	}
 
 	const match = await unwrapAsync(locals.services.replays().getMember(params.id));

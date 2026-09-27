@@ -4,17 +4,63 @@ function notHiddenSessionClause(column) {
 	return `NOT EXISTS (SELECT 1 FROM hidden_matches h WHERE h.sessionId = ${column})`;
 }
 
+/** Separators that the JS word-boundary hide path also treats as non-alphanumeric. */
+const TITLE_SEPARATORS = [
+	'-',
+	'_',
+	'/',
+	'.',
+	'(',
+	')',
+	':',
+	',',
+	';',
+	'!',
+	'?',
+	'#',
+	'@',
+	'+',
+	'=',
+	"'",
+	'"',
+	'[',
+	']',
+	'{',
+	'}',
+	'|',
+	'\\',
+	'~',
+	'*',
+	'&',
+	'%',
+	'<',
+	'>',
+	'`',
+	'^'
+];
+
 function normalizedTitleSql(expr) {
-	return `LOWER(' ' || REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(${expr}, ''), '-', ' '), '_', ' '), '/', ' '), '.', ' '), '(', ' '), ')', ' ') || ' ')`;
+	let sql = `COALESCE(${expr}, '')`;
+	for (let i = 0; i < TITLE_SEPARATORS.length; i++) {
+		const sep = TITLE_SEPARATORS[i].replace(/'/g, "''");
+		sql = `REPLACE(${sql}, '${sep}', ' ')`;
+	}
+
+	return `LOWER(' ' || ${sql} || ' ')`;
+}
+
+function likeNeedleSql(wordExpr) {
+	const normalized = normalizedTitleSql(wordExpr);
+	return `REPLACE(REPLACE(REPLACE(${normalized}, '\\', '\\\\'), '%', '\\%'), '_', '\\_')`;
 }
 
 function notHiddenTitleClause(descriptionExpr) {
 	const title = normalizedTitleSql(descriptionExpr);
-	const word = normalizedTitleSql('k.word');
+	const word = likeNeedleSql('k.word');
 	return `NOT EXISTS (
 		SELECT 1 FROM hidden_match_keywords k
 		WHERE TRIM(k.word) != ''
-		  AND ${title} LIKE '%' || ${word} || '%'
+		  AND ${title} LIKE '%' || ${word} || '%' ESCAPE '\\'
 	)`;
 }
 
@@ -24,12 +70,12 @@ function lobbyDescriptionSql(alias) {
 
 function notHiddenTitleBySessionClause(sessionColumn) {
 	const title = normalizedTitleSql("json_extract(lh.result, '$.description')");
-	const word = normalizedTitleSql('k.word');
+	const word = likeNeedleSql('k.word');
 	return `NOT EXISTS (
 		SELECT 1 FROM lobbies lh
 		INNER JOIN hidden_match_keywords k ON TRIM(k.word) != ''
 		WHERE lh.sessionId = ${sessionColumn}
-		  AND ${title} LIKE '%' || ${word} || '%'
+		  AND ${title} LIKE '%' || ${word} || '%' ESCAPE '\\'
 	)`;
 }
 

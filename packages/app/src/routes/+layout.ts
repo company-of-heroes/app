@@ -2,11 +2,12 @@
 // so we will use adapter-static to prerender the app (SSG)
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 
-import type { LoadEvent } from '@sveltejs/kit';
+import { redirect, type LoadEvent } from '@sveltejs/kit';
 import { browser } from '$app/environment';
 import { configureCorsFetch } from '$core/http/fetch';
 import { app } from '$core/app/context';
 import { boot } from '$core/runtime/boot.svelte';
+import { scheduleGoto } from '$core/runtime/schedule-goto';
 import { tts, twitch } from '$core/app/features/twitch';
 import { ttsPersonalVoices } from '$core/app/features/tts-personal-voices';
 import { twitchOverlays } from '$core/app/features/twitch-overlays';
@@ -56,10 +57,18 @@ export const load = async ({ url }: LoadEvent) => {
 	// Boot can take several seconds. On splash/setup, render the UI immediately
 	// and let boot.advance() update phase labels reactively in the background.
 	if (BOOT_UI_ROUTES.has(url.pathname)) {
-		void boot.advance(url.pathname);
+		void boot.advance(url.pathname).then((next) => {
+			if (next) {
+				scheduleGoto(next);
+			}
+		});
 		return { i18n };
 	}
 
-	await boot.advance(url.pathname);
+	const next = await boot.advance(url.pathname);
+	if (next) {
+		redirect(307, next);
+	}
+
 	return { i18n };
 };

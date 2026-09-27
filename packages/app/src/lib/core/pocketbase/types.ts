@@ -266,6 +266,8 @@ export type LobbiesRecord<TlobbyPlayers = unknown, Tplayers = unknown, Tresult =
 	playerProfileIdsCsv?: string
 	players: null | Tplayers
 	replay?: FileNameString
+	replayBytes?: number
+	replayDurationSeconds?: number
 	result?: null | Tresult
 	resultAttempts?: number
 	sessionId: number
@@ -435,6 +437,17 @@ export type PlayerVoteScoresRecord = {
 	likeCount?: number
 	steamId: string
 	updated: IsoAutoDateString
+}
+
+export type PlayerCustomizationsRecord<Tlinks = unknown, Tuser = unknown> = {
+	background?: FileNameString
+	bio?: string
+	created: IsoAutoDateString
+	id: string
+	links?: null | Tlinks
+	steam_id: string
+	updated: IsoAutoDateString
+	user: RecordIdString
 }
 
 export type PlayersRecord = {
@@ -707,6 +720,7 @@ export type PlayerLabelAssignmentsResponse<Texpand = unknown> = Required<PlayerL
 export type PlayerLikesResponse<Texpand = unknown> = Required<PlayerLikesRecord> & BaseSystemFields<Texpand>
 export type PlayerRatingsResponse<Telo = unknown, Texpand = unknown> = Required<PlayerRatingsRecord<Telo>> & BaseSystemFields<Texpand>
 export type PlayerVoteScoresResponse<Texpand = unknown> = Required<PlayerVoteScoresRecord> & BaseSystemFields<Texpand>
+export type PlayerCustomizationsResponse<Tlinks = unknown, Tuser = unknown, Texpand = unknown> = Required<PlayerCustomizationsRecord<Tlinks, Tuser>> & BaseSystemFields<Texpand>
 export type PlayersResponse<Texpand = unknown> = Required<PlayersRecord> & BaseSystemFields<Texpand>
 export type ReplayAggregationResponse<Tmaps = unknown, Tplayers = unknown, Tuser = unknown, Texpand = unknown> = Required<ReplayAggregationRecord<Tmaps, Tplayers, Tuser>> & BaseSystemFields<Texpand>
 export type ReplayCommentLikesResponse<Texpand = unknown> = Required<ReplayCommentLikesRecord> & BaseSystemFields<Texpand>
@@ -757,6 +771,7 @@ export type CollectionRecords = {
 	player_likes: PlayerLikesRecord
 	player_ratings: PlayerRatingsRecord
 	player_vote_scores: PlayerVoteScoresRecord
+	player_customizations: PlayerCustomizationsRecord
 	players: PlayersRecord
 	replay_aggregation: ReplayAggregationRecord
 	replay_comment_likes: ReplayCommentLikesRecord
@@ -806,6 +821,7 @@ export type CollectionResponses = {
 	player_likes: PlayerLikesResponse
 	player_ratings: PlayerRatingsResponse
 	player_vote_scores: PlayerVoteScoresResponse
+	player_customizations: PlayerCustomizationsResponse
 	players: PlayersResponse
 	replay_aggregation: ReplayAggregationResponse
 	replay_comment_likes: ReplayCommentLikesResponse

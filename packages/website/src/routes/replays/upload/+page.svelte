@@ -222,14 +222,11 @@
 					: null;
 			const fromResult = Number(result?.profile_id);
 			const fromLive = Number(live?.profileId);
-			const fromReplay = Number(player.id);
 			const profileId =
 				(Number.isFinite(fromResult) && fromResult > 0 ? fromResult : 0) ||
-				(Number.isFinite(fromLive) && fromLive > 0 ? fromLive : 0) ||
-				(Number.isFinite(fromReplay) && fromReplay > 0 && fromReplay < 1000 ? fromReplay : 0) ||
-				index + 1;
+				(Number.isFinite(fromLive) && fromLive > 0 ? fromLive : 0);
 			return {
-				playerId: profileId,
+				playerId: profileId > 0 ? profileId : -1,
 				steamId,
 				race: raceFromReplayFaction(player.faction || ''),
 				faction: player.faction,

@@ -66,6 +66,7 @@ export type AttachReplayResult = {
 	attached: boolean;
 	keptExisting: boolean;
 	replaySize: number;
+	replayDurationSeconds: number;
 };
 
 export type MatchAggregation = {
@@ -86,7 +87,8 @@ const attachReplaySchema = z.object({
 	id: z.string(),
 	attached: z.boolean(),
 	keptExisting: z.boolean(),
-	replaySize: z.number()
+	replaySize: z.number(),
+	replayDurationSeconds: z.number().optional().default(0)
 });
 
 const historyListSchema: z.ZodType<ListResult<MatchRecord>> = z
@@ -452,9 +454,14 @@ export class MatchesApi {
 
 	/**
 	 * Attach a replay file to a durable lobby. Any match participant may call this;
-	 * the server keeps the largest file by byte size.
+	 * longer duration wins when both sides have a parseable duration, otherwise
+	 * the largest file by byte size is kept.
 	 */
-	attachReplay(id: string, file: File): ResultAsync<AttachReplayResult, ApiError> {
+	attachReplay(
+		id: string,
+		file: File,
+		options?: { durationSeconds?: number }
+	): ResultAsync<AttachReplayResult, ApiError> {
 		const auth = requireAuth(this.deps);
 		if (auth.isErr()) {
 			return errAsync(auth.error);
@@ -468,11 +475,18 @@ export class MatchesApi {
 				return errAsync(apiError(400, 'Invalid replay upload.'));
 			}
 
+			const durationSeconds = Number(options?.durationSeconds);
+			const safeDuration =
+				Number.isFinite(durationSeconds) && durationSeconds > 0
+					? Math.floor(durationSeconds)
+					: 0;
+
 			const formData = new FormData();
 			formData.append(
 				'file',
 				new File([bytes], file.name || 'replay.rec', { type: 'application/octet-stream' })
 			);
+			formData.append('durationSeconds', String(safeDuration));
 
 			return fetchJson(
 				this.deps.fetch,

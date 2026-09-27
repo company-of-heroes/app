@@ -75,11 +75,15 @@ function isTrustedProxy(e, realIp) {
 function clientIp(e) {
 	const real = rawRealIp(e);
 	const forwarded = headerIp(e, 'X-Client-IP') || headerIp(e, 'CF-Connecting-IP');
-	if (isTrustedProxy(e, real) && forwarded) return forwarded;
-	const cf = headerIp(e, 'CF-Connecting-IP');
-	if (cf) return cf;
-	if (real) return real;
-	return forwarded || 'unknown';
+	if (isTrustedProxy(e, real) && forwarded) {
+		return forwarded;
+	}
+
+	if (real) {
+		return real;
+	}
+
+	return 'unknown';
 }
 
 function requestPath(e) {

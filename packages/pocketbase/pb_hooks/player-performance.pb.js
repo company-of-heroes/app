@@ -3,7 +3,7 @@
 'use strict';
 
 routerAdd('GET', '/api/player-performance', (e) => {
-	const { emptyPerformance, loadPlayerPerformance } = require(`${__hooks}/lib/player-performance.js`);
+	const { loadPlayerPerformance } = require(`${__hooks}/lib/player-performance.js`);
 
 	const query = e.request.url.query();
 	const scope = query.get('scope') || 'user';
@@ -46,6 +46,6 @@ routerAdd('GET', '/api/player-performance', (e) => {
 		return e.json(200, data);
 	} catch (error) {
 		console.warn('[player_performance] query failed:', String(error?.message || error));
-		return e.json(200, emptyPerformance());
+		return e.json(500, { message: 'Failed to load player performance' });
 	}
 });

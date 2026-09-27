@@ -190,9 +190,36 @@ function collectOpenIdParams(e) {
 	return params;
 }
 
+function expectedSteamReturnTo(e) {
+	return `${apiPublicBase(e)}/api/auth/steam/callback`;
+}
+
+function returnToMatchesCallback(returnTo, expectedBase) {
+	const value = String(returnTo || '').trim();
+	if (!value || !expectedBase) {
+		return false;
+	}
+
+	if (value === expectedBase) {
+		return true;
+	}
+
+	// Steam appends openid.* query params; our start URL also puts state on return_to.
+	if (!value.startsWith(`${expectedBase}?`) && !value.startsWith(`${expectedBase}&`)) {
+		return false;
+	}
+
+	return true;
+}
+
 function verifySteamOpenId(e) {
 	const params = collectOpenIdParams(e);
 	if (!params['openid.claimed_id'] || !params['openid.sig']) {
+		throw new BadRequestError('Invalid Steam login response.');
+	}
+
+	const returnTo = String(params['openid.return_to'] || '');
+	if (!returnToMatchesCallback(returnTo, expectedSteamReturnTo(e))) {
 		throw new BadRequestError('Invalid Steam login response.');
 	}
 

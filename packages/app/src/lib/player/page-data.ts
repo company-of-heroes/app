@@ -1,4 +1,5 @@
 import type {
+	PlayerCustomization,
 	PlayerEloMap,
 	PlayerLabel,
 	PlayerPageData,
@@ -9,7 +10,6 @@ import type {
 import type { TransformedMatch as AppTransformedMatch } from '@fknoobs/app';
 import type { SteamPlayerSummary } from '$core/steam';
 import type { SmurfAlertState } from '$lib/player/smurf';
-import { emptyPlayerPerformance } from '$core/pocketbase/player-performance';
 
 type RelicProfileLike = {
 	profile_id: number;
@@ -81,6 +81,7 @@ export function toPlayerPageData(input: {
 	smurf?: SmurfAlertState | null;
 	labels?: PlayerLabel[] | null;
 	likeCount?: number;
+	customization?: PlayerCustomization | null;
 }): PlayerPageData {
 	return {
 		steamId: input.user.steamid,
@@ -97,10 +98,11 @@ export function toPlayerPageData(input: {
 		playtime2weeks: input.game?.playtime_2weeks ?? null,
 		leaderboardStats: input.profile.leaderboardStats ?? [],
 		elo: input.elo ?? {},
-		performance: input.performance ?? emptyPlayerPerformance(),
+		performance: input.performance ?? null,
 		matchHistory: toUiMatchHistory(input.matchHistory ?? []),
 		smurf: toPlayerSmurf(input.smurf),
 		labels: input.labels ?? [],
-		likeCount: input.likeCount ?? 0
+		likeCount: input.likeCount ?? 0,
+		customization: input.customization ?? null
 	};
 }

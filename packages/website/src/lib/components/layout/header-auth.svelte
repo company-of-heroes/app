@@ -11,6 +11,7 @@
 	import { headerCellAction, interactive } from '$lib/utils/variants';
 	import { href, useI18n } from '$lib/i18n';
 	import GearIcon from 'phosphor-svelte/lib/GearIcon';
+	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import SignOutIcon from 'phosphor-svelte/lib/SignOutIcon';
 	import UserIcon from 'phosphor-svelte/lib/UserIcon';
 
@@ -20,6 +21,7 @@
 	const avatarSrc = $derived(user?.avatarUrl);
 	const displayName = $derived(user ? authDisplayName(user) : '');
 	const accountHref = $derived(href('/account'));
+	const updateProfileHref = $derived(href('/account/profile'));
 	const profileHref = $derived(
 		user?.steamIds?.[0] ? href(`/players/${user.steamIds[0]}`) : undefined
 	);
@@ -96,6 +98,10 @@
 					{t('View profile')}
 				</Dropdown.Item>
 			{/if}
+			<Dropdown.Item class={dropdownItemIcon} onSelect={() => goto(updateProfileHref)}>
+				<PencilSimpleIcon size={18} weight="duotone" class="text-primary shrink-0" />
+				{t('Update profile')}
+			</Dropdown.Item>
 			<Dropdown.Item class={dropdownItemIcon} onSelect={() => logoutForm?.requestSubmit()}>
 				<SignOutIcon size={18} weight="duotone" class="text-primary shrink-0" />
 				{t('Log out')}

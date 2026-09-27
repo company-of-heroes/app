@@ -243,9 +243,17 @@ export class AppContext extends Emittery<AppEvents> {
 					this.isReady = false;
 					this.gameLog.pause();
 					this.#logStopTimer = setTimeout(() => {
-						this.gameLog.stop();
-						this.#logStopTimer = null;
-						void this.#finalizeLobbyOnGameExit();
+						void (async () => {
+							try {
+								await this.gameLog.flush();
+							} catch (error) {
+								console.warn('[APP]: log flush on game exit failed:', error);
+							}
+
+							this.gameLog.stop();
+							this.#logStopTimer = null;
+							await this.#finalizeLobbyOnGameExit();
+						})();
 					}, 2500);
 				}
 			);
@@ -366,15 +374,38 @@ export class AppContext extends Emittery<AppEvents> {
 			this.#logStopTimer = null;
 		}
 
-		this.gameLog.stop();
+		// Snapshot before stop/clear — LOG:ENDED must not drop the save target.
+		const match = this.lobby;
 		this.isReady = false;
-		this.#clearLiveLobbyOnGameExit();
 
-		if (dev) {
-			return;
-		}
+		void (async () => {
+			try {
+				await this.gameLog.flush();
+			} catch (error) {
+				console.warn('[APP]: log flush on logout failed:', error);
+			}
 
-		this.game.close();
+			this.gameLog.stop();
+
+			if (
+				match &&
+				!match.isReplay &&
+				match.sessionId &&
+				match.started &&
+				this.features.history?.enabled
+			) {
+				this.lobby = match;
+				await this.#finalizeLobbyOnGameExit();
+			} else {
+				this.#clearLiveLobbyOnGameExit();
+			}
+
+			if (dev) {
+				return;
+			}
+
+			this.game.close();
+		})();
 	}
 
 	async #onLobbyJoined(lobby: Lobby) {
@@ -557,16 +588,15 @@ export class AppContext extends Emittery<AppEvents> {
 			match.started &&
 			this.features.history?.enabled
 		) {
-			let replayFile: File | null = null;
+			let localReplay: { file: File; replay: FlatReplay | null } | null = null;
 			try {
-				const replay = await this.features.history.getLastMatchReplay();
-				replayFile = replay?.file ?? null;
+				localReplay = await this.features.history.getLastMatchReplay({ attempts: 8 });
 			} catch (error) {
 				console.warn('[APP]: Could not read replay on game exit:', error);
 			}
 
 			try {
-				await this.features.history.saveLobbyResult(match, replayFile);
+				await this.features.history.saveLobbyResult(match, localReplay);
 			} catch (error) {
 				console.warn('[APP]: Could not save match on game exit:', error);
 			}

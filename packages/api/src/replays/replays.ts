@@ -507,7 +507,10 @@ export class ReplaysApi {
 						: 'Failed to load community replays. Please try again later.',
 				schema: communityMatchListSchema,
 				// Filtered list COUNT used to take >8s under local write load.
-				timeoutMs: 30_000
+				timeoutMs: 30_000,
+				init: {
+					headers: resolveAuthHeaders(this.deps)
+				}
 			}
 		);
 	}
@@ -546,11 +549,12 @@ export class ReplaysApi {
 			`${normalizeBaseUrl(this.deps.baseUrl)}/api/history-maps?${params.toString()}`,
 			{
 				fallback: 'Failed to load maps.',
-				schema: historyMapsSchema
+				schema: historyMapsSchema,
+				init: {
+					headers: resolveAuthHeaders(this.deps)
+				}
 			}
-		)
-			.map((data) => data.items ?? [])
-			.orElse(() => ok([] as HistoryMapOption[]));
+		).map((data) => data.items ?? []);
 	}
 
 	getMemberMaps(): ResultAsync<HistoryMapOption[], ApiError> {

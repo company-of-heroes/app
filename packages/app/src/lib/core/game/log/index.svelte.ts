@@ -97,6 +97,17 @@ export class GameLogService extends Emittery<GameLogEvents> {
 		this.isReady = false;
 	}
 
+	/**
+	 * Reads any appended log lines once so a late Game Stop is handled before stop.
+	 */
+	async flush(): Promise<void> {
+		if (!this.#tailer.path) {
+			return;
+		}
+
+		await this.#tailer.poll();
+	}
+
 	stop(): void {
 		this.#tailer.stop();
 		this.session.reset();

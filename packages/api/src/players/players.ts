@@ -1,11 +1,24 @@
 import { z } from 'zod';
-import { normalizeBaseUrl, type ApiDeps } from '../deps';
+import { errAsync, ResultAsync } from 'neverthrow';
+import { normalizeBaseUrl, resolveAuthHeaders, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
-import type { ResultAsync } from 'neverthrow';
-import type { PlayerPageData, PlayerSearchResult } from '@company-of-heroes/ui/player/types';
+import type {
+	PlayerCustomization,
+	PlayerPageData,
+	PlayerProfileLink,
+	PlayerSearchResult
+} from '@company-of-heroes/ui/player/types';
 
-export type { PlayerPageData, PlayerSearchResult };
+export type { PlayerCustomization, PlayerPageData, PlayerProfileLink, PlayerSearchResult };
+
+export type UpdatePlayerCustomizationInput = {
+	steamId: string;
+	bio?: string;
+	links?: PlayerProfileLink[];
+	background?: File | null;
+	clearBackground?: boolean;
+};
 
 const playerSearchResultSchema: z.ZodType<PlayerSearchResult> = z
 	.object({
@@ -48,9 +61,24 @@ const playerPageSchema: z.ZodType<PlayerPageData> = z
 		matchHistory: z.array(z.any()),
 		smurf: z.any().optional().nullable(),
 		labels: z.array(z.any()).optional(),
-		likeCount: z.number().optional()
+		likeCount: z.number().optional(),
+		customization: z.any().optional().nullable()
 	})
 	.passthrough() as z.ZodType<PlayerPageData>;
+
+const playerProfileLinkSchema: z.ZodType<PlayerProfileLink> = z.object({
+	type: z.enum(['twitch', 'youtube', 'other']),
+	url: z.string().min(1),
+	label: z.string().max(40).nullish().transform((value) => value ?? undefined)
+});
+
+const playerCustomizationSchema: z.ZodType<PlayerCustomization> = z.object({
+	bio: z.string().nullable(),
+	links: z.array(playerProfileLinkSchema),
+	backgroundUrl: z.string().nullable()
+});
+
+const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
 
 export class PlayersApi {
 	constructor(private deps: ApiDeps) {}
@@ -98,5 +126,103 @@ export class PlayersApi {
 				}
 			}
 		);
+	}
+
+	getCustomization(steamId: string): ResultAsync<PlayerCustomization, ApiError> {
+		return fetchJson(
+			this.deps.fetch,
+			`${normalizeBaseUrl(this.deps.baseUrl)}/api/player-customization/${encodeURIComponent(steamId)}`,
+			{
+				fallback: 'Failed to load profile customization.',
+				schema: playerCustomizationSchema,
+				init: { cache: 'no-store' },
+				onStatus: (status) => {
+					if (status === 400) {
+						return apiError(400, 'Enter a valid Steam ID64.');
+					}
+				}
+			}
+		);
+	}
+
+	updateCustomization(
+		input: UpdatePlayerCustomizationInput
+	): ResultAsync<PlayerCustomization, ApiError> {
+		const steamId = input.steamId.trim();
+		if (!steamId) {
+			return errAsync(apiError(400, 'Enter a valid Steam ID64.'));
+		}
+
+		const buildForm = (background?: File) => {
+			const formData = new FormData();
+			formData.append('steamId', steamId);
+			if (input.bio !== undefined) {
+				formData.append('bio', input.bio);
+			}
+
+			if (input.links !== undefined) {
+				formData.append('links', JSON.stringify(input.links));
+			}
+
+			if (input.clearBackground) {
+				formData.append('clearBackground', '1');
+			}
+
+			if (background) {
+				formData.append('background', background, background.name || 'background.jpg');
+			}
+
+			return formData;
+		};
+
+		const post = (formData: FormData) =>
+			fetchJson(this.deps.fetch, `${normalizeBaseUrl(this.deps.baseUrl)}/api/player-customization`, {
+				fallback: 'Could not update your profile.',
+				schema: playerCustomizationSchema,
+				timeoutMs: 60_000,
+				init: {
+					method: 'POST',
+					headers: resolveAuthHeaders(this.deps),
+					body: formData
+				},
+				onStatus: (status) => {
+					if (status === 401) {
+						return apiError(401, 'Log in to update your profile.');
+					}
+
+					if (status === 403) {
+						return apiError(
+							403,
+							'Link this Steam ID to your account before editing that profile.'
+						);
+					}
+
+					if (status === 400) {
+						return apiError(400, 'Could not update your profile.');
+					}
+				}
+			});
+
+		if (!input.background) {
+			return post(buildForm());
+		}
+
+		return ResultAsync.fromPromise(input.background.arrayBuffer(), () =>
+			apiError(400, 'Invalid background image.')
+		).andThen((buffer) => {
+			const bytes = new Uint8Array(buffer);
+			if (bytes.byteLength < 1) {
+				return errAsync(apiError(400, 'Background image is empty.'));
+			}
+
+			if (bytes.byteLength > MAX_BACKGROUND_BYTES) {
+				return errAsync(apiError(400, 'Background must be 5 MB or smaller.'));
+			}
+
+			const file = new File([bytes], input.background!.name || 'background.jpg', {
+				type: input.background!.type || 'image/jpeg'
+			});
+			return post(buildForm(file));
+		});
 	}
 }

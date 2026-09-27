@@ -1,4 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
+import { loginRedirectHref } from '$lib/auth/user';
+import { localizeHref } from '@company-of-heroes/i18n';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import type { PageServerLoad } from './$types';
 
@@ -6,7 +8,7 @@ export const prerender = false;
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
-		redirect(303, `/login?redirect=${encodeURIComponent(url.pathname + url.search)}`);
+		redirect(303, loginRedirectHref(url.pathname + url.search, locals.locale));
 	}
 
 	const fromMatchId = url.searchParams.get('fromMatch')?.trim() || '';
@@ -16,7 +18,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	const match = await unwrapAsync(locals.services.replays().get(fromMatchId));
 	if (match.memberReplayId) {
-		redirect(303, `/replays/${match.memberReplayId}`);
+		redirect(303, localizeHref(`/replays/${match.memberReplayId}`, locals.locale));
 	}
 
 	if (!match.canPublish) {

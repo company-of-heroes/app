@@ -201,7 +201,7 @@ function normalizeSlot(raw) {
 	const raceId = Number(raw?.raceId ?? raw?.race_id);
 	const rating = Number(raw?.rating ?? raw?.newrating);
 	const matchId = Number(raw?.matchId ?? raw?.match_id ?? raw?.id);
-	const at = Number(raw?.at ?? raw?.completiontime ?? 0);
+	let at = Number(raw?.at ?? raw?.completiontime ?? 0);
 
 	if (!isStoredMatchType(matchtypeId)) {
 		return null;
@@ -221,6 +221,12 @@ function normalizeSlot(raw) {
 
 	if (!Number.isFinite(at) || at < 0) {
 		return null;
+	}
+
+	// Cap far-future timestamps so a client cannot lock a slot forever.
+	const nowSec = Math.floor(Date.now() / 1000);
+	if (at > nowSec + 60) {
+		at = nowSec;
 	}
 
 	return { matchtypeId, raceId, rating, matchId, at };
@@ -482,7 +488,13 @@ function fillFromLobbies(steamId, profileIdHint) {
 	}
 }
 
+const LOBBY_FILL_JOB_ID = 'player_ratings_lobby_fill';
+const LOBBY_FILL_SCAN_SIZE = 256;
+
 function selectPlayersForLobbyFill(limit) {
+	const jobState = require(`${__hooks}/lib/job-state.js`);
+	const page = Math.max(1, jobState.getPage(LOBBY_FILL_JOB_ID) || 1);
+	const offset = (page - 1) * LOBBY_FILL_SCAN_SIZE;
 	const rows = arrayOf(
 		new DynamicModel({
 			steamId: '',
@@ -498,9 +510,17 @@ function selectPlayersForLobbyFill(limit) {
 			FROM player_ratings
 			WHERE steamId IS NOT NULL
 				AND steamId != ''
-			LIMIT 256`
+			ORDER BY steamId ASC
+			LIMIT {:limit} OFFSET {:offset}`
 		)
+		.bind({ limit: LOBBY_FILL_SCAN_SIZE, offset })
 		.all(rows);
+
+	if (rows.length < LOBBY_FILL_SCAN_SIZE) {
+		jobState.setPage(LOBBY_FILL_JOB_ID, 1);
+	} else {
+		jobState.setPage(LOBBY_FILL_JOB_ID, page + 1);
+	}
 
 	const candidates = [];
 	for (const row of rows) {

@@ -14,7 +14,8 @@
 	import { ToastReplaysProgress } from '$lib/components/toasts';
 	import { Avatar } from '$lib/components/ui/avatar';
 	import { page } from '$app/state';
-	import { afterNavigate, goto } from '$app/navigation';
+	import { afterNavigate } from '$app/navigation';
+	import { scheduleGoto } from '$core/runtime/schedule-goto';
 	import { Modal } from '$lib/components/ui/modal';
 	import { Toaster } from '$lib/components/ui/toasts';
 	import { Button, ButtonBack } from '$lib/components/ui/button';
@@ -111,7 +112,7 @@
 				return;
 			}
 
-			void goto('/current-game');
+			scheduleGoto('/current-game');
 		};
 
 		untrack(() => {

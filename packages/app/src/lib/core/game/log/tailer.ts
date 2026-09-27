@@ -140,7 +140,8 @@ export class LogTailer {
 					const read = await file.read(buffer);
 
 					if (read === null || read === 0) {
-						break;
+						// Short read — leave offset alone so the next tick retries the gap.
+						return null;
 					}
 
 					chunks.push(buffer.subarray(0, read));

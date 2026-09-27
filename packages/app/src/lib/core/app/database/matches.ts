@@ -140,8 +140,12 @@ export class Matches {
 		return exp(record) as unknown as MatchExpanded;
 	}
 
-	async attachReplay(id: string, file: File): Promise<AttachReplayResult> {
-		return unwrapApi(api.matches.attachReplay(id, file));
+	async attachReplay(
+		id: string,
+		file: File,
+		options?: { durationSeconds?: number }
+	): Promise<AttachReplayResult> {
+		return unwrapApi(api.matches.attachReplay(id, file, options));
 	}
 
 	async delete(id: string): Promise<boolean> {

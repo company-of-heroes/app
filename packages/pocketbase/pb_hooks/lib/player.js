@@ -572,7 +572,7 @@ function loadCommunityPerformance(profileId) {
 			profileId,
 			error: error instanceof Error ? error.message : String(error)
 		});
-		return emptyPerformance();
+		return null;
 	}
 }
 
@@ -711,12 +711,25 @@ function withLikeCount(page) {
 	});
 }
 
+function withCustomization(page) {
+	try {
+		const customization = require(`${__hooks}/lib/player-customization.js`).loadCustomization(
+			page.steamId
+		);
+		return Object.assign({}, page, { customization });
+	} catch {
+		return Object.assign({}, page, {
+			customization: { bio: null, links: [], backgroundUrl: null }
+		});
+	}
+}
+
 function loadPlayerPage(id, options) {
 	const extras = options?.extras !== false;
 	const cacheKey = `${id}:${extras ? 'full' : 'card'}`;
 	const cached = readPageCache(cacheKey);
 	if (cached) {
-		return withLikeCount(cached);
+		return withCustomization(withLikeCount(cached));
 	}
 
 	const steamLookup = isSteamId(String(id));
@@ -885,7 +898,7 @@ function loadPlayerPage(id, options) {
 	};
 
 	writePageCache(cacheKey, page);
-	return withLikeCount(page);
+	return withCustomization(withLikeCount(page));
 }
 
 function handleOptions(e) {

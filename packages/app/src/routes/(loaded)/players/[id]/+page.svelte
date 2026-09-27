@@ -1,5 +1,6 @@
 <script lang="ts">
 	import dayjs from '$lib/dayjs';
+	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { steam } from '$core/steam';
 	import { relic } from '$lib/relic';
@@ -17,6 +18,7 @@
 	import { findCheaterBySteamId } from '$core/pocketbase/anti-cheat';
 	import { account } from '$core/account';
 	import { app } from '$core/app/context';
+	import { api } from '$core/api';
 	import { getPlayerRating } from '$core/pocketbase/player-ratings';
 	import {
 		emptyPlayerPerformance,
@@ -27,6 +29,8 @@
 	import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import { useI18n } from '$lib/i18n';
+	import { Button } from '$lib/components/ui/button';
+	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 
 	const { t } = useI18n();
 
@@ -114,6 +118,24 @@
 		}
 	);
 
+	const customization = resource(
+		() => steamId,
+		async (id) => {
+			if (!id) {
+				return null;
+			}
+
+			const result = await api.players.getCustomization(id);
+			return result.isOk() ? result.value : null;
+		}
+	);
+
+	afterNavigate(({ from }) => {
+		if (from) {
+			void customization.refetch();
+		}
+	});
+
 	const extra = $derived.by(() => {
 		const current = extras.current;
 		const profile = relicProfile.current;
@@ -197,7 +219,8 @@
 			matchHistory: extra?.matchHistory ?? [],
 			smurf: extra?.smurf,
 			labels,
-			likeCount: extra?.likeCount ?? 0
+			likeCount: extra?.likeCount ?? 0,
+			customization: customization.current ?? null
 		});
 	});
 
@@ -230,6 +253,17 @@
 					alias={profile.alias}
 					class="shrink-0"
 				/>
+				{#if isSelf}
+					<Button
+						href="/account/profile?steamId={user.steamid}"
+						variant="secondary"
+						size="sm"
+						class="shrink-0"
+					>
+						<PencilSimpleIcon size={16} />
+						{t('Update profile')}
+					</Button>
+				{/if}
 				{#if extra?.cheater}
 					<CheaterAlert />
 				{/if}

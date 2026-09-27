@@ -30,6 +30,7 @@ export class Game extends Emittery {
 	#focusInterval: ReturnType<typeof setInterval> | null = null;
 	#unlisteners: UnlistenFn[] = [];
 	#started = false;
+	#processCheckGeneration = 0;
 
 	/** Begins process / focus / chat tracking. Idempotent. */
 	async start(): Promise<void> {
@@ -39,22 +40,8 @@ export class Game extends Emittery {
 
 		this.#started = true;
 
-		this.#checkGameInterval = setInterval(async () => {
-			try {
-				const running = dev ? true : await invoke<boolean>('is_running', { processName: 'RelicCOH.exe' });
-
-				if (running !== this.isRunning) {
-					this.isRunning = running;
-
-					if (running) {
-						this.#trackWindowFocus();
-					} else {
-						this.#stopTrackingWindowFocus();
-					}
-				}
-			} catch (error) {
-				console.error('[GAME]: process check failed:', error);
-			}
+		this.#checkGameInterval = setInterval(() => {
+			void this.#pollProcessRunning();
 		}, 1000);
 
 		this.#unlisteners.push(
@@ -73,6 +60,7 @@ export class Game extends Emittery {
 			this.#checkGameInterval = null;
 		}
 
+		this.#processCheckGeneration += 1;
 		this.#stopTrackingWindowFocus();
 
 		for (const unlisten of this.#unlisteners) {
@@ -81,6 +69,34 @@ export class Game extends Emittery {
 
 		this.#unlisteners = [];
 		this.#started = false;
+	}
+
+	async #pollProcessRunning(): Promise<void> {
+		const generation = ++this.#processCheckGeneration;
+
+		try {
+			const running = dev
+				? true
+				: await invoke<boolean>('is_running', { processName: 'RelicCOH.exe' });
+
+			if (generation !== this.#processCheckGeneration) {
+				return;
+			}
+
+			if (running !== this.isRunning) {
+				this.isRunning = running;
+
+				if (running) {
+					this.#trackWindowFocus();
+				} else {
+					this.#stopTrackingWindowFocus();
+				}
+			}
+		} catch (error) {
+			if (generation === this.#processCheckGeneration) {
+				console.error('[GAME]: process check failed:', error);
+			}
+		}
 	}
 
 	toggleIngameChatOpen() {

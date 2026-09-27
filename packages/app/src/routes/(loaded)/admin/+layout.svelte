@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { scheduleGoto } from '$core/runtime/schedule-goto';
 	import { watch } from 'runed';
 	import BellIcon from 'phosphor-svelte/lib/BellIcon';
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlashIcon';
@@ -28,7 +28,7 @@
 					app.toast.error(t('You do not have access to this page.'));
 				}
 
-				void goto('/');
+				scheduleGoto('/');
 			}
 		}
 	);

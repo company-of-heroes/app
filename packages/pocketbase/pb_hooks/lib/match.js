@@ -310,6 +310,11 @@ function loadMatchPage(id, options) {
 		canPublish: !!(isOwner && hasReplay && !memberReplayId)
 	};
 
+	// Never put an auth-dependent flag on a publicly cached response.
+	if (!auth) {
+		body.canPublish = false;
+	}
+
 	if (includeHidden) {
 		body.updatedAt = record.get('updatedAt') || record.get('updated') || '';
 		body.owner = ownerLabelFromRecord(record);
@@ -332,7 +337,8 @@ function handleGet(e) {
 	const includeHidden = isStaffAuth(e.auth);
 	try {
 		const body = loadMatchPage(id, { includeHidden, auth: e.auth });
-		if (includeHidden) {
+		// Auth-aware fields (canPublish) must not be shared-cacheable.
+		if (includeHidden || e.auth) {
 			return jsonNoStore(e, 200, body);
 		}
 
@@ -416,6 +422,13 @@ function currentDownloadCount(id) {
 	return Number(lobby.get('downloadCount')) || 0;
 }
 
+function incrementDownloadCount(id) {
+	$app.db().newQuery('UPDATE lobbies SET downloadCount = COALESCE(downloadCount, 0) + 1 WHERE id = {:id}').bind({
+		id
+	}).execute();
+	return currentDownloadCount(id);
+}
+
 function handleDownload(e) {
 	const limited = limitCountRequest(e);
 	if (!limited.ok) {
@@ -456,12 +469,10 @@ function handleDownload(e) {
 			return jsonNoStore(e, 200, { downloadCount: currentDownloadCount(id), counted: false });
 		}
 
-		const lobby = $app.findRecordById('lobbies', id);
-		const next = (Number(lobby.get('downloadCount')) || 0) + 1;
-		lobby.set('downloadCount', next);
-		$app.save(lobby);
+		const next = incrementDownloadCount(id);
 		if (saved.firstId) {
 			try {
+				const lobby = $app.findRecordById('lobbies', id);
 				require(`${__hooks}/lib/reputation.js`).awardReplayDownload({
 					uploaderId: lobby.get('user'),
 					downloaderId: '',

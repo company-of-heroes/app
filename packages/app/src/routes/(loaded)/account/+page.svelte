@@ -142,6 +142,11 @@
 			{t('Privacy policy')}
 		</Button>
 	</p>
+	<p class={flushHeaderDescription}>
+		<Button href="/account/profile" variant="link" class="h-auto px-0">
+			{t('Customize public player profile')}
+		</Button>
+	</p>
 </div>
 
 <Form.Root>

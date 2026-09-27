@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { Button } from '@company-of-heroes/ui/button';
 	import PlayerMatchHistory from '$lib/components/player/player-match-history.svelte';
 	import PlayerPerformancePanel from '$lib/components/player-performance/player-performance-panel.svelte';
 	import PlayerCompanionStaffDebug from '$lib/components/player/player-companion-staff-debug.svelte';
@@ -7,14 +9,17 @@
 	import PlayerProfileSkeleton from '$lib/components/player/player-profile-skeleton.svelte';
 	import PlayerStatsTable from '$lib/components/player/player-stats-table.svelte';
 	import * as Tabs from '@company-of-heroes/ui/tabs';
+	import { meSteamIds } from '$lib/auth/user';
 	import { formatRelative } from '$lib/utils/player/format';
 	import { SITE_URL } from '$lib/site/urls';
 	import { currentLocale, href, useI18n } from '$lib/i18n';
+	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
 	let currentTab = $state('stats');
+	const mySteamIds = $derived(meSteamIds(page.data.user));
 </script>
 
 <svelte:head>
@@ -41,6 +46,19 @@
 		<PlayerProfileHeader {player}>
 			{#snippet vote()}
 				<PlayerLikeButton steamId={player.steamId} likeCount={player.likeCount ?? 0} />
+			{/snippet}
+			{#snippet afterName()}
+				{#if mySteamIds.includes(player.steamId)}
+					<Button
+						href={href(`/account/profile?steamId=${player.steamId}`)}
+						variant="secondary"
+						size="sm"
+						class="shrink-0"
+					>
+						<PencilSimpleIcon size={16} />
+						{t('Update profile')}
+					</Button>
+				{/if}
 			{/snippet}
 			{#snippet afterDetails()}
 				<PlayerCompanionStaffDebug steamId={player.steamId} />
