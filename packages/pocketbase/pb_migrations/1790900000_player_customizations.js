@@ -92,7 +92,7 @@ migrate(
 					id: 'file_player_custom_background',
 					maxSelect: 1,
 					maxSize: 5242880,
-					mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+					mimeTypes: [],
 					name: 'background',
 					presentable: false,
 					protected: false,

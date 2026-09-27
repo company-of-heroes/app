@@ -454,27 +454,90 @@ function byteSize(bytes) {
 
 function extensionForMime(mime, fallbackName) {
 	const lower = String(fallbackName || '').toLowerCase();
-	if (lower.endsWith('.png')) {
+	if (lower.endsWith('.png') || mime === 'image/png') {
 		return 'png';
+	}
+
+	if (lower.endsWith('.webp') || mime === 'image/webp') {
+		return 'webp';
+	}
+
+	// Prefer .jpeg so OS/PB mime maps never invent non-standard image/jpg.
+	return 'jpeg';
+}
+
+function byteAt(bytes, index) {
+	if (bytes == null || index < 0) {
+		return -1;
+	}
+
+	const value = bytes[index];
+	if (typeof value === 'number') {
+		return value & 0xff;
+	}
+
+	if (typeof bytes.charCodeAt === 'function') {
+		return bytes.charCodeAt(index) & 0xff;
+	}
+
+	return -1;
+}
+
+function sniffImageMime(bytes) {
+	const size = byteSize(bytes);
+	if (size < 3) {
+		return '';
+	}
+
+	// JPEG
+	if (byteAt(bytes, 0) === 0xff && byteAt(bytes, 1) === 0xd8 && byteAt(bytes, 2) === 0xff) {
+		return 'image/jpeg';
+	}
+
+	// PNG
+	if (
+		size >= 8 &&
+		byteAt(bytes, 0) === 0x89 &&
+		byteAt(bytes, 1) === 0x50 &&
+		byteAt(bytes, 2) === 0x4e &&
+		byteAt(bytes, 3) === 0x47
+	) {
+		return 'image/png';
+	}
+
+	// WEBP: RIFF....WEBP
+	if (
+		size >= 12 &&
+		byteAt(bytes, 0) === 0x52 &&
+		byteAt(bytes, 1) === 0x49 &&
+		byteAt(bytes, 2) === 0x46 &&
+		byteAt(bytes, 3) === 0x46 &&
+		byteAt(bytes, 8) === 0x57 &&
+		byteAt(bytes, 9) === 0x45 &&
+		byteAt(bytes, 10) === 0x42 &&
+		byteAt(bytes, 11) === 0x50
+	) {
+		return 'image/webp';
+	}
+
+	return '';
+}
+
+function mimeFromFilename(name) {
+	const lower = String(name || '').toLowerCase();
+	if (lower.endsWith('.png')) {
+		return 'image/png';
 	}
 
 	if (lower.endsWith('.webp')) {
-		return 'webp';
+		return 'image/webp';
 	}
 
 	if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
-		return 'jpg';
+		return 'image/jpeg';
 	}
 
-	if (mime === 'image/png') {
-		return 'png';
-	}
-
-	if (mime === 'image/webp') {
-		return 'webp';
-	}
-
-	return 'jpg';
+	return '';
 }
 
 function readUploadedBackground(e) {
@@ -490,51 +553,57 @@ function readUploadedBackground(e) {
 	}
 
 	const uploaded = files[0];
-	const fallbackName = String(uploaded.name || 'background.jpg').trim() || 'background.jpg';
-	const rawMime = String(uploaded.contentType || uploaded.type || '').toLowerCase();
-	const mimeFromName = (() => {
-		const lower = fallbackName.toLowerCase();
-		if (lower.endsWith('.png')) {
-			return 'image/png';
-		}
-
-		if (lower.endsWith('.webp')) {
-			return 'image/webp';
-		}
-
-		if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
-			return 'image/jpeg';
-		}
-
-		return '';
-	})();
-	const mime = ALLOWED_MIME[rawMime] ? rawMime : mimeFromName;
-	if (!mime || !ALLOWED_MIME[mime]) {
-		throw new Error('Background must be a jpeg, png, or webp image.');
+	const fallbackName = String(uploaded.name || 'background.jpeg').trim() || 'background.jpeg';
+	const declaredSize = Number(uploaded.size) || 0;
+	if (declaredSize > MAX_FILE_BYTES) {
+		throw new Error('Background must be 5 MB or smaller.');
 	}
 
-	const ext = extensionForMime(mime, fallbackName);
-	const tempPath = `${$os.tempDir()}/player-bg-${Date.now()}-${String(Math.random()).slice(2, 10)}.${ext}`;
-
+	// Prefer multipart → File so binary stays intact (toBytes/writeFile can corrupt images).
+	// Fall back to temp path + magic-byte sniff when we can read bytes.
 	const reader = uploaded.reader.open();
-	let bytes;
+	let bytes = null;
 	try {
-		bytes = toBytes(reader);
-		const size = byteSize(bytes);
-		if (!size) {
-			throw new Error('Background image is empty.');
+		if (typeof toBytes === 'function') {
+			bytes = toBytes(reader);
 		}
-
-		if (size > MAX_FILE_BYTES) {
-			throw new Error('Background must be 5 MB or smaller.');
-		}
-
-		$os.writeFile(tempPath, bytes, 0o644);
 	} finally {
 		reader.close();
 	}
 
-	return { tempPath, fallbackName: `background.${ext}` };
+	const size = bytes != null ? byteSize(bytes) : declaredSize;
+	if (!size) {
+		throw new Error('Background image is empty.');
+	}
+
+	if (size > MAX_FILE_BYTES) {
+		throw new Error('Background must be 5 MB or smaller.');
+	}
+
+	const sniffed = bytes != null ? sniffImageMime(bytes) : '';
+	const rawMime = String(uploaded.contentType || uploaded.type || '').toLowerCase();
+	const mime =
+		sniffed ||
+		(ALLOWED_MIME[rawMime] ? (rawMime === 'image/jpg' ? 'image/jpeg' : rawMime) : '') ||
+		mimeFromFilename(fallbackName);
+
+	if (!mime || !ALLOWED_MIME[mime === 'image/jpg' ? 'image/jpeg' : mime]) {
+		throw new Error('Background must be a jpeg, png, or webp image.');
+	}
+
+	const normalizedMime = mime === 'image/jpg' ? 'image/jpeg' : mime;
+	const ext = extensionForMime(normalizedMime, fallbackName);
+
+	if (bytes != null) {
+		const tempPath = `${$os.tempDir()}/player-bg-${Date.now()}-${String(Math.random()).slice(2, 10)}.${ext}`;
+		$os.writeFile(tempPath, bytes, 0o644);
+		return { tempPath, fallbackName: `background.${ext}` };
+	}
+
+	return {
+		file: $filesystem.fileFromMultipart(uploaded),
+		fallbackName: `background.${ext}`
+	};
 }
 
 function handleGet(e) {
@@ -554,11 +623,13 @@ function applyCustomizationFields(record, authId, steamId, bio, links, options) 
 	// JSON fields are more reliable as a string in the JSVM.
 	record.set('links', JSON.stringify(links));
 
-	if (options.clearBackground && !options.uploadTempPath) {
+	if (options.clearBackground && !options.uploadTempPath && !options.uploadFile) {
 		record.set('background', null);
 	}
 
-	if (options.uploadTempPath) {
+	if (options.uploadFile) {
+		record.set('background', options.uploadFile);
+	} else if (options.uploadTempPath) {
 		record.set('background', $filesystem.fileFromPath(options.uploadTempPath));
 	}
 }
@@ -602,7 +673,7 @@ function handleUpdate(e) {
 	const body = e.requestInfo()?.body || {};
 	const steamId = parseSteamId(bodyField(body, 'steamId'));
 	if (!steamId) {
-		if (upload) {
+		if (upload?.tempPath) {
 			try {
 				$os.remove(upload.tempPath);
 			} catch {
@@ -614,7 +685,7 @@ function handleUpdate(e) {
 	}
 
 	if (!authOwnsSteamId(e.auth, steamId)) {
-		if (upload) {
+		if (upload?.tempPath) {
 			try {
 				$os.remove(upload.tempPath);
 			} catch {
@@ -636,7 +707,7 @@ function handleUpdate(e) {
 			links = parseLinks(linksRaw);
 		}
 	} catch (error) {
-		if (upload) {
+		if (upload?.tempPath) {
 			try {
 				$os.remove(upload.tempPath);
 			} catch {
@@ -653,7 +724,8 @@ function handleUpdate(e) {
 		bodyField(body, 'clearBackground') === 'true';
 	const fieldOptions = {
 		clearBackground,
-		uploadTempPath: upload ? upload.tempPath : ''
+		uploadTempPath: upload && upload.tempPath ? upload.tempPath : '',
+		uploadFile: upload && upload.file ? upload.file : null
 	};
 
 	try {
@@ -667,11 +739,20 @@ function handleUpdate(e) {
 		$app.save(record);
 
 		let copiedBackground = '';
-		const syncOptions = { ...fieldOptions };
-		if (!syncOptions.uploadTempPath && !clearBackground) {
-			copiedBackground = backgroundTempFromRecord(record);
-			if (copiedBackground) {
-				syncOptions.uploadTempPath = copiedBackground;
+		// Don't reuse the multipart File across records — copy from the saved primary.
+		const syncOptions = {
+			clearBackground,
+			uploadTempPath: '',
+			uploadFile: null
+		};
+		if (!clearBackground) {
+			if (fieldOptions.uploadTempPath) {
+				syncOptions.uploadTempPath = fieldOptions.uploadTempPath;
+			} else {
+				copiedBackground = backgroundTempFromRecord(record);
+				if (copiedBackground) {
+					syncOptions.uploadTempPath = copiedBackground;
+				}
 			}
 		}
 
@@ -687,7 +768,7 @@ function handleUpdate(e) {
 			}
 		}
 
-		if (upload) {
+		if (upload?.tempPath) {
 			try {
 				$os.remove(upload.tempPath);
 			} catch {
@@ -697,7 +778,7 @@ function handleUpdate(e) {
 
 		return jsonNoStore(e, 200, serializeRecord(record));
 	} catch (error) {
-		if (upload) {
+		if (upload?.tempPath) {
 			try {
 				$os.remove(upload.tempPath);
 			} catch {

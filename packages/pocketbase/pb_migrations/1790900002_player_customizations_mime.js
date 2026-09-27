@@ -8,9 +8,9 @@ migrate(
 			return;
 		}
 
-		background.maxSize = 5242880;
+		// PB content-sniff often rejects real .jpg uploads (and image/jpg).
+		// We validate jpeg/png/webp ourselves in the player-customization hook.
 		background.mimeTypes = [];
-		background.thumbs = ['800x0', '1600x0'];
 		app.save(collection);
 	},
 	(app) => {
@@ -21,8 +21,7 @@ migrate(
 				return;
 			}
 
-			background.maxSize = 2097152;
-			background.thumbs = [];
+			background.mimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
 			app.save(collection);
 		} catch {
 			// collection removed

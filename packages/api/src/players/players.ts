@@ -245,9 +245,21 @@ export class PlayersApi {
 			}
 
 			const filename = input.background!.name || 'background.jpg';
-			const file = new File([bytes], filename, {
-				type: normalizeBackgroundMime(input.background!.type, filename)
-			});
+			const mime = normalizeBackgroundMime(input.background!.type, filename);
+			const lower = filename.toLowerCase();
+			const safeName =
+				mime === 'image/png'
+					? lower.endsWith('.png')
+						? filename
+						: 'background.png'
+					: mime === 'image/webp'
+						? lower.endsWith('.webp')
+							? filename
+							: 'background.webp'
+						: lower.endsWith('.jpeg') || lower.endsWith('.jpg')
+							? filename.replace(/\.jpg$/i, '.jpeg')
+							: 'background.jpeg';
+			const file = new File([bytes], safeName, { type: mime });
 			return post(buildForm(file));
 		});
 	}
