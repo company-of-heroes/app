@@ -9,6 +9,16 @@ import { generateUniqueId } from '../id';
 import { escapePocketBaseString, fromPbPromise, pbOptions, requireAuth } from '../pb';
 import { isStaff } from '../staff';
 import { readMetaVersion } from '../companion/meta';
+import { toUploadFile } from '../upload-file';
+
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+const AVATAR_UPLOAD = {
+	maxBytes: MAX_AVATAR_BYTES,
+	allowed: ['jpeg', 'png', 'webp', 'gif', 'bmp'] as const,
+	fallbackName: 'avatar.png',
+	tooLargeMessage: 'Avatar must be 2 MB or smaller.',
+	invalidTypeMessage: 'Avatar must be an image file.'
+};
 
 export type UserRole = 'admin' | 'moderator';
 
@@ -159,11 +169,14 @@ export class AuthApi {
 			payload.name = input.name.trim();
 		}
 
-		if (input.avatar !== undefined) {
-			payload.avatar = input.avatar;
+		const hasAvatar = Boolean(
+			input.avatar && (input.avatar.size == null || input.avatar.size > 0)
+		);
+		if (input.avatar === null) {
+			payload.avatar = null;
 		}
 
-		if (Object.keys(payload).length === 0) {
+		if (Object.keys(payload).length === 0 && !hasAvatar) {
 			const record = this.deps.pocketbase.authStore.record as AuthUser | null;
 			if (!record) {
 				return errAsync(apiError(401, 'Log in to do that.'));
@@ -172,13 +185,23 @@ export class AuthApi {
 			return okAsync(record);
 		}
 
-		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('users')
-				.update(auth.value, payload, pbOptions(this.deps))
-				.then((record) => this.#saveAuthRecord(record as AuthUser)),
-			'Could not update your profile.'
-		);
+		const persist = (finalPayload: Record<string, unknown>) =>
+			fromPbPromise(
+				this.deps.pocketbase
+					.collection('users')
+					.update(auth.value, finalPayload, pbOptions(this.deps))
+					.then((record) => this.#saveAuthRecord(record as AuthUser)),
+				'Could not update your profile.'
+			);
+
+		if (!hasAvatar || !input.avatar) {
+			return persist(payload);
+		}
+
+		return toUploadFile(input.avatar, AVATAR_UPLOAD).andThen((avatar) => {
+			payload.avatar = avatar;
+			return persist(payload);
+		});
 	}
 
 	updatePassword(input: {

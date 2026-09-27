@@ -15,15 +15,6 @@ const updateProfileSchema = z.object({
 		.refine((file) => !file || file.size === 0 || file.size <= MAX_AVATAR_BYTES, {
 			message: 'Avatar must be 2 MB or smaller.'
 		})
-		.refine(
-			(file) =>
-				!file ||
-				file.size === 0 ||
-				['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/bmp'].includes(
-					file.type
-				),
-			{ message: 'Avatar must be an image file.' }
-		)
 });
 
 export const updateProfile = form(updateProfileSchema, async (data) => {
@@ -33,12 +24,7 @@ export const updateProfile = form(updateProfileSchema, async (data) => {
 		error(401, locals.t('Log in to do that.'));
 	}
 
-	const avatar =
-		data.avatar && data.avatar.size > 0
-			? new File([data.avatar], data.avatar.name || 'avatar.png', {
-					type: data.avatar.type || 'image/png'
-				})
-			: undefined;
+	const avatar = data.avatar && data.avatar.size > 0 ? data.avatar : undefined;
 
 	const result = await locals.services.auth().updateProfile({
 		name: data.name,

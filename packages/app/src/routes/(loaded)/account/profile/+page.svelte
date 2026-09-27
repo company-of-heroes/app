@@ -10,13 +10,17 @@
 	import { useI18n } from '$lib/i18n';
 	import { api, unwrapApi } from '$core/api';
 	import { resource, watch } from 'runed';
-	import type { PlayerProfileLink } from '@company-of-heroes/api';
+	import {
+		PROFILE_BIO_MAX,
+		PROFILE_OTHER_LINKS_MAX,
+		buildProfileLinks,
+		pickOwnedSteamId,
+		splitProfileLinks
+	} from '@company-of-heroes/api';
 	import ImageIcon from 'phosphor-svelte/lib/ImageIcon';
 	import { page } from '$app/state';
 
 	const { t } = useI18n();
-
-	const MAX_OTHER_LINKS = 4;
 
 	let bio = $state('');
 	let twitchUrl = $state('');
@@ -29,48 +33,17 @@
 	let saveError = $state<string | null>(null);
 	let saveSuccess = $state(false);
 
-	const steamIds = $derived(app.features.auth.user.steamIds ?? []);
-	const steamId = $derived.by(() => {
-		const preferred = page.url.searchParams.get('steamId');
-		if (preferred && steamIds.includes(preferred)) {
-			return preferred;
-		}
-
-		const fromGame = app.game.profile?.steam.steamid;
-		if (fromGame && steamIds.includes(fromGame)) {
-			return fromGame;
-		}
-
-		return steamIds[0] ?? null;
-	});
-	const canAddOtherLink = $derived(otherLinks.length < MAX_OTHER_LINKS);
+	const steamId = $derived(
+		pickOwnedSteamId(app.features.auth.user.steamIds, [
+			page.url.searchParams.get('steamId'),
+			app.game.profile?.steam.steamid
+		])
+	);
+	const canAddOtherLink = $derived(otherLinks.length < PROFILE_OTHER_LINKS_MAX);
 
 	const customization = resource(
 		() => steamId,
-		async (id) => {
-			if (!id) {
-				return null;
-			}
-
-			const ownedIds = app.features.auth.user.steamIds ?? [];
-			const primary = await unwrapApi(api.players.getCustomization(id));
-			if (primary.bio || primary.backgroundUrl || primary.links.length > 0) {
-				return primary;
-			}
-
-			for (const otherId of ownedIds) {
-				if (otherId === id) {
-					continue;
-				}
-
-				const other = await unwrapApi(api.players.getCustomization(otherId));
-				if (other.bio || other.backgroundUrl || other.links.length > 0) {
-					return other;
-				}
-			}
-
-			return primary;
-		}
+		async (id) => (id ? unwrapApi(api.players.getCustomization(id)) : null)
 	);
 
 	const backgroundPreview = $derived.by(() => {
@@ -83,25 +56,9 @@
 	const showClearBackground = $derived(
 		Boolean(backgroundFile || customization.current?.backgroundUrl)
 	);
-	const loadErrorMessage = $derived.by(() => {
-		const error = customization.error;
-		if (!error) {
-			return null;
-		}
-
-		if (error instanceof Error && error.message) {
-			return error.message;
-		}
-
-		if (typeof error === 'object' && error !== null && 'message' in error) {
-			const message = (error as { message: unknown }).message;
-			if (typeof message === 'string' && message) {
-				return message;
-			}
-		}
-
-		return 'Failed to load profile customization.';
-	});
+	const loadErrorMessage = $derived(
+		customization.error ? t('Failed to load profile customization.') : null
+	);
 
 	watch(
 		() => customization.current,
@@ -110,32 +67,18 @@
 				return;
 			}
 
+			const links = splitProfileLinks(value.links);
 			bio = value.bio ?? '';
-			twitchUrl = value.links.find((link) => link.type === 'twitch')?.url ?? '';
-			youtubeUrl = value.links.find((link) => link.type === 'youtube')?.url ?? '';
-			otherLinks = value.links
-				.filter((link) => link.type === 'other')
-				.map((link) => ({ id: crypto.randomUUID(), label: link.label ?? '', url: link.url }));
+			twitchUrl = links.twitchUrl;
+			youtubeUrl = links.youtubeUrl;
+			otherLinks = links.others.map((link) => ({
+				id: crypto.randomUUID(),
+				label: link.label ?? '',
+				url: link.url ?? ''
+			}));
 			clearBackground = false;
 		}
 	);
-
-	function mimeFromPath(path: string): string {
-		const lower = path.toLowerCase();
-		if (lower.endsWith('.png')) {
-			return 'image/png';
-		}
-
-		if (lower.endsWith('.webp')) {
-			return 'image/webp';
-		}
-
-		if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
-			return 'image/jpeg';
-		}
-
-		return 'image/jpeg';
-	}
 
 	function addOtherLink() {
 		if (!canAddOtherLink) {
@@ -151,28 +94,6 @@
 
 	function updateOtherLink(index: number, field: 'label' | 'url', value: string) {
 		otherLinks = otherLinks.map((link, i) => (i === index ? { ...link, [field]: value } : link));
-	}
-
-	function buildLinks(): PlayerProfileLink[] {
-		const links: PlayerProfileLink[] = [];
-		if (twitchUrl.trim()) {
-			links.push({ type: 'twitch', url: twitchUrl.trim() });
-		}
-
-		if (youtubeUrl.trim()) {
-			links.push({ type: 'youtube', url: youtubeUrl.trim() });
-		}
-
-		for (const item of otherLinks) {
-			const url = item.url.trim();
-			if (!url) {
-				continue;
-			}
-
-			links.push({ type: 'other', url, label: item.label.trim() || undefined });
-		}
-
-		return links;
 	}
 
 	function clearBackgroundImage() {
@@ -200,9 +121,7 @@
 			return;
 		}
 
-		const bytes = await readFile(path);
-		const name = await basename(path);
-		const file = new File([bytes], name, { type: mimeFromPath(path) });
+		const file = new File([await readFile(path)], await basename(path));
 		if (previewUrl) {
 			URL.revokeObjectURL(previewUrl);
 		}
@@ -218,14 +137,20 @@
 			return;
 		}
 
-		saving = true;
 		saveError = null;
 		saveSuccess = false;
+		const links = buildProfileLinks({ twitchUrl, youtubeUrl, others: otherLinks });
+		if (links.isErr()) {
+			saveError = t(links.error.message);
+			return;
+		}
+
+		saving = true;
 		const result = await api.players.updateCustomization({
 			steamId,
 			bio,
-			links: buildLinks(),
-			background: clearBackground ? undefined : (backgroundFile ?? undefined),
+			links: links.value,
+			background: backgroundFile,
 			clearBackground
 		});
 		saving = false;
@@ -262,15 +187,17 @@
 		{t('Link your Steam account to customize your player profile.')}
 	</p>
 {:else if customization.loading && !customization.current}
-	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">{t('Loading...')}</p>
+	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
+		{t('Loading...')}
+	</p>
 {:else if loadErrorMessage}
 	<p class="text-destructive border-secondary-800 border-b px-4 py-3 text-sm">
-		{t(loadErrorMessage)}
+		{loadErrorMessage}
 	</p>
 {:else}
 	<Form.Root>
 		<Form.Group label={t('Bio')} description={t('Up to 500 characters.')}>
-			<Textarea id="profile-bio" rows={4} maxlength={500} bind:value={bio} />
+			<Textarea id="profile-bio" rows={4} maxlength={PROFILE_BIO_MAX} bind:value={bio} />
 		</Form.Group>
 
 		<Form.Group label={t('Twitch URL')}>
@@ -281,7 +208,12 @@
 			<Input id="profile-youtube" type="url" bind:value={youtubeUrl} />
 		</Form.Group>
 
-		<Form.Group label={t('Other links')} description={t('Up to 4 additional links.')} wide layout="stacked">
+		<Form.Group
+			label={t('Other links')}
+			description={t('Up to 4 additional links.')}
+			wide
+			layout="stacked"
+		>
 			{#each otherLinks as link, index (link.id)}
 				<div class="flex flex-col gap-2 sm:flex-row sm:items-end">
 					<div class="min-w-0 flex-1">

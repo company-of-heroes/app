@@ -4,6 +4,11 @@
 	import { Input, Textarea } from '@company-of-heroes/ui/input';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
+	import {
+		PROFILE_BIO_MAX,
+		PROFILE_OTHER_LINKS_MAX,
+		splitProfileLinks
+	} from '@company-of-heroes/api';
 	import { href, useI18n } from '$lib/i18n';
 	import {
 		loadProfileCustomization,
@@ -16,19 +21,21 @@
 
 	const profile = await loadProfileCustomization();
 	const { steamId, customization } = profile;
+	const initialLinks = splitProfileLinks(customization.links);
 
 	let bio = $state(customization.bio ?? '');
-	let twitchUrl = $state(customization.links.find((l) => l.type === 'twitch')?.url ?? '');
-	let youtubeUrl = $state(customization.links.find((l) => l.type === 'youtube')?.url ?? '');
+	let twitchUrl = $state(initialLinks.twitchUrl);
+	let youtubeUrl = $state(initialLinks.youtubeUrl);
 	let otherLinks = $state(
-		customization.links
-			.filter((l) => l.type === 'other')
-			.map((l) => ({ id: crypto.randomUUID(), label: l.label ?? '', url: l.url }))
+		initialLinks.others.map((link) => ({
+			id: crypto.randomUUID(),
+			label: link.label ?? '',
+			url: link.url ?? ''
+		}))
 	);
 	let clearBackground = $state(false);
 
-	const MAX_OTHER_LINKS = 4;
-	const canAddOtherLink = $derived(otherLinks.length < MAX_OTHER_LINKS);
+	const canAddOtherLink = $derived(otherLinks.length < PROFILE_OTHER_LINKS_MAX);
 	const formIssue = $derived(updateProfileCustomization.fields.allIssues()?.[0]?.message);
 	const saved = $derived(data.saved === '1');
 	const otherLinksPayload = $derived(
@@ -66,8 +73,9 @@
 		<h1 class="font-heading text-xl font-bold text-white">{t('Update profile')}</h1>
 		{#if steamId}
 			<p class="text-secondary-400 mt-1 text-sm">
-				<a href={href(`/players/${steamId}`)} class={cn(interactive, 'text-primary hover:underline')}
-					>{t('View profile')}</a
+				<a
+					href={href(`/players/${steamId}`)}
+					class={cn(interactive, 'text-primary hover:underline')}>{t('View profile')}</a
 				>
 			</p>
 		{/if}
@@ -75,7 +83,9 @@
 </div>
 
 {#if saved}
-	<p class="text-success border-secondary-800 border-b px-4 py-3 text-sm">{t('Profile updated.')}</p>
+	<p class="text-success border-secondary-800 border-b px-4 py-3 text-sm">
+		{t('Profile updated.')}
+	</p>
 {/if}
 
 {#if !steamId}
@@ -97,7 +107,7 @@
 			<Textarea
 				id="profile-bio"
 				rows={4}
-				maxlength={500}
+				maxlength={PROFILE_BIO_MAX}
 				{...updateProfileCustomization.fields.bio.as('text', bio)}
 			/>
 		</Form.Group>
@@ -162,10 +172,7 @@
 			{/if}
 		</Form.Group>
 
-		<Form.Group
-			label={t('Background')}
-			description={t('JPEG, PNG, or WebP. Max 5 MB.')}
-		>
+		<Form.Group label={t('Background')} description={t('JPEG, PNG, or WebP. Max 5 MB.')}>
 			{#if customization.backgroundUrl && !clearBackground}
 				<img
 					src={customization.backgroundUrl}
@@ -182,9 +189,8 @@
 			{#snippet footer()}
 				<div class="flex flex-wrap items-center gap-2">
 					<input
-						type="file"
 						accept="image/jpeg,image/jpg,image/png,image/webp"
-						class="text-secondary-400 text-sm file:bg-secondary-800 file:mr-3 file:rounded file:border-0 file:px-3 file:py-1.5 file:text-sm file:text-white"
+						class="text-secondary-400 file:bg-secondary-800 text-sm file:mr-3 file:rounded file:border-0 file:px-3 file:py-1.5 file:text-sm file:text-white"
 						{...updateProfileCustomization.fields.background.as('file')}
 						onchange={() => {
 							clearBackground = false;

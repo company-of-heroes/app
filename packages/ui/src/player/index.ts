@@ -50,7 +50,6 @@ export type {
 	PlayerPreviewData,
 	PlayerFactionPreview,
 	PlayerCustomization,
-	PlayerProfileLink,
 	PlayerProfileLinkType
 } from './types';
 export {

@@ -55,7 +55,14 @@ export {
 	type PlayerProfileLink,
 	type PlayerSearchOptions,
 	type PlayerSearchResult,
-	type UpdatePlayerCustomizationInput
+	type UpdatePlayerCustomizationInput,
+	PROFILE_BIO_MAX,
+	PROFILE_BACKGROUND_MAX_BYTES,
+	PROFILE_OTHER_LINKS_MAX,
+	buildProfileLinks,
+	pickOwnedSteamId,
+	splitProfileLinks,
+	type ProfileLinkFields
 } from './players';
 
 export {
@@ -176,3 +183,10 @@ export {
 } from './player-performance';
 
 export { CompanionApi, readMetaVersion, type CompanionUser } from './companion';
+
+export {
+	toUploadFile,
+	cloneUploadFile,
+	type ToUploadFileOptions,
+	type UploadImageKind
+} from './upload-file';

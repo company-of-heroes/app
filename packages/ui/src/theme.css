@@ -110,3 +110,10 @@
 @utility overlay-surface {
 	background-color: var(--color-gray-950);
 }
+
+/* bits-ui copies z-index onto this wrapper only when the menu mounts while open.
+   Header menus stay mounted while closed, so the wrapper never gets a z-index
+   and page content with its own stacking level paints over the menu. */
+[data-bits-floating-content-wrapper] {
+	z-index: 50;
+}

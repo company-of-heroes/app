@@ -41,7 +41,8 @@ export function createServices(deps: ServiceDeps): Services {
 		(api ??= createApi({
 			pocketbase: deps.pocketbase,
 			fetch: deps.fetch,
-			baseUrl: API_URL
+			baseUrl: API_URL,
+			userId: () => deps.pocketbase.authStore.record?.id ?? ''
 		}));
 
 	let replays: WebsiteReplaysService | undefined;

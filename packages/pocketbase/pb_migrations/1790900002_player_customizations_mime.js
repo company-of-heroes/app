@@ -8,8 +8,7 @@ migrate(
 			return;
 		}
 
-		// PB content-sniff often rejects real .jpg uploads (and image/jpg).
-		// We validate jpeg/png/webp ourselves in the player-customization hook.
+		// Empty mimeTypes: accept jpeg/png/webp validated in app/website before upload.
 		background.mimeTypes = [];
 		app.save(collection);
 	},

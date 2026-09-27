@@ -1,8 +1,20 @@
 import { z } from 'zod';
-import { errAsync, ResultAsync } from 'neverthrow';
-import { normalizeBaseUrl, resolveAuthHeaders, type ApiDeps } from '../deps';
+import { errAsync, okAsync, ResultAsync } from 'neverthrow';
+import type { RecordModel } from 'pocketbase';
+import { normalizeBaseUrl, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
+import { escapePocketBaseString, fromPbPromise, requireAuth } from '../pb';
+import { STEAM_ID_REGEX } from '../ratings/ratings';
+import { cloneUploadFile, toUploadFile } from '../upload-file';
+import {
+	BACKGROUND_UPLOAD,
+	EMPTY_CUSTOMIZATION,
+	PROFILE_BIO_MAX,
+	ownedSteamIds,
+	serializeCustomization,
+	validateProfileLinks
+} from './customization';
 import type {
 	PlayerCustomization,
 	PlayerPageData,
@@ -19,6 +31,15 @@ export type UpdatePlayerCustomizationInput = {
 	background?: File | null;
 	clearBackground?: boolean;
 };
+
+type CustomizationFields = {
+	userId: string;
+	bio: string;
+	links: PlayerProfileLink[];
+	clearBackground: boolean;
+};
+
+const COLLECTION = 'player_customizations';
 
 const playerSearchResultSchema: z.ZodType<PlayerSearchResult> = z
 	.object({
@@ -66,77 +87,6 @@ const playerPageSchema: z.ZodType<PlayerPageData> = z
 	})
 	.passthrough() as z.ZodType<PlayerPageData>;
 
-const playerProfileLinkSchema: z.ZodType<PlayerProfileLink> = z.object({
-	type: z.enum(['twitch', 'youtube', 'other']),
-	url: z.string().min(1),
-	label: z.string().max(40).nullish().transform((value) => value ?? undefined)
-});
-
-const playerCustomizationSchema: z.ZodType<PlayerCustomization> = z.object({
-	bio: z.string().nullable(),
-	links: z.array(playerProfileLinkSchema),
-	backgroundUrl: z.string().nullable()
-});
-
-const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
-
-const ALLOWED_BACKGROUND_MIME: Record<string, string> = {
-	'image/jpeg': 'image/jpeg',
-	'image/jpg': 'image/jpeg',
-	'image/png': 'image/png',
-	'image/webp': 'image/webp'
-};
-
-function backgroundMimeFromName(name: string): string {
-	const lower = name.toLowerCase();
-	if (lower.endsWith('.png')) {
-		return 'image/png';
-	}
-
-	if (lower.endsWith('.webp')) {
-		return 'image/webp';
-	}
-
-	return 'image/jpeg';
-}
-
-function normalizeBackgroundMime(type: string | undefined, filename: string): string {
-	const normalized = ALLOWED_BACKGROUND_MIME[String(type || '').toLowerCase().trim()];
-	if (normalized) {
-		return normalized;
-	}
-
-	return backgroundMimeFromName(filename);
-}
-
-function absolutizeBackgroundUrl(url: string | null | undefined, baseUrl: string): string | null {
-	if (!url) {
-		return null;
-	}
-
-	const trimmed = url.trim();
-	if (!trimmed) {
-		return null;
-	}
-
-	if (/^https?:\/\//i.test(trimmed)) {
-		return trimmed;
-	}
-
-	const base = normalizeBaseUrl(baseUrl).replace(/\/$/, '');
-	return trimmed.startsWith('/') ? `${base}${trimmed}` : `${base}/${trimmed}`;
-}
-
-function withAbsoluteBackground(
-	customization: PlayerCustomization,
-	baseUrl: string
-): PlayerCustomization {
-	return {
-		...customization,
-		backgroundUrl: absolutizeBackgroundUrl(customization.backgroundUrl, baseUrl)
-	};
-}
-
 export class PlayersApi {
 	constructor(private deps: ApiDeps) {}
 
@@ -149,15 +99,19 @@ export class PlayersApi {
 			params.set('requireMatches', '1');
 		}
 
-		return fetchJson(this.deps.fetch, `${normalizeBaseUrl(this.deps.baseUrl)}/api/player/search?${params}`, {
-			fallback: 'Failed to search for player',
-			schema: playerSearchSchema,
-			onStatus: (status) => {
-				if (status === 400) {
-					return apiError(400, 'Enter a Steam ID64, Relic profile id, or player name.');
+		return fetchJson(
+			this.deps.fetch,
+			`${normalizeBaseUrl(this.deps.baseUrl)}/api/player/search?${params}`,
+			{
+				fallback: 'Failed to search for player',
+				schema: playerSearchSchema,
+				onStatus: (status) => {
+					if (status === 400) {
+						return apiError(400, 'Enter a Steam ID64, Relic profile id, or player name.');
+					}
 				}
 			}
-		}).map((data) => data.items ?? []);
+		).map((data) => data.items ?? []);
 	}
 
 	get(id: string): ResultAsync<PlayerPageData, ApiError> {
@@ -167,7 +121,6 @@ export class PlayersApi {
 			{
 				fallback: 'Failed to load player stats. Please try again later.',
 				schema: playerPageSchema,
-				// Cold loads pull Relic + Steam + match-history enrichment and often exceed 8s.
 				timeoutMs: 45_000,
 				onStatus: (status) => {
 					if (status === 404) {
@@ -186,117 +139,132 @@ export class PlayersApi {
 	}
 
 	getCustomization(steamId: string): ResultAsync<PlayerCustomization, ApiError> {
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/player-customization/${encodeURIComponent(steamId)}`,
-			{
-				fallback: 'Failed to load profile customization.',
-				schema: playerCustomizationSchema,
-				init: { cache: 'no-store' },
-				onStatus: (status) => {
-					if (status === 400) {
-						return apiError(400, 'Enter a valid Steam ID64.');
-					}
-				}
-			}
-		).map((data) => withAbsoluteBackground(data, this.deps.baseUrl));
+		const id = steamId.trim();
+		if (!STEAM_ID_REGEX.test(id)) {
+			return errAsync(apiError(400, 'Enter a valid Steam ID64.'));
+		}
+
+		return this.#findCustomization(id).map((record) =>
+			record
+				? serializeCustomization(this.deps.pocketbase, record, this.deps.baseUrl)
+				: EMPTY_CUSTOMIZATION
+		);
 	}
 
 	updateCustomization(
 		input: UpdatePlayerCustomizationInput
 	): ResultAsync<PlayerCustomization, ApiError> {
 		const steamId = input.steamId.trim();
-		if (!steamId) {
+		if (!STEAM_ID_REGEX.test(steamId)) {
 			return errAsync(apiError(400, 'Enter a valid Steam ID64.'));
 		}
 
-		const buildForm = (background?: { base64: string; name: string }) => {
-			const formData = new FormData();
-			formData.append('steamId', steamId);
-			if (input.bio !== undefined) {
-				formData.append('bio', input.bio);
-			}
-
-			if (input.links !== undefined) {
-				formData.append('links', JSON.stringify(input.links));
-			}
-
-			if (input.clearBackground) {
-				formData.append('clearBackground', '1');
-			}
-
-			if (background) {
-				formData.append('backgroundBase64', background.base64);
-				formData.append('backgroundName', background.name);
-			}
-
-			return formData;
-		};
-
-		const post = (formData: FormData) =>
-			fetchJson(this.deps.fetch, `${normalizeBaseUrl(this.deps.baseUrl)}/api/player-customization`, {
-				fallback: 'Could not update your profile.',
-				schema: playerCustomizationSchema,
-				timeoutMs: 60_000,
-				init: {
-					method: 'POST',
-					headers: resolveAuthHeaders(this.deps),
-					body: formData
-				},
-				onStatus: (status) => {
-					if (status === 401) {
-						return apiError(401, 'Log in to update your profile.');
-					}
-
-					if (status === 403) {
-						return apiError(
-							403,
-							'Link this Steam ID to your account before editing that profile.'
-						);
-					}
-				}
-			}).map((data) => withAbsoluteBackground(data, this.deps.baseUrl));
-
-		if (!input.background) {
-			return post(buildForm());
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
 		}
 
-		return ResultAsync.fromPromise(input.background.arrayBuffer(), () =>
-			apiError(400, 'Invalid background image.')
-		).andThen((buffer) => {
-			const bytes = new Uint8Array(buffer);
-			if (bytes.byteLength < 1) {
-				return errAsync(apiError(400, 'Background image is empty.'));
-			}
-
-			if (bytes.byteLength > MAX_BACKGROUND_BYTES) {
-				return errAsync(apiError(400, 'Background must be 5 MB or smaller.'));
-			}
-
-			const mime = normalizeBackgroundMime(
-				input.background!.type,
-				input.background!.name || 'background.jpg'
+		const owned = ownedSteamIds(this.deps.pocketbase.authStore.record);
+		if (!owned.includes(steamId)) {
+			return errAsync(
+				apiError(403, 'Link this Steam ID to your account before editing that profile.')
 			);
-			const safeName =
-				mime === 'image/png'
-					? 'background.png'
-					: mime === 'image/webp'
-						? 'background.webp'
-						: 'background.jpeg';
+		}
 
-			// Avoid multipart file fields — PB hooks race and delete the temp before save.
-			let binary = '';
-			const chunk = 0x8000;
-			for (let i = 0; i < bytes.length; i += chunk) {
-				binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-			}
+		const bio = (input.bio ?? '').trim();
+		if (bio.length > PROFILE_BIO_MAX) {
+			return errAsync(apiError(400, `Bio must be ${PROFILE_BIO_MAX} characters or fewer.`));
+		}
 
-			return post(
-				buildForm({
-					base64: btoa(binary),
-					name: safeName
-				})
-			);
-		});
+		const links = validateProfileLinks(input.links ?? []);
+		if (links.isErr()) {
+			return errAsync(links.error);
+		}
+
+		const fields: CustomizationFields = {
+			userId: auth.value,
+			bio,
+			links: links.value,
+			clearBackground: Boolean(input.clearBackground)
+		};
+
+		return this.#prepareBackground(input, fields.clearBackground).andThen((background) =>
+			this.#upsertCustomization(steamId, fields, background).andThen((primary) =>
+				this.#syncOwnedProfiles(
+					owned.filter((id) => id !== steamId),
+					fields,
+					background
+				).map(() => serializeCustomization(this.deps.pocketbase, primary, this.deps.baseUrl))
+			)
+		);
+	}
+
+	#findCustomization(steamId: string): ResultAsync<RecordModel | null, ApiError> {
+		const filter = `steam_id = "${escapePocketBaseString(steamId)}"`;
+		return fromPbPromise(
+			this.deps.pocketbase.collection(COLLECTION).getFirstListItem(filter, { requestKey: null }),
+			'Failed to load profile customization.'
+		).orElse((error) => (error.status === 404 ? okAsync(null) : errAsync(error)));
+	}
+
+	#prepareBackground(
+		input: UpdatePlayerCustomizationInput,
+		clear: boolean
+	): ResultAsync<File | null, ApiError> {
+		const file = input.background;
+		if (clear || !file || file.size < 1) {
+			return okAsync(null);
+		}
+
+		return toUploadFile(file, BACKGROUND_UPLOAD);
+	}
+
+	#upsertCustomization(
+		steamId: string,
+		fields: CustomizationFields,
+		background: File | null
+	): ResultAsync<RecordModel, ApiError> {
+		const body: Record<string, unknown> = {
+			steam_id: steamId,
+			user: fields.userId,
+			bio: fields.bio,
+			links: fields.links
+		};
+		if (fields.clearBackground) {
+			body.background = '';
+		} else if (background) {
+			body.background = cloneUploadFile(background);
+		}
+
+		const collection = this.deps.pocketbase.collection(COLLECTION);
+		return this.#findCustomization(steamId).andThen((existing) =>
+			fromPbPromise(
+				existing
+					? collection.update(existing.id, body, { requestKey: null })
+					: collection.create(body, { requestKey: null }),
+				'Could not update your profile.'
+			)
+		);
+	}
+
+	// Sequential: parallel uploads hit Cloudflare subrequest limits on the website,
+	// and each request needs its own File copy because a body cannot be sent twice.
+	#syncOwnedProfiles(
+		steamIds: string[],
+		fields: CustomizationFields,
+		background: File | null
+	): ResultAsync<void, ApiError> {
+		return steamIds.reduce<ResultAsync<void, ApiError>>(
+			(chain, id) =>
+				chain.andThen(() =>
+					this.#upsertCustomization(id, fields, background)
+						.map(() => undefined)
+						.orElse((error) => {
+							console.warn('[players] sync customization', id, error.message);
+							return okAsync(undefined);
+						})
+				),
+			okAsync(undefined)
+		);
 	}
 }

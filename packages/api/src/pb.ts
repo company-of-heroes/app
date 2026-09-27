@@ -19,10 +19,19 @@ export function recordId(value: unknown): string {
 	return String(value);
 }
 
+function readPbMessage(error: ClientResponseError): string {
+	const message = (error.response as { message?: unknown } | undefined)?.message;
+	return typeof message === 'string' ? message : '';
+}
+
 export function fromClientError(error: unknown, fallback: string): ApiError {
 	if (error instanceof ClientResponseError) {
-		if (error.status === 401 || error.status === 403) {
+		if (error.status === 401) {
 			return apiError(401, 'Log in to do that.');
+		}
+
+		if (error.status === 403) {
+			return apiError(403, readPbMessage(error) || fallback || 'Not allowed.');
 		}
 
 		if (error.status === 404) {
@@ -30,7 +39,16 @@ export function fromClientError(error: unknown, fallback: string): ApiError {
 		}
 
 		if (error.status === 400) {
-			return apiError(400, fallback);
+			const data = error.response?.data;
+			if (data && typeof data === 'object') {
+				for (const value of Object.values(data as Record<string, { message?: string }>)) {
+					if (value?.message) {
+						return apiError(400, value.message);
+					}
+				}
+			}
+
+			return apiError(400, error.message || fallback);
 		}
 
 		if (error.status > 0) {
@@ -41,10 +59,7 @@ export function fromClientError(error: unknown, fallback: string): ApiError {
 	return fromUnknown(error, fallback);
 }
 
-export function fromPbPromise<T>(
-	promise: Promise<T>,
-	fallback: string
-): ResultAsync<T, ApiError> {
+export function fromPbPromise<T>(promise: Promise<T>, fallback: string): ResultAsync<T, ApiError> {
 	return ResultAsync.fromPromise(promise, (error) => fromClientError(error, fallback));
 }
 

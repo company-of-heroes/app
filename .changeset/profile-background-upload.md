@@ -5,4 +5,4 @@
 '@company-of-heroes/pocketbase': patch
 ---
 
-fix; upload profile backgrounds as base64 instead of multipart (avoids PocketBase temp-file races)
+fix; reliable profile background and avatar uploads on the website

@@ -4,7 +4,7 @@
 	"type": "module",
 	"packageManager": "pnpm@9.15.9",
 	"scripts": {
-		"dev": "turbo run dev --filter=@company-of-heroes/pocketbase --filter=@company-of-heroes/app",
+		"dev": "turbo run dev --filter=@company-of-heroes/pocketbase --filter=@company-of-heroes/app --filter=@company-of-heroes/website",
 		"build": "pnpm --filter app tauri build",
 		"pb:up": "pnpm --filter pocketbase serve",
 		"pb:down": "pnpm --filter pocketbase down",
