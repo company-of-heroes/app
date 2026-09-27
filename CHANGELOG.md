@@ -1,3 +1,8 @@
+### v0.65.1
+
+- fix; keep the account menu above page content so its actions stay clickable
+- fix; reliable profile background and avatar uploads on the website
+
 ### v0.65.0
 
 - fix; keep navigation client-side after a refresh

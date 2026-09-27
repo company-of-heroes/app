@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.12.1
+
+- fix; reliable profile background and avatar uploads on the website
+
 ## 0.12.0
 
 - fix; save match replay on abrupt game exit and prefer longer participant replays
