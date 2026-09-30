@@ -65,6 +65,9 @@
 		"./live-lobby/types": "./src/live-lobby/types.ts",
 		"./match": "./src/match/index.ts",
 		"./match/types": "./src/match/types.ts",
+		"./reward": "./src/reward/index.ts",
+		"./reward/metrics": "./src/reward/metrics.ts",
+		"./reward/types": "./src/reward/types.ts",
 		"./twitch": "./src/twitch/index.ts",
 		"./twitch/types": "./src/twitch/types.ts"
 	},

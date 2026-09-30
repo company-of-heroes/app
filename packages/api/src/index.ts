@@ -62,6 +62,7 @@ export {
 	PROFILE_OTHER_LINKS_MAX,
 	buildProfileLinks,
 	pickOwnedSteamId,
+	isStreamingLink,
 	splitProfileLinks,
 	type ProfileLinkFields
 } from './players';
@@ -180,6 +181,19 @@ export {
 	type ReputationTriggerCatalogItem,
 	type ReputationType
 } from './reputation';
+
+export {
+	RewardsApi,
+	REWARD_IMAGE_MAX_BYTES,
+	REWARD_IMAGE_SIZE,
+	REWARD_IMAGE_UPLOAD,
+	parseRewardConditions,
+	rewardConditionSchema,
+	rewardConditionsSchema,
+	rewardImageUrl,
+	type RewardInput,
+	type RewardRecord
+} from './rewards';
 
 export {
 	PlayerPerformanceApi,

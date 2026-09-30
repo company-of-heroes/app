@@ -1,3 +1,4 @@
+import type { PlayerLabel } from '../format/types';
 import type { PlayerPreviewData } from './types';
 
 const cache = new Map<string, Promise<PlayerPreviewData | null>>();
@@ -45,6 +46,7 @@ export function toPlayerPreviewData(player: {
 	level: number;
 	avatarUrl: string;
 	likeCount?: number;
+	labels?: PlayerLabel[];
 }): PlayerPreviewData {
 	return {
 		steamId: player.steamId,
@@ -53,7 +55,8 @@ export function toPlayerPreviewData(player: {
 		country: player.country,
 		level: player.level,
 		avatarUrl: player.avatarUrl,
-		likeCount: player.likeCount
+		likeCount: player.likeCount,
+		labels: player.labels
 	};
 }
 

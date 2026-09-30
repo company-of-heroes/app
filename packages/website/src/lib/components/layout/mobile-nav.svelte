@@ -90,7 +90,7 @@
 		<Dialog.Content
 			class={cn(
 				'data-[state=open]:animate-in data-[state=open]:slide-in-from-right fixed',
-				'data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right',
+				'data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=closed]:fill-mode-forwards',
 				'top-0 right-0 z-50 flex h-screen w-screen max-w-[calc(100%-2rem)] flex-col',
 				'text-secondary-100 rounded-l-md sm:max-w-[420px]'
 			)}

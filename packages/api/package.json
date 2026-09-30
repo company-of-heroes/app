@@ -23,6 +23,7 @@
 		"./anti-cheat": "./src/anti-cheat/index.ts",
 		"./smurf-watch": "./src/smurf-watch/index.ts",
 		"./reputation": "./src/reputation/index.ts",
+		"./rewards": "./src/rewards/index.ts",
 		"./player-performance": "./src/player-performance/index.ts",
 		"./companion": "./src/companion/index.ts"
 	},

@@ -90,5 +90,6 @@ export function chunk<T>(items: readonly T[], size: number): T[][] {
 	for (let i = 0; i < items.length; i += size) {
 		slices.push(items.slice(i, i + size));
 	}
+
 	return slices;
 }

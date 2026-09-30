@@ -12,6 +12,7 @@
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import ImageIcon from 'phosphor-svelte/lib/ImageIcon';
 	import { accountUrl, privacyUrl, SITE_URL } from '$core/site/urls';
+	import { pickOwnedSteamId } from '@company-of-heroes/api';
 
 	const { t } = useI18n();
 
@@ -30,6 +31,9 @@
 	const canChangeEmail = $derived(app.account.canChangeEmail);
 	const isPlaceholder = $derived(app.account.isPlaceholderEmail);
 	const needsVerification = $derived(!verified && !isPlaceholder);
+	const rewardsSteamId = $derived(
+		pickOwnedSteamId(app.features.auth.user.steamIds, [app.game.profile?.steam.steamid])
+	);
 
 	const selectAvatar = async () => {
 		const path = await open({
@@ -146,6 +150,12 @@
 		<Button href="/account/profile" variant="link" class="h-auto px-0">
 			{t('Customize public player profile')}
 		</Button>
+		{#if rewardsSteamId}
+			·
+			<Button href="/players/{rewardsSteamId}" variant="link" class="h-auto px-0">
+				{t('View your rewards')}
+			</Button>
+		{/if}
 	</p>
 </div>
 

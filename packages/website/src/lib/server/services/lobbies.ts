@@ -113,8 +113,11 @@ export class LobbiesService extends Service {
 		).map((rows) => rows.items[0]);
 	}
 
-	/** Replaces the lobby's index rows in one transaction, touching only rows that changed. */
-	private syncIndex(lobbyId: string, rows: IndexRow[]): Task<void> {
+	/**
+	 * Replaces the lobby's index rows in one transaction, touching only rows that changed.
+	 * Resolves whether anything changed.
+	 */
+	private syncIndex(lobbyId: string, rows: IndexRow[]): Task<boolean> {
 		return fromPb(
 			this.pb.collection('lobby_player_index').getFullList<StoredIndexRow>({
 				filter: this.pb.filter('lobby = {:lobbyId}', { lobbyId })
@@ -146,25 +149,28 @@ export class LobbiesService extends Service {
 				}
 			}
 			return writes > 0
-				? fromPb(batch.send(), 'Could not update lobby players').map(() => undefined)
-				: okAsync(undefined);
+				? fromPb(batch.send(), 'Could not update lobby players').map(() => true)
+				: okAsync(false);
 		});
 	}
 
-	/** Every signed-up player in the match earns "match played" once per lobby. */
-	private awardMatchPlayed(lobbyId: string, steamIds: string[]): Task<void> {
+	/**
+	 * Every signed-up player in the match earns "match played" once per lobby. When the
+	 * index rows changed (e.g. a result came in), the players are queued for rewards.
+	 */
+	private awardMatchPlayed(lobbyId: string, steamIds: string[], indexChanged: boolean): Task<void> {
 		if (steamIds.length === 0) {
 			return okAsync(undefined);
 		}
 
-		const reputation = this.services.reputation;
+		const { reputation, rewards } = this.services;
 		return ResultAsync.combine([
 			fromPb(
-				this.pb.collection('users').getFullList<{ id: string }>({
+				this.pb.collection('users').getFullList<{ id: string; rewardsCheckedAt: string }>({
 					filter: steamIds
 						.map((steamId) => this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }))
 						.join(' || '),
-					fields: 'id'
+					fields: 'id,rewardsCheckedAt'
 				}),
 				'Could not load users'
 			),
@@ -174,7 +180,7 @@ export class LobbiesService extends Service {
 				sequence(
 					users.filter((user) => !awarded.has(user.id)),
 					(user) => reputation.award(user.id, 'match_played', lobbyId)
-				)
+				).andThen(() => rewards.markDirty(indexChanged ? users : []))
 			)
 			.map(() => undefined);
 	}
@@ -195,7 +201,7 @@ export class LobbiesService extends Service {
 						: okAsync(undefined);
 				return saved
 					.andThen(() => this.syncIndex(lobbyId, derived.indexRows))
-					.andThen(() => this.awardMatchPlayed(lobbyId, derived.steamIds))
+					.andThen((indexChanged) => this.awardMatchPlayed(lobbyId, derived.steamIds, indexChanged))
 					.andThen(() => ratings.apply(derived.ratings))
 					.andThen(() =>
 						sequence(created ? derived.smurfCandidates : [], (candidate) =>

@@ -19,6 +19,7 @@ const ADMIN_PAGES: Record<string, string> = {
 	users: 'Users',
 	labels: 'Labels',
 	reputation: 'Reputation',
+	rewards: 'Rewards',
 	flagged: 'Flagged',
 	screenshots: 'Screenshots',
 	denylist: 'Denylist',

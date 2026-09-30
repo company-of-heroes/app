@@ -39,7 +39,9 @@ export class ReputationService extends Service {
 			.andThen((rows) =>
 				fromPb(
 					this.pb.collection('users').update(userId, {
-						reputation: rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0)
+						reputation: rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0),
+						// Reputation feeds reward conditions: queue the user for the rewards job.
+						rewardsCheckedAt: null
 					}),
 					'Could not update reputation'
 				)

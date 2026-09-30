@@ -10,7 +10,9 @@
 	} from '@company-of-heroes/ui/variants';
 	import { getEloColor, getEloTextShadow } from '../format/player-format';
 	import { Skeleton } from '../ui/skeleton';
+	import PlayerLabels from './player-labels.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
+	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import type { PlayerFactionPreview, PlayerPreviewData } from './types';
 	import { useHost } from '../host/host.context';
 
@@ -50,7 +52,23 @@
 		[faction?.modeLabel?.trim(), faction?.raceLabel?.trim()].filter(Boolean).join(' · ')
 	);
 	const stats = $derived(faction?.stats ?? null);
+	/** The app's profile fetch has no labels; fall back to the host's label cache. */
+	const labels = $derived(
+		player ? (player.labels ?? host.api.labels.forSteamId(player.steamId)) : []
+	);
 </script>
+
+{#snippet social()}
+	{#if player}
+		<div class="border-secondary-800 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t px-3 py-2">
+			<span class="inline-flex items-center gap-1.5 text-xs">
+				<span class="text-secondary-500">{t('Likes')}</span>
+				<PlayerLikeCount likeCount={player.likeCount ?? 0} showZero />
+			</span>
+			<PlayerLabels {labels} />
+		</div>
+	{/if}
+{/snippet}
 
 <div
 	class={cn(
@@ -138,6 +156,7 @@
 				</tbody>
 			</table>
 		{/if}
+		{@render social()}
 	{:else if error || !player}
 		<p class="text-secondary-400 px-3 py-4 text-sm">{t('Could not load player')}</p>
 	{:else}
@@ -158,7 +177,7 @@
 							alt={player.country ?? ''}
 						/>
 					{/if}
-					<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
+					<PlayerStreamerIcon {labels} steamId={player?.steamId} size={14} />
 					<span class="font-heading truncate text-sm font-bold text-white">{player.alias}</span>
 				</div>
 				<p class="text-secondary-400 mt-0.5 text-xs tabular-nums">
@@ -167,5 +186,6 @@
 				</p>
 			</div>
 		</div>
+		{@render social()}
 	{/if}
 </div>

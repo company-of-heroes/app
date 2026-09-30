@@ -535,7 +535,8 @@ export class SocialService extends Service {
 				'Could not record download'
 			).andThen((created) =>
 				uploaderId === userId
-					? okAsync(undefined)
+					? // No reputation for your own replay, but it still counts toward rewards.
+						this.services.rewards.markDirty([{ id: userId }])
 					: reputation
 							.award(uploaderId, 'replay_received_download', created.id)
 							.andThen(() => reputation.award(userId, 'replay_cast_download', created.id))

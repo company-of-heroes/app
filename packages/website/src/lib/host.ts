@@ -27,7 +27,9 @@ import {
 	searchPlayersForUpload,
 	uploadMemberReplay
 } from '$lib/remote/replays.remote';
-import { getMyPlayerVote, setPlayerVote } from '$lib/remote/player-social.remote';
+import { getMyPlayerVote, getPlayerLabels, setPlayerVote } from '$lib/remote/player-social.remote';
+import { getPlayerRewards } from '$lib/remote/rewards.remote';
+import { getLiveStreamerIds } from '$lib/remote/streaming.remote';
 import {
 	createComment,
 	deleteComment,
@@ -199,6 +201,15 @@ export function provideWebsiteHost(): HostContext {
 					pickOwnedSteamId(meSteamIds(page.data.user), [page.url.searchParams.get('steamId')]),
 				get: (steamId) => getProfileCustomization(steamId),
 				save: (input) => saveProfileCustomization(input)
+			},
+			labels: {
+				forSteamId: (steamId) => getPlayerLabels(steamId).current ?? []
+			},
+			streaming: {
+				isLive: (steamId) => (getLiveStreamerIds().current ?? []).includes(steamId)
+			},
+			rewards: {
+				forPlayer: (steamId) => getPlayerRewards(steamId)
 			},
 			staff: {
 				getCompanionUser: (steamId) => getCompanionUser(steamId)

@@ -100,6 +100,17 @@ class Modal extends Emittery<ModalEvents> {
 
 	close() {
 		this._open = false;
+	}
+
+	/**
+	 * Clears the content once the close animation has finished, so the modal
+	 * does not empty out while it is still animating away.
+	 */
+	reset() {
+		if (this._open) {
+			return;
+		}
+
 		this._title = undefined;
 		this._description = undefined;
 		this._component = undefined;

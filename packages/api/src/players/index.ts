@@ -14,6 +14,7 @@ export {
 	PROFILE_OTHER_LINKS_MAX,
 	buildProfileLinks,
 	pickOwnedSteamId,
+	isStreamingLink,
 	splitProfileLinks,
 	type ProfileLinkFields
 } from './customization';

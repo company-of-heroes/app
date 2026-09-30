@@ -21,6 +21,8 @@ import {
 	getString
 } from '$lib/utils/game';
 import { flagImageUrl } from '$lib/utils/leaderboard-resolvers';
+import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
+import { isStreamerLive } from '$core/pocketbase/live-streamers-cache.svelte';
 
 const doctrineBanners = import.meta.glob<string>('$lib/files/ct_branchbanner_*.png', {
 	eager: true,
@@ -265,7 +267,8 @@ export function provideAppHost(): HostContext {
 					]),
 				get: (steamId) => unwrapApi(api.players.getCustomization(steamId)),
 				save: async ({ links, background, ...input }) => {
-					const built = buildProfileLinks(links);
+					const current = await unwrapApi(api.players.getCustomization(input.steamId));
+					const built = buildProfileLinks(links, current.links);
 					if (built.isErr()) {
 						throw new Error(built.error.message);
 					}
@@ -278,6 +281,18 @@ export function provideAppHost(): HostContext {
 						})
 					);
 				}
+			},
+			labels: {
+				forSteamId: (steamId) => {
+					preloadPlayerLabels([steamId]);
+					return labelsForSteamId(steamId);
+				}
+			},
+			streaming: {
+				isLive: (steamId) => isStreamerLive(steamId)
+			},
+			rewards: {
+				forPlayer: (steamId) => unwrapApi(api.rewards.forPlayer(steamId))
 			},
 			staff: {
 				getCompanionUser: async (steamId) => {

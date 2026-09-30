@@ -4,7 +4,6 @@ import {
 	isLocalUrl,
 	isPocketBaseUrl,
 	localUrlPattern,
-	selectFetchTransport,
 	shouldUseNativeFetch
 } from './fetch-routing';
 
@@ -71,29 +70,6 @@ describe('http/fetch-routing', () => {
 			expect(localUrlPattern.test('http://localhost:1420/')).toBe(true);
 			expect(localUrlPattern.test('http://127.0.0.1:9000/health')).toBe(true);
 			expect(localUrlPattern.test('http://[::1]:8090/api/health')).toBe(true);
-		});
-	});
-
-	describe('selectFetchTransport', () => {
-		it('prefers fetchNative, then workerFetch, then tauri for native targets', () => {
-			expect(
-				selectFetchTransport('http://localhost:8090/api/test', pbOrigin, {
-					hasFetchNative: true,
-					isWorker: true
-				})
-			).toBe('fetchNative');
-			expect(
-				selectFetchTransport('http://localhost:8090/api/test', pbOrigin, {
-					hasFetchNative: false,
-					isWorker: true
-				})
-			).toBe('workerFetch');
-			expect(
-				selectFetchTransport('http://localhost:8090/api/test', pbOrigin, {
-					hasFetchNative: false,
-					isWorker: false
-				})
-			).toBe('tauri');
 		});
 	});
 });

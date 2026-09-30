@@ -3,8 +3,10 @@ import type { LobbyComment, MentionUser } from '../comment/types';
 import type { CommentVoteValue } from '../comment/vote';
 import type { LiveLobbyPlayer } from '../live-lobby/types';
 import type { ProfileLinkFields } from '../player/profile';
+import type { PlayerLabel } from '../format/types';
 import type { PlayerCustomization, PlayerEloMap, PlayerPreviewData } from '../player/types';
 import type { CommunityMatchDetail, MatchResultPlayer } from '../replay/types';
+import type { PlayerRewards } from '../reward/types';
 
 /**
  * Everything a shared component needs from the host (desktop app or website).
@@ -207,6 +209,18 @@ export type HostApi = {
 			background: File | null;
 			clearBackground: boolean;
 		}) => Promise<PlayerCustomization>;
+	};
+	labels: {
+		/** Reactive: empty until the host has loaded (batched, cached) the labels for this Steam id. */
+		forSteamId: (steamId: string) => PlayerLabel[];
+	};
+	streaming: {
+		/** Reactive: true while the player with this Steam id is streaming Company of Heroes. */
+		isLive: (steamId: string) => boolean;
+	};
+	rewards: {
+		/** Unlocked rewards; the owner also gets locked ones with progress. */
+		forPlayer: (steamId: string) => Promise<PlayerRewards>;
 	};
 	staff: {
 		getCompanionUser: (steamId: string) => Promise<CompanionUserDebug | null>;

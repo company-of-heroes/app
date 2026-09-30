@@ -11,6 +11,7 @@ import {
 	PROFILE_BACKGROUND_MAX_BYTES,
 	PROFILE_BIO_MAX,
 	PROFILE_OTHER_LINKS_MAX,
+	isStreamingLink,
 	type ProfileLinkFields
 } from '@company-of-heroes/ui/player/profile';
 
@@ -18,6 +19,7 @@ export {
 	PROFILE_BACKGROUND_MAX_BYTES,
 	PROFILE_BIO_MAX,
 	PROFILE_OTHER_LINKS_MAX,
+	isStreamingLink,
 	splitProfileLinks,
 	type ProfileLinkFields
 } from '@company-of-heroes/ui/player/profile';
@@ -56,20 +58,12 @@ export function validateProfileLinks(
 	return parsed.success ? ok(parsed.data) : err(apiError(400, 'Check your links and try again.'));
 }
 
+/** Form links plus the Twitch/YouTube links already on the profile (set by connecting a channel). */
 export function buildProfileLinks(
-	fields: ProfileLinkFields
+	fields: ProfileLinkFields,
+	current: PlayerProfileLink[]
 ): Result<PlayerProfileLink[], ApiError> {
-	const links: PlayerProfileLink[] = [];
-	const twitch = fields.twitchUrl.trim();
-	if (twitch) {
-		links.push({ type: 'twitch', url: twitch });
-	}
-
-	const youtube = fields.youtubeUrl.trim();
-	if (youtube) {
-		links.push({ type: 'youtube', url: youtube });
-	}
-
+	const links = current.filter(isStreamingLink);
 	for (const item of fields.others) {
 		const url = String(item?.url ?? '').trim();
 		if (!url) {

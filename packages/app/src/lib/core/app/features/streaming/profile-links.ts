@@ -7,37 +7,8 @@ import type { StreamPlatform } from './chat';
 
 /** Puts the connected channel on the user's public profile, keeping bio and other links. */
 export async function publishProfileLink(platform: StreamPlatform, url: string): Promise<void> {
-	if (!app.account.isAuthenticated) {
-		void error(`[STREAMING]: skip ${platform} profile link — not signed in`);
-		return;
-	}
-
-	const steamId = pickOwnedSteamId(app.account.user.steamIds, [app.game.profile?.steam.steamid]);
-	if (!steamId) {
-		void error(`[STREAMING]: skip ${platform} profile link — no linked Steam ID`);
-		return;
-	}
-
-	const current = await api.players.getCustomization(steamId);
-	if (current.isErr()) {
-		void error(`[STREAMING]: load profile links failed: ${current.error.message}`);
-		app.toast.error(t('Could not update your profile link.'));
-		return;
-	}
-
-	const { bio, links } = current.value;
-	if (links.some((link) => link.type === platform && link.url === url)) {
-		return;
-	}
-
-	const result = await api.players.updateCustomization({
-		steamId,
-		bio: bio ?? '',
-		links: [...links.filter((link) => link.type !== platform), { type: platform, url }]
-	});
-	if (result.isErr()) {
-		void error(`[STREAMING]: publish ${platform} link failed: ${result.error.message}`);
-		app.toast.error(t('Could not update your profile link.'));
+	const updated = await setProfileLink(platform, url);
+	if (!updated) {
 		return;
 	}
 
@@ -46,4 +17,50 @@ export async function publishProfileLink(platform: StreamPlatform, url: string):
 			? t('Twitch link added to your profile')
 			: t('YouTube link added to your profile')
 	);
+}
+
+/** Takes a disconnected channel off the user's public profile. */
+export async function removeProfileLink(platform: StreamPlatform): Promise<void> {
+	await setProfileLink(platform, null);
+}
+
+/** Replaces (or with `null` removes) the platform link; resolves true when the profile changed. */
+async function setProfileLink(platform: StreamPlatform, url: string | null): Promise<boolean> {
+	if (!app.account.isAuthenticated) {
+		void error(`[STREAMING]: skip ${platform} profile link — not signed in`);
+		return false;
+	}
+
+	const steamId = pickOwnedSteamId(app.account.user.steamIds, [app.game.profile?.steam.steamid]);
+	if (!steamId) {
+		void error(`[STREAMING]: skip ${platform} profile link — no linked Steam ID`);
+		return false;
+	}
+
+	const current = await api.players.getCustomization(steamId);
+	if (current.isErr()) {
+		void error(`[STREAMING]: load profile links failed: ${current.error.message}`);
+		app.toast.error(t('Could not update your profile link.'));
+		return false;
+	}
+
+	const { bio, links } = current.value;
+	const existing = links.find((link) => link.type === platform);
+	if ((existing?.url ?? null) === url) {
+		return false;
+	}
+
+	const others = links.filter((link) => link.type !== platform);
+	const result = await api.players.updateCustomization({
+		steamId,
+		bio: bio ?? '',
+		links: url ? [...others, { type: platform, url }] : others
+	});
+	if (result.isErr()) {
+		void error(`[STREAMING]: update ${platform} link failed: ${result.error.message}`);
+		app.toast.error(t('Could not update your profile link.'));
+		return false;
+	}
+
+	return true;
 }

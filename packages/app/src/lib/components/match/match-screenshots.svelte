@@ -22,7 +22,7 @@
 	import { interactive } from '$lib/components/ui/variants';
 	import { cn } from '$lib/utils';
 	import { useI18n } from '$lib/i18n';
-	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
+	import { PlayerProfileLink, PlayerStreamerIcon } from '@company-of-heroes/ui/player';
 	import { ClientResponseError } from 'pocketbase';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 
@@ -287,6 +287,7 @@
 {#snippet cell_player({ row }: { row: CaptureGroup })}
 	<span class="flex min-w-0 items-center gap-2">
 		<PlayerLikeCount steamId={row.steamId} class="shrink-0" />
+		<PlayerStreamerIcon steamId={row.steamId} />
 		{#if row.profileId}
 			<PlayerProfileLink
 				href="/players/{row.profileId}"

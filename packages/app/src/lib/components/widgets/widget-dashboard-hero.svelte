@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isStreamingLink } from '@company-of-heroes/api';
 	import { api } from '$core/api';
 	import { app } from '$core/app/context';
 	import { Alert } from '$lib/components/ui/alert';
@@ -30,6 +31,7 @@
 	import {
 		PlayerProfileLink,
 		playerPreviewId,
+		PlayerStreamerIcon,
 		TwitchLogo,
 		YoutubeLogo
 	} from '@company-of-heroes/ui/player';
@@ -44,6 +46,7 @@
 		todayPlayedMatchesFilter
 	} from './dashboard-utils';
 	import { getPlayerRating } from '$core/pocketbase/player-ratings';
+	import { labelsForSteamId } from '$core/pocketbase/player-label-cache.svelte';
 	import { eloMapForSteamId, mergeEloMaps } from '$lib/utils/player-elo';
 	import { useI18n } from '$lib/i18n';
 	import {
@@ -108,7 +111,10 @@
 		const value = customization.current?.bio?.trim();
 		return value ? value : null;
 	});
-	const links = $derived(customization.current?.links ?? []);
+	const streamingLinks = $derived((customization.current?.links ?? []).filter(isStreamingLink));
+	const otherLinks = $derived(
+		(customization.current?.links ?? []).filter((link) => !isStreamingLink(link))
+	);
 
 	const resolvedProfile = resource(
 		() => [app.game.profile ?? null, steamId] as const,
@@ -492,6 +498,7 @@
 										/>
 									{/if}
 									<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
+									<PlayerStreamerIcon labels={labelsForSteamId(profile.steam.steamid)} size={24} />
 									<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span
 									>
 								</PlayerProfileLink>
@@ -506,56 +513,52 @@
 							{/if}
 						</div>
 
-						{#if bio || links.length > 0}
+						{#if streamingLinks.length > 0}
+							<div class="mb-3 flex flex-wrap items-center gap-4">
+								{#each streamingLinks as link (link.url)}
+									<a
+										href={link.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										class={cn(
+											interactive,
+											'inline-flex items-center gap-2 text-sm font-medium underline'
+										)}
+									>
+										{#if link.type === 'twitch'}
+											<TwitchLogo size={20} class="text-[#9146FF]" />
+											<span>{t('Twitch')}</span>
+										{:else}
+											<YoutubeLogo size={20} />
+											<span>{t('YouTube')}</span>
+										{/if}
+									</a>
+								{/each}
+							</div>
+						{/if}
+
+						{#if bio || otherLinks.length > 0}
 							<div class="my-4">
 								{#if bio}
 									<p class="text-secondary-400 mb-3 max-w-2xl text-sm whitespace-pre-wrap">{bio}</p>
 								{/if}
-								{#if links.length > 0}
+								{#if otherLinks.length > 0}
 									<div class="mb-3 flex flex-wrap items-center gap-4">
-										{#each links as link (link.url)}
-											{#if link.type === 'twitch'}
-												<a
-													href={link.url}
-													target="_blank"
-													rel="noopener noreferrer"
-													class={cn(
-														interactive,
-														'inline-flex items-center gap-2 text-sm font-medium underline'
-													)}
-												>
-													<TwitchLogo size={20} class="text-[#9146FF]" />
-													<span>{t('Twitch')}</span>
-												</a>
-											{:else if link.type === 'youtube'}
-												<a
-													href={link.url}
-													target="_blank"
-													rel="noopener noreferrer"
-													class={cn(
-														interactive,
-														'inline-flex items-center gap-2 text-sm font-medium underline'
-													)}
-												>
-													<YoutubeLogo size={20} />
-													<span>{t('YouTube')}</span>
-												</a>
-											{:else}
-												<a
-													href={link.url}
-													target="_blank"
-													rel="noopener noreferrer"
-													class={cn(
-														interactive,
-														'text-secondary-300 hover:text-primary inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm transition-colors'
-													)}
-												>
-													<LinkIcon size={18} />
-													{#if link.label}
-														<span>{link.label}</span>
-													{/if}
-												</a>
-											{/if}
+										{#each otherLinks as link (link.url)}
+											<a
+												href={link.url}
+												target="_blank"
+												rel="noopener noreferrer"
+												class={cn(
+													interactive,
+													'text-secondary-300 hover:text-primary inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm transition-colors'
+												)}
+											>
+												<LinkIcon size={18} />
+												{#if link.label}
+													<span>{link.label}</span>
+												{/if}
+											</a>
 										{/each}
 									</div>
 								{/if}

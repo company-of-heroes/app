@@ -45,7 +45,7 @@
 		<Dialog.Content
 			class={cn(
 				'data-[state=open]:animate-in data-[state=open]:zoom-in absolute duration-75',
-				'data-[state=closed]:animate-out data-[state=closed]:zoom-out data-[state=closed]:fade-out',
+				'data-[state=closed]:animate-out data-[state=closed]:zoom-out data-[state=closed]:fade-out data-[state=closed]:fill-mode-forwards',
 				'top-0 left-1/2 z-50 mx-auto mt-12 w-[min(28rem,calc(100%-2rem))] -translate-x-1/2'
 			)}
 		>

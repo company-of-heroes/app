@@ -1,0 +1,601 @@
+{
+	"type": "message",
+	"topic": "game.lobby.destroyed",
+	"data": {
+		"sessionId": 143240639,
+		"startedAt": "00:21:43.11",
+		"map": "4p_rails and metal",
+		"players": [
+			{
+				"index": 0,
+				"playerId": 1501877,
+				"type": 0,
+				"race": 0,
+				"team": 0,
+				"steamId": "76561198884295259",
+				"ranking": 63,
+				"slot": 0,
+				"name": "ηΟΟβ",
+				"profile": {
+					"profile_id": 1501877,
+					"name": "/steam/76561198884295259",
+					"alias": "ηΟΟβ",
+					"personal_statgroup_id": 1502877,
+					"xp": 250000,
+					"level": 40,
+					"leaderboardregion_id": 1,
+					"country": "nl",
+					"leaderboardStats": [
+						{
+							"disputes": 0,
+							"drops": 2,
+							"highestrank": 63,
+							"highestranklevel": 15,
+							"lastmatchdate": 1768516181,
+							"leaderboard_id": 5,
+							"losses": 102,
+							"rank": 63,
+							"ranklevel": 15,
+							"ranktotal": 12000,
+							"regionrank": 16,
+							"regionranktotal": 3000,
+							"statgroup_id": 1502877,
+							"streak": 3,
+							"wins": 189
+						}
+					]
+				},
+				"stats": {
+					"elo": 1924,
+					"wins": 189,
+					"losses": 102,
+					"streak": 3,
+					"rank": 63,
+					"rankLevel": 15
+				},
+				"storedElo": {
+					"2": {
+						"0": {
+							"rating": 1924,
+							"wins": 189,
+							"losses": 102,
+							"streak": 3,
+							"disputes": 0,
+							"drops": 2,
+							"rank": 63,
+							"rankLevel": 15,
+							"at": 1768516181
+						}
+					}
+				}
+			},
+			{
+				"index": 1,
+				"playerId": 45226,
+				"type": 0,
+				"race": 2,
+				"team": 0,
+				"steamId": "76561197984831596",
+				"ranking": 980,
+				"slot": 1,
+				"name": "TommyAtkins",
+				"profile": {
+					"profile_id": 45226,
+					"name": "/steam/76561197984831596",
+					"alias": "TommyAtkins",
+					"personal_statgroup_id": 46226,
+					"xp": 250000,
+					"level": 40,
+					"leaderboardregion_id": 1,
+					"country": "gb",
+					"leaderboardStats": [
+						{
+							"disputes": 0,
+							"drops": 2,
+							"highestrank": 980,
+							"highestranklevel": 11,
+							"lastmatchdate": 1768516181,
+							"leaderboard_id": 13,
+							"losses": 144,
+							"rank": 980,
+							"ranklevel": 11,
+							"ranktotal": 12000,
+							"regionrank": 245,
+							"regionranktotal": 3000,
+							"statgroup_id": 46226,
+							"streak": 1,
+							"wins": 156
+						}
+					]
+				},
+				"stats": {
+					"elo": 1688,
+					"wins": 156,
+					"losses": 144,
+					"streak": 1,
+					"rank": 980,
+					"rankLevel": 11
+				},
+				"storedElo": {
+					"2": {
+						"2": {
+							"rating": 1688,
+							"wins": 156,
+							"losses": 144,
+							"streak": 1,
+							"disputes": 0,
+							"drops": 2,
+							"rank": 980,
+							"rankLevel": 11,
+							"at": 1768516181
+						}
+					}
+				}
+			},
+			{
+				"index": 2,
+				"playerId": 1808205,
+				"type": 0,
+				"race": 1,
+				"team": 1,
+				"steamId": "76561197991978161",
+				"ranking": 734,
+				"slot": 2,
+				"name": "BlitzKrieg",
+				"profile": {
+					"profile_id": 1808205,
+					"name": "/steam/76561197991978161",
+					"alias": "BlitzKrieg",
+					"personal_statgroup_id": 1809205,
+					"xp": 250000,
+					"level": 40,
+					"leaderboardregion_id": 1,
+					"country": "at",
+					"leaderboardStats": [
+						{
+							"disputes": 0,
+							"drops": 2,
+							"highestrank": 734,
+							"highestranklevel": 13,
+							"lastmatchdate": 1768516181,
+							"leaderboard_id": 6,
+							"losses": 167,
+							"rank": 734,
+							"ranklevel": 13,
+							"ranktotal": 12000,
+							"regionrank": 184,
+							"regionranktotal": 3000,
+							"statgroup_id": 1809205,
+							"streak": 2,
+							"wins": 201
+						}
+					]
+				},
+				"stats": {
+					"elo": 1810,
+					"wins": 201,
+					"losses": 167,
+					"streak": 2,
+					"rank": 734,
+					"rankLevel": 13
+				},
+				"storedElo": {
+					"2": {
+						"1": {
+							"rating": 1810,
+							"wins": 201,
+							"losses": 167,
+							"streak": 2,
+							"disputes": 0,
+							"drops": 2,
+							"rank": 734,
+							"rankLevel": 13,
+							"at": 1768516181
+						}
+					}
+				}
+			},
+			{
+				"index": 3,
+				"playerId": 991362,
+				"type": 0,
+				"race": 3,
+				"team": 1,
+				"steamId": "76561199136220615",
+				"ranking": 1450,
+				"slot": 3,
+				"name": "StukaPilot",
+				"profile": {
+					"profile_id": 991362,
+					"name": "/steam/76561199136220615",
+					"alias": "StukaPilot",
+					"personal_statgroup_id": 992362,
+					"xp": 250000,
+					"level": 40,
+					"leaderboardregion_id": 1,
+					"country": "de",
+					"leaderboardStats": [
+						{
+							"disputes": 0,
+							"drops": 2,
+							"highestrank": 1450,
+							"highestranklevel": 10,
+							"lastmatchdate": 1768516181,
+							"leaderboard_id": 14,
+							"losses": 112,
+							"rank": 1450,
+							"ranklevel": 10,
+							"ranktotal": 12000,
+							"regionrank": 363,
+							"regionranktotal": 3000,
+							"statgroup_id": 992362,
+							"streak": -1,
+							"wins": 98
+						}
+					]
+				},
+				"stats": {
+					"elo": 1595,
+					"wins": 98,
+					"losses": 112,
+					"streak": -1,
+					"rank": 1450,
+					"rankLevel": 10
+				},
+				"storedElo": {
+					"2": {
+						"3": {
+							"rating": 1595,
+							"wins": 98,
+							"losses": 112,
+							"streak": -1,
+							"disputes": 0,
+							"drops": 2,
+							"rank": 1450,
+							"rankLevel": 10,
+							"at": 1768516181
+						}
+					}
+				}
+			}
+		],
+		"teams": [
+			{
+				"teamId": 0,
+				"players": [
+					{
+						"index": 0,
+						"playerId": 1501877,
+						"type": 0,
+						"race": 0,
+						"team": 0,
+						"steamId": "76561198884295259",
+						"ranking": 63,
+						"slot": 0,
+						"name": "ηΟΟβ",
+						"profile": {
+							"profile_id": 1501877,
+							"name": "/steam/76561198884295259",
+							"alias": "ηΟΟβ",
+							"personal_statgroup_id": 1502877,
+							"xp": 250000,
+							"level": 40,
+							"leaderboardregion_id": 1,
+							"country": "nl",
+							"leaderboardStats": [
+								{
+									"disputes": 0,
+									"drops": 2,
+									"highestrank": 63,
+									"highestranklevel": 15,
+									"lastmatchdate": 1768516181,
+									"leaderboard_id": 5,
+									"losses": 102,
+									"rank": 63,
+									"ranklevel": 15,
+									"ranktotal": 12000,
+									"regionrank": 16,
+									"regionranktotal": 3000,
+									"statgroup_id": 1502877,
+									"streak": 3,
+									"wins": 189
+								}
+							]
+						},
+						"stats": {
+							"elo": 1924,
+							"wins": 189,
+							"losses": 102,
+							"streak": 3,
+							"rank": 63,
+							"rankLevel": 15
+						},
+						"storedElo": {
+							"2": {
+								"0": {
+									"rating": 1924,
+									"wins": 189,
+									"losses": 102,
+									"streak": 3,
+									"disputes": 0,
+									"drops": 2,
+									"rank": 63,
+									"rankLevel": 15,
+									"at": 1768516181
+								}
+							}
+						}
+					},
+					{
+						"index": 1,
+						"playerId": 45226,
+						"type": 0,
+						"race": 2,
+						"team": 0,
+						"steamId": "76561197984831596",
+						"ranking": 980,
+						"slot": 1,
+						"name": "TommyAtkins",
+						"profile": {
+							"profile_id": 45226,
+							"name": "/steam/76561197984831596",
+							"alias": "TommyAtkins",
+							"personal_statgroup_id": 46226,
+							"xp": 250000,
+							"level": 40,
+							"leaderboardregion_id": 1,
+							"country": "gb",
+							"leaderboardStats": [
+								{
+									"disputes": 0,
+									"drops": 2,
+									"highestrank": 980,
+									"highestranklevel": 11,
+									"lastmatchdate": 1768516181,
+									"leaderboard_id": 13,
+									"losses": 144,
+									"rank": 980,
+									"ranklevel": 11,
+									"ranktotal": 12000,
+									"regionrank": 245,
+									"regionranktotal": 3000,
+									"statgroup_id": 46226,
+									"streak": 1,
+									"wins": 156
+								}
+							]
+						},
+						"stats": {
+							"elo": 1688,
+							"wins": 156,
+							"losses": 144,
+							"streak": 1,
+							"rank": 980,
+							"rankLevel": 11
+						},
+						"storedElo": {
+							"2": {
+								"2": {
+									"rating": 1688,
+									"wins": 156,
+									"losses": 144,
+									"streak": 1,
+									"disputes": 0,
+									"drops": 2,
+									"rank": 980,
+									"rankLevel": 11,
+									"at": 1768516181
+								}
+							}
+						}
+					}
+				]
+			},
+			{
+				"teamId": 1,
+				"players": [
+					{
+						"index": 2,
+						"playerId": 1808205,
+						"type": 0,
+						"race": 1,
+						"team": 1,
+						"steamId": "76561197991978161",
+						"ranking": 734,
+						"slot": 2,
+						"name": "BlitzKrieg",
+						"profile": {
+							"profile_id": 1808205,
+							"name": "/steam/76561197991978161",
+							"alias": "BlitzKrieg",
+							"personal_statgroup_id": 1809205,
+							"xp": 250000,
+							"level": 40,
+							"leaderboardregion_id": 1,
+							"country": "at",
+							"leaderboardStats": [
+								{
+									"disputes": 0,
+									"drops": 2,
+									"highestrank": 734,
+									"highestranklevel": 13,
+									"lastmatchdate": 1768516181,
+									"leaderboard_id": 6,
+									"losses": 167,
+									"rank": 734,
+									"ranklevel": 13,
+									"ranktotal": 12000,
+									"regionrank": 184,
+									"regionranktotal": 3000,
+									"statgroup_id": 1809205,
+									"streak": 2,
+									"wins": 201
+								}
+							]
+						},
+						"stats": {
+							"elo": 1810,
+							"wins": 201,
+							"losses": 167,
+							"streak": 2,
+							"rank": 734,
+							"rankLevel": 13
+						},
+						"storedElo": {
+							"2": {
+								"1": {
+									"rating": 1810,
+									"wins": 201,
+									"losses": 167,
+									"streak": 2,
+									"disputes": 0,
+									"drops": 2,
+									"rank": 734,
+									"rankLevel": 13,
+									"at": 1768516181
+								}
+							}
+						}
+					},
+					{
+						"index": 3,
+						"playerId": 991362,
+						"type": 0,
+						"race": 3,
+						"team": 1,
+						"steamId": "76561199136220615",
+						"ranking": 1450,
+						"slot": 3,
+						"name": "StukaPilot",
+						"profile": {
+							"profile_id": 991362,
+							"name": "/steam/76561199136220615",
+							"alias": "StukaPilot",
+							"personal_statgroup_id": 992362,
+							"xp": 250000,
+							"level": 40,
+							"leaderboardregion_id": 1,
+							"country": "de",
+							"leaderboardStats": [
+								{
+									"disputes": 0,
+									"drops": 2,
+									"highestrank": 1450,
+									"highestranklevel": 10,
+									"lastmatchdate": 1768516181,
+									"leaderboard_id": 14,
+									"losses": 112,
+									"rank": 1450,
+									"ranklevel": 10,
+									"ranktotal": 12000,
+									"regionrank": 363,
+									"regionranktotal": 3000,
+									"statgroup_id": 992362,
+									"streak": -1,
+									"wins": 98
+								}
+							]
+						},
+						"stats": {
+							"elo": 1595,
+							"wins": 98,
+							"losses": 112,
+							"streak": -1,
+							"rank": 1450,
+							"rankLevel": 10
+						},
+						"storedElo": {
+							"2": {
+								"3": {
+									"rating": 1595,
+									"wins": 98,
+									"losses": 112,
+									"streak": -1,
+									"disputes": 0,
+									"drops": 2,
+									"rank": 1450,
+									"rankLevel": 10,
+									"at": 1768516181
+								}
+							}
+						}
+					}
+				]
+			}
+		],
+		"didNotify": true,
+		"started": true,
+		"ended": true,
+		"isRanked": true,
+		"isReplay": false,
+		"outcomeFormatted": "Won",
+		"matchType": 2,
+		"isSkirmish": false,
+		"type": "2 VS. 2",
+		"mapName": "Rails And Metal (4)",
+		"me": {
+			"index": 0,
+			"playerId": 1501877,
+			"type": 0,
+			"race": 0,
+			"team": 0,
+			"steamId": "76561198884295259",
+			"ranking": 63,
+			"slot": 0,
+			"name": "ηΟΟβ",
+			"profile": {
+				"profile_id": 1501877,
+				"name": "/steam/76561198884295259",
+				"alias": "ηΟΟβ",
+				"personal_statgroup_id": 1502877,
+				"xp": 250000,
+				"level": 40,
+				"leaderboardregion_id": 1,
+				"country": "nl",
+				"leaderboardStats": [
+					{
+						"disputes": 0,
+						"drops": 2,
+						"highestrank": 63,
+						"highestranklevel": 15,
+						"lastmatchdate": 1768516181,
+						"leaderboard_id": 5,
+						"losses": 102,
+						"rank": 63,
+						"ranklevel": 15,
+						"ranktotal": 12000,
+						"regionrank": 16,
+						"regionranktotal": 3000,
+						"statgroup_id": 1502877,
+						"streak": 3,
+						"wins": 189
+					}
+				]
+			},
+			"stats": {
+				"elo": 1924,
+				"wins": 189,
+				"losses": 102,
+				"streak": 3,
+				"rank": 63,
+				"rankLevel": 15
+			},
+			"storedElo": {
+				"2": {
+					"0": {
+						"rating": 1924,
+						"wins": 189,
+						"losses": 102,
+						"streak": 3,
+						"disputes": 0,
+						"drops": 2,
+						"rank": 63,
+						"rankLevel": 15,
+						"at": 1768516181
+					}
+				}
+			}
+		},
+		"outcome": "PS_WON"
+	}
+}

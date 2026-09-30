@@ -5,6 +5,12 @@ import { unwrapAsync } from '$lib/errors/unwrap';
 
 const steamId = z.string().min(1);
 
+/** Labels per Steam id; calls made during one render go to the server as a single request. */
+export const getPlayerLabels = query.batch(steamId, async (ids) => {
+	const labels = await unwrapAsync(getRequestEvent().locals.services.playerInfo.labels(ids));
+	return (id) => labels.get(id) ?? [];
+});
+
 export const getMyPlayerVote = query(steamId, (id) => {
 	return unwrapAsync(getRequestEvent().locals.api.playerSocial.getMyVote(id));
 });

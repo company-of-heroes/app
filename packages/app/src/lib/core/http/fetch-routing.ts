@@ -36,26 +36,4 @@ export function shouldUseNativeFetch(url: string, pocketBaseOrigin: string): boo
 	return isPocketBaseUrl(url, pocketBaseOrigin) || isLocalUrl(url);
 }
 
-export type FetchTransport = 'fetchNative' | 'workerFetch' | 'tauri';
-
-export function selectFetchTransport(
-	url: string,
-	pocketBaseOrigin: string,
-	options: { hasFetchNative: boolean; isWorker: boolean }
-): FetchTransport {
-	if (!shouldUseNativeFetch(url, pocketBaseOrigin)) {
-		return 'tauri';
-	}
-
-	if (options.hasFetchNative) {
-		return 'fetchNative';
-	}
-
-	if (options.isWorker) {
-		return 'workerFetch';
-	}
-
-	return 'tauri';
-}
-
 export const localUrlPattern = /^https?:\/\/((localhost|127\.0\.0\.1|\[::1\]|::1)(:\d+)?)/i;

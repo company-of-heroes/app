@@ -51,6 +51,15 @@ export function preloadPlayerLabels(steamIds: string[]) {
 	}, 0);
 }
 
+/** Loads the labels again, e.g. after the server granted one during this session. */
+export function refreshPlayerLabels(steamIds: string[]) {
+	for (const id of steamIds) {
+		fetched.delete(id);
+	}
+
+	preloadPlayerLabels(steamIds);
+}
+
 async function fetchIds(ids: string[]) {
 	try {
 		const loaded = labelsBySteamId(await listAssignmentsForSteamIds(ids));

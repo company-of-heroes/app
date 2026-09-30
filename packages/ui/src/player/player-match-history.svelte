@@ -22,6 +22,7 @@
 	import type { MatchHistoryPlayer, PlayerPageData, TransformedMatch } from './types';
 	import { isRankedMatchType } from './match-history-ranks';
 	import PlayerLabels from './player-labels.svelte';
+	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
 	import { playerPreviewId } from './player-preview-cache';
@@ -132,6 +133,7 @@
 			></span>
 		{/if}
 		<PlayerLikeCount likeCount={matchPlayer.likeCount} class="shrink-0" />
+		<PlayerStreamerIcon labels={matchPlayer.labels} steamId={matchPlayer.steamId} />
 		{#if matchPlayer.steamId}
 			<PlayerProfileLink
 				href={host.routes.player(matchPlayer.steamId)}

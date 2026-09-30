@@ -12,6 +12,8 @@ import PlayerProfileSkeleton from './player-profile-skeleton.svelte';
 import PlayerSearchCard from './player-search-card.svelte';
 import PlayerPreviewCard from './player-preview-card.svelte';
 import PlayerProfileLink from './player-profile-link.svelte';
+import PlayerStreamerIcon from './player-streamer-icon.svelte';
+import StreamerBadgeProgress from './streamer-badge-progress.svelte';
 import TwitchLogo from './twitch-logo.svelte';
 import YoutubeLogo from './youtube-logo.svelte';
 
@@ -30,6 +32,8 @@ export {
 	PlayerSearchCard,
 	PlayerPreviewCard,
 	PlayerProfileLink,
+	PlayerStreamerIcon,
+	StreamerBadgeProgress,
 	TwitchLogo,
 	YoutubeLogo
 };

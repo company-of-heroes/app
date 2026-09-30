@@ -31,8 +31,6 @@ const saveProfileCustomizationSchema = z.object({
 	steamId: z.string().min(1),
 	bio: z.string().max(PROFILE_BIO_MAX),
 	links: z.object({
-		twitchUrl: z.string(),
-		youtubeUrl: z.string(),
 		others: z.array(z.object({ label: z.string().optional(), url: z.string().optional() }))
 	}),
 	background: z
@@ -48,7 +46,8 @@ const saveProfileCustomizationSchema = z.object({
 export const saveProfileCustomization = command(saveProfileCustomizationSchema, async (input) => {
 	const { locals } = getRequestEvent();
 	const steamId = ownedSteamId(input.steamId);
-	const links = buildProfileLinks(input.links);
+	const current = await unwrapAsync(locals.api.players.getCustomization(steamId));
+	const links = buildProfileLinks(input.links, current.links);
 	if (links.isErr()) {
 		error(400, locals.t(links.error.message));
 	}

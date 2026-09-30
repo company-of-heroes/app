@@ -23,8 +23,6 @@
 	);
 
 	let bio = $state('');
-	let twitchUrl = $state('');
-	let youtubeUrl = $state('');
 	let otherLinks = $state<Array<{ id: string; label: string; url: string }>>([]);
 	let clearBackground = $state(false);
 	let backgroundFile = $state<File | null>(null);
@@ -48,11 +46,8 @@
 				return;
 			}
 
-			const links = splitProfileLinks(value.links);
 			bio = value.bio ?? '';
-			twitchUrl = links.twitchUrl;
-			youtubeUrl = links.youtubeUrl;
-			otherLinks = links.others.map((link) => ({
+			otherLinks = splitProfileLinks(value.links).others.map((link) => ({
 				id: crypto.randomUUID(),
 				label: link.label ?? '',
 				url: link.url ?? ''
@@ -105,7 +100,7 @@
 			const next = await host.api.profile.save({
 				steamId,
 				bio,
-				links: { twitchUrl, youtubeUrl, others: otherLinks },
+				links: { others: otherLinks },
 				background: backgroundFile,
 				clearBackground
 			});
@@ -141,14 +136,6 @@
 	<Form.Root>
 		<Form.Group label={t('Bio')} inputId="profile-bio" description={t('Up to 500 characters.')}>
 			<Textarea id="profile-bio" rows={4} maxlength={PROFILE_BIO_MAX} bind:value={bio} />
-		</Form.Group>
-
-		<Form.Group label={t('Twitch URL')} inputId="profile-twitch">
-			<Input id="profile-twitch" type="url" bind:value={twitchUrl} />
-		</Form.Group>
-
-		<Form.Group label={t('YouTube URL')} inputId="profile-youtube">
-			<Input id="profile-youtube" type="url" bind:value={youtubeUrl} />
 		</Form.Group>
 
 		<Form.Group

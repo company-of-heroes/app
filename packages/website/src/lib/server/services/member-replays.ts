@@ -461,7 +461,9 @@ export class MemberReplaysService extends Service {
 				file
 			}),
 			'Could not save replay'
-		).andThen((record) => this.get(record.id, { id: userId, isStaff: false }));
+		)
+			.andThen((record) => this.services.rewards.markDirty([{ id: userId }]).map(() => record))
+			.andThen((record) => this.get(record.id, { id: userId, isStaff: false }));
 	}
 
 	/** A member uploads a .rec file with the metadata their analyzer parsed from it. */

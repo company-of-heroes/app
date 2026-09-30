@@ -33,12 +33,22 @@ class Dialog extends Emittery<DialogEvents> {
 
 	close() {
 		this.open = false;
+		this.emit('close');
+	}
+
+	/**
+	 * Clears the content once the close animation has finished, so the dialog
+	 * does not empty out while it is still sliding away.
+	 */
+	reset() {
+		if (this.open) {
+			return;
+		}
+
 		this.title = '';
 		this.description = '';
 		this.component = undefined;
 		this.props = undefined;
-
-		this.emit('close');
 	}
 
 	constructor() {

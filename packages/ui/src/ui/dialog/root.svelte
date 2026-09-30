@@ -13,14 +13,21 @@
 	import { isSelectionPickerTarget, selectionPicker } from '../input/selection-picker';
 </script>
 
-<Dialog.Root bind:open={dialog.open}>
+<Dialog.Root
+	bind:open={dialog.open}
+	onOpenChangeComplete={(open) => {
+		if (!open) {
+			dialog.reset();
+		}
+	}}
+>
 	<Dialog.Portal>
 		<Dialog.Overlay
 			class={cn(
 				overlayBackdrop,
 				'fixed inset-0 z-50',
 				'data-[state=open]:animate-in data-[state=open]:fade-in-0',
-				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0'
+				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:fill-mode-forwards'
 			)}
 		/>
 		<Dialog.Content
@@ -38,7 +45,7 @@
 			}}
 			class={cn(
 				'data-[state=open]:animate-in data-[state=open]:slide-in-from-right fixed',
-				'data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right',
+				'data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=closed]:fill-mode-forwards',
 				'top-0 right-0 z-50 h-screen w-screen max-w-[calc(100%-2rem)]',
 				'text-secondary-100 rounded-l-md',
 				surfaceModal,

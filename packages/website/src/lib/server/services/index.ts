@@ -25,6 +25,7 @@ import { RatingHarvestService } from './rating-harvest';
 import { RatingsService } from './ratings';
 import { ReplaysService } from './replays';
 import { ReputationService } from './reputation';
+import { RewardsService } from './rewards';
 import { SmurfService } from './smurf';
 import { SocialService } from './social';
 import { SocialCompatService } from './social-compat';
@@ -181,6 +182,10 @@ export class Services {
 
 	get reputation() {
 		return this.#get('reputation', ReputationService);
+	}
+
+	get rewards() {
+		return this.#get('rewards', RewardsService);
 	}
 
 	get smurf() {

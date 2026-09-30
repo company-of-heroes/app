@@ -37,7 +37,7 @@
 				dropdownPanel,
 				'z-50',
 				'data-[state=open]:animate-in data-[state=open]:fade-in-0',
-				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
+				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:fill-mode-forwards',
 				'data-[side=right]:data-[state=open]:slide-in-from-left-2',
 				'data-[side=left]:data-[state=open]:slide-in-from-right-2',
 				'data-[side=top]:data-[state=open]:slide-in-from-bottom-2',

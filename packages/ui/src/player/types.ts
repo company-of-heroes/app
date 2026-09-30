@@ -135,6 +135,7 @@ export type PlayerPreviewData = {
 	level: number;
 	avatarUrl: string;
 	likeCount?: number;
+	labels?: PlayerLabel[];
 };
 
 /** Local match-faction snapshot for square link previews (no profile fetch). */

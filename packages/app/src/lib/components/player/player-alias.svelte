@@ -3,7 +3,12 @@
 	import { usePlayer } from '.';
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
-	import { PlayerProfileLink, playerPreviewId } from '@company-of-heroes/ui/player';
+	import {
+		PlayerProfileLink,
+		playerPreviewId,
+		PlayerStreamerIcon
+	} from '@company-of-heroes/ui/player';
+	import { labelsForSteamId } from '$core/pocketbase/player-label-cache.svelte';
 	import { cn } from '$lib/utils';
 	import { isMePlayer } from '$lib/utils/player-me';
 	import { mePlayerText } from '$lib/components/ui/variants';
@@ -26,6 +31,7 @@
 
 <span class={cn('inline-flex min-w-0 items-center gap-1.5', className)}>
 	<PlayerLikeCount steamId={player.steamId} class="shrink-0" />
+	<PlayerStreamerIcon labels={labelsForSteamId(player.steamId)} />
 	{#if previewId}
 		<PlayerProfileLink
 			{...restProps}

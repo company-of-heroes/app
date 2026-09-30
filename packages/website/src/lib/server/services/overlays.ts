@@ -108,7 +108,15 @@ export class OverlaysService extends Service {
 							? overlays.update<OverlayRecord>(existing.id, data)
 							: overlays.create<OverlayRecord>(data),
 						'Could not save overlay'
-					).map((record) => ({ success: true as const, version, updatedAt: record.updated }));
+					)
+						.andThen((record) =>
+							// A first overlay can unlock the "overlay published" reward.
+							(existing
+								? okAsync(undefined)
+								: this.services.rewards.markDirty([{ id: userId }])
+							).map(() => record)
+						)
+						.map((record) => ({ success: true as const, version, updatedAt: record.updated }));
 				})
 			);
 	}

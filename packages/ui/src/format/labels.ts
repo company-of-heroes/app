@@ -2,6 +2,9 @@ import type { PlayerLabel } from './types';
 
 export const DEFAULT_LABEL_HEX = '#FEC766';
 
+/** Label granted automatically after 12 hours of streaming Company of Heroes. */
+export const STREAMER_LABEL_NAME = 'Streamer';
+
 const TOKEN_HEX: Record<string, string> = {
 	primary: '#FEC766',
 	default: '#A3A3A8',
@@ -37,4 +40,8 @@ export function labelHex(color?: string | null): string {
 
 export function sortPlayerLabels(labels: PlayerLabel[]): PlayerLabel[] {
 	return [...labels].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0) || a.name.localeCompare(b.name));
+}
+
+export function isStreamer(labels: PlayerLabel[] | null | undefined): boolean {
+	return (labels ?? []).some((label) => label.name === STREAMER_LABEL_NAME);
 }

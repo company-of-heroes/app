@@ -5,7 +5,7 @@ import { watch } from 'runed';
 import { api } from '$core/api';
 import { Feature } from '$features/feature.svelte';
 import { streamChat } from '$features/streaming/chat';
-import { publishProfileLink } from '$features/streaming/profile-links';
+import { publishProfileLink, removeProfileLink } from '$features/streaming/profile-links';
 import { fetch } from '$core/http/fetch';
 
 export type YouTubeSettings = {
@@ -168,6 +168,7 @@ export class YouTube extends Feature<YouTubeSettings> {
 		this.settings.accessToken = null;
 		this.settings.refreshToken = null;
 		this.settings.expiresAt = null;
+		void removeProfileLink('youtube');
 	}
 
 	async say(text: string): Promise<void> {

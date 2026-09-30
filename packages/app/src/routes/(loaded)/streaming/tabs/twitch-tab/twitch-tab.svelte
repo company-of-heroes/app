@@ -90,7 +90,7 @@
 	};
 
 	const disconnect = () => {
-		twitch.settings.accessToken = null;
+		twitch.disconnect();
 		app.toast.success(t('Successfully disconnected from Twitch'));
 	};
 

@@ -8,7 +8,7 @@ import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { error } from '@tauri-apps/plugin-log';
 import { app } from '$core/app/context';
 import { streamChat } from '$features/streaming/chat';
-import { publishProfileLink } from '$features/streaming/profile-links';
+import { publishProfileLink, removeProfileLink } from '$features/streaming/profile-links';
 
 export type ValidatedTokenInfo = TokenInfo & { userId: string };
 
@@ -95,6 +95,12 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 	/** Stores a token from the OAuth flow; the channel is then added to the user's profile. */
 	connectWithToken(accessToken: string) {
 		this.settings.accessToken = accessToken;
+	}
+
+	/** Clears the token and takes the channel off the user's profile. */
+	disconnect() {
+		this.settings.accessToken = null;
+		void removeProfileLink('twitch');
 	}
 
 	enable(): void {

@@ -13,6 +13,7 @@
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import CrownIcon from 'phosphor-svelte/lib/CrownIcon';
 	import PlayerLabels from '../player/player-labels.svelte';
+	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
@@ -149,6 +150,7 @@
 						/>
 					{/if}
 					<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
+					<PlayerStreamerIcon labels={stat.profile.labels} />
 					<span class="truncate">{stat.profile.alias}</span>
 					<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
 				</div>

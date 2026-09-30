@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date:** September 29, 2026
+**Effective date:** September 30, 2026
 
 This Privacy Policy explains how **Code IT** (“we”, “us”) collects, uses, shares, and protects information when you use **Company of Heroes Companion** (also called the FKNOOBS App), the website at [https://coh1stats.com](https://coh1stats.com), and the API at [https://api.coh1stats.com](https://api.coh1stats.com) (together, the “Service”).
 
@@ -31,7 +31,8 @@ When you use the desktop app we create or restore an account so your match histo
 - a password hash (for email/password accounts);
 - last login time and the app version;
 - staff role, if we grant you one;
-- a reputation score derived from comments, votes, replay downloads, player profile votes, and matches you play. We store that score per action type so we can moderate accounts and grant rewards later. These scores are not shown on public player pages.
+- a reputation score derived from comments, votes, replay downloads, player profile votes, and matches you play. We store that score per action type so we can moderate accounts and grant rewards. These scores are not shown on public player pages;
+- the rewards you unlocked and when you unlocked them. Rewards are images with a title and description that staff create; we unlock them automatically when your account meets their conditions, using data we already hold for other features: your matches on every Steam ID on your account (result, faction, mode, map, duration, lobby rating, and your community ELO), matches your app recorded, comments and replies, votes you cast and receive, replays you upload or download and the votes and downloads they receive, your reputation, whether your profile has an avatar, bio, background and link, how long your account exists, your total Company of Heroes streaming time, the number of matches with fair play checks, and whether you published a stream overlay. We do not collect anything new for rewards. This includes matches recorded before a reward existed. Unlocked rewards and their unlock dates are shown on your public player page on the website and in the desktop app; your progress toward rewards you have not unlocked yet is only shown to you.
 
 Website login keeps you signed in with a PocketBase session cookie in your browser. Steam login sends you to Steam to prove your identity; we store the resulting Steam ID on your account and do not receive your Steam password.
 
@@ -94,11 +95,12 @@ We use information to:
 - create and manage accounts, and keep you signed in;
 - provide match tracking, history, replays (including the public community replay browser), live companion lobbies, Twitch stream listings, leaderboards, and player pages;
 - sync data across the app, website, and API;
-- operate overlays, notifications (including comment, reply, and @mention alerts), and other features you enable;
+- operate overlays, notifications (including comment, reply, @mention, and reward unlock alerts), and other features you enable;
+- unlock rewards when your account meets their conditions, and show the rewards you unlocked on your public player page;
 - review fair play reports and protect the community from abuse;
 - keep comments that users or staff remove so moderators can review the text and the reason it was deleted;
 - hide match results from public listings when staff need to (for example during a tournament), including by lobby-name word list;
-- show staff-assigned public badges next to Relic player names in the desktop app and on the website, and grant the Streamer badge after 12 hours of Company of Heroes streaming;
+- show staff-assigned public badges next to Relic player names in the desktop app and on the website, and grant the Streamer badge after 12 hours of Company of Heroes streaming, and show that badge in green while you are streaming (based on the streaming reports the desktop app sends, which are public only as "this Steam ID is streaming right now");
 - debug, maintain, and improve the Service;
 - comply with legal obligations.
 

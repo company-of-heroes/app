@@ -1,4 +1,5 @@
 import { ok, okAsync } from 'neverthrow';
+import { cached } from '../cache';
 import { RELIC_BASE } from '../clients/relic';
 import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
 import { steamIdsOf, type UserRow } from '../domain/users';
@@ -12,6 +13,9 @@ const STREAMER_LABEL_COLOR = '#9146FF';
 const MAX_REPORT_MS = 5 * 60 * 1000;
 /** Clock slack between two reports. */
 const REPORT_SLACK_MS = 30 * 1000;
+/** Desktop reports every ~60s while live; two missed reports and the stream counts as ended. */
+const LIVE_WINDOW_MS = 150 * 1000;
+const LIVE_CACHE_SECONDS = 30;
 
 type ProgressRow = {
 	id: string;
@@ -64,8 +68,31 @@ export class StreamingService extends Service {
 		).map((found) => found.items[0] ?? null);
 	}
 
+	/**
+	 * Steam ids of accounts streaming right now: the desktop reports about every minute
+	 * while live with the game running, so a recent report means live.
+	 */
+	liveSteamIds(): Task<string[]> {
+		return cached('streaming:live', LIVE_CACHE_SECONDS, () =>
+			fromPb(
+				this.rows.getFullList<{ expand?: { user?: UserRow } }>({
+					filter: this.pb.filter('lastReportAt >= {:since}', {
+						since: new Date(Date.now() - LIVE_WINDOW_MS)
+					}),
+					expand: 'user',
+					fields: 'expand.user.steamIds'
+				}),
+				'Could not load live streamers'
+			).map((rows) => [
+				...new Set(rows.flatMap((row) => (row.expand?.user ? steamIdsOf(row.expand.user) : [])))
+			])
+		);
+	}
+
 	progress(userId: string): Task<StreamingProgress> {
-		return this.find(userId).map(toProgress);
+		return this.find(userId).andThen((row) =>
+			(row?.badgeGranted ? this.healLabel(userId) : okAsync(false)).map(() => toProgress(row))
+		);
 	}
 
 	private streamerLabelId(): Task<string> {
@@ -166,19 +193,28 @@ export class StreamingService extends Service {
 		});
 	}
 
-	/** Grants the label once the threshold is crossed; a failure is logged and retried on the next report. */
+	/**
+	 * Re-labels an account that already earned the badge: Steam ids linked later, or ones
+	 * Relic did not know yet, still get the label. A failure is logged, never surfaced.
+	 */
+	private healLabel(userId: string): Task<boolean> {
+		return this.grantStreamerLabel(userId).orElse((error) => {
+			console.warn('[streaming] grant label', userId, error);
+			return ok(false);
+		});
+	}
+
+	/** Grants the label once the threshold is crossed; a failure is retried on the next report. */
 	private badgeFor(userId: string, existing: ProgressRow | null, streamedMs: number) {
-		const granted = Boolean(existing?.badgeGranted);
-		if (granted || streamedMs < STREAMER_THRESHOLD_MS) {
-			return okAsync({ granted, changed: false });
+		if (existing?.badgeGranted) {
+			return this.healLabel(userId).map(() => ({ granted: true, changed: false }));
 		}
 
-		return this.grantStreamerLabel(userId)
-			.orElse((error) => {
-				console.warn('[streaming] grant label', userId, error);
-				return ok(false);
-			})
-			.map((granted) => ({ granted, changed: true }));
+		if (streamedMs < STREAMER_THRESHOLD_MS) {
+			return okAsync({ granted: false, changed: false });
+		}
+
+		return this.healLabel(userId).map((granted) => ({ granted, changed: true }));
 	}
 
 	report(userId: string, input: StreamingReport): Task<StreamingProgress & { creditedMs: number }> {
@@ -214,6 +250,15 @@ export class StreamingService extends Service {
 							: this.rows.create<ProgressRow>({ user: userId, ...body }),
 						'Could not save streaming progress'
 					);
+				})
+				.andThen((row) => {
+					// "Hours streamed" rewards: queue a check each time a whole hour completes.
+					const hour = 60 * 60 * 1000;
+					const newHour =
+						Math.floor(Number(existing?.streamedMs ?? 0) / hour) !== Math.floor(streamedMs / hour);
+					return (
+						newHour ? this.services.rewards.markDirty([{ id: userId }]) : okAsync(undefined)
+					).map(() => row);
 				})
 				.map((row) => ({ ...toProgress(row), creditedMs: delta }));
 		});

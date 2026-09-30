@@ -77,13 +77,6 @@
 			return;
 		}
 
-		if (snapshotMode) {
-			loading = false;
-			error = false;
-			player = null;
-			return;
-		}
-
 		const id = playerId.trim();
 		if (!id) {
 			return;
@@ -107,7 +100,12 @@
 				trapFocus={false}
 				preventScroll={false}
 			>
-				<PlayerPreviewCard {player} faction={snapshotMode ? preview : null} {loading} {error} />
+				<PlayerPreviewCard
+					{player}
+					faction={snapshotMode ? preview : null}
+					loading={loading && !snapshotMode}
+					error={error && !snapshotMode}
+				/>
 			</LinkPreview.Content>
 		</LinkPreview.Portal>
 	</LinkPreview.Root>

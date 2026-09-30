@@ -23,6 +23,9 @@
 	import type { PlayerPageData } from './types';
 	import PlayerCompanionStaffDebug from './player-companion-staff-debug.svelte';
 	import PlayerLabels from './player-labels.svelte';
+	import RewardIcons from '../reward/reward-icons.svelte';
+	import PlayerStreamerIcon from './player-streamer-icon.svelte';
+	import { isStreamingLink } from './profile';
 	import SmurfAlert from './smurf-alert.svelte';
 	import TwitchLogo from './twitch-logo.svelte';
 	import YoutubeLogo from './youtube-logo.svelte';
@@ -78,7 +81,10 @@
 		const value = player.customization?.bio?.trim();
 		return value ? value : null;
 	});
-	const links = $derived(player.customization?.links ?? []);
+	const streamingLinks = $derived((player.customization?.links ?? []).filter(isStreamingLink));
+	const otherLinks = $derived(
+		(player.customization?.links ?? []).filter((link) => !isStreamingLink(link))
+	);
 
 	const metaList = 'grid-cols-[9.5rem_minmax(0,1fr)] content-start gap-x-4';
 	const valueRow = 'inline-flex min-w-0 flex-nowrap items-center gap-2 whitespace-nowrap';
@@ -139,6 +145,7 @@
 					{#if flag}
 						<img class="h-5 w-auto shrink-0 rounded-xs" src={flag} alt={player.country ?? ''} />
 					{/if}
+					<PlayerStreamerIcon labels={player.labels} steamId={player.steamId} size={24} />
 					<h1 class="font-heading truncate text-3xl font-bold">{player.alias}</h1>
 					<PlayerLabels labels={player.labels} class="shrink-0" />
 					<span class="text-secondary-500 text-sm">
@@ -146,61 +153,57 @@
 					</span>
 					{@render afterName?.()}
 				</div>
-				{#if bio || links.length > 0}
+				{#if streamingLinks.length > 0}
+					<div class="mb-3 flex flex-wrap items-center gap-4">
+						{#each streamingLinks as link (link.url)}
+							<a
+								href={link.url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class={cn(
+									interactive,
+									'inline-flex items-center gap-2 text-sm font-medium underline'
+								)}
+							>
+								{#if link.type === 'twitch'}
+									<TwitchLogo size={20} class="text-[#9146FF]" />
+									<span>Twitch</span>
+								{:else}
+									<YoutubeLogo size={20} />
+									<span>YouTube</span>
+								{/if}
+							</a>
+						{/each}
+					</div>
+				{/if}
+				{#if bio || otherLinks.length > 0}
 					<div class="my-4">
 						{#if bio}
 							<p class="text-secondary-200 mb-3 max-w-2xl whitespace-pre-wrap">{bio}</p>
 						{/if}
-						{#if links.length > 0}
+						{#if otherLinks.length > 0}
 							<div class="mb-3 flex flex-wrap items-center gap-4">
-								{#each links as link (link.url)}
-									{#if link.type === 'twitch'}
-										<a
-											href={link.url}
-											target="_blank"
-											rel="noopener noreferrer"
-											class={cn(
-												interactive,
-												'inline-flex items-center gap-2 text-sm font-medium underline'
-											)}
-										>
-											<TwitchLogo size={20} class="text-[#9146FF]" />
-											<span>Twitch</span>
-										</a>
-									{:else if link.type === 'youtube'}
-										<a
-											href={link.url}
-											target="_blank"
-											rel="noopener noreferrer"
-											class={cn(
-												interactive,
-												'inline-flex items-center gap-2 text-sm font-medium underline'
-											)}
-										>
-											<YoutubeLogo size={20} />
-											<span>YouTube</span>
-										</a>
-									{:else}
-										<a
-											href={link.url}
-											target="_blank"
-											rel="noopener noreferrer"
-											class={cn(
-												interactive,
-												'text-secondary-300 hover:text-primary inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm transition-colors'
-											)}
-										>
-											<LinkIcon size={18} />
-											{#if link.label}
-												<span>{link.label}</span>
-											{/if}
-										</a>
-									{/if}
+								{#each otherLinks as link (link.url)}
+									<a
+										href={link.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										class={cn(
+											interactive,
+											'text-secondary-300 hover:text-primary inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm transition-colors'
+										)}
+									>
+										<LinkIcon size={18} />
+										{#if link.label}
+											<span>{link.label}</span>
+										{/if}
+									</a>
 								{/each}
 							</div>
 						{/if}
 					</div>
 				{/if}
+				<RewardIcons steamId={player.steamId} />
 				<div class="grid grid-cols-1 items-start gap-x-6 gap-y-1 sm:grid-cols-2">
 					<List.Root class={metaList}>
 						<List.Title>{t('Steam ID:')}</List.Title>

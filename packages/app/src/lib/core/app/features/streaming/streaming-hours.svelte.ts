@@ -6,6 +6,7 @@ import { twitch } from '$features/twitch';
 import { youtube } from '$features/youtube';
 import { app } from '$core/app/context';
 import { api } from '$core/api';
+import { refreshPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 import { t } from '$lib/i18n';
 
 export type StreamingHoursSettings = {
@@ -95,6 +96,10 @@ export class StreamingHours extends Feature<StreamingHoursSettings> {
 		const result = await api.streaming.getProgress();
 		if (result.isOk()) {
 			this.progress = result.value;
+			// The server (re)labels the account while answering; show that right away.
+			if (result.value.badgeGranted) {
+				refreshPlayerLabels(app.account.user.steamIds);
+			}
 		}
 	}
 
@@ -123,6 +128,7 @@ export class StreamingHours extends Feature<StreamingHoursSettings> {
 			this.progress = progress;
 			this.settings.pendingMs = Math.max(0, this.settings.pendingMs - creditedMs);
 			if (justGranted) {
+				refreshPlayerLabels(app.account.user.steamIds);
 				app.toast.success(
 					t('You streamed 12 hours of Company of Heroes — you now have the Streamer badge!')
 				);

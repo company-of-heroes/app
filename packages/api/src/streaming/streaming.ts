@@ -1,7 +1,11 @@
 import { errAsync, type ResultAsync } from 'neverthrow';
-import { sendV1, siteUrl, type ApiDeps } from '../deps';
+import { z } from 'zod';
+import { sendV1, siteUrl, v1Base, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
+import { fetchJson } from '../fetch-json';
 import { fromPbPromise, requireAuth } from '../pb';
+
+const liveSchema = z.object({ steamIds: z.array(z.string()).optional() });
 
 export type StreamingProgress = {
 	streamedMs: number;
@@ -35,6 +39,14 @@ export class StreamingApi {
 			sendV1<StreamingProgress>(this.deps, '/streaming/progress'),
 			'Failed to load streaming progress.'
 		);
+	}
+
+	/** Steam ids of players streaming Company of Heroes right now (public). */
+	listLiveSteamIds(): ResultAsync<string[], ApiError> {
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/streaming/live`, {
+			fallback: 'Failed to load live streamers.',
+			schema: liveSchema
+		}).map((data) => data.steamIds ?? []);
 	}
 
 	/** `creditedMs` is how much of `deltaMs` the server counted. */

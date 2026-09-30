@@ -10,6 +10,7 @@
 	import ProhibitIcon from 'phosphor-svelte/lib/ProhibitIcon';
 	import SealCheckIcon from 'phosphor-svelte/lib/SealCheckIcon';
 	import TagSimpleIcon from 'phosphor-svelte/lib/TagSimpleIcon';
+	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import UsersIcon from 'phosphor-svelte/lib/UsersIcon';
 	import { Label } from '$lib/components/ui/label';
 	import * as Nav from '$lib/components/ui/nav';
@@ -62,6 +63,10 @@
 						<Nav.Link href="/admin/reputation" class="gap-2 py-2 text-sm font-semibold">
 							<SealCheckIcon size={20} weight="duotone" />
 							{t('Reputation')}
+						</Nav.Link>
+						<Nav.Link href="/admin/rewards" class="gap-2 py-2 text-sm font-semibold">
+							<TrophyIcon size={20} weight="duotone" />
+							{t('Rewards')}
 						</Nav.Link>
 					</div>
 				{/if}

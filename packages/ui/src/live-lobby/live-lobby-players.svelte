@@ -13,6 +13,7 @@
 	import { getEloColor, getEloTextShadow } from '@company-of-heroes/ui/format/player-format';
 	import { hasLiveLobbyStats } from './stats';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
+	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
 	import { playerRowKey, teamPlayers, type LiveLobbyPlayer } from './types';
@@ -99,6 +100,7 @@
 		{#if !cpu}
 			<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 		{/if}
+		<PlayerStreamerIcon steamId={player.steamId} />
 		{#if href}
 			{@const previewId = playerPreviewId({
 				steamId: player.steamId,
