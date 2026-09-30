@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Selection } from '../ui/input';
 	import { Button } from '../ui/button';
 	import { cn } from '../cn';
+	import { useHost } from '../host/host.context';
+	import { raceFromReplayFaction } from './replay-stats';
 	import ArrowSquareOutIcon from 'phosphor-svelte/lib/ArrowSquareOutIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 
@@ -51,51 +54,18 @@
 				profileId?: number | null;
 			}
 		) => void;
-		onSearchPlayers: (query: string) => Promise<ReplaySteamLinkOption[]>;
-		resolveFactionFlag?: (race: number) => string;
-		raceFromFaction?: (faction: string) => number;
-		resolveAvatarUrl?: (url: string) => string;
-		flagImageUrl?: (country: string | null | undefined) => string | null;
-		resolvePlayerHref?: (steamId: string, profileId?: number | null) => string | null;
-		playersLabel?: string;
-		hint?: string;
-		searchPlaceholder?: string;
-		linkedLabel?: string;
-		clearLabel?: string;
-		viewProfileLabel?: string;
-		noResultsLabel?: string;
-		searchingLabel?: string;
 		class?: string;
 	};
 
-	let {
-		players,
-		onLink,
-		onSearchPlayers,
-		resolveFactionFlag,
-		raceFromFaction,
-		resolveAvatarUrl,
-		flagImageUrl,
-		resolvePlayerHref,
-		playersLabel = 'Players',
-		hint = 'Link a Steam account when the replay has no Steam ID so ratings and flags can load.',
-		searchPlaceholder = 'Search player...',
-		linkedLabel = 'Linked',
-		clearLabel = 'Clear',
-		viewProfileLabel = 'View profile',
-		noResultsLabel = 'No results found.',
-		searchingLabel = 'Searching...',
-		class: className
-	}: Props = $props();
+	let { players, onLink, class: className }: Props = $props();
+	const { t } = useI18n();
+	const host = useHost();
+	const STEAM_ID = /^7656119\d{10}$/;
 
 	let knownProfiles = $state.raw<Record<string, KnownProfile>>({});
 
 	function factionRace(faction: string | undefined) {
-		if (!raceFromFaction) {
-			return 0;
-		}
-
-		return raceFromFaction(String(faction || ''));
+		return raceFromReplayFaction(String(faction || ''));
 	}
 
 	function parseProfileId(raw: string | undefined): number | null {
@@ -158,15 +128,28 @@
 	}
 
 	function displayLabel(player: ReplaySteamLinkPlayer) {
-		return profileFor(player)?.label ?? searchPlaceholder;
+		return profileFor(player)?.label ?? t('Search player...');
 	}
 
 	function playerHref(steamId: string, profileId?: number | null) {
-		if (!resolvePlayerHref) {
-			return null;
+		return host.routes.player(profileId && profileId > 0 ? profileId : steamId);
+	}
+
+	/** Search people with matches; a raw SteamID64 is always offered when nothing matches. */
+	async function searchPlayers(query: string): Promise<ReplaySteamLinkOption[]> {
+		const q = query.trim();
+		if (!q) {
+			return [];
 		}
 
-		return resolvePlayerHref(steamId, profileId ?? null);
+		const results = await host.api.players.search(q).catch(() => []);
+		if (results.length > 0) {
+			return results;
+		}
+
+		return STEAM_ID.test(q)
+			? [{ value: q, label: q, avatarUrl: null, country: null, profileId: null }]
+			: [];
 	}
 
 	function optionsFor(player: ReplaySteamLinkPlayer): SelectionOption[] {
@@ -187,7 +170,7 @@
 	}
 
 	async function search(query: string): Promise<SelectionOption[]> {
-		const results = await onSearchPlayers(query);
+		const results = await searchPlayers(query);
 		const next = { ...knownProfiles };
 		for (const option of results) {
 			next[option.value] = {
@@ -225,15 +208,11 @@
 			return null;
 		}
 
-		return resolveAvatarUrl ? resolveAvatarUrl(url) : url;
+		return host.resolve.avatarUrl(url);
 	}
 
 	function flagSrc(country: string | null | undefined) {
-		if (!country || !flagImageUrl) {
-			return null;
-		}
-
-		return flagImageUrl(country);
+		return country ? host.resolve.flagImageUrl(country) : null;
 	}
 
 	function stopSelect(event: Event) {
@@ -267,8 +246,8 @@
 				variant="secondary"
 				size="icon-sm"
 				class="shrink-0"
-				aria-label={viewProfileLabel}
-				title={viewProfileLabel}
+				aria-label={t('View profile')}
+				title={t('View profile')}
 				onpointerdown={stopSelect}
 				onmousedown={stopSelect}
 				onclick={stopSelect}
@@ -283,10 +262,12 @@
 	<section class={cn('border-secondary-800', className)}>
 		<div class="px-4 py-3">
 			<h2 class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">
-				{playersLabel}
+				{t('Players')}
 			</h2>
-			{#if hint}
-				<p class="text-secondary-400 mt-1 text-sm">{hint}</p>
+			{#if t('Link a Steam account when the replay has no Steam ID so ratings and flags can load.')}
+				<p class="text-secondary-400 mt-1 text-sm">
+					{t('Link a Steam account when the replay has no Steam ID so ratings and flags can load.')}
+				</p>
 			{/if}
 		</div>
 		<ul class="border-secondary-800 bg-secondary-800/30 divide-secondary-800 divide-y border-t">
@@ -299,13 +280,11 @@
 					: null}
 				<li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
 					<div class="flex min-w-0 flex-1 items-center gap-2.5">
-						{#if resolveFactionFlag}
-							<img
-								src={resolveFactionFlag(factionRace(player.faction))}
-								alt=""
-								class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
-							/>
-						{/if}
+						<img
+							src={host.resolve.factionFlagByRace(factionRace(player.faction))}
+							alt=""
+							class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
+						/>
 						<div class="min-w-0">
 							<p class="truncate text-sm font-medium text-white">{player.name}</p>
 							{#if player.steamId}
@@ -320,7 +299,7 @@
 											alt={profile?.country ?? ''}
 										/>
 									{/if}
-									<span class="truncate">{linkedLabel}: {displayLabel(player)}</span>
+									<span class="truncate">{t('Linked')}: {displayLabel(player)}</span>
 								</p>
 							{/if}
 						</div>
@@ -330,10 +309,10 @@
 							<Selection
 								value={player.steamId ?? ''}
 								options={optionsFor(player)}
-								placeholder={searchPlaceholder}
-								{searchPlaceholder}
-								{noResultsLabel}
-								{searchingLabel}
+								placeholder={t('Search player...')}
+								searchPlaceholder={t('Search player...')}
+								noResultsLabel={t('No results found.')}
+								searchingLabel={t('Searching...')}
 								onSearch={search}
 								onValueChange={(value) => onValueChange(player, value)}
 								getDisplayLabel={(option) => option.label}
@@ -351,10 +330,10 @@
 								variant="secondary"
 								size="sm"
 								class="shrink-0"
-								aria-label={viewProfileLabel}
+								aria-label={t('View profile')}
 							>
 								<ArrowSquareOutIcon class="size-4" weight="bold" />
-								{viewProfileLabel}
+								{t('View profile')}
 							</Button>
 						{/if}
 						{#if player.steamId}
@@ -363,7 +342,7 @@
 								variant="secondary"
 								size="icon-sm"
 								class="shrink-0"
-								aria-label={clearLabel}
+								aria-label={t('Clear')}
 								onclick={() => clear(player)}
 							>
 								<XIcon class="size-4" weight="bold" />

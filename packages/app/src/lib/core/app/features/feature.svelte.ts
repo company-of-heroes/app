@@ -111,10 +111,9 @@ export abstract class Feature<
 		const slice = settingsService.getFeatureSlice(this.name);
 		const defaults = (await this.defaultSettings?.()) ?? ({} as Settings);
 
-		const merged = defaultsDeep(
-			cloneDeep(slice ?? {}),
-			cloneDeep(defaults)
-		) as Settings & { enabled: boolean };
+		const merged = defaultsDeep(cloneDeep(slice ?? {}), cloneDeep(defaults)) as Settings & {
+			enabled: boolean;
+		};
 
 		merged.enabled = Boolean(merged.enabled ?? false);
 

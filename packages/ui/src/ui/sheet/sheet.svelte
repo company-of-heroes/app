@@ -3,10 +3,7 @@
 	import { Dialog } from 'bits-ui';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { flushHeader, flushHeaderTitle, overlayBackdrop, surfaceModal } from '../../variants';
-	import {
-		isSelectionPickerTarget,
-		selectionPicker
-	} from '../input/selection-picker';
+	import { isSelectionPickerTarget, selectionPicker } from '../input/selection-picker';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 
 	type Props = {
@@ -35,7 +32,9 @@
 				overlayBackdrop,
 				'fixed inset-0 z-50',
 				'data-[state=open]:animate-in data-[state=open]:fade-in-0',
-				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0'
+				// Stay at the end of the exit animation until bits-ui removes the element
+				// (otherwise it flashes back for a frame after sliding out).
+				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:fill-mode-forwards'
 			)}
 		/>
 		<Dialog.Content
@@ -54,7 +53,7 @@
 			class={cn(
 				surfaceModal,
 				'fixed inset-y-0 z-50 flex w-80 max-w-[calc(100vw-1rem)] flex-col rounded-none outline-hidden',
-				'data-[state=open]:animate-in data-[state=closed]:animate-out',
+				'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fill-mode-forwards',
 				side === 'left' &&
 					'data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left left-0 border-r',
 				side === 'right' &&

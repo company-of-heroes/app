@@ -2,6 +2,9 @@ import PlayerLabels from './player-labels.svelte';
 import PlayerLikeCount from './player-like-count.svelte';
 import SmurfAlert from './smurf-alert.svelte';
 import PlayerProfileHeader from './player-profile-header.svelte';
+import PlayerProfile from './player-profile.svelte';
+import ProfileCustomizationForm from './profile-customization-form.svelte';
+import PlayerCompanionStaffDebug from './player-companion-staff-debug.svelte';
 import PlayerStatsTable from './player-stats-table.svelte';
 import PlayerMatchHistory from './player-match-history.svelte';
 import PlayerMatchHistorySkeleton from './player-match-history-skeleton.svelte';
@@ -17,6 +20,9 @@ export {
 	PlayerLikeCount,
 	SmurfAlert,
 	PlayerProfileHeader,
+	PlayerProfile,
+	ProfileCustomizationForm,
+	PlayerCompanionStaffDebug,
 	PlayerStatsTable,
 	PlayerMatchHistory,
 	PlayerMatchHistorySkeleton,
@@ -27,8 +33,6 @@ export {
 	TwitchLogo,
 	YoutubeLogo
 };
-export { createPlayerPreview, usePlayerPreview } from './player-preview.context';
-export type { PlayerPreviewContext } from './player-preview.context';
 export {
 	clearPlayerPreviewCache,
 	getCachedPlayerPreview,

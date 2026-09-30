@@ -10,10 +10,7 @@
 		surfaceModal
 	} from '../../variants';
 	import CloseIcon from 'phosphor-svelte/lib/XIcon';
-	import {
-		isSelectionPickerTarget,
-		selectionPicker
-	} from '../input/selection-picker';
+	import { isSelectionPickerTarget, selectionPicker } from '../input/selection-picker';
 </script>
 
 <Dialog.Root bind:open={dialog.open}>
@@ -58,9 +55,7 @@
 								{@render dialog.title()}
 							{/if}
 							{#if dialog.description}
-								<Dialog.Description
-									class={cn(flushHeaderDescription, 'whitespace-pre-line')}
-								>
+								<Dialog.Description class={cn(flushHeaderDescription, 'whitespace-pre-line')}>
 									{#if typeof dialog.description === 'string'}
 										{dialog.description}
 									{:else}

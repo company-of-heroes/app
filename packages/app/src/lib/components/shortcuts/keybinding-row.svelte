@@ -43,7 +43,7 @@
 		<input
 			bind:value={keybinding.description}
 			placeholder={t('Description')}
-			class="border-secondary-800 bg-secondary-950/50 focus:border-secondary-600 h-9 w-full rounded-sm border px-3 text-sm font-medium text-white placeholder:text-secondary-600 focus:outline-none"
+			class="border-secondary-800 bg-secondary-950/50 focus:border-secondary-600 placeholder:text-secondary-600 h-9 w-full rounded-sm border px-3 text-sm font-medium text-white focus:outline-none"
 		/>
 	</td>
 

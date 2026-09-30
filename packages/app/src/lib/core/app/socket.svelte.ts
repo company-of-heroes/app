@@ -116,18 +116,21 @@ export class Socket extends Emittery<SocketEvents> {
 					if (typeof parsed.topic !== 'string' || !('data' in parsed)) {
 						throw new Error('Invalid message format: missing topic or data');
 					}
+
 					return { type: 'message', topic: parsed.topic, data: parsed.data };
 
 				case 'success':
 					if (typeof parsed.message !== 'string') {
 						throw new Error('Invalid success format: missing message');
 					}
+
 					return { type: 'success', message: parsed.message };
 
 				case 'error':
 					if (typeof parsed.message !== 'string') {
 						throw new Error('Invalid error format: missing message');
 					}
+
 					return { type: 'error', message: parsed.message };
 
 				default:

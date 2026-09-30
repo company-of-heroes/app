@@ -20,8 +20,12 @@
 	class={cn(
 		'inline-block w-fit rounded-md border px-2.5 py-0.5 text-xs font-medium',
 		!custom && variant === 'primary' && 'border-primary/20 bg-primary/5 text-primary',
-		!custom && variant === 'default' && 'border-secondary-700 bg-secondary-800/30 text-secondary-300',
-		!custom && variant === 'destructive' && 'border-destructive/20 bg-destructive/5 text-destructive',
+		!custom &&
+			variant === 'default' &&
+			'border-secondary-700 bg-secondary-800/30 text-secondary-300',
+		!custom &&
+			variant === 'destructive' &&
+			'border-destructive/20 bg-destructive/5 text-destructive',
 		!custom && variant === 'warning' && 'border-warning/20 bg-warning/5 text-warning',
 		!custom && variant === 'success' && 'border-success/20 bg-success/5 text-success',
 		!custom && variant === 'info' && 'border-info/20 bg-info/5 text-info',

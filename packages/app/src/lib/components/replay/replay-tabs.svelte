@@ -4,8 +4,8 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { cn } from '$lib/utils';
 	import ReplayPlayers from './replay-players.svelte';
-	import ReplayChat from './replay-chat.svelte';
-	import ReplayActions from './replay-actions.svelte';
+	import { Actions, Chat, type ReplayData } from '@company-of-heroes/ui/replay';
+	import { useReplay } from './context';
 	import { useI18n } from '$lib/i18n';
 
 	type Props = {
@@ -27,15 +27,15 @@
 	}: Props = $props();
 	const { t } = useI18n();
 	let activeTab = $state('overview');
+	const replay = $derived(useReplay());
+	/** Parser output is structurally the shared replay shape. */
+	const replayData = $derived(replay as unknown as ReplayData);
 </script>
 
 <div class={className}>
 	<Tabs.Root bind:value={activeTab}>
 		<Tabs.List
-			class={cn(
-				'border-secondary-800 px-4 py-2.5',
-				flush ? 'border-b' : 'border-t border-b'
-			)}
+			class={cn('border-secondary-800 px-4 py-2.5', flush ? 'border-b' : 'border-t border-b')}
 		>
 			<Tabs.Trigger value="overview">{t('Overview')}</Tabs.Trigger>
 			<Tabs.Trigger value="chat">{t('Chat')}</Tabs.Trigger>
@@ -49,10 +49,10 @@
 			{@render overviewExtra?.()}
 		</Tabs.Content>
 		<Tabs.Content value="chat" class={flush ? undefined : 'flex grow flex-col gap-4'}>
-			<ReplayChat {flush} class="grow" />
+			<Chat messages={replay.messages} playerCount={replay.playerCount} class="grow" />
 		</Tabs.Content>
 		<Tabs.Content value="timeline" class={flush ? undefined : 'flex grow flex-col gap-4'}>
-			<ReplayActions {flush} />
+			<Actions replay={replayData} />
 		</Tabs.Content>
 		{#if showScreenshots}
 			<Tabs.Content value="screenshots" class={flush ? undefined : 'flex grow flex-col gap-4'}>

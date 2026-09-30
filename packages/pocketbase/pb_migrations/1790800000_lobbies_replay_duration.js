@@ -59,7 +59,10 @@ function registerFieldMetadata(app, field) {
 function ensureNumberColumn(app, field) {
 	if (!hasSqlColumn(app, field.name)) {
 		// SQLite ADD COLUMN is cheap; does not rewrite the table.
-		app.db().newQuery(`ALTER TABLE lobbies ADD COLUMN \`${field.name}\` NUMERIC DEFAULT NULL`).execute();
+		app
+			.db()
+			.newQuery(`ALTER TABLE lobbies ADD COLUMN \`${field.name}\` NUMERIC DEFAULT NULL`)
+			.execute();
 	}
 
 	registerFieldMetadata(app, field);

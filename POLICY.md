@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date:** September 27, 2026
+**Effective date:** September 29, 2026
 
 This Privacy Policy explains how **Code IT** (“we”, “us”) collects, uses, shares, and protects information when you use **Company of Heroes Companion** (also called the FKNOOBS App), the website at [https://coh1stats.com](https://coh1stats.com), and the API at [https://api.coh1stats.com](https://api.coh1stats.com) (together, the “Service”).
 
@@ -37,7 +37,7 @@ Website login keeps you signed in with a PocketBase session cookie in your brows
 
 You can update your display name, avatar, email, and password on the website and in the desktop app. When you verify an email or change to a new one, we send a one-time confirmation message to that address so only you can complete the change. We do not use those messages for marketing.
 
-If you link a Steam ID to your account, you can also customize your **public player profile**: an optional bio, links (for example Twitch, YouTube, or other URLs), and an optional background image. That customization is stored with your Steam ID and shown on your public player page on the website and in the desktop app.
+If you link a Steam ID to your account, you can also customize your **public player profile**: an optional bio, links (for example Twitch, YouTube, or other URLs), and an optional background image. That customization is stored with your Steam ID and shown on your public player page on the website and in the desktop app. When you connect Twitch or YouTube on the desktop app's Streaming page, we add that channel's link to your profile automatically (you can still edit or remove it).
 
 ### b) Match, replay, and community data
 
@@ -65,6 +65,8 @@ We may also show smurf / related-account labels when our systems link Steam acco
 
 Staff can attach public badges (for example Premium or Streamer) to Relic/Steam player identities. We store those assignments (Steam ID, Relic profile ID, and an alias snapshot) so the badges can be shown next to in-game names in the desktop app and on the public website.
 
+The **Streamer** badge is also granted automatically. While you are live on a connected Twitch or YouTube channel **and** Company of Heroes is running, the desktop app counts that time and sends it to our servers with your account, together with your Twitch login and YouTube channel ID. After 12 hours in total, every Steam ID on your account gets the public Streamer badge. We store only the total time, when it was last reported, and those channel identifiers; we do not store stream video, titles, or viewer data for this.
+
 ### d) Fair play checks (desktop app)
 
 Fair play checks are **on by default** and can be turned off in Settings. While they are enabled, during a match the app may:
@@ -77,9 +79,9 @@ Fair play checks are **on by default** and can be turned off in Settings. While 
 
 ### e) Settings and optional integrations
 
-Settings, Twitch tokens, overlay config, and API keys you enter (for example an ElevenLabs key for TTS) are stored **on your device** unless a feature needs to publish something to our servers (for example a stream overlay).
+Settings, Twitch and YouTube tokens, overlay config, and API keys you enter (for example an ElevenLabs key for TTS) are stored **on your device** unless a feature needs to publish something to our servers (for example a stream overlay or your Streamer badge progress).
 
-If you connect Twitch, Twitch provides the account information needed to run chat, rewards, and overlays. If you use ElevenLabs, chat text is sent to ElevenLabs with **your** key; we do not keep that key on our servers.
+If you connect Twitch, Twitch provides the account information needed to run chat, rewards, and overlays. If you connect YouTube, sign-in goes through our website so we can exchange Google's authorization code for tokens (the Google client secret stays on our servers and is never shipped in the app). We pass those tokens back to your device in a short-lived handoff and do not keep them; after that, Google provides your channel name, handle, and avatar to the app, and the app reads your YouTube Live chat (for TTS) and posts bot messages to it directly from your device — we do not receive that chat. If you use ElevenLabs, chat text is sent to ElevenLabs with **your** key; we do not keep that key on our servers.
 
 ### f) Technical data
 
@@ -96,7 +98,7 @@ We use information to:
 - review fair play reports and protect the community from abuse;
 - keep comments that users or staff remove so moderators can review the text and the reason it was deleted;
 - hide match results from public listings when staff need to (for example during a tournament), including by lobby-name word list;
-- show staff-assigned public badges next to Relic player names in the desktop app and on the website;
+- show staff-assigned public badges next to Relic player names in the desktop app and on the website, and grant the Streamer badge after 12 hours of Company of Heroes streaming;
 - debug, maintain, and improve the Service;
 - comply with legal obligations.
 
@@ -117,6 +119,7 @@ We share information with:
 
 - **Steam (Valve)** and **Relic Entertainment / SEGA** — to look up profiles, ranks, and match history, and (when you choose Log in with Steam) to authenticate your Steam identity via Steam OpenID;
 - **Twitch** — if you connect Twitch, and to list public Company of Heroes streams on the website;
+- **Google (YouTube)** — if you connect YouTube, to sign you in (via our website OAuth exchange) and so the app can read and post to your YouTube Live chat on your device;
 - **ElevenLabs** — if you use TTS with your own API key;
 - **Cloudflare** — to host and deliver the website;
 - staff moderators who review fair play reports, who can hide match results from public listings (including by lobby-name word list), who can hide fair-play screenshots from player views while still reviewing them, who can attach public badges to Relic/Steam player identities, and who can see comments marked as deleted together with the reason a moderator entered;

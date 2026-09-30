@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { countryDisplayName } from '../format/country';
+	import { useHost } from '../host/host.context';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
 		formatStreak,
@@ -24,38 +27,22 @@
 	type Props = {
 		stats: LeaderboardStatRow[];
 		eloBySteamId: Record<string, PlayerEloMap>;
-		getSteamIdFromName: (name: string) => string;
-		getCountryDisplayName: (country: string | null | undefined) => string | null;
-		getRankImageByLeaderboardId: (leaderboardId: number, rankLevel: number) => string;
-		flagImageUrl: (country: string | null | undefined) => string | null;
-		playerHref: (profileId: number) => string;
-		resolveAvatarUrl?: (url: string) => string;
 		loading?: boolean;
 		class?: string;
-		naLabel?: string;
-		formatLevel?: (level: number) => string;
-		formatWins?: (wins: number) => string;
-		formatLosses?: (losses: number) => string;
-		formatStreakLabel?: (streak: string) => string;
 	};
 
-	let {
-		stats,
-		eloBySteamId,
-		getSteamIdFromName,
-		getCountryDisplayName,
-		getRankImageByLeaderboardId,
-		flagImageUrl,
-		playerHref,
-		resolveAvatarUrl = (url) => url,
-		loading = false,
-		class: className,
-		naLabel = 'N/A',
-		formatLevel = (level) => `Lvl ${level}`,
-		formatWins = (wins) => `${wins}W`,
-		formatLosses = (losses) => `${losses}L`,
-		formatStreakLabel = (streak) => `${streak} streak`
-	}: Props = $props();
+	const { t } = useI18n();
+	const host = useHost();
+
+	let { stats, eloBySteamId, loading = false, class: className }: Props = $props();
+
+	const getSteamIdFromName = (name: string) => name.replace('/steam/', '');
+	const getCountryDisplayName = (country: string | null | undefined) =>
+		countryDisplayName(country, host.locale());
+	const formatLevel = (level: number) => t('Lvl {level}', { level });
+	const formatWins = (wins: number) => t('{count}W', { count: wins });
+	const formatLosses = (losses: number) => t('{count}L', { count: losses });
+	const formatStreakLabel = (streak: string) => t('{streak} streak', { streak });
 
 	const podiumOrder = $derived.by(() => {
 		const first = stats[0];
@@ -100,9 +87,9 @@
 		{#each podiumOrder as stat (stat.profile.profile_id)}
 			{@const elo = eloForStat(stat)}
 			{@const countryName = getCountryDisplayName(stat.profile.country)}
-			{@const flagUrl = flagImageUrl(stat.profile.country)}
+			{@const flagUrl = host.resolve.flagImageUrl(stat.profile.country)}
 			<PlayerProfileLink
-				href={playerHref(stat.profile.profile_id)}
+				href={host.routes.player(stat.profile.profile_id)}
 				playerId={playerPreviewId({
 					steamId: getSteamIdFromName(stat.profile.name),
 					profileId: stat.profile.profile_id
@@ -124,7 +111,7 @@
 				</div>
 				{#if stat.profile.avatarUrl}
 					<img
-						src={resolveAvatarUrl(stat.profile.avatarUrl)}
+						src={host.resolve.avatarUrl(stat.profile.avatarUrl)}
 						alt=""
 						class={cn(
 							'border-secondary-700 shrink-0 rounded-xl border-2 object-cover',
@@ -141,13 +128,11 @@
 				{/if}
 				<div class="flex items-center gap-2">
 					<img
-						src={getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel)}
+						src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
 						alt=""
 						class={cn('w-auto', stat.rank === 1 ? 'h-8' : 'h-7')}
 					/>
-					<span class="text-secondary-400 text-sm tabular-nums"
-						>{formatLevel(stat.ranklevel)}</span
-					>
+					<span class="text-secondary-400 text-sm tabular-nums">{formatLevel(stat.ranklevel)}</span>
 				</div>
 				<div
 					class={cn(
@@ -168,7 +153,7 @@
 					<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
 				</div>
 				{#if elo == null}
-					<span class="text-secondary-500 text-xs">{naLabel}</span>
+					<span class="text-secondary-500 text-xs">{t('N/A')}</span>
 				{:else}
 					<span
 						class={cn(

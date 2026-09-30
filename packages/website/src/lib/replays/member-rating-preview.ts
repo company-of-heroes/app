@@ -23,9 +23,7 @@ function normalizeSteamId(value: string | null | undefined): string | null {
 
 	const raw = String(value).trim();
 	const fromPath = raw.match(/\/steam\/(\d+)/i);
-	const candidate = fromPath
-		? fromPath[1]
-		: raw.replace(/^[^\d]*/, '').replace(/[^\d].*$/, '');
+	const candidate = fromPath ? fromPath[1] : raw.replace(/^[^\d]*/, '').replace(/[^\d].*$/, '');
 	if (isValidSteamId(candidate)) {
 		return candidate;
 	}

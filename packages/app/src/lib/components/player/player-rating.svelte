@@ -4,7 +4,11 @@
 	import { cn } from '$lib/utils';
 	import { getPlayerEloFromMatchHistory } from '$lib/utils/game';
 	import { getStoredEloRating } from '$lib/utils/player-elo';
-	import { getEloColor, getEloTextShadow, isEliteElo } from '$lib/components/leaderboard/leaderboard-utils';
+	import {
+		getEloColor,
+		getEloTextShadow,
+		isEliteElo
+	} from '$lib/components/leaderboard/leaderboard-utils';
 
 	type Props = HTMLAttributes<HTMLSpanElement> & {
 		matchType?: number;
@@ -16,7 +20,11 @@
 		if (playerResult?.newrating && playerResult.newrating >= 1) {
 			return playerResult.newrating;
 		}
-		if (matchType === undefined) return undefined;
+
+		if (matchType === undefined) {
+			return undefined;
+		}
+
 		return (
 			getPlayerEloFromMatchHistory(matchType, player) ??
 			getStoredEloRating(player.storedElo, matchType, player.race) ??

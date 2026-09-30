@@ -76,11 +76,16 @@ function sleep(ms: number) {
 function tokenExpiresAt(token: string): number {
 	try {
 		const part = token.split('.')[1];
-		if (!part) return Date.now() + 120_000;
+		if (!part) {
+			return Date.now() + 120_000;
+		}
+
 		const padded =
 			part.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (part.length % 4)) % 4);
 		const payload = JSON.parse(atob(padded)) as { exp?: number };
-		if (typeof payload.exp === 'number') return payload.exp * 1000;
+		if (typeof payload.exp === 'number') {
+			return payload.exp * 1000;
+		}
 	} catch {
 		// ignore malformed tokens
 	}
@@ -91,6 +96,7 @@ async function withFileDownloadSlot<T>(run: () => Promise<T>): Promise<T> {
 	if (fileDownloadsActive >= FILE_DOWNLOAD_CONCURRENCY) {
 		await new Promise<void>((resolve) => fileDownloadWaiters.push(resolve));
 	}
+
 	fileDownloadsActive++;
 	try {
 		return await run();
@@ -105,7 +111,11 @@ export async function getFileAccessToken() {
 	if (fileTokenCache && now < fileTokenCache.expiresAt - FILE_TOKEN_REFRESH_MARGIN_MS) {
 		return fileTokenCache.token;
 	}
-	if (fileTokenInflight) return fileTokenInflight;
+
+	if (fileTokenInflight) {
+		return fileTokenInflight;
+	}
+
 	fileTokenInflight = pocketbase.files
 		.getToken({ fetch: appFetch })
 		.then((token) => {
@@ -138,12 +148,17 @@ export const getFile = async (
 					}
 				}
 			}
+
 			const params: FileOptions = { ...queryParams };
-			if (token) params.token = token;
+			if (token) {
+				params.token = token;
+			}
+
 			const response = await appFetch(pocketbase.files.getURL(record, filename, params));
 			if (response.ok) {
 				return new Uint8Array(await response.arrayBuffer());
 			}
+
 			lastError = new Error(`Failed to download file (${response.status})`);
 			if (response.status === 401 || response.status === 403) {
 				token = undefined;
@@ -151,10 +166,12 @@ export const getFile = async (
 				await sleep(150 * (attempt + 1));
 				continue;
 			}
+
 			if (response.status >= 500 || response.status === 429) {
 				await sleep(300 * (attempt + 1));
 				continue;
 			}
+
 			throw lastError;
 		}
 		throw lastError ?? new Error('Failed to download file');

@@ -1,0 +1,33 @@
+{
+	"vars": {
+		"boardId": "4",
+		"profileId": "REPLACE_WITH_RELIC_PROFILE_ID",
+		"steamId": "REPLACE_WITH_STEAM_ID",
+		"matchId": "REPLACE_WITH_LOBBY_ID"
+	},
+	"cases": [
+		{ "name": "leaderboard", "legacy": "/api/leaderboard/{boardId}" },
+		{ "name": "twitch-streams", "legacy": "/api/twitch/streams", "volatile": true },
+		{ "name": "player-search", "legacy": "/api/player/search?q=fknoobs" },
+		{ "name": "player", "legacy": "/api/player/{profileId}" },
+		{ "name": "player-ratings", "legacy": "/api/player-ratings/{steamId}" },
+		{ "name": "match", "legacy": "/api/match/{matchId}" },
+		{
+			"name": "match-history-community",
+			"legacy": "/api/match-history?scope=community&page=1&perPage=20"
+		},
+		{
+			"name": "match-history-community-filtered",
+			"legacy": "/api/match-history?scope=community&page=1&perPage=20&sort=likeCount&sortDir=desc"
+		},
+		{
+			"name": "history-maps-community",
+			"legacy": "/api/history-maps?scope=community&q=&limit=100"
+		},
+		{
+			"name": "history-players-community",
+			"legacy": "/api/history-players?scope=community&q=a&limit=20"
+		},
+		{ "name": "member-replays-maps", "legacy": "/api/member-replays/maps" }
+	]
+}

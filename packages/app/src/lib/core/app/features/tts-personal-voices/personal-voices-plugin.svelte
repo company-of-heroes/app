@@ -62,7 +62,9 @@
 	<Form.Group
 		label={t('Rewarded Voices')}
 		description={Object.keys(ttsPersonalVoices.rewardedVoices).length === 0
-			? t('No rewarded voices added yet. Rewarded voices appear here automatically, or add a user below.')
+			? t(
+					'No rewarded voices added yet. Rewarded voices appear here automatically, or add a user below.'
+				)
 			: undefined}
 		layout="stacked"
 	>
@@ -134,7 +136,9 @@
 		<Form.Group
 			label={t('Rewarded free voices')}
 			description={Object.keys(ttsPersonalVoices.rewardedFreeVoices).length === 0
-				? t('No rewarded free voices added yet. They appear here automatically, or add a user below.')
+				? t(
+						'No rewarded free voices added yet. They appear here automatically, or add a user below.'
+					)
 				: undefined}
 			layout="stacked"
 		>

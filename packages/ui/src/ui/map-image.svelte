@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
+	import { tryUseHost } from '../host/host.context';
 
 	type Props = {
 		map: string | undefined;
-		resolveMapSrc: (map: string | undefined) => string | undefined;
+		/** Defaults to the host's map images. */
+		resolveMapSrc?: (map: string | undefined) => string | undefined;
 		resolveFallbackSrc?: () => string | undefined;
 		small?: boolean;
 		flush?: boolean;
@@ -11,10 +13,12 @@
 		class?: string;
 	};
 
+	const host = tryUseHost();
+
 	let {
 		map,
-		resolveMapSrc,
-		resolveFallbackSrc,
+		resolveMapSrc = (value) => host?.resolve.mapSrc(value),
+		resolveFallbackSrc = () => host?.resolve.mapFallbackSrc(),
 		small = false,
 		flush = false,
 		alt: altText,
@@ -40,12 +44,7 @@
 		onerror={handleImageError}
 		class="absolute inset-0 z-5 size-full scale-180 object-cover opacity-30"
 	/>
-	<img
-		{src}
-		{alt}
-		onerror={handleImageError}
-		class="relative z-10 size-full object-contain"
-	/>
+	<img {src} {alt} onerror={handleImageError} class="relative z-10 size-full object-contain" />
 {/snippet}
 
 {#if src}

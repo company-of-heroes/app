@@ -12,7 +12,10 @@
 	const streak = $derived(playerResult?.streak ?? stats?.streak);
 </script>
 
-<span class={cn('text-center font-medium', streak !== undefined && statStreakClass(streak), className)} {...restProps}>
+<span
+	class={cn('text-center font-medium', streak !== undefined && statStreakClass(streak), className)}
+	{...restProps}
+>
 	{#if streak !== undefined}
 		{formatStreak(streak)}
 	{/if}

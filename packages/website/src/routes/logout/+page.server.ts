@@ -10,7 +10,7 @@ export const load: PageServerLoad = ({ locals }) => {
 
 export const actions: Actions = {
 	default: async ({ locals }) => {
-		locals.services.auth().logout();
+		locals.api.auth.logout();
 		redirect(303, localizeHref('/', locals.locale));
 	}
 };

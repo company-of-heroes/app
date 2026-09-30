@@ -26,10 +26,10 @@
 	{value}
 	{min}
 	{max}
-	class="bg-secondary-900 shadow-mini-inset relative h-[15px] overflow-hidden"
+	class="bg-secondary-900 relative h-[15px] overflow-hidden rounded-full"
 >
 	<div
-		class="shadow-mini-inset bg-primary/10 h-full w-full flex-1 transition-all duration-1000 ease-in-out"
+		class="bg-primary h-full w-full flex-1 rounded-full transition-all duration-1000 ease-in-out"
 		style="transform: translateX(-{100 - (100 * (value ?? 0)) / max}%)"
 	></div>
 </Meter.Root>

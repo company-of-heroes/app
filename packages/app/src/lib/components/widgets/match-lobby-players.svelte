@@ -31,10 +31,15 @@
 	const players = $derived.by((): LobbyPlayer[] => {
 		const source = match.players ?? [];
 		const stored = ratings.current;
-		if (!stored) return source;
+		if (!stored) {
+			return source;
+		}
 
 		return source.map((player) => {
-			if (!player.steamId) return player;
+			if (!player.steamId) {
+				return player;
+			}
+
 			const record = stored.get(player.steamId);
 			return record ? { ...player, storedElo: record.elo } : player;
 		});

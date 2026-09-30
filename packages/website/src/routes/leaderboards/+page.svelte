@@ -7,14 +7,6 @@
 		LeaderboardSkeleton
 	} from '@company-of-heroes/ui/leaderboard';
 	import {
-		flagImageUrl,
-		getCountryDisplayName,
-		getRankImageByLeaderboardId,
-		getSteamIdFromName,
-		profileHref,
-		proxiedImageUrl
-	} from '$lib/utils/resolvers';
-	import {
 		boardIdForMode,
 		getModeForBoard,
 		LEADERBOARD_MODES,
@@ -54,7 +46,10 @@
 	}
 
 	function selectBoard(id: number) {
-		if (id === boardId) return;
+		if (id === boardId) {
+			return;
+		}
+
 		searchInput = '';
 		debouncedSearch = '';
 		void goto(href(`/leaderboards?board=${id}`), {
@@ -66,13 +61,19 @@
 
 	function selectMode(modeValue: number) {
 		const mode = LEADERBOARD_MODES.find((entry) => entry.value === modeValue);
-		if (!mode) return;
+		if (!mode) {
+			return;
+		}
+
 		selectBoard(boardIdForMode(mode, boardId));
 	}
 
 	function filterStats(board: LeaderboardPageData) {
 		const query = debouncedSearch.trim().toLowerCase();
-		if (!query) return board.stats;
+		if (!query) {
+			return board.stats;
+		}
+
 		return board.stats.filter((stat) => {
 			const alias = stat.profile.alias.toLowerCase();
 			return alias.startsWith(query) || alias.includes(query);
@@ -148,39 +149,12 @@
 		{@const podiumStats = searching ? [] : filtered.slice(0, 3)}
 		{@const listStats = searching ? filtered : filtered.slice(3)}
 		{#if podiumStats.length > 0}
-			<LeaderboardPodium
-				stats={podiumStats}
-				eloBySteamId={board.eloBySteamId}
-				{getSteamIdFromName}
-				{getCountryDisplayName}
-				{getRankImageByLeaderboardId}
-				{flagImageUrl}
-				playerHref={profileHref}
-				resolveAvatarUrl={proxiedImageUrl}
-				naLabel={t('N/A')}
-				formatLevel={(level) => t('Lvl {level}', { level })}
-				formatWins={(wins) => t('{count}W', { count: wins })}
-				formatLosses={(losses) => t('{count}L', { count: losses })}
-				formatStreakLabel={(streak) => t('{streak} streak', { streak })}
-			/>
+			<LeaderboardPodium stats={podiumStats} eloBySteamId={board.eloBySteamId} />
 		{/if}
 		<LeaderboardList
 			stats={listStats}
 			eloBySteamId={board.eloBySteamId}
-			{getSteamIdFromName}
-			{getCountryDisplayName}
-			{getRankImageByLeaderboardId}
-			{flagImageUrl}
-			playerHref={profileHref}
 			emptyMessage={t('No players found.')}
-			rankColumnLabel={t('Rank')}
-			aliasColumnLabel={t('Alias')}
-			eloColumnLabel={t('ELO')}
-			winsColumnLabel={t('Wins')}
-			lossesColumnLabel={t('Losses')}
-			streakColumnLabel={t('Streak')}
-			ratioColumnLabel={t('Ratio')}
-			naLabel={t('N/A')}
 		/>
 	{/await}
 {/if}

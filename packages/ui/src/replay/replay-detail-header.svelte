@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
+	import { useHost } from '../host/host.context';
 	import type { Snippet } from 'svelte';
 	import { Button } from '@company-of-heroes/ui/button';
 	import MapImage from '@company-of-heroes/ui/map-image';
@@ -15,13 +17,9 @@
 		downloadDisabled?: boolean;
 		downloadCount: number;
 		listHref: string;
-		resolveMapSrc: (map: string | undefined) => string | undefined;
+		resolveMapSrc?: (map: string | undefined) => string | undefined;
 		resolveFallbackSrc?: () => string | undefined;
 		onDownloadClick?: () => void;
-		replaysLabel?: string;
-		downloadLabel?: string;
-		backAriaLabel?: string;
-		downloadsLabel?: string;
 		showDownload?: boolean;
 		vote?: Snippet;
 		title?: Snippet;
@@ -34,6 +32,9 @@
 		showNav?: boolean;
 	};
 
+	const { t } = useI18n();
+	const host = useHost();
+
 	let {
 		mapName,
 		map,
@@ -42,13 +43,9 @@
 		downloadDisabled = false,
 		downloadCount,
 		listHref,
-		resolveMapSrc,
-		resolveFallbackSrc,
+		resolveMapSrc = host.resolve.mapSrc,
+		resolveFallbackSrc = () => host.resolve.mapSrc(undefined),
 		onDownloadClick,
-		replaysLabel = 'Replays',
-		downloadLabel = 'Download replay',
-		backAriaLabel = 'Back to replays',
-		downloadsLabel = 'Downloads',
 		showDownload = true,
 		showNav = true,
 		vote,
@@ -66,7 +63,7 @@
 		<div class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">
 			<a
 				href={listHref}
-				aria-label={backAriaLabel}
+				aria-label={t('Back to replays')}
 				class={cn(
 					interactive,
 					'border-secondary-600 bg-secondary-800 hover:border-secondary-500 hover:bg-secondary-700 inline-flex size-9 shrink-0 items-center justify-center rounded-md border text-white'
@@ -78,7 +75,7 @@
 				<ol class="flex items-center">
 					<li>
 						<a href={listHref} class={cn(interactive, 'text-secondary-400 hover:text-primary')}>
-							{replaysLabel}
+							{t('Replays')}
 						</a>
 					</li>
 					<li aria-hidden="true" class="text-secondary-500 mx-2">/</li>
@@ -118,7 +115,7 @@
 							{#if downloadDisabled || !downloadHref}
 								<Button disabled>
 									<DownloadIcon class="size-4" />
-									{downloadLabel}
+									{t('Download replay')}
 								</Button>
 							{:else}
 								<Button
@@ -127,7 +124,7 @@
 									onclick={() => onDownloadClick?.()}
 								>
 									<DownloadIcon class="size-4" />
-									{downloadLabel}
+									{t('Download replay')}
 								</Button>
 							{/if}
 						{/if}
@@ -135,7 +132,7 @@
 						{#if showDownload}
 							<span
 								class="text-secondary-400 inline-flex h-11 items-center gap-1.5 px-3 text-sm tabular-nums"
-								title={downloadsLabel}
+								title={t('Downloads')}
 							>
 								<DownloadIcon class="size-4" weight="duotone" />
 								{downloadCount}

@@ -56,7 +56,9 @@ describe('import-export', () => {
 	});
 
 	it('rejects a feature envelope on full import', () => {
-		const envelope = serializeEnvelope(createFeatureEnvelope('twitch', { enabled: true }, '0.50.0'));
+		const envelope = serializeEnvelope(
+			createFeatureEnvelope('twitch', { enabled: true }, '0.50.0')
+		);
 		const parsed = parseImportContent(envelope);
 
 		expect(parsed.success).toBe(false);

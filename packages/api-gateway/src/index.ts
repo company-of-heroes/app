@@ -1,0 +1,53 @@
+import { limitFileDownload, type FilesEnv } from './files.ts';
+import { serveOverlay, type OverlayEnv } from './overlay.ts';
+import { rewrite, rewritesPath } from './routes.ts';
+
+type Env = OverlayEnv & FilesEnv & { WEBSITE: Fetcher };
+
+/** PocketBase answered every origin; rewritten paths keep that for browser clients. */
+function cors(request: Request): Record<string, string> {
+	return {
+		'access-control-allow-origin': '*',
+		'access-control-allow-methods': 'GET, HEAD, PUT, PATCH, POST, DELETE',
+		'access-control-allow-headers': request.headers.get('access-control-request-headers') ?? '*',
+		'access-control-max-age': '86400'
+	};
+}
+
+export default {
+	async fetch(request: Request, env: Env): Promise<Response> {
+		const overlay = await serveOverlay(request, env);
+		if (overlay) {
+			return overlay;
+		}
+
+		const limited = await limitFileDownload(request, env);
+		if (limited) {
+			return limited;
+		}
+
+		const url = new URL(request.url);
+		if (request.method === 'OPTIONS' && rewritesPath(url.pathname)) {
+			return new Response(null, { status: 204, headers: cors(request) });
+		}
+
+		const v1Path = rewrite(request.method, url.pathname);
+		if (!v1Path) {
+			return fetch(request); // PocketBase origin
+		}
+
+		const target = new URL(`${v1Path}${url.search}`, 'https://coh1stats.com');
+		const headers = new Headers(request.headers);
+		headers.set('x-forwarded-for', request.headers.get('cf-connecting-ip') ?? '');
+		const body = request.method === 'GET' || request.method === 'HEAD' ? null : request.body;
+		// Redirects (e.g. to Steam's login) go back to the browser, not followed here.
+		const response = await env.WEBSITE.fetch(
+			new Request(target, { method: request.method, headers, body, redirect: 'manual' })
+		);
+		const withCors = new Response(response.body, response);
+		for (const [name, value] of Object.entries(cors(request))) {
+			withCors.headers.set(name, value);
+		}
+		return withCors;
+	}
+} satisfies ExportedHandler<Env>;

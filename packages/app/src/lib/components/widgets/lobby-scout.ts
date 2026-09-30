@@ -18,7 +18,10 @@ export type MatchupStats = {
 };
 
 export function getLobbyPlayerElo(player: LobbyPlayer, matchType: number): number | null {
-	if (player.playerId === -1) return null;
+	if (player.playerId === -1) {
+		return null;
+	}
+
 	return (
 		getPlayerEloFromMatchHistory(matchType, player) ??
 		getStoredEloRating(player.storedElo, matchType, player.race)
@@ -32,9 +35,15 @@ function teamEloSummary(players: LobbyPlayer[], matchType: MatchTypeId): TeamElo
 	let maxAlias: string | null = null;
 
 	for (const player of players) {
-		if (player.playerId === -1) continue;
+		if (player.playerId === -1) {
+			continue;
+		}
+
 		const elo = getLobbyPlayerElo(player, matchType);
-		if (elo == null) continue;
+		if (elo == null) {
+			continue;
+		}
+
 		total += elo;
 		count += 1;
 		if (max == null || elo > max) {
@@ -70,8 +79,17 @@ export function getMatchupStats(
 }
 
 export function formatMatchupGap(gap: number | null): string {
-	if (gap == null) return '—';
-	if (gap === 0) return t('Even');
-	if (gap > 0) return t('Axis +{gap}', { gap });
+	if (gap == null) {
+		return '—';
+	}
+
+	if (gap === 0) {
+		return t('Even');
+	}
+
+	if (gap > 0) {
+		return t('Axis +{gap}', { gap });
+	}
+
 	return t('Allies +{gap}', { gap: Math.abs(gap) });
 }

@@ -240,7 +240,7 @@
 			{#each selectedUsers as user (user.id)}
 				<li class="flex min-h-11 items-stretch">
 					<div class="flex min-w-0 flex-1 items-center px-4 py-2">
-						<User.Root user={user} class="flex min-w-0 flex-col">
+						<User.Root {user} class="flex min-w-0 flex-col">
 							<User.Name class="font-medium" />
 							{#if user.name && user.email}
 								<span class="text-secondary-400 text-xs">{user.email}</span>
@@ -279,11 +279,11 @@
 								type="button"
 								class={cn(
 									interactive,
-									'hover:bg-secondary-950/50 flex w-full min-h-11 flex-col justify-center px-4 py-2 text-left transition-colors'
+									'hover:bg-secondary-950/50 flex min-h-11 w-full flex-col justify-center px-4 py-2 text-left transition-colors'
 								)}
 								onclick={() => addUser(user)}
 							>
-								<User.Root user={user} class="flex min-w-0 flex-col">
+								<User.Root {user} class="flex min-w-0 flex-col">
 									<User.Name class="font-medium" />
 									{#if user.name && user.email}
 										<span class="text-secondary-400 text-xs">{user.email}</span>
@@ -309,7 +309,9 @@
 		<p class="text-secondary-400 px-4 py-6 text-sm">{t('No notifications sent yet.')}</p>
 	{:else}
 		{#snippet cell_recipients({ row }: { row: NotificationRecord })}
-			{row.targetAll ? t('All users') : t('{count} recipient(s)', { count: row.recipients?.length ?? 0 })}
+			{row.targetAll
+				? t('All users')
+				: t('{count} recipient(s)', { count: row.recipients?.length ?? 0 })}
 		{/snippet}
 		{#snippet cell_created({ row }: { row: NotificationRecord })}
 			{dayjs(row.created).format('D MMM YYYY HH:mm')}

@@ -52,7 +52,7 @@
 			<div class={cn(flushHeader, 'flex items-center justify-between bg-gray-950')}>
 				<Dialog.Title class={flushHeaderTitle}>{t('Join Discord')}</Dialog.Title>
 				<Dialog.Close
-					class={cn(interactive, 'text-secondary-400 hover:text-white p-1')}
+					class={cn(interactive, 'text-secondary-400 p-1 hover:text-white')}
 					aria-label={t('Close')}
 				>
 					<XIcon size={16} weight="bold" />

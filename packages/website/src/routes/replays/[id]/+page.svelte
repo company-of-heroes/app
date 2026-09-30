@@ -1,7 +1,6 @@
 <script lang="ts">
-	import ReplayViewer from '$lib/components/replay/replay-viewer.svelte';
+	import { PageSkeleton as ReplayPageSkeleton, ReplayDetail } from '@company-of-heroes/ui/replay';
 	import ErrorState from '$lib/components/ui/error-state.svelte';
-	import { PageSkeleton as ReplayPageSkeleton } from '@company-of-heroes/ui/replay';
 	import { SITE_URL } from '$lib/site/urls';
 	import { normalizeMapName } from '$lib/utils/player/format';
 	import { rememberedReplaysListHref } from '$lib/replays';
@@ -42,17 +41,9 @@
 </svelte:head>
 
 {#await data.match}
-	<ReplayPageSkeleton
-		overviewLabel={t('Overview')}
-		chatLabel={t('Chat')}
-		timelineLabel={t('Timeline')}
-		alliesLabel={t('Allies')}
-		axisLabel={t('Axis')}
-		ratingLabel={t('Rating')}
-		cpmLabel={t('CPM')}
-	/>
+	<ReplayPageSkeleton />
 {:then match}
-	<ReplayViewer {match} />
+	<ReplayDetail {match} />
 {:catch error}
 	<ErrorState
 		title={error?.status === 404 ? t('Replay not found') : t('Could not load replay')}

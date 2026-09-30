@@ -119,6 +119,7 @@
 					if (!files) {
 						return;
 					}
+
 					voiceFiles = await Promise.all(files.map(async (file) => await readFile(file))).then(
 						(data) => {
 							return data.map((d: Uint8Array, index: number) => {

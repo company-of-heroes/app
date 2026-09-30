@@ -581,12 +581,14 @@ export class AntiCheatApi {
 	private async queryCapturesBySteam(steamId: string, userId?: string): Promise<CaptureRecord[]> {
 		const clauses = captureOwnerClauses(steamId, userId);
 		try {
-			return await this.deps.pocketbase.collection('anti_cheat_captures').getFullList<CaptureRecord>(
-				pbOptions(this.deps, {
-					filter: clauses.join(' || '),
-					sort: '-captured_at'
-				})
-			);
+			return await this.deps.pocketbase
+				.collection('anti_cheat_captures')
+				.getFullList<CaptureRecord>(
+					pbOptions(this.deps, {
+						filter: clauses.join(' || '),
+						sort: '-captured_at'
+					})
+				);
 		} catch {
 			const fallback = captureOwnerFallbackClauses(steamId, userId);
 			if (fallback.length === 0) {
@@ -648,11 +650,12 @@ export class AntiCheatApi {
 				await Promise.all(
 					leftover.map(async (id) => {
 						try {
-							await this.deps.pocketbase
-								.collection('anti_cheat_cheaters')
-								.getFirstListItem(`user.steamIds ?= "${escapePocketBaseString(id)}"`, pbOptions(this.deps, {
+							await this.deps.pocketbase.collection('anti_cheat_cheaters').getFirstListItem(
+								`user.steamIds ?= "${escapePocketBaseString(id)}"`,
+								pbOptions(this.deps, {
 									fields: 'id'
-								}));
+								})
+							);
 							matched.add(id);
 						} catch {
 							// not labeled

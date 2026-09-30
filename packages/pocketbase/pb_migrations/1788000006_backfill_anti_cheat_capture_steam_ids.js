@@ -1,10 +1,14 @@
 /// <reference path="../pb_data/types.d.ts" />
 
 function firstSteamId(value) {
-	if (!value) return '';
+	if (!value) {
+		return '';
+	}
+
 	if (Array.isArray(value) && value.length) {
 		return String(value[0] || '');
 	}
+
 	if (typeof value === 'string') {
 		try {
 			const parsed = JSON.parse(value);
@@ -15,6 +19,7 @@ function firstSteamId(value) {
 			return value;
 		}
 	}
+
 	return '';
 }
 
@@ -28,13 +33,22 @@ migrate(
 		}
 
 		for (const record of records) {
-			if (!record || record.getString('steam_id')) continue;
+			if (!record || record.getString('steam_id')) {
+				continue;
+			}
+
 			const userId = record.getString('user');
-			if (!userId) continue;
+			if (!userId) {
+				continue;
+			}
+
 			try {
 				const user = app.findRecordById('users', userId);
 				const steamId = firstSteamId(user.get('steamIds'));
-				if (!steamId) continue;
+				if (!steamId) {
+					continue;
+				}
+
 				record.set('steam_id', steamId);
 				app.save(record);
 			} catch {

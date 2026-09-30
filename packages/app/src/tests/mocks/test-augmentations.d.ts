@@ -37,7 +37,9 @@ declare module '@tauri-apps/plugin-dialog' {
 
 declare module '@tauri-apps/plugin-http-original' {
 	export const __http: {
-		setHandler(next: (input: string | URL | Request, init?: RequestInit) => Promise<Response>): void;
+		setHandler(
+			next: (input: string | URL | Request, init?: RequestInit) => Promise<Response>
+		): void;
 		reset(): void;
 	};
 }

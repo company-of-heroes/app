@@ -1,6 +1,6 @@
 import { err, ok, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
-import type { ApiDeps } from '../deps';
+import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 
 export type PerformanceScope = 'user' | 'community';
@@ -110,11 +110,7 @@ export class PlayerPerformanceApi {
 		}
 
 		return ResultAsync.fromPromise(
-			this.deps.pocketbase.send<PlayerPerformance>('/api/player-performance', {
-				method: 'GET',
-				query,
-				fetch: this.deps.fetch
-			}),
+			sendV1<PlayerPerformance>(this.deps, `/player-performance?${new URLSearchParams(query)}`),
 			() => apiError(500, 'Failed to load player performance.')
 		).andThen((value) => {
 			const parsed = performanceSchema.safeParse(value);

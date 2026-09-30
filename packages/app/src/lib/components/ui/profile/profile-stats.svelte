@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Leaderboard } from '$lib/components/leaderboard';
+	import { PlayerStatsTable } from '@company-of-heroes/ui/player';
 	import { useProfile } from '.';
 	import { getPlayerRating } from '$core/pocketbase/player-ratings';
 	import { resource } from 'runed';
@@ -11,4 +11,4 @@
 	);
 </script>
 
-<Leaderboard stats={profile.relic.leaderboardStats!} elo={storedRating.current?.elo ?? {}} />
+<PlayerStatsTable stats={profile.relic.leaderboardStats!} elo={storedRating.current?.elo ?? {}} />

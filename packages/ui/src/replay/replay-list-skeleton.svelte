@@ -1,26 +1,16 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import { tableHeadRow } from '@company-of-heroes/ui/variants';
 
 	type Props = {
 		rowCount?: number;
-		mapLabel?: string;
-		typeLabel?: string;
-		alliesLabel?: string;
-		axisLabel?: string;
-		durationLabel?: string;
 		dateLabel?: string;
 	};
 
-	let {
-		rowCount = 30,
-		mapLabel = 'Map',
-		typeLabel = 'Type',
-		alliesLabel = 'Allies',
-		axisLabel = 'Axis',
-		durationLabel = 'Duration',
-		dateLabel = 'Date'
-	}: Props = $props();
+	const { t } = useI18n();
+
+	let { rowCount = 30 }: Props = $props();
 
 	const rows = $derived(Array.from({ length: rowCount }, (_, i) => i + 1));
 </script>
@@ -39,13 +29,13 @@
 		<table class="w-full table-auto border-collapse text-sm">
 			<thead class="border-secondary-800 border-b">
 				<tr class="{tableHeadRow} text-left">
-					<th class="w-full px-4 py-2">{mapLabel}</th>
-					<th class="px-4 py-2 whitespace-nowrap">{typeLabel}</th>
-					<th class="px-2 py-2 whitespace-nowrap">{alliesLabel}</th>
-					<th class="px-2 py-2 whitespace-nowrap">{axisLabel}</th>
-					<th class="px-4 py-2 whitespace-nowrap">{durationLabel}</th>
+					<th class="w-full px-4 py-2">{t('Map')}</th>
+					<th class="px-4 py-2 whitespace-nowrap">{t('Type')}</th>
+					<th class="px-2 py-2 whitespace-nowrap">{t('Allies')}</th>
+					<th class="px-2 py-2 whitespace-nowrap">{t('Axis')}</th>
+					<th class="px-4 py-2 whitespace-nowrap">{t('Duration')}</th>
 					<th class="px-4 py-2 whitespace-nowrap"></th>
-					<th class="px-4 py-2 text-end whitespace-nowrap">{dateLabel}</th>
+					<th class="px-4 py-2 text-end whitespace-nowrap">{t('Date')}</th>
 				</tr>
 			</thead>
 			<tbody>

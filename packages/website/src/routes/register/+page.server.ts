@@ -17,12 +17,9 @@ export const actions: Actions = {
 			return fail(400, { message: locals.t('Password must be at least 8 characters.'), email });
 		}
 
-		const result = await locals.services.auth().register(email, password);
+		const result = await locals.api.auth.register(email, password);
 		if (result.isErr()) {
-			return failFrom(
-				{ ...result.error, message: locals.t(result.error.message) },
-				{ email }
-			);
+			return failFrom({ ...result.error, message: locals.t(result.error.message) }, { email });
 		}
 
 		redirect(303, localizeHref('/', locals.locale));

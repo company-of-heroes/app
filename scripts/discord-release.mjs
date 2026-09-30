@@ -32,11 +32,15 @@ const changelogPath = join(scriptDir, '..', 'CHANGELOG.md');
 function argValue(name) {
 	const prefix = `--${name}`;
 	const eq = process.argv.find((arg) => arg.startsWith(`${prefix}=`));
-	if (eq) return eq.slice(prefix.length + 1);
+	if (eq) {
+		return eq.slice(prefix.length + 1);
+	}
+
 	const index = process.argv.indexOf(prefix);
 	if (index !== -1 && process.argv[index + 1] && !process.argv[index + 1].startsWith('--')) {
 		return process.argv[index + 1];
 	}
+
 	return undefined;
 }
 
@@ -45,6 +49,7 @@ function normalizeTag(raw) {
 	if (!trimmed) {
 		throw new Error('Missing release tag. Pass --tag vX.Y.Z or set RELEASE_TAG.');
 	}
+
 	return trimmed.startsWith('v') ? trimmed : `v${trimmed}`;
 }
 
@@ -55,6 +60,7 @@ function extractSection(changelog, tag) {
 	if (!match) {
 		throw new Error(`No CHANGELOG.md section found for ${tag}.`);
 	}
+
 	return match[1].trim();
 }
 
@@ -62,12 +68,16 @@ function parseEntries(section) {
 	const entries = [];
 	for (const line of section.split(/\r?\n/)) {
 		const trimmed = line.trim();
-		if (!trimmed) continue;
+		if (!trimmed) {
+			continue;
+		}
+
 		const prefixed = trimmed.match(/^- ([a-z]+);\s*(.+)$/i);
 		if (prefixed) {
 			entries.push({ kind: prefixed[1].toLowerCase(), text: prefixed[2].trim() });
 			continue;
 		}
+
 		if (trimmed.startsWith('- ')) {
 			entries.push({ kind: 'other', text: trimmed.slice(2).trim() });
 		}
@@ -81,7 +91,9 @@ function formatDescription(entries, downloadUrl, changelogUrl) {
 	}
 
 	const buckets = new Map();
-	for (const group of GROUPS) buckets.set(group.title, []);
+	for (const group of GROUPS) {
+		buckets.set(group.title, []);
+	}
 	buckets.set('Other', []);
 
 	for (const entry of entries) {
@@ -91,7 +103,10 @@ function formatDescription(entries, downloadUrl, changelogUrl) {
 
 	const parts = [];
 	for (const [title, lines] of buckets) {
-		if (!lines.length) continue;
+		if (!lines.length) {
+			continue;
+		}
+
 		parts.push(`**${title}**\n${lines.join('\n')}`);
 	}
 	parts.push(`[Download](${downloadUrl})`);
@@ -99,7 +114,10 @@ function formatDescription(entries, downloadUrl, changelogUrl) {
 }
 
 function truncateDescription(text, changelogUrl) {
-	if (text.length <= MAX_DESCRIPTION) return text;
+	if (text.length <= MAX_DESCRIPTION) {
+		return text;
+	}
+
 	const suffix = `\n\n…and more. [Full changelog](${changelogUrl})`;
 	const budget = MAX_DESCRIPTION - suffix.length;
 	const cut = text.slice(0, Math.max(budget, 0));

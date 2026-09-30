@@ -1,11 +1,6 @@
 import { watch } from 'runed';
 import { exists } from '@tauri-apps/plugin-fs';
-import {
-	defaultSettings,
-	validateSettings,
-	type FeatureSlice,
-	type Settings
-} from './schema';
+import { defaultSettings, validateSettings, type FeatureSlice, type Settings } from './schema';
 import { isV1Store, migrateToCurrent, migrateV1 } from './migrations';
 import { readJsonWithRecovery, writeJsonAtomic } from './fs-json';
 import { BackupService } from './backup';
@@ -129,7 +124,12 @@ export class SettingsService {
 			}
 		}
 
-		return { tree: defaultSettings(), source: 'fresh', recoveredFromTmp: false, shouldPersist: false };
+		return {
+			tree: defaultSettings(),
+			source: 'fresh',
+			recoveredFromTmp: false,
+			shouldPersist: false
+		};
 	}
 
 	#startPersistWatcher() {

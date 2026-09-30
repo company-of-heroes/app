@@ -40,8 +40,13 @@ export function teamOutcome(
 	for (const member of members) {
 		const profileId = member.profile.profile_id;
 		const result = resultPlayers.find((entry) => entry.profile_id === profileId);
-		if (result?.outcome === 1) return 'win';
-		if (result?.outcome === 0) return 'loss';
+		if (result?.outcome === 1) {
+			return 'win';
+		}
+
+		if (result?.outcome === 0) {
+			return 'loss';
+		}
 	}
 	return null;
 }
@@ -50,21 +55,29 @@ export function matchDurationSeconds(match: CommunityMatch | CommunityMatchDetai
 	if ('durationSeconds' in match && match.durationSeconds != null) {
 		return match.durationSeconds;
 	}
+
 	const start = Number(match.result?.startgametime);
 	const end = Number(match.result?.completiontime);
 	if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
 		return end - start;
 	}
+
 	return null;
 }
 
 export function formatDurationSeconds(seconds: number | null): string {
-	if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return '—';
+	if (seconds == null || !Number.isFinite(seconds) || seconds < 0) {
+		return '—';
+	}
+
 	const total = Math.round(seconds);
 	const hours = Math.floor(total / 3600);
 	const minutes = Math.floor((total % 3600) / 60);
 	const rest = total % 60;
-	if (hours > 0) return `${hours}h ${minutes}m ${rest}s`;
+	if (hours > 0) {
+		return `${hours}h ${minutes}m ${rest}s`;
+	}
+
 	return `${minutes}m ${rest}s`;
 }
 
@@ -90,9 +103,15 @@ export function formatReplayDurationLabel(
 }
 
 export function formatMatchDate(value: string | undefined, locale?: string): string {
-	if (!value) return '—';
+	if (!value) {
+		return '—';
+	}
+
 	const date = new Date(value);
-	if (Number.isNaN(date.getTime())) return '—';
+	if (Number.isNaN(date.getTime())) {
+		return '—';
+	}
+
 	return date.toLocaleDateString(locale, {
 		year: 'numeric',
 		month: 'short',
@@ -106,9 +125,7 @@ export function findResultPlayer(
 	match: CommunityMatchDetail,
 	lobby: CommunityPlayer
 ): MatchResultPlayer | undefined {
-	return match.result?.players?.find(
-		(player) => player.profile_id === lobby.profile.profile_id
-	);
+	return match.result?.players?.find((player) => player.profile_id === lobby.profile.profile_id);
 }
 
 /** Ranked ladder / custom / skirmish label for community list rows. */

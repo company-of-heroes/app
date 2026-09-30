@@ -29,16 +29,12 @@ describe('migrations', () => {
 		it('maps the app settings slice', () => {
 			expect(migrated.app.autostart).toBe(true);
 			expect(migrated.app.companyOfHeroesConfigPath).toContain('warnings.log');
-			expect(migrated.app.companyOfHeroesInstallationPath).toContain(
-				'Company of Heroes Relaunch'
-			);
+			expect(migrated.app.companyOfHeroesInstallationPath).toContain('Company of Heroes Relaunch');
 		});
 
 		it('maps feature.auth to the account slice', () => {
 			expect(migrated.account.userId).toBe('abc123def456ghi');
-			expect(migrated.account.email).toBe(
-				'11111111-2222-3333-4444-555555555555@fknoobs.com'
-			);
+			expect(migrated.account.email).toBe('11111111-2222-3333-4444-555555555555@fknoobs.com');
 			expect(migrated.account.password).toBe('S3cretPassw0rd16');
 			expect(migrated.features.auth).toBeUndefined();
 		});

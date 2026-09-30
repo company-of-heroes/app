@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { countryDisplayName } from '../format/country';
+	import { useHost } from '../host/host.context';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
 		formatStreak,
@@ -25,40 +28,18 @@
 	type Props = {
 		stats: LeaderboardStatRow[];
 		eloBySteamId: Record<string, PlayerEloMap>;
-		getSteamIdFromName: (name: string) => string;
-		getCountryDisplayName: (country: string | null | undefined) => string | null;
-		getRankImageByLeaderboardId: (leaderboardId: number, rankLevel: number) => string;
-		flagImageUrl: (country: string | null | undefined) => string | null;
-		playerHref: (profileId: number) => string;
 		emptyMessage?: string;
-		rankColumnLabel?: string;
-		aliasColumnLabel?: string;
-		eloColumnLabel?: string;
-		winsColumnLabel?: string;
-		lossesColumnLabel?: string;
-		streakColumnLabel?: string;
-		ratioColumnLabel?: string;
 		naLabel?: string;
 	};
 
-	let {
-		stats,
-		eloBySteamId,
-		getSteamIdFromName,
-		getCountryDisplayName,
-		getRankImageByLeaderboardId,
-		flagImageUrl,
-		playerHref,
-		emptyMessage = 'No players found.',
-		rankColumnLabel = 'Rank',
-		aliasColumnLabel = 'Alias',
-		eloColumnLabel = 'ELO',
-		winsColumnLabel = 'Wins',
-		lossesColumnLabel = 'Losses',
-		streakColumnLabel = 'Streak',
-		ratioColumnLabel = 'Ratio',
-		naLabel = 'N/A'
-	}: Props = $props();
+	const { t } = useI18n();
+	const host = useHost();
+
+	let { stats, eloBySteamId, emptyMessage = 'No players found.' }: Props = $props();
+
+	const getSteamIdFromName = (name: string) => name.replace('/steam/', '');
+	const getCountryDisplayName = (country: string | null | undefined) =>
+		countryDisplayName(country, host.locale());
 
 	function eloForRow(stat: LeaderboardStatRow): number | null {
 		return getStoredEloForLeaderboard(
@@ -76,20 +57,20 @@
 			<thead>
 				<tr class="{tableHeadRow} text-center">
 					<th class="w-14 px-4 py-2">#</th>
-					<th class="w-26 px-4 py-2">{rankColumnLabel}</th>
-					<th class="px-4 py-2 text-left">{aliasColumnLabel}</th>
-					<th class="w-22 px-4 py-2">{eloColumnLabel}</th>
-					<th class="w-20 px-4 py-2">{winsColumnLabel}</th>
-					<th class="w-22 px-4 py-2">{lossesColumnLabel}</th>
-					<th class="w-22 px-4 py-2">{streakColumnLabel}</th>
-					<th class="w-22 px-4 py-2">{ratioColumnLabel}</th>
+					<th class="w-26 px-4 py-2">{t('Rank')}</th>
+					<th class="px-4 py-2 text-left">{t('Alias')}</th>
+					<th class="w-22 px-4 py-2">{t('ELO')}</th>
+					<th class="w-20 px-4 py-2">{t('Wins')}</th>
+					<th class="w-22 px-4 py-2">{t('Losses')}</th>
+					<th class="w-22 px-4 py-2">{t('Streak')}</th>
+					<th class="w-22 px-4 py-2">{t('Ratio')}</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each stats as stat (stat.profile.profile_id)}
 					{@const elo = eloForRow(stat)}
 					{@const countryName = getCountryDisplayName(stat.profile.country)}
-					{@const flagUrl = flagImageUrl(stat.profile.country)}
+					{@const flagUrl = host.resolve.flagImageUrl(stat.profile.country)}
 					<tr class="border-secondary-800/70 hover:bg-secondary-950/50 h-11 border-t text-white">
 						<td class="text-secondary-400 px-4 py-1.5 text-center font-semibold tabular-nums">
 							{stat.rank}
@@ -97,7 +78,7 @@
 						<td class="px-4 py-1.5">
 							<div class="flex items-center justify-center gap-2">
 								<img
-									src={getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel)}
+									src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
 									alt=""
 									class="size-6 shrink-0 object-contain"
 								/>
@@ -106,14 +87,14 @@
 						</td>
 						<td class="px-4 py-1.5">
 							<PlayerProfileLink
-								href={playerHref(stat.profile.profile_id)}
+								href={host.routes.player(stat.profile.profile_id)}
 								playerId={playerPreviewId({
 									steamId: getSteamIdFromName(stat.profile.name),
 									profileId: stat.profile.profile_id
 								}) ?? String(stat.profile.profile_id)}
 								class={cn(
 									interactive,
-									'flex min-w-0 items-center gap-2 font-medium hover:text-primary'
+									'hover:text-primary flex min-w-0 items-center gap-2 font-medium'
 								)}
 							>
 								{#if flagUrl}
@@ -138,7 +119,7 @@
 							style:color={elo != null ? getEloColor(elo) : undefined}
 							style:text-shadow={getEloTextShadow(elo)}
 						>
-							{elo ?? naLabel}
+							{elo ?? t('N/A')}
 						</td>
 						<td class={cn('px-4 py-1.5 text-center font-medium', statWins)}>{stat.wins}</td>
 						<td class={cn('px-4 py-1.5 text-center font-medium', statLosses)}>{stat.losses}</td>
@@ -161,27 +142,27 @@
 		{#each stats as stat (stat.profile.profile_id)}
 			{@const elo = eloForRow(stat)}
 			{@const countryName = getCountryDisplayName(stat.profile.country)}
-			{@const flagUrl = flagImageUrl(stat.profile.country)}
+			{@const flagUrl = host.resolve.flagImageUrl(stat.profile.country)}
 			<div class="px-4 py-3 text-white">
 				<div class="flex items-center gap-2">
 					<span class="text-secondary-400 shrink-0 font-semibold tabular-nums">#{stat.rank}</span>
 					<div class="flex shrink-0 items-center gap-1.5">
 						<img
-							src={getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel)}
+							src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
 							alt=""
 							class="size-6 shrink-0 object-contain"
 						/>
 						<span class="text-secondary-400 text-sm tabular-nums">{stat.ranklevel}</span>
 					</div>
 					<PlayerProfileLink
-						href={playerHref(stat.profile.profile_id)}
+						href={host.routes.player(stat.profile.profile_id)}
 						playerId={playerPreviewId({
 							steamId: getSteamIdFromName(stat.profile.name),
 							profileId: stat.profile.profile_id
 						}) ?? String(stat.profile.profile_id)}
 						class={cn(
 							interactive,
-							'flex min-w-0 flex-1 items-center gap-2 font-medium hover:text-primary'
+							'hover:text-primary flex min-w-0 flex-1 items-center gap-2 font-medium'
 						)}
 					>
 						{#if flagUrl}
@@ -205,24 +186,24 @@
 						style:color={elo != null ? getEloColor(elo) : undefined}
 						style:text-shadow={getEloTextShadow(elo)}
 					>
-						{elo ?? naLabel}
+						{elo ?? t('N/A')}
 					</span>
 				</div>
 				<div class="text-secondary-400 mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
 					<span>
-						{winsColumnLabel} <span class={cn('font-medium', statWins)}>{stat.wins}</span>
+						{t('Wins')} <span class={cn('font-medium', statWins)}>{stat.wins}</span>
 					</span>
 					<span>
-						{lossesColumnLabel} <span class={cn('font-medium', statLosses)}>{stat.losses}</span>
+						{t('Losses')} <span class={cn('font-medium', statLosses)}>{stat.losses}</span>
 					</span>
 					<span>
-						{streakColumnLabel}
+						{t('Streak')}
 						<span class={cn('font-medium', statStreakClass(stat.streak))}>
 							{formatStreak(stat.streak)}
 						</span>
 					</span>
 					<span>
-						{ratioColumnLabel}
+						{t('Ratio')}
 						<span
 							class="font-medium tabular-nums"
 							style:color={getRatioColor(stat.wins, stat.losses)}

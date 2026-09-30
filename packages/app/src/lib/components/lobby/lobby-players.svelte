@@ -88,7 +88,13 @@
 {#snippet cell_streak({ row }: { row: LobbyPlayer })}
 	<Player.Streak />
 {/snippet}
-{#snippet playerRowWrapper({ row, children }: { row: LobbyPlayer; children: import('svelte').Snippet })}
+{#snippet playerRowWrapper({
+	row,
+	children
+}: {
+	row: LobbyPlayer;
+	children: import('svelte').Snippet;
+})}
 	{@const stats = getLeaderboardStatsForPlayerByMatchType(lobby.matchType, row)}
 	{@const race = row.race}
 	<Player.Root player={row} {stats} {race}>
@@ -102,9 +108,11 @@
 		{columns}
 		rowKey={(player) => player.index}
 		rowWrapper={playerRowWrapper}
-		class={embedded ? 'rounded-none border-0 border-secondary-800 border-t' : undefined}
+		class={embedded ? 'border-secondary-800 rounded-none border-0 border-t' : undefined}
 		headerClass={embedded ? 'bg-transparent' : undefined}
-		headerRowClass={embedded ? 'bg-transparent text-secondary-400 h-9 text-xs font-semibold tracking-wide uppercase' : undefined}
+		headerRowClass={embedded
+			? 'bg-transparent text-secondary-400 h-9 text-xs font-semibold tracking-wide uppercase'
+			: undefined}
 		bodyRowClass={embedded ? 'h-9 odd:bg-secondary-600/5' : undefined}
 		cells={{
 			rank: cell_rank,

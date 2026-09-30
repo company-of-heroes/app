@@ -1,8 +1,7 @@
-import LiveLobbiesTable from './live-lobbies-table.svelte';
 import LiveLobbyPlayers from './live-lobby-players.svelte';
-import LiveLobbyDetail from './live-lobby-detail.svelte';
 
-export { LiveLobbiesTable as Table, LiveLobbyPlayers as Players, LiveLobbyDetail as Detail };
+export { LiveLobbyPlayers as Players };
+export { liveLobbyPlayerHref, liveLobbyPlayerLabel } from './links';
 export type { LiveLobby, LiveLobbyPlayer, LiveLobbyPlayerStats } from './types';
 export type { LiveLobbyRecord } from './slim';
 export {

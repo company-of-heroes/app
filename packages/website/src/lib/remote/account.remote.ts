@@ -26,7 +26,7 @@ export const updateProfile = form(updateProfileSchema, async (data) => {
 
 	const avatar = data.avatar && data.avatar.size > 0 ? data.avatar : undefined;
 
-	const result = await locals.services.auth().updateProfile({
+	const result = await locals.api.auth.updateProfile({
 		name: data.name,
 		avatar
 	});
@@ -55,7 +55,7 @@ export const updatePassword = form(updatePasswordSchema, async (data) => {
 		invalid(locals.t('Passwords do not match.'));
 	}
 
-	const result = await locals.services.auth().updatePassword({
+	const result = await locals.api.auth.updatePassword({
 		oldPassword: data.oldPassword,
 		password: data.password
 	});
@@ -81,7 +81,7 @@ export const requestVerification = form(requestVerificationSchema, async (data) 
 		invalid(locals.t('Set a real email address before verifying.'));
 	}
 
-	const result = await locals.services.auth().requestVerification(data.email);
+	const result = await locals.api.auth.requestVerification(data.email);
 	if (result.isErr()) {
 		invalid(locals.t(result.error.message));
 	}
@@ -103,7 +103,7 @@ export const requestEmailChange = form(requestEmailChangeSchema, async (data) =>
 		invalid(locals.t('Verify your email before changing it.'));
 	}
 
-	const result = await locals.services.auth().requestEmailChange(data.newEmail);
+	const result = await locals.api.auth.requestEmailChange(data.newEmail);
 	if (result.isErr()) {
 		invalid(locals.t(result.error.message));
 	}
@@ -120,7 +120,7 @@ export const confirmEmailChange = form(confirmEmailChangeSchema, async (data) =>
 	const event = getRequestEvent();
 	const { locals } = event;
 
-	const result = await locals.services.auth().confirmEmailChange(data.token, data.password);
+	const result = await locals.api.auth.confirmEmailChange(data.token, data.password);
 	if (result.isErr()) {
 		invalid(locals.t(result.error.message));
 	}

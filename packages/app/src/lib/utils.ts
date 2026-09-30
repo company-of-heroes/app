@@ -5,6 +5,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '$core/http/fetch';
 import { isBoolean, isString } from 'lodash-es';
 import dayjs from '$lib/dayjs';
+import { normalizeMapName } from '@company-of-heroes/ui/format/player-format';
+import { cn } from '@company-of-heroes/ui/cn';
+export { normalizeMapName } from '@company-of-heroes/ui/format/player-format';
+export { cn } from '@company-of-heroes/ui/cn';
 
 /**
  * Race enum for Company of Heroes factions
@@ -37,17 +41,6 @@ const USFlag = factionImagesByFilename.get('us.png') ?? '';
 const WMFlag = factionImagesByFilename.get('wm.png') ?? '';
 const CWFlag = factionImagesByFilename.get('cw.png') ?? '';
 const PEFlag = factionImagesByFilename.get('pe.png') ?? '';
-
-/**
- * Utility function for merging CSS classes using clsx and tailwind-merge
- * Combines multiple class values and resolves Tailwind CSS conflicts
- *
- * @param inputs - Variable number of class values (strings, objects, arrays, etc.)
- * @returns Merged and optimized class string
- */
-export function cn(...inputs: ClassValue[]): string {
-	return twMerge(clsx(inputs));
-}
 
 /**
  * Extracts Steam ID from a player name string
@@ -97,10 +90,9 @@ export function getFactionFlagFromRace(
  * Eagerly load rank images — Vite cannot resolve fully dynamic import() paths.
  * Relative glob (not kit alias) so Rolldown/Vite always expands the files.
  */
-const rankModules = import.meta.glob<{ default: string }>(
-	'../../../shared-assets/ranks/*.png',
-	{ eager: true }
-);
+const rankModules = import.meta.glob<{ default: string }>('../../../shared-assets/ranks/*.png', {
+	eager: true
+});
 
 const rankImagesByFilename = new Map(
 	Object.entries(rankModules).map(([path, module]) => {
@@ -167,22 +159,6 @@ export function getRankImageByLeaderboardId(leaderboardId: number, rank?: number
 	return getRankImage(race, rank);
 }
 
-export function normalizeMapName(mapName: string, includePlayerCount = true): string {
-	const match = mapName.match(/^(\d+)[pP][ _](.+)$/);
-	if (!match) {
-		return mapName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-	}
-
-	const [, playerCount, mapNameWithoutPrefix] = match;
-	const formattedName = mapNameWithoutPrefix
-		.replace(/_/g, ' ')
-		.toLowerCase()
-		.replace(/\b\w/g, (c) => c.toUpperCase());
-
-	if (!includePlayerCount) return formattedName;
-	return `${formattedName} (${playerCount})`;
-}
-
 export function getRacePrefix(race: Race | number): string {
 	switch (race) {
 		case Race.US:
@@ -229,10 +205,22 @@ export function isNumeric(str: any) {
  * @returns {boolean} True if the value is a string, false otherwise
  */
 export function convertToType(value: any) {
-	if (isBigInt(value)) return BigInt(value);
-	if (isNumeric(value)) return Number(value);
-	if (isBoolean(value)) return Boolean(value);
-	if (isString(value)) return String(value);
+	if (isBigInt(value)) {
+		return BigInt(value);
+	}
+
+	if (isNumeric(value)) {
+		return Number(value);
+	}
+
+	if (isBoolean(value)) {
+		return Boolean(value);
+	}
+
+	if (isString(value)) {
+		return String(value);
+	}
+
 	return value;
 }
 
@@ -434,7 +422,10 @@ export function stripEmotes(text: string, msg: ChatMessage): string {
 	const ranges: Array<[number, number]> = [];
 	for (const group of emotesTag.split('/')) {
 		const [, indices] = group.split(':');
-		if (!indices) continue;
+		if (!indices) {
+			continue;
+		}
+
 		for (const r of indices.split(',')) {
 			const [startStr, endStr] = r.split('-');
 			const start = Number(startStr);
@@ -512,12 +503,16 @@ export async function unzip(zipPathOrUrl: string, destination: string): Promise<
  * @param gameDate - Date string from the replay file (e.g. "HH:mm:ss")
  */
 export function doesMatchGameTime(logTimestamp: string, gameDate: string): boolean {
-	if (!logTimestamp || !gameDate) return false;
+	if (!logTimestamp || !gameDate) {
+		return false;
+	}
 
 	const logTime = dayjs(logTimestamp, ['HH:mm:ss.SS', 'HH:mm:ss.SSS', 'HH:mm:ss']);
 	const gameTime = dayjs(gameDate, 'HH:mm:ss');
 
-	if (!logTime.isValid() || !gameTime.isValid()) return false;
+	if (!logTime.isValid() || !gameTime.isValid()) {
+		return false;
+	}
 
 	const diff = Math.abs(logTime.startOf('minute').diff(gameTime.startOf('minute'), 'minute'));
 

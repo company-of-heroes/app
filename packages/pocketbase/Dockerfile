@@ -1,6 +1,7 @@
 FROM ghcr.io/muchobien/pocketbase:latest
 
-RUN apk add --no-cache unzip python3
+# python3 runs lib/fetch-insecure.py for the Relic proxy (relic-proxy.pb.js).
+RUN apk add --no-cache python3
 
 # Set default port if not provided
 ENV PORT=8090

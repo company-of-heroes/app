@@ -1,7 +1,7 @@
 import type { ListResult, RecordFullListOptions, RecordModel } from 'pocketbase';
 import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
-import { normalizeBaseUrl, resolveAuthHeaders, type ApiDeps } from '../deps';
+import { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, sendV1, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import { fromPbPromise, pbOptions, requireAuth } from '../pb';
@@ -182,7 +182,9 @@ export class MatchesApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies').getList<MatchRecord>(page, perPage, requestOptions),
+			this.deps.pocketbase
+				.collection('lobbies')
+				.getList<MatchRecord>(page, perPage, requestOptions),
 			'Failed to load matches.'
 		);
 	}
@@ -264,14 +266,9 @@ export class MatchesApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase.send<ListResult<MatchRecord>>(
-				`/api/match-history?${params.toString()}`,
-				{
-					method: 'GET',
-					fetch: this.deps.fetch,
-					signal: options?.signal
-				}
-			),
+			sendV1<ListResult<MatchRecord>>(this.deps, `/match-history?${params.toString()}`, {
+				signal: options?.signal
+			}),
 			'Failed to load match history.'
 		).andThen((response) => {
 			const parsed = historyListSchema.safeParse(response);
@@ -299,10 +296,7 @@ export class MatchesApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase.send(`/api/history-players?${params.toString()}`, {
-				method: 'GET',
-				fetch: this.deps.fetch
-			}),
+			sendV1(this.deps, `/history-players?${params.toString()}`),
 			'Failed to search players.'
 		).map((data) => {
 			const parsed = aggregationPlayersSchema.safeParse(data);
@@ -326,10 +320,7 @@ export class MatchesApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase.send(`/api/history-maps?${params.toString()}`, {
-				method: 'GET',
-				fetch: this.deps.fetch
-			}),
+			sendV1(this.deps, `/history-maps?${params.toString()}`),
 			'Failed to search maps.'
 		).map((data) => {
 			const parsed = aggregationMapsSchema.safeParse(data);
@@ -351,20 +342,23 @@ export class MatchesApi {
 
 	getById(id: string): ResultAsync<MatchRecord, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies').getOne<MatchRecord>(
-				id,
-				pbOptions(this.deps, { expand: DEFAULT_EXPAND })
-			),
+			this.deps.pocketbase
+				.collection('lobbies')
+				.getOne<MatchRecord>(id, pbOptions(this.deps, { expand: DEFAULT_EXPAND })),
 			'Failed to load match.'
 		);
 	}
 
 	getBySessionId(sessionId: number): ResultAsync<MatchRecord | null, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies').getList<MatchRecord>(1, 1, pbOptions(this.deps, {
-				filter: `sessionId=${sessionId}`,
-				expand: DEFAULT_EXPAND
-			})),
+			this.deps.pocketbase.collection('lobbies').getList<MatchRecord>(
+				1,
+				1,
+				pbOptions(this.deps, {
+					filter: `sessionId=${sessionId}`,
+					expand: DEFAULT_EXPAND
+				})
+			),
 			'Failed to load match.'
 		).map((records) => (records.items.length > 0 ? records.items[0] : null));
 	}
@@ -411,10 +405,14 @@ export class MatchesApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies').getList<MatchRecord>(1, unique.length, pbOptions(this.deps, {
-				filter: unique.map((id) => `id="${id}"`).join(' || '),
-				expand: DEFAULT_EXPAND
-			})),
+			this.deps.pocketbase.collection('lobbies').getList<MatchRecord>(
+				1,
+				unique.length,
+				pbOptions(this.deps, {
+					filter: unique.map((id) => `id="${id}"`).join(' || '),
+					expand: DEFAULT_EXPAND
+				})
+			),
 			'Failed to load matches.'
 		).map((records) => {
 			const byId = new Map(records.items.map((record) => [record.id, record] as const));
@@ -431,23 +429,20 @@ export class MatchesApi {
 			return errAsync(auth.error);
 		}
 
+		// Starts (or finds) the lobby for the session; the website owns lobby writes.
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies').create(
-				{
-					user: auth.value,
-					...data
-				},
-				pbOptions(this.deps, { expand: DEFAULT_EXPAND })
-			),
+			sendV1<MatchRecord>(this.deps, '/lobbies', { method: 'POST', body: data }),
 			'Failed to create match.'
 		);
 	}
 
 	update(id: string, data: MatchUpdateInput): ResultAsync<MatchRecord, ApiError> {
+		// JSON, or multipart when `data.replay` is a file.
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('lobbies')
-				.update(id, data, pbOptions(this.deps, { expand: DEFAULT_EXPAND })),
+			sendV1<MatchRecord>(this.deps, `/lobbies/${encodeURIComponent(id)}`, {
+				method: 'PATCH',
+				body: data
+			}),
 			'Failed to update match.'
 		);
 	}
@@ -477,9 +472,7 @@ export class MatchesApi {
 
 			const durationSeconds = Number(options?.durationSeconds);
 			const safeDuration =
-				Number.isFinite(durationSeconds) && durationSeconds > 0
-					? Math.floor(durationSeconds)
-					: 0;
+				Number.isFinite(durationSeconds) && durationSeconds > 0 ? Math.floor(durationSeconds) : 0;
 
 			const formData = new FormData();
 			formData.append(
@@ -490,7 +483,7 @@ export class MatchesApi {
 
 			return fetchJson(
 				this.deps.fetch,
-				`${normalizeBaseUrl(this.deps.baseUrl)}/api/lobbies/${encodeURIComponent(id)}/attach-replay`,
+				`${v1Base(this.deps)}/lobbies/${encodeURIComponent(id)}/replay`,
 				{
 					fallback: 'Failed to attach replay.',
 					schema: attachReplaySchema,
@@ -526,18 +519,21 @@ export class MatchesApi {
 
 	delete(id: string): ResultAsync<boolean, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies').delete(id, pbOptions(this.deps)),
+			sendV1(this.deps, `/lobbies/${encodeURIComponent(id)}`, { method: 'DELETE' }).then(
+				() => true
+			),
 			'Failed to delete match.'
 		);
 	}
 
 	findBySessionId(sessionId: number): ResultAsync<MatchRecord | null, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('lobbies')
-				.getFirstListItem<MatchRecord>(`sessionId=${sessionId}`, pbOptions(this.deps, {
+			this.deps.pocketbase.collection('lobbies').getFirstListItem<MatchRecord>(
+				`sessionId=${sessionId}`,
+				pbOptions(this.deps, {
 					expand: DEFAULT_EXPAND
-				})),
+				})
+			),
 			'Failed to load match.'
 		).orElse(() => ok(null));
 	}
@@ -588,15 +584,9 @@ export class MatchesApi {
 		}
 
 		const query = params.toString();
-		const path = `/api/match-filters/${type}${query ? `?${query}` : ''}`;
+		const path = `/match-filters/${type}${query ? `?${query}` : ''}`;
 
-		return fromPbPromise(
-			this.deps.pocketbase.send(path, {
-				method: 'GET',
-				fetch: this.deps.fetch
-			}),
-			'Failed to load match filters.'
-		)
+		return fromPbPromise(sendV1(this.deps, path), 'Failed to load match filters.')
 			.map((data) => {
 				const parsed = matchFiltersSchema.safeParse(data);
 				const maps = parsed.success ? (parsed.data.maps ?? []) : [];
@@ -626,8 +616,7 @@ export class MatchesApi {
 				ok({
 					id: '',
 					collectionId: '',
-					collectionName:
-						type === 'user' ? 'lobby_aggregation' : 'lobby_aggregation_community',
+					collectionName: type === 'user' ? 'lobby_aggregation' : 'lobby_aggregation_community',
 					user: type === 'user' ? (userId ?? '') : undefined,
 					maps: [],
 					players: [],

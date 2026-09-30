@@ -14,7 +14,10 @@ export const RELIC_API_BASE = 'https://coh1-lobby.reliclink.com';
 
 /** Compact Relic ladder snapshot so the dashboard can detect when ranks/wins change. */
 export function relicLeaderboardFingerprint(stats?: LeaderboardStat[] | null): string {
-	if (!stats?.length) return '';
+	if (!stats?.length) {
+		return '';
+	}
+
 	return stats
 		.map(
 			(stat) =>
@@ -159,7 +162,8 @@ export class RelicClient {
 		);
 
 		const members = statGroups?.[0]?.members ?? [];
-		const member = members.find((m) => m.alias.toLowerCase() === trimmed.toLowerCase()) ?? members[0];
+		const member =
+			members.find((m) => m.alias.toLowerCase() === trimmed.toLowerCase()) ?? members[0];
 
 		if (!member) {
 			return null;
@@ -280,6 +284,7 @@ export class RelicClient {
 		if (options?.includeHidden) {
 			return matches;
 		}
+
 		try {
 			const { filterPublicMatchHistory } = await import('$core/pocketbase/hidden-matches');
 			return await filterPublicMatchHistory(matches);

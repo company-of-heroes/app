@@ -58,7 +58,9 @@ export function migrateV1(store: Record<string, unknown>): Settings {
 	const features: Record<string, unknown> = {};
 
 	for (const [key, value] of Object.entries(store)) {
-		if (!key.startsWith('feature.')) continue;
+		if (!key.startsWith('feature.')) {
+			continue;
+		}
 
 		const legacyName = key.slice('feature.'.length);
 
@@ -90,9 +92,7 @@ export function migrateV1(store: Record<string, unknown>): Settings {
 	if (!result.success) {
 		// v1 content was malformed beyond repair; fall back to a tree that at
 		// least preserves the raw slices for manual recovery.
-		throw new Error(
-			t('Failed to migrate v1 settings: {message}', { message: result.error })
-		);
+		throw new Error(t('Failed to migrate v1 settings: {message}', { message: result.error }));
 	}
 
 	return result.data;

@@ -24,7 +24,10 @@
 	}
 
 	async function save() {
-		if (!pixelCrop || !oncrop) return;
+		if (!pixelCrop || !oncrop) {
+			return;
+		}
+
 		isSaving = true;
 		try {
 			const croppedBlob = await getCroppedImg(image, pixelCrop);

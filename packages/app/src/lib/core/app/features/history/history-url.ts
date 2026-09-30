@@ -34,7 +34,11 @@ function parseOperator(raw: string | null): FilterOperator | null {
 	return null;
 }
 
-function parseCompare(search: URLSearchParams, opKey: string, valueKey: string): CompareFilter | null {
+function parseCompare(
+	search: URLSearchParams,
+	opKey: string,
+	valueKey: string
+): CompareFilter | null {
 	const op = parseOperator(search.get(opKey));
 	const value = Number(search.get(valueKey) || '');
 	if (!op || !Number.isFinite(value) || value < 0) {
@@ -117,7 +121,10 @@ export function historyListStateFromMatches(matches: Matches): HistoryListQueryS
 	};
 }
 
-export function historySearchParams(state: HistoryListQueryState, tab: HistoryTab): URLSearchParams {
+export function historySearchParams(
+	state: HistoryListQueryState,
+	tab: HistoryTab
+): URLSearchParams {
 	const params = new URLSearchParams();
 	if (tab !== 'user') {
 		params.set('tab', tab);

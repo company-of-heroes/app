@@ -1,6 +1,6 @@
 import { parseReplay } from '@fknoobs/replay-parser';
 import { fetch } from '$core/http/fetch';
-import { flattenReplay } from '$lib/utils/flatten-replay';
+import { flattenReplay } from '@company-of-heroes/ui/replay/parse';
 
 onmessage = async ({ data }: MessageEvent) => {
 	const { id, type } = data;

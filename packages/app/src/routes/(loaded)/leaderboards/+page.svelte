@@ -10,14 +10,7 @@
 		LeaderboardSkeleton
 	} from '@company-of-heroes/ui/leaderboard';
 	import type { LeaderboardStatRow } from '@company-of-heroes/ui/format/types';
-	import {
-		flagImageUrl,
-		getCountryDisplayName,
-		getRankImageByLeaderboardId,
-		getSteamIdFromName,
-		getSteamIdFromProfile,
-		playerHref
-	} from '$lib/utils/leaderboard-resolvers';
+	import { getSteamIdFromProfile } from '$lib/utils/leaderboard-resolvers';
 	import {
 		getPlayerRatings,
 		harvestPlayerRatingsForProfiles,
@@ -93,13 +86,15 @@
 	);
 
 	const eloBySteamId = $derived.by(() => {
-		const map = eloOverride ?? (() => {
-			const next = new Map<string, PlayerEloMap>();
-			for (const [steamId, record] of ratingsResource.current) {
-				next.set(steamId, record.elo);
-			}
-			return next;
-		})();
+		const map =
+			eloOverride ??
+			(() => {
+				const next = new Map<string, PlayerEloMap>();
+				for (const [steamId, record] of ratingsResource.current) {
+					next.set(steamId, record.elo);
+				}
+				return next;
+			})();
 
 		return Object.fromEntries(map);
 	});
@@ -183,6 +178,7 @@
 			if (harvestKey === lastHarvestKey) {
 				return;
 			}
+
 			lastHarvestKey = harvestKey;
 			eloOverride = null;
 
@@ -210,9 +206,7 @@
 					return;
 				}
 
-				const steamIds = stats
-					.map((stat) => getSteamIdFromProfile(stat.profile))
-					.filter(Boolean);
+				const steamIds = stats.map((stat) => getSteamIdFromProfile(stat.profile)).filter(Boolean);
 				const refreshed = await getPlayerRatings(steamIds);
 				const map = new Map<string, PlayerEloMap>();
 				for (const [steamId, record] of refreshed) {
@@ -257,38 +251,14 @@
 	<LeaderboardSkeleton />
 {:else}
 	{#if !isSearching}
-		<LeaderboardPodium
-			stats={podiumStats}
-			{eloBySteamId}
-			{getSteamIdFromName}
-			{getCountryDisplayName}
-			{getRankImageByLeaderboardId}
-			{flagImageUrl}
-			{playerHref}
-			naLabel={t('N/A')}
-			formatLevel={(level) => t('Lvl {level}', { level })}
-			formatWins={(wins) => t('{count}W', { count: wins })}
-			formatLosses={(losses) => t('{count}L', { count: losses })}
-			formatStreakLabel={(streak) => t('{streak} streak', { streak })}
-		/>
+		<LeaderboardPodium stats={podiumStats} {eloBySteamId} />
 	{/if}
 
 	<LeaderboardList
 		stats={listStats}
 		{eloBySteamId}
-		{getSteamIdFromName}
-		{getCountryDisplayName}
-		{getRankImageByLeaderboardId}
-		{flagImageUrl}
-		{playerHref}
-		emptyMessage={filteredStats.length === 0 ? t('No players found.') : t('No more players to show.')}
-		rankColumnLabel={t('Rank')}
-		aliasColumnLabel={t('Alias')}
-		eloColumnLabel={t('ELO')}
-		winsColumnLabel={t('Wins')}
-		lossesColumnLabel={t('Losses')}
-		streakColumnLabel={t('Streak')}
-		ratioColumnLabel={t('Ratio')}
-		naLabel={t('N/A')}
+		emptyMessage={filteredStats.length === 0
+			? t('No players found.')
+			: t('No more players to show.')}
 	/>
 {/if}

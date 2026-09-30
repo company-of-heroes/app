@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import { Badge } from '@company-of-heroes/ui/badge';
 	import * as List from '@company-of-heroes/ui/list';
@@ -13,12 +14,8 @@
 	type Props = {
 		title: string;
 		map: string;
-		resolveMapSrc: (map: string | undefined) => string | undefined;
-		resolveFallbackSrc?: () => string | undefined;
 		showNav?: boolean;
 		listHref: string;
-		replaysLabel: string;
-		backAriaLabel?: string;
 		isRanked: boolean;
 		statusPending?: boolean;
 		titleValue: string;
@@ -32,22 +29,8 @@
 		downloadFileName?: string;
 		downloadDisabled?: boolean;
 		downloadCount?: number;
-		downloadLabel?: string;
-		downloadsLabel?: string;
 		onDownloadClick?: () => void;
 		description?: string | null;
-		descriptionLabel?: string;
-		statusLabel: string;
-		titleLabel: string;
-		submittedAtLabel: string;
-		playerCountLabel: string;
-		uploadedByLabel: string;
-		durationLabel: string;
-		gameModeLabel: string;
-		resultSavedLabel?: string;
-		resultPendingLabel?: string;
-		rankedMatchLabel?: string;
-		deletedLabel?: string;
 		showDeletedBadge?: boolean;
 		titleMeta?: Snippet;
 		actions?: Snippet;
@@ -55,15 +38,13 @@
 		vote?: Snippet;
 	};
 
+	const { t } = useI18n();
+
 	let {
 		title,
 		map,
-		resolveMapSrc,
-		resolveFallbackSrc,
 		showNav = true,
 		listHref,
-		replaysLabel,
-		backAriaLabel,
 		isRanked,
 		statusPending = false,
 		titleValue,
@@ -77,22 +58,8 @@
 		downloadFileName = '',
 		downloadDisabled = false,
 		downloadCount = 0,
-		downloadLabel,
-		downloadsLabel,
 		onDownloadClick,
 		description = null,
-		descriptionLabel = 'Description',
-		statusLabel,
-		titleLabel,
-		submittedAtLabel,
-		playerCountLabel,
-		uploadedByLabel,
-		durationLabel,
-		gameModeLabel,
-		resultSavedLabel = 'Result saved',
-		resultPendingLabel = 'Result pending',
-		rankedMatchLabel = 'Ranked match',
-		deletedLabel = 'Deleted',
 		showDeletedBadge = false,
 		titleMeta: extraTitleMeta,
 		actions,
@@ -101,11 +68,9 @@
 	}: Props = $props();
 
 	const descriptionTrimmed = $derived(description?.trim() || '');
-	const descriptionHtml = $derived(
-		descriptionTrimmed ? renderMarkdown(descriptionTrimmed) : ''
-	);
+	const descriptionHtml = $derived(descriptionTrimmed ? renderMarkdown(descriptionTrimmed) : '');
 	const markdownClass = cn(
-		'prose prose-sm max-w-none min-w-0 break-words text-secondary-200',
+		'prose prose-sm text-secondary-200 max-w-none min-w-0 break-words',
 		'prose-headings:my-1 prose-headings:text-sm prose-headings:leading-snug prose-headings:text-white',
 		'prose-h1:text-base prose-strong:text-white',
 		'prose-code:bg-secondary-800 prose-code:text-primary prose-code:rounded prose-code:px-1 prose-code:py-0.5',
@@ -126,47 +91,41 @@
 	mapName={title}
 	{map}
 	{listHref}
-	{resolveMapSrc}
-	{resolveFallbackSrc}
 	{showNav}
 	{showDownload}
 	{downloadHref}
 	{downloadFileName}
 	{downloadDisabled}
 	{downloadCount}
-	{downloadLabel}
-	{downloadsLabel}
 	{onDownloadClick}
-	{replaysLabel}
-	{backAriaLabel}
 	{actions}
 	{afterDetails}
 	{vote}
 >
 	{#snippet titleMeta()}
 		{#if showDeletedBadge}
-			<Badge variant="warning">{deletedLabel}</Badge>
+			<Badge variant="warning">{t('Deleted')}</Badge>
 		{/if}
 		{@render extraTitleMeta?.()}
 	{/snippet}
 	{#snippet details()}
 		<div class={detailMetaGrid}>
-			<List.Title>{statusLabel}</List.Title>
+			<List.Title>{t('Status')}</List.Title>
 			<List.Value class="flex items-center">
 				{#if statusPending}
-					<span title={resultPendingLabel}>
+					<span title={t('Result pending')}>
 						<HourglassIcon class="text-primary" />
 					</span>
 				{:else}
-					<span title={resultSavedLabel}>
+					<span title={t('Result saved')}>
 						<ChecksIcon class="text-green-400" />
 					</span>
 				{/if}
 			</List.Value>
-			<List.Title>{titleLabel}</List.Title>
+			<List.Title>{t('Title')}</List.Title>
 			<List.Value>
 				{#if isRanked}
-					<span class="flex items-center" title={rankedMatchLabel}>
+					<span class="flex items-center" title={t('Ranked match')}>
 						<RankingIcon class="text-primary-100" weight="duotone" />
 					</span>
 				{:else}
@@ -174,24 +133,24 @@
 				{/if}
 			</List.Value>
 
-			<List.Title>{submittedAtLabel}</List.Title>
+			<List.Title>{t('Submitted at')}</List.Title>
 			<List.Value>{submittedAt}</List.Value>
-			<List.Title>{playerCountLabel}</List.Title>
+			<List.Title>{t('Player count')}</List.Title>
 			<List.Value>{playerCount}</List.Value>
 
-			<List.Title>{uploadedByLabel}</List.Title>
+			<List.Title>{t('Uploaded by')}</List.Title>
 			<List.Value>{uploadedBy}</List.Value>
-			<List.Title>{durationLabel}</List.Title>
+			<List.Title>{t('Duration')}</List.Title>
 			<List.Value>{duration}</List.Value>
 
-			<List.Title>{gameModeLabel}</List.Title>
+			<List.Title>{t('Game mode')}</List.Title>
 			<List.Value>{gameMode}</List.Value>
 		</div>
 	{/snippet}
 	{#snippet afterActions()}
 		{#if descriptionHtml}
 			<div class="mt-4">
-				<h2 class="font-heading text-lg font-bold text-white">{descriptionLabel}</h2>
+				<h2 class="font-heading text-lg font-bold text-white">{t('Description')}</h2>
 				<div class={cn(markdownClass, 'mt-2')}>
 					{@html descriptionHtml}
 				</div>

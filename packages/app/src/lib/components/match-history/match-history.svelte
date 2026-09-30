@@ -5,7 +5,7 @@
 	import { cn, getRankImage, normalizeMapName } from '$lib/utils';
 	import * as Player from '$lib/components/player';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
-	import MapImage from '$lib/components/ui/map-image.svelte';
+	import MapImage from '@company-of-heroes/ui/map-image';
 	import { orderBy, sortBy } from 'lodash-es';
 	import ClockIcon from 'phosphor-svelte/lib/ClockIcon';
 	import ChecksIcon from 'phosphor-svelte/lib/ChecksIcon';
@@ -48,8 +48,16 @@
 		() => listHiddenKeywordWords()
 	);
 	const visibleMatches = $derived.by(() => {
-		if (isStaff) return orderedMatches;
-		if (hiddenIds.current == null || hiddenWords.current == null || hiddenIds.error || hiddenWords.error) {
+		if (isStaff) {
+			return orderedMatches;
+		}
+
+		if (
+			hiddenIds.current == null ||
+			hiddenWords.current == null ||
+			hiddenIds.error ||
+			hiddenWords.error
+		) {
 			return [];
 		}
 
@@ -63,7 +71,10 @@
 	const savedBySession = resource(
 		() => sessionIdsKey,
 		(key) => {
-			if (!key) return Promise.resolve(new Map<number, string>());
+			if (!key) {
+				return Promise.resolve(new Map<number, string>());
+			}
+
 			return app.database.matches.getIdsBySessionIds(key.split(',').map(Number)).catch((error) => {
 				console.warn('[MATCH-HISTORY]: saved match lookup failed:', error);
 				return new Map<number, string>();
@@ -171,7 +182,10 @@
 				kind: 'warning'
 			}
 		);
-		if (!confirmed) return;
+		if (!confirmed) {
+			return;
+		}
+
 		pendingSessionId = sessionId;
 		try {
 			if (currentlyHidden) {
@@ -181,12 +195,14 @@
 				await hideMatch(sessionId, app.account.userId);
 				app.toast.success(t('Match hidden from public overviews.'));
 			}
+
 			const next = new Set(hiddenIds.current ?? []);
 			if (currentlyHidden) {
 				next.delete(sessionId);
 			} else {
 				next.add(sessionId);
 			}
+
 			hiddenIds.mutate(next);
 		} catch (error) {
 			console.error('[MATCH-HISTORY]: hide toggle failed:', error);
@@ -247,7 +263,9 @@
 {/snippet}
 
 {#if visibleMatches.length === 0}
-	<p class={cn('text-secondary-400 px-4 py-3 text-sm', className)}>{t('No recent matches found.')}</p>
+	<p class={cn('text-secondary-400 px-4 py-3 text-sm', className)}>
+		{t('No recent matches found.')}
+	</p>
 {:else}
 	<div class={className}>
 		{#each visibleMatches as match (match.id)}
@@ -270,7 +288,9 @@
 						<p class="text-secondary-400 text-sm">
 							{dayjs.unix(match.startgametime).format('MMM D, YYYY · HH:mm')}
 							{#if showSessionId}
-								<span class="text-secondary-500 text-xs tabular-nums"> · {t('ID: {id}', { id: match.id })}</span>
+								<span class="text-secondary-500 text-xs tabular-nums">
+									· {t('ID: {id}', { id: match.id })}</span
+								>
 							{/if}
 						</p>
 					</div>

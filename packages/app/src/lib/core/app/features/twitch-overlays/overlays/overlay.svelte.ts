@@ -14,6 +14,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { pocketbase } from '$core/pocketbase';
 import type { UserOverlaysResponse } from '$core/pocketbase/types';
 import { fetch } from '$core/http/fetch';
+import { siteApi } from '$core/api';
 import { unzip } from '$lib/utils/unzip';
 import { ClientResponseError } from 'pocketbase';
 import { t } from '$lib/i18n';
@@ -73,7 +74,9 @@ export abstract class Overlay {
 	}
 
 	async writeVersionFile() {
-		if (!this.version) return;
+		if (!this.version) {
+			return;
+		}
 
 		await writeTextFile(
 			`${this.path}/overlay-version.json`,
@@ -91,7 +94,9 @@ export abstract class Overlay {
 	}
 
 	async isOutdated(): Promise<boolean> {
-		if (!this.version) return false;
+		if (!this.version) {
+			return false;
+		}
 
 		const versionPath = `${this.path}/overlay-version.json`;
 		if (!(await exists(versionPath, { baseDir: this.baseDir }))) {
@@ -282,12 +287,18 @@ export abstract class Overlay {
 
 	async syncBundledDistIfNeeded(): Promise<boolean> {
 		const bundledDistHash = await this.getBundledDistHash();
-		if (!bundledDistHash) return false;
+		if (!bundledDistHash) {
+			return false;
+		}
 
 		const localDistHash = await this.getLocalContentHash();
-		if (localDistHash === bundledDistHash) return false;
+		if (localDistHash === bundledDistHash) {
+			return false;
+		}
 
-		if (await this.hasCustomizedSource()) return false;
+		if (await this.hasCustomizedSource()) {
+			return false;
+		}
 
 		await this.reinstallFromBundle();
 		return true;
@@ -366,7 +377,9 @@ export abstract class Overlay {
 					continue;
 				}
 
-				if (!entry.isFile) continue;
+				if (!entry.isFile) {
+					continue;
+				}
 
 				const info = await stat(entryPath, { baseDir: this.baseDir });
 				const mtime = info.mtime?.getTime() ?? 0;
@@ -465,18 +478,13 @@ export abstract class Overlay {
 
 		const bytes = await this.zipContent(this.publishPath);
 		const formData = new FormData();
-		formData.append(
-			'bundle',
-			new Blob([bytes], { type: 'application/zip' }),
-			'overlay.zip'
-		);
+		formData.append('bundle', new Blob([bytes], { type: 'application/zip' }), 'overlay.zip');
 
 		try {
-			const response = (await pocketbase.send('/api/overlay/publish', {
+			const response = await siteApi<PublishResponse>('/overlays', {
 				method: 'POST',
-				body: formData,
-				fetch
-			})) as PublishResponse;
+				body: formData
+			});
 
 			const contentHash = await this.getLocalContentHash();
 			await this.savePublishState({
@@ -501,6 +509,7 @@ export abstract class Overlay {
 						: t('Failed to publish overlay: {detail}', { detail })
 				);
 			}
+
 			throw error;
 		}
 	}

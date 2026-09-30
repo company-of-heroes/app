@@ -2,7 +2,7 @@ import { ClientResponseError, type RecordModel } from 'pocketbase';
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
 import { voteFromRecord, type CommentVoteValue } from '@company-of-heroes/ui/comment/vote';
-import type { ApiDeps } from '../deps';
+import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import {
 	currentUserId,
@@ -77,11 +77,15 @@ export class MatchSocialApi {
 		const filter = `name ~ "${escaped}" && name != ""${me ? ` && id != "${me}"` : ''}`;
 
 		return fromPbPromise(
-			this.deps.pocketbase.collection('users').getList(1, 6, pbOptions(this.deps, {
-				filter,
-				fields: 'id,name,avatar,collectionId,collectionName,steamIds',
-				sort: 'name'
-			})),
+			this.deps.pocketbase.collection('users').getList(
+				1,
+				6,
+				pbOptions(this.deps, {
+					filter,
+					fields: 'id,name,avatar,collectionId,collectionName,steamIds',
+					sort: 'name'
+				})
+			),
 			'Failed to search users.'
 		).map((response) =>
 			response.items
@@ -134,15 +138,22 @@ export class MatchSocialApi {
 	listComments(lobbyId: string): ResultAsync<LobbyComment[], ApiError> {
 		const escaped = escapePocketBaseString(lobbyId);
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobby_comments').getList(1, 200, pbOptions(this.deps, {
-				filter: `lobby = "${escaped}"`,
-				sort: 'created',
-				expand: 'user'
-			})),
+			this.deps.pocketbase.collection('lobby_comments').getList(
+				1,
+				200,
+				pbOptions(this.deps, {
+					filter: `lobby = "${escaped}"`,
+					sort: 'created',
+					expand: 'user'
+				})
+			),
 			'Failed to load comments.'
 		).andThen((response) =>
 			fromPbPromise(
-				this.listMyCommentVotes(response.items.map((item) => item.id), 'lobby_comment_likes'),
+				this.listMyCommentVotes(
+					response.items.map((item) => item.id),
+					'lobby_comment_likes'
+				),
 				'Failed to load comments.'
 			).map((votes) =>
 				response.items.map((item) => this.serializeComment(item, votes.get(item.id) ?? 0))
@@ -153,15 +164,22 @@ export class MatchSocialApi {
 	listReplayComments(replayId: string): ResultAsync<ReplayComment[], ApiError> {
 		const escaped = escapePocketBaseString(replayId);
 		return fromPbPromise(
-			this.deps.pocketbase.collection('replay_comments').getList(1, 200, pbOptions(this.deps, {
-				filter: `replay = "${escaped}"`,
-				sort: 'created',
-				expand: 'user'
-			})),
+			this.deps.pocketbase.collection('replay_comments').getList(
+				1,
+				200,
+				pbOptions(this.deps, {
+					filter: `replay = "${escaped}"`,
+					sort: 'created',
+					expand: 'user'
+				})
+			),
 			'Failed to load comments.'
 		).andThen((response) =>
 			fromPbPromise(
-				this.listMyCommentVotes(response.items.map((item) => item.id), 'replay_comment_likes'),
+				this.listMyCommentVotes(
+					response.items.map((item) => item.id),
+					'replay_comment_likes'
+				),
 				'Failed to load comments.'
 			).map((votes) =>
 				response.items.map((item) => this.serializeComment(item, votes.get(item.id) ?? 0))
@@ -184,21 +202,13 @@ export class MatchSocialApi {
 			return errAsync(apiError(400, 'Enter a comment.'));
 		}
 
-		const data: Record<string, string> = {
-			lobby: lobbyId,
-			user: auth.value,
-			text: trimmed
-		};
-		if (parentId) {
-			data.parent = parentId;
-		}
-
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('lobby_comments')
-				.create(data, pbOptions(this.deps, { expand: 'user' })),
+			sendV1<LobbyComment>(this.deps, `/social/lobby/${encodeURIComponent(lobbyId)}/comments`, {
+				method: 'POST',
+				body: { text: trimmed, ...(parentId ? { parent: parentId } : {}) }
+			}),
 			'Failed to post comment.'
-		).map((record) => this.serializeComment(record, 0));
+		);
 	}
 
 	createReplayComment(
@@ -216,21 +226,13 @@ export class MatchSocialApi {
 			return errAsync(apiError(400, 'Enter a comment.'));
 		}
 
-		const data: Record<string, string> = {
-			replay: replayId,
-			user: auth.value,
-			text: trimmed
-		};
-		if (parentId) {
-			data.parent = parentId;
-		}
-
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('replay_comments')
-				.create(data, pbOptions(this.deps, { expand: 'user' })),
+			sendV1<LobbyComment>(this.deps, `/social/replay/${encodeURIComponent(replayId)}/comments`, {
+				method: 'POST',
+				body: { text: trimmed, ...(parentId ? { parent: parentId } : {}) }
+			}),
 			'Failed to post comment.'
-		).map((record) => this.serializeComment(record, 0));
+		);
 	}
 
 	setCommentVote(
@@ -275,11 +277,12 @@ export class MatchSocialApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('lobby_comments')
-				.update(commentId, { text: trimmed }, pbOptions(this.deps, { expand: 'user' })),
+			sendV1<LobbyComment>(this.deps, `/social/lobby/comments/${encodeURIComponent(commentId)}`, {
+				method: 'PATCH',
+				body: { text: trimmed }
+			}),
 			'Failed to update comment.'
-		).map((record) => this.serializeComment(record, 0));
+		);
 	}
 
 	updateReplayComment(commentId: string, text: string): ResultAsync<ReplayComment, ApiError> {
@@ -294,11 +297,12 @@ export class MatchSocialApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('replay_comments')
-				.update(commentId, { text: trimmed }, pbOptions(this.deps, { expand: 'user' })),
+			sendV1<LobbyComment>(this.deps, `/social/replay/comments/${encodeURIComponent(commentId)}`, {
+				method: 'PATCH',
+				body: { text: trimmed }
+			}),
 			'Failed to update comment.'
-		).map((record) => this.serializeComment(record, 0));
+		);
 	}
 
 	deleteComment(commentId: string, note?: string): ResultAsync<LobbyComment, ApiError> {
@@ -307,17 +311,15 @@ export class MatchSocialApi {
 			return errAsync(auth.error);
 		}
 
-		const data: Record<string, unknown> = { deleted: true };
-		if (note) {
-			data.deletedNote = note;
-		}
-
+		const query = note ? `?note=${encodeURIComponent(note)}` : '';
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('lobby_comments')
-				.update(commentId, data, pbOptions(this.deps, { expand: 'user' })),
+			sendV1<LobbyComment>(
+				this.deps,
+				`/social/lobby/comments/${encodeURIComponent(commentId)}${query}`,
+				{ method: 'DELETE' }
+			),
 			'Failed to delete comment.'
-		).map((record) => this.serializeComment(record, 0));
+		);
 	}
 
 	deleteReplayComment(commentId: string, note?: string): ResultAsync<ReplayComment, ApiError> {
@@ -326,25 +328,24 @@ export class MatchSocialApi {
 			return errAsync(auth.error);
 		}
 
-		const data: Record<string, unknown> = { deleted: true };
-		if (note) {
-			data.deletedNote = note;
-		}
-
+		const query = note ? `?note=${encodeURIComponent(note)}` : '';
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('replay_comments')
-				.update(commentId, data, pbOptions(this.deps, { expand: 'user' })),
+			sendV1<LobbyComment>(
+				this.deps,
+				`/social/replay/comments/${encodeURIComponent(commentId)}${query}`,
+				{ method: 'DELETE' }
+			),
 			'Failed to delete comment.'
-		).map((record) => this.serializeComment(record, 0));
+		);
 	}
 
 	recordDownload(lobbyId: string): ResultAsync<number, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.send<{ downloadCount: number }>(`/api/lobbies/${lobbyId}/download`, {
-				method: 'POST',
-				fetch: this.deps.fetch
-			}),
+			sendV1<{ downloadCount: number }>(
+				this.deps,
+				`/lobbies/${encodeURIComponent(lobbyId)}/download`,
+				{ method: 'POST' }
+			),
 			'Failed to record download.'
 		).map((response) => Number(response.downloadCount) || 0);
 	}
@@ -453,102 +454,28 @@ export class MatchSocialApi {
 		}
 	}
 
-	private async setLobbyVoteRecord(
+	private setLobbyVoteRecord(
 		lobbyId: string,
-		userId: string,
+		_userId: string,
 		value: 1 | -1
 	): Promise<{ vote: CommentVoteValue; likeCount: number }> {
-		let vote: CommentVoteValue = value;
-		try {
-			const existing = await this.deps.pocketbase
-				.collection('lobby_likes')
-				.getFirstListItem(
-					`lobby = "${escapePocketBaseString(lobbyId)}" && user = "${userId}"`,
-					pbOptions(this.deps)
-				);
-			const current = voteFromRecord(existing.value);
-			if (current === value) {
-				await this.deps.pocketbase
-					.collection('lobby_likes')
-					.delete(existing.id, pbOptions(this.deps));
-				vote = 0;
-			} else {
-				await this.deps.pocketbase
-					.collection('lobby_likes')
-					.update(existing.id, { value }, pbOptions(this.deps));
-			}
-		} catch (error) {
-			if (!(error instanceof ClientResponseError) || error.status !== 404) {
-				throw error;
-			}
-
-			await this.deps.pocketbase.collection('lobby_likes').create(
-				{
-					lobby: lobbyId,
-					user: userId,
-					value
-				},
-				pbOptions(this.deps)
-			);
-		}
-
-		try {
-			const lobby = await this.deps.pocketbase
-				.collection('lobbies')
-				.getOne(lobbyId, pbOptions(this.deps, { fields: 'likeCount' }));
-			return { vote, likeCount: Number(lobby.likeCount) || 0 };
-		} catch {
-			return { vote, likeCount: 0 };
-		}
+		// Clicking the same vote again removes it (toggle).
+		return sendV1(this.deps, `/social/lobby/${encodeURIComponent(lobbyId)}/vote`, {
+			method: 'PUT',
+			body: { value, toggle: true }
+		});
 	}
 
-	private async setReplayVoteRecord(
+	private setReplayVoteRecord(
 		replayId: string,
-		userId: string,
+		_userId: string,
 		value: 1 | -1
 	): Promise<{ vote: CommentVoteValue; likeCount: number }> {
-		let vote: CommentVoteValue = value;
-		try {
-			const existing = await this.deps.pocketbase
-				.collection('replay_likes')
-				.getFirstListItem(
-					`replay = "${escapePocketBaseString(replayId)}" && user = "${userId}"`,
-					pbOptions(this.deps)
-				);
-			const current = voteFromRecord(existing.value);
-			if (current === value) {
-				await this.deps.pocketbase
-					.collection('replay_likes')
-					.delete(existing.id, pbOptions(this.deps));
-				vote = 0;
-			} else {
-				await this.deps.pocketbase
-					.collection('replay_likes')
-					.update(existing.id, { value }, pbOptions(this.deps));
-			}
-		} catch (error) {
-			if (!(error instanceof ClientResponseError) || error.status !== 404) {
-				throw error;
-			}
-
-			await this.deps.pocketbase.collection('replay_likes').create(
-				{
-					replay: replayId,
-					user: userId,
-					value
-				},
-				pbOptions(this.deps)
-			);
-		}
-
-		try {
-			const replay = await this.deps.pocketbase
-				.collection('replays')
-				.getOne(replayId, pbOptions(this.deps, { fields: 'likeCount' }));
-			return { vote, likeCount: Number(replay.likeCount) || 0 };
-		} catch {
-			return { vote, likeCount: 0 };
-		}
+		// Clicking the same vote again removes it (toggle).
+		return sendV1(this.deps, `/social/replay/${encodeURIComponent(replayId)}/vote`, {
+			method: 'PUT',
+			body: { value, toggle: true }
+		});
 	}
 
 	private async listMyCommentVotes(
@@ -578,56 +505,16 @@ export class MatchSocialApi {
 		return votes;
 	}
 
-	private async setCommentVoteRecord(
+	private setCommentVoteRecord(
 		commentId: string,
-		userId: string,
+		_userId: string,
 		value: 1 | -1,
 		target: 'lobby' | 'replay'
 	): Promise<{ vote: CommentVoteValue; likeCount: number }> {
-		const likesCollection = target === 'replay' ? 'replay_comment_likes' : 'lobby_comment_likes';
-		const commentsCollection = target === 'replay' ? 'replay_comments' : 'lobby_comments';
-		let vote: CommentVoteValue = value;
-		try {
-			const existing = await this.deps.pocketbase
-				.collection(likesCollection)
-				.getFirstListItem(
-					`comment = "${commentId}" && user = "${userId}"`,
-					pbOptions(this.deps)
-				);
-			const current = voteFromRecord(existing.value);
-			if (current === value) {
-				await this.deps.pocketbase
-					.collection(likesCollection)
-					.delete(existing.id, pbOptions(this.deps));
-				vote = 0;
-			} else {
-				await this.deps.pocketbase
-					.collection(likesCollection)
-					.update(existing.id, { value }, pbOptions(this.deps));
-			}
-		} catch (error) {
-			if (!(error instanceof ClientResponseError) || error.status !== 404) {
-				throw error;
-			}
-
-			await this.deps.pocketbase.collection(likesCollection).create(
-				{
-					comment: commentId,
-					user: userId,
-					value
-				},
-				pbOptions(this.deps)
-			);
-		}
-
-		try {
-			const comment = await this.deps.pocketbase
-				.collection(commentsCollection)
-				.getOne(commentId, pbOptions(this.deps, { fields: 'likeCount' }));
-			return { vote, likeCount: Number(comment.likeCount) || 0 };
-		} catch {
-			return { vote, likeCount: 0 };
-		}
+		return sendV1(this.deps, `/social/${target}/comments/${encodeURIComponent(commentId)}/vote`, {
+			method: 'PUT',
+			body: { value, toggle: true }
+		});
 	}
 }
 

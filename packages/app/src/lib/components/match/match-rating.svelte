@@ -35,10 +35,14 @@
 	});
 
 	const change = $derived.by(() => {
-		if (!player) return undefined;
+		if (!player) {
+			return undefined;
+		}
+
 		if (!Number.isFinite(player.newrating) || !Number.isFinite(player.oldrating)) {
 			return undefined;
 		}
+
 		return player.newrating - player.oldrating;
 	});
 </script>

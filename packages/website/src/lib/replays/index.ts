@@ -10,6 +10,26 @@ import {
 	type HistorySortField,
 	type ReplaysQuery
 } from '@company-of-heroes/ui/replay';
+import {
+	formatDurationSeconds,
+	formatMatchDate,
+	getMatchAverageElo,
+	isAlliesRace,
+	isAxisRace,
+	matchDurationSeconds,
+	teamOutcome,
+	teamPlayers
+} from '@company-of-heroes/ui/replay/utils';
+export {
+	formatDurationSeconds,
+	formatMatchDate,
+	getMatchAverageElo,
+	isAlliesRace,
+	isAxisRace,
+	matchDurationSeconds,
+	teamOutcome,
+	teamPlayers
+} from '@company-of-heroes/ui/replay/utils';
 
 export type {
 	CompareFilter,
@@ -172,8 +192,13 @@ export function matchtypesForMatchups(matchups: string[]): number[] {
 	const ids = new Set<number>();
 	for (const matchup of matchups) {
 		const types = HISTORY_MATCHUP_TYPES[matchup as HistoryMatchup];
-		if (!types) continue;
-		for (const id of types) ids.add(id);
+		if (!types) {
+			continue;
+		}
+
+		for (const id of types) {
+			ids.add(id);
+		}
 	}
 	return [...ids];
 }
@@ -183,21 +208,34 @@ export function slotsForPositions(positions: string[]): number[] {
 	const slots = new Set<number>();
 	for (const value of positions) {
 		const slot = Number(value);
-		if (!Number.isInteger(slot) || slot < 1 || slot > 8) continue;
+		if (!Number.isInteger(slot) || slot < 1 || slot > 8) {
+			continue;
+		}
+
 		slots.add(slot);
 	}
 	return [...slots];
 }
 
 function parseOperator(raw: string | null): FilterOperator | null {
-	if (raw && OPERATORS.has(raw as FilterOperator)) return raw as FilterOperator;
+	if (raw && OPERATORS.has(raw as FilterOperator)) {
+		return raw as FilterOperator;
+	}
+
 	return null;
 }
 
-function parseCompare(search: URLSearchParams, opKey: string, valueKey: string): CompareFilter | null {
+function parseCompare(
+	search: URLSearchParams,
+	opKey: string,
+	valueKey: string
+): CompareFilter | null {
 	const op = parseOperator(search.get(opKey));
 	const value = Number(search.get(valueKey) || '');
-	if (!op || !Number.isFinite(value) || value < 0) return null;
+	if (!op || !Number.isFinite(value) || value < 0) {
+		return null;
+	}
+
 	return { op, value };
 }
 
@@ -220,6 +258,7 @@ export function parseReplaysQuery(search: URLSearchParams): ReplaysQuery {
 			filter = null;
 		}
 	}
+
 	const flatPlayerIds = splitCsv(search.get('players'));
 	return {
 		page,
@@ -241,28 +280,60 @@ export function parseReplaysQuery(search: URLSearchParams): ReplaysQuery {
 
 export function replaysSearchParams(query: ReplaysQuery): URLSearchParams {
 	const params = new URLSearchParams();
-	if (query.page > 1) params.set('page', String(query.page));
+	if (query.page > 1) {
+		params.set('page', String(query.page));
+	}
+
 	if (query.filter != null) {
 		params.set('filter', JSON.stringify(query.filter));
 	} else {
-		if (query.ranked) params.set('ranked', '1');
-		if (query.pro) params.set('pro', '1');
-		if (query.matchups.length > 0) params.set('modes', query.matchups.join(','));
-		if (query.playerIds.length > 0) params.set('players', query.playerIds.join(','));
-		if (query.maps.length > 0) params.set('maps', query.maps.join(','));
-		if (query.races.length > 0) params.set('races', query.races.join(','));
-		if (query.positions.length > 0) params.set('positions', query.positions.join(','));
+		if (query.ranked) {
+			params.set('ranked', '1');
+		}
+
+		if (query.pro) {
+			params.set('pro', '1');
+		}
+
+		if (query.matchups.length > 0) {
+			params.set('modes', query.matchups.join(','));
+		}
+
+		if (query.playerIds.length > 0) {
+			params.set('players', query.playerIds.join(','));
+		}
+
+		if (query.maps.length > 0) {
+			params.set('maps', query.maps.join(','));
+		}
+
+		if (query.races.length > 0) {
+			params.set('races', query.races.join(','));
+		}
+
+		if (query.positions.length > 0) {
+			params.set('positions', query.positions.join(','));
+		}
+
 		if (query.elo) {
 			params.set('eloOp', query.elo.op);
 			params.set('elo', String(query.elo.value));
 		}
+
 		if (query.duration) {
 			params.set('durationOp', query.duration.op);
 			params.set('duration', String(query.duration.value));
 		}
 	}
-	if (query.sort !== 'createdAt') params.set('sort', query.sort);
-	if (query.sortDir === 'asc') params.set('sortDir', 'asc');
+
+	if (query.sort !== 'createdAt') {
+		params.set('sort', query.sort);
+	}
+
+	if (query.sortDir === 'asc') {
+		params.set('sortDir', 'asc');
+	}
+
 	return params;
 }
 
@@ -271,6 +342,7 @@ export function replaysHref(query: ReplaysQuery, tab: ReplaysListTab = 'communit
 	if (tab !== 'community') {
 		params.set('tab', tab);
 	}
+
 	const search = params.toString();
 	return search ? `/replays?${search}` : '/replays';
 }
@@ -301,10 +373,15 @@ export function rememberReplaysListHref(href: string) {
 }
 
 export function rememberedReplaysListHref(): string {
-	if (typeof sessionStorage === 'undefined') return '/replays';
+	if (typeof sessionStorage === 'undefined') {
+		return '/replays';
+	}
+
 	try {
 		const href = sessionStorage.getItem(REPLAYS_LIST_HREF_KEY);
-		if (href && isReplaysListHref(href)) return href;
+		if (href && isReplaysListHref(href)) {
+			return href;
+		}
 	} catch {
 		// Private mode.
 	}
@@ -312,7 +389,10 @@ export function rememberedReplaysListHref(): string {
 }
 
 function splitCsv(value: string | null): string[] {
-	if (!value) return [];
+	if (!value) {
+		return [];
+	}
+
 	return value
 		.split(',')
 		.map((part) => part.trim())
@@ -346,24 +426,47 @@ export function buildMatchHistoryUrl(query: ReplaysQuery, perPage = REPLAYS_PER_
 	if (query.filter != null) {
 		params.set('filter', JSON.stringify(query.filter));
 	} else {
-		if (query.ranked) params.set('ranked', 'true');
-		if (query.pro) params.set('pro', 'true');
+		if (query.ranked) {
+			params.set('ranked', 'true');
+		}
+
+		if (query.pro) {
+			params.set('pro', 'true');
+		}
+
 		const matchtypes = matchtypesForMatchups(query.matchups);
-		if (matchtypes.length > 0) params.set('matchtypes', matchtypes.join(','));
-		if (query.playerIds.length > 0) params.set('playerIds', query.playerIds.join(','));
-		if (query.maps.length > 0) params.set('maps', query.maps.join(','));
-		if (query.races.length > 0) params.set('races', query.races.join(','));
+		if (matchtypes.length > 0) {
+			params.set('matchtypes', matchtypes.join(','));
+		}
+
+		if (query.playerIds.length > 0) {
+			params.set('playerIds', query.playerIds.join(','));
+		}
+
+		if (query.maps.length > 0) {
+			params.set('maps', query.maps.join(','));
+		}
+
+		if (query.races.length > 0) {
+			params.set('races', query.races.join(','));
+		}
+
 		const slots = slotsForPositions(query.positions);
-		if (slots.length > 0) params.set('slots', slots.join(','));
+		if (slots.length > 0) {
+			params.set('slots', slots.join(','));
+		}
+
 		if (query.elo) {
 			params.set('eloOp', query.elo.op);
 			params.set('elo', String(query.elo.value));
 		}
+
 		if (query.duration) {
 			params.set('durationOp', query.duration.op);
 			params.set('duration', String(query.duration.value * 60));
 		}
 	}
+
 	if (query.sort !== 'createdAt') {
 		params.set('sort', query.sort);
 		params.set('sortDir', query.sortDir);
@@ -371,82 +474,28 @@ export function buildMatchHistoryUrl(query: ReplaysQuery, perPage = REPLAYS_PER_
 		params.set('sort', 'createdAt');
 		params.set('sortDir', 'asc');
 	}
+
 	return `${API_URL}/api/match-history?${params.toString()}`;
 }
 
 export function matchFileUrl(match: Pick<CommunityMatchDetail, 'id' | 'replay'>): string | null {
-	if (!match.replay) return null;
+	if (!match.replay) {
+		return null;
+	}
+
 	return `${API_URL}/api/files/lobbies/${match.id}/${encodeURIComponent(match.replay)}`;
 }
 
-export function isAlliesRace(race: number | null | undefined): boolean {
-	return race === 0 || race === 2;
-}
-
-export function isAxisRace(race: number | null | undefined): boolean {
-	return race === 1 || race === 3;
-}
-
-export function teamPlayers(match: CommunityMatch | CommunityMatchDetail, team: 'allies' | 'axis') {
-	return match.players.filter((player) =>
-		team === 'allies' ? isAlliesRace(player.race) : isAxisRace(player.race)
-	);
-}
-
-export function teamOutcome(
-	match: CommunityMatch | CommunityMatchDetail,
-	team: 'allies' | 'axis'
-): 'win' | 'loss' | null {
-	const members = teamPlayers(match, team);
-	const resultPlayers = match.result?.players ?? [];
-	for (const member of members) {
-		const profileId = member.profile.profile_id;
-		const result = resultPlayers.find((entry) => entry.profile_id === profileId);
-		if (result?.outcome === 1) return 'win';
-		if (result?.outcome === 0) return 'loss';
-	}
-	return null;
-}
-
-export function matchDurationSeconds(match: CommunityMatch | CommunityMatchDetail): number | null {
-	if ('durationSeconds' in match && match.durationSeconds != null) {
-		return match.durationSeconds;
-	}
-	const start = Number(match.result?.startgametime);
-	const end = Number(match.result?.completiontime);
-	if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
-		return end - start;
-	}
-	return null;
-}
-
-export function formatDurationSeconds(seconds: number | null): string {
-	if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return '—';
-	const total = Math.round(seconds);
-	const hours = Math.floor(total / 3600);
-	const minutes = Math.floor((total % 3600) / 60);
-	const rest = total % 60;
-	if (hours > 0) return `${hours}h ${minutes}m ${rest}s`;
-	return `${minutes}m ${rest}s`;
-}
-
-export function formatMatchDate(value: string | undefined, locale?: string): string {
-	if (!value) return '—';
-	const date = new Date(value);
-	if (Number.isNaN(date.getTime())) return '—';
-	return date.toLocaleDateString(locale, {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit'
-	});
-}
-
 export function formatSubmittedAt(value: string | undefined, locale?: string): string {
-	if (!value) return '—';
+	if (!value) {
+		return '—';
+	}
+
 	const date = new Date(value);
-	if (Number.isNaN(date.getTime())) return '—';
+	if (Number.isNaN(date.getTime())) {
+		return '—';
+	}
+
 	const day = String(date.getDate()).padStart(2, '0');
 	const month = date.toLocaleDateString(locale, { month: 'short' });
 	const year = date.getFullYear();
@@ -457,27 +506,23 @@ export function formatSubmittedAt(value: string | undefined, locale?: string): s
 
 function playerMatchElo(player: MatchResultPlayer): number | null {
 	const previous = Number(player.oldrating);
-	if (Number.isFinite(previous) && previous >= 1) return previous;
+	if (Number.isFinite(previous) && previous >= 1) {
+		return previous;
+	}
+
 	const next = Number(player.newrating);
-	if (Number.isFinite(next) && next >= 1) return next;
+	if (Number.isFinite(next) && next >= 1) {
+		return next;
+	}
+
 	return null;
 }
 
-export function getMatchAverageElo(match: CommunityMatch | CommunityMatchDetail): number | null {
-	const players = match.result?.players;
-	if (!players?.length) return null;
-	const ratings: number[] = [];
-	for (const player of players) {
-		const rating = playerMatchElo(player);
-		if (rating != null) ratings.push(rating);
-	}
-	if (ratings.length < 2) return null;
-	if (ratings.length < players.length / 2) return null;
-	return ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
-}
-
 export function isProGameplayMatch(match: CommunityMatch | CommunityMatchDetail): boolean {
-	if (!match.isRanked) return false;
+	if (!match.isRanked) {
+		return false;
+	}
+
 	const matchType = Number(match.result?.matchtype_id);
 	const rankedTypes = new Set([1, 2, 3, 4, 5, 6, 7]);
 	const playerCount = match.result?.players?.length || match.players.length;
@@ -487,7 +532,10 @@ export function isProGameplayMatch(match: CommunityMatch | CommunityMatchDetail)
 		playerCount === 4 ||
 		playerCount === 6 ||
 		playerCount === 8;
-	if (!isStandard) return false;
+	if (!isStandard) {
+		return false;
+	}
+
 	const average = getMatchAverageElo(match);
 	const is1v1 = matchType === 1 || (!rankedTypes.has(matchType) && playerCount === 2);
 	const threshold = is1v1 ? 1800 : 1850;
@@ -503,9 +551,18 @@ export function findResultPlayer(
 }
 
 export function playerHref(player: CommunityPlayer): string | null {
-	if (player.playerId === -1) return null;
-	if (player.steamId) return `/players/${player.steamId}`;
-	if (player.profile.profile_id) return `/players/${player.profile.profile_id}`;
+	if (player.playerId === -1) {
+		return null;
+	}
+
+	if (player.steamId) {
+		return `/players/${player.steamId}`;
+	}
+
+	if (player.profile.profile_id) {
+		return `/players/${player.profile.profile_id}`;
+	}
+
 	return null;
 }
 
@@ -560,98 +617,5 @@ export type ParsedReplay = {
 	highResources?: boolean;
 };
 
-export function raceFromReplayFaction(faction: string): number {
-	const value = faction.toLowerCase();
-	if (value.includes('commonwealth')) return 2;
-	if (value.includes('panzer')) return 3;
-	if (value.startsWith('axis')) return 1;
-	return 0;
-}
-
-const ALLIED_DOCTRINE_BANNERS: Record<number, string> = {
-	2: 'ct_branchbanner_top_allied_airborne.png',
-	9: 'ct_branchbanner_top_allied_armor.png',
-	17: 'ct_branchbanner_top_allied_infantry.png',
-	316: 'ct_branchbanner_top_cmnw_infantry.png',
-	323: 'ct_branchbanner_top_cmnw_airborne.png',
-	330: 'ct_branchbanner_top_cmnw_armor.png'
-};
-
-const AXIS_DOCTRINE_BANNERS: Record<number, string> = {
-	186: 'ct_branchbanner_top_axis_blitz.png',
-	194: 'ct_branchbanner_top_axis_defense.png',
-	265: 'ct_branchbanner_top_axis_terror.png',
-	295: 'ct_branchbanner_top_pnze_00.png',
-	302: 'ct_branchbanner_top_pnze_01.png',
-	309: 'ct_branchbanner_top_pnze_02.png'
-};
-
-export function doctrineBannerUrl(player: ParsedReplayPlayer): string | null {
-	const doctrine = player.doctrine;
-	if (doctrine == null) return null;
-	const file = player.faction.startsWith('allies')
-		? ALLIED_DOCTRINE_BANNERS[doctrine]
-		: AXIS_DOCTRINE_BANNERS[doctrine];
-	return file ? `/doctrines/${file}` : null;
-}
-
-/** UNIT_COMMAND object IDs filtered by Replay Manager / C2A as non-input spam. */
-const CPM_EXCLUDED_UNIT_COMMAND_IDS: ReadonlySet<number> = new Set([
-	0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xa8
-]);
-
-const isAiTakeoverAction = (action: ParsedReplayAction): boolean =>
-	action.command?.type === 'AI_TAKEOVER';
-
-const isCpmExcludedAction = (action: ParsedReplayAction): boolean => {
-	if (isAiTakeoverAction(action)) return true;
-	return (
-		(action.commandID ?? -1) === 0x37 &&
-		CPM_EXCLUDED_UNIT_COMMAND_IDS.has(action.objectID ?? -1)
-	);
-};
-
-export function countedActions(replay: ParsedReplay, playerId: number | undefined): ParsedReplayAction[] {
-	if (playerId == null) return [];
-	const actions = replay.actions.filter((action) => action.playerID === playerId);
-	const takeover = actions.findIndex(isAiTakeoverAction);
-	const window = takeover >= 0 ? actions.slice(0, takeover + 1) : actions;
-	return window.filter((action) => !isCpmExcludedAction(action));
-}
-
-/**
- * CPM aligned with Replay Manager / C2A: unique (tick, commandID, objectID)
- * among eligible actions, divided by minutes until AI takeover (or match end).
- */
-export function playerCpm(replay: ParsedReplay, playerId: number | undefined): string {
-	if (playerId == null) {
-		return '0';
-	}
-
-	const precomputed = replay.cpmByPlayerId?.[String(playerId)];
-	if (precomputed != null) {
-		return precomputed;
-	}
-
-	if (!(replay.duration > 0)) {
-		return '0';
-	}
-
-	const playerActions = replay.actions.filter((action) => action.playerID === playerId);
-	const takeover = playerActions.find(isAiTakeoverAction);
-	const window = takeover
-		? playerActions.slice(0, playerActions.indexOf(takeover))
-		: playerActions;
-
-	const keys = new Set<string>();
-	for (const action of window) {
-		if (isCpmExcludedAction(action)) continue;
-		keys.add(`${action.tick}|${action.commandID ?? 0}|${action.objectID ?? 0}`);
-	}
-	if (keys.size === 0) return '0';
-
-	const minutes = takeover
-		? Math.max(takeover.tick / 8 / 60, 1 / 60)
-		: Math.max(replay.duration / 60, 1 / 60);
-	return String(Math.round(keys.size / minutes));
-}
+/** Pure replay helpers live in `@company-of-heroes/ui/replay/stats`. */
+export { raceFromReplayFaction } from '@company-of-heroes/ui/replay/stats';

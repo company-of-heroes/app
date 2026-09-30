@@ -47,9 +47,7 @@
 								<p class={flushHeaderTitle}>{modal.title}</p>
 							{/if}
 							{#if modal.description}
-								<Dialog.Description
-									class={cn(flushHeaderDescription, 'whitespace-pre-line')}
-								>
+								<Dialog.Description class={cn(flushHeaderDescription, 'whitespace-pre-line')}>
 									{#if typeof modal.description === 'function'}
 										{@render modal.description()}
 									{:else}

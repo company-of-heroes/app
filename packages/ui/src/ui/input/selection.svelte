@@ -351,13 +351,7 @@
 		class={cn(
 			interactive,
 			'group flex items-center justify-between truncate text-left font-medium transition-colors duration-150',
-			variant === 'control' &&
-				cn(
-					controlBase,
-					controlSize,
-					controlPad,
-					'w-fit max-w-64 min-w-40'
-				),
+			variant === 'control' && cn(controlBase, controlSize, controlPad, 'w-fit max-w-64 min-w-40'),
 			variant === 'secondary' &&
 				cn(
 					buttonSize,

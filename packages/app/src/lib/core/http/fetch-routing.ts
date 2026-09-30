@@ -58,5 +58,4 @@ export function selectFetchTransport(
 	return 'tauri';
 }
 
-export const localUrlPattern =
-	/^https?:\/\/((localhost|127\.0\.0\.1|\[::1\]|::1)(:\d+)?)/i;
+export const localUrlPattern = /^https?:\/\/((localhost|127\.0\.0\.1|\[::1\]|::1)(:\d+)?)/i;

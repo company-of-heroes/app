@@ -20,6 +20,7 @@ export function liveLobbyToMatch(record: LiveLobbyRecord): Match {
 	if (record.matchType != null) {
 		instance.logMatchType = record.matchType;
 	}
+
 	return instance.toJSON();
 }
 
@@ -33,7 +34,10 @@ export function toPersistablePlayers(players: LobbyPlayer[]): LobbyPlayer[] {
 }
 
 function resolveMe(players: LobbyPlayer[], steamIds?: string[] | null): LobbyPlayer | undefined {
-	if (!steamIds?.length) return undefined;
+	if (!steamIds?.length) {
+		return undefined;
+	}
+
 	return players.find((player) => player.steamId && steamIds.includes(player.steamId));
 }
 

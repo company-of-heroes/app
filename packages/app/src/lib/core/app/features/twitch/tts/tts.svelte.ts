@@ -1,6 +1,5 @@
-import type { ChatMessage } from '@twurple/chat';
 import { Feature } from '$features/feature.svelte';
-import { twitch } from '$features/twitch';
+import { streamChat, type StreamChatMessage, type StreamPlatform } from '$features/streaming/chat';
 import { watch } from 'runed';
 import { stripEmotes } from '$lib/utils';
 import { t } from '$lib/i18n';
@@ -20,12 +19,13 @@ export type TTSSettings = {
 };
 
 export type TTSEvents = {
-	speak: { message: string; user: string; voiceId?: string };
+	speak: { message: string; user: string; platform?: StreamPlatform; voiceId?: string };
 };
 
 export interface TTSOptions {
 	message: string;
 	user?: string;
+	platform?: StreamPlatform;
 	voiceId?: string;
 }
 
@@ -56,24 +56,11 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 	private readonly audioContext = new AudioContext();
 
 	public async enable() {
+		this.chatMessageSubscription?.();
+		this.chatMessageSubscription = streamChat.on('message', this.handleMessage.bind(this));
+		this.startPlayback();
+
 		this.disposeWatchers = $effect.root(() => {
-			watch(
-				() => twitch.chatClient,
-				() => {
-					// Always drop the previous subscription so chat messages are
-					// never spoken twice after a reconnect.
-					this.chatMessageSubscription?.();
-					this.chatMessageSubscription = null;
-
-					if (!twitch.chatClient) {
-						return;
-					}
-
-					this.chatMessageSubscription = twitch.on('chat-message', this.handleMessage.bind(this));
-					this.startPlayback();
-				}
-			);
-
 			watch(
 				() => [this.settings.provider, this.provider.defaultVoiceId],
 				() => {
@@ -83,27 +70,23 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 		});
 	}
 
-	private async handleMessage(data: {
-		channel: string;
-		user: string;
-		message: string;
-		msg: ChatMessage;
-	}) {
+	private async handleMessage(data: StreamChatMessage) {
+		const speaker = data.platform === 'twitch' ? data.user : data.displayName;
 		if (data.message.startsWith('!')) {
-			this.handleCommand(data.user, data.message);
+			this.handleCommand(speaker, data.message);
 			return;
 		}
 
-		if (data.user.includes('bot')) {
+		if (speaker.toLowerCase().includes('bot')) {
 			return;
 		}
 
-		let format = this.settings.messageFormat || '{message}';
-		const alias = this.getAliasedUser(data.user);
+		const format = this.settings.messageFormat || '{message}';
+		const alias = this.getAliasedUser(speaker);
 		let message = format
 			.replace(/\{(username|user)\}/g, alias)
 			.replace(/\{(message|msg)\}/g, data.message)
-			.replace(data.msg.userInfo.isSubscriber ? '' : /\[.*?\]/g, '')
+			.replace(data.isSubscriber ? '' : /\[.*?\]/g, '')
 			.replace(/https?:\/\/\S+/g, '');
 
 		const shouldAnnounce =
@@ -119,6 +102,7 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 		const speakOptions = {
 			message,
 			user: data.user,
+			platform: data.platform,
 			voiceId: this.settings.voiceId || undefined
 		} satisfies TTSOptions;
 
@@ -202,10 +186,14 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 	}
 
 	private async playNext(): Promise<void> {
-		if (this.isPlaying || this.queue.length === 0) return;
+		if (this.isPlaying || this.queue.length === 0) {
+			return;
+		}
 
 		const audio = this.queue.shift();
-		if (!audio) return;
+		if (!audio) {
+			return;
+		}
 
 		this.isPlaying = true;
 
@@ -237,6 +225,7 @@ export class TTS extends Feature<TTSSettings, TTSEvents> {
 			if (!this.isPlaying && this.queue.length > 0) {
 				await this.playNext();
 			}
+
 			this.playIntervalId = window.setTimeout(checkQueue, 250);
 		};
 		checkQueue();

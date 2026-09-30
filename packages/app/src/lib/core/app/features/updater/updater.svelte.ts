@@ -79,6 +79,7 @@ export class Updater extends Feature<UpdaterSettings> {
 			if (this.hasUpdate) {
 				app.toast.error(t('Failed to download update.'));
 			}
+
 			this.hasUpdate = false;
 		}
 	}

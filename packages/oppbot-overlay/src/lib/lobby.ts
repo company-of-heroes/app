@@ -11,7 +11,9 @@ export function getRaceImage(race: number): string {
 
 export function getRankImage(type: number, player: Player): string {
 	const stat = getLeaderboardStat(type, player);
-	if (!stat || stat.ranklevel < 1) return './images/ranks/no_rank_yet.png';
+	if (!stat || stat.ranklevel < 1) {
+		return './images/ranks/no_rank_yet.png';
+	}
 
 	const prefix = getRacePrefix(player.race);
 	return `./images/ranks/${prefix}_${stat.ranklevel.toString().padStart(2, '0')}.png`;
@@ -23,17 +25,26 @@ export function getFlagImage(country: string): string {
 
 export function formatRankLevel(type: number, player: Player): string {
 	const stat = getLeaderboardStat(type, player);
-	if (!stat || stat.ranklevel < 1) return '—';
+	if (!stat || stat.ranklevel < 1) {
+		return '—';
+	}
+
 	return String(stat.ranklevel);
 }
 
 export function formatRanking(ranking: number | undefined): string {
-	if (!ranking || ranking < 1) return '—';
+	if (!ranking || ranking < 1) {
+		return '—';
+	}
+
 	return `#${ranking.toLocaleString()}`;
 }
 
 export function formatElo(value: number | null): string {
-	if (typeof value !== 'number' || value < 1) return 'NA';
+	if (typeof value !== 'number' || value < 1) {
+		return 'NA';
+	}
+
 	return value.toLocaleString();
 }
 
@@ -42,8 +53,14 @@ function lerp(min: number, max: number, t: number): number {
 }
 
 function eloBandProgress(elo: number, min: number, max: number): number {
-	if (elo <= min) return 0;
-	if (elo >= max) return 1;
+	if (elo <= min) {
+		return 0;
+	}
+
+	if (elo >= max) {
+		return 1;
+	}
+
 	return (elo - min) / (max - min);
 }
 
@@ -57,7 +74,9 @@ function lerpOklch(
 
 /** Low = blue, mid = green, pro = gold, elite (2400+) = luminous gold. */
 export function getEloColor(elo: number | null | undefined): string {
-	if (typeof elo !== 'number' || elo < 1) return 'var(--ink-dim)';
+	if (typeof elo !== 'number' || elo < 1) {
+		return 'var(--ink-dim)';
+	}
 
 	if (elo < 1500) {
 		return lerpOklch(
@@ -99,7 +118,9 @@ export function isEliteElo(elo: number | null | undefined): boolean {
 }
 
 export function getEloTextShadow(elo: number | null | undefined): string | undefined {
-	if (!isPremiumElo(elo)) return undefined;
+	if (!isPremiumElo(elo)) {
+		return undefined;
+	}
 
 	const color = getEloColor(elo);
 	const brandGold = 'oklch(0.88 0.11 80)';
@@ -141,21 +162,36 @@ export function getCombatRecord(type: number, player: Player): CombatRecord {
 }
 
 export function formatStreak(streak: number): string | null {
-	if (!streak) return null;
+	if (!streak) {
+		return null;
+	}
+
 	return streak > 0 ? `+${streak}` : `${streak}`;
 }
 
 export function getPlayerDisplayName(player: Player): string {
 	const alias = player.profile?.alias?.trim();
-	if (alias) return alias;
+	if (alias) {
+		return alias;
+	}
+
 	const name = player.name?.trim();
-	if (name) return name;
-	if (player.playerId === -1) return 'CPU';
+	if (name) {
+		return name;
+	}
+
+	if (player.playerId === -1) {
+		return 'CPU';
+	}
+
 	return `Player ${(player.index ?? 0) + 1}`;
 }
 
 export function getPlayerCount(data: LobbyData): number {
-	if (data.players?.length) return data.players.length;
+	if (data.players?.length) {
+		return data.players.length;
+	}
+
 	return data.teams?.reduce((sum, team) => sum + (team.players?.length ?? 0), 0) ?? 0;
 }
 

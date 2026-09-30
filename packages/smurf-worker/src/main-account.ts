@@ -34,9 +34,17 @@ function normalizeAlias(alias: string): string {
 }
 
 function levenshtein(a: string, b: string): number {
-	if (a === b) return 0;
-	if (a.length === 0) return b.length;
-	if (b.length === 0) return a.length;
+	if (a === b) {
+		return 0;
+	}
+
+	if (a.length === 0) {
+		return b.length;
+	}
+
+	if (b.length === 0) {
+		return a.length;
+	}
 
 	let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
 
@@ -54,7 +62,10 @@ function levenshtein(a: string, b: string): number {
 	return previous[b.length];
 }
 
-export function aliasSimilarity(a: string | null | undefined, b: string | null | undefined): number {
+export function aliasSimilarity(
+	a: string | null | undefined,
+	b: string | null | undefined
+): number {
 	if (!a || !b) {
 		return 0;
 	}

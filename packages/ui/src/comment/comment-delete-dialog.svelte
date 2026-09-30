@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Dialog } from 'bits-ui';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { Textarea } from '@company-of-heroes/ui/input';
@@ -19,25 +20,21 @@
 		requireNote?: boolean;
 		title?: string;
 		description?: string;
-		noteLabel?: string;
 		notePlaceholder?: string;
 		confirmLabel?: string;
-		cancelLabel?: string;
-		closeLabel?: string;
 		onconfirm: (note: string) => void | Promise<void>;
 		oncancel?: () => void;
 	};
+
+	const { t } = useI18n();
 
 	let {
 		open = $bindable(false),
 		requireNote = false,
 		title = 'Delete comment',
 		description = 'This comment will be hidden from other users.',
-		noteLabel = 'Reason',
 		notePlaceholder = 'Why is this comment being deleted?',
 		confirmLabel = 'Save',
-		cancelLabel = 'Cancel',
-		closeLabel = 'Close',
 		onconfirm,
 		oncancel
 	}: Props = $props();
@@ -87,7 +84,7 @@
 	}
 </script>
 
-<Dialog.Root {open} onOpenChange={onOpenChange}>
+<Dialog.Root {open} {onOpenChange}>
 	<Dialog.Portal>
 		<Dialog.Overlay
 			class={cn(
@@ -116,7 +113,7 @@
 					</div>
 					<Dialog.Close
 						class="bg-secondary-800 hover:bg-secondary-700 cursor-pointer rounded-md p-1 transition outline-none"
-						aria-label={closeLabel}
+						aria-label={t('Close')}
 					>
 						<CloseIcon size={20} />
 					</Dialog.Close>
@@ -131,7 +128,7 @@
 			>
 				{#if requireNote}
 					<div class="flex flex-col gap-2">
-						<Label for="comment-delete-note">{noteLabel}</Label>
+						<Label for="comment-delete-note">{t('Reason')}</Label>
 						<Textarea
 							id="comment-delete-note"
 							bind:value={note}
@@ -145,14 +142,9 @@
 				{/if}
 				<div class="flex justify-end gap-2">
 					<Button type="button" variant="secondary" onclick={cancel} disabled={submitting}>
-						{cancelLabel}
+						{t('Cancel')}
 					</Button>
-					<Button
-						type="submit"
-						variant="destructive"
-						disabled={!canConfirm}
-						loading={submitting}
-					>
+					<Button type="submit" variant="destructive" disabled={!canConfirm} loading={submitting}>
 						{confirmLabel}
 					</Button>
 				</div>

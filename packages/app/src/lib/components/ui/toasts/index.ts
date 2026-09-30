@@ -1,2 +1,1 @@
-export { toast } from 'svelte-sonner';
-export { default as Toaster } from './toaster.svelte';
+export * from '@company-of-heroes/ui/toasts';

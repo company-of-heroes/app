@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { communityPlayerHref, displayMapName, replayDetailHref } from './links';
+	import { useHost } from '../host/host.context';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import MapImage from '../ui/map-image.svelte';
 	import { Badge } from '../ui/badge';
 	import { cn } from '@company-of-heroes/ui/cn';
@@ -27,29 +30,12 @@
 		sort: HistorySortField;
 		sortDir: HistorySortDir;
 		onSort: (field: HistorySortField) => void;
-		replayHref: (matchId: string) => string;
-		playerHref: (player: CommunityPlayer) => string | null;
-		resolveMapSrc: (map: string | undefined) => string | undefined;
-		resolveFallbackSrc?: () => string | undefined;
-		resolveFactionFlag: (race: number) => string;
-		getRankImage?: (race: number, rankLevel: number) => string;
-		formatMapName: (map: string) => string;
 		emptyMessage?: string;
-		locale?: string;
 		mapLabel?: string;
-		typeLabel?: string;
-		alliesLabel?: string;
-		axisLabel?: string;
-		durationLabel?: string;
-		likesLabel?: string;
-		commentsLabel?: string;
-		downloadsLabel?: string;
-		dateLabel?: string;
-		sortByLabel?: string;
-		deletedLabel?: string;
-		proLabel?: string;
-		proTooltipLabel?: (elo: number) => string;
 	};
+
+	const { t } = useI18n();
+	const host = useHost();
 
 	let {
 		matches,
@@ -58,29 +44,14 @@
 		sort: _sort,
 		sortDir: _sortDir,
 		onSort: _onSort,
-		replayHref,
-		playerHref,
-		resolveMapSrc,
-		resolveFallbackSrc,
-		resolveFactionFlag,
-		getRankImage,
-		formatMapName,
-		emptyMessage = 'No community replays found.',
-		locale,
-		mapLabel = 'Map',
-		typeLabel = 'Type',
-		alliesLabel = 'Allies',
-		axisLabel = 'Axis',
-		durationLabel = 'Duration',
-		likesLabel: _likesLabel = 'Likes',
-		commentsLabel: _commentsLabel = 'Comments',
-		downloadsLabel: _downloadsLabel = 'Downloads',
-		dateLabel = 'Date',
-		sortByLabel: _sortByLabel = 'Sort by {label}',
-		deletedLabel = 'Deleted',
-		proLabel = 'Pro',
-		proTooltipLabel
+		emptyMessage = t('No community replays found.'),
+		mapLabel = t('Map')
 	}: Props = $props();
+
+	const replayHref = (match: CommunityMatch) => replayDetailHref(match, host.routes);
+	const playerHref = (player: CommunityPlayer) => communityPlayerHref(player, host.routes);
+	const formatMapName = (map: string) => displayMapName(map, host);
+	const proTooltipLabel = (elo: number) => t('Pro gameplay · avg {elo} ELO', { elo });
 
 	function rowLabel(match: CommunityMatch) {
 		if (match.kind === 'member') {
@@ -105,8 +76,6 @@
 			stats: player.stats,
 			href: playerHref(player)
 		}))}
-		{resolveFactionFlag}
-		{getRankImage}
 		{meSteamIds}
 		{highlightedPlayers}
 		outcome={teamOutcome(match, team)}
@@ -147,12 +116,12 @@
 			<thead class="border-secondary-800 border-b">
 				<tr class="{tableHeadRow} text-left">
 					<th class="w-full px-4 py-2">{mapLabel}</th>
-					<th class="px-4 py-2 whitespace-nowrap">{typeLabel}</th>
-					<th class="px-2 py-2 whitespace-nowrap">{alliesLabel}</th>
-					<th class="px-2 py-2 whitespace-nowrap">{axisLabel}</th>
-					<th class="px-4 py-2 whitespace-nowrap">{durationLabel}</th>
+					<th class="px-4 py-2 whitespace-nowrap">{t('Type')}</th>
+					<th class="px-2 py-2 whitespace-nowrap">{t('Allies')}</th>
+					<th class="px-2 py-2 whitespace-nowrap">{t('Axis')}</th>
+					<th class="px-4 py-2 whitespace-nowrap">{t('Duration')}</th>
 					<th class="px-4 py-2 whitespace-nowrap"></th>
-					<th class="px-4 py-2 text-end whitespace-nowrap">{dateLabel}</th>
+					<th class="px-4 py-2 text-end whitespace-nowrap">{t('Date')}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -165,13 +134,13 @@
 					>
 						<td class="w-full overflow-clip py-0 pr-0 pl-4">
 							<a
-								href={replayHref(match.id)}
+								href={replayHref(match)}
 								class={cn(interactive, 'flex h-11 min-w-0 items-center gap-0')}
 							>
 								<MapImage
 									map={match.map}
-									{resolveMapSrc}
-									{resolveFallbackSrc}
+									resolveMapSrc={host.resolve.mapSrc}
+									resolveFallbackSrc={host.resolve.mapFallbackSrc}
 									alt={formatMapName(match.map)}
 									small
 									flush
@@ -181,9 +150,9 @@
 									{#if match.isRanked}
 										<RankingIcon class="text-primary-100 shrink-0" weight="duotone" />
 									{/if}
-									<ReplayProBadge {match} label={proLabel} tooltipLabel={proTooltipLabel} />
+									<ReplayProBadge {match} label={t('Pro')} tooltipLabel={proTooltipLabel} />
 									{#if match.visibility === 'deleted'}
-										<Badge variant="warning" class="shrink-0">{deletedLabel}</Badge>
+										<Badge variant="warning" class="shrink-0">{t('Deleted')}</Badge>
 									{/if}
 								</div>
 							</a>
@@ -198,7 +167,7 @@
 							{@render teamFlags(match, 'axis')}
 						</td>
 						<td class="text-secondary-400 px-4 py-0 whitespace-nowrap tabular-nums">
-							<a href={replayHref(match.id)} class={cn(interactive, 'hover:text-white')}>
+							<a href={replayHref(match)} class={cn(interactive, 'hover:text-white')}>
 								{formatDurationSeconds(matchDurationSeconds(match))}
 							</a>
 						</td>
@@ -206,7 +175,7 @@
 						<td
 							class="text-secondary-400 px-4 py-0 text-end text-sm whitespace-nowrap tabular-nums"
 						>
-							{formatMatchDate(match.createdAt, locale)}
+							{formatMatchDate(match.createdAt, host.locale())}
 						</td>
 					</tr>
 				{/each}
@@ -217,11 +186,11 @@
 	<div class="divide-secondary-800 divide-y md:hidden">
 		{#each matches as match (match.id)}
 			<div class={cn('px-4 py-3 text-white', match.visibility === 'deleted' && 'opacity-50')}>
-				<a href={replayHref(match.id)} class={cn(interactive, 'flex min-w-0 items-center gap-0')}>
+				<a href={replayHref(match)} class={cn(interactive, 'flex min-w-0 items-center gap-0')}>
 					<MapImage
 						map={match.map}
-						{resolveMapSrc}
-						{resolveFallbackSrc}
+						resolveMapSrc={host.resolve.mapSrc}
+						resolveFallbackSrc={host.resolve.mapFallbackSrc}
 						alt={formatMapName(match.map)}
 						small
 						flush
@@ -231,9 +200,9 @@
 						{#if match.isRanked}
 							<RankingIcon class="text-primary-100 shrink-0" weight="duotone" />
 						{/if}
-						<ReplayProBadge {match} label={proLabel} tooltipLabel={proTooltipLabel} />
+						<ReplayProBadge {match} label={t('Pro')} tooltipLabel={proTooltipLabel} />
 						{#if match.visibility === 'deleted'}
-							<Badge variant="warning" class="shrink-0">{deletedLabel}</Badge>
+							<Badge variant="warning" class="shrink-0">{t('Deleted')}</Badge>
 						{/if}
 					</div>
 				</a>
@@ -245,10 +214,10 @@
 					class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tabular-nums"
 				>
 					<span>{matchModeLabel(match)}</span>
-					<a href={replayHref(match.id)} class={cn(interactive, 'hover:text-white')}>
+					<a href={replayHref(match)} class={cn(interactive, 'hover:text-white')}>
 						{formatDurationSeconds(matchDurationSeconds(match))}
 					</a>
-					<span>{formatMatchDate(match.createdAt, locale)}</span>
+					<span>{formatMatchDate(match.createdAt, host.locale())}</span>
 				</div>
 				<div class="text-secondary-400 mt-1.5 flex items-center gap-3 text-sm tabular-nums">
 					<span

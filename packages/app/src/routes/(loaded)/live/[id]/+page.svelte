@@ -30,7 +30,10 @@
 	);
 
 	const match = $derived.by(() => {
-		if (!lobby.current) return null;
+		if (!lobby.current) {
+			return null;
+		}
+
 		return liveLobbyToLobbyData(toLobbyRecord(lobby.current));
 	});
 
@@ -150,7 +153,7 @@
 
 {#if lobby.error}
 	<div class="border-secondary-800 border-b px-4 py-6">
-		<p class="text-red-400 text-sm">
+		<p class="text-sm text-red-400">
 			{isNotFound
 				? t('This live match is no longer available.')
 				: t('Could not load this live match.')}

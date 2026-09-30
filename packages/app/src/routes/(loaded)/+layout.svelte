@@ -24,7 +24,7 @@
 	import DashboardIcon from 'phosphor-svelte/lib/SquaresFourIcon';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
 	import UsersIcon from 'phosphor-svelte/lib/UsersIcon';
-	import TwitchIcon from 'phosphor-svelte/lib/TwitchLogoIcon';
+	import BroadcastIcon from 'phosphor-svelte/lib/BroadcastIcon';
 	import Logo from '$lib/files/logo-transparent-bg.png?url';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
 	import SettingsIcon from 'phosphor-svelte/lib/GearSixIcon';
@@ -37,7 +37,7 @@
 	import NotificationBell from '$lib/components/notifications/notification-bell.svelte';
 	import HeaderSteamPlayers from '$lib/components/layout/header-steam-players.svelte';
 	import * as User from '$lib/components/user';
-	import PlayerPreviewBoot from '$lib/components/player/player-preview-boot.svelte';
+	import { provideAppHost } from '$lib/host';
 	import { useI18n } from '$lib/i18n';
 
 	import '$lib/fonts/TT Mussels/style.css';
@@ -72,6 +72,7 @@
 	);
 
 	createApp(app);
+	provideAppHost();
 	createBreadcrumbs();
 
 	const breadcrumbs = useBreadcrumbs();
@@ -127,8 +128,7 @@
 
 <svelte:boundary>
 	{#snippet pending()}{/snippet}
-	<PlayerPreviewBoot>
-		<div class="flex h-screen w-screen overflow-hidden">
+	<div class="flex h-screen w-screen overflow-hidden">
 		<div
 			class="border-secondary-800 bg-secondary-950 flex min-w-[300px] flex-col gap-8 border-r text-white"
 		>
@@ -158,9 +158,9 @@
 					<UsersIcon size={28} weight="duotone" />
 					{t('Players')}
 				</Nav.Link>
-				<Nav.Link href="/twitch">
-					<TwitchIcon size={28} weight="duotone" />
-					{t('Twitch')}
+				<Nav.Link href="/streaming">
+					<BroadcastIcon size={28} weight="duotone" />
+					{t('Streaming')}
 				</Nav.Link>
 				<Nav.Link href="/settings">
 					<SettingsIcon size={28} weight="duotone" />
@@ -253,11 +253,7 @@
 		</div>
 		<div class="relative flex min-w-0 grow flex-col">
 			<div aria-hidden="true" class="pointer-events-none absolute inset-0">
-				<img
-					src={pageBackgroundImage}
-					alt=""
-					class="size-full object-cover"
-				/>
+				<img src={pageBackgroundImage} alt="" class="size-full object-cover" />
 				<div class="absolute inset-0 bg-gray-950/95 mix-blend-color"></div>
 				<div class="absolute inset-0 bg-gray-950/85"></div>
 			</div>
@@ -297,7 +293,6 @@
 			</main>
 		</div>
 	</div>
-	</PlayerPreviewBoot>
 </svelte:boundary>
 
 <Dialog />

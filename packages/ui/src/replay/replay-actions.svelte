@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
+	import { useI18n } from '@company-of-heroes/i18n';
+	import { useHost } from '../host/host.context';
+	import { countedActions, raceFromReplayFaction } from './replay-stats';
 	import type { ReplayAction, ReplayData } from './types';
 	import { Axis, ChartClipPath, Highlight, Layer, LineChart, Points, Tooltip } from 'layerchart';
 
 	type Props = {
 		replay: ReplayData;
-		countedActions: (replay: ReplayData, playerId: number | null) => ReplayAction[];
-		resolveFactionFlag: (raceId: number) => string;
-		raceFromReplayFaction: (faction: string) => number;
 	};
 
-	let { replay, countedActions, resolveFactionFlag, raceFromReplayFaction }: Props = $props();
+	let { replay }: Props = $props();
+	const host = useHost();
+	const { t } = useI18n();
 
 	let selectedPlayerId = $state<number | null>(null);
 	let visiblePlayerIds = $state<number[]>([]);
@@ -21,8 +23,14 @@
 	const excludedUnitCommands = new Set([0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xa8]);
 
 	function isChartAction(action: ReplayAction): boolean {
-		if (!action.command?.description) return false;
-		if (action.command.type === 'AI_TAKEOVER') return false;
+		if (!action.command?.description) {
+			return false;
+		}
+
+		if (action.command.type === 'AI_TAKEOVER') {
+			return false;
+		}
+
 		if (
 			action.commandID === 0x37 &&
 			action.objectID != null &&
@@ -30,6 +38,7 @@
 		) {
 			return false;
 		}
+
 		return true;
 	}
 
@@ -38,7 +47,10 @@
 		const out: ReplayAction[] = [];
 		for (const action of actions) {
 			const key = `${action.tick}|${action.commandID ?? 0}|${action.objectID ?? 0}`;
-			if (seen.has(key)) continue;
+			if (seen.has(key)) {
+				continue;
+			}
+
 			seen.add(key);
 			out.push(action);
 		}
@@ -46,7 +58,10 @@
 	}
 
 	const playerActions = $derived.by(() => {
-		if (selected == null) return [];
+		if (selected == null) {
+			return [];
+		}
+
 		return dedupeActions(countedActions(replay, selected).filter(isChartAction));
 	});
 
@@ -55,7 +70,10 @@
 		for (const action of playerActions) {
 			const type = action.command?.type || 'OTHER';
 			const name = action.command?.name || action.command?.description || type;
-			if (!byType.has(type)) byType.set(type, new Map());
+			if (!byType.has(type)) {
+				byType.set(type, new Map());
+			}
+
 			const names = byType.get(type)!;
 			const current = names.get(name);
 			names.set(name, { name, count: (current?.count ?? 0) + 1 });
@@ -92,11 +110,15 @@
 			) {
 				continue;
 			}
+
 			const actions = dedupeActions(countedActions(replay, player.id).filter(isChartAction));
 			const perSecond = new Map<number, number>();
 			for (const action of actions) {
 				const second = Math.floor(action.tick / 8);
-				if (second < 0 || second > endSecond) continue;
+				if (second < 0 || second > endSecond) {
+					continue;
+				}
+
 				const value = (perSecond.get(second) ?? 0) + 1;
 				perSecond.set(second, value);
 				result.push({ player, second, value, action });
@@ -137,7 +159,10 @@
 		const target = event.currentTarget as HTMLElement;
 		const rect = target.getBoundingClientRect();
 		const plotWidth = rect.width - chartPadding.left - chartPadding.right;
-		if (plotWidth <= 0) return;
+		if (plotWidth <= 0) {
+			return;
+		}
+
 		const ratio = Math.min(
 			1,
 			Math.max(0, (event.clientX - rect.left - chartPadding.left) / plotWidth)
@@ -151,14 +176,17 @@
 			nextStart = 0;
 			nextEnd = nextSpan;
 		}
+
 		if (nextEnd > endSecond) {
 			nextEnd = endSecond;
 			nextStart = Math.max(0, endSecond - nextSpan);
 		}
+
 		if (nextStart <= 0 && nextEnd >= endSecond) {
 			resetZoom();
 			return;
 		}
+
 		zoomedStart = nextStart;
 		zoomedEnd = nextEnd;
 	}
@@ -185,18 +213,35 @@
 
 	function commandColor(action: ReplayAction) {
 		const type = action.command?.type;
-		if (type === 'MOVE_COMMAND') return 'text-blue-400';
-		if (type === 'BUILDING') return 'text-green-200';
-		if (type === 'UNIT') return 'text-green-400';
-		if (type === 'DOCTRINAL') return 'text-primary-200';
-		if (type === 'AI_TAKEOVER') return 'text-red-400';
+		if (type === 'MOVE_COMMAND') {
+			return 'text-blue-400';
+		}
+
+		if (type === 'BUILDING') {
+			return 'text-green-200';
+		}
+
+		if (type === 'UNIT') {
+			return 'text-green-400';
+		}
+
+		if (type === 'DOCTRINAL') {
+			return 'text-primary-200';
+		}
+
+		if (type === 'AI_TAKEOVER') {
+			return 'text-red-400';
+		}
+
 		return 'text-secondary-200';
 	}
 </script>
 
 <section>
 	<div class="border-secondary-800 flex flex-col gap-3 border-b px-4 py-3">
-		<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">Actions per second</p>
+		<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">
+			Actions per second
+		</p>
 		<div class="flex flex-wrap gap-x-4 gap-y-2">
 			{#each replay.players as player, i (`${player.id ?? player.name}-${i}`)}
 				<label class={cn(interactive, 'text-secondary-300 flex items-center gap-2 text-sm')}>
@@ -206,7 +251,10 @@
 						checked={player.id != null && visiblePlayerIds.includes(player.id)}
 						onchange={() => {
 							const id = player.id;
-							if (id == null) return;
+							if (id == null) {
+								return;
+							}
+
 							if (visiblePlayerIds.includes(id)) {
 								visiblePlayerIds = visiblePlayerIds.filter((value) => id !== value);
 							} else {
@@ -248,8 +296,7 @@
 						/>
 						<ChartClipPath>
 							{#each series as s, i (`${s.key ?? s.label}-${i}`)}
-								{@const active =
-									s.key === context.tooltip.data?.player?.id || s.key === selected}
+								{@const active = s.key === context.tooltip.data?.player?.id || s.key === selected}
 								<g class={cn(!active && 'opacity-20 saturate-0')}>
 									<Points data={s.dots} y="value" r={2} strokeWidth={0} class={s.color} />
 								</g>
@@ -275,9 +322,11 @@
 
 <section>
 	<div class="border-secondary-800 border-b px-4 py-2.5">
-		<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">Actions over time</p>
+		<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">
+			Actions over time
+		</p>
 	</div>
-	<div class="grid min-h-0 items-stretch grid-cols-1 md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
+	<div class="grid min-h-0 grid-cols-1 items-stretch md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
 		<nav
 			class="border-secondary-800 divide-secondary-800 divide-y md:border-r"
 			aria-label="Select player"
@@ -296,7 +345,7 @@
 					onclick={() => (selectedPlayerId = player.id ?? null)}
 				>
 					<img
-						src={resolveFactionFlag(raceFromReplayFaction(player.faction))}
+						src={host.resolve.factionFlagByRace(raceFromReplayFaction(player.faction))}
 						alt=""
 						class="h-3.5 shrink-0"
 					/>
@@ -311,7 +360,7 @@
 				{#each ACTION_GROUPS as group (group.type)}
 					<div class={group.color}>
 						<p class="text-secondary-400 mb-2 text-xs font-semibold tracking-wide uppercase">
-							{group.title}
+							{t(group.title)}
 						</p>
 						{#each typeItems(group.type) as item, itemIndex (`${group.type}-${item.name}-${itemIndex}`)}
 							<div
@@ -331,7 +380,7 @@
 					</div>
 				{/each}
 			</div>
-			<div class="bg-secondary-950/50 max-h-[32rem] flex min-h-0 flex-col overflow-auto">
+			<div class="bg-secondary-950/50 flex max-h-[32rem] min-h-0 flex-col overflow-auto">
 				{#each playerActions as action, index (index)}
 					<div
 						class="border-secondary-800 grid grid-cols-[4rem_minmax(0,auto)_1fr] items-start gap-x-3 border-b px-4 py-2 last:border-b-0"

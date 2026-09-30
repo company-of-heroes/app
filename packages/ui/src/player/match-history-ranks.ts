@@ -1,7 +1,4 @@
-import {
-	leaderboardIdForMatchRace,
-	type LeaderboardStatLike
-} from '../live-lobby/stats';
+import { leaderboardIdForMatchRace, type LeaderboardStatLike } from '../live-lobby/stats';
 import type { MatchHistoryPlayer, TransformedMatch } from './types';
 
 function toFiniteNumber(value: unknown): number | null {
@@ -12,8 +9,7 @@ function toFiniteNumber(value: unknown): number | null {
 /** Ranked automatch (1–4) or skirmish (14); Basic Match (0) has no rank badges. */
 export function isRankedMatchType(matchTypeId: number): boolean {
 	return (
-		(Number.isInteger(matchTypeId) && matchTypeId >= 1 && matchTypeId <= 4) ||
-		matchTypeId === 14
+		(Number.isInteger(matchTypeId) && matchTypeId >= 1 && matchTypeId <= 4) || matchTypeId === 14
 	);
 }
 

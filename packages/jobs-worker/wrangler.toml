@@ -1,0 +1,17 @@
+# Scheduler only: on each cron tick it asks the website to run its jobs
+# (POST /api/internal/jobs/{name}). All job logic lives in the website services.
+# Secret: SERVICE_TOKEN (same value as the website's).
+name = "coh1stats-jobs-worker"
+main = "src/index.ts"
+compatibility_date = "2025-07-10"
+
+[triggers]
+crons = ["* * * * *"]
+
+[[services]]
+binding = "WEBSITE"
+service = "coh1stats-website"
+
+[observability.logs]
+enabled = true
+invocation_logs = true

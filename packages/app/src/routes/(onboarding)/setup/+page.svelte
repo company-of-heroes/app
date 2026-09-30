@@ -90,6 +90,7 @@
 					settings.tree.app.companyOfHeroesConfigPath = log;
 				}
 			}
+
 			if (game) {
 				expectedGameDir = game;
 				const current = settings.tree.app.companyOfHeroesInstallationPath;
@@ -113,6 +114,7 @@
 			if (!(await exists(candidate))) {
 				continue;
 			}
+
 			try {
 				await revealItemInDir(candidate);
 				return;
@@ -133,6 +135,7 @@
 		if (!candidate) {
 			return;
 		}
+
 		isRestoring = true;
 		try {
 			const result = await settings.replace(candidate.settings);
@@ -140,6 +143,7 @@
 				toast.error(t('Could not restore backup: {message}', { message: result.error }));
 				return;
 			}
+
 			didDismissRestore = true;
 			toast.success(t('Backup restored. Your account and settings are back.'));
 		} finally {
@@ -201,7 +205,10 @@
 			<Form.Root
 				onsubmit={(event) => {
 					event.preventDefault();
-					if (!canFinish || isFinishing) return;
+					if (!canFinish || isFinishing) {
+						return;
+					}
+
 					void finish();
 				}}
 			>
@@ -221,7 +228,7 @@
 						{#if expectedLogPath}
 							<p class="mt-2">
 								<span class="text-secondary-500">{t('Default location')}</span>
-								<code class="text-secondary-200 mt-0.5 block select-text break-all">
+								<code class="text-secondary-200 mt-0.5 block break-all select-text">
 									{expectedLogPath}
 								</code>
 							</p>
@@ -289,7 +296,7 @@
 						{#if expectedGameDir}
 							<p class="mt-2">
 								<span class="text-secondary-500">{t('Default location')}</span>
-								<code class="text-secondary-200 mt-0.5 block select-text break-all">
+								<code class="text-secondary-200 mt-0.5 block break-all select-text">
 									{expectedGameDir}
 								</code>
 							</p>
@@ -332,19 +339,14 @@
 							size="sm"
 							type="button"
 							onclick={() =>
-								revealPath(
-									settings.tree.app.companyOfHeroesInstallationPath,
-									expectedGameDir
-								)}
+								revealPath(settings.tree.app.companyOfHeroesInstallationPath, expectedGameDir)}
 						>
 							<ArrowSquareOutIcon size={16} />
 							{t('Show in Explorer')}
 						</Button>
 					{/snippet}
 				</Form.Group>
-				<div
-					class="border-secondary-800 flex items-center justify-end gap-3 border-t px-4 py-3"
-				>
+				<div class="border-secondary-800 flex items-center justify-end gap-3 border-t px-4 py-3">
 					{#if !canFinish}
 						<span class="text-secondary-500 mr-auto text-sm">
 							{t('Both paths must be valid before you can continue.')}

@@ -27,8 +27,7 @@ export function toPlayerSmurf(smurf: SmurfAlertState | null | undefined): Player
 	return {
 		lenderSteamId: smurf.lenderSteamId,
 		lenderProfileId: smurf.lenderProfile?.profile_id ?? null,
-		lenderAlias:
-			smurf.lenderProfile?.alias ?? smurf.lenderSteam?.personaname ?? 'Original account',
+		lenderAlias: smurf.lenderProfile?.alias ?? smurf.lenderSteam?.personaname ?? 'Original account',
 		lenderAvatarUrl: smurf.lenderSteam?.avatarfull ?? null
 	};
 }

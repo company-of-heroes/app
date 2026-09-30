@@ -12,9 +12,7 @@
 	} from '@company-of-heroes/ui/replay';
 	import { api, unwrapApi } from '$core/api';
 	import { app } from '$core/app/context';
-	import type { CommunityMatch, CommunityPlayer, HistorySortField } from '@company-of-heroes/api';
-	import { getDefaultMapImage, getMapImageFromName, getString } from '$lib/utils/game';
-	import { getFactionFlagFromRace, getRankImage } from '$lib/utils';
+	import type { CommunityMatch, HistorySortField } from '@company-of-heroes/api';
 	import { getMeSteamIds } from '$lib/utils/player-me';
 	import { useI18n } from '$lib/i18n';
 	import FunnelSimpleIcon from 'phosphor-svelte/lib/FunnelSimpleIcon';
@@ -119,15 +117,6 @@
 		apply({ sort: field, sortDir: 'desc' });
 	}
 
-	function playerHref(player: CommunityPlayer): string | null {
-		const id = player.profile?.profile_id;
-		if (id != null && id > 0) {
-			return `/players/${id}`;
-		}
-
-		return player.steamId ? `/players/${player.steamId}` : null;
-	}
-
 	async function searchPlayers(q: string) {
 		const items = await app.database.matches.searchHistoryPlayers('community', q);
 		return items.map((player) => ({
@@ -175,12 +164,6 @@
 			sort={query.sort}
 			sortDir={query.sortDir}
 			onChange={({ sort, sortDir }) => apply({ sort, sortDir })}
-			dateLabel={t('Date')}
-			likesLabel={t('Likes')}
-			downloadsLabel={t('Downloads')}
-			commentsLabel={t('Comments')}
-			ascendingLabel={t('Ascending')}
-			descendingLabel={t('Descending')}
 		/>
 		<Button variant="secondary" size="sm" onclick={() => (filtersOpen = true)}>
 			<span class="relative inline-flex">
@@ -198,14 +181,7 @@
 
 	<div class="min-w-0 flex-1 overflow-auto">
 		{#if loading && items.length === 0}
-			<ReplayListSkeleton
-				mapLabel={t('Title')}
-				typeLabel={t('Type')}
-				alliesLabel={t('Allies')}
-				axisLabel={t('Axis')}
-				durationLabel={t('Duration')}
-				dateLabel={t('Date')}
-			/>
+			<ReplayListSkeleton />
 		{:else}
 			<ReplayList
 				matches={items}
@@ -214,27 +190,8 @@
 				sort={query.sort}
 				sortDir={query.sortDir}
 				{onSort}
-				replayHref={(id) => `/replays/${id}`}
-				{playerHref}
-				resolveMapSrc={getMapImageFromName}
-				resolveFallbackSrc={getDefaultMapImage}
-				resolveFactionFlag={getFactionFlagFromRace}
-				getRankImage={getRankImage}
-				formatMapName={(map) => getString(map) || map}
 				emptyMessage={t('No member replays found.')}
 				mapLabel={t('Title')}
-				typeLabel={t('Type')}
-				alliesLabel={t('Allies')}
-				axisLabel={t('Axis')}
-				durationLabel={t('Duration')}
-				likesLabel={t('Likes')}
-				commentsLabel={t('Comments')}
-				downloadsLabel={t('Downloads')}
-				dateLabel={t('Date')}
-				sortByLabel={t('Sort by {label}')}
-				deletedLabel={t('Deleted')}
-				proLabel={t('Pro')}
-				proTooltipLabel={(elo) => t('Pro gameplay · avg {elo} ELO', { elo })}
 			/>
 		{/if}
 	</div>

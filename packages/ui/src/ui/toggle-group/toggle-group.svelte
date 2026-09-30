@@ -19,18 +19,10 @@
 		class?: string;
 	} & Omit<ToggleGroupRootProps, 'type' | 'value' | 'children' | 'class'>;
 
-	let {
-		value = $bindable(),
-		items,
-		size = 'md',
-		class: className,
-		...restProps
-	}: Props = $props();
+	let { value = $bindable(), items, size = 'md', class: className, ...restProps }: Props = $props();
 
 	const itemClass = $derived(
-		size === 'sm'
-			? 'h-7 px-3 text-xs font-semibold tracking-wide uppercase'
-			: 'h-11 px-4'
+		size === 'sm' ? 'h-7 px-3 text-xs font-semibold tracking-wide uppercase' : 'h-11 px-4'
 	);
 
 	watch(
@@ -47,10 +39,7 @@
 	type="single"
 	bind:value
 	{...restProps}
-	class={cn(
-		'border-secondary-700 flex items-center overflow-clip rounded-md border',
-		className
-	)}
+	class={cn('border-secondary-700 flex items-center overflow-clip rounded-md border', className)}
 >
 	{#each items as item (item.value)}
 		<ToggleGroup.Item

@@ -31,14 +31,23 @@ function buildPocketBaseFilter(filters: FiltersState) {
 		parts.push(`title ~ "${q}"`);
 	}
 
-	if (filters.ranked.value) parts.push('isRanked = true');
-	else if (filters.ranked.indeterminate) parts.push('isRanked = false');
+	if (filters.ranked.value) {
+		parts.push('isRanked = true');
+	} else if (filters.ranked.indeterminate) {
+		parts.push('isRanked = false');
+	}
 
-	if (filters.vp.value) parts.push('isVpGame = true');
-	else if (filters.vp.indeterminate) parts.push('isVpGame = false');
+	if (filters.vp.value) {
+		parts.push('isVpGame = true');
+	} else if (filters.vp.indeterminate) {
+		parts.push('isVpGame = false');
+	}
 
-	if (filters.highResources.value) parts.push('isHighResources = true');
-	else if (filters.highResources.indeterminate) parts.push('isHighResources = false');
+	if (filters.highResources.value) {
+		parts.push('isHighResources = true');
+	} else if (filters.highResources.indeterminate) {
+		parts.push('isHighResources = false');
+	}
 
 	if (filters.maps.length > 0) {
 		const mapExpr = filters.maps
@@ -59,10 +68,18 @@ function buildPocketBaseFilter(filters: FiltersState) {
 
 function buildPocketBaseSort(sort: FiltersState['sort']) {
 	const parts: string[] = [];
-	if (sort.duration) parts.push(sort.duration);
-	if (sort.gameDate) parts.push(sort.gameDate);
+	if (sort.duration) {
+		parts.push(sort.duration);
+	}
 
-	if (parts.length === 0) return '-gameDate';
+	if (sort.gameDate) {
+		parts.push(sort.gameDate);
+	}
+
+	if (parts.length === 0) {
+		return '-gameDate';
+	}
+
 	return parts.join(',');
 }
 
@@ -110,7 +127,10 @@ export class ReplayList {
 		watch(
 			() => this.#debouncedFilter.current,
 			(nextFilter) => {
-				if (nextFilter === this.#activeFilter) return;
+				if (nextFilter === this.#activeFilter) {
+					return;
+				}
+
 				this.#resetSearch(nextFilter);
 				this.loadMore({ reset: true });
 			}
@@ -120,7 +140,10 @@ export class ReplayList {
 		watch(
 			() => sortString,
 			(nextSort) => {
-				if (nextSort === this.#activeSort) return;
+				if (nextSort === this.#activeSort) {
+					return;
+				}
+
 				this.#resetSort(nextSort);
 				this.loadMore({ reset: true });
 			}
@@ -160,8 +183,13 @@ export class ReplayList {
 	}
 
 	async loadMore({ reset = false }: { reset?: boolean } = {}) {
-		if (this.isLoading && !reset) return;
-		if (!this.hasMore && !reset) return;
+		if (this.isLoading && !reset) {
+			return;
+		}
+
+		if (!this.hasMore && !reset) {
+			return;
+		}
 
 		this.isLoading = true;
 		const currentSearchId = this.#searchId;

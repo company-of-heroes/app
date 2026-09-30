@@ -106,6 +106,7 @@ export class SteamAPI {
 		if (!key) {
 			throw new SteamAPIError('STEAM_API_KEY is not configured');
 		}
+
 		return key;
 	}
 
@@ -119,6 +120,7 @@ export class SteamAPI {
 		if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
 			return cached.data as T;
 		}
+
 		this.cache.delete(key);
 		return null;
 	}
@@ -129,11 +131,15 @@ export class SteamAPI {
 
 	private getCachedProfile(steamId: string): SteamPlayerSummary | null | undefined {
 		const cached = this.profileCache.get(steamId);
-		if (!cached) return undefined;
+		if (!cached) {
+			return undefined;
+		}
+
 		if (Date.now() - cached.timestamp >= this.cacheDuration) {
 			this.profileCache.delete(steamId);
 			return undefined;
 		}
+
 		return cached.data;
 	}
 
@@ -191,6 +197,7 @@ export class SteamAPI {
 			if (error instanceof SteamAPIError) {
 				throw error;
 			}
+
 			throw new SteamAPIError(
 				`Failed to fetch from Steam API: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				undefined,
@@ -280,7 +287,9 @@ export class SteamAPI {
 	 * @returns Steam player summary, or null when unknown or unavailable
 	 */
 	async getUserProfile(steamId: string): Promise<SteamPlayerSummary | null> {
-		if (!steamId) return null;
+		if (!steamId) {
+			return null;
+		}
 
 		const cached = this.getCachedProfile(steamId);
 		if (cached !== undefined) {
@@ -298,7 +307,9 @@ export class SteamAPI {
 	 */
 	async getUserProfiles(steamIds: string[]): Promise<SteamPlayerSummary[]> {
 		const uniqueIds = [...new Set(steamIds.filter(Boolean))];
-		if (uniqueIds.length === 0) return [];
+		if (uniqueIds.length === 0) {
+			return [];
+		}
 
 		const profiles = await Promise.all(uniqueIds.map((steamId) => this.getUserProfile(steamId)));
 		return profiles.filter(Boolean) as SteamPlayerSummary[];

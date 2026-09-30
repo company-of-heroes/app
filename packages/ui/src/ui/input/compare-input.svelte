@@ -2,12 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import {
-		adornedControl,
-		adornedInput,
-		adornedTrailing,
-		interactive
-	} from '../../variants';
+	import { adornedControl, adornedInput, adornedTrailing, interactive } from '../../variants';
 
 	export type CompareOperatorOption = {
 		value: string;
@@ -39,7 +34,11 @@
 
 	/** Match Selection trigger heights; sm uses h-9 so it aligns with controlBase beside filters. */
 	const controlSize = $derived(
-		size === 'sm' ? 'h-9 min-h-9 text-sm' : size === 'lg' ? 'h-14 min-h-14 text-lg' : 'h-11 min-h-11 text-base'
+		size === 'sm'
+			? 'h-9 min-h-9 text-sm'
+			: size === 'lg'
+				? 'h-14 min-h-14 text-lg'
+				: 'h-11 min-h-11 text-base'
 	);
 	const adornedText = $derived(size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-lg' : 'text-base');
 	const adornedSidePad = $derived(size === 'sm' ? 'px-2' : 'px-3');

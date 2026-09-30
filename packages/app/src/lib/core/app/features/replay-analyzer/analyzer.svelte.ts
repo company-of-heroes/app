@@ -49,7 +49,9 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 	}
 
 	private setupWorkerListeners() {
-		if (!this.worker) return;
+		if (!this.worker) {
+			return;
+		}
 
 		this.worker.onmessage = (event) => {
 			const { id, success, replay, content, error } = event.data;
@@ -69,7 +71,9 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 
 	private async scanReplays() {
 		const playbackDir = await this.getPlaybackDir();
-		if (!playbackDir) return;
+		if (!playbackDir) {
+			return;
+		}
 
 		this.progress.isScanning = true;
 
@@ -179,6 +183,7 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 				reject(new Error('Worker not initialized'));
 				return;
 			}
+
 			const id = this.idCounter++;
 			this.pending.set(id, { resolve, reject });
 			this.worker.postMessage(

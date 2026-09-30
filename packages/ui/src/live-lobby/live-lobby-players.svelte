@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { liveLobbyPlayerHref, liveLobbyPlayerLabel } from './links';
+	import { useHost } from '../host/host.context';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
 		formatStreak,
@@ -12,46 +15,22 @@
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
-	import {
-		defaultLiveLobbyPlayerLabel,
-		playerRowKey,
-		teamPlayers,
-		type LiveLobbyPlayer
-	} from './types';
+	import { playerRowKey, teamPlayers, type LiveLobbyPlayer } from './types';
 
 	type Props = {
 		players: LiveLobbyPlayer[];
 		meSteamIds?: string[];
-		resolveFactionFlag: (race: number) => string;
-		playerHref: (player: LiveLobbyPlayer) => string | null;
-		playerLabel?: (player: LiveLobbyPlayer) => string;
 		showStats?: boolean;
-		alliesLabel?: string;
-		axisLabel?: string;
-		eloLabel?: string;
-		levelLabel?: string;
-		posLabel?: string;
-		winsLabel?: string;
-		lossesLabel?: string;
 		streakLabel?: string;
 	};
 
-	let {
-		players,
-		meSteamIds = [],
-		resolveFactionFlag,
-		playerHref,
-		playerLabel = defaultLiveLobbyPlayerLabel,
-		showStats,
-		alliesLabel = 'Allies',
-		axisLabel = 'Axis',
-		eloLabel = 'ELO',
-		levelLabel = 'Level',
-		posLabel = 'Pos',
-		winsLabel = 'W',
-		lossesLabel = 'L',
-		streakLabel = 'Streak'
-	}: Props = $props();
+	const { t } = useI18n();
+	const host = useHost();
+
+	let { players, meSteamIds = host.auth.user?.steamIds ?? [], showStats }: Props = $props();
+
+	const playerHref = (player: LiveLobbyPlayer) => liveLobbyPlayerHref(player, host.routes);
+	const playerLabel = (player: LiveLobbyPlayer) => liveLobbyPlayerLabel(player, t);
 
 	const allies = $derived(teamPlayers(players, 'allies'));
 	const axis = $derived(teamPlayers(players, 'axis'));
@@ -86,10 +65,10 @@
 					class={cn(interactive, 'shrink-0 rounded-full')}
 				>
 					<img
-						src={resolveFactionFlag(player.race)}
+						src={host.resolve.factionFlagByRace(player.race)}
 						alt=""
 						class={cn(
-							'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4',
+							'ring-secondary-800 !size-5 shrink-0 rounded-full object-cover ring-4',
 							isMe && 'ring-primary'
 						)}
 					/>
@@ -97,10 +76,10 @@
 			{:else}
 				<a {href} title={label} class={cn(interactive, 'shrink-0 rounded-full')}>
 					<img
-						src={resolveFactionFlag(player.race)}
+						src={host.resolve.factionFlagByRace(player.race)}
 						alt=""
 						class={cn(
-							'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4',
+							'ring-secondary-800 !size-5 shrink-0 rounded-full object-cover ring-4',
 							isMe && 'ring-primary'
 						)}
 					/>
@@ -108,11 +87,11 @@
 			{/if}
 		{:else}
 			<img
-				src={resolveFactionFlag(player.race)}
+				src={host.resolve.factionFlagByRace(player.race)}
 				alt=""
 				title={label}
 				class={cn(
-					'!size-5 shrink-0 rounded-full object-cover ring-secondary-800 ring-4 opacity-70',
+					'ring-secondary-800 !size-5 shrink-0 rounded-full object-cover opacity-70 ring-4',
 					isMe && 'ring-primary'
 				)}
 			/>
@@ -198,7 +177,7 @@
 	{@const stats = cpu ? null : player.stats}
 	<div class="text-secondary-400 mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs tabular-nums">
 		<span class="inline-flex items-center gap-1">
-			<span class="text-secondary-500">{eloLabel}</span>
+			<span class="text-secondary-500">{t('ELO')}</span>
 			{#if stats?.elo != null}
 				<span
 					class="font-semibold"
@@ -212,7 +191,7 @@
 			{/if}
 		</span>
 		<span class="inline-flex items-center gap-1">
-			<span class="text-secondary-500">{levelLabel}</span>
+			<span class="text-secondary-500">{t('Level')}</span>
 			{#if stats && stats.rankLevel > 0}
 				<span class="font-medium text-white">{stats.rankLevel}</span>
 			{:else}
@@ -220,7 +199,7 @@
 			{/if}
 		</span>
 		<span class="inline-flex items-center gap-1">
-			<span class="text-secondary-500">{posLabel}</span>
+			<span class="text-secondary-500">{t('Pos')}</span>
 			{#if stats && stats.rank > 0}
 				<span class="font-medium text-white">{stats.rank}</span>
 			{:else}
@@ -228,11 +207,11 @@
 			{/if}
 		</span>
 		<span class={cn('inline-flex items-center gap-1 font-medium', stats ? statWins : undefined)}>
-			<span class="text-secondary-500">{winsLabel}</span>
+			<span class="text-secondary-500">{t('W')}</span>
 			<span>{stats ? stats.wins : '—'}</span>
 		</span>
 		<span class={cn('inline-flex items-center gap-1 font-medium', stats ? statLosses : undefined)}>
-			<span class="text-secondary-500">{lossesLabel}</span>
+			<span class="text-secondary-500">{t('L')}</span>
 			<span>{stats ? stats.losses : '—'}</span>
 		</span>
 		<span
@@ -241,7 +220,7 @@
 				stats && statStreakClass(stats.streak)
 			)}
 		>
-			<span class="text-secondary-500">{streakLabel}</span>
+			<span class="text-secondary-500">{t('Streak')}</span>
 			<span>{stats ? formatStreak(stats.streak) : '—'}</span>
 		</span>
 	</div>
@@ -254,7 +233,12 @@
 			{@render playerStatChips(player)}
 		{/if}
 	</div>
-	<div class={cn(desktopGrid, 'border-secondary-800 hidden h-11 border-b px-4 last:border-b-0 md:grid')}>
+	<div
+		class={cn(
+			desktopGrid,
+			'border-secondary-800 hidden h-11 border-b px-4 last:border-b-0 md:grid'
+		)}
+	>
 		{@render playerIdentity(player)}
 		{#if withStats}
 			{@render playerStats(player)}
@@ -277,12 +261,12 @@
 		>
 			<span>{label}</span>
 			{#if withStats}
-				<span class="text-center">{eloLabel}</span>
-				<span class="text-center">{levelLabel}</span>
-				<span class="text-center">{posLabel}</span>
-				<span class="text-center">{winsLabel}</span>
-				<span class="text-center">{lossesLabel}</span>
-				<span class="text-center">{streakLabel}</span>
+				<span class="text-center">{t('ELO')}</span>
+				<span class="text-center">{t('Level')}</span>
+				<span class="text-center">{t('Pos')}</span>
+				<span class="text-center">{t('W')}</span>
+				<span class="text-center">{t('L')}</span>
+				<span class="text-center">{t('Streak')}</span>
 			{/if}
 		</div>
 		{#each team as player, rowIndex (playerRowKey(player, rowIndex))}
@@ -294,6 +278,6 @@
 <div
 	class="divide-secondary-800 border-secondary-800 grid grid-cols-1 border-b md:grid-cols-2 md:divide-x"
 >
-	{@render teamColumn(alliesLabel, allies)}
-	{@render teamColumn(axisLabel, axis)}
+	{@render teamColumn(t('Allies'), allies)}
+	{@render teamColumn(t('Axis'), axis)}
 </div>

@@ -1,4 +1,9 @@
-import { ClientResponseError, type ListResult, type RecordSubscription, type UnsubscribeFunc } from 'pocketbase';
+import {
+	ClientResponseError,
+	type ListResult,
+	type RecordSubscription,
+	type UnsubscribeFunc
+} from 'pocketbase';
 import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow';
 import {
 	isOccupiedLobbySlot,
@@ -9,7 +14,7 @@ import {
 	attachLiveLobbyStats,
 	type LiveLobbyRawPlayer
 } from '@company-of-heroes/ui/live-lobby/stats';
-import type { ApiDeps } from '../deps';
+import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fromPbPromise, pbOptions, requireAuth } from '../pb';
 
@@ -71,10 +76,7 @@ export function lobbiesLivePublicFilter(now = Date.now()): string {
 	return `(${lobbiesLiveFreshFilter(now)}) && isReplay != true`;
 }
 
-export function isLiveLobbyFresh(
-	lobby: { updatedAt?: string },
-	now = Date.now()
-): boolean {
+export function isLiveLobbyFresh(lobby: { updatedAt?: string }, now = Date.now()): boolean {
 	if (!lobby.updatedAt) {
 		return false;
 	}
@@ -111,12 +113,7 @@ function toRecord(row: CollectionLobby): LiveLobbyRecord | null {
 	const rawPlayers = (Array.isArray(row.players) ? row.players : []) as LiveLobbyRawPlayer[];
 	return {
 		...record,
-		players: attachLiveLobbyStats(
-			record.players,
-			rawPlayers,
-			record.isRanked,
-			record.matchType
-		)
+		players: attachLiveLobbyStats(record.players, rawPlayers, record.isRanked, record.matchType)
 	};
 }
 
@@ -192,11 +189,15 @@ export class LiveLobbiesApi {
 
 	list(): ResultAsync<LiveLobbyRecord[], ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies_live').getList<CollectionLobby>(1, LIST_LIMIT, pbOptions(this.deps, {
-				filter: lobbiesLivePublicFilter(),
-				sort: '-updatedAt',
-				expand: 'user'
-			})),
+			this.deps.pocketbase.collection('lobbies_live').getList<CollectionLobby>(
+				1,
+				LIST_LIMIT,
+				pbOptions(this.deps, {
+					filter: lobbiesLivePublicFilter(),
+					sort: '-updatedAt',
+					expand: 'user'
+				})
+			),
 			'Failed to load live lobbies.'
 		).map((response) => {
 			const items: LiveLobbyRecord[] = [];
@@ -213,11 +214,15 @@ export class LiveLobbiesApi {
 
 	getList(page = 1, perPage = 20): ResultAsync<ListResult<LiveLobbyRow>, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies_live').getList<LiveLobbyRow>(page, perPage, pbOptions(this.deps, {
-				filter: lobbiesLivePublicFilter(),
-				sort: '-updatedAt',
-				expand: 'user'
-			})),
+			this.deps.pocketbase.collection('lobbies_live').getList<LiveLobbyRow>(
+				page,
+				perPage,
+				pbOptions(this.deps, {
+					filter: lobbiesLivePublicFilter(),
+					sort: '-updatedAt',
+					expand: 'user'
+				})
+			),
 			'Failed to load live lobbies.'
 		);
 	}
@@ -230,10 +235,14 @@ export class LiveLobbiesApi {
 
 		const filter = `(${lobbiesLivePublicFilter()}) && (lobby="${matchId}" || sessionId=${sessionId})`;
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies_live').getList(1, 1, pbOptions(this.deps, {
-				filter,
-				fields: 'id'
-			})),
+			this.deps.pocketbase.collection('lobbies_live').getList(
+				1,
+				1,
+				pbOptions(this.deps, {
+					filter,
+					fields: 'id'
+				})
+			),
 			'Failed to check live lobby.'
 		).map((response) => response.items.length > 0);
 	}
@@ -243,11 +252,9 @@ export class LiveLobbiesApi {
 		callback: (event: RecordSubscription<LiveLobbyRow>) => void
 	): ResultAsync<UnsubscribeFunc, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies_live').subscribe<LiveLobbyRow>(
-				topic,
-				callback,
-				pbOptions(this.deps, { expand: 'user' })
-			),
+			this.deps.pocketbase
+				.collection('lobbies_live')
+				.subscribe<LiveLobbyRow>(topic, callback, pbOptions(this.deps, { expand: 'user' })),
 			'Failed to subscribe to live lobbies.'
 		);
 	}
@@ -274,7 +281,10 @@ export class LiveLobbiesApi {
 		return fromPbPromise(this.deleteLobby(auth.value), 'Failed to remove live lobby.');
 	}
 
-	private async upsertLobby(userId: string, data: LiveLobbyWriteInput): Promise<LiveLobbyRow | undefined> {
+	private async upsertLobby(
+		userId: string,
+		data: LiveLobbyWriteInput
+	): Promise<LiveLobbyRow | undefined> {
 		// App may still hold replay placeholders (playerId 0) that pass a looser
 		// local roster check; required JSON `players` rejects [] as blank.
 		const occupied = data.players.filter(isOccupiedLobbySlot) as LiveLobbyWritePlayer[];
@@ -294,34 +304,18 @@ export class LiveLobbiesApi {
 		if (data.matchType != null) {
 			payload.matchType = data.matchType;
 		}
+
 		if (data.lobby) {
 			payload.lobby = data.lobby;
 		}
 
-		try {
-			const existing = await this.deps.pocketbase
-				.collection('lobbies_live')
-				.getFirstListItem(`user="${userId}"`, pbOptions(this.deps));
-			return (await this.deps.pocketbase
-				.collection('lobbies_live')
-				.update(existing.id, payload, pbOptions(this.deps))) as LiveLobbyRow;
-		} catch (error) {
-			if (error instanceof ClientResponseError && error.status === 404) {
-				return (await this.deps.pocketbase
-					.collection('lobbies_live')
-					.create(payload, pbOptions(this.deps))) as LiveLobbyRow;
-			}
-
-			throw error;
-		}
+		// The website keeps one live row per user and links the match's lobby.
+		return sendV1<LiveLobbyRow>(this.deps, '/live-lobbies', { method: 'PUT', body: payload });
 	}
 
-	private async deleteLobby(userId: string): Promise<void> {
+	private async deleteLobby(_userId: string): Promise<void> {
 		try {
-			const existing = await this.deps.pocketbase
-				.collection('lobbies_live')
-				.getFirstListItem(`user="${userId}"`, pbOptions(this.deps));
-			await this.deps.pocketbase.collection('lobbies_live').delete(existing.id, pbOptions(this.deps));
+			await sendV1(this.deps, '/live-lobbies', { method: 'DELETE' });
 		} catch (error) {
 			if (error instanceof ClientResponseError && error.status === 404) {
 				return;
@@ -331,7 +325,9 @@ export class LiveLobbiesApi {
 		}
 	}
 
-	private async withOverlayEloSources(players: LiveLobbyWritePlayer[]): Promise<LiveLobbyWritePlayer[]> {
+	private async withOverlayEloSources(
+		players: LiveLobbyWritePlayer[]
+	): Promise<LiveLobbyWritePlayer[]> {
 		const steamIds = players
 			.map((player) => player.steamId)
 			.filter((steamId): steamId is string => Boolean(steamId));
@@ -342,9 +338,9 @@ export class LiveLobbiesApi {
 				const batch = steamIds.slice(i, i + BATCH_SIZE);
 				try {
 					const filter = batch.map((id) => `steamId="${id}"`).join('||');
-					const rows = await this.deps.pocketbase.collection('player_ratings').getFullList(
-						pbOptions(this.deps, { filter, fields: 'steamId,elo' })
-					);
+					const rows = await this.deps.pocketbase
+						.collection('player_ratings')
+						.getFullList(pbOptions(this.deps, { filter, fields: 'steamId,elo' }));
 					for (const row of rows) {
 						const steamId = String(row.steamId ?? '');
 						if (steamId) {

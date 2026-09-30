@@ -55,7 +55,6 @@ export function isPlayingCoH(summary: PlayerPresence | undefined): boolean {
 	// A set gameid means the player is in-game regardless of personastate
 	// (away/snooze players were previously missed by requiring personastate === 1).
 	return (
-		summary.gameid === String(COH_APP_ID) ||
-		COH_GAME_NAMES.has(summary.gameextrainfo?.trim() ?? '')
+		summary.gameid === String(COH_APP_ID) || COH_GAME_NAMES.has(summary.gameextrainfo?.trim() ?? '')
 	);
 }

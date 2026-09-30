@@ -145,7 +145,10 @@ export function parseLogLine(line: string): TriggerEvent | null {
 		const data: Record<string, string | number> = {};
 
 		for (const [key, value] of Object.entries(match.groups)) {
-			if (value == null || value === '') continue;
+			if (value == null || value === '') {
+				continue;
+			}
+
 			data[key] = STRING_KEYS.has(key) ? value : coerce(value);
 		}
 

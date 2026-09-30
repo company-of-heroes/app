@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import { tableHeadRow } from '@company-of-heroes/ui/variants';
+
+	const { t } = useI18n();
 </script>
 
 <div class="border-secondary-800 overflow-clip border-b" aria-busy="true">
@@ -26,7 +29,7 @@
 				<Skeleton class="h-4 w-16" />
 				<div class="flex gap-1 overflow-hidden">
 					{#each Array(10) as _, index (index)}
-						<Skeleton class="min-w-6 h-6 shrink-0 rounded-md" />
+						<Skeleton class="h-6 min-w-6 shrink-0 rounded-md" />
 					{/each}
 				</div>
 				<Skeleton class="h-4 w-20" />
@@ -50,13 +53,13 @@
 				<table class="w-full table-fixed border-collapse text-sm">
 					<thead>
 						<tr class="{tableHeadRow} text-center">
-							<th class="w-[6.5rem] px-4 py-2">ELO</th>
-							<th class="w-[8rem] px-4 py-2">Level</th>
-							<th class="w-[14rem] px-4 py-2">Type</th>
-							<th class="w-[6.5rem] px-4 py-2">Position</th>
-							<th class="w-[5.5rem] px-4 py-2">Wins</th>
-							<th class="w-[6rem] px-4 py-2">Losses</th>
-							<th class="w-[6rem] px-4 py-2">Streak</th>
+							<th class="w-[6.5rem] px-4 py-2">{t('ELO')}</th>
+							<th class="w-[8rem] px-4 py-2">{t('Level')}</th>
+							<th class="w-[14rem] px-4 py-2">{t('Type')}</th>
+							<th class="w-[6.5rem] px-4 py-2">{t('Position')}</th>
+							<th class="w-[5.5rem] px-4 py-2">{t('Wins')}</th>
+							<th class="w-[6rem] px-4 py-2">{t('Losses')}</th>
+							<th class="w-[6rem] px-4 py-2">{t('Streak')}</th>
 						</tr>
 					</thead>
 					<tbody>

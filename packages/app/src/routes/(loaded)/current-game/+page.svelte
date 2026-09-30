@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FlatReplay } from '$lib/utils/flatten-replay';
+	import type { FlatReplay } from '@company-of-heroes/ui/replay/parse';
 	import type { Snapshot } from './$types';
 	import { dev } from '$app/environment';
 	import { app } from '$core/app/context';

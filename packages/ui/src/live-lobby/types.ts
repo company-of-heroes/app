@@ -99,11 +99,14 @@ export function playerRowKey(player: LiveLobbyPlayer, rowIndex = 0): string {
 	if (player.profileId != null) {
 		return `profile:${player.profileId}`;
 	}
+
 	if (player.steamId) {
 		return `steam:${player.steamId}`;
 	}
+
 	if (player.index != null) {
 		return `index:${player.index}`;
 	}
+
 	return `row:${rowIndex}`;
 }

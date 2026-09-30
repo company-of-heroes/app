@@ -85,6 +85,7 @@ migrate(
 		if (!indexes.includes(memberIndex)) {
 			indexes.push(memberIndex);
 		}
+
 		replays.indexes = indexes;
 
 		app.save(replays);

@@ -17,7 +17,10 @@
 	let saving = $state(false);
 
 	async function submit() {
-		if (saving) return;
+		if (saving) {
+			return;
+		}
+
 		saving = true;
 		try {
 			await onSave(name.trim());

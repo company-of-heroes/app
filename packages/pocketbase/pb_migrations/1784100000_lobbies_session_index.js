@@ -18,7 +18,10 @@ function saveCollectionIndexes(app, indexes) {
 
 migrate(
 	(app) => {
-		app.db().newQuery('CREATE INDEX IF NOT EXISTS `idx_lobbies_sessionId` ON `lobbies` (`sessionId`)').execute();
+		app
+			.db()
+			.newQuery('CREATE INDEX IF NOT EXISTS `idx_lobbies_sessionId` ON `lobbies` (`sessionId`)')
+			.execute();
 
 		const indexes = collectionIndexes(app);
 		if (indexes.some((sql) => sql.includes('idx_lobbies_sessionId'))) {

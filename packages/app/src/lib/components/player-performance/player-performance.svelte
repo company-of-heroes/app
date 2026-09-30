@@ -6,13 +6,12 @@
 		type PlayerPerformance as PerformanceData
 	} from '$core/pocketbase/player-performance';
 	import { PlayerPerformancePanel } from '@company-of-heroes/ui/player-performance';
-	import { cn, getFactionFlagFromRace, normalizeMapName } from '$lib/utils';
-	import { getMapImageFromName, getDefaultMapImage } from '$lib/utils/game';
+	import { cn, normalizeMapName } from '$lib/utils';
 	import { MATCH_TYPES } from '$core/game/lobby';
 	import { getRaceLabel } from '$lib/components/leaderboard/leaderboard-utils';
 	import { resource } from 'runed';
 	import PlayerPerformanceMatches from './player-performance-matches.svelte';
-	import PlayerPerformanceEloHistory from './player-performance-elo-history.svelte';
+	import { EloHistory } from '@company-of-heroes/ui/player-performance';
 	import {
 		getPlayerEloHistory,
 		groupEloHistoryByModeAndRace
@@ -117,35 +116,13 @@
 <div class={cn(className)}>
 	<PlayerPerformancePanel
 		performance={stats}
-		resolveFactionFlag={getFactionFlagFromRace}
-		resolveMapSrc={getMapImageFromName}
-		resolveFallbackSrc={getDefaultMapImage}
-		formatMapName={normalizeMapName}
 		includeSkirmish={dev}
 		emptyPerformanceMessage={emptyMessage}
-		emptyEloMessage={t(
-			'No tracked match ratings yet. Play with the companion running so lobby results can build this history.'
-		)}
-		eloHistoryTitle={t('ELO history')}
 		trackedLobbyRatingsLabel={eloSummary}
-		byMapTitle={t('By map')}
-		byFactionTitle={t('By faction')}
-		byModeTitle={t('By mode')}
-		mapsSummary={t('{maps} maps · {games} games')}
-		factionsSummary={t('{factions} factions · {games} games')}
-		modesSummary={t('{modes} game modes · {games} games')}
-		mapLabel={t('Map')}
-		gamesLabel={t('Games')}
-		winsLabel={t('Wins')}
-		lossesLabel={t('Losses')}
-		winrateLabel={t('Winrate')}
-		modeLabel={t('Mode')}
-		factionLabel={t('Faction')}
-		eloLabel={t('ELO')}
 	>
 		{#snippet eloContent()}
 			{#if profileId}
-				<PlayerPerformanceEloHistory points={eloPoints} loading={eloHistory.loading} />
+				<EloHistory points={eloPoints} loading={eloHistory.loading} />
 			{/if}
 		{/snippet}
 		{#snippet mapRowDetail(row)}

@@ -29,10 +29,7 @@
 	} from '$lib/components/ui/variants';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
-	import {
-		mergeSteamProfiles,
-		PlayersSearch
-	} from '../../players/players-search.svelte';
+	import { mergeSteamProfiles, PlayersSearch } from '../../players/players-search.svelte';
 	import ColorPicker from 'svelte-awesome-color-picker';
 	import ColorPickerTrigger from '$lib/components/ui/input/color-picker-trigger.svelte';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
@@ -64,14 +61,18 @@
 	function bindNameField(el: HTMLInputElement) {
 		nameField = el;
 		return () => {
-			if (nameField === el) nameField = undefined;
+			if (nameField === el) {
+				nameField = undefined;
+			}
 		};
 	}
 
 	watch(
 		() => app.account.isAdmin,
 		(isAdmin) => {
-			if (isAdmin) void loadLabels();
+			if (isAdmin) {
+				void loadLabels();
+			}
 		}
 	);
 
@@ -105,11 +106,18 @@
 
 	const saveLabel = async () => {
 		const trimmed = name.trim();
-		if (!trimmed) return;
+		if (!trimmed) {
+			return;
+		}
+
 		isSaving = true;
 		try {
 			if (editingId) {
-				const data: Update<'user_labels'> = { name: trimmed, color: labelHex(hex), sort: editingSort };
+				const data: Update<'user_labels'> = {
+					name: trimmed,
+					color: labelHex(hex),
+					sort: editingSort
+				};
 				await pocketbase.collection('user_labels').update(editingId, data, { fetch });
 				app.toast.success(t('Label updated.'));
 			} else {
@@ -121,6 +129,7 @@
 				await pocketbase.collection('user_labels').create(data, { fetch });
 				app.toast.success(t('Label created.'));
 			}
+
 			resetForm();
 			await loadLabels();
 		} catch (error) {
@@ -136,11 +145,17 @@
 			t('Delete {name}? This removes it from every assigned player.', { name: label.name }),
 			{ okLabel: t('Delete'), cancelLabel: t('Cancel'), kind: 'warning' }
 		);
-		if (!confirmed) return;
+		if (!confirmed) {
+			return;
+		}
+
 		deletingId = label.id;
 		try {
 			await pocketbase.collection('user_labels').delete(label.id, { fetch });
-			if (editingId === label.id) resetForm();
+			if (editingId === label.id) {
+				resetForm();
+			}
+
 			app.toast.success(t('Label deleted.'));
 			await loadLabels();
 			if (searchedPlayers) {
@@ -169,7 +184,10 @@
 
 	const searchPlayers = async () => {
 		const trimmed = playerSearch.query.trim();
-		if (!trimmed) return;
+		if (!trimmed) {
+			return;
+		}
+
 		searchingPlayers = true;
 		playerSearch.error = null;
 		playerSearch.resetResults();
@@ -181,6 +199,7 @@
 					searchedPlayers = true;
 					return;
 				}
+
 				const steamId = profile.name.replace('/steam/', '');
 				const steamProfiles = await steam.getUserProfiles([steamId]);
 				playerSearch.results = mergeSteamProfiles([profile], steamProfiles);
@@ -191,15 +210,18 @@
 					searchedPlayers = true;
 					return;
 				}
+
 				const steamIds = players.map((profile) => profile.name.replace('/steam/', ''));
 				const steamProfiles = await steam.getUserProfiles(steamIds);
 				playerSearch.results = mergeSteamProfiles(players, steamProfiles);
 			}
+
 			if (playerSearch.results.length === 0) {
 				playerSearch.error = t('Player not found');
 			} else {
 				await loadAssignments(playerSearch.results.map((player) => player.steam.steamid));
 			}
+
 			searchedPlayers = true;
 		} catch {
 			playerSearch.error = t('Failed to search for player');
@@ -234,6 +256,7 @@
 					event.preventDefault();
 					void saveLabel();
 				}
+
 				if (event.key === 'Escape' && editingId) {
 					event.preventDefault();
 					resetForm();
@@ -278,14 +301,9 @@
 	{#if labels.length === 0}
 		<p class="text-secondary-400 px-4 py-6 text-sm">{t('No labels yet.')}</p>
 	{:else}
-		<ul class="divide-secondary-800 divide-y border-secondary-800 border-b">
+		<ul class="divide-secondary-800 border-secondary-800 divide-y border-b">
 			{#each labels as label (label.id)}
-				<li
-					class={cn(
-						'flex min-h-11 items-stretch',
-						editingId === label.id && 'bg-primary/10'
-					)}
-				>
+				<li class={cn('flex min-h-11 items-stretch', editingId === label.id && 'bg-primary/10')}>
 					<div class="flex min-w-0 flex-1 items-center px-4">
 						<Badge hex={labelHex(label.color)}>{label.name}</Badge>
 					</div>
@@ -375,7 +393,11 @@
 								steamId={player.steam.steamid}
 								profileId={player.relic.profile_id}
 								alias={player.relic.alias}
-								class={cn(footerAction, 'text-secondary-400 hover:text-white h-auto min-h-11 rounded-none px-3', 'border-r-0')}
+								class={cn(
+									footerAction,
+									'text-secondary-400 h-auto min-h-11 rounded-none px-3 hover:text-white',
+									'border-r-0'
+								)}
 							/>
 						</div>
 					</li>

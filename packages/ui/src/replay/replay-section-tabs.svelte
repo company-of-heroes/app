@@ -19,7 +19,12 @@
 	let { tabs, active, onSelect, class: className, trailing }: Props = $props();
 </script>
 
-<div class={cn('border-secondary-800 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-4 py-2.5', className)}>
+<div
+	class={cn(
+		'border-secondary-800 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-4 py-2.5',
+		className
+	)}
+>
 	<div class="flex flex-wrap items-center gap-2">
 		{#each tabs as tab (tab.id)}
 			{#if tab.href && !onSelect}

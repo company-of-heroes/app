@@ -34,4 +34,9 @@ export {
 	type SettingsEnvelope,
 	type ParseResult
 } from './import-export';
-export { settings, SettingsService, type SettingsLoadResult, type SettingsSource } from './settings.svelte';
+export {
+	settings,
+	SettingsService,
+	type SettingsLoadResult,
+	type SettingsSource
+} from './settings.svelte';

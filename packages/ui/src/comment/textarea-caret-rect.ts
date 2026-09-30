@@ -46,7 +46,8 @@ export function getTextareaCaretRect(textarea: HTMLTextAreaElement, position: nu
 
 	const computed = win.getComputedStyle(textarea);
 	const mirror = doc.createElement('div');
-	const mirrorStyle = mirror.style as CSSStyleDeclaration & Record<(typeof MIRROR_STYLE_KEYS)[number], string>;
+	const mirrorStyle = mirror.style as CSSStyleDeclaration &
+		Record<(typeof MIRROR_STYLE_KEYS)[number], string>;
 
 	mirrorStyle.whiteSpace = 'pre-wrap';
 	mirrorStyle.wordWrap = 'break-word';

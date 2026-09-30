@@ -7,11 +7,10 @@
 		query: ReplaysQuery;
 		maps: HistoryMapOption[];
 		scope?: 'community' | 'user';
-		userId?: string;
 		onChange: (patch: Partial<ReplaysQuery>) => void;
 	};
 
-	let { query, maps, scope = 'community', userId, onChange }: Props = $props();
+	let { query, maps, scope = 'community', onChange }: Props = $props();
 	const { t } = useI18n();
 
 	const labels = $derived({
@@ -50,17 +49,15 @@
 			limit,
 			scope
 		});
-		if (scope === 'user' && userId) {
-			params.set('userId', userId);
-		}
 		return params;
 	}
 
 	async function searchPlayers(q: string) {
-		const response = await fetch(`/api/history-players?${historySearchParams(q, '20')}`);
+		const response = await fetch(`/api/v1/history-players?${historySearchParams(q, '20')}`);
 		if (!response.ok) {
 			return [];
 		}
+
 		const data = (await response.json()) as { items?: HistoryPlayerOption[] };
 		return (data.items ?? []).map((item) => ({
 			value: String(item.profile_id),
@@ -69,12 +66,13 @@
 	}
 
 	async function searchMaps(q: string) {
-		const response = await fetch(`/api/history-maps?${historySearchParams(q, '40')}`);
+		const response = await fetch(`/api/v1/history-maps?${historySearchParams(q, '40')}`);
 		if (!response.ok) {
 			return maps
 				.map((item) => ({ value: item.map, label: item.name || item.map }))
 				.filter((item) => item.label.toLowerCase().includes(q.toLowerCase()));
 		}
+
 		const data = (await response.json()) as { items?: HistoryMapOption[] };
 		return (data.items ?? []).map((item) => ({
 			value: item.map,
@@ -83,4 +81,11 @@
 	}
 </script>
 
-<Filters {query} {maps} {onChange} {labels} onSearchPlayers={searchPlayers} onSearchMaps={searchMaps} />
+<Filters
+	{query}
+	{maps}
+	{onChange}
+	{labels}
+	onSearchPlayers={searchPlayers}
+	onSearchMaps={searchMaps}
+/>

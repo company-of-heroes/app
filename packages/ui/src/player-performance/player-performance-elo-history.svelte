@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { useHost } from '../host/host.context';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive, tabTrigger } from '@company-of-heroes/ui/variants';
 	import { getModeLabel, getRaceLabel } from '../format/player-format';
@@ -17,31 +19,25 @@
 		loading?: boolean;
 		getModeLabel?: (matchtypeId: number) => string;
 		getRaceLabel?: (raceId: number) => string;
-		resolveFactionFlag?: (raceId: number) => string;
 		formatAxisDate?: (date: Date) => string;
 		formatTooltipDate?: (date: Date) => string;
 		formatTooltipRating?: (rating: number) => string;
-		loadingMessage?: string;
-		emptyMessage?: string;
-		emptyModeMessage?: string;
 		factionNavLabel?: string;
 	};
+
+	const { t } = useI18n();
+	const host = useHost();
 
 	let {
 		points,
 		loading = false,
 		getModeLabel: modeLabel = getModeLabel,
 		getRaceLabel: raceLabel = getRaceLabel,
-		resolveFactionFlag = () => '',
 		formatAxisDate = (date) =>
-			date.toLocaleDateString(undefined, { day: '2-digit', month: 'short' }),
+			date.toLocaleDateString(host.locale(), { day: '2-digit', month: 'short' }),
 		formatTooltipDate = (date) =>
-			date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }),
-		formatTooltipRating = (rating) => `${rating} ELO`,
-		loadingMessage = 'Loading ELO history…',
-		emptyMessage = 'No tracked match ratings yet. Play with the companion running so lobby results can build this history.',
-		emptyModeMessage = 'No faction ratings for this mode yet.',
-		factionNavLabel = 'Select faction'
+			date.toLocaleDateString(host.locale(), { day: '2-digit', month: 'short', year: 'numeric' }),
+		formatTooltipRating = (rating) => t('{rating} ELO', { rating })
 	}: Props = $props();
 
 	type GroupedPoints = Record<number, Record<number, EloHistoryPoint[]>>;
@@ -61,7 +57,10 @@
 	);
 
 	const raceIds = $derived.by(() => {
-		if (activeMode == null) return [] as number[];
+		if (activeMode == null) {
+			return [] as number[];
+		}
+
 		return Object.keys(grouped[activeMode] ?? {})
 			.map(Number)
 			.filter((raceId) => (grouped[activeMode]?.[raceId]?.length ?? 0) > 0)
@@ -79,7 +78,10 @@
 	};
 
 	const chartData = $derived.by(() => {
-		if (activeMode == null || activeRace == null) return [] as ChartPoint[];
+		if (activeMode == null || activeRace == null) {
+			return [] as ChartPoint[];
+		}
+
 		const racePoints = grouped[activeMode]?.[activeRace] ?? [];
 		const label = raceLabel(activeRace);
 		const byDay: Record<string, ChartPoint> = {};
@@ -105,8 +107,14 @@
 	function groupPoints(history: EloHistoryPoint[]): GroupedPoints {
 		const result: GroupedPoints = {};
 		for (const point of history) {
-			if (!result[point.matchtypeId]) result[point.matchtypeId] = {};
-			if (!result[point.matchtypeId][point.raceId]) result[point.matchtypeId][point.raceId] = [];
+			if (!result[point.matchtypeId]) {
+				result[point.matchtypeId] = {};
+			}
+
+			if (!result[point.matchtypeId][point.raceId]) {
+				result[point.matchtypeId][point.raceId] = [];
+			}
+
 			result[point.matchtypeId][point.raceId].push(point);
 		}
 		return result;
@@ -119,9 +127,13 @@
 </script>
 
 {#if loading && points.length === 0}
-	<p class="text-secondary-400 px-4 py-6 text-sm">{loadingMessage}</p>
+	<p class="text-secondary-400 px-4 py-6 text-sm">{t('Loading ELO history…')}</p>
 {:else if points.length === 0}
-	<p class="text-secondary-400 px-4 py-6 text-sm">{emptyMessage}</p>
+	<p class="text-secondary-400 px-4 py-6 text-sm">
+		{t(
+			'No tracked match ratings yet. Play with the companion running so lobby results can build this history.'
+		)}
+	</p>
 {:else}
 	<div class="flex flex-col">
 		<div class="border-secondary-800 flex flex-wrap items-center gap-2 border-b px-4 py-2.5">
@@ -143,7 +155,7 @@
 			>
 				<nav
 					class="border-secondary-800 divide-secondary-800 flex h-full min-h-0 flex-col divide-y border-b md:border-r md:border-b-0"
-					aria-label={factionNavLabel}
+					aria-label={t('Select faction')}
 				>
 					{#each raceIds as raceId (raceId)}
 						{@const isSelected = activeRace === raceId}
@@ -159,7 +171,11 @@
 							aria-current={isSelected ? 'true' : undefined}
 							onclick={() => (selectedRace = raceId)}
 						>
-							<img src={resolveFactionFlag(raceId)} alt={raceLabel(raceId)} class="h-3.5 shrink-0" />
+							<img
+								src={host.resolve.factionFlagByRace(raceId)}
+								alt={raceLabel(raceId)}
+								class="h-3.5 shrink-0"
+							/>
 							<span class="min-w-0 flex-1 truncate">{raceLabel(raceId)}</span>
 						</button>
 					{/each}
@@ -221,7 +237,9 @@
 				</div>
 			</div>
 		{:else}
-			<p class="text-secondary-400 px-4 py-4 text-sm">{emptyModeMessage}</p>
+			<p class="text-secondary-400 px-4 py-4 text-sm">
+				{t('No faction ratings for this mode yet.')}
+			</p>
 		{/if}
 	</div>
 {/if}

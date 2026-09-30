@@ -1,8 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive, statLosses, statWins } from '@company-of-heroes/ui/variants';
 	import LinkIcon from 'phosphor-svelte/lib/LinkIcon';
+	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
+	import { formatDate } from '../format/date';
 	import {
 		getModeLabel,
 		getRaceLabel,
@@ -11,10 +14,14 @@
 		normalizeMapName,
 		winrate
 	} from '../format/player-format';
+	import { useHost } from '../host/host.context';
 	import LeaderboardStatPill from '../leaderboard/leaderboard-stat-pill.svelte';
+	import LikeButton from '../comment/like-button.svelte';
 	import { Badge } from '../ui/badge';
+	import { Button } from '../ui/button';
 	import * as List from '../ui/list';
-	import type { PerformanceRecentMatch, PlayerPageData } from './types';
+	import type { PlayerPageData } from './types';
+	import PlayerCompanionStaffDebug from './player-companion-staff-debug.svelte';
 	import PlayerLabels from './player-labels.svelte';
 	import SmurfAlert from './smurf-alert.svelte';
 	import TwitchLogo from './twitch-logo.svelte';
@@ -22,50 +29,25 @@
 
 	type Props = {
 		player: PlayerPageData;
-		flagImageUrl: (country: string | null | undefined) => string | null;
-		resolveAvatarUrl: (url: string) => string;
-		smurfLenderHref: (lenderProfileId: number | null, lenderSteamId: string) => string;
-		resolveMapSrc?: (map: string | undefined) => string | undefined;
-		matchHref?: (match: PerformanceRecentMatch) => string | null;
-		levelLabel?: string;
-		steamIdLabel?: string;
-		trackedLabel?: string;
-		joinedSinceLabel?: string;
-		joinedSince?: string | null;
-		smurfLabel?: string;
-		recordLabel?: string;
-		recentLabel?: string;
-		bestMapLabel?: string;
-		emptyTrackedLabel?: string;
-		winLabel?: string;
-		lossLabel?: string;
-		vote?: Snippet;
+		/** Host-only extras shown in the action row above the name (e.g. label editor, cheater alert). */
+		actions?: Snippet;
 		afterName?: Snippet;
-		afterDetails?: Snippet;
 	};
 
-	let {
-		player,
-		flagImageUrl,
-		resolveAvatarUrl,
-		smurfLenderHref,
-		matchHref,
-		levelLabel,
-		steamIdLabel = 'Steam ID:',
-		trackedLabel = 'Tracked:',
-		joinedSinceLabel = 'Joined since:',
-		joinedSince = null,
-		smurfLabel = 'Smurf account:',
-		recordLabel = 'Record:',
-		recentLabel = 'Recent:',
-		bestMapLabel = 'Best map:',
-		emptyTrackedLabel = 'No community matches recorded yet.',
-		winLabel = 'Win',
-		lossLabel = 'Loss',
-		vote,
-		afterName,
-		afterDetails
-	}: Props = $props();
+	let { player, actions, afterName }: Props = $props();
+	const { t } = useI18n();
+	const host = useHost();
+
+	const isSelf = $derived(host.auth.isSelf(player.steamId, player.profileId));
+	const joinedSince = $derived(
+		player.timecreated ? formatDate(player.timecreated, host.locale()) : null
+	);
+	const emptyTrackedLabel = $derived(
+		isSelf
+			? t('Play with the companion running to build stats.')
+			: t('No tracked community matches for this player.')
+	);
+	const flag = $derived(host.resolve.flagImageUrl(player.country));
 
 	const stats = $derived(player.performance);
 	const recentMatches = $derived((stats?.recentMatches ?? []).slice(0, 5));
@@ -119,46 +101,49 @@
 	{/if}
 	<div
 		class={cn(
-			'border-secondary-800 relative z-10 grid grid-cols-1 border-b',
-			vote
-				? 'gap-4 sm:grid-cols-[minmax(220px,280px)_auto_minmax(0,1fr)]'
-				: 'sm:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]'
+			'border-secondary-800 relative z-10 grid grid-cols-1 gap-4 border-b sm:grid-cols-[minmax(220px,280px)_auto_minmax(0,1fr)]'
 		)}
 	>
-		<div
-			class={cn(
-				'aspect-square self-start overflow-clip',
-				!hasBackground && !vote && 'sm:border-r',
-				hasBackground && 'border-2',
-				avatarBorder
-			)}
-		>
+		<div class={cn('aspect-square self-start overflow-clip', 'border-r border-b', avatarBorder)}>
 			<img
-				src={resolveAvatarUrl(player.avatarUrl)}
+				src={host.resolve.avatarUrl(player.avatarUrl)}
 				alt={player.alias}
 				class="h-full w-full object-cover"
 			/>
 		</div>
-		{#if vote}
-			<div class="flex items-start justify-center px-6 sm:px-0 sm:py-4">
-				{@render vote()}
-			</div>
-		{/if}
+		<div class="flex items-start justify-center px-6 sm:px-0 sm:py-4">
+			<LikeButton
+				target={{ kind: 'player', id: player.steamId }}
+				likeCount={player.likeCount ?? 0}
+			/>
+		</div>
 		<div class="min-w-0">
-			<div class={cn('px-6 py-4', vote && 'sm:pl-0')}>
+			<div class="px-6 py-4 sm:pl-0">
+				{#if actions || isSelf}
+					<div class="mb-3 flex flex-wrap items-center gap-2">
+						{@render actions?.()}
+						{#if isSelf}
+							<Button
+								href={host.routes.accountProfile(player.steamId)}
+								variant="secondary"
+								size="sm"
+								class="shrink-0"
+							>
+								<PencilSimpleIcon size={16} />
+								{t('Update profile')}
+							</Button>
+						{/if}
+					</div>
+				{/if}
 				<div class="mb-3 flex flex-wrap items-center gap-2.5">
-					{#if flagImageUrl(player.country)}
-						<img
-							class="h-5 w-auto shrink-0 rounded-xs"
-							src={flagImageUrl(player.country)!}
-							alt={player.country ?? ''}
-						/>
+					{#if flag}
+						<img class="h-5 w-auto shrink-0 rounded-xs" src={flag} alt={player.country ?? ''} />
 					{/if}
 					<h1 class="font-heading truncate text-3xl font-bold">{player.alias}</h1>
 					<PlayerLabels labels={player.labels} class="shrink-0" />
-					{#if levelLabel}
-						<span class="text-secondary-500 text-sm">{levelLabel}</span>
-					{/if}
+					<span class="text-secondary-500 text-sm">
+						{t('Level {level}', { level: player.level })}
+					</span>
 					{@render afterName?.()}
 				</div>
 				{#if bio || links.length > 0}
@@ -218,7 +203,7 @@
 				{/if}
 				<div class="grid grid-cols-1 items-start gap-x-6 gap-y-1 sm:grid-cols-2">
 					<List.Root class={metaList}>
-						<List.Title>{steamIdLabel}</List.Title>
+						<List.Title>{t('Steam ID:')}</List.Title>
 						<List.Value>
 							<a
 								href="https://steamcommunity.com/profiles/{player.steamId}"
@@ -229,26 +214,20 @@
 								{player.steamId}
 							</a>
 						</List.Value>
-						<List.Title>{joinedSinceLabel}</List.Title>
+						<List.Title>{t('Joined since:')}</List.Title>
 						<List.Value>{joinedSince ?? '—'}</List.Value>
 						{#if player.smurf}
-							<List.Title class="flex h-5 items-center leading-none">{smurfLabel}</List.Title>
+							<List.Title class="flex h-5 items-center leading-none"
+								>{t('Smurf account:')}</List.Title
+							>
 							<List.Value class="flex h-5 items-center leading-none">
-								<SmurfAlert
-									smurf={player.smurf}
-									lenderHref={smurfLenderHref(
-										player.smurf.lenderProfileId,
-										player.smurf.lenderSteamId
-									)}
-									{resolveAvatarUrl}
-									showLabel={false}
-								/>
+								<SmurfAlert smurf={player.smurf} showLabel={false} />
 							</List.Value>
 						{/if}
 					</List.Root>
 					<List.Root class={metaList}>
 						{#if stats && stats.matchCount > 0}
-							<List.Title>{recordLabel}</List.Title>
+							<List.Title>{t('Record:')}</List.Title>
 							<List.Value class={valueRow}>
 								<span class={statWins}>{stats.wins}W</span>
 								<span class="text-secondary-600">·</span>
@@ -261,13 +240,13 @@
 								/>
 							</List.Value>
 							{#if recentMatches.length > 0}
-								<List.Title>{recentLabel}</List.Title>
+								<List.Title>{t('Recent:')}</List.Title>
 								<List.Value
 									class="inline-flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto"
 								>
 									{#each recentMatches as match (match.id || match.sessionId)}
-										{@const href = matchHref?.(match)}
-										{@const title = `${match.outcome === 1 ? winLabel : lossLabel}${match.raceId != null ? ` · ${getRaceLabel(match.raceId)}` : ''}${match.matchtypeId != null ? ` · ${getModeLabel(match.matchtypeId)}` : ''}`}
+										{@const href = match.id ? host.routes.match(match.id) : null}
+										{@const title = `${match.outcome === 1 ? t('Win') : t('Loss')}${match.raceId != null ? ` · ${getRaceLabel(match.raceId)}` : ''}${match.matchtypeId != null ? ` · ${getModeLabel(match.matchtypeId)}` : ''}`}
 										{#if href}
 											<a {href} class={cn(interactive, 'group inline-flex shrink-0')} {title}>
 												<Badge
@@ -297,7 +276,7 @@
 								</List.Value>
 							{/if}
 							{#if bestMap}
-								<List.Title>{bestMapLabel}</List.Title>
+								<List.Title>{t('Best map:')}</List.Title>
 								<List.Value class={valueRow}>
 									<span class="text-secondary-300 max-w-44 truncate">
 										{normalizeMapName(bestMap.map, false)}
@@ -314,13 +293,13 @@
 								</List.Value>
 							{/if}
 						{:else}
-							<List.Title>{trackedLabel}</List.Title>
+							<List.Title>{t('Tracked:')}</List.Title>
 							<List.Value class="text-secondary-400 text-sm">{emptyTrackedLabel}</List.Value>
 						{/if}
 					</List.Root>
 				</div>
 			</div>
-			{@render afterDetails?.()}
+			<PlayerCompanionStaffDebug steamId={player.steamId} />
 		</div>
 	</div>
 </div>

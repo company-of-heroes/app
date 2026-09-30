@@ -1,11 +1,12 @@
-import type { ResultAsync } from 'neverthrow';
-import type { AppError } from '$lib/errors/app-error';
 import {
 	HOME_RECENT_MATCHES,
 	HOME_RECENT_MEMBER_UPLOADS,
 	recentCommunityQuery,
 	recentMemberQuery
 } from '$lib/replays';
+import type { Task } from '$lib/server/result';
+import { historyInputFromQuery } from '$lib/server/services/match-history';
+import { memberQueryFromReplaysQuery } from '$lib/server/services/member-replays';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;
@@ -15,29 +16,28 @@ type SectionResult<T> = {
 	error: string | null;
 };
 
-async function loadSection<T>(result: ResultAsync<T[], AppError>): Promise<SectionResult<T>> {
-	const settled = await result;
-	if (settled.isErr()) {
-		return { items: [], error: settled.error.message };
-	}
-
-	return { items: settled.value, error: null };
+/** A home page section: its items, or the error message to show in its place. */
+function section<T>(items: Task<T[]>): Promise<SectionResult<T>> {
+	return items.match(
+		(list) => ({ items: list, error: null }),
+		(error) => ({ items: [], error: error.message })
+	);
 }
 
 /** Stream each section so client nav to `/` is not blocked on Twitch / match APIs. */
 export const load: PageServerLoad = ({ locals }) => {
-	const replays = locals.services.replays();
-
 	return {
-		liveLobbies: loadSection(locals.services.liveLobbies().list()),
-		recentMatches: loadSection(
-			replays.getHistory(recentCommunityQuery(), HOME_RECENT_MATCHES).map((list) => list.items)
-		),
-		recentMemberUploads: loadSection(
-			replays
-				.getMemberHistory(recentMemberQuery(), HOME_RECENT_MEMBER_UPLOADS)
+		liveLobbies: section(locals.services.liveLobbies.list()),
+		recentMatches: section(
+			locals.services.matchHistory
+				.list(historyInputFromQuery(recentCommunityQuery(), 'community', HOME_RECENT_MATCHES), null)
 				.map((list) => list.items)
 		),
-		streams: locals.services.twitch().listStreams().unwrapOr([])
+		recentMemberUploads: section(
+			locals.services.memberReplays
+				.list(memberQueryFromReplaysQuery(recentMemberQuery(), HOME_RECENT_MEMBER_UPLOADS), null)
+				.map((list) => list.items)
+		),
+		streams: locals.services.twitch.listStreams().unwrapOr([])
 	};
 };

@@ -60,6 +60,10 @@
 		onSearchPlayers?: (query: string) => Promise<SelectOption[]>;
 		onSearchMaps?: (query: string) => Promise<SelectOption[]>;
 		labels?: Partial<FilterLabels>;
+		/** Player names the page already knows (value = profile id). */
+		players?: SelectOption[];
+		/** Looks up names for filtered player ids nobody searched for in this session. */
+		onResolvePlayers?: (ids: string[]) => Promise<SelectOption[]>;
 	};
 
 	const defaultLabels: FilterLabels = {
@@ -114,7 +118,16 @@
 		lte: '≤'
 	};
 
-	let { query, maps, onChange, onSearchPlayers, onSearchMaps, labels }: Props = $props();
+	let {
+		query,
+		maps,
+		onChange,
+		onSearchPlayers,
+		onSearchMaps,
+		labels,
+		players = [],
+		onResolvePlayers
+	}: Props = $props();
 	const l = $derived({ ...defaultLabels, ...labels });
 
 	const factionOptions = [
@@ -212,6 +225,29 @@
 	});
 
 	const draftAst = $derived(rulesToAst(rules));
+
+	/** Known names: searched in this panel, or handed in by the page. */
+	const playerNames = $derived({
+		...Object.fromEntries(players.map((player) => [player.value, player.label])),
+		...playerLabels
+	});
+
+	// Filtered players without a known name (e.g. after a restart): look them up once.
+	const requestedPlayerNames = new Set<string>();
+	$effect(() => {
+		const missing = playerIdsFromAst(draftAst).filter(
+			(id) => !playerNames[id] && !requestedPlayerNames.has(id)
+		);
+		if (!onResolvePlayers || missing.length === 0) {
+			return;
+		}
+
+		missing.forEach((id) => requestedPlayerNames.add(id));
+		onResolvePlayers(missing)
+			.then((found) => rememberLabels(found, 'players'))
+			.catch(() => {});
+	});
+
 	const appliedAst = $derived.by(() => {
 		if (query.filter != null) {
 			return query.filter;
@@ -416,7 +452,7 @@
 				const values = leaf.op === 'in' ? leaf.value : leaf.value ? [leaf.value] : [];
 				return values.map((id) => ({
 					value: id,
-					label: playerLabels[id] || id
+					label: playerNames[id] || id
 				}));
 			}
 			case 'map': {
@@ -507,9 +543,7 @@
 			return results;
 		}
 
-		return mapCatalogOptions.filter((item) =>
-			item.label.toLowerCase().includes(q.toLowerCase())
-		);
+		return mapCatalogOptions.filter((item) => item.label.toLowerCase().includes(q.toLowerCase()));
 	}
 
 	function emptyFlatPatch() {
@@ -581,7 +615,7 @@
 				</div>
 			{/if}
 
-			<div class="border-secondary-800 bg-gray-950 flex flex-col gap-2 border-b px-4 py-3">
+			<div class="border-secondary-800 flex flex-col gap-2 border-b bg-gray-950 px-4 py-3">
 				<div class="flex items-start gap-2">
 					<div class="flex min-w-0 flex-1 flex-col gap-2">
 						<div class="grid grid-cols-2 gap-2">
@@ -591,7 +625,7 @@
 								value={leaf.field}
 								items={fieldItems}
 								aria-label={fieldLabel(leaf.field)}
-								class="min-w-0 w-full"
+								class="w-full min-w-0"
 								onValueChange={(next) => {
 									if (typeof next === 'string') {
 										setField(rule.id, next as FilterField);
@@ -606,7 +640,7 @@
 									value={leaf.op}
 									items={multiOpItems}
 									aria-label={opLabel(leaf.op)}
-									class="min-w-0 w-full"
+									class="w-full min-w-0"
 									onValueChange={(next) => {
 										if (typeof next === 'string') {
 											setMultiOp(rule.id, leaf, next as 'in' | 'eq');
@@ -621,7 +655,7 @@
 									items={boolIsItems}
 									aria-label={l.is}
 									disabled
-									class="min-w-0 w-full"
+									class="w-full min-w-0"
 								/>
 							{:else if COMPARE_FIELDS.has(leaf.field)}
 								<Select
@@ -630,7 +664,7 @@
 									value={leaf.op}
 									items={compareOpItems}
 									aria-label={l.changeOperator}
-									class="min-w-0 w-full"
+									class="w-full min-w-0"
 									onValueChange={(next) => {
 										if (typeof next === 'string') {
 											setCompareOp(rule.id, leaf, next as FilterOperator);
@@ -662,7 +696,7 @@
 								value={leaf.value === true ? 'true' : 'false'}
 								items={boolValueItems}
 								aria-label={fieldLabel(leaf.field)}
-								class="min-w-0 w-full"
+								class="w-full min-w-0"
 								onValueChange={(next) => {
 									if (typeof next === 'string') {
 										setBoolValue(rule.id, leaf, next === 'true');
@@ -700,7 +734,7 @@
 						type="button"
 						class={cn(
 							interactive,
-							'text-secondary-400 hover:bg-secondary-800/50 hover:text-white shrink-0 rounded-md p-1.5'
+							'text-secondary-400 hover:bg-secondary-800/50 shrink-0 rounded-md p-1.5 hover:text-white'
 						)}
 						aria-label={l.removeCondition}
 						onclick={() => removeRule(rule.id)}

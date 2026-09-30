@@ -41,9 +41,7 @@ export function fetchJson<T>(
 					return errAsync(apiError(mapped.status, messageFromBody(json, mapped.message)));
 				}
 
-				return errAsync(
-					apiError(response.status || 500, messageFromBody(json, options.fallback))
-				);
+				return errAsync(apiError(response.status || 500, messageFromBody(json, options.fallback)));
 			});
 		}
 

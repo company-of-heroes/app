@@ -6,23 +6,42 @@ const USER_ID_PATTERN = /^[a-z0-9]{15}$/;
 
 export function getUserIdFromPath(): string | null {
 	const fromPath = window.location.pathname.match(/^\/overlay\/([a-z0-9]{15})/);
-	if (fromPath?.[1]) return fromPath[1];
+	if (fromPath?.[1]) {
+		return fromPath[1];
+	}
+
 	const fromQuery = new URLSearchParams(window.location.search).get('user');
-	if (fromQuery && USER_ID_PATTERN.test(fromQuery)) return fromQuery;
+	if (fromQuery && USER_ID_PATTERN.test(fromQuery)) {
+		return fromQuery;
+	}
+
 	return null;
 }
 
 function pocketBaseUrl(): string {
 	const injected = (window as Window & { __OPP_PB_URL?: string }).__OPP_PB_URL;
-	if (typeof injected === 'string' && injected) return injected.replace(/\/$/, '');
+	if (typeof injected === 'string' && injected) {
+		return injected.replace(/\/$/, '');
+	}
+
 	const fromEnv = import.meta.env.VITE_PB_URL;
-	if (typeof fromEnv === 'string' && fromEnv) return fromEnv;
+	if (typeof fromEnv === 'string' && fromEnv) {
+		return fromEnv;
+	}
+
 	if (window.location.pathname.startsWith('/overlay/')) {
 		return window.location.origin;
 	}
+
 	const host = window.location.hostname;
-	if (host === '127.0.0.1' || host === 'localhost') return 'http://127.0.0.1:8090';
-	if (import.meta.env.DEV) return 'http://127.0.0.1:8090';
+	if (host === '127.0.0.1' || host === 'localhost') {
+		return 'http://127.0.0.1:8090';
+	}
+
+	if (import.meta.env.DEV) {
+		return 'http://127.0.0.1:8090';
+	}
+
 	return 'https://api.coh1stats.com';
 }
 
@@ -35,7 +54,10 @@ async function loadSteamIds(pb: PocketBase, userId: string): Promise<string[] | 
 	}
 }
 
-export function connectLobby(userId: string, onLobby: (data: LobbyData | null) => void): () => void {
+export function connectLobby(
+	userId: string,
+	onLobby: (data: LobbyData | null) => void
+): () => void {
 	if (!USER_ID_PATTERN.test(userId)) {
 		onLobby(null);
 		return () => {};
@@ -72,18 +94,25 @@ export function connectLobby(userId: string, onLobby: (data: LobbyData | null) =
 					elo?: Player['storedElo'];
 				}>({ filter });
 				for (const row of rows) {
-					if (row.elo) eloBySteamId.set(row.steamId, row.elo);
+					if (row.elo) {
+						eloBySteamId.set(row.steamId, row.elo);
+					}
 				}
 			} catch {
 				// overlay can still use matchHistory
 			}
-			for (const id of missing) fetchedSteamIds.add(id);
+			for (const id of missing) {
+				fetchedSteamIds.add(id);
+			}
 		}
 
 		return {
 			...record,
 			players: players.map((player) => {
-				if (player.storedElo || !player.steamId) return player;
+				if (player.storedElo || !player.steamId) {
+					return player;
+				}
+
 				const storedElo = eloBySteamId.get(player.steamId);
 				return storedElo ? { ...player, storedElo } : player;
 			})
@@ -91,7 +120,10 @@ export function connectLobby(userId: string, onLobby: (data: LobbyData | null) =
 	}
 
 	const applyRecord = (record: LiveLobbyRecord | null) => {
-		if (!active) return;
+		if (!active) {
+			return;
+		}
+
 		currentRecord = record;
 		onLobby(record ? liveLobbyToLobbyData(record, steamIds) : null);
 	};
@@ -104,19 +136,25 @@ export function connectLobby(userId: string, onLobby: (data: LobbyData | null) =
 	});
 
 	const poll = async () => {
-		if (!active) return;
+		if (!active) {
+			return;
+		}
+
 		if (debugPoll) {
 			const w = window as unknown as Record<string, unknown>;
 			w.__oppbotPollLast = Date.now();
 			w.__oppbotPollCount = (typeof w.__oppbotPollCount === 'number' ? w.__oppbotPollCount : 0) + 1;
 		}
+
 		try {
 			const record = await pb
 				.collection('lobbies_live')
 				.getFirstListItem<LiveLobbyRecord>(`user="${userId}"`);
 			applyRecord(await withStoredElo(record));
 		} catch {
-			if (currentRecord) applyRecord(null);
+			if (currentRecord) {
+				applyRecord(null);
+			}
 		}
 	};
 
@@ -125,7 +163,9 @@ export function connectLobby(userId: string, onLobby: (data: LobbyData | null) =
 
 	return () => {
 		active = false;
-		if (pollTimer != null) window.clearInterval(pollTimer);
+		if (pollTimer != null) {
+			window.clearInterval(pollTimer);
+		}
 	};
 }
 

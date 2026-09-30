@@ -11,12 +11,18 @@ const queued = new Set<string>();
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function labelsForSteamId(steamId: string | undefined | null): UserLabel[] {
-	if (!steamId) return [];
+	if (!steamId) {
+		return [];
+	}
+
 	return bySteam[steamId] ?? [];
 }
 
 export function setLabelsForSteamId(steamId: string, labels: UserLabel[]) {
-	if (!steamId) return;
+	if (!steamId) {
+		return;
+	}
+
 	fetched.add(steamId);
 	queued.delete(steamId);
 	bySteam = { ...bySteam, [steamId]: sortUserLabels(labels) };
@@ -26,9 +32,17 @@ export function preloadPlayerLabels(steamIds: string[]) {
 	const missing = [...new Set(steamIds.filter(Boolean))].filter(
 		(id) => !fetched.has(id) && !queued.has(id)
 	);
-	if (missing.length === 0) return;
-	for (const id of missing) queued.add(id);
-	if (flushTimer) return;
+	if (missing.length === 0) {
+		return;
+	}
+
+	for (const id of missing) {
+		queued.add(id);
+	}
+	if (flushTimer) {
+		return;
+	}
+
 	flushTimer = setTimeout(() => {
 		flushTimer = null;
 		const ids = [...queued];

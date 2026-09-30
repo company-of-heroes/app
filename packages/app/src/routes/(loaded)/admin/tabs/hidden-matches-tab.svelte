@@ -79,7 +79,10 @@
 
 	async function loadMaps(sessionIds: number[]): Promise<Map<number, string>> {
 		const unique = [...new Set(sessionIds.filter((id) => id > 0))];
-		if (unique.length === 0) return new Map();
+		if (unique.length === 0) {
+			return new Map();
+		}
+
 		try {
 			const response = await pocketbase
 				.collection('lobbies')
@@ -130,7 +133,10 @@
 
 	async function addWord() {
 		const next = word.trim();
-		if (!next || isSaving) return;
+		if (!next || isSaving) {
+			return;
+		}
+
 		isSaving = true;
 		try {
 			await addHiddenKeyword(next);
@@ -151,7 +157,10 @@
 			cancelLabel: t('Cancel'),
 			kind: 'warning'
 		});
-		if (!confirmed) return;
+		if (!confirmed) {
+			return;
+		}
+
 		deletingWordId = entry.id;
 		try {
 			await deleteHiddenKeyword(entry.id);
@@ -171,7 +180,10 @@
 			cancelLabel: t('Cancel'),
 			kind: 'warning'
 		});
-		if (!confirmed) return;
+		if (!confirmed) {
+			return;
+		}
+
 		unhidingId = Number(row.sessionId);
 		try {
 			await unhideMatch(Number(row.sessionId));

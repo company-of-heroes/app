@@ -1,21 +1,26 @@
 import { command, getRequestEvent, query } from '$app/server';
-import * as v from 'valibot';
+import { error } from '@sveltejs/kit';
+import { z } from 'zod';
 import { unwrapAsync } from '$lib/errors/unwrap';
 
-const steamIdSchema = v.pipe(v.string(), v.minLength(1));
+const steamId = z.string().min(1);
 
-export const getMyPlayerVote = query(steamIdSchema, (steamId) => {
-	const { locals } = getRequestEvent();
-	return unwrapAsync(locals.services.playerSocial().getMyVote(steamId));
+export const getMyPlayerVote = query(steamId, (id) => {
+	return unwrapAsync(getRequestEvent().locals.api.playerSocial.getMyVote(id));
 });
 
+/** Voting the same way twice removes the vote. */
 export const setPlayerVote = command(
-	v.object({
-		steamId: steamIdSchema,
-		value: v.union([v.literal(1), v.literal(-1)])
-	}),
-	({ steamId, value }) => {
+	z.object({ steamId, value: z.union([z.literal(1), z.literal(-1)]) }),
+	async ({ steamId, value }) => {
 		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.playerSocial().setPlayerVote(steamId, value));
+		if (!locals.user) {
+			error(401, locals.t('Sign in to do that.'));
+		}
+
+		const result = await unwrapAsync(
+			locals.services.playerSocial.vote(steamId, locals.user.id, value, { toggle: true })
+		);
+		return { vote: result.vote, likeCount: result.likeCount };
 	}
 );

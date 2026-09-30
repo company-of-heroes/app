@@ -6,10 +6,16 @@
 
 	const { playerResult } = $derived(usePlayer());
 	const change = $derived.by(() => {
-		if (!playerResult) return undefined;
+		if (!playerResult) {
+			return undefined;
+		}
+
 		const next = playerResult.newrating;
 		const prev = playerResult.oldrating;
-		if (!Number.isFinite(next) || !Number.isFinite(prev)) return undefined;
+		if (!Number.isFinite(next) || !Number.isFinite(prev)) {
+			return undefined;
+		}
+
 		return next - prev;
 	});
 </script>

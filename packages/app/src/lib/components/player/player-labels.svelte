@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { PlayerLabels as SharedPlayerLabels } from '@company-of-heroes/ui/player';
-	import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
+	import {
+		labelsForSteamId,
+		preloadPlayerLabels
+	} from '$core/pocketbase/player-label-cache.svelte';
 
 	type Props = {
 		steamId?: string | null;
@@ -11,7 +14,9 @@
 	const labels = $derived(labelsForSteamId(steamId));
 
 	$effect(() => {
-		if (steamId) preloadPlayerLabels([steamId]);
+		if (steamId) {
+			preloadPlayerLabels([steamId]);
+		}
 	});
 </script>
 

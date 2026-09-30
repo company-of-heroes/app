@@ -1,11 +1,5 @@
 <script lang="ts">
-	import {
-		createTranslate,
-		locales,
-		provideI18n,
-		type AppI18n,
-		type AppLocale
-	} from '$lib/i18n';
+	import { createTranslate, locales, provideI18n, type AppI18n, type AppLocale } from '$lib/i18n';
 	import type { Snippet } from 'svelte';
 
 	type Props = {

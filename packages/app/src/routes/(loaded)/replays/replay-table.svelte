@@ -37,8 +37,7 @@
 		async () => {
 			const entries = await Promise.all(
 				list.replays.map(
-					async (row) =>
-						[row.id, await app.database.replays.localExists(row.filename)] as const
+					async (row) => [row.id, await app.database.replays.localExists(row.filename)] as const
 				)
 			);
 			return Object.fromEntries(entries) as Record<string, boolean>;
@@ -209,6 +208,7 @@
 								app.toast.error(t('Local replay file was not found.'));
 								return;
 							}
+
 							markLocalAbsent(row.id);
 							app.toast.success(t('Local replay file deleted.'));
 						} else {
@@ -222,6 +222,7 @@
 							markLocalAbsent(row.id);
 							app.toast.success(t('Replay deleted from library and disk.'));
 						}
+
 						app.modal.close();
 					} catch (error) {
 						app.toast.error(
@@ -235,7 +236,10 @@
 	}
 
 	async function downloadReplay(row: ReplaysExpanded) {
-		if (downloadingIds[row.id] || localPresentIds[row.id]) return;
+		if (downloadingIds[row.id] || localPresentIds[row.id]) {
+			return;
+		}
+
 		downloadingIds = { ...downloadingIds, [row.id]: true };
 		try {
 			const result = await app.database.replays.download(row.id);
@@ -330,7 +334,9 @@
 		loading={isDownloading}
 		disabled={isDownloading || isLocal}
 		aria-label={isLocal ? t('Replay available locally') : t('Download replay')}
-		{@attach tooltip(isLocal ? t('Available in playback folder') : t('Download to playback folder'))}
+		{@attach tooltip(
+			isLocal ? t('Available in playback folder') : t('Download to playback folder')
+		)}
 		onclick={() => void downloadReplay(row)}
 	>
 		{#if isLocal && !isDownloading}
@@ -350,7 +356,9 @@
 		)}
 		disabled={row.visibility === 'member'}
 		aria-label={row.visibility === 'member' ? t('Published') : t('Publish to Member replays')}
-		{@attach tooltip(row.visibility === 'member' ? t('Already published') : t('Publish to Member replays'))}
+		{@attach tooltip(
+			row.visibility === 'member' ? t('Already published') : t('Publish to Member replays')
+		)}
 		onclick={() => void publishReplay(row)}
 	>
 		{#if row.visibility === 'member'}

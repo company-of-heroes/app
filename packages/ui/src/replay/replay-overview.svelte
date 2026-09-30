@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
@@ -18,7 +19,6 @@
 	} from './types';
 	import { findResultPlayer, isCpuPlayerName, isCpuReplayPlayer } from './utils';
 	import {
-		defaultLiveLobbyPlayerLabel,
 		isCpuLiveLobbyPlayer,
 		teamPlayers,
 		type LiveLobbyPlayer,
@@ -30,6 +30,11 @@
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
+	import { countryDisplayName } from '../format/country';
+	import { liveLobbyPlayerHref, liveLobbyPlayerLabel } from '../live-lobby/links';
+	import { communityPlayerHref } from './links';
+	import { doctrineBannerFile, playerCpm, raceFromReplayFaction } from './replay-stats';
+	import { useHost } from '../host/host.context';
 
 	type NameExtraArgs = {
 		name: string;
@@ -41,51 +46,38 @@
 		match: CommunityMatchDetail;
 		replay?: ReplayData | null;
 		livePlayers?: LiveLobbyPlayer[];
-		playerHref: (player: CommunityPlayer) => string | null;
-		flagImageUrl: (country: string | null | undefined) => string | null;
-		getCountryDisplayName: (country: string | null | undefined) => string | null;
-		resolveFactionFlag: (raceId: number) => string;
-		raceFromReplayFaction: (faction: string) => number;
-		doctrineBannerUrl: (player: ReplayPlayer) => string | null;
-		playerCpm: (replay: ReplayData, playerId: number | null) => string | number;
-		formatStreakLabel?: (streak: number) => string;
-		livePlayerHref?: (player: LiveLobbyPlayer) => string | null;
-		livePlayerLabel?: (player: LiveLobbyPlayer) => string;
-		getRankImage?: (race: number, rankLevel: number) => string;
-		levelLabel?: string;
-		alliesLabel?: string;
-		axisLabel?: string;
-		unknownDoctrineLabel?: string;
-		ratingLabel?: string;
-		cpmLabel?: string;
+		/** Hide rank badges / positions (e.g. local replays without ranked data). */
+		showRanks?: boolean;
+		/** Defaults to the viewer's own alias. */
 		isHighlightedName?: (name: string) => boolean;
 		nameExtra?: Snippet<[NameExtraArgs]>;
 	};
+
+	const { t } = useI18n();
+	const host = useHost();
 
 	let {
 		match,
 		replay = null,
 		livePlayers = [],
-		playerHref,
-		flagImageUrl,
-		getCountryDisplayName,
-		resolveFactionFlag,
-		raceFromReplayFaction,
-		doctrineBannerUrl,
-		playerCpm,
-		formatStreakLabel = formatStreak,
-		livePlayerHref,
-		livePlayerLabel = defaultLiveLobbyPlayerLabel,
-		getRankImage,
-		levelLabel = 'Lv',
-		alliesLabel = 'Allies',
-		axisLabel = 'Axis',
-		unknownDoctrineLabel = 'Unknown doctrine',
-		ratingLabel = 'Rating',
-		cpmLabel = 'CPM',
-		isHighlightedName,
+		showRanks = true,
+		isHighlightedName = (name: string) => host.auth.isSelfAlias(name),
 		nameExtra
 	}: Props = $props();
+
+	const getRankImage = $derived(showRanks ? host.resolve.rankImageByRace : undefined);
+	const getCountryDisplayName = (country: string | null | undefined) =>
+		countryDisplayName(country, host.locale());
+
+	const playerHref = (player: CommunityPlayer) => communityPlayerHref(player, host.routes);
+
+	const livePlayerHref = (player: LiveLobbyPlayer) => liveLobbyPlayerHref(player, host.routes);
+	const livePlayerLabel = (player: LiveLobbyPlayer) => liveLobbyPlayerLabel(player, t);
+
+	function doctrineBannerUrl(player: ReplayPlayer): string | null {
+		const file = doctrineBannerFile(player);
+		return file ? host.resolve.doctrineBanner(file) : null;
+	}
 
 	const teams = $derived.by(() => ({
 		allies:
@@ -165,8 +157,7 @@
 		if (name) {
 			const fromResult = match.result?.players?.find(
 				(player) =>
-					!isCpuPlayerName(player.alias) &&
-					(player.alias ?? '').trim().toLowerCase() === name
+					!isCpuPlayerName(player.alias) && (player.alias ?? '').trim().toLowerCase() === name
 			);
 			if (fromResult) {
 				return fromResult;
@@ -225,8 +216,7 @@
 		const key = replayPlayer.name.trim().toLowerCase();
 		if (key) {
 			const byName = livePlayers.find(
-				(player) =>
-					!isCpuLiveLobbyPlayer(player) && player.alias.trim().toLowerCase() === key
+				(player) => !isCpuLiveLobbyPlayer(player) && player.alias.trim().toLowerCase() === key
 			);
 			if (byName) {
 				return byName;
@@ -307,7 +297,7 @@
 		<span class="text-secondary-600" aria-hidden="true">·</span>
 		<span class="text-secondary-200 inline-flex items-center gap-1">
 			<img src={getRankImage(race, rankLevel ?? 0)} alt="" class="h-5 w-5" />
-			<span class="text-secondary-400">{levelLabel}</span>
+			<span class="text-secondary-400">{t('Lv')}</span>
 			<span class="text-secondary-100">{rankLevel && rankLevel > 0 ? rankLevel : '—'}</span>
 		</span>
 	{/if}
@@ -321,7 +311,7 @@
 	{@const href = cpu
 		? null
 		: ((lobby ? playerHref(lobby) : null) ??
-			(live && livePlayerHref ? livePlayerHref(live) : null) ??
+			(live ? livePlayerHref(live) : null) ??
 			(result?.profile_id
 				? playerHref({
 						playerId: result.profile_id,
@@ -347,7 +337,7 @@
 	{@const liveStats = live?.stats ?? liveStatsForReplay(player)}
 	{@const banner = doctrineBannerUrl(player)}
 	{@const country = result?.country ?? live?.country ?? null}
-	{@const flagUrl = flagImageUrl(country)}
+	{@const flagUrl = host.resolve.flagImageUrl(country)}
 	{@const countryName = getCountryDisplayName(country)}
 	{@const steamId = lobby?.steamId ?? live?.steamId ?? null}
 	{@const profileId = lobby?.profile.profile_id ?? live?.profileId ?? null}
@@ -408,12 +398,12 @@
 				</div>
 				<div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base tabular-nums">
 					<img
-						src={resolveFactionFlag(race ?? 0)}
+						src={host.resolve.factionFlagByRace(race ?? 0)}
 						alt=""
 						class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
 					/>
 					<span class="text-secondary-200 truncate">
-						{player.doctrineName || unknownDoctrineLabel}
+						{player.doctrineName || t('Unknown doctrine')}
 					</span>
 					{#if !cpu}
 						{@render rankBadge(race ?? 0, liveStats?.rankLevel)}
@@ -434,7 +424,7 @@
 										? 'text-red-300'
 										: 'text-secondary-400'}
 							>
-								{formatStreakLabel(result.streak)}
+								{formatStreak(result.streak)}
 							</span>
 						{/if}
 					{/if}
@@ -466,7 +456,7 @@
 			{/if}
 			<div class="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5">
 				<span class="text-secondary-400 text-xs font-semibold tracking-wider uppercase">
-					{cpmLabel}
+					{t('CPM')}
 				</span>
 				<span class="text-primary text-xl leading-none font-bold tabular-nums">
 					{replay ? playerCpm(replay, player.id) : '—'}
@@ -483,7 +473,7 @@
 	{@const stats = cpu ? null : player.stats}
 	{@const elo = stats?.elo ?? null}
 	{@const country = cpu ? null : (player.country ?? null)}
-	{@const flagUrl = flagImageUrl(country)}
+	{@const flagUrl = host.resolve.flagImageUrl(country)}
 	{@const countryName = getCountryDisplayName(country)}
 	<div class="border-secondary-800 relative overflow-hidden border-b last:border-b-0">
 		<div class="relative flex items-center gap-4 px-4 py-3.5">
@@ -532,7 +522,7 @@
 				</div>
 				<div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base tabular-nums">
 					<img
-						src={resolveFactionFlag(player.race)}
+						src={host.resolve.factionFlagByRace(player.race)}
 						alt=""
 						class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
 					/>
@@ -556,7 +546,7 @@
 										? 'text-red-300'
 										: 'text-secondary-400'}
 							>
-								{formatStreakLabel(stats.streak)}
+								{formatStreak(stats.streak)}
 							</span>
 						{/if}
 					{:else}
@@ -579,7 +569,7 @@
 			</div>
 			<div class="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5">
 				<span class="text-secondary-400 text-xs font-semibold tracking-wider uppercase">
-					{cpmLabel}
+					{t('CPM')}
 				</span>
 				<span class="text-primary text-xl leading-none font-bold tabular-nums">—</span>
 			</div>
@@ -593,8 +583,8 @@
 			class="bg-secondary-950/90 text-secondary-300 border-secondary-800 flex items-center gap-4 border-b px-4 py-2.5 text-sm font-semibold tracking-wide uppercase"
 		>
 			<span class="min-w-0 flex-1">{label}</span>
-			<span class="text-right">{ratingLabel}</span>
-			<span class="text-primary w-12 text-center font-semibold">{cpmLabel}</span>
+			<span class="text-right">{t('Rating')}</span>
+			<span class="text-primary w-12 text-center font-semibold">{t('CPM')}</span>
 		</div>
 		{#each players as player, index (`${index}-${player.id ?? player.name}`)}
 			{@render playerRow(player)}
@@ -608,8 +598,8 @@
 			class="bg-secondary-950/90 text-secondary-300 border-secondary-800 flex items-center gap-4 border-b px-4 py-2.5 text-sm font-semibold tracking-wide uppercase"
 		>
 			<span class="min-w-0 flex-1">{label}</span>
-			<span class="text-right">{ratingLabel}</span>
-			<span class="text-primary w-12 text-center font-semibold">{cpmLabel}</span>
+			<span class="text-right">{t('Rating')}</span>
+			<span class="text-primary w-12 text-center font-semibold">{t('CPM')}</span>
 		</div>
 		{#each players as player (`${player.profileId ?? player.steamId ?? player.index}-${player.alias}`)}
 			{@render livePlayerRow(player)}
@@ -619,10 +609,10 @@
 
 <div class="divide-secondary-800 grid grid-cols-1 md:grid-cols-2 md:divide-x">
 	{#if replay}
-		{@render teamColumn(alliesLabel, teams.allies)}
-		{@render teamColumn(axisLabel, teams.axis)}
+		{@render teamColumn(t('Allies'), teams.allies)}
+		{@render teamColumn(t('Axis'), teams.axis)}
 	{:else}
-		{@render liveTeamColumn(alliesLabel, liveTeams.allies)}
-		{@render liveTeamColumn(axisLabel, liveTeams.axis)}
+		{@render liveTeamColumn(t('Allies'), liveTeams.allies)}
+		{@render liveTeamColumn(t('Axis'), liveTeams.axis)}
 	{/if}
 </div>

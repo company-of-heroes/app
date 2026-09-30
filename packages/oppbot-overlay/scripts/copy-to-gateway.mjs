@@ -6,7 +6,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(__dirname, '..');
 const distDir = join(packageRoot, 'dist');
 const versionPath = join(packageRoot, 'overlay-version.json');
-const targetDir = join(packageRoot, '..', 'pocketbase', 'pb_hooks', 'public', 'overlay-default');
+// The api-gateway ships the default overlay as static assets (served under /overlay/{userId}/).
+const targetDir = join(packageRoot, '..', 'api-gateway', 'overlay-default');
 
 const versionFile = readFileSync(versionPath, 'utf8');
 

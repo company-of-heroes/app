@@ -1,20 +1,29 @@
 /// <reference path="../pb_data/types.d.ts" />
-migrate((app) => {
-  const collection = app.findCollectionByNameOrId("_pb_users_auth_")
+migrate(
+	(app) => {
+		const collection = app.findCollectionByNameOrId('_pb_users_auth_');
 
-  // update collection data
-  unmarshal({
-    "manageRule": "id = @request.auth.id"
-  }, collection)
+		// update collection data
+		unmarshal(
+			{
+				manageRule: 'id = @request.auth.id'
+			},
+			collection
+		);
 
-  return app.save(collection)
-}, (app) => {
-  const collection = app.findCollectionByNameOrId("_pb_users_auth_")
+		return app.save(collection);
+	},
+	(app) => {
+		const collection = app.findCollectionByNameOrId('_pb_users_auth_');
 
-  // update collection data
-  unmarshal({
-    "manageRule": null
-  }, collection)
+		// update collection data
+		unmarshal(
+			{
+				manageRule: null
+			},
+			collection
+		);
 
-  return app.save(collection)
-})
+		return app.save(collection);
+	}
+);

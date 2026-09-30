@@ -3,8 +3,7 @@
 		attachLiveLobbyStats,
 		getLiveLobbyMatchTypeId,
 		toLiveLobbyRecord,
-		type LiveLobby,
-		type LiveLobbyPlayer
+		type LiveLobby
 	} from '@company-of-heroes/ui/live-lobby';
 	import {
 		ListTable as MatchListTable,
@@ -16,13 +15,11 @@
 	import { LiveLobbiesFeed } from './live-lobbies.svelte';
 	import { MATCH_TYPES } from '$core/game/lobby';
 	import { app } from '$core/app/context';
-	import { PUBLIC_PB_URL } from '$env/static/public';
 	import { fetch } from '$core/http/fetch';
+	import { SITE_URL } from '$core/site/urls';
 	import { Button } from '$lib/components/ui/button';
 	import { useI18n } from '$lib/i18n';
 	import dayjs from '$lib/dayjs';
-	import { getFactionFlagFromRace, getRankImage, normalizeMapName } from '$lib/utils';
-	import { getDefaultMapImage, getMapImageFromName } from '$lib/utils/game';
 
 	const { t } = useI18n();
 	const feed = new LiveLobbiesFeed();
@@ -37,9 +34,7 @@
 
 	const rows = $derived(lobbies.map(toMatchListRowFromLiveLobby));
 
-	const meSteamIds = $derived(
-		(app.features.auth.user.steamIds ?? []).filter(Boolean) as string[]
-	);
+	const meSteamIds = $derived((app.features.auth.user.steamIds ?? []).filter(Boolean) as string[]);
 
 	$effect(() => {
 		void feed.start();
@@ -66,11 +61,7 @@
 			return null;
 		}
 
-		const matchTypeId = getLiveLobbyMatchTypeId(
-			record.players,
-			record.isRanked,
-			record.matchType
-		);
+		const matchTypeId = getLiveLobbyMatchTypeId(record.players, record.isRanked, record.matchType);
 
 		return {
 			...record,
@@ -84,49 +75,9 @@
 		};
 	}
 
-	function playerHref(player: LiveLobbyPlayer) {
-		if (player.playerId === -1) {
-			return null;
-		}
-
-		if (player.profileId) {
-			return `/players/${player.profileId}`;
-		}
-
-		if (player.steamId) {
-			return `/players/${player.steamId}`;
-		}
-
-		return null;
-	}
-
-	function playerLabel(player: LiveLobbyPlayer) {
-		if (player.playerId === -1) {
-			const alias = player.alias.trim();
-			if (alias && /^cpu(\b|\s*[-–—])/i.test(alias)) {
-				return alias;
-			}
-
-			return t('CPU opponent');
-		}
-
-		if (player.alias.trim()) {
-			return player.alias.trim();
-		}
-
-		return t('Player {n}', { n: player.index + 1 });
-	}
-
-	function detailsHref(row: { lobbyId?: string | null }) {
-		if (!row.lobbyId) {
-			return null;
-		}
-
-		return `/history/${row.lobbyId}`;
-	}
-
 	function seedUrl() {
-		return `${(PUBLIC_PB_URL ?? 'https://api.coh1stats.com').replace(/\/$/, '')}/api/dev/live-lobbies/seed`;
+		// Dev tool served by the website's dev server (not PocketBase).
+		return `${SITE_URL}/api/dev/live-lobbies/seed`;
 	}
 
 	async function seedTestLobbies() {
@@ -181,7 +132,7 @@
 		</div>
 	{/if}
 	{#if feed.error}
-		<p class="border-secondary-800 text-red-400 border-b px-4 py-2 text-sm">
+		<p class="border-secondary-800 border-b px-4 py-2 text-sm text-red-400">
 			{t('Could not load live lobbies.')}
 		</p>
 	{/if}
@@ -189,33 +140,8 @@
 		{rows}
 		loading={feed.isLoading}
 		columns={LIVE_MATCH_LIST_COLUMNS}
-		{meSteamIds}
-		resolveMapSrc={getMapImageFromName}
-		resolveFallbackSrc={getDefaultMapImage}
-		resolveFactionFlag={getFactionFlagFromRace}
-		getRankImage={getRankImage}
-		formatMapName={normalizeMapName}
-		formatStarted={(createdAt: string) => dayjs(createdAt).fromNow()}
-		{playerHref}
-		{playerLabel}
-		{detailsHref}
 		emptyMessage={feed.error
 			? t('Could not load live lobbies.')
 			: t('No community members are in a match right now.')}
-		mapLabel={t('Map')}
-		nameLabel={t('Name')}
-		typeLabel={t('Type')}
-		alliesLabel={t('Allies')}
-		axisLabel={t('Axis')}
-		hostLabel={t('Host')}
-		startedLabel={t('Started at')}
-		unknownHostLabel={t('Unknown')}
-		detailsLabel={t('Details')}
-		eloLabel={t('ELO')}
-		levelLabel={t('Level')}
-		posLabel={t('Pos')}
-		winsLabel={t('W')}
-		lossesLabel={t('L')}
-		streakLabel={t('Streak')}
 	/>
 </WidgetPanel>

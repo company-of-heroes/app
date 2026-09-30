@@ -2,8 +2,8 @@
 	import { api } from '$core/api';
 	import { app } from '$core/app/context';
 	import { Alert } from '$lib/components/ui/alert';
-	import { Leaderboard } from '../leaderboard';
-	import LeaderboardStatPill from '$lib/components/leaderboard/leaderboard-stat-pill.svelte';
+	import { PlayerStatsTable } from '@company-of-heroes/ui/player';
+	import { LeaderboardStatPill } from '@company-of-heroes/ui/leaderboard';
 	import { MatchHistory } from '../match-history';
 	import { PlayerPerformance } from '$lib/components/player-performance';
 	import { relic, relicLeaderboardFingerprint } from '$lib/relic';
@@ -464,6 +464,16 @@
 					{/if}
 
 					<div class="min-w-0 px-5 py-4">
+						<div class="mb-2.5">
+							{#if profileHref}
+								<Button href={profileHref} variant="secondary" size="sm" class="shrink-0">
+									{t('View profile')}
+								</Button>
+							{/if}
+							<Button href={updateProfileHref} variant="secondary" size="sm" class="shrink-0">
+								{t('Update profile')}
+							</Button>
+						</div>
 						<div class="mb-3 flex flex-wrap items-center gap-2.5">
 							{#if profileHref && previewId}
 								<PlayerProfileLink
@@ -482,18 +492,11 @@
 										/>
 									{/if}
 									<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
-									<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span>
+									<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span
+									>
 								</PlayerProfileLink>
 							{/if}
 							<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
-							{#if profileHref}
-								<Button href={profileHref} variant="secondary" size="sm" class="shrink-0">
-									{t('View profile')}
-								</Button>
-							{/if}
-							<Button href={updateProfileHref} variant="secondary" size="sm" class="shrink-0">
-								{t('Update profile')}
-							</Button>
 							{#if app.lobby}
 								<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
 									<LiveBadge label={t('In match')} />
@@ -763,7 +766,9 @@
 									'[&_[data-state=active]]:border-transparent [&_[data-state=active]]:bg-transparent [&_[data-state=active]]:text-white'
 							)}
 						>
-							<Tabs.Trigger value="stats" onclick={() => openTab('stats')}>{t('Stats')}</Tabs.Trigger>
+							<Tabs.Trigger value="stats" onclick={() => openTab('stats')}
+								>{t('Stats')}</Tabs.Trigger
+							>
 							<Tabs.Trigger value="performance" onclick={() => openTab('performance')}>
 								{t('Performance')}
 							</Tabs.Trigger>
@@ -786,11 +791,7 @@
 					{#if panelExpanded}
 						<div class="border-secondary-800 border-t">
 							<Tabs.Content value="stats">
-								<Leaderboard
-									stats={profile.relic.leaderboardStats ?? []}
-									elo={playerElo}
-									class="rounded-none border-0"
-								/>
+								<PlayerStatsTable stats={profile.relic.leaderboardStats ?? []} elo={playerElo} />
 							</Tabs.Content>
 							<Tabs.Content value="performance">
 								<PlayerPerformance
@@ -822,7 +823,7 @@
 		</div>
 	{/key}
 {:else if resolvedProfile.loading}
-	<Player.ProfileSkeleton widget />
+	<Player.WidgetSkeleton />
 {:else}
 	<Alert variant="warning">
 		{t('Company of Heroes is not running. Start the game to see your profile and match tracking.')}

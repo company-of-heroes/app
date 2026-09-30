@@ -9,6 +9,9 @@
 	"exports": {
 		"./cn": "./src/cn.ts",
 		"./variants": "./src/variants.ts",
+		"./host": "./src/host/index.ts",
+		"./format/date": "./src/format/date.ts",
+		"./format/country": "./src/format/country.ts",
 		"./theme.css": "./src/theme.css",
 		"./attachments": "./src/attachments/index.ts",
 		"./tooltip": "./src/attachments/tooltip.svelte.ts",
@@ -36,18 +39,24 @@
 		"./modal": "./src/ui/modal/index.ts",
 		"./sheet": "./src/ui/sheet/index.ts",
 		"./form": "./src/ui/form/index.ts",
+		"./toasts": "./src/ui/toasts/index.ts",
 		"./context-menu": "./src/ui/context-menu/index.ts",
 		"./format/player-format": "./src/format/player-format.ts",
 		"./format/ranks": "./src/format/ranks.ts",
 		"./format/types": "./src/format/types.ts",
+		"./format/labels": "./src/format/labels.ts",
 		"./leaderboard": "./src/leaderboard/index.ts",
 		"./player": "./src/player/index.ts",
 		"./player/types": "./src/player/types.ts",
+		"./player/profile": "./src/player/profile.ts",
 		"./player-performance": "./src/player-performance/index.ts",
 		"./replay": "./src/replay/index.ts",
 		"./replay/types": "./src/replay/types.ts",
 		"./replay/filter-ast": "./src/replay/filter-ast.ts",
 		"./replay/utils": "./src/replay/utils.ts",
+		"./replay/stats": "./src/replay/replay-stats.ts",
+		"./replay/roster": "./src/replay/roster.ts",
+		"./replay/parse": "./src/replay/parse/index.ts",
 		"./comment": "./src/comment/index.ts",
 		"./comment/vote": "./src/comment/vote.ts",
 		"./live-lobby": "./src/live-lobby/index.ts",
@@ -60,18 +69,21 @@
 		"./twitch/types": "./src/twitch/types.ts"
 	},
 	"dependencies": {
+		"@company-of-heroes/i18n": "workspace:*",
 		"clsx": "^2.1.1",
 		"emittery": "^1.2.1",
 		"marked": "17.0.6",
 		"tailwind-merge": "^3.6.0",
-		"tippy.js": "^6.3.7"
+		"tippy.js": "^6.3.7",
+		"@fknoobs/replay-parser": "github:fknoobs/replay-analyzer"
 	},
 	"peerDependencies": {
 		"bits-ui": "^2.19.0",
 		"layerchart": "2.0.0-next.43",
 		"phosphor-svelte": "^3.1.0",
 		"runed": "^0.37.1",
-		"svelte": "^5.57.0"
+		"svelte": "^5.57.0",
+		"svelte-sonner": "^1.2.1"
 	},
 	"devDependencies": {
 		"bits-ui": "^2.19.0",
@@ -80,6 +92,7 @@
 		"runed": "^0.37.1",
 		"svelte": "^5.57.0",
 		"svelte-check": "^4.7.6",
-		"typescript": "~5.6.3"
+		"typescript": "~5.6.3",
+		"svelte-sonner": "1.2.1"
 	}
 }

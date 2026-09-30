@@ -1,4 +1,4 @@
-import type { LiveLobbyPlayerStats } from '../live-lobby/types';
+import type { LiveLobbyPlayer, LiveLobbyPlayerStats } from '../live-lobby/types';
 import type { FilterAst } from './filter-ast';
 
 export type ReplayMessage = {
@@ -13,6 +13,7 @@ export type ReplayPlayer = {
 	id: number | null;
 	name: string;
 	faction: string;
+	doctrine?: number | null;
 	doctrineName?: string;
 	steamId?: string | null;
 };
@@ -38,6 +39,8 @@ export type ReplayData = {
 	players: ReplayPlayer[];
 	messages: ReplayMessage[];
 	actions: ReplayAction[];
+	/** Precomputed CPM per player id (desktop parser); computed on the fly otherwise. */
+	cpmByPlayerId?: Record<string, string>;
 };
 
 export type HistorySortField = 'createdAt' | 'likeCount' | 'downloadCount' | 'commentCount';
@@ -106,6 +109,7 @@ export type MatchResultPlayer = {
 };
 
 export type MatchResult = {
+	description?: string;
 	startgametime?: number;
 	completiontime?: number;
 	matchtype_id?: number;
@@ -129,6 +133,13 @@ export type CommunityMatch = {
 	visibility?: 'private' | 'member' | 'deleted';
 };
 
+export type CommunityMatchSubmittedBy = {
+	alias: string;
+	profileId: number;
+	steamId?: string | null;
+};
+
+/** One community match or member replay, as served by `GET /api/v1/replays/{id}`. */
 export type CommunityMatchDetail = {
 	id: string;
 	map: string;
@@ -142,4 +153,25 @@ export type CommunityMatchDetail = {
 	title?: string;
 	kind?: 'match' | 'member';
 	description?: string;
+	replay?: string;
+	hasReplay?: boolean;
+	needsResult?: boolean;
+	sessionId?: number;
+	hidden?: boolean;
+	hiddenByKeyword?: boolean;
+	submittedBy?: CommunityMatchSubmittedBy | null;
+	/** Staff-only: lobby updatedAt from PocketBase. */
+	updatedAt?: string;
+	/** Staff-only: uploader display name / email / id. */
+	owner?: string | null;
+	/** Slim players with leaderboard stats (rank/level/ELO) for Overview. */
+	livePlayers?: LiveLobbyPlayer[] | null;
+	filename?: string;
+	mapFilename?: string;
+	uploadedBy?: { id: string; alias: string } | null;
+	visibility?: 'private' | 'member' | 'deleted';
+	roster?: unknown[];
+	memberReplayId?: string | null;
+	/** Only true for the uploader. */
+	canPublish?: boolean;
 };

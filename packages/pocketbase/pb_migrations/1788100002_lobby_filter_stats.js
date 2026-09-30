@@ -9,7 +9,8 @@ const LOBBY_INDEXES = [
 ];
 
 const INDEX_ELO_INDEX = 'CREATE INDEX `idx_lpi_elo` ON `lobby_player_index` (`elo`)';
-const INDEX_RACE_ELO = 'CREATE INDEX `idx_lpi_lobby_race_elo` ON `lobby_player_index` (`lobby`, `race_id`, `elo`)';
+const INDEX_RACE_ELO =
+	'CREATE INDEX `idx_lpi_lobby_race_elo` ON `lobby_player_index` (`lobby`, `race_id`, `elo`)';
 
 migrate(
 	(app) => {
@@ -104,9 +105,11 @@ migrate(
 		if (lobbies.fields.getByName('durationSeconds')) {
 			lobbies.fields.removeByName('durationSeconds');
 		}
+
 		if (lobbies.fields.getByName('avgElo')) {
 			lobbies.fields.removeByName('avgElo');
 		}
+
 		const lobbyIndexes = [];
 		for (const index of lobbies.indexes) {
 			const text = String(index);
@@ -127,6 +130,7 @@ migrate(
 		if (indexCollection.fields.getByName('elo')) {
 			indexCollection.fields.removeByName('elo');
 		}
+
 		const indexes = [];
 		for (const index of indexCollection.indexes) {
 			const text = String(index);

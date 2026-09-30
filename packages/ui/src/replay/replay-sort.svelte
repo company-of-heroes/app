@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Button } from '../ui/button';
 	import { Select } from '../ui/input';
 	import { cn } from '@company-of-heroes/ui/cn';
@@ -10,33 +11,18 @@
 		sort: HistorySortField;
 		sortDir: HistorySortDir;
 		onChange: (next: { sort: HistorySortField; sortDir: HistorySortDir }) => void;
-		dateLabel?: string;
-		likesLabel?: string;
-		downloadsLabel?: string;
-		commentsLabel?: string;
-		ascendingLabel?: string;
-		descendingLabel?: string;
 		class?: string;
 	};
 
-	let {
-		sort,
-		sortDir,
-		onChange,
-		dateLabel = 'Date',
-		likesLabel = 'Likes',
-		downloadsLabel = 'Downloads',
-		commentsLabel = 'Comments',
-		ascendingLabel = 'Ascending',
-		descendingLabel = 'Descending',
-		class: className
-	}: Props = $props();
+	const { t } = useI18n();
+
+	let { sort, sortDir, onChange, class: className }: Props = $props();
 
 	const items = $derived([
-		{ value: 'createdAt', label: dateLabel },
-		{ value: 'likeCount', label: likesLabel },
-		{ value: 'downloadCount', label: downloadsLabel },
-		{ value: 'commentCount', label: commentsLabel }
+		{ value: 'createdAt', label: t('Date') },
+		{ value: 'likeCount', label: t('Likes') },
+		{ value: 'downloadCount', label: t('Downloads') },
+		{ value: 'commentCount', label: t('Comments') }
 	]);
 
 	function isSortField(value: string): value is HistorySortField {
@@ -82,7 +68,7 @@
 		variant="secondary"
 		size="icon-sm"
 		onclick={toggleDir}
-		aria-label={sortDir === 'desc' ? descendingLabel : ascendingLabel}
+		aria-label={sortDir === 'desc' ? t('Descending') : t('Ascending')}
 	>
 		{#if sortDir === 'desc'}
 			<SortDescendingIcon class="size-4" />

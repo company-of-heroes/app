@@ -15,7 +15,7 @@ export const load: PageServerLoad = async (event) => {
 		};
 	}
 
-	const result = await locals.services.auth().confirmVerification(token);
+	const result = await locals.api.auth.confirmVerification(token);
 	if (result.isErr()) {
 		return {
 			ok: false as const,

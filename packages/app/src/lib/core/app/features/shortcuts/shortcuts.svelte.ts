@@ -466,6 +466,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			if (!Array.isArray(this.settings.global)) {
 				this.settings.global = [];
 			}
+
 			return this.settings.global;
 		}
 
@@ -516,6 +517,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		if (keybinding.isRecordingTriggerKeys) {
 			this.commitRecording(keybinding, 'trigger');
 		}
+
 		if (keybinding.isRecordingActionKeys) {
 			this.commitRecording(keybinding, 'action');
 		}
@@ -544,7 +546,9 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 	}
 
 	commitRecording(keybinding: Shortcut, type: 'trigger' | 'action') {
-		if (type === 'trigger' ? !keybinding.isRecordingTriggerKeys : !keybinding.isRecordingActionKeys) {
+		if (
+			type === 'trigger' ? !keybinding.isRecordingTriggerKeys : !keybinding.isRecordingActionKeys
+		) {
 			return;
 		}
 
@@ -586,6 +590,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			if (shortcut.isRecordingTriggerKeys) {
 				this.commitRecording(shortcut, 'trigger');
 			}
+
 			if (shortcut.isRecordingActionKeys) {
 				this.commitRecording(shortcut, 'action');
 			}
@@ -597,9 +602,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			this.handlers.set(keybinding, entry);
 		}
 
-		const previousKeys = [
-			...(type === 'trigger' ? keybinding.triggerKeys : keybinding.actionKeys)
-		];
+		const previousKeys = [...(type === 'trigger' ? keybinding.triggerKeys : keybinding.actionKeys)];
 
 		const commit = () => {
 			this.commitRecording(keybinding, type);
@@ -608,16 +611,41 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		const getShortcutKey = (event: KeyboardEvent) => {
 			const { key, code } = event;
 
-			if (key === 'CapsLock') return null;
-			if (key === 'Control') return 'CommandOrControl';
-			if (key === 'Shift') return 'Shift';
-			if (key === 'Alt') return 'Alt';
-			if (key === 'Meta') return 'Super';
-			if (key === ' ') return 'Space';
+			if (key === 'CapsLock') {
+				return null;
+			}
 
-			if (code.startsWith('Key')) return code;
-			if (code.startsWith('Digit')) return code;
-			if (code.startsWith('Numpad')) return code;
+			if (key === 'Control') {
+				return 'CommandOrControl';
+			}
+
+			if (key === 'Shift') {
+				return 'Shift';
+			}
+
+			if (key === 'Alt') {
+				return 'Alt';
+			}
+
+			if (key === 'Meta') {
+				return 'Super';
+			}
+
+			if (key === ' ') {
+				return 'Space';
+			}
+
+			if (code.startsWith('Key')) {
+				return code;
+			}
+
+			if (code.startsWith('Digit')) {
+				return code;
+			}
+
+			if (code.startsWith('Numpad')) {
+				return code;
+			}
 
 			const punctuationMap: Record<string, string> = {
 				Backquote: '`',
@@ -633,7 +661,9 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				Slash: '/'
 			};
 
-			if (code in punctuationMap) return punctuationMap[code];
+			if (code in punctuationMap) {
+				return punctuationMap[code];
+			}
 
 			return key;
 		};
@@ -654,7 +684,9 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			event.preventDefault();
 			const key = getShortcutKey(event);
 
-			if (!key) return;
+			if (!key) {
+				return;
+			}
 
 			const targetArray = type === 'trigger' ? keybinding.triggerKeys : keybinding.actionKeys;
 			if (!targetArray.includes(key)) {

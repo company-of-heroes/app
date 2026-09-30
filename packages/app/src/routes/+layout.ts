@@ -12,6 +12,8 @@ import { tts, twitch } from '$core/app/features/twitch';
 import { ttsPersonalVoices } from '$core/app/features/tts-personal-voices';
 import { twitchOverlays } from '$core/app/features/twitch-overlays';
 import { twitchBot } from '$core/app/features/twitch-bot';
+import { youtube } from '$core/app/features/youtube';
+import { streamingHours } from '$core/app/features/streaming';
 import { replayAnalyzer } from '$core/app/features/replay-analyzer';
 import { history } from '$core/app/features/history';
 import { shortcuts } from '$core/app/features/shortcuts';
@@ -46,6 +48,8 @@ export const load = async ({ url }: LoadEvent) => {
 		app.register('anti-cheat', antiCheat);
 		app.register('replay-analyzer', replayAnalyzer);
 		app.register('twitch', twitch);
+		app.register('youtube', youtube);
+		app.register('streaming-hours', streamingHours);
 		app.register('text-to-speech', tts);
 		app.register('text-to-speech-custom-characters', ttsPersonalVoices);
 		app.register('twitch-bot', twitchBot);

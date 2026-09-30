@@ -2,11 +2,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import * as Dialog from '@company-of-heroes/ui/dialog';
-	import {
-		flushHeader,
-		flushHeaderTitle,
-		tabTrigger
-	} from '@company-of-heroes/ui/variants';
+	import { flushHeader, flushHeaderTitle, tabTrigger } from '@company-of-heroes/ui/variants';
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import { cn } from '$lib/utils/cn';
 	import { rememberedReplaysListHref } from '$lib/replays';
@@ -83,7 +79,7 @@
 	<Dialog.Trigger
 		class={cn(
 			interactive,
-			'border-secondary-800 text-white hover:bg-secondary-950/50 inline-flex h-full items-center justify-center border-l px-3 md:hidden'
+			'border-secondary-800 hover:bg-secondary-950/50 inline-flex h-full items-center justify-center border-l px-3 text-white md:hidden'
 		)}
 		aria-label={t('Menu')}
 	>

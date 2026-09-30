@@ -1,11 +1,14 @@
-import { form, command, query, getRequestEvent } from '$app/server';
-import { error, invalid, redirect } from '@sveltejs/kit';
+import { command, query, getRequestEvent } from '$app/server';
+import { error } from '@sveltejs/kit';
 import { z } from 'zod';
-import { localizeHref } from '@company-of-heroes/i18n';
+import {
+	memberUpdateSchema,
+	memberUploadSchema,
+	publishFromMatchSchema
+} from '$lib/server/domain/member-replay-writes';
+import { countDownload } from '$lib/server/downloads';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import type { MemberReplayPreviewPlayer } from '$lib/replays/member-rating-preview';
-
-const boolString = z.enum(['true', 'false']).transform((value) => value === 'true');
 
 const uploadMemberReplaySchema = z.object({
 	file: z
@@ -17,74 +20,33 @@ const uploadMemberReplaySchema = z.object({
 			'Only .rec replay files are supported.'
 		),
 	filename: z.string().trim().min(1).max(255),
-	title: z
-		.string()
-		.trim()
-		.min(1, 'Title is required.')
-		.max(200),
+	title: z.string().trim().min(1, 'Title is required.').max(200),
 	description: z.string().trim().min(1, 'Description is required.').max(2000),
 	mapName: z.string().trim().min(1).max(200),
 	mapFilename: z.string().trim().min(1).max(200),
-	durationInSeconds: z.string().transform((value) => {
-		const n = Number(value);
-		return Number.isFinite(n) && n >= 0 ? n : 0;
-	}),
+	durationInSeconds: z.number().nonnegative(),
 	gameDate: z.string().optional().default(''),
-	isRanked: boolString,
-	isVpGame: boolString,
-	isRandomStart: boolString,
-	isHighResources: boolString,
-	vpCount: z.string().transform((value) => {
-		const n = Number(value);
-		return Number.isFinite(n) ? n : 0;
-	}),
-	players: z.string().transform((raw, ctx) => {
-		try {
-			return JSON.parse(raw || '[]') as unknown;
-		} catch {
-			ctx.addIssue({ code: 'custom', message: 'Invalid replay metadata.' });
-			return [];
-		}
-	}),
-	messages: z.string().transform((raw, ctx) => {
-		try {
-			return JSON.parse(raw || '[]') as unknown;
-		} catch {
-			ctx.addIssue({ code: 'custom', message: 'Invalid replay metadata.' });
-			return [];
-		}
-	})
+	isRanked: z.boolean(),
+	isVpGame: z.boolean(),
+	isRandomStart: z.boolean(),
+	isHighResources: z.boolean(),
+	vpCount: z.number(),
+	players: z.array(z.unknown()),
+	messages: z.array(z.unknown())
 });
 
-export const uploadMemberReplay = form(uploadMemberReplaySchema, async (data) => {
+/** Shared uploader (`@company-of-heroes/ui/replay`) submits the parsed replay + file here. */
+export const uploadMemberReplay = command(uploadMemberReplaySchema, async (data) => {
 	const { locals } = getRequestEvent();
 	if (!locals.user) {
 		error(401, locals.t('Sign in to upload a member replay.'));
 	}
 
-	const result = await locals.services.replays().uploadMember({
-		file: data.file,
-		filename: data.filename,
-		title: data.title || '-',
-		description: data.description,
-		mapName: data.mapName,
-		mapFilename: data.mapFilename,
-		durationInSeconds: data.durationInSeconds,
-		gameDate: data.gameDate || undefined,
-		isRanked: data.isRanked,
-		isVpGame: data.isVpGame,
-		isRandomStart: data.isRandomStart,
-		isHighResources: data.isHighResources,
-		vpCount: data.vpCount,
-		players: data.players,
-		messages: data.messages
-	});
-
-	if (result.isErr()) {
-		invalid(locals.t(result.error.message));
-	}
-
-	redirect(303, localizeHref(`/replays/${result.value.id}`, locals.locale));
+	const { file, ...metadata } = data;
+	const replay = await unwrapAsync(
+		locals.services.memberReplays.upload(locals.user.id, file, memberUploadSchema.parse(metadata))
+	);
+	return { id: replay.id };
 });
 
 const previewMemberReplayRatingsSchema = z.object({
@@ -114,11 +76,11 @@ export const previewMemberReplayRatings = query(
 		}
 
 		return unwrapAsync(
-			locals.services.replays().previewMemberStats({
-				players: players as MemberReplayPreviewPlayer[],
+			locals.services.memberReplays.previewStats(
+				players as MemberReplayPreviewPlayer[],
 				isRanked,
-				durationInSeconds
-			})
+				durationInSeconds ?? 0
+			)
 		);
 	}
 );
@@ -143,7 +105,7 @@ export const searchPlayersForUpload = query(searchPlayersForUploadSchema, async 
 		}[];
 	}
 
-	const players = await unwrapAsync(locals.services.players().search(q, { requireMatches: true }));
+	const players = await unwrapAsync(locals.services.players.search(q, true));
 	return players.map((player) => ({
 		value: player.steamId,
 		label: player.alias || player.steamId,
@@ -157,51 +119,33 @@ const updateMemberReplaySchema = z.object({
 	id: z.string().min(1),
 	title: z.string().trim().min(1, 'Title is required.').max(200),
 	description: z.string().trim().min(1, 'Description is required.').max(2000),
-	players: z.string().transform((raw, ctx) => {
-		try {
-			return JSON.parse(raw || '[]') as unknown;
-		} catch {
-			ctx.addIssue({ code: 'custom', message: 'Invalid replay metadata.' });
-			return [];
-		}
-	})
+	players: z.array(z.unknown())
 });
 
-export const updateMemberReplay = form(updateMemberReplaySchema, async (data) => {
+/** Shared edit form (`@company-of-heroes/ui/replay`): owner edits title/description/roster. */
+export const updateMemberReplay = command(updateMemberReplaySchema, async (data) => {
 	const { locals } = getRequestEvent();
 	if (!locals.user) {
 		error(401, locals.t('Sign in to edit a member replay.'));
 	}
 
-	const result = await locals.services.replays().updateMember(data.id, {
-		title: data.title,
-		description: data.description,
-		players: data.players
-	});
-
-	if (result.isErr()) {
-		invalid(locals.t(result.error.message));
-	}
-
-	redirect(303, localizeHref(`/replays/${result.value.id}`, locals.locale));
+	const { id, ...changes } = data;
+	await unwrapAsync(
+		locals.services.memberReplays.update(id, locals.user.id, memberUpdateSchema.parse(changes))
+	);
 });
 
 const deleteMemberReplaySchema = z.object({
 	id: z.string().min(1)
 });
 
-export const deleteMemberReplay = form(deleteMemberReplaySchema, async (data) => {
+export const deleteMemberReplay = command(deleteMemberReplaySchema, async ({ id }) => {
 	const { locals } = getRequestEvent();
 	if (!locals.user) {
 		error(401, locals.t('Sign in to delete a member replay.'));
 	}
 
-	const result = await locals.services.replays().deleteMember(data.id);
-	if (result.isErr()) {
-		invalid(locals.t(result.error.message));
-	}
-
-	redirect(303, localizeHref('/replays?tab=member', locals.locale));
+	await unwrapAsync(locals.services.memberReplays.remove(id, locals.user.id));
 });
 
 const publishMatchAsMemberReplaySchema = z.object({
@@ -221,12 +165,11 @@ export const publishMatchAsMemberReplay = command(
 		}
 
 		return unwrapAsync(
-			locals.services.replays().publishFromMatch(lobbyId, {
-				title,
-				description,
-				durationInSeconds,
-				players
-			})
+			locals.services.memberReplays.publishFromMatch(
+				lobbyId,
+				locals.user.id,
+				publishFromMatchSchema.parse({ title, description, durationInSeconds, players })
+			)
 		);
 	}
 );
@@ -239,14 +182,8 @@ const recordReplayDownloadSchema = z.object({
 
 export const recordReplayDownload = command(
 	recordReplayDownloadSchema,
-	({ matchId, visitorId, kind }) => {
-		const { locals, getClientAddress } = getRequestEvent();
-		const replays = locals.services.replays();
-		const ip = getClientAddress();
-		if (kind === 'member') {
-			return unwrapAsync(replays.downloadMember(matchId, visitorId, ip));
-		}
-
-		return unwrapAsync(replays.download(matchId, visitorId, ip));
-	}
+	({ matchId, visitorId, kind }) =>
+		unwrapAsync(
+			countDownload(getRequestEvent(), kind === 'member' ? 'replay' : 'lobby', matchId, visitorId)
+		)
 );

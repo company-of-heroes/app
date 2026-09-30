@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { SmurfAlert } from '@company-of-heroes/ui/player';
+	import { toPlayerSmurf } from '$lib/player/page-data';
 	import type { LobbyPlayer, MatchHistoryPlayer, TransformedMatch } from '@fknoobs/app';
 	import type { MatchTypeId } from '$core/game/lobby';
 	import type { SmurfAlertState } from '$lib/player/smurf';
@@ -50,14 +52,19 @@
 		if (result) {
 			return getLeaderboardStatsForPlayerByMatchType(result.matchtype_id, player);
 		}
+
 		return getLeaderboardStatsForPlayerByMatchType(matchType, player);
 	}
 
 	function getPlayerResult(player: LobbyPlayer): MatchHistoryPlayer | undefined {
-		if (!result) return undefined;
+		if (!result) {
+			return undefined;
+		}
 
 		const profileId = getPlayerProfileId(player);
-		if (!profileId) return undefined;
+		if (!profileId) {
+			return undefined;
+		}
 
 		return result.players.find((entry) => entry.profile_id === profileId);
 	}
@@ -68,7 +75,10 @@
 
 	function playerSmurf(player: LobbyPlayer): SmurfAlertState | undefined {
 		const profileId = getPlayerProfileId(player);
-		if (profileId == null) return undefined;
+		if (profileId == null) {
+			return undefined;
+		}
+
 		return smurfs?.[profileId];
 	}
 </script>
@@ -99,7 +109,10 @@
 				<Player.Country class="shrink-0" />
 				<Player.Alias class="min-w-0 flex-1 truncate text-sm" />
 				{#if smurf?.status === 'shared'}
-					<Player.SmurfAlert {smurf} compact />
+					{@const shared = toPlayerSmurf(smurf)}
+					{#if shared}
+						<SmurfAlert smurf={shared} compact />
+					{/if}
 				{/if}
 				{#if player.steamId && cheaters?.has(player.steamId)}
 					<Player.CheaterAlert compact />

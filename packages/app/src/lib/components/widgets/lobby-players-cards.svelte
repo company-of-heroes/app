@@ -3,7 +3,12 @@
 	import type { MatchTypeId } from '$core/game/lobby';
 	import { sortBy } from 'lodash-es';
 	import LobbyPlayerCard from './lobby-player-card.svelte';
-	import { getAlliesPlayers, getAxisPlayers, getPlayerRowKey, isHighlightedPlayer } from './dashboard-utils';
+	import {
+		getAlliesPlayers,
+		getAxisPlayers,
+		getPlayerRowKey,
+		isHighlightedPlayer
+	} from './dashboard-utils';
 	import { useI18n } from '$lib/i18n';
 
 	type Props = {
@@ -21,7 +26,9 @@
 
 <div class="grid grid-cols-1 gap-8 xl:grid-cols-2">
 	<section>
-		<h3 class="text-secondary-400 mb-4 text-xs font-semibold tracking-wide uppercase">{t('Allies')}</h3>
+		<h3 class="text-secondary-400 mb-4 text-xs font-semibold tracking-wide uppercase">
+			{t('Allies')}
+		</h3>
 		<div class="grid gap-3">
 			{#each allies as player, rowIndex (getPlayerRowKey(player, rowIndex))}
 				<LobbyPlayerCard
@@ -33,7 +40,9 @@
 		</div>
 	</section>
 	<section>
-		<h3 class="text-secondary-400 mb-4 text-xs font-semibold tracking-wide uppercase">{t('Axis')}</h3>
+		<h3 class="text-secondary-400 mb-4 text-xs font-semibold tracking-wide uppercase">
+			{t('Axis')}
+		</h3>
 		<div class="grid gap-3">
 			{#each axis as player, rowIndex (getPlayerRowKey(player, rowIndex))}
 				<LobbyPlayerCard

@@ -3,6 +3,23 @@ import type { LeaderboardStat, RelicProfile } from '@fknoobs/app';
 import { getI18n, t } from '$lib/i18n';
 import { getStoredEloForLeaderboard, type PlayerEloMap } from '$lib/utils/player-elo';
 
+import {
+	formatRatio,
+	getEloTextShadow,
+	getRatioColor,
+	getRatioValue,
+	isEliteElo,
+	isPremiumElo
+} from '@company-of-heroes/ui/format/player-format';
+export {
+	formatRatio,
+	getEloTextShadow,
+	getRatioColor,
+	getRatioValue,
+	isEliteElo,
+	isPremiumElo
+} from '@company-of-heroes/ui/format/player-format';
+
 export const RANKED_MODE_GROUPS = [
 	{ label: '1v1', ids: [4, 5, 6, 7] },
 	{ label: '2v2', ids: [8, 9, 10, 11] },
@@ -17,10 +34,7 @@ export type RankedModeRow = {
 };
 
 /** Per mode: faction with highest companion ELO, ties broken by Relic ranklevel. */
-export function buildRankedModeRows(
-	stats: LeaderboardStat[],
-	elo?: PlayerEloMap
-): RankedModeRow[] {
+export function buildRankedModeRows(stats: LeaderboardStat[], elo?: PlayerEloMap): RankedModeRow[] {
 	const result: RankedModeRow[] = [];
 	for (const group of RANKED_MODE_GROUPS) {
 		const candidates = stats.filter(
@@ -73,10 +87,14 @@ export function getSteamIdFromProfile(profile: RelicProfile): string {
 }
 
 export function getCountryDisplayName(country: string | null | undefined): string | null {
-	if (!country) return null;
+	if (!country) {
+		return null;
+	}
 
 	const region = String(country).trim().toUpperCase();
-	if (!/^[A-Z]{2}$/.test(region)) return null;
+	if (!/^[A-Z]{2}$/.test(region)) {
+		return null;
+	}
 
 	try {
 		const locale = getI18n().getLocale() || 'en';
@@ -99,11 +117,6 @@ export function getRaceLabel(race: Race | number): string {
 
 export function getRaceLabelFromLeaderboardId(leaderboardId: number): string {
 	return getRaceLabel(getRaceFromLeaderboardId(leaderboardId));
-}
-
-export function getRatioValue(wins: number, losses: number): number {
-	if (losses === 0) return wins > 0 ? Infinity : 0;
-	return wins / losses;
 }
 
 export type PerformanceWlRow = {
@@ -163,9 +176,18 @@ function lerp(min: number, max: number, t: number): number {
 }
 
 function ratioToProgress(ratio: number): number {
-	if (!Number.isFinite(ratio) || ratio <= 0) return 0;
-	if (ratio >= 5) return 1;
-	if (ratio <= 1) return ratio * 0.5;
+	if (!Number.isFinite(ratio) || ratio <= 0) {
+		return 0;
+	}
+
+	if (ratio >= 5) {
+		return 1;
+	}
+
+	if (ratio <= 1) {
+		return ratio * 0.5;
+	}
+
 	return 0.5 + ((ratio - 1) / 4) * 0.5;
 }
 
@@ -185,30 +207,35 @@ function interpolateRatioColor(t: number): string {
 	return `oklch(${lerp(stops[1].l, stops[2].l, local)} ${lerp(stops[1].c, stops[2].c, local)} ${lerp(stops[1].h, stops[2].h, local)})`;
 }
 
-export function getRatioColor(wins: number, losses: number): string {
-	if (wins === 0 && losses === 0) return 'var(--color-secondary-400)';
-
-	const ratio = getRatioValue(wins, losses);
-	if (ratio === Infinity) return 'oklch(0.72 0.21 145)';
-
-	return interpolateRatioColor(ratioToProgress(ratio));
-}
-
 function streakToProgress(streak: number): number {
-	if (streak >= 5) return 1;
-	if (streak <= -5) return 0;
+	if (streak >= 5) {
+		return 1;
+	}
+
+	if (streak <= -5) {
+		return 0;
+	}
+
 	return 0.5 + (streak / 5) * 0.5;
 }
 
 export function getStreakColor(streak: number): string {
-	if (streak === 0) return 'var(--color-secondary-400)';
+	if (streak === 0) {
+		return 'var(--color-secondary-400)';
+	}
 
 	return interpolateRatioColor(streakToProgress(streak));
 }
 
 function eloBandProgress(elo: number, min: number, max: number): number {
-	if (elo <= min) return 0;
-	if (elo >= max) return 1;
+	if (elo <= min) {
+		return 0;
+	}
+
+	if (elo >= max) {
+		return 1;
+	}
+
 	return (elo - min) / (max - min);
 }
 
@@ -222,7 +249,9 @@ function lerpOklch(
 
 /** Low = blue, mid = green, pro = gold, elite (2400+) = luminous gold. */
 export function getEloColor(elo: number | null | undefined): string {
-	if (typeof elo !== 'number' || elo < 1) return 'var(--color-secondary-400)';
+	if (typeof elo !== 'number' || elo < 1) {
+		return 'var(--color-secondary-400)';
+	}
 
 	if (elo < 1500) {
 		return lerpOklch(
@@ -254,41 +283,4 @@ export function getEloColor(elo: number | null | undefined): string {
 		{ l: 0.88, c: 0.2, h: 78 },
 		eloBandProgress(elo, 2400, 2800)
 	);
-}
-
-export function isPremiumElo(elo: number | null | undefined): boolean {
-	return typeof elo === 'number' && elo >= 1950;
-}
-
-export function isEliteElo(elo: number | null | undefined): boolean {
-	return typeof elo === 'number' && elo >= 2400;
-}
-
-export function getEloTextShadow(elo: number | null | undefined): string | undefined {
-	if (!isPremiumElo(elo)) return undefined;
-
-	const color = getEloColor(elo);
-
-	if (isEliteElo(elo)) {
-		const t = eloBandProgress(elo!, 2400, 2800);
-		const outer = lerp(18, 28, t);
-		const mid = lerp(10, 16, t);
-		return [
-			`0 0 1px color-mix(in oklch, ${color} 90%, white)`,
-			`0 0 ${mid}px color-mix(in oklch, ${color} 70%, transparent)`,
-			`0 0 ${outer}px color-mix(in oklch, ${color} 45%, transparent)`,
-			`0 0 ${outer * 1.6}px color-mix(in oklch, var(--color-primary) 25%, transparent)`
-		].join(', ');
-	}
-
-	const t = eloBandProgress(elo!, 1950, 2400);
-	const glow = lerp(0.28, 0.48, t);
-	const blur = lerp(8, 14, t);
-	return `0 0 ${blur}px color-mix(in oklch, ${color} ${Math.round(glow * 100)}%, transparent)`;
-}
-
-export function formatRatio(wins: number, losses: number): string {
-	if (losses > 0) return (wins / losses).toFixed(2);
-	if (wins > 0) return '∞';
-	return '0.00';
 }

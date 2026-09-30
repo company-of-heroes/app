@@ -1,18 +1,9 @@
-import PocketBase from 'pocketbase';
 import type { RequestEvent } from '@sveltejs/kit';
+import { createApi } from '@company-of-heroes/api';
 import { serializeAuthUser } from '$lib/auth/user';
-import { createServices } from '$lib/services/create-services';
+import { createUserPocketBase } from '$lib/server/pb';
+import { Services } from '$lib/server/services';
 import { API_URL } from '$lib/site/urls';
-
-export function createPocketBase(event: RequestEvent): PocketBase {
-	const pocketbase = new PocketBase(API_URL);
-	pocketbase.beforeSend = (url, options) => ({
-		url,
-		options: { ...options, fetch: options.fetch ?? event.fetch }
-	});
-	pocketbase.authStore.loadFromCookie(event.request.headers.get('cookie') ?? '');
-	return pocketbase;
-}
 
 export function syncLocalsUser(event: RequestEvent) {
 	const pocketbase = event.locals.pocketbase;
@@ -22,9 +13,18 @@ export function syncLocalsUser(event: RequestEvent) {
 }
 
 export function boot(event: RequestEvent) {
-	event.locals.pocketbase = createPocketBase(event);
-	event.locals.services = createServices({
-		pocketbase: event.locals.pocketbase,
-		fetch: event.fetch
+	const pocketbase = createUserPocketBase(event.request, event.fetch);
+	event.locals.pocketbase = pocketbase;
+	// The shared client, acting as the signed-in user (account, profile customization).
+	event.locals.api = createApi({
+		pocketbase,
+		fetch: event.fetch,
+		baseUrl: API_URL,
+		siteUrl: event.url.origin,
+		userId: () => pocketbase.authStore.record?.id ?? ''
+	});
+	event.locals.services = new Services(event.locals, {
+		fetch: event.fetch,
+		overlays: event.platform?.env?.OVERLAYS
 	});
 }

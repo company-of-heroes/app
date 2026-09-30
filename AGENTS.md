@@ -21,3 +21,11 @@ You MUST use this tool whenever writing Svelte code before sending it to the use
 
 Generates a Svelte Playground link with the provided code.
 After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
+
+## Shared components (app + website)
+
+- Every UI component exists once, in `packages/ui`. Do not create or keep a copy/wrapper in `packages/app` or `packages/website`.
+- Shared components translate with `useI18n()` and get host-specific links, images, auth, data I/O and toasts from `useHost()` (`packages/ui/src/host/host.context.ts`). A new host difference = a new port there, implemented in `packages/app/src/lib/host.ts` and `packages/website/src/lib/host.ts`.
+- Host-only extras go in as snippets on the shared component.
+- `pnpm check:duplicates` fails when a component name exists in both hosts' `src/lib/components`.
+- See `.cursor/skills/app-vs-website/SKILL.md` for the full rules.

@@ -1,6 +1,6 @@
 import type { RecordModel } from 'pocketbase';
 import { err, errAsync, ok, okAsync, ResultAsync } from 'neverthrow';
-import type { ApiDeps } from '../deps';
+import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { isStaff, requireStaff } from '../staff';
 import { fromClientError, fromPbPromise, pbOptions } from '../pb';
@@ -106,14 +106,11 @@ export class HiddenMatchesApi {
 
 	listSessionIds(): ResultAsync<Set<number>, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('hidden_matches').getFullList(
-				pbOptions(this.deps, { fields: 'id,sessionId' })
-			),
+			this.deps.pocketbase
+				.collection('hidden_matches')
+				.getFullList(pbOptions(this.deps, { fields: 'id,sessionId' })),
 			'Could not load hidden matches.'
-		).map(
-			(rows) =>
-				new Set(rows.map((row) => Number(row.sessionId)).filter((id) => id > 0))
-		);
+		).map((rows) => new Set(rows.map((row) => Number(row.sessionId)).filter((id) => id > 0)));
 	}
 
 	find(sessionId: number): ResultAsync<HiddenMatch | null, ApiError> {
@@ -122,11 +119,12 @@ export class HiddenMatchesApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('hidden_matches')
-				.getFirstListItem<HiddenMatch>(`sessionId=${sessionId}`, pbOptions(this.deps, {
+			this.deps.pocketbase.collection('hidden_matches').getFirstListItem<HiddenMatch>(
+				`sessionId=${sessionId}`,
+				pbOptions(this.deps, {
 					expand: 'hiddenBy'
-				})),
+				})
+			),
 			'Could not load hidden matches.'
 		).orElse((error) => (error.status === 404 ? ok(null) : err(error)));
 	}
@@ -142,17 +140,9 @@ export class HiddenMatchesApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase.collection('hidden_matches').create(
-				{
-					sessionId,
-					hiddenBy: staff.value
-				},
-				pbOptions(this.deps)
-			),
+			sendV1(this.deps, '/hidden-matches', { method: 'POST', body: { sessionId } }),
 			'Could not hide this match.'
-		)
-			.map(() => undefined)
-			.orElse((error) => (error.status === 400 ? ok(undefined) : err(error)));
+		).map(() => undefined);
 	}
 
 	unhide(sessionId: number): ResultAsync<void, ApiError> {
@@ -165,16 +155,10 @@ export class HiddenMatchesApi {
 			return errAsync(apiError(400, 'Could not show this match.'));
 		}
 
-		return this.find(sessionId).andThen((record) => {
-			if (!record) {
-				return okAsync(undefined);
-			}
-
-			return fromPbPromise(
-				this.deps.pocketbase.collection('hidden_matches').delete(record.id, pbOptions(this.deps)),
-				'Could not show this match.'
-			).map(() => undefined);
-		});
+		return fromPbPromise(
+			sendV1(this.deps, `/hidden-matches/${sessionId}`, { method: 'DELETE' }),
+			'Could not show this match.'
+		).map(() => undefined);
 	}
 
 	listKeywords(): ResultAsync<HiddenMatchKeyword[], ApiError> {
@@ -196,9 +180,9 @@ export class HiddenMatchesApi {
 		}
 
 		return fromPbPromise(
-			this.deps.pocketbase.collection('hidden_match_keywords').getFullList(
-				pbOptions(this.deps, { fields: 'id,word' })
-			),
+			this.deps.pocketbase
+				.collection('hidden_match_keywords')
+				.getFullList(pbOptions(this.deps, { fields: 'id,word' })),
 			'Could not load hidden keywords.'
 		).map((rows) => {
 			const words = rows.map((row) => String(row.word ?? '').trim()).filter(Boolean);
@@ -209,10 +193,10 @@ export class HiddenMatchesApi {
 
 	addKeyword(word: string): ResultAsync<HiddenMatchKeyword, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('hidden_match_keywords').create<HiddenMatchKeyword>(
-				{ word: word.trim() },
-				pbOptions(this.deps)
-			),
+			sendV1<HiddenMatchKeyword>(this.deps, '/hidden-matches/keywords', {
+				method: 'POST',
+				body: { word: word.trim() }
+			}),
 			'Could not add hidden keyword.'
 		).map((created) => {
 			invalidateHiddenKeywordCache();
@@ -222,7 +206,7 @@ export class HiddenMatchesApi {
 
 	deleteKeyword(id: string): ResultAsync<void, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('hidden_match_keywords').delete(id, pbOptions(this.deps)),
+			sendV1(this.deps, `/hidden-matches/keywords/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 			'Could not delete hidden keyword.'
 		).map(() => {
 			invalidateHiddenKeywordCache();

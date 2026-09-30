@@ -1,7 +1,7 @@
 import { ClientResponseError } from 'pocketbase';
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { voteFromRecord, type CommentVoteValue } from '@company-of-heroes/ui/comment/vote';
-import type { ApiDeps } from '../deps';
+import { sendV1, type ApiDeps } from '../deps';
 import type { ApiError } from '../errors';
 import {
 	currentUserId,
@@ -40,10 +40,7 @@ export class PlayerSocialApi {
 			return errAsync(auth.error);
 		}
 
-		return fromPbPromise(
-			this.setVoteRecord(steamId, auth.value, value),
-			'Failed to update vote.'
-		);
+		return fromPbPromise(this.setVoteRecord(steamId, auth.value, value), 'Failed to update vote.');
 	}
 
 	private async findMyVote(steamId: string): Promise<CommentVoteValue> {
@@ -54,10 +51,12 @@ export class PlayerSocialApi {
 		}
 
 		try {
-			const existing = await this.deps.pocketbase.collection('player_likes').getFirstListItem(
-				`steamId = "${escapePocketBaseString(id)}" && user = "${userId}"`,
-				pbOptions(this.deps, { fields: 'value' })
-			);
+			const existing = await this.deps.pocketbase
+				.collection('player_likes')
+				.getFirstListItem(
+					`steamId = "${escapePocketBaseString(id)}" && user = "${userId}"`,
+					pbOptions(this.deps, { fields: 'value' })
+				);
 			return voteFromRecord(existing.value);
 		} catch (error) {
 			if (error instanceof ClientResponseError && error.status === 404) {
@@ -75,10 +74,12 @@ export class PlayerSocialApi {
 		}
 
 		try {
-			const score = await this.deps.pocketbase.collection('player_vote_scores').getFirstListItem(
-				`steamId = "${escapePocketBaseString(id)}"`,
-				pbOptions(this.deps, { fields: 'likeCount' })
-			);
+			const score = await this.deps.pocketbase
+				.collection('player_vote_scores')
+				.getFirstListItem(
+					`steamId = "${escapePocketBaseString(id)}"`,
+					pbOptions(this.deps, { fields: 'likeCount' })
+				);
 			return Number(score.likeCount) || 0;
 		} catch {
 			return 0;
@@ -94,9 +95,7 @@ export class PlayerSocialApi {
 		const size = 40;
 		for (let i = 0; i < steamIds.length; i += size) {
 			const chunk = steamIds.slice(i, i + size);
-			const filter = chunk
-				.map((id) => `steamId = "${escapePocketBaseString(id)}"`)
-				.join(' || ');
+			const filter = chunk.map((id) => `steamId = "${escapePocketBaseString(id)}"`).join(' || ');
 			const rows = await this.deps.pocketbase.collection('player_vote_scores').getFullList(
 				pbOptions(this.deps, {
 					filter,
@@ -114,46 +113,15 @@ export class PlayerSocialApi {
 		return counts;
 	}
 
-	private async setVoteRecord(
+	private setVoteRecord(
 		steamId: string,
-		userId: string,
+		_userId: string,
 		value: 1 | -1
 	): Promise<{ vote: CommentVoteValue; likeCount: number }> {
-		const id = steamId.trim();
-		let vote: CommentVoteValue = value;
-		try {
-			const existing = await this.deps.pocketbase
-				.collection('player_likes')
-				.getFirstListItem(
-					`steamId = "${escapePocketBaseString(id)}" && user = "${userId}"`,
-					pbOptions(this.deps)
-				);
-			const current = voteFromRecord(existing.value);
-			if (current === value) {
-				await this.deps.pocketbase
-					.collection('player_likes')
-					.delete(existing.id, pbOptions(this.deps));
-				vote = 0;
-			} else {
-				await this.deps.pocketbase
-					.collection('player_likes')
-					.update(existing.id, { value }, pbOptions(this.deps));
-			}
-		} catch (error) {
-			if (!(error instanceof ClientResponseError) || error.status !== 404) {
-				throw error;
-			}
-
-			await this.deps.pocketbase.collection('player_likes').create(
-				{
-					steamId: id,
-					user: userId,
-					value
-				},
-				pbOptions(this.deps)
-			);
-		}
-
-		return { vote, likeCount: await this.loadLikeCount(id) };
+		// Clicking the same vote again removes it (toggle).
+		return sendV1(this.deps, `/players/${encodeURIComponent(steamId.trim())}/vote`, {
+			method: 'PUT',
+			body: { value, toggle: true }
+		});
 	}
 }

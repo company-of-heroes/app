@@ -41,6 +41,7 @@
 		if (!selectedPath) {
 			return;
 		}
+
 		value = selectedPath;
 		onSelect?.(value);
 	};
@@ -51,13 +52,18 @@
 				fileExists = false;
 				return;
 			}
+
 			let cancelled = false;
 			exists(path)
 				.then((result) => {
-					if (!cancelled) fileExists = result;
+					if (!cancelled) {
+						fileExists = result;
+					}
 				})
 				.catch(() => {
-					if (!cancelled) fileExists = false;
+					if (!cancelled) {
+						fileExists = false;
+					}
 				});
 			return () => {
 				cancelled = true;

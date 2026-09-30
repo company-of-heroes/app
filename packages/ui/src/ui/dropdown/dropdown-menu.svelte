@@ -71,8 +71,8 @@
 			{trapFocus}
 			{preventScroll}
 			{forceMount}
-			onOpenAutoFocus={onOpenAutoFocus}
-			onCloseAutoFocus={onCloseAutoFocus}
+			{onOpenAutoFocus}
+			{onCloseAutoFocus}
 			{alignOffset}
 			class={cn(
 				dropdownPanel,

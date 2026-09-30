@@ -8,11 +8,13 @@ export const getPlayerPreview = query(
 	playerIdSchema,
 	async (id): Promise<PlayerPreviewData | null> => {
 		const { locals } = getRequestEvent();
-		const result = await locals.services.players().get(id);
-		if (result.isErr()) {
-			return null;
-		}
-
-		return toPlayerPreviewData(result.value);
+		return locals.services.playerPage.get(id).match(toPlayerPreviewData, () => null);
 	}
 );
+
+/** Stored lobby ELO per mode/race, for the expandable stats on search cards. */
+export const getPlayerElo = query(playerIdSchema, async (steamId) => {
+	const { locals } = getRequestEvent();
+	const result = await locals.api.ratings.getPlayerRating(steamId);
+	return result.isOk() ? (result.value?.elo ?? {}) : {};
+});

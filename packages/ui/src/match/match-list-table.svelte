@@ -1,4 +1,9 @@
 <script lang="ts">
+	import { formatRelative } from '../format/date';
+	import { normalizeMapName } from '../format/player-format';
+	import { liveLobbyPlayerHref, liveLobbyPlayerLabel } from '../live-lobby/links';
+	import { useHost } from '../host/host.context';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import MapImage from '../ui/map-image.svelte';
 	import { Button } from '../ui/button';
@@ -10,11 +15,7 @@
 	import MinusIcon from 'phosphor-svelte/lib/MinusIcon';
 	import LiveLobbyPlayers from '../live-lobby/live-lobby-players.svelte';
 	import { hasLiveLobbyStats } from '../live-lobby/stats';
-	import {
-		defaultLiveLobbyPlayerLabel,
-		teamPlayers,
-		type LiveLobbyPlayer
-	} from '../live-lobby/types';
+	import { teamPlayers, type LiveLobbyPlayer } from '../live-lobby/types';
 	import { DEFAULT_MATCH_LIST_COLUMNS, type MatchListColumnId, type MatchListRow } from './types';
 	import { defaultFormatDuration } from './utils';
 	import TeamPlayerSkills from './team-player-skills.svelte';
@@ -25,81 +26,39 @@
 		columns?: MatchListColumnId[];
 		meSteamIds?: string[];
 		highlightedPlayers?: string[];
-		resolveMapSrc: (map: string | undefined) => string | undefined;
-		resolveFallbackSrc?: () => string | undefined;
-		resolveFactionFlag: (race: number) => string;
-		getRankImage?: (race: number, rankLevel: number) => string;
-		formatMapName: (map: string) => string;
 		formatStarted?: (createdAt: string) => string;
 		formatDate?: (createdAt: string) => string;
 		formatDuration?: (seconds: number | null | undefined) => string;
-		playerHref: (player: LiveLobbyPlayer) => string | null;
-		playerLabel?: (player: LiveLobbyPlayer) => string;
 		detailsHref?: (row: MatchListRow) => string | null | undefined;
 		expandContent?: Snippet<[{ row: MatchListRow }]>;
 		emptyMessage?: string;
 		class?: string;
 		footer?: Snippet;
-		mapLabel?: string;
-		nameLabel?: string;
-		typeLabel?: string;
-		alliesLabel?: string;
-		axisLabel?: string;
-		hostLabel?: string;
-		startedLabel?: string;
-		dateLabel?: string;
-		durationLabel?: string;
-		ratingLabel?: string;
-		unknownHostLabel?: string;
-		detailsLabel?: string;
-		eloLabel?: string;
-		levelLabel?: string;
-		posLabel?: string;
-		winsLabel?: string;
-		lossesLabel?: string;
 		streakLabel?: string;
 	};
+
+	const { t } = useI18n();
+	const host = useHost();
 
 	let {
 		rows,
 		loading = false,
 		columns: columnIds,
-		meSteamIds = [],
+		meSteamIds = host.auth.user?.steamIds ?? [],
 		highlightedPlayers = [],
-		resolveMapSrc,
-		resolveFallbackSrc,
-		resolveFactionFlag,
-		getRankImage,
-		formatMapName,
-		formatStarted = (createdAt) => createdAt,
+		formatStarted = (createdAt) =>
+			formatRelative(new Date(createdAt).getTime() / 1000, host.locale()),
 		formatDate,
 		formatDuration = defaultFormatDuration,
-		playerHref,
-		playerLabel = defaultLiveLobbyPlayerLabel,
-		detailsHref,
+		detailsHref = (row) => (row.lobbyId ? host.routes.match(row.lobbyId) : null),
 		expandContent,
-		emptyMessage = 'No matches.',
+		emptyMessage,
 		class: className,
-		footer,
-		mapLabel = 'Map',
-		nameLabel = 'Name',
-		typeLabel = 'Type',
-		alliesLabel = 'Allies',
-		axisLabel = 'Axis',
-		hostLabel = 'Host',
-		startedLabel = 'Started at',
-		dateLabel = 'Date',
-		durationLabel = 'Duration',
-		ratingLabel = 'Rating',
-		unknownHostLabel = 'Unknown',
-		detailsLabel = 'Details',
-		eloLabel = 'ELO',
-		levelLabel = 'Level',
-		posLabel = 'Pos',
-		winsLabel = 'W',
-		lossesLabel = 'L',
-		streakLabel = 'Streak'
+		footer
 	}: Props = $props();
+
+	const playerHref = (player: LiveLobbyPlayer) => liveLobbyPlayerHref(player, host.routes);
+	const playerLabel = (player: LiveLobbyPlayer) => liveLobbyPlayerLabel(player, t);
 
 	let expandedId = $state<string | null>(null);
 
@@ -109,16 +68,16 @@
 	const columnCount = $derived(columns.length);
 
 	const headerById: Record<MatchListColumnId, string> = $derived({
-		map: mapLabel,
-		name: nameLabel,
-		type: typeLabel,
-		allies: alliesLabel,
-		axis: axisLabel,
-		host: hostLabel,
-		started: startedLabel,
-		date: dateLabel,
-		duration: durationLabel,
-		rating: ratingLabel,
+		map: t('Map'),
+		name: t('Name'),
+		type: t('Type'),
+		allies: t('Allies'),
+		axis: t('Axis'),
+		host: t('Host'),
+		started: t('Started at'),
+		date: t('Date'),
+		duration: t('Duration'),
+		rating: t('Rating'),
 		actions: '',
 		expand: ''
 	});
@@ -156,11 +115,11 @@
 </script>
 
 {#snippet factionFlags(
-		players: LiveLobbyPlayer[],
-		outcome?: 'win' | 'loss' | null,
-		isRanked = true,
-		modeLabel?: string | null
-	)}
+	players: LiveLobbyPlayer[],
+	outcome?: 'win' | 'loss' | null,
+	isRanked = true,
+	modeLabel?: string | null
+)}
 	<TeamPlayerSkills
 		players={players.map((player) => ({
 			race: player.race,
@@ -171,8 +130,6 @@
 			href: playerHref(player),
 			country: player.country
 		}))}
-		{resolveFactionFlag}
-		{getRankImage}
 		{meSteamIds}
 		{highlightedPlayers}
 		{outcome}
@@ -206,18 +163,7 @@
 		<LiveLobbyPlayers
 			players={row.players}
 			{meSteamIds}
-			{resolveFactionFlag}
-			{playerHref}
-			{playerLabel}
 			showStats={hasLiveLobbyStats(row.players)}
-			{alliesLabel}
-			{axisLabel}
-			{eloLabel}
-			{levelLabel}
-			{posLabel}
-			{winsLabel}
-			{lossesLabel}
-			{streakLabel}
 		/>
 	{/if}
 {/snippet}
@@ -229,15 +175,19 @@
 				small
 				flush
 				map={row.map}
-				{resolveMapSrc}
-				{resolveFallbackSrc}
-				alt={formatMapName(row.map)}
+				resolveMapSrc={host.resolve.mapSrc}
+				resolveFallbackSrc={host.resolve.mapFallbackSrc}
+				alt={normalizeMapName(row.map)}
 			/>
 		</td>
 	{:else if column === 'name'}
-		<td class="w-full truncate py-0 pr-4 pl-2 font-medium text-white">{formatMapName(row.map)}</td>
+		<td class="w-full truncate py-0 pr-4 pl-2 font-medium text-white"
+			>{normalizeMapName(row.map)}</td
+		>
 	{:else if column === 'type'}
-		<td class="text-secondary-400 h-11 truncate px-4 py-0 whitespace-nowrap">{row.modeLabel ?? ''}</td>
+		<td class="text-secondary-400 h-11 truncate px-4 py-0 whitespace-nowrap"
+			>{row.modeLabel ?? ''}</td
+		>
 	{:else if column === 'allies'}
 		<td class="px-2 py-0 whitespace-nowrap">
 			{@render factionFlags(
@@ -258,7 +208,7 @@
 		</td>
 	{:else if column === 'host'}
 		<td class="text-secondary-400 h-11 truncate px-4 py-0 whitespace-nowrap">
-			{row.hostName || unknownHostLabel}
+			{row.hostName || t('Unknown')}
 		</td>
 	{:else if column === 'started'}
 		<td class="text-secondary-500 h-11 truncate px-4 py-0 text-xs whitespace-nowrap tabular-nums">
@@ -280,7 +230,7 @@
 				{@const detailUrl = detailsHref(row)}
 				{#if detailUrl}
 					<Button href={detailUrl} size="sm" variant="secondary" class="h-7 px-2.5 text-xs">
-						{detailsLabel}
+						{t('Details')}
 					</Button>
 				{/if}
 			{/if}
@@ -377,9 +327,9 @@
 										? 'w-px px-0 pl-4'
 										: column === 'name'
 											? 'w-full pr-4 pl-2'
-									: column === 'allies' || column === 'axis'
-										? 'px-2 py-3 whitespace-nowrap'
-										: 'px-4 whitespace-nowrap'
+											: column === 'allies' || column === 'axis'
+												? 'px-2 py-3 whitespace-nowrap'
+												: 'px-4 whitespace-nowrap'
 								)}
 							>
 								{headerById[column]}
@@ -422,7 +372,7 @@
 			{/each}
 		</div>
 	{:else if rows.length === 0}
-		<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
+		<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage ?? t('No matches.')}</p>
 	{:else}
 		<div class="hidden overflow-x-auto md:block">
 			<table class="w-full table-auto border-collapse text-sm">
@@ -436,9 +386,9 @@
 										? 'w-px px-0 pl-4'
 										: column === 'name'
 											? 'w-full pr-4 pl-2'
-									: column === 'allies' || column === 'axis'
-										? 'px-2 py-3 whitespace-nowrap'
-										: 'px-4 whitespace-nowrap'
+											: column === 'allies' || column === 'axis'
+												? 'px-2 py-3 whitespace-nowrap'
+												: 'px-4 whitespace-nowrap'
 								)}
 							>
 								{headerById[column]}
@@ -499,15 +449,15 @@
 							<MapImage
 								small
 								map={row.map}
-								{resolveMapSrc}
-								{resolveFallbackSrc}
-								alt={formatMapName(row.map)}
+								resolveMapSrc={host.resolve.mapSrc}
+								resolveFallbackSrc={host.resolve.mapFallbackSrc}
+								alt={normalizeMapName(row.map)}
 							/>
 						{/if}
 						<div class="min-w-0 flex-1">
 							<div class="flex items-start justify-between gap-2">
 								<div class="min-w-0">
-									<p class="truncate font-medium text-white">{formatMapName(row.map)}</p>
+									<p class="truncate font-medium text-white">{normalizeMapName(row.map)}</p>
 									{#if columns.includes('type')}
 										<p class="text-secondary-400 truncate text-sm">{row.modeLabel ?? ''}</p>
 									{/if}
@@ -522,7 +472,7 @@
 												variant="secondary"
 												class="h-7 px-2.5 text-xs"
 											>
-												{detailsLabel}
+												{t('Details')}
 											</Button>
 										{/if}
 									{/if}
@@ -537,7 +487,7 @@
 								<div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
 									{#if columns.includes('allies')}
 										<div class="flex min-w-0 items-center gap-1.5">
-											<span class="text-secondary-500 text-xs">{alliesLabel}</span>
+											<span class="text-secondary-500 text-xs">{t('Allies')}</span>
 											{@render factionFlags(
 												teamPlayers(row.players, 'allies'),
 												row.alliesOutcome,
@@ -548,7 +498,7 @@
 									{/if}
 									{#if columns.includes('axis')}
 										<div class="flex min-w-0 items-center gap-1.5">
-											<span class="text-secondary-500 text-xs">{axisLabel}</span>
+											<span class="text-secondary-500 text-xs">{t('Axis')}</span>
 											{@render factionFlags(
 												teamPlayers(row.players, 'axis'),
 												row.axisOutcome,
@@ -563,7 +513,7 @@
 								class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
 							>
 								{#if columns.includes('host')}
-									<span class="truncate">{row.hostName || unknownHostLabel}</span>
+									<span class="truncate">{row.hostName || t('Unknown')}</span>
 								{/if}
 								{#if columns.includes('started')}
 									<span class="text-secondary-500 tabular-nums">{formatStarted(row.createdAt)}</span

@@ -10,6 +10,7 @@ export function isProfileId(value: string): boolean {
 	if (!PROFILE_ID_REGEX.test(trimmed) || isSteamId(trimmed)) {
 		return false;
 	}
+
 	const id = Number(trimmed);
 	return Number.isInteger(id) && id > 0;
 }

@@ -43,7 +43,7 @@
 		class="ring-secondary-700 size-6 shrink-0 rounded-md ring-1 ring-inset"
 		style:background={hex ?? 'transparent'}
 	></span>
-	<span class="min-w-0 flex-1 truncate text-sm font-medium tabular-nums uppercase">
+	<span class="min-w-0 flex-1 truncate text-sm font-medium uppercase tabular-nums">
 		{hex ?? '—'}
 	</span>
 	<CaretDownIcon class="text-secondary-400 size-4 shrink-0" />

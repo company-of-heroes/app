@@ -10,11 +10,13 @@ import ReplayDetailHeader from './replay-detail-header.svelte';
 import MemberReplayDetailHeader from './member-replay-detail-header.svelte';
 import ReplayFilters from './replay-filters.svelte';
 import ReplaySectionTabs from './replay-section-tabs.svelte';
-import ReplayUploadForm from './replay-upload-form.svelte';
 import ReplayPlayerSteamLinks from './replay-player-steam-links.svelte';
 import ReplayFileDropzone from './replay-file-dropzone.svelte';
 import ReplayProBadge from './replay-pro-badge.svelte';
 import ReplaySort from './replay-sort.svelte';
+import ReplayUploader from './replay-uploader.svelte';
+import ReplayDetail from './replay-detail.svelte';
+import ReplayEditForm from './replay-edit-form.svelte';
 
 export {
 	ReplayChat as Chat,
@@ -29,16 +31,17 @@ export {
 	MemberReplayDetailHeader as MemberDetailHeader,
 	ReplayFilters as Filters,
 	ReplaySectionTabs as SectionTabs,
-	ReplayUploadForm as UploadForm,
 	ReplayPlayerSteamLinks as PlayerSteamLinks,
 	ReplayFileDropzone as FileDropzone,
 	ReplayProBadge as ProBadge,
-	ReplaySort as Sort
+	ReplaySort as Sort,
+	ReplayUploader,
+	ReplayDetail,
+	ReplayEditForm
 };
 
 export type * from './types';
 export type { ReplaySectionTab } from './replay-section-tabs.svelte';
-export type { ReplayUploadPreview } from './replay-upload-form.svelte';
 export type {
 	ReplaySteamLinkPlayer,
 	ReplaySteamLinkOption
@@ -76,3 +79,9 @@ export {
 	type FilterRule,
 	type FlatHistoryFilters
 } from './filter-ast';
+export {
+	countedActions,
+	doctrineBannerFile,
+	playerCpm,
+	raceFromReplayFaction
+} from './replay-stats';

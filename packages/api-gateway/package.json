@@ -1,0 +1,17 @@
+{
+	"name": "@company-of-heroes/api-gateway",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"check": "tsc --noEmit",
+		"test": "node --experimental-strip-types --test src/routes.test.ts src/overlay.test.ts src/files.test.ts"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20250710.0",
+		"typescript": "^5.9.3",
+		"wrangler": "^4.26.0"
+	}
+}

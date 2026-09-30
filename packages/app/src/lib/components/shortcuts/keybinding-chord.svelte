@@ -27,8 +27,7 @@
 <div
 	class={cn(
 		'flex min-h-9 w-full min-w-0 items-center gap-2',
-		recording &&
-			'border-destructive/40 bg-destructive/5 rounded-md border px-2 py-1.5',
+		recording && 'border-destructive/40 bg-destructive/5 rounded-md border px-2 py-1.5',
 		className
 	)}
 >

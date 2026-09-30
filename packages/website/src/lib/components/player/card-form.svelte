@@ -78,7 +78,7 @@
 
 <Form.Root onsubmit={handleSubmit}>
 	{#if prominent}
-		<div class="flex w-full min-w-0 max-w-2xl flex-wrap items-center gap-3">
+		<div class="flex w-full max-w-2xl min-w-0 flex-wrap items-center gap-3">
 			{@render searchControls()}
 		</div>
 	{:else}

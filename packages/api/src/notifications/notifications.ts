@@ -36,33 +36,39 @@ export class NotificationsApi {
 
 	listForUser(userId: string, limit = 10): ResultAsync<NotificationRecord[], ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('notifications').getList<NotificationRecord>(1, limit, pbOptions(this.deps, {
-				filter: USER_FILTER(userId),
-				sort: '-created'
-			})),
+			this.deps.pocketbase.collection('notifications').getList<NotificationRecord>(
+				1,
+				limit,
+				pbOptions(this.deps, {
+					filter: USER_FILTER(userId),
+					sort: '-created'
+				})
+			),
 			'Failed to load notifications.'
 		).map((response) => response.items);
 	}
 
 	listAll(limit = 50): ResultAsync<NotificationRecord[], ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('notifications').getList<NotificationRecord>(1, limit, pbOptions(this.deps, {
-				sort: '-created'
-			})),
+			this.deps.pocketbase.collection('notifications').getList<NotificationRecord>(
+				1,
+				limit,
+				pbOptions(this.deps, {
+					sort: '-created'
+				})
+			),
 			'Failed to load notifications.'
 		).map((response) => response.items);
 	}
 
 	getReadIds(userId: string): ResultAsync<Set<string>, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase
-				.collection('notification_reads')
-				.getFullList<NotificationReadRecord>(
-					pbOptions(this.deps, {
-						filter: `user = "${userId}"`,
-						fields: 'notification'
-					})
-				),
+			this.deps.pocketbase.collection('notification_reads').getFullList<NotificationReadRecord>(
+				pbOptions(this.deps, {
+					filter: `user = "${userId}"`,
+					fields: 'notification'
+				})
+			),
 			'Failed to load notification reads.'
 		).map((reads) => new Set(reads.map((read) => String(read.notification))));
 	}
@@ -70,18 +76,21 @@ export class NotificationsApi {
 	countUnread(userId: string): ResultAsync<number, ApiError> {
 		return ResultAsync.combine([
 			fromPbPromise(
-				this.deps.pocketbase
-					.collection('notifications')
-					.getList<NotificationRecord>(1, UNREAD_SCAN_LIMIT, pbOptions(this.deps, {
+				this.deps.pocketbase.collection('notifications').getList<NotificationRecord>(
+					1,
+					UNREAD_SCAN_LIMIT,
+					pbOptions(this.deps, {
 						filter: USER_FILTER(userId),
 						sort: '-created',
 						fields: 'id'
-					})),
+					})
+				),
 				'Failed to load notifications.'
 			),
 			this.getReadIds(userId)
-		]).map(([notifications, readIds]) =>
-			notifications.items.filter((notification) => !readIds.has(notification.id)).length
+		]).map(
+			([notifications, readIds]) =>
+				notifications.items.filter((notification) => !readIds.has(notification.id)).length
 		);
 	}
 

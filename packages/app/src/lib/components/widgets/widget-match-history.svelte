@@ -26,7 +26,10 @@
 		() => steamIds.join(','),
 		async (steamIdsKey) => {
 			const ids = steamIdsKey ? steamIdsKey.split(',').filter(Boolean) : [];
-			if (ids.length === 0) return [];
+			if (ids.length === 0) {
+				return [];
+			}
+
 			const items = await app.database.matches.getList({
 				filter: todayPlayedMatchesFilter(ids),
 				sort: '-createdAt'
@@ -46,9 +49,14 @@
 			const generation = ++subscribeGeneration;
 			void (async () => {
 				await unsubscribe?.();
-				if (generation !== subscribeGeneration) return;
+				if (generation !== subscribeGeneration) {
+					return;
+				}
+
 				unsubscribe = undefined;
-				if (ids.length === 0) return;
+				if (ids.length === 0) {
+					return;
+				}
 
 				const next = await app.pocketbase.collection('lobbies').subscribe<LobbyMatch>(
 					'*',
@@ -57,6 +65,7 @@
 						if (!isMatchFromLocalToday(match) || !matchIncludesSteamIds(match, ids)) {
 							return;
 						}
+
 						if (e.action === 'create') {
 							const current = matches.current || [];
 							if (!current.find((m) => m.id === e.record.id)) {
@@ -64,9 +73,7 @@
 							}
 						} else if (e.action === 'update') {
 							matches.mutate(
-								(matches.current || []).map((entry) =>
-									entry.id === e.record.id ? match : entry
-								)
+								(matches.current || []).map((entry) => (entry.id === e.record.id ? match : entry))
 							);
 						} else if (e.action === 'delete') {
 							matches.mutate((matches.current || []).filter((entry) => entry.id !== e.record.id));
@@ -83,6 +90,7 @@
 					await next();
 					return;
 				}
+
 				unsubscribe = next;
 			})();
 		}
@@ -104,7 +112,9 @@
 	{#if matches.loading}
 		<TodayMatchesTable matches={[]} loading />
 	{:else if !matches.current || matches.current.length === 0}
-		<p class="text-secondary-400 px-4 py-3 text-sm">{t('You have not played any matches today.')}</p>
+		<p class="text-secondary-400 px-4 py-3 text-sm">
+			{t('You have not played any matches today.')}
+		</p>
 	{:else}
 		<TodayMatchesTable matches={matches.current} />
 	{/if}

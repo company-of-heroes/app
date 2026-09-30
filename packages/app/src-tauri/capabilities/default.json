@@ -43,6 +43,15 @@
 					"url": "https://www.twitch.tv/*"
 				},
 				{
+					"url": "https://accounts.google.com/*"
+				},
+				{
+					"url": "https://www.youtube.com/*"
+				},
+				{
+					"url": "https://studio.youtube.com/*"
+				},
+				{
 					"url": "https://api.steampowered.com"
 				},
 				{
@@ -138,6 +147,9 @@
 				},
 				{
 					"url": "https://*.google.nl"
+				},
+				{
+					"url": "https://*.googleapis.com"
 				},
 				{
 					"url": "https://*.elevenlabs.io"

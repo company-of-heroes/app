@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { tableHeadRow } from '@company-of-heroes/ui/variants';
 	import {
@@ -11,39 +12,22 @@
 	} from '../format/player-format';
 	import { getLeaderboardTypeLabel } from '../format/ranks';
 	import LeaderboardStatPill from '../leaderboard/leaderboard-stat-pill.svelte';
-	import type { PlayerPageData } from './types';
+	import { Skeleton } from '../ui/skeleton';
+	import type { LeaderboardStat, PlayerEloMap } from './types';
+	import { useHost } from '../host/host.context';
 
 	type Props = {
-		player: PlayerPageData;
-		getRankImageByLeaderboardId: (leaderboardId: number, rankLevel: number) => string;
-		getFactionFlagByLeaderboardId: (leaderboardId: number) => string;
-		emptyMessage?: string;
-		eloLabel?: string;
-		levelLabelText?: string;
-		typeLabel?: string;
-		positionLabelText?: string;
-		winsLabel?: string;
-		lossesLabel?: string;
-		streakLabel?: string;
-		notAvailableLabel?: string;
+		stats: LeaderboardStat[];
+		elo?: PlayerEloMap;
+		loading?: boolean;
+		skeletonRows?: number;
 	};
 
-	let {
-		player,
-		getRankImageByLeaderboardId,
-		getFactionFlagByLeaderboardId,
-		emptyMessage = 'No leaderboard stats yet.',
-		eloLabel = 'ELO',
-		levelLabelText = 'Level',
-		typeLabel = 'Type',
-		positionLabelText = 'Position',
-		winsLabel = 'Wins',
-		lossesLabel = 'Losses',
-		streakLabel = 'Streak',
-		notAvailableLabel = 'N/A'
-	}: Props = $props();
+	let { stats: rawStats, elo: eloMap, loading = false, skeletonRows = 5 }: Props = $props();
+	const { t } = useI18n();
+	const host = useHost();
 
-	const stats = $derived(sortLeaderboardStats(player.leaderboardStats));
+	const stats = $derived(sortLeaderboardStats(rawStats));
 
 	function positionLabel(leaderboardId: number, rank: number): string {
 		if (!isRankedLeaderboard(leaderboardId) || rank <= 0) {
@@ -54,46 +38,58 @@
 	}
 </script>
 
-{#if stats.length === 0}
-	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
+{#if loading}
+	<div class="divide-secondary-800 divide-y" aria-busy="true">
+		{#each Array(skeletonRows) as _, index (index)}
+			<div class="flex items-center gap-4 px-4 py-3">
+				<Skeleton class="h-4 w-12" />
+				<Skeleton class="size-6" />
+				<Skeleton class="h-4 w-28 grow" />
+				<Skeleton class="h-4 w-10" />
+				<Skeleton class="h-4 w-10" />
+			</div>
+		{/each}
+	</div>
+{:else if stats.length === 0}
+	<p class="text-secondary-400 px-4 py-3 text-sm">{t('No leaderboard stats yet.')}</p>
 {:else}
-	<div class="hidden md:block overflow-x-auto">
+	<div class="hidden overflow-x-auto md:block">
 		<table class="w-full table-fixed text-sm">
 			<thead>
 				<tr class={tableHeadRow}>
 					<th class="w-[6.5rem] px-4 py-2">
-						<div class="flex w-full justify-center">{eloLabel}</div>
+						<div class="flex w-full justify-center">{t('ELO')}</div>
 					</th>
 					<th class="w-[5rem] px-4 py-2">
-						<div class="flex w-full justify-center">{levelLabelText}</div>
+						<div class="flex w-full justify-center">{t('Level')}</div>
 					</th>
 					<th class="w-[14rem] px-4 py-2">
-						<div class="flex w-full justify-center">{typeLabel}</div>
+						<div class="flex w-full justify-center">{t('Type')}</div>
 					</th>
 					<th class="w-[4.5rem] px-4 py-2">
-						<div class="flex w-full justify-center">{positionLabelText}</div>
+						<div class="flex w-full justify-center">{t('Position')}</div>
 					</th>
 					<th class="w-auto p-0"></th>
 					<th class="w-[4.5rem] px-4 py-2">
-						<div class="flex w-full justify-center">{winsLabel}</div>
+						<div class="flex w-full justify-center">{t('Wins')}</div>
 					</th>
 					<th class="w-[5.5rem] px-4 py-2">
-						<div class="flex w-full justify-center">{lossesLabel}</div>
+						<div class="flex w-full justify-center">{t('Losses')}</div>
 					</th>
 					<th class="w-[5rem] px-4 py-2">
-						<div class="flex w-full justify-center">{streakLabel}</div>
+						<div class="flex w-full justify-center">{t('Streak')}</div>
 					</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each stats as stat (stat.leaderboard_id)}
-					{@const elo = getStoredEloForLeaderboard(player.elo, stat.leaderboard_id)}
+					{@const elo = getStoredEloForLeaderboard(eloMap, stat.leaderboard_id)}
 					{@const ranked = isRankedLeaderboard(stat.leaderboard_id)}
 					<tr class="border-secondary-800 h-11 border-b">
 						<td class="px-4 py-1.5">
 							<div class="flex h-full w-full min-w-0 items-center justify-center">
 								{#if elo == null}
-									<span class="text-secondary-500 text-xs">{notAvailableLabel}</span>
+									<span class="text-secondary-500 text-xs">{t('N/A')}</span>
 								{:else}
 									<span
 										class={cn(
@@ -112,7 +108,7 @@
 							<div class="flex h-full w-full min-w-0 items-center justify-center gap-2">
 								{#if ranked}
 									<img
-										src={getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel)}
+										src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
 										alt=""
 										class="size-6 shrink-0 object-contain"
 									/>
@@ -127,7 +123,7 @@
 						<td class="px-4 py-1.5">
 							<div class="flex h-full w-full min-w-0 items-center justify-center gap-2">
 								<img
-									src={getFactionFlagByLeaderboardId(stat.leaderboard_id)}
+									src={host.resolve.factionFlagByLeaderboard(stat.leaderboard_id)}
 									alt=""
 									class="w-6 shrink-0 ring-2 ring-black"
 								/>
@@ -185,14 +181,14 @@
 		</table>
 	</div>
 
-	<div class="md:hidden divide-y divide-secondary-800">
+	<div class="divide-secondary-800 divide-y md:hidden">
 		{#each stats as stat (stat.leaderboard_id)}
-			{@const elo = getStoredEloForLeaderboard(player.elo, stat.leaderboard_id)}
+			{@const elo = getStoredEloForLeaderboard(eloMap, stat.leaderboard_id)}
 			{@const ranked = isRankedLeaderboard(stat.leaderboard_id)}
 			<div class="px-4 py-3 text-white">
 				<div class="flex min-w-0 items-center gap-2">
 					<img
-						src={getFactionFlagByLeaderboardId(stat.leaderboard_id)}
+						src={host.resolve.factionFlagByLeaderboard(stat.leaderboard_id)}
 						alt=""
 						class="w-6 shrink-0 ring-2 ring-black"
 					/>
@@ -201,7 +197,7 @@
 					</span>
 					<div class="ml-auto flex shrink-0 items-center gap-3">
 						{#if elo == null}
-							<span class="text-secondary-500 text-xs">{notAvailableLabel}</span>
+							<span class="text-secondary-500 text-xs">{t('N/A')}</span>
 						{:else}
 							<span
 								class={cn(
@@ -228,7 +224,7 @@
 					{#if ranked}
 						<span class="inline-flex items-center gap-2">
 							<img
-								src={getRankImageByLeaderboardId(stat.leaderboard_id, stat.ranklevel)}
+								src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
 								alt=""
 								class="size-6 shrink-0 object-contain"
 							/>
@@ -238,7 +234,7 @@
 						</span>
 					{/if}
 					<span class="inline-flex items-center gap-1">
-						{winsLabel}
+						{t('Wins')}
 						<LeaderboardStatPill
 							type="wins"
 							wins={stat.wins}
@@ -247,7 +243,7 @@
 						/>
 					</span>
 					<span class="inline-flex items-center gap-1">
-						{lossesLabel}
+						{t('Losses')}
 						<LeaderboardStatPill
 							type="losses"
 							wins={stat.wins}
@@ -256,7 +252,7 @@
 						/>
 					</span>
 					<span class="inline-flex items-center gap-1">
-						{streakLabel}
+						{t('Streak')}
 						<LeaderboardStatPill
 							type="streak"
 							wins={stat.wins}

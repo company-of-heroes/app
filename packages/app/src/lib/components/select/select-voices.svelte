@@ -52,7 +52,9 @@
 		stopRowSelection(event);
 
 		const voice = getVoice(voiceId);
-		if (!voice) return;
+		if (!voice) {
+			return;
+		}
 
 		editingVoiceId = voiceId;
 		aliasDraft = voice.alias ?? '';
@@ -62,7 +64,9 @@
 		stopRowSelection(event);
 
 		const voice = getVoice(voiceId);
-		if (!voice) return;
+		if (!voice) {
+			return;
+		}
 
 		dialog.title = t('Edit voice alias');
 		dialog.description = t('Set a custom display name for {name}.', { name: voice.name });

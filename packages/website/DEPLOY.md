@@ -76,15 +76,26 @@ pnpm --filter @company-of-heroes/website preview
 
 ## Environment variables
 
-| Variable | Where | Purpose |
-|----------|-------|---------|
-| `PUBLIC_API_URL` | `.env` / Cloudflare Worker vars | PocketBase API base URL (default: `https://api.coh1stats.com`) |
-| `REPLAY_PROXY_SECRET` | PocketBase `.env` and Cloudflare Worker vars (optional) | Shared secret so the website can fetch replay files without sharing one IP quota with every visitor |
+| Variable                 | Where                                                   | Purpose                                                                                             |
+| ------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `PUBLIC_API_URL`         | `.env` / Cloudflare Worker vars                         | PocketBase API base URL (default: `https://api.coh1stats.com`)                                      |
+| `REPLAY_PROXY_SECRET`    | PocketBase `.env` and Cloudflare Worker vars (optional) | Shared secret so the website can fetch replay files without sharing one IP quota with every visitor |
+| `YOUTUBE_CLIENT_ID`      | Cloudflare Worker secrets                               | Google OAuth web client for desktop YouTube connect (Streaming)                                     |
+| `YOUTUBE_CLIENT_SECRET`  | Cloudflare Worker secrets                               | Google OAuth client secret (never ship in the desktop app)                                          |
+| `AUTH_HANDOFF_SECRET`    | Cloudflare Worker secrets                               | Signs Steam login handoff codes and YouTube OAuth state / token handoff                             |
 
 For local player card API testing, create `packages/website/.env`:
 
 ```
 PUBLIC_API_URL=http://127.0.0.1:8090
+YOUTUBE_CLIENT_ID=
+YOUTUBE_CLIENT_SECRET=
+AUTH_HANDOFF_SECRET=
 ```
+
+Google Cloud Console: create a **Web application** OAuth client. Authorized redirect URIs must include:
+
+- `https://coh1stats.com/api/v1/streaming/youtube/callback`
+- `http://127.0.0.1:5174/api/v1/streaming/youtube/callback` (local website)
 
 PocketBase must have `STEAM_API_KEY` configured for the player card endpoint.

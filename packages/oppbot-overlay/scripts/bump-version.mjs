@@ -31,6 +31,7 @@ const updated = oppbotSource.replace(/version\s*=\s*['"]\d+['"]/, `version = '${
 if (updated === oppbotSource) {
 	throw new Error(`Could not update version in ${oppbotClassPath}`);
 }
+
 writeFileSync(oppbotClassPath, updated, 'utf8');
 
 console.log(`Overlay version bumped: ${prev} → ${next}`);

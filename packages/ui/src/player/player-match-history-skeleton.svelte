@@ -1,32 +1,15 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import { tableHeadRow } from '@company-of-heroes/ui/variants';
 
 	type Props = {
 		matchCount?: number;
 		playersPerMatch?: number;
-		changeLabel?: string;
-		eloLabel?: string;
-		rankLabel?: string;
-		teamLabel?: string;
-		playerLabel?: string;
-		winsLabel?: string;
-		lossesLabel?: string;
-		streakLabel?: string;
 	};
 
-	let {
-		matchCount = 4,
-		playersPerMatch = 2,
-		changeLabel = 'Change',
-		eloLabel = 'ELO',
-		rankLabel = 'Rank',
-		teamLabel = 'Team',
-		playerLabel = 'Player',
-		winsLabel = 'Wins',
-		lossesLabel = 'Losses',
-		streakLabel = 'Streak'
-	}: Props = $props();
+	let { matchCount = 4, playersPerMatch = 2 }: Props = $props();
+	const { t } = useI18n();
 
 	const matches = $derived(Array.from({ length: matchCount }, (_, i) => i + 1));
 	const players = $derived(Array.from({ length: playersPerMatch }, (_, i) => i + 1));
@@ -110,14 +93,14 @@
 					</colgroup>
 					<thead>
 						<tr class={tableHeadRow}>
-							<th class="px-2 py-2 text-center">{changeLabel}</th>
-							<th class="px-2 py-2 text-center">{eloLabel}</th>
-							<th class="px-2 py-2 text-center">{rankLabel}</th>
-							<th class="px-2 py-2 text-center">{teamLabel}</th>
-							<th class="px-3 py-2 text-left">{playerLabel}</th>
-							<th class="px-2 py-2 text-center">{winsLabel}</th>
-							<th class="px-2 py-2 text-center">{lossesLabel}</th>
-							<th class="px-2 py-2 text-center">{streakLabel}</th>
+							<th class="px-2 py-2 text-center">{t('Change')}</th>
+							<th class="px-2 py-2 text-center">{t('ELO')}</th>
+							<th class="px-2 py-2 text-center">{t('Rank')}</th>
+							<th class="px-2 py-2 text-center">{t('Team')}</th>
+							<th class="px-3 py-2 text-left">{t('Player')}</th>
+							<th class="px-2 py-2 text-center">{t('Wins')}</th>
+							<th class="px-2 py-2 text-center">{t('Losses')}</th>
+							<th class="px-2 py-2 text-center">{t('Streak')}</th>
 						</tr>
 					</thead>
 					<tbody>

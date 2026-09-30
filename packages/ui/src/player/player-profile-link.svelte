@@ -4,7 +4,7 @@
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { getCachedPlayerPreview } from './player-preview-cache';
-	import { usePlayerPreview } from './player-preview.context';
+	import { tryUseHost } from '../host/host.context';
 	import PlayerPreviewCard from './player-preview-card.svelte';
 	import type { PlayerFactionPreview, PlayerPreviewData } from './types';
 
@@ -30,10 +30,9 @@
 		...restProps
 	}: Props = $props();
 
-	const getPreview = usePlayerPreview();
+	const host = tryUseHost();
 	const snapshotMode = $derived(Boolean(preview));
-	const previewEnabled = $derived(Boolean(playerId.trim() && (snapshotMode || getPreview)));
-	const ctx = $derived(getPreview?.() ?? null);
+	const previewEnabled = $derived(Boolean(host && playerId.trim()));
 
 	let open = $state(false);
 	let loading = $state(false);
@@ -42,8 +41,7 @@
 	let requestId = 0;
 
 	async function loadPreview(id: string) {
-		const currentCtx = getPreview?.();
-		if (!currentCtx) {
+		if (!host) {
 			return;
 		}
 
@@ -52,7 +50,7 @@
 		error = false;
 
 		try {
-			const data = await getCachedPlayerPreview(id, currentCtx.load);
+			const data = await getCachedPlayerPreview(id, host.api.players.getPreview);
 			if (current !== requestId) {
 				return;
 			}
@@ -87,19 +85,16 @@
 		}
 
 		const id = playerId.trim();
-		if (!id || !getPreview) {
+		if (!id) {
 			return;
 		}
 
 		void loadPreview(id);
 	}
-
-	const resolveAvatarUrl = $derived(ctx?.resolveAvatarUrl ?? ((url: string) => url));
-	const flagImageUrl = $derived(ctx?.flagImageUrl ?? ((_country: string | null | undefined) => null));
 </script>
 
 {#if previewEnabled}
-	<LinkPreview.Root bind:open {openDelay} {closeDelay} onOpenChange={onOpenChange}>
+	<LinkPreview.Root bind:open {openDelay} {closeDelay} {onOpenChange}>
 		<LinkPreview.Trigger {href} class={cn(className)} {...restProps}>
 			{@render children()}
 		</LinkPreview.Trigger>
@@ -112,17 +107,7 @@
 				trapFocus={false}
 				preventScroll={false}
 			>
-				<PlayerPreviewCard
-					{player}
-					faction={snapshotMode ? preview : null}
-					{loading}
-					{error}
-					{resolveAvatarUrl}
-					{flagImageUrl}
-					levelLabel={ctx?.levelLabel}
-					loadingLabel={ctx?.loadingLabel}
-					errorLabel={ctx?.errorLabel}
-				/>
+				<PlayerPreviewCard {player} faction={snapshotMode ? preview : null} {loading} {error} />
 			</LinkPreview.Content>
 		</LinkPreview.Portal>
 	</LinkPreview.Root>

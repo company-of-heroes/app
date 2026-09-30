@@ -7,7 +7,6 @@
 	import { cn } from '$lib/utils/cn';
 	import { interactive } from '$lib/utils/variants';
 	import { href, useI18n } from '$lib/i18n';
-	import { API_URL } from '$lib/site/urls';
 	import DesktopIcon from 'phosphor-svelte/lib/DesktopIcon';
 	import SteamLogoIcon from 'phosphor-svelte/lib/SteamLogo';
 	import type { SubmitFunction } from '@sveltejs/kit';
@@ -23,7 +22,8 @@
 
 	const redirectTarget = $derived(page.url.searchParams.get('redirect') ?? '/');
 	const error = $derived(
-		form?.message ?? (page.url.searchParams.get('error') ? t(page.url.searchParams.get('error')!) : null)
+		form?.message ??
+			(page.url.searchParams.get('error') ? t(page.url.searchParams.get('error')!) : null)
 	);
 
 	const linkClass = cn(interactive, 'text-primary hover:underline');
@@ -56,12 +56,11 @@
 	function loginWithSteam() {
 		steamLoginPending = true;
 		const params = new URLSearchParams();
-		params.set('origin', page.url.origin);
 		if (redirectTarget && redirectTarget !== '/') {
 			params.set('redirect', redirectTarget);
 		}
 
-		window.location.href = `${API_URL}/api/auth/steam/start?${params.toString()}`;
+		window.location.href = `/auth/steam/start?${params.toString()}`;
 	}
 </script>
 
@@ -124,7 +123,7 @@
 
 <div class="border-secondary-800 border-b px-4 py-3">
 	<div class="flex flex-wrap items-center gap-3">
-		<span class="text-secondary-500 text-xs uppercase tracking-wide">{t('OR')}</span>
+		<span class="text-secondary-500 text-xs tracking-wide uppercase">{t('OR')}</span>
 		<Button
 			type="button"
 			variant="secondary"

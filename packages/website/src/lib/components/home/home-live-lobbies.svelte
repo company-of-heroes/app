@@ -5,26 +5,11 @@
 		ListTable as MatchListTable,
 		LIVE_MATCH_LIST_COLUMNS
 	} from '@company-of-heroes/ui/match';
-	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
 	import type { LiveLobbyRecord } from '@company-of-heroes/api';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { meSteamIds } from '$lib/auth/user';
-	import { currentLocale, useI18n } from '$lib/i18n';
-	import { API_URL } from '$lib/site/urls';
-	import {
-		liveLobbyPlayerHref,
-		liveLobbyPlayerLabel,
-		matchListDetailsHref,
-		toLiveLobby,
-		toMatchListRow
-	} from '$lib/utils/live-lobby';
-	import { formatRelativeIso, normalizeMapName } from '$lib/utils/player/format';
-	import {
-		resolveFactionFlag,
-		resolveFallbackSrc,
-		resolveMapSrc,
-		getRankImageByRace
-	} from '$lib/utils/resolvers';
+	import { useI18n } from '$lib/i18n';
+	import { toLiveLobby, toMatchListRow } from '$lib/utils/live-lobby';
 
 	type Props = {
 		lobbies: LiveLobbyRecord[];
@@ -42,15 +27,11 @@
 	const rows = $derived(lobbies.map((lobby) => toMatchListRow(toLiveLobby(lobby, t))));
 	const loadError = $derived(error || seedError);
 
-	function playerLabel(player: LiveLobbyPlayer) {
-		return liveLobbyPlayerLabel(player, t);
-	}
-
 	async function seedTestLobbies() {
 		seeding = true;
 		seedError = null;
 		try {
-			const response = await fetch(`${API_URL}/api/dev/live-lobbies/seed`, { method: 'POST' });
+			const response = await fetch('/api/dev/live-lobbies/seed', { method: 'POST' });
 			if (!response.ok) {
 				throw new Error((await response.text()) || response.statusText);
 			}
@@ -67,7 +48,7 @@
 		seeding = true;
 		seedError = null;
 		try {
-			const response = await fetch(`${API_URL}/api/dev/live-lobbies/seed`, { method: 'DELETE' });
+			const response = await fetch('/api/dev/live-lobbies/seed', { method: 'DELETE' });
 			if (!response.ok) {
 				throw new Error((await response.text()) || response.statusText);
 			}
@@ -103,12 +84,13 @@
 				</div>
 			{/if}
 			{#if !loading}
-				<span class="text-secondary-400 text-sm">{t('{count} active', { count: rows.length })}</span>
+				<span class="text-secondary-400 text-sm">{t('{count} active', { count: rows.length })}</span
+				>
 			{/if}
 		</div>
 	</div>
 	{#if loadError}
-		<p class="border-secondary-800 text-red-400 border-b px-4 py-2 text-sm">
+		<p class="border-secondary-800 border-b px-4 py-2 text-sm text-red-400">
 			{seedError ?? t('Could not load live lobbies.')}
 		</p>
 	{/if}
@@ -116,33 +98,8 @@
 		{rows}
 		{loading}
 		columns={LIVE_MATCH_LIST_COLUMNS}
-		meSteamIds={mySteamIds}
-		{resolveMapSrc}
-		{resolveFallbackSrc}
-		{resolveFactionFlag}
-		getRankImage={getRankImageByRace}
-		playerHref={liveLobbyPlayerHref}
-		{playerLabel}
-		detailsHref={matchListDetailsHref}
-		formatMapName={normalizeMapName}
-		formatStarted={(createdAt) => formatRelativeIso(createdAt, currentLocale())}
 		emptyMessage={loadError
 			? t('Could not load live lobbies.')
 			: t('No community members are in a match right now.')}
-		mapLabel={t('Map')}
-		nameLabel={t('Name')}
-		typeLabel={t('Type')}
-		alliesLabel={t('Allies')}
-		axisLabel={t('Axis')}
-		hostLabel={t('Host')}
-		startedLabel={t('Started at')}
-		unknownHostLabel={t('Unknown')}
-		detailsLabel={t('Details')}
-		eloLabel={t('ELO')}
-		levelLabel={t('Level')}
-		posLabel={t('Pos')}
-		winsLabel={t('W')}
-		lossesLabel={t('L')}
-		streakLabel={t('Streak')}
 	/>
 </section>

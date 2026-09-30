@@ -1,4 +1,3 @@
-import { fetch as appFetch } from '$core/http/fetch';
 import { pocketbase } from '$core/pocketbase';
 
 declare global {
@@ -13,10 +12,9 @@ export function registerBrowserHandoffGlobal(): void {
 			throw new Error('Not signed in to the desktop app.');
 		}
 
-		const payload = await pocketbase.send<{ code?: string }>('/api/auth/handoff', {
-			method: 'POST',
-			fetch: appFetch
-		});
+		// Dynamic: $core/api pulls in the account module, which registers this global.
+		const { siteApi } = await import('$core/api');
+		const payload = await siteApi<{ code?: string }>('/auth/handoff', { method: 'POST' });
 
 		if (!payload.code?.startsWith('signed-v1.')) {
 			throw new Error('Could not create a browser login link.');

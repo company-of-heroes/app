@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build && node scripts/bump-version.mjs && node scripts/copy-to-pb.mjs && node scripts/pack-zip.mjs",
+		"build": "vite build && node scripts/bump-version.mjs && node scripts/copy-to-gateway.mjs && node scripts/pack-zip.mjs",
 		"bump:version": "node scripts/bump-version.mjs",
 		"preview": "vite preview",
 		"check": "svelte-check --tsconfig ./tsconfig.json",

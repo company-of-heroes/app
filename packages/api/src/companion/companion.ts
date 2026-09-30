@@ -47,29 +47,32 @@ export class CompanionApi {
 
 		const escaped = escapePocketBaseString(id);
 		return ResultAsync.fromPromise(
-			this.deps.pocketbase.collection('users').getList(1, 1, pbOptions(this.deps, {
-				filter: `steamIds ~ "${escaped}"`
-			})),
+			this.deps.pocketbase.collection('users').getList(
+				1,
+				1,
+				pbOptions(this.deps, {
+					filter: `steamIds ~ "${escaped}"`
+				})
+			),
 			() => apiError(500, 'Could not load that account.')
-		)
-			.map((response) => {
-				const row = response.items[0];
-				if (!row) {
-					return null;
-				}
+		).map((response) => {
+			const row = response.items[0];
+			if (!row) {
+				return null;
+			}
 
-				const parsed = companionUserSchema.safeParse(row);
-				if (!parsed.success) {
-					return null;
-				}
+			const parsed = companionUserSchema.safeParse(row);
+			if (!parsed.success) {
+				return null;
+			}
 
-				const data = parsed.data;
-				return {
-					...row,
-					...data,
-					steamIds: Array.isArray(data.steamIds) ? data.steamIds.map(String) : [],
-					appVersion: readMetaVersion(data.meta)
-				} as CompanionUser;
-			});
+			const data = parsed.data;
+			return {
+				...row,
+				...data,
+				steamIds: Array.isArray(data.steamIds) ? data.steamIds.map(String) : [],
+				appVersion: readMetaVersion(data.meta)
+			} as CompanionUser;
+		});
 	}
 }

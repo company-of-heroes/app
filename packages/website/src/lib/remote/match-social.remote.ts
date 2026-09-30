@@ -1,144 +1,97 @@
 import { command, getRequestEvent, query } from '$app/server';
-import * as v from 'valibot';
+import { error } from '@sveltejs/kit';
+import { z } from 'zod';
+import { isStaffUser } from '$lib/auth/user';
 import { unwrapAsync } from '$lib/errors/unwrap';
 
-const lobbyIdSchema = v.pipe(v.string(), v.minLength(1));
-const commentIdSchema = v.pipe(v.string(), v.minLength(1));
-const commentTextSchema = v.pipe(v.string(), v.minLength(1), v.maxLength(2000));
+/** `lobby` = community match, `replay` = member replay. */
+const kind = z.enum(['lobby', 'replay']);
+const id = z.string().min(1);
+const upOrDown = z.union([z.literal(1), z.literal(-1)]);
+const commentText = z.string().min(1).max(2000);
 
-export const listComments = query(lobbyIdSchema, (lobbyId) => {
+function signedIn() {
 	const { locals } = getRequestEvent();
-	return unwrapAsync(locals.services.matchSocial().listComments(lobbyId));
-});
-
-export const listReplayComments = query(lobbyIdSchema, (replayId) => {
-	const { locals } = getRequestEvent();
-	return unwrapAsync(locals.services.matchSocial().listReplayComments(replayId));
-});
-
-export const searchMentionUsers = query(v.pipe(v.string(), v.minLength(1)), (queryText) => {
-	const { locals } = getRequestEvent();
-	return unwrapAsync(locals.services.matchSocial().searchMentionUsers(queryText));
-});
-
-export const getMyVote = query(lobbyIdSchema, (lobbyId) => {
-	const { locals } = getRequestEvent();
-	return unwrapAsync(locals.services.matchSocial().getMyVote(lobbyId));
-});
-
-export const getMyReplayVote = query(lobbyIdSchema, (replayId) => {
-	const { locals } = getRequestEvent();
-	return unwrapAsync(locals.services.matchSocial().getMyReplayVote(replayId));
-});
-
-export const setLobbyVote = command(
-	v.object({
-		lobbyId: lobbyIdSchema,
-		value: v.union([v.literal(1), v.literal(-1)])
-	}),
-	({ lobbyId, value }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().setLobbyVote(lobbyId, value));
+	if (!locals.user) {
+		error(401, locals.t('Sign in to do that.'));
 	}
-);
 
-export const setReplayVote = command(
-	v.object({
-		replayId: lobbyIdSchema,
-		value: v.union([v.literal(1), v.literal(-1)])
-	}),
-	({ replayId, value }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().setReplayVote(replayId, value));
-	}
-);
+	return { services: locals.services, user: locals.user };
+}
 
-export const setCommentVote = command(
-	v.object({
-		commentId: commentIdSchema,
-		value: v.union([v.literal(1), v.literal(-1)])
-	}),
-	({ commentId, value }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().setCommentVote(commentId, value));
-	}
-);
+export const listComments = query(z.object({ kind, targetId: id }), ({ kind, targetId }) => {
+	const social = getRequestEvent().locals.api.matchSocial;
+	return unwrapAsync(
+		kind === 'replay' ? social.listReplayComments(targetId) : social.listComments(targetId)
+	);
+});
 
-export const setReplayCommentVote = command(
-	v.object({
-		commentId: commentIdSchema,
-		value: v.union([v.literal(1), v.literal(-1)])
-	}),
-	({ commentId, value }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().setReplayCommentVote(commentId, value));
+export const searchMentionUsers = query(z.string().min(1), (queryText) => {
+	return unwrapAsync(getRequestEvent().locals.api.matchSocial.searchMentionUsers(queryText));
+});
+
+export const getMyVote = query(z.object({ kind, targetId: id }), ({ kind, targetId }) => {
+	const social = getRequestEvent().locals.api.matchSocial;
+	return unwrapAsync(
+		kind === 'replay' ? social.getMyReplayVote(targetId) : social.getMyVote(targetId)
+	);
+});
+
+/** Voting the same way twice removes the vote. */
+export const vote = command(
+	z.object({ kind, targetId: id, value: upOrDown }),
+	async ({ kind, targetId, value }) => {
+		const { services, user } = signedIn();
+		const result = await unwrapAsync(
+			services.social.vote({ kind, id: targetId }, user.id, value, { toggle: true })
+		);
+		return { vote: result.vote, likeCount: result.likeCount };
 	}
 );
 
 export const createComment = command(
-	v.object({
-		lobbyId: lobbyIdSchema,
-		text: commentTextSchema,
-		parentId: v.optional(v.pipe(v.string(), v.minLength(1)))
-	}),
-	({ lobbyId, text, parentId }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().createComment(lobbyId, text, parentId));
+	z.object({ kind, targetId: id, text: commentText, parentId: id.optional() }),
+	async ({ kind, targetId, text, parentId }) => {
+		const { services, user } = signedIn();
+		const created = await unwrapAsync(
+			services.social.comment({ kind, id: targetId }, user.id, text, parentId)
+		);
+		return unwrapAsync(services.social.commentView(kind, created.id, user.id));
 	}
 );
 
-export const createReplayComment = command(
-	v.object({
-		replayId: lobbyIdSchema,
-		text: commentTextSchema,
-		parentId: v.optional(v.pipe(v.string(), v.minLength(1)))
-	}),
-	({ replayId, text, parentId }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().createReplayComment(replayId, text, parentId));
+export const voteComment = command(
+	z.object({ kind, commentId: id, value: upOrDown }),
+	async ({ kind, commentId, value }) => {
+		const { services, user } = signedIn();
+		const result = await unwrapAsync(
+			services.social.voteComment(kind, commentId, user.id, value, { toggle: true })
+		);
+		return { vote: result.vote, likeCount: result.likeCount };
 	}
 );
 
 export const updateComment = command(
-	v.object({
-		commentId: commentIdSchema,
-		text: commentTextSchema
-	}),
-	({ commentId, text }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().updateComment(commentId, text));
-	}
-);
-
-export const updateReplayComment = command(
-	v.object({
-		commentId: commentIdSchema,
-		text: commentTextSchema
-	}),
-	({ commentId, text }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().updateReplayComment(commentId, text));
+	z.object({ kind, commentId: id, text: commentText }),
+	async ({ kind, commentId, text }) => {
+		const { services, user } = signedIn();
+		await unwrapAsync(services.social.editComment(kind, commentId, user.id, text));
+		return unwrapAsync(services.social.commentView(kind, commentId, user.id));
 	}
 );
 
 export const deleteComment = command(
-	v.object({
-		commentId: commentIdSchema,
-		note: v.optional(v.pipe(v.string(), v.maxLength(500)))
-	}),
-	({ commentId, note }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().deleteComment(commentId, note));
-	}
-);
-
-export const deleteReplayComment = command(
-	v.object({
-		commentId: commentIdSchema,
-		note: v.optional(v.pipe(v.string(), v.maxLength(500)))
-	}),
-	({ commentId, note }) => {
-		const { locals } = getRequestEvent();
-		return unwrapAsync(locals.services.matchSocial().deleteReplayComment(commentId, note));
+	z.object({ kind, commentId: id, note: z.string().max(500).optional() }),
+	async ({ kind, commentId, note }) => {
+		const { services, user } = signedIn();
+		await unwrapAsync(
+			services.social.deleteComment(
+				kind,
+				commentId,
+				{ id: user.id, isStaff: isStaffUser(user) },
+				note
+			)
+		);
+		return unwrapAsync(services.social.commentView(kind, commentId, user.id));
 	}
 );

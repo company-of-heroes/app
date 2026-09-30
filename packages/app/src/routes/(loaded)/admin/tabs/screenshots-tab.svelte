@@ -413,7 +413,7 @@
 		type="button"
 		variant="secondary"
 		size="sm"
-		loading={loading}
+		{loading}
 		disabled={loading}
 		onclick={() => applyFilter()}
 	>
@@ -507,7 +507,7 @@
 							'opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100'
 					)}
 				>
-					<div class="bg-black/55 rounded-sm p-0.5 backdrop-blur-sm">
+					<div class="rounded-sm bg-black/55 p-0.5 backdrop-blur-sm">
 						<Checkbox
 							size="sm"
 							class="border-white/50"

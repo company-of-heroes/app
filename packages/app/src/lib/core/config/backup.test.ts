@@ -44,7 +44,9 @@ describe('BackupService', () => {
 
 		await service.backupNow('change');
 
-		const rotated = __fs.listFiles().filter((f) => f.startsWith(BACKUP_DIR) && !f.endsWith('settings-latest.json'));
+		const rotated = __fs
+			.listFiles()
+			.filter((f) => f.startsWith(BACKUP_DIR) && !f.endsWith('settings-latest.json'));
 
 		expect(__fs.has(`${BACKUP_DIR}/settings-latest.json`)).toBe(true);
 		expect(rotated).toHaveLength(0);
@@ -61,8 +63,7 @@ describe('BackupService', () => {
 		const rotated = __fs
 			.listFiles()
 			.filter(
-				(f) =>
-					f.startsWith(`${BACKUP_DIR}/settings-`) && !f.endsWith('settings-latest.json')
+				(f) => f.startsWith(`${BACKUP_DIR}/settings-`) && !f.endsWith('settings-latest.json')
 			);
 
 		expect(rotated).toHaveLength(10);

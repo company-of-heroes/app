@@ -44,6 +44,7 @@
 		if (Number.isFinite(fromResult) && fromResult >= 1 && fromResult <= 4) {
 			return fromResult;
 		}
+
 		if (fromResult === 14) {
 			return 14;
 		}
@@ -52,15 +53,19 @@
 		if (humans.length === 2) {
 			return 1;
 		}
+
 		if (humans.length === 4) {
 			return 2;
 		}
+
 		if (humans.length === 6) {
 			return 3;
 		}
+
 		if (humans.length === 8) {
 			return 4;
 		}
+
 		return 0;
 	});
 
@@ -124,8 +129,6 @@
 <span {...restProps} class={cn('inline-flex items-center', restProps.class)}>
 	<TeamPlayerSkills
 		players={skillPlayers}
-		resolveFactionFlag={getFactionFlagFromRace}
-		{getRankImage}
 		{meSteamIds}
 		{highlightedPlayers}
 		{outcome}

@@ -45,13 +45,19 @@ function readWorkspacePackages() {
 	const packages = new Map();
 
 	for (const entry of readdirSync(paths.packagesDir, { withFileTypes: true })) {
-		if (!entry.isDirectory()) continue;
+		if (!entry.isDirectory()) {
+			continue;
+		}
 
 		const packageJsonPath = join(paths.packagesDir, entry.name, 'package.json');
-		if (!existsSync(packageJsonPath)) continue;
+		if (!existsSync(packageJsonPath)) {
+			continue;
+		}
 
 		const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-		if (!pkg.name) continue;
+		if (!pkg.name) {
+			continue;
+		}
 
 		packages.set(pkg.name, {
 			name: pkg.name,
@@ -141,6 +147,7 @@ function readAppVersion() {
 	if (!conf.version) {
 		throw new Error('No "version" found in tauri.conf.json');
 	}
+
 	return conf.version;
 }
 
@@ -161,6 +168,7 @@ function replaceFirst(filePath, regex, replacement) {
 	if (!regex.test(content)) {
 		throw new Error(`Could not find version field in ${filePath}`);
 	}
+
 	writeFileSync(filePath, content.replace(regex, replacement));
 }
 
@@ -203,7 +211,10 @@ function toBullets(changesets) {
 		const lines = changeset.summary.split(/\r?\n/).map((line) => line.trim());
 
 		for (const line of lines) {
-			if (!line) continue;
+			if (!line) {
+				continue;
+			}
+
 			bullets.push(line.startsWith('-') ? line : `- ${line}`);
 		}
 	}
@@ -246,6 +257,7 @@ function versionPackage(pkg, packageChangesets) {
 			console.log(`[dry-run] Would prepend to CHANGELOG.md:\n`);
 			console.log(`### v${newVersion}\n\n${bullets.join('\n')}\n`);
 		}
+
 		console.log(`[dry-run] Would prepend to ${pkg.changelogPath}:\n`);
 		console.log(`## ${newVersion}\n\n${bullets.join('\n')}\n`);
 		return;

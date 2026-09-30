@@ -24,11 +24,7 @@ import {
 import { log, logError } from './logger';
 import { getRelicStats, type RelicStats } from './relic';
 import { computeSmurfScore, type ScoreResult } from './score';
-import {
-	type CandidateFacts,
-	MAIN_CONFIDENCE_THRESHOLD,
-	rankMainCandidates
-} from './main-account';
+import { type CandidateFacts, MAIN_CONFIDENCE_THRESHOLD, rankMainCandidates } from './main-account';
 import { getSteamBlockedSeconds, releaseWorkerLock, tryAcquireWorkerLock } from './steam-rate';
 
 type ScreeningOutcome =
@@ -66,8 +62,18 @@ type ScreeningContext = {
 
 type CoplayResponse = {
 	profile_id: number;
-	teammates: { profile_id: number; steam_id: string | null; alias: string | null; shared_lobbies: number }[];
-	candidates: { profile_id: number; steam_id: string | null; alias: string | null; shared_teammates: number }[];
+	teammates: {
+		profile_id: number;
+		steam_id: string | null;
+		alias: string | null;
+		shared_lobbies: number;
+	}[];
+	candidates: {
+		profile_id: number;
+		steam_id: string | null;
+		alias: string | null;
+		shared_teammates: number;
+	}[];
 };
 
 async function patchBackoff(
@@ -124,7 +130,9 @@ async function analyzeMainAccount(
 ): Promise<Record<string, unknown> | null> {
 	const startedAt = Date.now();
 
-	const friends = ctx.budget.canSpend() ? await getFriendList(env, record.steam_id, ctx.budget) : null;
+	const friends = ctx.budget.canSpend()
+		? await getFriendList(env, record.steam_id, ctx.budget)
+		: null;
 
 	let coplay: CoplayResponse | null = null;
 	if (record.profile_id) {
@@ -156,6 +164,7 @@ async function analyzeMainAccount(
 			};
 			facts.set(steamId, candidate);
 		}
+
 		return candidate;
 	};
 
@@ -171,6 +180,7 @@ async function analyzeMainAccount(
 		if (!entry.steam_id) {
 			continue;
 		}
+
 		const candidate = ensureCandidate(entry.steam_id);
 		candidate.sharedTeammates = entry.shared_teammates;
 		candidate.alias = candidate.alias ?? entry.alias;
@@ -180,6 +190,7 @@ async function analyzeMainAccount(
 		if (!entry.steam_id) {
 			continue;
 		}
+
 		const candidate = ensureCandidate(entry.steam_id);
 		candidate.lobbiesWithSuspect = entry.shared_lobbies;
 		candidate.alias = candidate.alias ?? entry.alias;
@@ -514,6 +525,7 @@ async function screenRecords(
 			if (!(error instanceof RateLimitError)) {
 				throw error;
 			}
+
 			log('warn', 'steam rate limit before screening summaries', {
 				retryAfterSec: error.retryAfterSec
 			});
@@ -736,6 +748,7 @@ async function pollRecords(
 			});
 			return;
 		}
+
 		throw error;
 	}
 

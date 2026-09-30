@@ -15,7 +15,7 @@ import { ingestPlayerRatings } from '$core/pocketbase/player-ratings';
 import { toPersistablePlayers } from '$core/game/lobby-utils';
 import { embedSteamIdsInReplay } from '$lib/utils/replay-steam-ids';
 import { rewriteReplayMapPathsForLocalPlayback } from '$lib/utils/rewrite-replay-map-paths';
-import { flattenReplay, type FlatReplay } from '$lib/utils/flatten-replay';
+import { flattenReplay, type FlatReplay } from '@company-of-heroes/ui/replay/parse';
 import { getFile } from '$core/pocketbase';
 import { t } from '$lib/i18n';
 
@@ -367,8 +367,7 @@ export class History extends Feature<HistorySettings> {
 
 		this.#setPendingSessionId(lobby.sessionId);
 
-		const replayFile =
-			localReplay instanceof File ? localReplay : (localReplay?.file ?? null);
+		const replayFile = localReplay instanceof File ? localReplay : (localReplay?.file ?? null);
 		const durationSeconds = this.#normalizeDurationSeconds(
 			localReplay instanceof File ? 0 : localReplay?.replay?.duration
 		);
@@ -401,8 +400,7 @@ export class History extends Feature<HistorySettings> {
 				console.warn('[HISTORY]: match metadata update skipped:', error);
 			}
 
-			const parsedReplay =
-				localReplay instanceof File ? null : (localReplay?.replay ?? null);
+			const parsedReplay = localReplay instanceof File ? null : (localReplay?.replay ?? null);
 			if (replayFile) {
 				if (!parsedReplay) {
 					// Unparsed temp.rec — leave pending so recovery can retry with a header match.
@@ -419,16 +417,10 @@ export class History extends Feature<HistorySettings> {
 					console.warn('[HISTORY]: temp.rec does not match lobby; skipping attach');
 				} else {
 					try {
-						const result = await app.database.matches.attachReplay(
-							existing.id,
-							replayFile,
-							{
-								durationSeconds
-							}
-						);
-						if (
-							this.#shouldClearPendingAfterAttach(result, replayFile, durationSeconds)
-						) {
+						const result = await app.database.matches.attachReplay(existing.id, replayFile, {
+							durationSeconds
+						});
+						if (this.#shouldClearPendingAfterAttach(result, replayFile, durationSeconds)) {
 							this.#clearPendingSessionId(lobby.sessionId);
 						}
 					} catch (error) {
@@ -811,10 +803,7 @@ export class History extends Feature<HistorySettings> {
 				try {
 					replay = flattenReplay(parseReplay(new Uint8Array(fileData)));
 				} catch (error) {
-					console.warn(
-						'[HISTORY]: parseReplay failed; uploading raw temp.rec bytes:',
-						error
-					);
+					console.warn('[HISTORY]: parseReplay failed; uploading raw temp.rec bytes:', error);
 				}
 
 				return {

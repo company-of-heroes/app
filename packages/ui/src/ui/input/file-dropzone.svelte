@@ -1,7 +1,12 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { controlDisabled, fileDropzone, fileDropzoneDragging, interactive } from '@company-of-heroes/ui/variants';
+	import {
+		controlDisabled,
+		fileDropzone,
+		fileDropzoneDragging,
+		interactive
+	} from '@company-of-heroes/ui/variants';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 
 	export type FileDropzoneProps = {
@@ -246,7 +251,7 @@
 	<input
 		{...inputProps}
 		bind:this={inputEl}
-		id={id}
+		{id}
 		type="file"
 		class="hidden"
 		{accept}

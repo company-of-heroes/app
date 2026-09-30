@@ -62,8 +62,7 @@ export function computeSmurfScore(input: ScoreInput): ScoreResult {
 	}
 
 	const relic = input.relic;
-	const winratePct =
-		relic?.winrate != null ? Math.round(relic.winrate * 100) : null;
+	const winratePct = relic?.winrate != null ? Math.round(relic.winrate * 100) : null;
 
 	if (
 		input.cohPlaytimeMinutes != null &&
@@ -80,7 +79,13 @@ export function computeSmurfScore(input: ScoreInput): ScoreResult {
 		});
 	}
 
-	if (relic && relic.winrate != null && relic.totalGames >= 10 && relic.totalGames < 100 && relic.winrate >= 0.6) {
+	if (
+		relic &&
+		relic.winrate != null &&
+		relic.totalGames >= 10 &&
+		relic.totalGames < 100 &&
+		relic.winrate >= 0.6
+	) {
 		signals.push({
 			id: 'few_games_high_winrate',
 			points: 18,
@@ -129,7 +134,11 @@ export function computeSmurfScore(input: ScoreInput): ScoreResult {
 	);
 
 	const verdict: Verdict =
-		score >= LIKELY_THRESHOLD ? 'likely_smurf' : score >= SUSPICIOUS_THRESHOLD ? 'suspicious' : 'clean';
+		score >= LIKELY_THRESHOLD
+			? 'likely_smurf'
+			: score >= SUSPICIOUS_THRESHOLD
+				? 'suspicious'
+				: 'clean';
 
 	return { score, verdict, signals };
 }

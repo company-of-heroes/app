@@ -6,11 +6,7 @@ import {
 	isHiddenFromPublic,
 	invalidateHiddenKeywordCache
 } from '@company-of-heroes/api';
-import type {
-	HiddenMatchKeywordsResponse,
-	HiddenMatchesResponse,
-	UsersResponse
-} from './types';
+import type { HiddenMatchKeywordsResponse, HiddenMatchesResponse, UsersResponse } from './types';
 
 export type HiddenMatch = HiddenMatchesResponse<{ hiddenBy?: UsersResponse }>;
 export type HiddenMatchKeyword = HiddenMatchKeywordsResponse<{ createdBy?: UsersResponse }>;

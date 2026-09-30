@@ -22,7 +22,8 @@
 
 	type HitRow = AntiCheatModuleHitsResponse<{ user?: UsersResponse }>;
 
-	const escapeFilterValue = (value: string) => value.replaceAll('\\', '\\\\').replaceAll('"', '\\"');
+	const escapeFilterValue = (value: string) =>
+		value.replaceAll('\\', '\\\\').replaceAll('"', '\\"');
 
 	const allowlistColumns: ColumnDef<AntiCheatModuleAllowlistResponse>[] = [
 		{ id: 'name', header: t('Module or path'), width: 'w-8/24', class: 'font-medium' },
@@ -214,6 +215,7 @@
 						.collection('anti_cheat_module_allowlist')
 						.update(existing.id, { enabled: true }, { fetch });
 				}
+
 				app.toast.success(t('Module allowlisted.'));
 				await loadAllowlist();
 				return;

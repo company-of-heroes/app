@@ -1,4 +1,4 @@
-import { Context } from 'runed';
+import { getContext, hasContext, setContext } from 'svelte';
 import { t } from '$lib/i18n';
 import { rememberedHistoryListHref } from '$core/app/features/history/history-url';
 
@@ -31,7 +31,7 @@ const SECTIONS: Record<string, string> = {
 	shortcuts: 'Keybindings',
 	leaderboards: 'Leaderboards',
 	players: 'Players',
-	twitch: 'Twitch',
+	streaming: 'Streaming',
 	settings: 'Settings',
 	account: 'Account',
 	admin: 'Management'
@@ -45,10 +45,18 @@ class Breadcrumbs {
 	}
 }
 
-const context = new Context<Breadcrumbs>('<breadcrumbs />');
+// String key (not runed's Symbol-based Context) so the key survives HMR re-evaluation
+// of this module; otherwise consumers look up a fresh Symbol the layout never set.
+const KEY = '<breadcrumbs />';
 
-export const createBreadcrumbs = () => context.set(new Breadcrumbs());
-export const useBreadcrumbs = () => context.get();
+export const createBreadcrumbs = () => setContext(KEY, new Breadcrumbs());
+export const useBreadcrumbs = () => {
+	if (!hasContext(KEY)) {
+		throw new Error(`Context "${KEY}" not found`);
+	}
+
+	return getContext<Breadcrumbs>(KEY);
+};
 
 export function crumbsFromPath(pathname: string, extra: Crumb[]): Crumb[] {
 	const parts = pathname.replace(/\/+$/, '').split('/').filter(Boolean);

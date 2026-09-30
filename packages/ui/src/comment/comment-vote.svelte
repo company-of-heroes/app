@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { scoreClassName, type CommentVoteValue } from './vote';
@@ -11,11 +12,11 @@
 		disabled?: boolean;
 		compact?: boolean;
 		href?: string;
-		upvoteLabel?: string;
-		downvoteLabel?: string;
 		onvote?: (value: 1 | -1) => void;
 		class?: string;
 	};
+
+	const { t } = useI18n();
 
 	let {
 		score,
@@ -23,8 +24,6 @@
 		disabled = false,
 		compact = false,
 		href,
-		upvoteLabel = 'Upvote',
-		downvoteLabel = 'Downvote',
 		onvote,
 		class: className
 	}: Props = $props();
@@ -56,7 +55,7 @@
 		)}
 		disabled={!href && disabled}
 		aria-pressed={href ? undefined : upActive}
-		aria-label={upvoteLabel}
+		aria-label={t('Upvote')}
 		onclick={href ? undefined : voteUp}
 	>
 		<CaretUpIcon size={iconSize} weight="fill" />
@@ -76,7 +75,7 @@
 		)}
 		disabled={!href && disabled}
 		aria-pressed={href ? undefined : downActive}
-		aria-label={downvoteLabel}
+		aria-label={t('Downvote')}
 		onclick={href ? undefined : voteDown}
 	>
 		<CaretDownIcon size={iconSize} weight="fill" />

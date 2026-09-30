@@ -32,7 +32,10 @@
 		class={cn('size-full object-cover', restProps.class)}
 	/>
 {:else}
-	<div {...restProps} class={cn('flex size-full items-center justify-center bg-gray-600', restProps.class)}>
+	<div
+		{...restProps}
+		class={cn('flex size-full items-center justify-center bg-gray-600', restProps.class)}
+	>
 		<span class="text-xl text-white">?</span>
 	</div>
 {/if}

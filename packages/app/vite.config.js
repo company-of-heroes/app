@@ -93,9 +93,7 @@ export default defineConfig(({ mode }) => {
 		define: {
 			// Do not pass the whole `process.env` object — Vite 8 rejects it (exposes
 			// host env like Path) and aborts the dev server.
-			'process.env.NODE_ENV': JSON.stringify(
-				mode === 'production' ? 'production' : 'development'
-			),
+			'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
 			global: 'globalThis'
 		},
 		assetsInclude: ['*.md'],

@@ -3,14 +3,22 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { Badge } from '@company-of-heroes/ui/badge';
 	import { cn } from '@company-of-heroes/ui/cn';
+	import { useI18n } from '@company-of-heroes/i18n';
 
 	type Props = {
-		staffOnlyLabel: string;
+		staffOnlyLabel?: string;
 		description?: string;
 		children: Snippet;
 	} & HTMLAttributes<HTMLElement>;
 
-	let { staffOnlyLabel, description, children, class: className, ...restProps }: Props = $props();
+	const { t } = useI18n();
+	let {
+		staffOnlyLabel = t('Staff only'),
+		description,
+		children,
+		class: className,
+		...restProps
+	}: Props = $props();
 </script>
 
 <section

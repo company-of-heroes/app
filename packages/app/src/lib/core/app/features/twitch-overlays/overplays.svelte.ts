@@ -37,7 +37,10 @@ export class TwitchOverlays extends Feature {
 			let settled = false;
 
 			const settle = (value: boolean) => {
-				if (settled) return;
+				if (settled) {
+					return;
+				}
+
 				settled = true;
 				unsubscribe();
 				resolve(value);
@@ -45,7 +48,10 @@ export class TwitchOverlays extends Feature {
 			};
 
 			const unsubscribe = app.modal.on('close', () => {
-				if (settled) return;
+				if (settled) {
+					return;
+				}
+
 				settled = true;
 				unsubscribe();
 				resolve(false);
@@ -67,7 +73,9 @@ export class TwitchOverlays extends Feature {
 	}
 
 	async #publishUpdatedOverlay(overlay: Overlay) {
-		if (!pocketbase.authStore.isValid) return false;
+		if (!pocketbase.authStore.isValid) {
+			return false;
+		}
 
 		try {
 			await overlay.publish({ silent: true });
@@ -79,20 +87,29 @@ export class TwitchOverlays extends Feature {
 	}
 
 	async #promptPendingUpdates(overlays: Overlay[]) {
-		if (this.#promptInFlight) return;
+		if (this.#promptInFlight) {
+			return;
+		}
 
 		this.#promptInFlight = true;
 		try {
 			for (const overlay of overlays) {
 				const key = this.#pendingUpdateKey(overlay);
-				if (this.#skippedPendingUpdates.has(key)) continue;
-				if (!(await overlay.hasPendingUpdate())) continue;
+				if (this.#skippedPendingUpdates.has(key)) {
+					continue;
+				}
+
+				if (!(await overlay.hasPendingUpdate())) {
+					continue;
+				}
 
 				const ok = await this.#confirmUpdate(overlay);
 				// Never re-prompt for this version in the same session (yes or no).
 				this.#skippedPendingUpdates.add(key);
 
-				if (!ok) continue;
+				if (!ok) {
+					continue;
+				}
 
 				try {
 					await overlay.overwriteWithLatest({ backup: true });

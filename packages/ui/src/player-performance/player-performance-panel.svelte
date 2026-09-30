@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { useHost } from '../host/host.context';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import MapImage from '../ui/map-image.svelte';
@@ -36,28 +38,11 @@
 	type Props = {
 		performance: PlayerPerformanceStats;
 		elo?: PlayerEloMap;
-		resolveFactionFlag: (raceId: number) => string;
-		resolveMapSrc: (map: string | undefined) => string | undefined;
 		resolveFallbackSrc?: () => string | undefined;
-		formatMapName?: (map: string, includePlayerCount?: boolean) => string;
+		/** Overrides the default empty text (e.g. "play with the companion" on your own profile). */
 		emptyPerformanceMessage?: string;
-		emptyEloMessage?: string;
-		eloHistoryTitle?: string;
+		/** Overrides the collapsed ELO section summary. */
 		trackedLobbyRatingsLabel?: string;
-		byMapTitle?: string;
-		byFactionTitle?: string;
-		byModeTitle?: string;
-		mapsSummary?: string;
-		factionsSummary?: string;
-		modesSummary?: string;
-		mapLabel?: string;
-		gamesLabel?: string;
-		winsLabel?: string;
-		lossesLabel?: string;
-		winrateLabel?: string;
-		modeLabel?: string;
-		factionLabel?: string;
-		eloLabel?: string;
 		eloContent?: Snippet;
 		mapRowDetail?: Snippet<[row: { map: string; wins: number; losses: number }]>;
 		factionRowDetail?: Snippet<[row: { raceId: number; wins: number; losses: number }]>;
@@ -66,31 +51,15 @@
 		eloExpanded?: boolean;
 	};
 
+	const { t } = useI18n();
+	const host = useHost();
+
 	let {
 		performance: stats,
 		elo,
-		resolveFactionFlag,
-		resolveMapSrc,
 		resolveFallbackSrc,
-		formatMapName = normalizeMapName,
-		emptyPerformanceMessage = 'No tracked community matches for this player.',
-		emptyEloMessage = 'No tracked match ratings yet. Play with the companion running so lobby results can build this history.',
-		eloHistoryTitle = 'ELO history',
-		trackedLobbyRatingsLabel = 'Tracked lobby ratings',
-		byMapTitle = 'By map',
-		byFactionTitle = 'By faction',
-		byModeTitle = 'By mode',
-		mapsSummary = '{maps} maps · {games} games',
-		factionsSummary = '{factions} factions · {games} games',
-		modesSummary = '{modes} game modes · {games} games',
-		mapLabel = 'Map',
-		gamesLabel = 'Games',
-		winsLabel = 'Wins',
-		lossesLabel = 'Losses',
-		winrateLabel = 'Winrate',
-		modeLabel = 'Mode',
-		factionLabel = 'Faction',
-		eloLabel = 'ELO',
+		emptyPerformanceMessage,
+		trackedLobbyRatingsLabel,
 		eloContent,
 		mapRowDetail,
 		factionRowDetail,
@@ -122,9 +91,15 @@
 		const rows: EloRow[] = [];
 		for (const [matchType, races] of Object.entries(eloMap ?? {})) {
 			const matchtypeId = Number(matchType);
-			if (!Number.isInteger(matchtypeId) || matchtypeId === 14) continue;
+			if (!Number.isInteger(matchtypeId) || matchtypeId === 14) {
+				continue;
+			}
+
 			for (const [race, slot] of Object.entries(races ?? {})) {
-				if (typeof slot?.rating !== 'number' || slot.rating < 1) continue;
+				if (typeof slot?.rating !== 'number' || slot.rating < 1) {
+					continue;
+				}
+
 				rows.push({ matchtypeId, raceId: Number(race), rating: slot.rating });
 			}
 		}
@@ -174,17 +149,17 @@
 {#snippet statMeta(row: { wins: number; losses: number })}
 	<div class="text-secondary-400 mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
 		<span>
-			{gamesLabel}
+			{t('Games')}
 			<span class="text-secondary-300 font-medium tabular-nums">{row.wins + row.losses}</span>
 		</span>
 		<span>
-			{winsLabel} <span class={cn('font-medium', statWins)}>{row.wins}</span>
+			{t('Wins')} <span class={cn('font-medium', statWins)}>{row.wins}</span>
 		</span>
 		<span>
-			{lossesLabel} <span class={cn('font-medium', statLosses)}>{row.losses}</span>
+			{t('Losses')} <span class={cn('font-medium', statLosses)}>{row.losses}</span>
 		</span>
 		<span>
-			{winrateLabel}
+			{t('Winrate')}
 			<span class="font-medium tabular-nums" style:color={getRatioColor(row.wins, row.losses)}>
 				{winrate(row.wins, row.losses)}
 			</span>
@@ -196,12 +171,12 @@
 	<div class="flex min-w-0 items-center gap-3">
 		<MapImage
 			map={row.map}
-			{resolveMapSrc}
+			resolveMapSrc={host.resolve.mapSrc}
 			{resolveFallbackSrc}
-			alt={formatMapName(row.map)}
+			alt={normalizeMapName(row.map)}
 		/>
 		<span class="min-w-0 truncate font-medium">
-			{formatMapName(row.map, false)}
+			{normalizeMapName(row.map, false)}
 			{#if players}
 				<span class="text-secondary-400">({players})</span>
 			{/if}
@@ -212,7 +187,11 @@
 
 {#snippet factionMobileCard(row: { raceId: number; wins: number; losses: number })}
 	<div class="flex min-w-0 items-center gap-2">
-		<img src={resolveFactionFlag(row.raceId)} alt="" class="w-6 shrink-0 ring-2 ring-black" />
+		<img
+			src={host.resolve.factionFlagByRace(row.raceId)}
+			alt=""
+			class="w-6 shrink-0 ring-2 ring-black"
+		/>
 		<span class="min-w-0 truncate font-medium">{getRaceLabel(row.raceId)}</span>
 	</div>
 	{@render statMeta(row)}
@@ -224,23 +203,27 @@
 {/snippet}
 
 <PlayerPerformanceSection
-	title={eloHistoryTitle}
-	summary={trackedLobbyRatingsLabel}
+	title={t('ELO history')}
+	summary={trackedLobbyRatingsLabel ?? t('Tracked lobby ratings')}
 	icon={ChartLineIcon}
 	bind:expanded={eloExpanded}
 >
 	{#if eloContent}
 		{@render eloContent()}
 	{:else if eloRows.length === 0}
-		<p class="text-secondary-400 px-4 py-6 text-sm">{emptyEloMessage}</p>
+		<p class="text-secondary-400 px-4 py-6 text-sm">
+			{t(
+				'No tracked match ratings yet. Play with the companion running so lobby results can build this history.'
+			)}
+		</p>
 	{:else}
-		<div class="hidden md:block overflow-x-auto">
+		<div class="hidden overflow-x-auto md:block">
 			<table class="w-full border-collapse text-sm">
 				<thead>
 					<tr class={headerRow}>
-						<th class="px-4 py-2 text-left">{modeLabel}</th>
-						<th class="px-4 py-2 text-left">{factionLabel}</th>
-						<th class="w-[6.5rem] px-2 py-2 text-center">{eloLabel}</th>
+						<th class="px-4 py-2 text-left">{t('Mode')}</th>
+						<th class="px-4 py-2 text-left">{t('Faction')}</th>
+						<th class="w-[6.5rem] px-2 py-2 text-center">{t('ELO')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -250,7 +233,7 @@
 							<td class="px-4 py-1.5">
 								<div class="flex min-w-0 items-center gap-2">
 									<img
-										src={resolveFactionFlag(row.raceId)}
+										src={host.resolve.factionFlagByRace(row.raceId)}
 										alt=""
 										class="w-6 shrink-0 ring-2 ring-black"
 									/>
@@ -291,7 +274,7 @@
 					</div>
 					<div class="mt-2 flex min-w-0 items-center gap-2 text-sm">
 						<img
-							src={resolveFactionFlag(row.raceId)}
+							src={host.resolve.factionFlagByRace(row.raceId)}
 							alt=""
 							class="w-6 shrink-0 ring-2 ring-black"
 						/>
@@ -304,23 +287,25 @@
 </PlayerPerformanceSection>
 
 {#if stats.matchCount === 0}
-	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyPerformanceMessage}</p>
+	<p class="text-secondary-400 px-4 py-3 text-sm">
+		{emptyPerformanceMessage ?? t('No tracked community matches for this player.')}
+	</p>
 {:else}
 	<PlayerPerformanceSection
-		title={byMapTitle}
-		summary={fill(mapsSummary, { maps: stats.byMap.length, games: mapGames })}
+		title={t('By map')}
+		summary={fill(t('{maps} maps · {games} games'), { maps: stats.byMap.length, games: mapGames })}
 		icon={MapTrifoldIcon}
 		bind:expanded={mapsExpanded}
 	>
-		<div class="hidden md:block overflow-x-auto">
+		<div class="hidden overflow-x-auto md:block">
 			<table class="w-full border-collapse text-sm">
 				<thead>
 					<tr class={headerRow}>
-						<th class="px-4 py-2 text-left">{mapLabel}</th>
-						<th class="w-[3.25rem] px-2 py-2 text-center">{gamesLabel}</th>
-						<th class="w-[4.5rem] px-2 py-2 text-center">{winsLabel}</th>
-						<th class="w-[4.75rem] px-2 py-2 text-center">{lossesLabel}</th>
-						<th class="w-[4.5rem] px-2 py-2 text-center">{winrateLabel}</th>
+						<th class="px-4 py-2 text-left">{t('Map')}</th>
+						<th class="w-[3.25rem] px-2 py-2 text-center">{t('Games')}</th>
+						<th class="w-[4.5rem] px-2 py-2 text-center">{t('Wins')}</th>
+						<th class="w-[4.75rem] px-2 py-2 text-center">{t('Losses')}</th>
+						<th class="w-[4.5rem] px-2 py-2 text-center">{t('Winrate')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -335,12 +320,12 @@
 								<div class="flex min-w-0 items-center gap-3">
 									<MapImage
 										map={row.map}
-										{resolveMapSrc}
+										resolveMapSrc={host.resolve.mapSrc}
 										{resolveFallbackSrc}
-										alt={formatMapName(row.map)}
+										alt={normalizeMapName(row.map)}
 									/>
 									<span class="min-w-0 truncate text-white">
-										{formatMapName(row.map, false)}
+										{normalizeMapName(row.map, false)}
 										{#if players}
 											<span class="text-secondary-400">({players})</span>
 										{/if}
@@ -388,20 +373,23 @@
 	</PlayerPerformanceSection>
 
 	<PlayerPerformanceSection
-		title={byFactionTitle}
-		summary={fill(factionsSummary, { factions: stats.byFaction.length, games: factionGames })}
+		title={t('By faction')}
+		summary={fill(t('{factions} factions · {games} games'), {
+			factions: stats.byFaction.length,
+			games: factionGames
+		})}
 		icon={FlagIcon}
 		bind:expanded={factionExpanded}
 	>
-		<div class="hidden md:block overflow-x-auto">
+		<div class="hidden overflow-x-auto md:block">
 			<table class="w-full border-collapse text-sm">
 				<thead>
 					<tr class={headerRow}>
-						<th class="px-4 py-2 text-left">{factionLabel}</th>
-						<th class="w-[3.25rem] px-2 py-2 text-center">{gamesLabel}</th>
-						<th class="w-[4.5rem] px-2 py-2 text-center">{winsLabel}</th>
-						<th class="w-[4.75rem] px-2 py-2 text-center">{lossesLabel}</th>
-						<th class="w-[4.5rem] px-2 py-2 text-center">{winrateLabel}</th>
+						<th class="px-4 py-2 text-left">{t('Faction')}</th>
+						<th class="w-[3.25rem] px-2 py-2 text-center">{t('Games')}</th>
+						<th class="w-[4.5rem] px-2 py-2 text-center">{t('Wins')}</th>
+						<th class="w-[4.75rem] px-2 py-2 text-center">{t('Losses')}</th>
+						<th class="w-[4.5rem] px-2 py-2 text-center">{t('Winrate')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -415,7 +403,7 @@
 							<td class="px-4 py-1.5">
 								<div class="flex min-w-0 items-center gap-2">
 									<img
-										src={resolveFactionFlag(row.raceId)}
+										src={host.resolve.factionFlagByRace(row.raceId)}
 										alt=""
 										class="w-6 shrink-0 ring-2 ring-black"
 									/>
@@ -463,25 +451,29 @@
 	</PlayerPerformanceSection>
 
 	<PlayerPerformanceSection
-		title={byModeTitle}
-		summary={fill(modesSummary, { modes: byMode.length, games: modeGames })}
+		title={t('By mode')}
+		summary={fill(t('{modes} game modes · {games} games'), {
+			modes: byMode.length,
+			games: modeGames
+		})}
 		icon={UsersThreeIcon}
 		bind:expanded={modeExpanded}
 	>
-		<div class="hidden md:block overflow-x-auto">
+		<div class="hidden overflow-x-auto md:block">
 			<table class="w-full border-collapse text-sm">
 				<thead>
 					<tr class={headerRow}>
-						<th class="px-4 py-2 text-left">{modeLabel}</th>
-						<th class="w-[3.25rem] px-2 py-2 text-center">{gamesLabel}</th>
-						<th class="w-[4.5rem] px-2 py-2 text-center">{winsLabel}</th>
-						<th class="w-[4.75rem] px-2 py-2 text-center">{lossesLabel}</th>
-						<th class="w-[4.5rem] px-2 py-2 text-center">{winrateLabel}</th>
+						<th class="px-4 py-2 text-left">{t('Mode')}</th>
+						<th class="w-[3.25rem] px-2 py-2 text-center">{t('Games')}</th>
+						<th class="w-[4.5rem] px-2 py-2 text-center">{t('Wins')}</th>
+						<th class="w-[4.75rem] px-2 py-2 text-center">{t('Losses')}</th>
+						<th class="w-[4.5rem] px-2 py-2 text-center">{t('Winrate')}</th>
 					</tr>
 				</thead>
 				<tbody>
 					{#each byMode as row (row.matchtypeId)}
-						{@const modeRowExpanded = modeRowDetail !== undefined && expandedMode === row.matchtypeId}
+						{@const modeRowExpanded =
+							modeRowDetail !== undefined && expandedMode === row.matchtypeId}
 						<tr
 							class={cn('border-secondary-800 border-b', modeRowDetail && interactive)}
 							onclick={modeRowDetail ? () => toggleModeRow(row) : undefined}

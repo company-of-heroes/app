@@ -10,7 +10,9 @@ export function steamIdsByAliasFromResultPlayers(
 	players: ResultPlayer[] | null | undefined
 ): Record<string, string> {
 	const map: Record<string, string> = {};
-	if (!players?.length) return map;
+	if (!players?.length) {
+		return map;
+	}
 
 	for (const player of players) {
 		const alias = player.alias?.trim();

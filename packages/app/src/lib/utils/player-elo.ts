@@ -1,6 +1,9 @@
 import type { LobbyPlayer, TransformedMatch } from '@fknoobs/app';
 import { getRaceFromLeaderboardId } from '$lib/utils/game';
 
+import { getMatchTypeIdFromLeaderboardId } from '@company-of-heroes/ui/format/player-format';
+export { getMatchTypeIdFromLeaderboardId } from '@company-of-heroes/ui/format/player-format';
+
 export const MIN_STORED_MATCH_TYPE = 0;
 export const MAX_STORED_MATCH_TYPE = 7;
 export const STEAM_ID_REGEX = /^7656119\d{10}$/;
@@ -52,19 +55,6 @@ export function getStoredEloRating(
 	}
 
 	return slot.rating;
-}
-
-/**
- * Maps Relic leaderboard IDs to matchtype_id used in stored ELO.
- * Returns null for operations (not stored) and skirmish (always 1000).
- */
-export function getMatchTypeIdFromLeaderboardId(leaderboardId: number): number | null {
-	if (leaderboardId >= 0 && leaderboardId <= 3) return 0;
-	if (leaderboardId >= 4 && leaderboardId <= 7) return 1;
-	if (leaderboardId >= 8 && leaderboardId <= 11) return 2;
-	if (leaderboardId >= 12 && leaderboardId <= 15) return 3;
-	if (leaderboardId >= 16 && leaderboardId <= 19) return 4;
-	return null;
 }
 
 export function getStoredEloForLeaderboard(
@@ -267,7 +257,9 @@ export function eloMapFromRecord(elo: unknown): PlayerEloMap {
 	for (const [matchKey, races] of keyedEntries(elo)) {
 		for (const [raceKey, value] of keyedEntries(races)) {
 			const slot = asEloSlot(value);
-			if (!slot) continue;
+			if (!slot) {
+				continue;
+			}
 
 			const group = map[matchKey] ?? {};
 			const current = group[raceKey];
@@ -307,7 +299,9 @@ export function mergeEloMaps(...maps: (PlayerEloMap | undefined)[]): PlayerEloMa
 	const merged: PlayerEloMap = {};
 
 	for (const map of maps) {
-		if (!map) continue;
+		if (!map) {
+			continue;
+		}
 
 		for (const [matchKey, races] of Object.entries(eloMapFromRecord(map))) {
 			for (const [raceKey, slot] of Object.entries(races)) {

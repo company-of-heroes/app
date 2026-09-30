@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ResultAsync } from 'neverthrow';
 import type { LiveStream } from '@company-of-heroes/ui/twitch/types';
-import { normalizeBaseUrl, type ApiDeps } from '../deps';
+import { type ApiDeps, normalizeBaseUrl, v1Base } from '../deps';
 import type { ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 
@@ -27,13 +27,9 @@ export class TwitchApi {
 	constructor(private deps: ApiDeps) {}
 
 	listStreams(): ResultAsync<LiveStream[], ApiError> {
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/twitch/streams`,
-			{
-				fallback: 'Failed to load live streams.',
-				schema: streamsSchema
-			}
-		).map((data) => data.items ?? []);
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/twitch/streams`, {
+			fallback: 'Failed to load live streams.',
+			schema: streamsSchema
+		}).map((data) => data.items ?? []);
 	}
 }

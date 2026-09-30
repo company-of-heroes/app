@@ -9,10 +9,14 @@ declare module '@fknoobs/app' {
 	import type { ReplayAnalyzer } from '$features/replay-analyzer';
 	import type { TwitchOverlays } from '$core/app/features/twitch-overlays';
 	import type { AntiCheat } from '$features/anti-cheat';
+	import type { YouTube } from '$features/youtube';
+	import type { StreamingHours } from '$features/streaming';
 
 	interface Features {
 		auth: AccountService;
 		twitch: Twitch;
+		youtube: YouTube;
+		'streaming-hours': StreamingHours;
 		shortcuts: Shortcuts;
 		updater: Updater;
 		history: History;

@@ -13,14 +13,6 @@
 	} from '@company-of-heroes/ui/replay';
 	import ReplayFilters from '$lib/components/replay/replay-filters.svelte';
 	import {
-		normalizeMapName,
-		replayHref,
-		resolveFactionFlag,
-		resolveMapSrc,
-		resolvePlayerHref,
-		getRankImageByRace
-	} from '$lib/utils/resolvers';
-	import {
 		REPLAYS_PER_PAGE,
 		rememberReplaysListHref,
 		replaysHref,
@@ -28,7 +20,7 @@
 		type ReplaysListTab,
 		type ReplaysQuery
 	} from '$lib/replays';
-	import { href, unlocalizedPath, currentLocale, useI18n } from '$lib/i18n';
+	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
 	import { meSteamIds } from '$lib/auth/user';
 	import { SITE_URL } from '$lib/site/urls';
 	import FunnelSimpleIcon from 'phosphor-svelte/lib/FunnelSimpleIcon';
@@ -55,7 +47,11 @@
 
 	const tabs = $derived.by(() => {
 		const items = [
-			{ id: 'community', label: t('Community matches'), href: href(replaysHref(query, 'community')) },
+			{
+				id: 'community',
+				label: t('Community matches'),
+				href: href(replaysHref(query, 'community'))
+			},
 			{ id: 'member', label: t('Member replays'), href: href(replaysHref(query, 'member')) }
 		];
 		if (user) {
@@ -65,6 +61,7 @@
 				href: href(replaysHref({ ...query, page: 1 }, 'mine'))
 			});
 		}
+
 		return items;
 	});
 
@@ -72,9 +69,11 @@
 		if (tab === 'member') {
 			return t('No member replays found.');
 		}
+
 		if (tab === 'mine') {
 			return t('No matches found.');
 		}
+
 		return t('No community replays found.');
 	});
 
@@ -109,14 +108,7 @@
 </script>
 
 {#snippet listSkeleton()}
-	<ReplayListSkeleton
-		mapLabel={nameColumnLabel}
-		typeLabel={t('Type')}
-		alliesLabel={t('Allies')}
-		axisLabel={t('Axis')}
-		durationLabel={t('Duration')}
-		dateLabel={t('Date')}
-	/>
+	<ReplayListSkeleton />
 {/snippet}
 
 {#snippet filtersButton()}
@@ -124,9 +116,7 @@
 		<span class="relative inline-flex">
 			<FunnelSimpleIcon class="size-4" />
 			{#if filtersActive}
-				<span
-					class="bg-primary absolute -end-0.5 -top-0.5 size-1.5 rounded-full"
-					aria-hidden="true"
+				<span class="bg-primary absolute -end-0.5 -top-0.5 size-1.5 rounded-full" aria-hidden="true"
 				></span>
 			{/if}
 		</span>
@@ -180,12 +170,6 @@
 				sort={query.sort}
 				sortDir={query.sortDir}
 				onChange={({ sort, sortDir }) => apply({ sort, sortDir })}
-				dateLabel={t('Date')}
-				likesLabel={t('Likes')}
-				downloadsLabel={t('Downloads')}
-				commentsLabel={t('Comments')}
-				ascendingLabel={t('Ascending')}
-				descendingLabel={t('Descending')}
 			/>
 			{@render filtersButton()}
 		</div>
@@ -221,27 +205,8 @@
 					sort={query.sort}
 					sortDir={query.sortDir}
 					onSort={toggleSort}
-					{replayHref}
-					playerHref={resolvePlayerHref}
-					{resolveMapSrc}
-					{resolveFactionFlag}
-					getRankImage={getRankImageByRace}
-					formatMapName={normalizeMapName}
 					{emptyMessage}
-					locale={currentLocale()}
 					mapLabel={nameColumnLabel}
-					typeLabel={t('Type')}
-					alliesLabel={t('Allies')}
-					axisLabel={t('Axis')}
-					durationLabel={t('Duration')}
-					likesLabel={t('Likes')}
-					commentsLabel={t('Comments')}
-					downloadsLabel={t('Downloads')}
-					dateLabel={t('Date')}
-					sortByLabel={t('Sort by {label}')}
-					deletedLabel={t('Deleted')}
-					proLabel={t('Pro')}
-					proTooltipLabel={(elo) => t('Pro gameplay · avg {elo} ELO', { elo })}
 				/>
 				<div class="border-secondary-800 flex border-t px-5 py-3">
 					<Pagination
@@ -256,8 +221,7 @@
 			{:catch error}
 				<div class="flex min-h-48 items-center justify-center px-4 py-8">
 					<p class="text-secondary-400 text-center text-sm">
-						{error?.message ??
-							t('Failed to load community replays. Please try again later.')}
+						{error?.message ?? t('Failed to load community replays. Please try again later.')}
 					</p>
 				</div>
 			{/await}
@@ -271,16 +235,9 @@
 			{query}
 			maps={[]}
 			scope={tab === 'mine' ? 'user' : 'community'}
-			userId={tab === 'mine' ? user?.id : undefined}
 			onChange={apply}
 		/>
 	{:then maps}
-		<ReplayFilters
-			{query}
-			{maps}
-			scope={tab === 'mine' ? 'user' : 'community'}
-			userId={tab === 'mine' ? user?.id : undefined}
-			onChange={apply}
-		/>
+		<ReplayFilters {query} {maps} scope={tab === 'mine' ? 'user' : 'community'} onChange={apply} />
 	{/await}
 </Sheet>

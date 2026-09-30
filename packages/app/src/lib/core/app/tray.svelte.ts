@@ -8,7 +8,10 @@ export async function startTray(options: {
 	shouldCloseToTray: () => boolean;
 	onQuit: () => Promise<void>;
 }): Promise<void> {
-	if (started) return;
+	if (started) {
+		return;
+	}
+
 	started = true;
 
 	try {

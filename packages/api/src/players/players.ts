@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import type { RecordModel } from 'pocketbase';
-import { normalizeBaseUrl, type ApiDeps } from '../deps';
+import { type ApiDeps, normalizeBaseUrl, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import { escapePocketBaseString, fromPbPromise, requireAuth } from '../pb';
@@ -99,43 +99,32 @@ export class PlayersApi {
 			params.set('requireMatches', '1');
 		}
 
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/player/search?${params}`,
-			{
-				fallback: 'Failed to search for player',
-				schema: playerSearchSchema,
-				onStatus: (status) => {
-					if (status === 400) {
-						return apiError(400, 'Enter a Steam ID64, Relic profile id, or player name.');
-					}
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/players/search?${params}`, {
+			fallback: 'Failed to search for player',
+			schema: playerSearchSchema,
+			onStatus: (status) => {
+				if (status === 400) {
+					return apiError(400, 'Enter a Steam ID64, Relic profile id, or player name.');
 				}
 			}
-		).map((data) => data.items ?? []);
+		}).map((data) => data.items ?? []);
 	}
 
 	get(id: string): ResultAsync<PlayerPageData, ApiError> {
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/player/${encodeURIComponent(id)}`,
-			{
-				fallback: 'Failed to load player stats. Please try again later.',
-				schema: playerPageSchema,
-				timeoutMs: 45_000,
-				onStatus: (status) => {
-					if (status === 404) {
-						return apiError(
-							404,
-							'Player not found. Check the Steam ID or profile id and try again.'
-						);
-					}
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/players/${encodeURIComponent(id)}`, {
+			fallback: 'Failed to load player stats. Please try again later.',
+			schema: playerPageSchema,
+			timeoutMs: 45_000,
+			onStatus: (status) => {
+				if (status === 404) {
+					return apiError(404, 'Player not found. Check the Steam ID or profile id and try again.');
+				}
 
-					if (status === 400) {
-						return apiError(400, 'Enter a valid Steam ID64 or Relic profile id.');
-					}
+				if (status === 400) {
+					return apiError(400, 'Enter a valid Steam ID64 or Relic profile id.');
 				}
 			}
-		);
+		});
 	}
 
 	getCustomization(steamId: string): ResultAsync<PlayerCustomization, ApiError> {

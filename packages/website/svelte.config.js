@@ -14,6 +14,11 @@ const config = {
 		experimental: {
 			remoteFunctions: true
 		},
+		csrf: {
+			// The desktop app's webview uploads replays and overlays (multipart) to the API,
+			// directly or through the api gateway. It authenticates with a token header.
+			trustedOrigins: ['http://tauri.localhost', 'https://tauri.localhost', 'tauri://localhost']
+		},
 		prerender: {
 			entries: ['/privacy', '/es/privacy', '/ko/privacy']
 		},

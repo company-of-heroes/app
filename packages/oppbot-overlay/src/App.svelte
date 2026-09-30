@@ -31,7 +31,10 @@
 	);
 
 	$effect(() => {
-		if (!isDevPreview && !isBrowserPreview) return;
+		if (!isDevPreview && !isBrowserPreview) {
+			return;
+		}
+
 		const background = isBrowserPreview ? '#1a1714' : '#fff';
 		document.documentElement.style.background = background;
 		document.body.style.background = background;
@@ -42,7 +45,10 @@
 	});
 
 	$effect(() => {
-		if (!debugPoll) return;
+		if (!debugPoll) {
+			return;
+		}
+
 		const tick = () => {
 			const w = window as unknown as Record<string, unknown>;
 			const last = typeof w.__oppbotPollLast === 'number' ? w.__oppbotPollLast : undefined;

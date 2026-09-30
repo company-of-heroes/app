@@ -28,11 +28,15 @@ registerHooks({
 			(specifier.startsWith('./') || specifier.startsWith('../')) &&
 			!path.extname(specifier)
 		) {
-			const candidate = path.join(path.dirname(fileURLToPath(context.parentURL)), `${specifier}.js`);
+			const candidate = path.join(
+				path.dirname(fileURLToPath(context.parentURL)),
+				`${specifier}.js`
+			);
 			if (existsSync(candidate)) {
 				return nextResolve(`${specifier}.js`, context);
 			}
 		}
+
 		return nextResolve(specifier, context);
 	}
 });
@@ -115,11 +119,17 @@ if (onlyId) {
 			total = result.totalItems;
 			console.log(`Found ${total} replay(s) to process.`);
 		}
-		if (result.items.length === 0) break;
+
+		if (result.items.length === 0) {
+			break;
+		}
 
 		await mapPool(result.items, concurrency, processOne);
 
-		if (page >= result.totalPages) break;
+		if (page >= result.totalPages) {
+			break;
+		}
+
 		page += 1;
 	}
 }
@@ -143,8 +153,11 @@ async function mapPool(items, limit, fn) {
 async function processOne(record) {
 	try {
 		const change = await processReplay(record);
-		if (change) updated += 1;
-		else skipped += 1;
+		if (change) {
+			updated += 1;
+		} else {
+			skipped += 1;
+		}
 	} catch (err) {
 		failed += 1;
 		console.error(`Replay ${record.id} failed:`, err?.message ?? err);
@@ -173,8 +186,14 @@ function formatEta(seconds) {
 	const h = Math.floor(s / 3600);
 	const m = Math.floor((s % 3600) / 60);
 	const rem = s % 60;
-	if (h > 0) return `${h}h${String(m).padStart(2, '0')}m`;
-	if (m > 0) return `${m}m${String(rem).padStart(2, '0')}s`;
+	if (h > 0) {
+		return `${h}h${String(m).padStart(2, '0')}m`;
+	}
+
+	if (m > 0) {
+		return `${m}m${String(rem).padStart(2, '0')}s`;
+	}
+
 	return `${rem}s`;
 }
 
@@ -250,8 +269,10 @@ function buildPayloadFromReplay(parsed, existing) {
 		isRanked,
 		mapName: replay.mapName || existing.mapName,
 		mapFilename: replay.mapFileName || existing.mapFilename,
-		isHighResources: typeof replay.highResources === 'boolean' ? replay.highResources : existing.isHighResources,
-		isRandomStart: typeof replay.randomStart === 'boolean' ? replay.randomStart : existing.isRandomStart,
+		isHighResources:
+			typeof replay.highResources === 'boolean' ? replay.highResources : existing.isHighResources,
+		isRandomStart:
+			typeof replay.randomStart === 'boolean' ? replay.randomStart : existing.isRandomStart,
 		isVpGame: typeof replay.vpGame === 'boolean' ? replay.vpGame : existing.isVpGame,
 		vpCount: typeof replay.vpCount === 'number' ? replay.vpCount : existing.vpCount,
 		players: replay.players
@@ -259,11 +280,15 @@ function buildPayloadFromReplay(parsed, existing) {
 
 	if (replay.gameDate) {
 		const iso = toIsoString(replay.gameDate);
-		if (iso) next.gameDate = iso;
+		if (iso) {
+			next.gameDate = iso;
+		}
 	}
+
 	if (typeof replay.duration === 'number' && replay.duration > 0) {
 		next.durationInSeconds = replay.duration;
 	}
+
 	if (!headerOnly) {
 		next.messages = replay.messages ?? [];
 	}
@@ -280,31 +305,69 @@ function buildPayloadFromReplay(parsed, existing) {
 			vpCount: next.vpCount,
 			players: next.players
 		};
-		if (next.gameDate) payload.gameDate = next.gameDate;
-		if (typeof next.durationInSeconds === 'number') payload.durationInSeconds = next.durationInSeconds;
-		if (!headerOnly) payload.messages = next.messages;
+		if (next.gameDate) {
+			payload.gameDate = next.gameDate;
+		}
+
+		if (typeof next.durationInSeconds === 'number') {
+			payload.durationInSeconds = next.durationInSeconds;
+		}
+
+		if (!headerOnly) {
+			payload.messages = next.messages;
+		}
+
 		return payload;
 	}
 
 	const payload = {};
-	if (next.gameDate && next.gameDate !== toIsoString(existing.gameDate)) payload.gameDate = next.gameDate;
+	if (next.gameDate && next.gameDate !== toIsoString(existing.gameDate)) {
+		payload.gameDate = next.gameDate;
+	}
+
 	if (
 		typeof next.durationInSeconds === 'number' &&
 		next.durationInSeconds !== existing.durationInSeconds
 	) {
 		payload.durationInSeconds = next.durationInSeconds;
 	}
-	if (next.mapName && next.mapName !== existing.mapName) payload.mapName = next.mapName;
+
+	if (next.mapName && next.mapName !== existing.mapName) {
+		payload.mapName = next.mapName;
+	}
+
 	if (next.mapFilename && next.mapFilename !== existing.mapFilename) {
 		payload.mapFilename = next.mapFilename;
 	}
-	if (next.title !== existing.title) payload.title = next.title;
-	if (next.isHighResources !== existing.isHighResources) payload.isHighResources = next.isHighResources;
-	if (next.isRandomStart !== existing.isRandomStart) payload.isRandomStart = next.isRandomStart;
-	if (next.isRanked !== Boolean(existing.isRanked)) payload.isRanked = next.isRanked;
-	if (next.isVpGame !== existing.isVpGame) payload.isVpGame = next.isVpGame;
-	if (next.vpCount !== existing.vpCount) payload.vpCount = next.vpCount;
-	if (!jsonEqual(next.players, existing.players)) payload.players = next.players;
+
+	if (next.title !== existing.title) {
+		payload.title = next.title;
+	}
+
+	if (next.isHighResources !== existing.isHighResources) {
+		payload.isHighResources = next.isHighResources;
+	}
+
+	if (next.isRandomStart !== existing.isRandomStart) {
+		payload.isRandomStart = next.isRandomStart;
+	}
+
+	if (next.isRanked !== Boolean(existing.isRanked)) {
+		payload.isRanked = next.isRanked;
+	}
+
+	if (next.isVpGame !== existing.isVpGame) {
+		payload.isVpGame = next.isVpGame;
+	}
+
+	if (next.vpCount !== existing.vpCount) {
+		payload.vpCount = next.vpCount;
+	}
+
+	if (!jsonEqual(next.players, existing.players)) {
+		payload.players = next.players;
+	}
+
 	// Messages aren't listed (too large); refresh them when something else already changed.
 	if (!headerOnly && Object.keys(payload).length > 0) {
 		payload.messages = next.messages;
@@ -319,27 +382,47 @@ function jsonEqual(a, b) {
 
 function summarizePayload(payload) {
 	const summary = { ...payload };
-	if (summary.players) summary.players = `[${Array.isArray(summary.players) ? summary.players.length : '?'} players]`;
+	if (summary.players) {
+		summary.players = `[${Array.isArray(summary.players) ? summary.players.length : '?'} players]`;
+	}
+
 	if (summary.messages) {
 		summary.messages = `[${Array.isArray(summary.messages) ? summary.messages.length : '?'} messages]`;
 	}
+
 	return summary;
 }
 
 function toIsoString(value) {
-	if (!value) return null;
-	if (value instanceof Date) return value.toISOString();
-	if (typeof value === 'number') return new Date(value).toISOString();
+	if (!value) {
+		return null;
+	}
+
+	if (value instanceof Date) {
+		return value.toISOString();
+	}
+
+	if (typeof value === 'number') {
+		return new Date(value).toISOString();
+	}
+
 	if (typeof value === 'string') {
 		const dt = new Date(value);
 		return Number.isNaN(dt.getTime()) ? null : dt.toISOString();
 	}
+
 	return null;
 }
 
 function normalizeBaseUrl(url) {
-	if (!url) return 'http://127.0.0.1:8090';
-	if (/^https?:\/\//i.test(url)) return url;
+	if (!url) {
+		return 'http://127.0.0.1:8090';
+	}
+
+	if (/^https?:\/\//i.test(url)) {
+		return url;
+	}
+
 	return `http://${url}`;
 }
 
@@ -349,6 +432,7 @@ function safeFileUrl(record) {
 		if (!url) {
 			url = `${baseUrl}/api/files/replays/${record.id}/${encodeURIComponent(record.file)}`;
 		}
+
 		return new URL(url, baseUrl).href;
 	} catch (err) {
 		console.warn(`Could not build URL for replay ${record.id}: ${err?.message ?? err}`);

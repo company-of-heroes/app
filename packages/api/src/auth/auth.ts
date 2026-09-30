@@ -2,7 +2,7 @@ import { ClientResponseError, type RecordModel } from 'pocketbase';
 import { errAsync, ok, okAsync, Result, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
 import type { ApiDeps } from '../deps';
-import { normalizeBaseUrl } from '../deps';
+import { normalizeBaseUrl, siteUrl, v1Base } from '../deps';
 import { apiError, fromUnknown, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import { generateUniqueId } from '../id';
@@ -107,7 +107,7 @@ export class AuthApi {
 			params.set('redirect', redirect);
 		}
 
-		return `${normalizeBaseUrl(this.deps.baseUrl)}/api/auth/steam/start?${params.toString()}`;
+		return `${siteUrl(this.deps)}/auth/steam/start?${params.toString()}`;
 	}
 
 	exchangeHandoffCode(code: string): ResultAsync<AuthExchange, ApiError> {
@@ -116,7 +116,7 @@ export class AuthApi {
 			return errAsync(apiError(400, 'Invalid or expired login link.'));
 		}
 
-		const url = `${normalizeBaseUrl(this.deps.baseUrl)}/api/auth/handoff/exchange`;
+		const url = `${v1Base(this.deps)}/auth/handoff/exchange`;
 		return ResultAsync.fromPromise(
 			this.deps.fetch(url, {
 				method: 'POST',
@@ -137,8 +137,7 @@ export class AuthApi {
 							? (json as { message: string }).message.trim()
 							: '';
 					const message = bodyMessage || 'Invalid or expired login link.';
-					const status =
-						response.status >= 400 && response.status < 600 ? response.status : 400;
+					const status = response.status >= 400 && response.status < 600 ? response.status : 400;
 					return errAsync(apiError(status, message));
 				}
 
@@ -155,10 +154,7 @@ export class AuthApi {
 		);
 	}
 
-	updateProfile(input: {
-		name?: string;
-		avatar?: File | null;
-	}): ResultAsync<AuthUser, ApiError> {
+	updateProfile(input: { name?: string; avatar?: File | null }): ResultAsync<AuthUser, ApiError> {
 		const auth = requireAuth(this.deps);
 		if (auth.isErr()) {
 			return errAsync(auth.error);
@@ -169,9 +165,7 @@ export class AuthApi {
 			payload.name = input.name.trim();
 		}
 
-		const hasAvatar = Boolean(
-			input.avatar && (input.avatar.size == null || input.avatar.size > 0)
-		);
+		const hasAvatar = Boolean(input.avatar && (input.avatar.size == null || input.avatar.size > 0));
 		if (input.avatar === null) {
 			payload.avatar = null;
 		}
@@ -371,23 +365,22 @@ export class AuthApi {
 				})
 			),
 			(error) => fromUnknown(error, 'Could not load that account.')
-		)
-			.map((list) => {
-				const row = list.items[0];
-				if (!row) {
-					return null;
-				}
+		).map((list) => {
+			const row = list.items[0];
+			if (!row) {
+				return null;
+			}
 
-				return {
-					id: row.id,
-					email: typeof row.email === 'string' ? row.email : '',
-					role: typeof row.role === 'string' ? row.role : undefined,
-					lastLogin: typeof row.lastLogin === 'string' ? row.lastLogin : undefined,
-					created: typeof row.created === 'string' ? row.created : undefined,
-					updated: typeof row.updated === 'string' ? row.updated : undefined,
-					appVersion: readMetaVersion(row.meta)
-				};
-			});
+			return {
+				id: row.id,
+				email: typeof row.email === 'string' ? row.email : '',
+				role: typeof row.role === 'string' ? row.role : undefined,
+				lastLogin: typeof row.lastLogin === 'string' ? row.lastLogin : undefined,
+				created: typeof row.created === 'string' ? row.created : undefined,
+				updated: typeof row.updated === 'string' ? row.updated : undefined,
+				appVersion: readMetaVersion(row.meta)
+			};
+		});
 	}
 }
 

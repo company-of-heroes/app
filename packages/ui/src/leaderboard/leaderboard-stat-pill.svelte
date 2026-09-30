@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { formatStreak, statLosses, statStreakClass, statWins } from '@company-of-heroes/ui/variants';
+	import {
+		formatStreak,
+		statLosses,
+		statStreakClass,
+		statWins
+	} from '@company-of-heroes/ui/variants';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { formatRatio, getRatioColor } from '../format/player-format';
 

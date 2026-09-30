@@ -101,13 +101,7 @@
 {#if app.account.isStaff}
 	<Dropdown.Root>
 		{#snippet trigger({ props })}
-			<Button
-				{...props}
-				type="button"
-				variant="ghost"
-				size="sm"
-				class={cn('text-secondary-400 h-8 px-2.5 hover:text-white', className)}
-			>
+			<Button {...props} type="button" variant="secondary" size="sm">
 				<TagSimpleIcon size={16} />
 				{t('Edit labels')}
 			</Button>

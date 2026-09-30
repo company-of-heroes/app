@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { List as ReplayList, ListSkeleton as ReplayListSkeleton } from '@company-of-heroes/ui/replay';
+	import {
+		List as ReplayList,
+		ListSkeleton as ReplayListSkeleton
+	} from '@company-of-heroes/ui/replay';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { goto } from '$app/navigation';
 	import { meSteamIds } from '$lib/auth/user';
@@ -11,16 +14,7 @@
 		type CommunityMatch,
 		type HistorySortField
 	} from '$lib/replays';
-	import {
-		normalizeMapName,
-		replayHref,
-		resolveFactionFlag,
-		resolveFallbackSrc,
-		resolveMapSrc,
-		resolvePlayerHref,
-		getRankImageByRace
-	} from '$lib/utils/resolvers';
-	import { currentLocale, href, useI18n } from '$lib/i18n';
+	import { href, useI18n } from '$lib/i18n';
 
 	type Props = {
 		matches: CommunityMatch[];
@@ -54,20 +48,12 @@
 		>
 	</div>
 	{#if error}
-		<p class="border-secondary-800 text-red-400 border-b px-4 py-2 text-sm">
+		<p class="border-secondary-800 border-b px-4 py-2 text-sm text-red-400">
 			{t('Could not load member uploads.')}
 		</p>
 	{/if}
 	{#if loading}
-		<ReplayListSkeleton
-			rowCount={HOME_RECENT_MEMBER_UPLOADS}
-			mapLabel={t('Title')}
-			typeLabel={t('Type')}
-			alliesLabel={t('Allies')}
-			axisLabel={t('Axis')}
-			durationLabel={t('Duration')}
-			dateLabel={t('Date')}
-		/>
+		<ReplayListSkeleton rowCount={HOME_RECENT_MEMBER_UPLOADS} />
 	{:else}
 		<ReplayList
 			{matches}
@@ -75,26 +61,8 @@
 			sort="createdAt"
 			sortDir="desc"
 			{onSort}
-			{replayHref}
-			playerHref={resolvePlayerHref}
-			{resolveMapSrc}
-			{resolveFallbackSrc}
-			{resolveFactionFlag}
-			getRankImage={getRankImageByRace}
-			formatMapName={normalizeMapName}
 			emptyMessage={error ? t('Could not load member uploads.') : t('No member replays found.')}
-			locale={currentLocale()}
 			mapLabel={t('Title')}
-			typeLabel={t('Type')}
-			alliesLabel={t('Allies')}
-			axisLabel={t('Axis')}
-			durationLabel={t('Duration')}
-			likesLabel={t('Likes')}
-			commentsLabel={t('Comments')}
-			downloadsLabel={t('Downloads')}
-			dateLabel={t('Date')}
-			sortByLabel={t('Sort by {label}')}
-			deletedLabel={t('Deleted')}
 		/>
 	{/if}
 </section>

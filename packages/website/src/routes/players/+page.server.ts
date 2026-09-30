@@ -15,10 +15,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		return { query: '', results: [], error: null };
 	}
 
-	const result = await locals.services.players().search(query);
-	if (result.isErr()) {
-		return { query, results: [], error: result.error.message };
-	}
-
-	return { query, results: result.value, error: null };
+	return locals.services.players.search(query, false).match(
+		(results) => ({ query, results, error: null }),
+		(cause) => ({ query, results: [], error: cause.message || 'Failed to search for player' })
+	);
 };

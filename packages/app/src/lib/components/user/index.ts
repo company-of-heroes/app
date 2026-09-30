@@ -16,4 +16,3 @@ export {
 	UserLabels as Labels
 };
 export type { UserAvatarRecord } from './user-avatar-src';
-

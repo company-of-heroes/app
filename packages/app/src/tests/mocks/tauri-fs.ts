@@ -64,7 +64,10 @@ export const __fs = {
 };
 
 function ensureDirs(path: string) {
-	if (!path) return;
+	if (!path) {
+		return;
+	}
+
 	const segments = normalize(path).split('/');
 	let current = '';
 	for (const segment of segments) {
@@ -76,7 +79,10 @@ function ensureDirs(path: string) {
 }
 
 export async function exists(path: string): Promise<boolean> {
-	if (!path) return false;
+	if (!path) {
+		return false;
+	}
+
 	return files.has(normalize(path));
 }
 
@@ -85,6 +91,7 @@ export async function readTextFile(path: string): Promise<string> {
 	if (!node || node.type !== 'file') {
 		throw new Error(`No such file: ${path}`);
 	}
+
 	return decoder.decode(node.data);
 }
 
@@ -93,6 +100,7 @@ export async function readFile(path: string): Promise<Uint8Array> {
 	if (!node || node.type !== 'file') {
 		throw new Error(`No such file: ${path}`);
 	}
+
 	return node.data;
 }
 
@@ -111,10 +119,12 @@ export async function rename(from: string, to: string): Promise<void> {
 	if (!node) {
 		throw new Error(`No such file: ${from}`);
 	}
+
 	// Mirror Windows std::fs::rename semantics: fail when destination exists.
 	if (files.has(normalize(to))) {
 		throw new Error(`Destination exists: ${to}`);
 	}
+
 	files.delete(normalize(from));
 	ensureDirs(parent(to));
 	files.set(normalize(to), node);
@@ -131,6 +141,7 @@ export async function copyFile(from: string, to: string): Promise<void> {
 	if (!node || node.type !== 'file') {
 		throw new Error(`No such file: ${from}`);
 	}
+
 	ensureDirs(parent(to));
 	files.set(normalize(to), { type: 'file', data: node.data.slice() });
 }
@@ -146,10 +157,17 @@ export async function readDir(path: string): Promise<DirEntry[]> {
 	if (!files.has(dir)) {
 		throw new Error(`No such directory: ${path}`);
 	}
+
 	const entries: DirEntry[] = [];
 	for (const [key, node] of files) {
-		if (key === dir) continue;
-		if (parent(key) !== dir) continue;
+		if (key === dir) {
+			continue;
+		}
+
+		if (parent(key) !== dir) {
+			continue;
+		}
+
 		entries.push({
 			name: key.slice(dir.length + 1),
 			isDirectory: node.type === 'dir',
@@ -173,6 +191,7 @@ export async function stat(path: string): Promise<FileInfo> {
 	if (!node) {
 		throw new Error(`No such file: ${path}`);
 	}
+
 	return {
 		isFile: node.type === 'file',
 		isDirectory: node.type === 'dir',
@@ -195,14 +214,20 @@ export class FileHandle {
 		if (!node || node.type !== 'file') {
 			throw new Error(`No such file: ${this.#path}`);
 		}
+
 		return node.data;
 	}
 
 	async seek(offset: number, whence: SeekMode = SeekMode.Start): Promise<number> {
 		const size = this.#data().length;
-		if (whence === SeekMode.Start) this.#position = offset;
-		else if (whence === SeekMode.Current) this.#position += offset;
-		else this.#position = size + offset;
+		if (whence === SeekMode.Start) {
+			this.#position = offset;
+		} else if (whence === SeekMode.Current) {
+			this.#position += offset;
+		} else {
+			this.#position = size + offset;
+		}
+
 		return this.#position;
 	}
 
@@ -211,6 +236,7 @@ export class FileHandle {
 		if (this.#position >= data.length) {
 			return null;
 		}
+
 		const slice = data.subarray(this.#position, this.#position + buffer.length);
 		buffer.set(slice, 0);
 		this.#position += slice.length;
@@ -229,5 +255,6 @@ export async function open(
 	if (!files.has(normalize(path))) {
 		throw new Error(`No such file: ${path}`);
 	}
+
 	return new FileHandle(path);
 }

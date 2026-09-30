@@ -6,35 +6,38 @@ alwaysApply: false
 
 # neverthrow
 
-PocketBase / `api.coh1stats.com` I/O lives in **`@company-of-heroes/api`** (`createApi`) and returns `Result` / `ResultAsync`. Website `locals.services.*()` are thin factories over that client. Do not throw for expected HTTP failures (404, 400, 429, upstream 500).
+Server I/O returns `Result` / `ResultAsync` — shared client code in **`@company-of-heroes/api`** (`createApi`), website server logic in **`packages/website/src/lib/server/services`**. Do not throw for expected HTTP failures (404, 400, 429, upstream 500).
 
-## Services / api
+## Website services
 
-Map failures to `AppError` / `ApiError` (`status` + user-facing `message`). Prefer calling `@company-of-heroes/api` over new `pocketbase.collection` or `fetchJson` in website.
+- One **class per service**, extending `Service` (`services/service.ts`). The constructor takes the request's `locals`; the `Services` class (`services/index.ts`, `locals.services`) builds each one lazily with `new XService(locals)`.
+- Other services and clients come through `locals`: `this.services.reputation`, `this.pb`, `this.relic`, `this.steam`, `this.fetch`, `this.fileFetch`. Never touch them in a constructor.
+- Public methods return `Task<T>` (= `ResultAsync<T, AppError>`). Errors are `AppError` built with `badRequest()` / `notFound()` / `forbidden()` / … from `server/errors.ts`.
+- Wrap I/O with helpers from `server/result.ts`: `fromPb` (PocketBase), `pbMaybe` (404 → `null`), `fromAsync`, `fetchJson`; combine with `all`, `sequence` (in order), `chunk`, `ensure(condition, error)`.
+- Write **`.andThen` / `.map` / `.asyncAndThen` chains**, not `safeTry` + `yield*` generators. Split long flows into small private methods instead of deep nesting.
 
 ```typescript
-// ❌ BAD — try/catch that returns a string, or inline PB in a route
-async function login(email: string, password: string): Promise<string | null> {
-	try {
-		await pb.collection('users').authWithPassword(email, password);
-		return null;
-	} catch (error) {
-		return 'Invalid email or password.';
-	}
+// ❌ BAD — throws, or generator style
+async hide(sessionId: number) {
+	if (!sessionId) throw new Error('sessionId is required');
+	...
 }
 
-// ✅ GOOD — use createApi / locals.services
-login(email: string, password: string): ResultAsync<AuthUser, AppError> {
-	return locals.services.auth().login(email, password);
+// ✅ GOOD
+hide(sessionId: number, staffId: string): Task<RecordModel> {
+	return ensure(sessionId > 0, badRequest('sessionId is required'))
+		.asyncAndThen(() => fromPb(this.pb.collection('hidden_matches').create({ sessionId, hiddenBy: staffId })))
+		.andThen((record) => this.refresh(filter).map(() => record));
 }
 ```
 
-## Loads, actions, and remotes
+## Routes, loads and remotes
 
+- **`+server.ts`:** wrap in `handle()` from `server/http.ts` and return the Result; `err` becomes a JSON `{ message }` with its status. `requireUser` / `requireStaff` / `requireService` / `parse` / `parseQuery` return `Result`, `parseBody` / `readRecordBody` return `ResultAsync`.
 - **Loads:** `unwrap` / `unwrapAsync` — turns `err` into `error(status, message)` (expected Kit error → `+error.svelte`).
 - **Form actions:** `failFrom(error)` / `fail(status, { message })` — stay on the form, do not use the 500 page.
-- **Remote commands/queries:** same unwrap as loads; call `locals.services.*()` via `getRequestEvent()`.
-- Call services from `locals.services.auth()` (factory), not inline `fetch` in `+page.server.ts` or `$lib/remote/*.remote.ts`.
+- **Remote commands/queries:** same unwrap as loads; call `locals.services.x` via `getRequestEvent()`.
+- Services are getters: `locals.services.players.search(q)`, not `players()`.
 
 ```typescript
 // ❌ BAD
@@ -46,13 +49,22 @@ export const load = async ({ fetch }) => {
 
 // ✅ GOOD
 export const load = ({ locals, params }) => ({
-	player: unwrapAsync(locals.services.players().get(params.id))
+	player: unwrapAsync(locals.services.playerPage.get(params.id))
 });
+
+export const POST = handle((event) =>
+	requireUser(event).asyncAndThen((user) =>
+		parseBody(schema, event.request).andThen((input) =>
+			event.locals.services.lobbies.ensure(user.id, input)
+		)
+	)
+);
 ```
 
 ## Do not
 
 - Catch PocketBase / `fetch` errors and return `string | null`
-- Throw raw `Error` from a service or load for a known status
+- Throw from a service, route helper or load for a known status
+- Use `safeTry` / `yield*` generators
 - Leak `Result` into `+page.svelte` — unwrap on the server (loads, remotes)
 - Duplicate collection/HTTP logic in website that already exists in `@company-of-heroes/api`

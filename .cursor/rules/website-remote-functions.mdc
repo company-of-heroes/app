@@ -13,7 +13,7 @@ On `packages/website`, prefer **SvelteKit remote functions** (`$lib/remote/*.rem
 - `query` / `command` / `form` from `$app/server`
 - Zod v4 schemas (`import { z } from 'zod'`) as the Standard Schema
 - `form` for multipart / file uploads; `command` for JSON-only mutations; `query` for reads
-- Call `locals.services.*()` inside remotes; unwrap with `unwrapAsync` / `invalid` / `error` / `redirect`
+- Call `locals.services.x` inside remotes; unwrap with `unwrapAsync` / `invalid` / `error` / `redirect`
 
 ```typescript
 // ✅ GOOD — packages/website/src/lib/remote/example.remote.ts
@@ -28,7 +28,7 @@ export const saveThing = form(
 	}),
 	async (data) => {
 		const { locals } = getRequestEvent();
-		const result = await locals.services.things().create(data);
+		const result = await locals.services.things.create(data);
 		if (result.isErr()) {
 			invalid(locals.t(result.error.message));
 		}

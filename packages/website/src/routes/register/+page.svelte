@@ -96,7 +96,8 @@
 	{/if}
 	<Form.Group>
 		{#snippet footer()}
-			<Button type="submit" loading={submitting} disabled={submitting}>{t('Create account')}</Button>
+			<Button type="submit" loading={submitting} disabled={submitting}>{t('Create account')}</Button
+			>
 			<p class="text-secondary-400 text-sm">
 				{t('Already have an account?')}
 				<a href={href('/login')} class={linkClass}>{t('Log in')}</a>

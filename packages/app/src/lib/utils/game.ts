@@ -376,7 +376,9 @@ const defaultMapImage = Object.values(defaultMapModules)[0]?.default ?? '';
 
 function registerMapKey(key: string, url: string) {
 	const normalized = key.trim().toLowerCase().replace(/\s+/g, ' ');
-	if (!normalized) return;
+	if (!normalized) {
+		return;
+	}
 
 	mapCache.set(normalized, url);
 
@@ -429,7 +431,9 @@ function getMapLookupCandidates(mapName: string): string[] {
  * Initialize map cache from glob imports
  */
 function initializeMapCache() {
-	if (mapCache.size > 0) return;
+	if (mapCache.size > 0) {
+		return;
+	}
 
 	for (const [path, module] of Object.entries(mapModules)) {
 		const match = path.match(/\/maps\/(.+)_map_base\.png$/);
@@ -483,6 +487,7 @@ export function getPrimaryLeaderboardStat(
 		if (aRanked !== bRanked) {
 			return aRanked - bRanked;
 		}
+
 		return b.ranklevel - a.ranklevel;
 	})[0];
 }
@@ -576,21 +581,29 @@ export function getPlayerEloFromMatchHistory(
 	player: LobbyPlayer
 ): number | null {
 	const history = player.matchHistory;
-	if (!history?.length) return null;
+	if (!history?.length) {
+		return null;
+	}
 
 	const profileId = player.profile?.profile_id ?? (player.playerId > 0 ? player.playerId : null);
-	if (profileId == null) return null;
+	if (profileId == null) {
+		return null;
+	}
 
 	let elo: number | null = null;
 	let latestCompletion = -1;
 
 	for (const match of history) {
-		if (match.matchtype_id !== matchType) continue;
+		if (match.matchtype_id !== matchType) {
+			continue;
+		}
 
 		const entry = match.players.find(
 			(member) => member.profile_id === profileId && member.race_id === player.race
 		);
-		if (!entry || typeof entry.newrating !== 'number' || entry.newrating < 1) continue;
+		if (!entry || typeof entry.newrating !== 'number' || entry.newrating < 1) {
+			continue;
+		}
 
 		const completed = match.completiontime ?? match.startgametime ?? 0;
 		if (completed >= latestCompletion) {

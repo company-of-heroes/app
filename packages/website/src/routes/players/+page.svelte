@@ -3,7 +3,6 @@
 	import { PlayerSearchCard } from '@company-of-heroes/ui/player';
 	import { Alert } from '@company-of-heroes/ui/alert';
 	import { SITE_URL } from '$lib/site/urls';
-	import { flagImageUrl, profileHref, resolveAvatarUrl } from '$lib/utils/resolvers';
 	import { href, useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -41,14 +40,7 @@
 	{:else}
 		<div>
 			{#each results as player (player.profileId)}
-				<PlayerSearchCard
-					{player}
-					href={profileHref(player.profileId)}
-					flagSrc={flagImageUrl(player.country)}
-					{resolveAvatarUrl}
-					steamIdLabel={t('Steam ID:')}
-					profileIdLabel={t('Profile ID:')}
-				/>
+				<PlayerSearchCard {player} />
 			{/each}
 		</div>
 	{/if}

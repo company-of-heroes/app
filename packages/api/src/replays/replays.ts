@@ -6,11 +6,8 @@ import type {
 	HistoryMatchup,
 	ReplaysQuery
 } from '@company-of-heroes/ui/replay/types';
-import type {
-	LiveLobbyPlayer,
-	LiveLobbyPlayerStats
-} from '@company-of-heroes/ui/live-lobby/types';
-import { normalizeBaseUrl, resolveAuthHeaders, type ApiDeps } from '../deps';
+import type { LiveLobbyPlayer, LiveLobbyPlayerStats } from '@company-of-heroes/ui/live-lobby/types';
+import { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import { currentUserId, fromPbPromise, pbOptions } from '../pb';
@@ -199,75 +196,10 @@ export type MemberReplayUpdateInput = {
 };
 
 /** Editable roster row for member replay upload/edit (raw .rec player shape). */
-export type MemberReplayRosterPlayer = {
-	name?: string;
-	alias?: string;
-	faction?: string;
-	steamId?: string | null;
-	doctrineName?: string;
-	id?: number;
-};
-
-function parseJsonArray(raw: unknown): unknown[] {
-	if (Array.isArray(raw)) {
-		return raw;
-	}
-
-	if (typeof raw === 'string' && raw.trim()) {
-		try {
-			const parsed: unknown = JSON.parse(raw);
-			return Array.isArray(parsed) ? parsed : [];
-		} catch {
-			return [];
-		}
-	}
-
-	return [];
-}
-
-function rosterPlayerFromUnknown(raw: unknown, index: number): MemberReplayRosterPlayer {
-	const player =
-		raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : ({} as Record<string, unknown>);
-	const profile =
-		player.profile && typeof player.profile === 'object'
-			? (player.profile as Record<string, unknown>)
-			: null;
-	const name = String(
-		player.name || player.alias || profile?.alias || `Player ${index + 1}`
-	).trim();
-	const steamRaw = player.steamId;
-	const steamId =
-		steamRaw != null && String(steamRaw).trim() ? String(steamRaw).trim() : undefined;
-	const faction = player.faction != null ? String(player.faction) : undefined;
-	const doctrineName = player.doctrineName != null ? String(player.doctrineName) : undefined;
-	const idRaw = player.id ?? player.playerId ?? profile?.profile_id;
-	const idNum = Number(idRaw);
-	const id = Number.isFinite(idNum) && idNum > 0 ? idNum : undefined;
-
-	return {
-		name,
-		alias: name,
-		faction,
-		steamId,
-		doctrineName,
-		id
-	};
-}
-
-/**
- * Build an editable roster from member detail (`roster` preferred, else community `players`).
- */
-export function memberReplayRosterForEdit(match: {
-	roster?: unknown;
-	players?: unknown;
-}): MemberReplayRosterPlayer[] {
-	const fromRoster = parseJsonArray(match.roster).map(rosterPlayerFromUnknown);
-	if (fromRoster.length > 0) {
-		return fromRoster;
-	}
-
-	return parseJsonArray(match.players).map(rosterPlayerFromUnknown);
-}
+export {
+	memberReplayRosterForEdit,
+	type MemberReplayRosterPlayer
+} from '@company-of-heroes/ui/replay/roster';
 
 export function matchtypesForMatchups(matchups: string[]): number[] {
 	const ids = new Set<number>();
@@ -306,8 +238,9 @@ export type MatchHistoryScopeOptions = {
 	profileId?: number;
 };
 
+/** `apiBase`: the website API root (v1Base). */
 export function buildMatchHistoryUrl(
-	baseUrl: string,
+	apiBase: string,
 	query: ReplaysQuery,
 	perPage = REPLAYS_PER_PAGE,
 	options?: MatchHistoryScopeOptions
@@ -378,7 +311,7 @@ export function buildMatchHistoryUrl(
 		params.set('sortDir', 'asc');
 	}
 
-	return `${normalizeBaseUrl(baseUrl)}/api/match-history?${params.toString()}`;
+	return `${apiBase}/match-history?${params.toString()}`;
 }
 
 export function matchFileUrl(
@@ -393,8 +326,9 @@ export function matchFileUrl(
 	return `${normalizeBaseUrl(baseUrl)}/api/files/${collection}/${match.id}/${encodeURIComponent(match.replay)}`;
 }
 
+/** `apiBase`: the website API root (v1Base). */
 export function buildMemberReplaysUrl(
-	baseUrl: string,
+	apiBase: string,
 	query: ReplaysQuery,
 	perPage = REPLAYS_PER_PAGE
 ): string {
@@ -422,7 +356,7 @@ export function buildMemberReplaysUrl(
 		params.set('sortDir', 'asc');
 	}
 
-	return `${normalizeBaseUrl(baseUrl)}/api/member-replays?${params.toString()}`;
+	return `${apiBase}/member-replays?${params.toString()}`;
 }
 
 const communityMatchListSchema: z.ZodType<CommunityMatchList> = z
@@ -499,7 +433,7 @@ export class ReplaysApi {
 		const scope = options?.scope ?? 'community';
 		return fetchJson(
 			this.deps.fetch,
-			buildMatchHistoryUrl(this.deps.baseUrl, query, perPage, options),
+			buildMatchHistoryUrl(v1Base(this.deps), query, perPage, options),
 			{
 				fallback:
 					scope === 'user'
@@ -520,18 +454,14 @@ export class ReplaysApi {
 		perPage?: number,
 		options?: ReplayAuthOptions
 	): ResultAsync<MemberReplayList, ApiError> {
-		return fetchJson(
-			this.deps.fetch,
-			buildMemberReplaysUrl(this.deps.baseUrl, query, perPage),
-			{
-				fallback: 'Failed to load member replays. Please try again later.',
-				schema: communityMatchListSchema,
-				timeoutMs: 30_000,
-				init: {
-					headers: resolveAuthHeaders(this.deps, options?.headers)
-				}
+		return fetchJson(this.deps.fetch, buildMemberReplaysUrl(v1Base(this.deps), query, perPage), {
+			fallback: 'Failed to load member replays. Please try again later.',
+			schema: communityMatchListSchema,
+			timeoutMs: 30_000,
+			init: {
+				headers: resolveAuthHeaders(this.deps, options?.headers)
 			}
-		);
+		});
 	}
 
 	getMaps(options?: MatchHistoryScopeOptions): ResultAsync<HistoryMapOption[], ApiError> {
@@ -544,28 +474,20 @@ export class ReplaysApi {
 			params.set('userId', options.userId);
 		}
 
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/history-maps?${params.toString()}`,
-			{
-				fallback: 'Failed to load maps.',
-				schema: historyMapsSchema,
-				init: {
-					headers: resolveAuthHeaders(this.deps)
-				}
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/history-maps?${params.toString()}`, {
+			fallback: 'Failed to load maps.',
+			schema: historyMapsSchema,
+			init: {
+				headers: resolveAuthHeaders(this.deps)
 			}
-		).map((data) => data.items ?? []);
+		}).map((data) => data.items ?? []);
 	}
 
 	getMemberMaps(): ResultAsync<HistoryMapOption[], ApiError> {
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays/maps`,
-			{
-				fallback: 'Failed to load maps.',
-				schema: historyMapsSchema
-			}
-		)
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/member-replays/maps`, {
+			fallback: 'Failed to load maps.',
+			schema: historyMapsSchema
+		})
 			.map((data) => data.items ?? [])
 			.orElse(() => ok([] as HistoryMapOption[]));
 	}
@@ -584,32 +506,28 @@ export class ReplaysApi {
 			livePlayers: z.array(z.any()).optional().default([])
 		});
 
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays/preview-stats`,
-			{
-				fallback: 'Failed to preview replay stats.',
-				schema,
-				timeoutMs: 60_000,
-				init: {
-					method: 'POST',
-					headers: {
-						...resolveAuthHeaders(this.deps, options?.headers),
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						players: input.players,
-						isRanked: input.isRanked,
-						durationInSeconds: input.durationInSeconds ?? 0
-					})
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/member-replays/preview-stats`, {
+			fallback: 'Failed to preview replay stats.',
+			schema,
+			timeoutMs: 60_000,
+			init: {
+				method: 'POST',
+				headers: {
+					...resolveAuthHeaders(this.deps, options?.headers),
+					'Content-Type': 'application/json'
 				},
-				onStatus: (status) => {
-					if (status === 401) {
-						return apiError(401, 'Sign in to upload a member replay.');
-					}
+				body: JSON.stringify({
+					players: input.players,
+					isRanked: input.isRanked,
+					durationInSeconds: input.durationInSeconds ?? 0
+				})
+			},
+			onStatus: (status) => {
+				if (status === 401) {
+					return apiError(401, 'Sign in to upload a member replay.');
 				}
 			}
-		).map((data) => ({
+		}).map((data) => ({
 			matchtype_id: data.matchtype_id,
 			players: data.players as MatchResultPlayer[],
 			livePlayers: (data.livePlayers ?? []) as LiveLobbyPlayer[]
@@ -617,44 +535,30 @@ export class ReplaysApi {
 	}
 
 	get(id: string, options?: ReplayAuthOptions): ResultAsync<CommunityMatchDetail, ApiError> {
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/match/${encodeURIComponent(id)}`,
-			{
-				fallback: 'Failed to load this replay. Please try again later.',
-				schema: communityMatchDetailSchema,
-				init: {
-					headers: resolveAuthHeaders(this.deps, options?.headers)
-				},
-				onStatus: (status) => {
-					if (status === 404) {
-						return apiError(404, 'That replay is not available.');
-					}
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/matches/${encodeURIComponent(id)}`, {
+			fallback: 'Failed to load this replay. Please try again later.',
+			schema: communityMatchDetailSchema,
+			init: {
+				headers: resolveAuthHeaders(this.deps, options?.headers)
+			},
+			onStatus: (status) => {
+				if (status === 404) {
+					return apiError(404, 'That replay is not available.');
 				}
 			}
-		).andThen((match) => {
-			const hasReplay = match.hasReplay ?? Boolean(match.replay);
-			const inProgress = match.needsResult === true;
-			if (!hasReplay && !inProgress) {
-				return errAsync(apiError(404, 'That replay is not available.'));
-			}
-
-			return ok({
-				...match,
-				kind: match.kind ?? 'match',
-				hasReplay,
-				needsResult: inProgress
-			});
-		});
+			// Visibility (hidden, no replay yet, owner-only) is decided by the server.
+		}).map((match) => ({
+			...match,
+			kind: match.kind ?? 'match',
+			hasReplay: match.hasReplay ?? Boolean(match.replay),
+			needsResult: match.needsResult === true
+		}));
 	}
 
-	getMember(
-		id: string,
-		options?: ReplayAuthOptions
-	): ResultAsync<MemberReplayDetail, ApiError> {
+	getMember(id: string, options?: ReplayAuthOptions): ResultAsync<MemberReplayDetail, ApiError> {
 		return fetchJson(
 			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays/${encodeURIComponent(id)}`,
+			`${v1Base(this.deps)}/member-replays/${encodeURIComponent(id)}`,
 			{
 				fallback: 'Failed to load this replay. Please try again later.',
 				schema: communityMatchDetailSchema,
@@ -709,7 +613,7 @@ export class ReplaysApi {
 
 		return fetchJson(
 			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/match/${encodeURIComponent(id)}/download`,
+			`${v1Base(this.deps)}/matches/${encodeURIComponent(id)}/download`,
 			{
 				fallback: 'Failed to record replay download.',
 				schema: downloadSchema,
@@ -734,7 +638,7 @@ export class ReplaysApi {
 
 		return fetchJson(
 			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays/${encodeURIComponent(id)}/download`,
+			`${v1Base(this.deps)}/member-replays/${encodeURIComponent(id)}/download`,
 			{
 				fallback: 'Failed to record replay download.',
 				schema: downloadSchema,
@@ -774,6 +678,7 @@ export class ReplaysApi {
 			if (input.gameDate) {
 				formData.append('gameDate', input.gameDate);
 			}
+
 			formData.append('isRanked', String(Boolean(input.isRanked)));
 			formData.append('isVpGame', String(Boolean(input.isVpGame)));
 			formData.append('isRandomStart', String(Boolean(input.isRandomStart)));
@@ -782,28 +687,25 @@ export class ReplaysApi {
 			formData.append('players', JSON.stringify(input.players ?? []));
 			formData.append('messages', JSON.stringify(input.messages ?? []));
 
-			return fetchJson(
-				this.deps.fetch,
-				`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays`,
-				{
-					fallback: 'Failed to upload replay.',
-					schema: communityMatchDetailSchema,
-					timeoutMs: 120_000,
-					init: {
-						method: 'POST',
-						headers: resolveAuthHeaders(this.deps, options?.headers),
-						body: formData
-					},
-					onStatus: (status) => {
-						if (status === 401) {
-							return apiError(401, 'Sign in to upload a member replay.');
-						}
-						if (status === 400) {
-							return apiError(400, 'Invalid replay upload.');
-						}
+			return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/member-replays`, {
+				fallback: 'Failed to upload replay.',
+				schema: communityMatchDetailSchema,
+				timeoutMs: 120_000,
+				init: {
+					method: 'POST',
+					headers: resolveAuthHeaders(this.deps, options?.headers),
+					body: formData
+				},
+				onStatus: (status) => {
+					if (status === 401) {
+						return apiError(401, 'Sign in to upload a member replay.');
+					}
+
+					if (status === 400) {
+						return apiError(400, 'Invalid replay upload.');
 					}
 				}
-			).map((match) => ({
+			}).map((match) => ({
 				...match,
 				kind: 'member' as const,
 				hasReplay: true
@@ -820,16 +722,18 @@ export class ReplaysApi {
 		if (input.title !== undefined) {
 			body.title = input.title;
 		}
+
 		if (input.description !== undefined) {
 			body.description = input.description;
 		}
+
 		if (input.players !== undefined) {
 			body.players = input.players;
 		}
 
 		return fetchJson(
 			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays/${encodeURIComponent(id)}`,
+			`${v1Base(this.deps)}/member-replays/${encodeURIComponent(id)}`,
 			{
 				fallback: 'Failed to update replay.',
 				schema: communityMatchDetailSchema,
@@ -846,12 +750,15 @@ export class ReplaysApi {
 					if (status === 401) {
 						return apiError(401, 'Sign in to edit a member replay.');
 					}
+
 					if (status === 403) {
 						return apiError(403, 'You can only edit your own uploads.');
 					}
+
 					if (status === 404) {
 						return apiError(404, 'Replay not found');
 					}
+
 					if (status === 400) {
 						return apiError(400, 'Invalid replay update.');
 					}
@@ -871,7 +778,7 @@ export class ReplaysApi {
 		// Soft-delete via PATCH on the same path as update (avoids a separate /delete route).
 		return fetchJson(
 			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays/${encodeURIComponent(id)}`,
+			`${v1Base(this.deps)}/member-replays/${encodeURIComponent(id)}`,
 			{
 				fallback: 'Failed to delete replay.',
 				schema: z
@@ -892,12 +799,15 @@ export class ReplaysApi {
 					if (status === 401) {
 						return apiError(401, 'Sign in to delete a member replay.');
 					}
+
 					if (status === 403) {
 						return apiError(403, 'You can only delete your own uploads.');
 					}
+
 					if (status === 404) {
 						return apiError(404, 'Replay not found');
 					}
+
 					if (status === 400) {
 						return apiError(400, 'Invalid replay update.');
 					}
@@ -932,17 +842,19 @@ export class ReplaysApi {
 		if (input.title !== undefined) {
 			body.title = input.title;
 		}
+
 		body.description = input.description;
 		if (input.durationInSeconds !== undefined) {
 			body.durationInSeconds = input.durationInSeconds;
 		}
+
 		if (input.players !== undefined) {
 			body.players = input.players;
 		}
 
 		return fetchJson(
 			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/member-replays/from-match/${encodeURIComponent(lobbyId)}/publish`,
+			`${v1Base(this.deps)}/member-replays/from-match/${encodeURIComponent(lobbyId)}/publish`,
 			{
 				fallback: 'Failed to publish replay.',
 				schema: communityMatchDetailSchema,
@@ -959,15 +871,19 @@ export class ReplaysApi {
 					if (status === 401) {
 						return apiError(401, 'Sign in to publish a member replay.');
 					}
+
 					if (status === 403) {
 						return apiError(403, 'You can only publish your own matches.');
 					}
+
 					if (status === 404) {
 						return apiError(404, 'Match not found');
 					}
+
 					if (status === 400) {
 						return apiError(400, 'This match has no replay file.');
 					}
+
 					if (status === 409) {
 						return apiError(409, 'This match is already published.');
 					}
@@ -982,11 +898,9 @@ export class ReplaysApi {
 
 	unpublish(id: string): ResultAsync<ReplayCatalogRecord, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('replays').update<ReplayCatalogRecord>(
-				id,
-				{ visibility: 'private' },
-				pbOptions(this.deps)
-			),
+			this.deps.pocketbase
+				.collection('replays')
+				.update<ReplayCatalogRecord>(id, { visibility: 'private' }, pbOptions(this.deps)),
 			'Failed to unpublish replay.'
 		);
 	}
@@ -998,22 +912,25 @@ export class ReplaysApi {
 	): ResultAsync<ListResult<ReplayCatalogRecord>, ApiError> {
 		const { filter = '', fields = [], sort = '-gameDate' } = options;
 		return fromPbPromise(
-			this.deps.pocketbase.collection('replays').getList<ReplayCatalogRecord>(page, perPage, pbOptions(this.deps, {
-				filter,
-				fields: fields.length > 0 ? fields.join(',') : undefined,
-				sort,
-				expand: 'createdBy'
-			})),
+			this.deps.pocketbase.collection('replays').getList<ReplayCatalogRecord>(
+				page,
+				perPage,
+				pbOptions(this.deps, {
+					filter,
+					fields: fields.length > 0 ? fields.join(',') : undefined,
+					sort,
+					expand: 'createdBy'
+				})
+			),
 			'Failed to load replays.'
 		);
 	}
 
 	getById(id: string): ResultAsync<ReplayCatalogRecord, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('replays').getOne<ReplayCatalogRecord>(
-				id,
-				pbOptions(this.deps, { expand: 'createdBy' })
-			),
+			this.deps.pocketbase
+				.collection('replays')
+				.getOne<ReplayCatalogRecord>(id, pbOptions(this.deps, { expand: 'createdBy' })),
 			'Failed to load replay.'
 		);
 	}
@@ -1036,10 +953,7 @@ export class ReplaysApi {
 		).map((records) => records.map((record) => String(record.filename ?? '')).filter(Boolean));
 	}
 
-	getMine(
-		page = 1,
-		perPage = 30
-	): ResultAsync<ListResult<ReplayCatalogRecord>, ApiError> {
+	getMine(page = 1, perPage = 30): ResultAsync<ListResult<ReplayCatalogRecord>, ApiError> {
 		const userId = currentUserId(this.deps);
 		if (!userId) {
 			return errAsync(apiError(401, 'Sign in to view your replays.'));

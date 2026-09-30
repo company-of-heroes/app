@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { getStoredEloForLeaderboard } from '@company-of-heroes/ui/format/player-format';
 import type { PlayerEloMap } from '@company-of-heroes/ui/format/types';
 import type { TransformedMatch } from '@company-of-heroes/ui/player/types';
-import { normalizeBaseUrl, resolveAuthHeaders, type ApiDeps } from '../deps';
+import { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import { pbOptions } from '../pb';
@@ -352,8 +352,7 @@ export function selectLeaderboardHarvestProfileIds(options: {
 		const steamId = options.steamIdForProfile(profileId);
 		const record = steamId ? options.ratingsBySteamId.get(steamId) : undefined;
 		const leaderboardId = Number(stat.leaderboard_id ?? options.leaderboardId);
-		const hasSlot =
-			record != null && getStoredEloForLeaderboard(record.elo, leaderboardId) != null;
+		const hasSlot = record != null && getStoredEloForLeaderboard(record.elo, leaderboardId) != null;
 		const stale = !record || isHarvestedStale(record.harvestedAt, staleMs);
 
 		if (!hasSlot || stale) {
@@ -400,19 +399,15 @@ export class RatingsApi {
 		}
 
 		const fill = options?.fill ? '?fill=1' : '';
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/player-ratings/${steamId}${fill}`,
-			{
-				fallback: 'Failed to load player rating.',
-				schema: ratingRecordSchema,
-				onStatus: (status) => {
-					if (status === 404) {
-						return apiError(404, 'Player rating not found.');
-					}
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/player-ratings/${steamId}${fill}`, {
+			fallback: 'Failed to load player rating.',
+			schema: ratingRecordSchema,
+			onStatus: (status) => {
+				if (status === 404) {
+					return apiError(404, 'Player rating not found.');
 				}
 			}
-		).orElse(() => ok(null));
+		}).orElse(() => ok(null));
 	}
 
 	getPlayerRatings(steamIds: string[]): ResultAsync<Map<string, PlayerRatingRecord>, ApiError> {
@@ -432,7 +427,9 @@ export class RatingsApi {
 		return fromSafeRatings(this.ingestBatches(players));
 	}
 
-	ingestFromMatchHistory(matches: TransformedMatch[] | undefined): ResultAsync<PlayerRatingRecord[], ApiError> {
+	ingestFromMatchHistory(
+		matches: TransformedMatch[] | undefined
+	): ResultAsync<PlayerRatingRecord[], ApiError> {
 		if (!this.deps.pocketbase.authStore.isValid) {
 			return okAsync([]);
 		}
@@ -453,19 +450,15 @@ export class RatingsApi {
 			return okAsync(null);
 		}
 
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/player-ratings/harvest/profiles`,
-			{
-				fallback: 'Failed to harvest player ratings.',
-				schema: harvestSchema,
-				init: {
-					method: 'POST',
-					headers: resolveAuthHeaders(this.deps, { 'Content-Type': 'application/json' }),
-					body: JSON.stringify({ profileIds: unique })
-				}
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/player-ratings/harvest/profiles`, {
+			fallback: 'Failed to harvest player ratings.',
+			schema: harvestSchema,
+			init: {
+				method: 'POST',
+				headers: resolveAuthHeaders(this.deps, { 'Content-Type': 'application/json' }),
+				body: JSON.stringify({ profileIds: unique })
 			}
-		)
+		})
 			.map((payload) => ({
 				processed: Number(payload.processed) || 0,
 				skipped: Number(payload.skipped) || 0,
@@ -496,14 +489,10 @@ export class RatingsApi {
 			params.set('steamId', steamId);
 		}
 
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/player-ratings/history?${params}`,
-			{
-				fallback: 'Failed to load ELO history.',
-				schema: historySchema
-			}
-		)
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/player-ratings/history?${params}`, {
+			fallback: 'Failed to load ELO history.',
+			schema: historySchema
+		})
 			.map((payload) => (Array.isArray(payload.points) ? payload.points : []))
 			.orElse(() => ok([]));
 	}
@@ -520,9 +509,9 @@ export class RatingsApi {
 			batches.map(async (batch) => {
 				try {
 					const filter = batch.map((id) => `steamId="${id}"`).join('||');
-					return await this.deps.pocketbase.collection('player_ratings').getFullList(
-						pbOptions(this.deps, { filter })
-					);
+					return await this.deps.pocketbase
+						.collection('player_ratings')
+						.getFullList(pbOptions(this.deps, { filter }));
 				} catch {
 					return [];
 				}
@@ -548,14 +537,11 @@ export class RatingsApi {
 		for (let i = 0; i < players.length; i += INGEST_BATCH_SIZE) {
 			const batch = players.slice(i, i + INGEST_BATCH_SIZE);
 			try {
-				const response = await this.deps.fetch(
-					`${normalizeBaseUrl(this.deps.baseUrl)}/api/player-ratings/ingest`,
-					{
-						method: 'POST',
-						headers,
-						body: JSON.stringify({ players: batch })
-					}
-				);
+				const response = await this.deps.fetch(`${v1Base(this.deps)}/player-ratings/ingest`, {
+					method: 'POST',
+					headers,
+					body: JSON.stringify({ players: batch })
+				});
 				if (!response.ok) {
 					continue;
 				}

@@ -42,7 +42,10 @@ function leaderboardId(matchType: number, race: number): number {
 		4: '4v4'
 	};
 	const label = labels[matchType];
-	if (!label) return 0;
+	if (!label) {
+		return 0;
+	}
+
 	const key = `${label}_${getRacePrefix(race)}` as keyof typeof LEADERBOARD_IDS;
 	return LEADERBOARD_IDS[key] ?? 0;
 }
@@ -416,6 +419,7 @@ export function getDevScenarioFromUrl(): DevScenario {
 	if (param && DEV_SCENARIOS.includes(param as DevScenario)) {
 		return param as DevScenario;
 	}
+
 	return '4v4';
 }
 
@@ -435,4 +439,3 @@ export function getDevLobby(scenario: DevScenario): LobbyData {
 		me: { playerId: 1001, index: 0 }
 	};
 }
-

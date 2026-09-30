@@ -7,8 +7,4 @@
 	let { class: className, ...restProps }: Props = $props();
 </script>
 
-<div
-	class={cn('skeleton-shimmer rounded-lg', className)}
-	aria-hidden="true"
-	{...restProps}
-></div>
+<div class={cn('skeleton-shimmer rounded-lg', className)} aria-hidden="true" {...restProps}></div>

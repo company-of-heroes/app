@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { app } from '$core/app/context';
+	import { siteApi } from '$core/api';
 	import { getString } from '$lib/utils/game';
 	import { resource } from 'runed';
 	import { ReplayList } from '../replays/replay-list.svelte';
@@ -43,13 +44,11 @@
 	const aggregation = resource(
 		() => app.features.auth.userId,
 		async () => {
-			const response = await app.pocketbase.send<{
+			// The signed-in user's own uploads (the website knows the user from the token).
+			const response = await siteApi<{
 				maps: string[];
 				players: { name: string }[];
-			}>('/api/replay-filters', {
-				method: 'GET',
-				query: { userId: app.features.auth.userId }
-			});
+			}>('/replay-filters');
 			return {
 				players: response.players ?? [],
 				maps: response.maps ?? []
@@ -81,7 +80,9 @@
 			</p>
 		{/if}
 	</Alert>
-	<div class="border-secondary-800 flex flex-wrap items-center justify-end gap-3 border-b px-4 py-2">
+	<div
+		class="border-secondary-800 flex flex-wrap items-center justify-end gap-3 border-b px-4 py-2"
+	>
 		<Button href="/replays/upload" size="sm" variant="secondary">
 			{t('Upload to Member replays')}
 		</Button>

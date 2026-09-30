@@ -1,15 +1,11 @@
-import {
-	countedActions,
-	doctrineBannerUrl,
-	playerCpm,
-	playerHref,
-	raceFromReplayFaction,
-	type CommunityPlayer
-} from '$lib/replays';
+import { playerHref, raceFromReplayFaction, type CommunityPlayer } from '$lib/replays';
 import { href, currentLocale } from '$lib/i18n';
 import { getCountryDisplayName as countryDisplayName } from '$lib/utils/country';
 import { getMapImageFromName } from '$lib/utils/media/maps';
-import { flagImageUrl as flagImageUrlFromProxy, proxiedImageUrl } from '$lib/utils/media/proxy-image';
+import {
+	flagImageUrl as flagImageUrlFromProxy,
+	proxiedImageUrl
+} from '$lib/utils/media/proxy-image';
 import {
 	getFactionFlagByRace,
 	getRankImageByLeaderboardId,
@@ -33,10 +29,7 @@ export {
 	proxiedImageUrl,
 	normalizeMapName,
 	playerHref,
-	countedActions,
-	playerCpm,
-	raceFromReplayFaction,
-	doctrineBannerUrl
+	raceFromReplayFaction
 };
 
 export function resolveMapSrc(map: string | undefined): string | undefined {

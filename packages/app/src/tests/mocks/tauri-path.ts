@@ -19,7 +19,10 @@ export async function join(...segments: string[]): Promise<string> {
 export async function dirname(path: string): Promise<string> {
 	const normalized = normalize(path);
 	const idx = normalized.lastIndexOf('/');
-	if (idx <= 0) throw new Error(`Cannot get dirname of: ${path}`);
+	if (idx <= 0) {
+		throw new Error(`Cannot get dirname of: ${path}`);
+	}
+
 	return normalized.slice(0, idx);
 }
 

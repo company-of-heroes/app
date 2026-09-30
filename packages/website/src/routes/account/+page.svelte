@@ -98,7 +98,7 @@
 			<input
 				type="file"
 				accept="image/png,image/jpeg,image/gif,image/webp,image/bmp"
-				class="text-secondary-400 text-sm file:bg-secondary-800 file:mr-3 file:rounded file:border-0 file:px-3 file:py-1.5 file:text-sm file:text-white"
+				class="text-secondary-400 file:bg-secondary-800 text-sm file:mr-3 file:rounded file:border-0 file:px-3 file:py-1.5 file:text-sm file:text-white"
 				{...updateProfile.fields.avatar.as('file')}
 			/>
 		{/snippet}

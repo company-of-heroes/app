@@ -6,7 +6,7 @@ import { toMatchListRowFromLiveLobby } from '@company-of-heroes/ui/match';
 import type { MatchExpanded } from '$core/app/database/matches';
 import type { ReplaysExpanded } from '$core/app/database/replays';
 import { Race, getString } from '$lib/utils/game';
-import { raceFromReplayFaction } from '$lib/utils/replay-doctrine';
+import { raceFromReplayFaction } from '@company-of-heroes/ui/replay/stats';
 export type MatchViewResultPlayer = {
 	profile_id: number;
 	steamId?: string;
@@ -119,8 +119,7 @@ function livePlayerToLobby(player: LiveLobbyPlayer): LobbyPlayer {
 	const alias = player.alias.trim();
 	const profileId = player.profileId ?? (player.playerId > 0 ? player.playerId : 0);
 	const isAllies = player.race === Race.US || player.race === Race.Commonwealth;
-	const team =
-		player.team === 0 || player.team === 1 ? player.team : isAllies ? 0 : 1;
+	const team = player.team === 0 || player.team === 1 ? player.team : isAllies ? 0 : 1;
 
 	return {
 		index: player.index,
@@ -161,9 +160,7 @@ export function fromMatchExpanded(match: MatchExpanded): MatchView {
 }
 
 export function fromReplayExpanded(replay: ReplaysExpanded): MatchView {
-	const players = (replay.players ?? []).map((player, index) =>
-		replayPlayerToLobby(player, index)
-	);
+	const players = (replay.players ?? []).map((player, index) => replayPlayerToLobby(player, index));
 
 	return {
 		id: replay.id,
@@ -224,21 +221,13 @@ function ratingChangeForMatch(
 	}
 
 	const id = profileId != null && profileId !== '' ? Number(profileId) : NaN;
-	let entry = Number.isFinite(id)
-		? players.find((player) => player.profile_id === id)
-		: undefined;
+	let entry = Number.isFinite(id) ? players.find((player) => player.profile_id === id) : undefined;
 
 	if (!entry && steamIds?.length) {
-		entry = players.find(
-			(player) => !!player.steamId && steamIds.includes(player.steamId)
-		);
+		entry = players.find((player) => !!player.steamId && steamIds.includes(player.steamId));
 	}
 
-	if (
-		!entry ||
-		!Number.isFinite(entry.newrating) ||
-		!Number.isFinite(entry.oldrating)
-	) {
+	if (!entry || !Number.isFinite(entry.newrating) || !Number.isFinite(entry.oldrating)) {
 		return null;
 	}
 

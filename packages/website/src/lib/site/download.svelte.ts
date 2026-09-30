@@ -51,7 +51,9 @@ export async function loadLatestDownload(): Promise<void> {
 		const assets = release.assets ?? [];
 		applyAsset(
 			latestDownload,
-			pickAsset(assets, /setup\.exe$/i) ?? pickAsset(assets, /\.exe$/i) ?? pickAsset(assets, /\.msi$/i)
+			pickAsset(assets, /setup\.exe$/i) ??
+				pickAsset(assets, /\.exe$/i) ??
+				pickAsset(assets, /\.msi$/i)
 		);
 		applyAsset(linuxDownload, pickAsset(assets, /\.AppImage$/i));
 	} catch (error) {

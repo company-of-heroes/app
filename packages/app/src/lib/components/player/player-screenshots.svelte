@@ -53,11 +53,7 @@
 		'expand'
 	];
 
-	function sessionStub(
-		sessionId: number,
-		map: string,
-		capturedAt: string
-	): MatchExpanded {
+	function sessionStub(sessionId: number, map: string, capturedAt: string): MatchExpanded {
 		return {
 			id: `session:${sessionId}`,
 			sessionId,
@@ -89,7 +85,10 @@
 	}
 
 	function detailsHref(row: MatchExpanded) {
-		if (!row.id || String(row.id).startsWith('session:')) return undefined;
+		if (!row.id || String(row.id).startsWith('session:')) {
+			return undefined;
+		}
+
 		return `/history/${row.id}`;
 	}
 
@@ -101,12 +100,16 @@
 
 		while (found.length < limit) {
 			if (queue.length === 0) {
-				if (noMorePages) break;
+				if (noMorePages) {
+					break;
+				}
+
 				const page = await listCaptureSessionHints(steamId, capturePage, { userId });
 				if (page.items.length === 0) {
 					noMorePages = true;
 					break;
 				}
+
 				queue.push(...page.items);
 				capturePage += 1;
 				if (page.totalPages === 0 || capturePage > page.totalPages) {
@@ -115,11 +118,15 @@
 			}
 
 			const hint = queue.shift();
-			if (!hint) break;
+			if (!hint) {
+				break;
+			}
+
 			const sessionId = Number(hint.session_id);
 			if (!Number.isInteger(sessionId) || sessionId <= 0 || seen.has(sessionId)) {
 				continue;
 			}
+
 			seen.add(sessionId);
 			found.push(sessionId);
 		}
@@ -131,7 +138,9 @@
 	}
 
 	async function loadMatchesForSessions(sessionIds: number[]): Promise<MatchExpanded[]> {
-		if (sessionIds.length === 0) return [];
+		if (sessionIds.length === 0) {
+			return [];
+		}
 
 		const [captures, idMap] = await Promise.all([
 			listCapturesBySessionIds(steamId, sessionIds, { userId }),
@@ -141,20 +150,24 @@
 		const grouped: Record<number, CaptureRecord[]> = { ...capturesBySession };
 		for (const capture of captures) {
 			const sessionId = Number(capture.session_id);
-			if (!Number.isInteger(sessionId) || sessionId <= 0) continue;
+			if (!Number.isInteger(sessionId) || sessionId <= 0) {
+				continue;
+			}
+
 			(grouped[sessionId] ??= []).push(capture);
 		}
 		capturesBySession = grouped;
 
 		const lobbyIds = sessionIds.map((id) => idMap.get(id)).filter((id): id is string => !!id);
 		const loaded = await app.database.matches.getByIds(lobbyIds);
-		const bySession = new Map(
-			loaded.map((match) => [Number(match.sessionId), match] as const)
-		);
+		const bySession = new Map(loaded.map((match) => [Number(match.sessionId), match] as const));
 
 		return sessionIds.map((sessionId) => {
 			const existing = bySession.get(sessionId);
-			if (existing) return existing;
+			if (existing) {
+				return existing;
+			}
+
 			const first = grouped[sessionId]?.[0];
 			return sessionStub(
 				sessionId,
@@ -173,7 +186,10 @@
 
 		const sessionIds = await collectSessionIds(SESSION_PAGE);
 		if (sessionIds.length === 0) {
-			if (reset) matches = [];
+			if (reset) {
+				matches = [];
+			}
+
 			exhausted = true;
 			return;
 		}
@@ -205,7 +221,10 @@
 	);
 
 	async function loadMore() {
-		if (loadingMore || !hasMore) return;
+		if (loadingMore || !hasMore) {
+			return;
+		}
+
 		loadingMore = true;
 		try {
 			await loadPage(false);
@@ -222,17 +241,22 @@
 	{columns}
 	loading={initialLoading}
 	{highlightedPlayers}
-	emptyMessage={t('No screenshots for this player. Screenshots only appear when they used the app.')}
+	emptyMessage={t(
+		'No screenshots for this player. Screenshots only appear when they used the app.'
+	)}
 	class="bg-gray-950/90"
 	{detailsHref}
 >
-	{#snippet expandContent({ match }: { row: import('@company-of-heroes/ui/match').MatchListRow; match: MatchExpanded })}
+	{#snippet expandContent({
+		match
+	}: {
+		row: import('@company-of-heroes/ui/match').MatchListRow;
+		match: MatchExpanded;
+	})}
 		{@const captures = capturesBySession[match.sessionId] ?? []}
 		{#if captures.length === 0}
 			<p class="text-secondary-400 px-4 py-3 text-sm">
-				{t(
-					'No screenshots for this match. Screenshots only appear when a player used the app.'
-				)}
+				{t('No screenshots for this match. Screenshots only appear when a player used the app.')}
 			</p>
 		{:else}
 			<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">

@@ -11,10 +11,7 @@ const PERSONAL_STAT_BATCH = 10;
 
 type StatsMap = Map<number, LeaderboardStat[]>;
 
-async function fetchStatsByProfileIds(
-	profileIds: number[],
-	seed: StatsMap
-): Promise<StatsMap> {
+async function fetchStatsByProfileIds(profileIds: number[], seed: StatsMap): Promise<StatsMap> {
 	const byId = new Map(seed);
 	const missing = profileIds.filter((id) => !byId.has(id));
 

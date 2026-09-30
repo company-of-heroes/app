@@ -20,7 +20,10 @@ if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
 	}
 }
 
-if (process.env.TAURI_SIGNING_PRIVATE_KEY && process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD === undefined) {
+if (
+	process.env.TAURI_SIGNING_PRIVATE_KEY &&
+	process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD === undefined
+) {
 	process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD = '';
 }
 
@@ -32,6 +35,9 @@ const child = spawn(process.execPath, [cli, ...process.argv.slice(2)], {
 });
 
 child.on('exit', (code, signal) => {
-	if (signal) process.kill(process.pid, signal);
-	else process.exit(code ?? 1);
+	if (signal) {
+		process.kill(process.pid, signal);
+	} else {
+		process.exit(code ?? 1);
+	}
 });

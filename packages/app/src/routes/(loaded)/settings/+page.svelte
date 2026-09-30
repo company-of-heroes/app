@@ -78,6 +78,7 @@
 					app.settings.companyOfHeroesConfigPath = log;
 				}
 			}
+
 			if (game) {
 				expectedGameDir = game;
 				const current = app.settings.companyOfHeroesInstallationPath;
@@ -97,6 +98,7 @@
 			if (!(await exists(candidate))) {
 				continue;
 			}
+
 			try {
 				await revealItemInDir(candidate);
 				return;
@@ -133,10 +135,7 @@
 </script>
 
 <Form.Root>
-	<Form.Group
-		label={t('Language')}
-		description={t('Choose the language used in the app.')}
-	>
+	<Form.Group label={t('Language')} description={t('Choose the language used in the app.')}>
 		<SelectLocale bind:value={app.settings.locale} />
 	</Form.Group>
 	<Form.Group
@@ -207,7 +206,9 @@
 	</Form.Group>
 	<Form.Group
 		label={t('Company of Heroes installation folder')}
-		description={t('Select the root installation folder of Company of Heroes (contains RelicCOH.exe).')}
+		description={t(
+			'Select the root installation folder of Company of Heroes (contains RelicCOH.exe).'
+		)}
 		layout="stacked"
 	>
 		<FileSelection
@@ -246,8 +247,7 @@
 				variant="secondary"
 				size="sm"
 				type="button"
-				onclick={() =>
-					revealPath(app.settings.companyOfHeroesInstallationPath, expectedGameDir)}
+				onclick={() => revealPath(app.settings.companyOfHeroesInstallationPath, expectedGameDir)}
 			>
 				<ArrowSquareOutIcon size={16} />
 				{t('Show in Explorer')}
@@ -258,14 +258,9 @@
 	<Form.Group label={t('Fair play checks')}>
 		{#snippet description()}
 			{t(
-				'During a match the app uses Company of Heroes\' own Print Screen (never your Windows desktop) and checks for known cheat processes. These are uploaded for review and later analysis.'
+				"During a match the app uses Company of Heroes' own Print Screen (never your Windows desktop) and checks for known cheat processes. These are uploaded for review and later analysis."
 			)}
-			<Button
-				variant="link"
-				class="h-auto px-0"
-				type="button"
-				onclick={() => openUrl(privacyUrl)}
-			>
+			<Button variant="link" class="h-auto px-0" type="button" onclick={() => openUrl(privacyUrl)}>
 				{t('Privacy policy')}
 			</Button>
 		{/snippet}
@@ -325,7 +320,13 @@
 			{/if}
 		{/snippet}
 		{#snippet footer()}
-			<Button variant="secondary" type="button" class="w-fit" onclick={backupNow} loading={isBackingUp}>
+			<Button
+				variant="secondary"
+				type="button"
+				class="w-fit"
+				onclick={backupNow}
+				loading={isBackingUp}
+			>
 				<ArchiveIcon size={16} />
 				{t('Backup now')}
 			</Button>

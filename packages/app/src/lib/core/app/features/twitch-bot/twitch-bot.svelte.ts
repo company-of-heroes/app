@@ -3,7 +3,7 @@ import type { Match } from '$core/game/lobby';
 import { app } from '$core/app/context';
 import { watch } from 'runed';
 import { Feature } from '../feature.svelte';
-import { twitch } from '../twitch/twitch.svelte';
+import { streamChat } from '../streaming/chat';
 import { t } from '$lib/i18n';
 
 export type TwitchBotSettings = {
@@ -25,6 +25,7 @@ function playerStatsMessage(players: LobbyPlayer[]): string {
 			if (!alias || !player.steamId) {
 				return null;
 			}
+
 			return `${alias}: ${PLAYERCARD_URL}${player.steamId}`;
 		})
 		.filter(Boolean)
@@ -39,7 +40,7 @@ function playerStatsPending(players: LobbyPlayer[]): boolean {
 
 /**
  * Chat bot: periodic custom messages and player-stat announcements when a
- * match starts (only while connected and live).
+ * match starts, posted to every connected platform that is live.
  */
 export class TwitchBot extends Feature<TwitchBotSettings> {
 	name = 'twitch-bot';
@@ -90,11 +91,11 @@ export class TwitchBot extends Feature<TwitchBotSettings> {
 		}
 
 		const int = setInterval(() => {
-			if (!twitch.isConnected || !twitch.chatClient || !twitch.token || !twitch.isLive) {
+			if (!text.trim()) {
 				return;
 			}
 
-			twitch.chatClient.say(twitch.token.userName!, text);
+			void streamChat.sayToLive(text);
 		}, interval * 1000);
 
 		this.customMessagesIntervals.set(index, int);
@@ -123,12 +124,12 @@ export class TwitchBot extends Feature<TwitchBotSettings> {
 			return;
 		}
 
-		if (!twitch.isConnected || !twitch.chatClient || !twitch.token || !twitch.isLive) {
+		if (streamChat.liveSinks.length === 0) {
 			return;
 		}
 
 		this.#sentStatsSessionId = lobby.sessionId;
-		twitch.chatClient.say(twitch.token.userName!, t('Player Stats: {message}', { message }));
+		await streamChat.sayToLive(t('Player Stats: {message}', { message }));
 	}
 
 	async #waitForPlayerStats(lobby: Match, signal: AbortSignal): Promise<string> {

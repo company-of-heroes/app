@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ResultAsync } from 'neverthrow';
-import { normalizeBaseUrl, type ApiDeps } from '../deps';
+import { type ApiDeps, normalizeBaseUrl, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import type { PlayerEloMap } from '@company-of-heroes/ui/player/types';
@@ -43,18 +43,14 @@ export class LeaderboardsApi {
 	constructor(private deps: ApiDeps) {}
 
 	get(boardId: number): ResultAsync<LeaderboardPageData, ApiError> {
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/leaderboard/${boardId}`,
-			{
-				fallback: 'Failed to load the leaderboard. Please try again later.',
-				schema: leaderboardSchema,
-				onStatus: (status) => {
-					if (status === 400) {
-						return apiError(400, 'That leaderboard is not available.');
-					}
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/leaderboards/${boardId}`, {
+			fallback: 'Failed to load the leaderboard. Please try again later.',
+			schema: leaderboardSchema,
+			onStatus: (status) => {
+				if (status === 400) {
+					return apiError(400, 'That leaderboard is not available.');
 				}
 			}
-		);
+		});
 	}
 }

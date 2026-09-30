@@ -1,9 +1,5 @@
 import { api, unwrapApi } from '$core/api';
-import type {
-	SmurfWatchRecord,
-	SmurfWatchSource,
-	SmurfWatchStatus
-} from '@company-of-heroes/api';
+import type { SmurfWatchRecord, SmurfWatchSource, SmurfWatchStatus } from '@company-of-heroes/api';
 
 export type { SmurfWatchRecord, SmurfWatchSource, SmurfWatchStatus };
 

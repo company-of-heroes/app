@@ -24,7 +24,9 @@ export class LiveLobbiesFeed {
 	}
 
 	async start(): Promise<void> {
-		if (this.#started) return;
+		if (this.#started) {
+			return;
+		}
 
 		this.#started = true;
 
@@ -40,7 +42,9 @@ export class LiveLobbiesFeed {
 	}
 
 	async stop(): Promise<void> {
-		if (!this.#started) return;
+		if (!this.#started) {
+			return;
+		}
 
 		this.#started = false;
 		this.#clearPolling();
@@ -80,6 +84,7 @@ export class LiveLobbiesFeed {
 							this.error = error instanceof Error ? error.message : String(error);
 						});
 					}
+
 					return;
 				}
 
@@ -100,8 +105,7 @@ export class LiveLobbiesFeed {
 						await this.#loadItems();
 						this.error = null;
 					} catch (reloadError) {
-						this.error =
-							reloadError instanceof Error ? reloadError.message : String(reloadError);
+						this.error = reloadError instanceof Error ? reloadError.message : String(reloadError);
 					}
 				}
 			});

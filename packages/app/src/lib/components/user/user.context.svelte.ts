@@ -11,8 +11,7 @@ import type { RelicProfile } from '@fknoobs/app';
 import { Context } from 'runed';
 
 const userContext = new Context<UserContext>('<user />');
-export const createUser = (user: () => UsersResponse) =>
-	userContext.set(new UserContext(user));
+export const createUser = (user: () => UsersResponse) => userContext.set(new UserContext(user));
 export const useUser = () => userContext.get();
 
 export class UserContext {

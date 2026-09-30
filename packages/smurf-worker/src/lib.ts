@@ -81,11 +81,7 @@ export class SteamCallBudget {
 	}
 }
 
-export async function pbRequest<T>(
-	env: Env,
-	path: string,
-	init: RequestInit = {}
-): Promise<T> {
+export async function pbRequest<T>(env: Env, path: string, init: RequestInit = {}): Promise<T> {
 	const method = init.method ?? 'GET';
 	const startedAt = Date.now();
 
@@ -192,6 +188,7 @@ async function steamRequest<T>(
 			});
 			throw new RateLimitError(300);
 		}
+
 		budget.spend();
 	}
 

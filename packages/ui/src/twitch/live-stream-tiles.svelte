@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import UsersIcon from 'phosphor-svelte/lib/UsersIcon';
 	import { Badge } from '../ui/badge';
 	import { Skeleton } from '../ui/skeleton';
@@ -10,19 +11,14 @@
 		items: LiveStream[];
 		loading?: boolean;
 		compact?: boolean;
-		streamHref: (userName: string) => string;
-		emptyMessage?: string;
 		liveLabel?: string;
 	};
 
-	let {
-		items,
-		loading = false,
-		compact = false,
-		streamHref,
-		emptyMessage = 'No one is streaming Company of Heroes right now.',
-		liveLabel = 'Live'
-	}: Props = $props();
+	const { t } = useI18n();
+
+	let { items, loading = false, compact = false }: Props = $props();
+
+	const streamHref = (userName: string) => `https://www.twitch.tv/${userName}`;
 
 	const skeletonCount = $derived(compact ? 6 : 3);
 	const gridClass = $derived(
@@ -52,7 +48,9 @@
 		{/each}
 	</div>
 {:else if items.length === 0}
-	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
+	<p class="text-secondary-400 px-4 py-3 text-sm">
+		{t('No one is streaming Company of Heroes right now.')}
+	</p>
 {:else}
 	<div class={gridClass}>
 		{#each items as stream (stream.id)}
@@ -71,7 +69,7 @@
 				<div class="bg-secondary-900 relative aspect-video overflow-hidden">
 					<img src={stream.thumbnailUrl} alt={stream.title} class="size-full object-cover" />
 					{#if !compact}
-						<Badge variant="success" class="absolute top-2 left-2 rounded-none">{liveLabel}</Badge>
+						<Badge variant="success" class="absolute top-2 left-2 rounded-none">{t('Live')}</Badge>
 					{/if}
 					<span
 						class={cn(

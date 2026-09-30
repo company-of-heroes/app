@@ -66,9 +66,7 @@ export function sortUserLabels(labels: UserLabel[]): UserLabel[] {
 	return [...labels].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0) || a.name.localeCompare(b.name));
 }
 
-export function labelsBySteamId(
-	assignments: PlayerLabelAssignment[]
-): Record<string, UserLabel[]> {
+export function labelsBySteamId(assignments: PlayerLabelAssignment[]): Record<string, UserLabel[]> {
 	const bySteam: Record<string, UserLabel[]> = {};
 	for (const assignment of assignments) {
 		const steamId = assignment.steamId;
@@ -94,9 +92,9 @@ export class LabelsApi {
 
 	listUserLabels(): ResultAsync<UserLabel[], ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('user_labels').getFullList<UserLabel>(
-				pbOptions(this.deps, { sort: 'sort,name' })
-			),
+			this.deps.pocketbase
+				.collection('user_labels')
+				.getFullList<UserLabel>(pbOptions(this.deps, { sort: 'sort,name' })),
 			'Failed to load labels.'
 		);
 	}

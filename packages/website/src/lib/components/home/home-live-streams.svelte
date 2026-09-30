@@ -9,10 +9,6 @@
 
 	let { streams, loading = false }: Props = $props();
 	const { t } = useI18n();
-
-	function streamHref(userName: string) {
-		return `https://www.twitch.tv/${userName}`;
-	}
 </script>
 
 <section class="border-secondary-800 border-b">
@@ -29,12 +25,5 @@
 			<span class="text-secondary-400 text-sm">{t('{count} live', { count: streams.length })}</span>
 		{/if}
 	</div>
-	<LiveStreamTiles
-		items={streams}
-		{loading}
-		compact
-		{streamHref}
-		emptyMessage={t('No one is streaming Company of Heroes right now.')}
-		liveLabel={t('Live')}
-	/>
+	<LiveStreamTiles items={streams} {loading} compact />
 </section>

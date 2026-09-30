@@ -2,9 +2,21 @@ import { describe, expect, it, vi } from 'vitest';
 import { ensureAccountFlow, type RecoveryPorts } from './recovery';
 import type { AccountSettings } from '$core/config/schema';
 
-const LOCAL: AccountSettings = { userId: 'localuser123456', email: 'local@fknoobs.com', password: 'localpass' };
-const BACKUP: AccountSettings = { userId: 'backupuser12345', email: 'backup@fknoobs.com', password: 'backuppass' };
-const FRESH: AccountSettings = { userId: 'freshuser123456', email: 'fresh@fknoobs.com', password: 'freshpass' };
+const LOCAL: AccountSettings = {
+	userId: 'localuser123456',
+	email: 'local@fknoobs.com',
+	password: 'localpass'
+};
+const BACKUP: AccountSettings = {
+	userId: 'backupuser12345',
+	email: 'backup@fknoobs.com',
+	password: 'backuppass'
+};
+const FRESH: AccountSettings = {
+	userId: 'freshuser123456',
+	email: 'fresh@fknoobs.com',
+	password: 'freshpass'
+};
 const EMPTY: AccountSettings = { userId: '', email: '', password: '' };
 
 function makePorts(overrides: Partial<RecoveryPorts> = {}): RecoveryPorts {

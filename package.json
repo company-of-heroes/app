@@ -13,12 +13,13 @@
 		"oppbot:build": "turbo run build --filter=@company-of-heroes/oppbot-overlay",
 		"website:dev": "pnpm --filter @company-of-heroes/website dev",
 		"website:build": "turbo run build --filter=@company-of-heroes/website",
-		"check": "turbo run check",
+		"check": "node scripts/check-duplicate-components.mjs && turbo run check",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"changeset": "changeset",
 		"version-packages": "node scripts/version.mjs",
-		"release": "changeset publish"
+		"release": "changeset publish",
+		"check:duplicates": "node scripts/check-duplicate-components.mjs"
 	},
 	"license": "MIT",
 	"devDependencies": {

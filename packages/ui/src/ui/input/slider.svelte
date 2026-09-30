@@ -22,7 +22,9 @@
 		{...restProps as any}
 		class={cn('relative my-2 flex w-full touch-none items-center select-none', restProps.class)}
 	>
-		<span class="relative h-2 w-full grow cursor-pointer overflow-hidden rounded-full bg-secondary-950">
+		<span
+			class="bg-secondary-950 relative h-2 w-full grow cursor-pointer overflow-hidden rounded-full"
+		>
 			<Slider.Range class="bg-primary/40 absolute h-full" />
 		</span>
 		<Slider.Thumb
@@ -38,11 +40,13 @@
 	<input
 		type="text"
 		{value}
-		class={cn(controlBase, 'h-11 min-w-14 w-14 flex-none px-1 text-center text-sm')}
+		class={cn(controlBase, 'h-11 w-14 min-w-14 flex-none px-1 text-center text-sm')}
 		oninput={(e) => {
 			const input = e.target as HTMLInputElement;
 			let v = parseFloat(input.value);
-			if (isNaN(v)) v = 0;
+			if (isNaN(v)) {
+				v = 0;
+			}
 
 			value = v;
 		}}

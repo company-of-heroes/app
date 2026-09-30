@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useHost } from '../host/host.context';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { factionIcon, interactive } from '@company-of-heroes/ui/variants';
 	import { getRaceLabel } from '../format/player-format';
@@ -21,8 +22,6 @@
 
 	type Props = {
 		players: TeamSkillPlayer[];
-		resolveFactionFlag: (race: number) => string;
-		getRankImage?: (race: number, rankLevel: number) => string;
 		meSteamIds?: string[];
 		highlightedPlayers?: string[];
 		levelFallback?: string;
@@ -47,10 +46,10 @@
 		focus: boolean;
 	};
 
+	const host = useHost();
+
 	let {
 		players,
-		resolveFactionFlag,
-		getRankImage,
 		meSteamIds = [],
 		highlightedPlayers = [],
 		levelFallback = '-',
@@ -72,11 +71,19 @@
 		return `i:${index}`;
 	}
 
-	function isFocus(player: TeamSkillPlayer) {
+	/**
+	 * The signed-in player's own accounts (gold) or a player the list is filtered on
+	 * or about (blue). Your own accounts always stay gold, also on your own profile.
+	 */
+	function focusOf(player: TeamSkillPlayer): 'filtered' | 'me' | null {
 		if (player.steamId && meSteamIds.includes(player.steamId)) {
-			return true;
+			return 'me';
 		}
 
+		return isFiltered(player) ? 'filtered' : null;
+	}
+
+	function isFiltered(player: TeamSkillPlayer) {
 		if (!highlightedPlayers.length) {
 			return false;
 		}
@@ -109,13 +116,15 @@
 		return parts.filter(Boolean).join(' · ');
 	}
 
-	function tileClass(focus: boolean) {
+	/** Filtered players get a blue tile; your own accounts are marked on the icon instead. */
+	function tileClass(kind: 'filtered' | 'me' | null) {
+		const plain = kind !== 'filtered';
 		return cn(
 			'group inline-flex size-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md transition-colors',
-			focus && 'bg-primary/10',
-			!focus && outcome === 'win' && 'bg-green-500/5 hover:bg-green-500/10',
-			!focus && outcome === 'loss' && 'bg-red-500/5 hover:bg-red-500/10',
-			!focus &&
+			kind === 'filtered' && 'bg-blue-800/30',
+			plain && outcome === 'win' && 'bg-green-500/5 hover:bg-green-500/10',
+			plain && outcome === 'loss' && 'bg-red-500/5 hover:bg-red-500/10',
+			plain &&
 				outcome !== 'win' &&
 				outcome !== 'loss' &&
 				'bg-secondary-900/60 hover:bg-secondary-800/50'
@@ -123,13 +132,13 @@
 	}
 
 	function toChip(player: TeamSkillPlayer, index: number): Chip {
-		const focus = isFocus(player);
-		const rankImage = getRankImage;
-		const ranked = Boolean(showRankBadges && rankImage && player.stats);
+		const kind = focusOf(player);
+		const focus = kind !== null;
+		const ranked = Boolean(showRankBadges && player.stats);
 		const level = player.stats?.rankLevel ?? 0;
 		const ranking = player.stats?.rank ?? 0;
-		const rankSrc = ranked && rankImage ? rankImage(player.race ?? 0, level) : null;
-		const src = rankSrc ?? resolveFactionFlag(player.race ?? 0);
+		const rankSrc = ranked ? host.resolve.rankImageByRace(player.race ?? 0, level) : null;
+		const src = rankSrc ?? host.resolve.factionFlagByRace(player.race ?? 0);
 		const href = player.href ?? null;
 
 		return {
@@ -140,9 +149,11 @@
 			ranked,
 			src,
 			levelText: ranked ? (ranking > 0 ? `#${ranking}` : levelFallback) : null,
-			className: cn(href && interactive, tileClass(focus)),
+			className: cn(href && interactive, tileClass(kind)),
 			iconClass: cn(
 				focus ? 'opacity-100 grayscale-0' : 'opacity-70 grayscale-50',
+				// Your own accounts: gold ring on a faction icon, gold glow on a rank icon.
+				kind === 'me' && (ranked ? 'drop-shadow-[0_0_6px_var(--color-primary)]' : 'ring-primary'),
 				'group-hover:opacity-100 group-hover:grayscale-0'
 			),
 			preview: {
@@ -154,7 +165,7 @@
 				country: player.country,
 				stats: player.stats,
 				rankImageSrc: rankSrc,
-				factionFlagSrc: resolveFactionFlag(player.race ?? 0)
+				factionFlagSrc: host.resolve.factionFlagByRace(player.race ?? 0)
 			},
 			focus
 		};
@@ -167,7 +178,11 @@
 	<img
 		src={chip.src}
 		alt={chip.ranked ? '' : chip.label}
-		class={cn(chip.ranked ? 'size-5' : factionIcon, chip.iconClass, !chip.ranked && 'transition-all')}
+		class={cn(
+			chip.ranked ? 'size-5' : factionIcon,
+			chip.iconClass,
+			!chip.ranked && 'transition-all'
+		)}
 	/>
 	{#if chip.levelText}
 		<span

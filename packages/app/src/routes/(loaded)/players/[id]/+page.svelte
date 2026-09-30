@@ -1,5 +1,4 @@
 <script lang="ts">
-	import dayjs from '$lib/dayjs';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { steam } from '$core/steam';
@@ -7,10 +6,11 @@
 	import { isSteamId } from '$lib/utils';
 	import { resource } from 'runed';
 	import * as Player from '$lib/components/player';
-	import { PlayerMatchHistorySkeleton } from '@company-of-heroes/ui/player';
+	import { PlayerProfile } from '@company-of-heroes/ui/player';
+	import PlayerMatchStaffActions from '$lib/components/player/player-match-staff-actions.svelte';
+	import { MatchHistoryView } from '$lib/player/match-history-view.svelte';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
 	import { PlayerPerformance } from '$lib/components/player-performance';
-	import PlayerCompanionStaffDebug from '$lib/components/player/player-companion-staff-debug.svelte';
 	import CheaterAlert from '$lib/components/player/cheater-alert.svelte';
 	import PlayerScreenshots from '$lib/components/player/player-screenshots.svelte';
 	import { loadSmurfAlert } from '$lib/player/smurf';
@@ -26,11 +26,12 @@
 	} from '$core/pocketbase/player-performance';
 	import { eloMapForSteamId, mergeEloMaps } from '$lib/utils/player-elo';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
+	import {
+		labelsForSteamId,
+		preloadPlayerLabels
+	} from '$core/pocketbase/player-label-cache.svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import { useI18n } from '$lib/i18n';
-	import { Button } from '$lib/components/ui/button';
-	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 
 	const { t } = useI18n();
 
@@ -42,12 +43,14 @@
 			if (!id) {
 				throw new Error(t('Profile not found'));
 			}
+
 			const profile = isSteamId(id)
 				? await relic.getProfileBySteamId(id)
 				: await relic.getProfileById(parseInt(id, 10));
 			if (!profile) {
 				throw new Error(t('Profile not found'));
 			}
+
 			return profile;
 		}
 	);
@@ -76,6 +79,7 @@
 			if (!user) {
 				throw new Error(t('Profile not found'));
 			}
+
 			return { user, game };
 		}
 	);
@@ -92,6 +96,7 @@
 			if (!key || !profile || !id) {
 				return null;
 			}
+
 			const [matchHistoryRaw, playerRating, cheater, smurf, likeCount] = await Promise.all([
 				relic.getRecentMatchHistoryForProfile(profile.profile_id, {
 					includeHidden: true
@@ -177,8 +182,12 @@
 		);
 	});
 
-	const performance = resource(
-		[() => profile?.profile_id ?? null, () => (isSelf ? 'user' : 'community'), () => (isSelf ? account.userId : null)],
+	const playerPerformance = resource(
+		[
+			() => profile?.profile_id ?? null,
+			() => (isSelf ? 'user' : 'community'),
+			() => (isSelf ? account.userId : null)
+		],
 		async ([id, scope, userId]) => {
 			if (!id) {
 				return emptyPlayerPerformance();
@@ -215,7 +224,7 @@
 			user,
 			game,
 			elo: playerElo,
-			performance: performance.current ?? emptyPlayerPerformance(),
+			performance: playerPerformance.current ?? emptyPlayerPerformance(),
 			matchHistory: extra?.matchHistory ?? [],
 			smurf: extra?.smurf,
 			labels,
@@ -224,11 +233,7 @@
 		});
 	});
 
-	const emptyTrackedLabel = $derived(
-		isSelf
-			? t('Play with the companion running to build stats.')
-			: t('No tracked community matches for this player.')
-	);
+	const matchHistory = new MatchHistoryView(() => pagePlayer);
 
 	export const snapshot: Snapshot<string> = {
 		capture: () => currentTab,
@@ -241,106 +246,46 @@
 {#if relicProfile.loading || steamProfile.loading || !profile || !user || !pagePlayer}
 	<Player.ProfileSkeleton />
 {:else}
-	<div class="border-secondary-900 overflow-clip border-b">
-		<Player.ProfileHeader player={pagePlayer} {emptyTrackedLabel}>
-			{#snippet vote()}
-				<Player.LikeButton steamId={user.steamid} likeCount={pagePlayer.likeCount ?? 0} />
-			{/snippet}
-			{#snippet afterName()}
-				<Player.LabelEditor
+	<PlayerProfile
+		player={matchHistory.player ?? pagePlayer}
+		bind:tab={currentTab}
+		matchHistoryLoading={!extra}
+	>
+		{#snippet actions()}
+			<Player.LabelEditor
+				steamId={user.steamid}
+				profileId={profile.profile_id}
+				alias={profile.alias}
+				class="shrink-0"
+			/>
+			{#if extra?.cheater}
+				<CheaterAlert />
+			{/if}
+		{/snippet}
+		{#snippet performance()}
+			<PlayerPerformance
+				profileId={profile.profile_id}
+				scope={isSelf ? 'user' : 'community'}
+				userId={isSelf ? account.userId : undefined}
+				performance={playerPerformance.current}
+				empty={isSelf ? 'self' : 'other'}
+				class="rounded-none border-0"
+			/>
+		{/snippet}
+		{#snippet matchActions({ match })}
+			<PlayerMatchStaffActions view={matchHistory} {match} />
+		{/snippet}
+		{#snippet extraTabs()}
+			<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
+		{/snippet}
+		{#snippet extraTabContent()}
+			<Tabs.Content value="screenshots">
+				<PlayerScreenshots
 					steamId={user.steamid}
+					userId={isSelf ? account.userId : undefined}
 					profileId={profile.profile_id}
-					alias={profile.alias}
-					class="shrink-0"
 				/>
-				{#if isSelf}
-					<Button
-						href="/account/profile?steamId={user.steamid}"
-						variant="secondary"
-						size="sm"
-						class="shrink-0"
-					>
-						<PencilSimpleIcon size={16} />
-						{t('Update profile')}
-					</Button>
-				{/if}
-				{#if extra?.cheater}
-					<CheaterAlert />
-				{/if}
-			{/snippet}
-			{#snippet afterDetails()}
-				<PlayerCompanionStaffDebug steamId={user.steamid} />
-			{/snippet}
-		</Player.ProfileHeader>
-
-		<Tabs.Root bind:value={currentTab} class="border-secondary-800 border-b">
-			<Tabs.List class="px-4 py-2.5">
-				<Tabs.Trigger value="stats">{t('Stats')}</Tabs.Trigger>
-				<Tabs.Trigger value="performance">{t('Performance')}</Tabs.Trigger>
-				<Tabs.Trigger value="match-history">{t('Match history')}</Tabs.Trigger>
-				<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
-			</Tabs.List>
-			<div class="border-secondary-800 border-t">
-				<Tabs.Content value="stats">
-					<Player.StatsTable player={pagePlayer} />
-				</Tabs.Content>
-				<Tabs.Content value="performance">
-					<PlayerPerformance
-						profileId={profile.profile_id}
-						scope={isSelf ? 'user' : 'community'}
-						userId={isSelf ? account.userId : undefined}
-						performance={performance.current}
-						empty={isSelf ? 'self' : 'other'}
-						class="rounded-none border-0"
-					/>
-				</Tabs.Content>
-				<Tabs.Content value="match-history">
-					{#if !extra}
-						<PlayerMatchHistorySkeleton
-							changeLabel={t('Change')}
-							eloLabel={t('ELO')}
-							rankLabel={t('Rank')}
-							teamLabel={t('Team')}
-							playerLabel={t('Player')}
-							winsLabel={t('Wins')}
-							lossesLabel={t('Losses')}
-							streakLabel={t('Streak')}
-						/>
-					{:else}
-						<Player.MatchHistory player={pagePlayer} />
-					{/if}
-				</Tabs.Content>
-				<Tabs.Content value="screenshots">
-					<PlayerScreenshots
-						steamId={user.steamid}
-						userId={isSelf ? account.userId : undefined}
-						profileId={profile.profile_id}
-					/>
-				</Tabs.Content>
-			</div>
-		</Tabs.Root>
-
-		<div
-			class="text-secondary-400 bg-secondary-950/50 flex flex-wrap gap-x-4 gap-y-1 px-4 py-3 text-sm"
-		>
-			{#if user.lastlogoff}
-				<span>
-					<span class="text-secondary-500">{t('Last seen')}</span>
-					{dayjs.unix(user.lastlogoff).fromNow()}
-				</span>
-			{/if}
-			{#if game?.playtime_forever}
-				<span>
-					<span class="text-secondary-500">{t('Playtime')}</span>
-					{t('{hours} hours', { hours: (game.playtime_forever / 60).toFixed(0) })}
-				</span>
-			{/if}
-			{#if game?.playtime_2weeks}
-				<span>
-					<span class="text-secondary-500">{t('Past 2 weeks')}</span>
-					{t('{hours} hours', { hours: (game.playtime_2weeks / 60).toFixed(0) })}
-				</span>
-			{/if}
-		</div>
-	</div>
+			</Tabs.Content>
+		{/snippet}
+	</PlayerProfile>
 {/if}

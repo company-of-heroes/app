@@ -15,7 +15,7 @@
 
 <Avatar.Root class={cn('size-5 overflow-hidden rounded-full', className)}>
 	<Avatar.Image
-		src={src}
+		{src}
 		alt={user.name ? `@${user.name}` : ''}
 		class="size-full rounded-full object-cover"
 	/>

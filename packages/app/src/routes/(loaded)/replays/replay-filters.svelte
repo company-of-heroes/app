@@ -213,8 +213,7 @@
 			size="sm"
 			class="w-full max-w-none min-w-0"
 			value={players}
-			onValueChange={(next) =>
-				patchDraft({ players: Array.isArray(next) ? next : [next] })}
+			onValueChange={(next) => patchDraft({ players: Array.isArray(next) ? next : [next] })}
 		/>
 	</div>
 	<div class={fieldClass}>

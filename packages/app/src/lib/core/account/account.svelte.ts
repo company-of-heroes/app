@@ -301,10 +301,14 @@ export class AccountService {
 			throw new Error(t('You are already signed in as this user'));
 		}
 
-		const auth = (await pocketbase.send('/api/impersonate/' + userId, {
-			method: 'POST',
-			fetch
-		})) as { token?: string; record?: User };
+		// Dynamic: $core/api imports this module.
+		const { siteApi } = await import('$core/api');
+		const auth = await siteApi<{ token?: string; record?: User }>(
+			`/impersonate/${encodeURIComponent(userId)}`,
+			{
+				method: 'POST'
+			}
+		);
 
 		if (!auth?.token || !auth.record) {
 			throw new Error(t('Could not sign in as this user'));
@@ -395,11 +399,9 @@ export class AccountService {
 			}
 
 			if (Object.keys(updatePayload).length > 0) {
-				this.#user = (await pocketbase.collection('users').update(
-					this.userId,
-					updatePayload,
-					{ fetch }
-				)) as User;
+				this.#user = (await pocketbase
+					.collection('users')
+					.update(this.userId, updatePayload, { fetch })) as User;
 			}
 
 			if (passwordChanged) {

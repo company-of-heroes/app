@@ -19,7 +19,7 @@
 			id: 'screenshots',
 			title: 'Match screenshots',
 			description:
-				'During a match the app uses Company of Heroes\' own Print Screen (never your desktop) and uploads it for review.',
+				"During a match the app uses Company of Heroes' own Print Screen (never your desktop) and uploads it for review.",
 			icon: CameraIcon
 		},
 		{

@@ -9,4 +9,3 @@ routerAdd('GET', '/api/anti-cheat/worker/batch', (e) => {
 routerAdd('PATCH', '/api/anti-cheat/worker/{id}', (e) => {
 	return require(`${__hooks}/lib/anti-cheat-worker.js`).handleWorkerPatch(e);
 });
-

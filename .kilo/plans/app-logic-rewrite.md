@@ -114,20 +114,20 @@ Location: `appConfigDir()` → `%APPDATA%/com.fknoobscoh.app/settings.json` (`se
 
 ```jsonc
 {
-  "schemaVersion": 2,
-  "updatedAt": "2026-06-11T12:00:00Z",
-  "app": {
-    "autostart": true,
-    "isStreamer": false,
-    "paths": { "warningsLog": "", "gameDir": "" }
-  },
-  "account": { "userId": "", "email": "", "password": "" },
-  "features": {
-    "updater": { "enabled": true, "didReadChangelog": false, "version": "" },
-    "twitch": { "enabled": false, "accessToken": null, "clientId": "..." },
-    "history": { "enabled": true },
-    // ... one slice per feature, each with its own zod schema
-  }
+	"schemaVersion": 2,
+	"updatedAt": "2026-06-11T12:00:00Z",
+	"app": {
+		"autostart": true,
+		"isStreamer": false,
+		"paths": { "warningsLog": "", "gameDir": "" }
+	},
+	"account": { "userId": "", "email": "", "password": "" },
+	"features": {
+		"updater": { "enabled": true, "didReadChangelog": false, "version": "" },
+		"twitch": { "enabled": false, "accessToken": null, "clientId": "..." },
+		"history": { "enabled": true }
+		// ... one slice per feature, each with its own zod schema
+	}
 }
 ```
 
@@ -158,12 +158,14 @@ Location: `appConfigDir()` → `%APPDATA%/com.fknoobscoh.app/settings.json` (`se
 New route: `src/routes/(onboarding)/setup/+page.svelte` (uses existing UI kit: `Form`, `FileSelection`, `Button`, `H` — same visual style, dark theme).
 
 Steps:
+
 1. **Restore (conditional):** if `findRestoreCandidates()` non-empty and current settings are fresh → "We found a backup of your configuration (account + settings)" → [Restore] (primary) / [Start fresh]. Restoring fills paths/account and may skip the remaining steps if valid.
 2. **warnings.log:** auto-detect `Documents/My Games/Company of Heroes Relaunch/warnings.log` (pre-filled if found). Validation: file exists **and** filename is `warnings.log`.
 3. **Installation folder:** auto-detect `C:/Program Files (x86)/Steam/steamapps/common/Company of Heroes Relaunch` (+ scan Steam `libraryfolders.vdf` for alternate library paths, best-effort). Validation: directory exists **and** contains `RelicCOH.exe`.
 4. **Finish:** persist + immediate backup → boot continues.
 
 Enforcement:
+
 - Boot gate (phase 3) blocks until `pathsValid` derived state is true.
 - `(loaded)/+layout.svelte` guard: while `!app.isConfigured` redirect to `/setup` (covers prerendered deep links).
 - Paths re-validated on every boot and when edited in Settings page; Settings page shows inline valid/invalid state using the same validators (`config/paths.ts` exports `validateWarningsLog(path)`, `validateGameDir(path)`).
@@ -210,6 +212,7 @@ Rewrite `app/database/*` → `core/data/*` with consistent conventions (all meth
 ## Workstream 6 — Feature framework + all features (incl. Twitch)
 
 **New `Feature` base (`features/feature.svelte.ts`):**
+
 - `abstract id: FeatureId`, `abstract schema: ZodType<Slice>`, `settings` = reactive slice from SettingsService (`settings.features[id]`), `status: 'disabled'|'starting'|'active'|'error'` reactive.
 - Lifecycle: `async start(ctx)` / `async stop()`; base watches `settings.enabled` and transitions with guaranteed `stop()` before re-`start()` (fixes duplicate-client bugs). No promise-resolution-inside-watch.
 - Per-feature import/export delegates to `config/import-export.ts` (slice envelope).
@@ -217,6 +220,7 @@ Rewrite `app/database/*` → `core/data/*` with consistent conventions (all meth
 **Registry (`features/registry.ts`):** deterministic order `[updater, shortcuts, history, replay-analyzer, twitch, twitch-tts, tts-personal-voices, twitch-bot, twitch-overlays]`; `startAll()` error-isolated.
 
 **Rewrites per feature:**
+
 - **updater:** release check via GitHub API; changelog modal logic; `backupNow('pre-update')` before launching installer download; remove the `setTimeout` config copy (BackupService owns backups now). Keep the "do not uninstall / keep data" warning copy, but data loss is now recoverable anyway.
 - **shortcuts:** port logic; ensure unregister-all on stop; suppression while `isIngameChatOpen` kept.
 - **history:** event-driven save on `lobby.destroyed` (replay file attach, needsResult); result polling only runs while pending matches exist (start/stop on demand, backoff 10s→60s), cleared on stop. `downloadReplay`/`downloadExists` ported.
@@ -229,6 +233,7 @@ Rewrite `app/database/*` → `core/data/*` with consistent conventions (all meth
 ## Workstream 7 — Chat removal
 
 Delete:
+
 - `src/routes/(loaded)/chat/` (route)
 - `src/lib/components/chat/` (components)
 - `src/lib/core/app/features/chat/` (feature)
@@ -296,14 +301,14 @@ Backend exists (`comments`, `lobby_comments` collections). UI components exist b
 
 ## Risks & mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Big-bang regressions across ~300 files | Facade keeps UI contracts; parser/session/regression covered by fixture tests; QA checklist below |
-| Existing users' data must survive | v1→v2 migration tested with real `app.json` fixture; legacy Documents backup format supported in recovery |
-| Overlays package depends on socket payloads | Topic names + payload shapes frozen; verify against `packages/overlays` usages before merge |
-| PocketBase rules may block comment writes | Verify `comments`/`lobby_comments` create/update rules early (chunk 5); adjust server if needed (separate task) |
-| plugin-fs streaming (`open/seek/read`) quirks on Windows | Tailer has full-read fallback path; both covered by tests |
-| Twitch reconnect/disposal edge cases | Single connect/disconnect path + `stop()` before `start()` enforced by base class |
+| Risk                                                     | Mitigation                                                                                                      |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Big-bang regressions across ~300 files                   | Facade keeps UI contracts; parser/session/regression covered by fixture tests; QA checklist below               |
+| Existing users' data must survive                        | v1→v2 migration tested with real `app.json` fixture; legacy Documents backup format supported in recovery       |
+| Overlays package depends on socket payloads              | Topic names + payload shapes frozen; verify against `packages/overlays` usages before merge                     |
+| PocketBase rules may block comment writes                | Verify `comments`/`lobby_comments` create/update rules early (chunk 5); adjust server if needed (separate task) |
+| plugin-fs streaming (`open/seek/read`) quirks on Windows | Tailer has full-read fallback path; both covered by tests                                                       |
+| Twitch reconnect/disposal edge cases                     | Single connect/disconnect path + `stop()` before `start()` enforced by base class                               |
 
 ## Manual QA checklist (release gate)
 

@@ -37,7 +37,10 @@
 	function commitPageInput() {
 		const parsed = Number.parseInt(pageInput, 10);
 		focused = false;
-		if (!Number.isFinite(parsed)) return;
+		if (!Number.isFinite(parsed)) {
+			return;
+		}
+
 		handlePageChange(Math.min(Math.max(1, parsed), totalPages));
 	}
 </script>

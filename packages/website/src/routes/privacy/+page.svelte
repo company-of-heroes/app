@@ -15,7 +15,10 @@
 
 	function linkAttrs(href: string) {
 		const internal = href.startsWith(SITE_URL) || href.startsWith('mailto:');
-		if (internal) return { href, rel: undefined, target: undefined };
+		if (internal) {
+			return { href, rel: undefined, target: undefined };
+		}
+
 		return { href, rel: 'noopener noreferrer', target: '_blank' };
 	}
 </script>

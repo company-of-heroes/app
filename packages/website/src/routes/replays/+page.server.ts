@@ -1,6 +1,8 @@
+import { parseReplaysQuery, parseReplaysTab, REPLAYS_PER_PAGE } from '$lib/replays';
+import { isStaffUser, loginRedirectHref } from '$lib/auth/user';
 import { unwrapAsync } from '$lib/errors/unwrap';
-import { parseReplaysQuery, parseReplaysTab } from '$lib/replays';
-import { loginRedirectHref } from '$lib/auth/user';
+import { historyInputFromQuery } from '$lib/server/services/match-history';
+import { memberQueryFromReplaysQuery } from '$lib/server/services/member-replays';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -13,32 +15,29 @@ export const load: PageServerLoad = ({ locals, url }) => {
 	}
 
 	const query = parseReplaysQuery(url.searchParams);
-	const replays = locals.services.replays();
+	const viewer = locals.user ? { id: locals.user.id, isStaff: isStaffUser(locals.user) } : null;
 
 	if (tab === 'member') {
 		return {
 			tab,
 			query,
-			result: unwrapAsync(replays.getMemberHistory(query))
-		};
-	}
-
-	if (tab === 'mine') {
-		return {
-			tab,
-			query,
 			result: unwrapAsync(
-				replays.getHistory(query, undefined, {
-					scope: 'user',
-					userId: locals.user!.id
-				})
+				locals.services.memberReplays.list(
+					memberQueryFromReplaysQuery(query, REPLAYS_PER_PAGE),
+					viewer
+				)
 			)
 		};
 	}
 
+	const input = historyInputFromQuery(
+		query,
+		tab === 'mine' ? 'user' : 'community',
+		REPLAYS_PER_PAGE
+	);
 	return {
 		tab,
 		query,
-		result: unwrapAsync(replays.getHistory(query))
+		result: unwrapAsync(locals.services.matchHistory.list(input, viewer))
 	};
 };

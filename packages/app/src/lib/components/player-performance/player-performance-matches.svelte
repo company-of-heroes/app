@@ -50,6 +50,7 @@
 		if (!profileId || !hasFilter) {
 			return { items: [], totalItems: 0 };
 		}
+
 		if (scope === 'user' && !userId) {
 			return { items: [], totalItems: 0 };
 		}
@@ -110,7 +111,9 @@
 	);
 
 	async function loadMore() {
-		if (loadingMore || !hasMore) return;
+		if (loadingMore || !hasMore) {
+			return;
+		}
 
 		loadingMore = true;
 		try {

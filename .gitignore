@@ -5,7 +5,6 @@ node_modules
 .env
 .env.*
 !.env.example
-!.env.production
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .svelte-kit
@@ -32,3 +31,9 @@ packages/app/src-tauri/target/
 packages/app/src-tauri/tauri.codesign.conf.json
 
 script.js
+# Golden snapshots (production data)
+scripts/golden/snapshots/
+
+# Generated from .cursor by scripts/sync-cursor-rules.mjs
+.claude/rules/cursor/
+.claude/skills/

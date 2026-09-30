@@ -82,14 +82,23 @@ function normalizeMapKey(value: string): string {
 
 /** True when the log only had a slot label (`Player 1`) and no rec/Relic name. */
 export function isPlaceholderPlayerName(name: string | undefined): boolean {
-	if (!name?.trim()) return true;
+	if (!name?.trim()) {
+		return true;
+	}
+
 	return /^player\s+\d+$/i.test(name.trim());
 }
 
 export function replayMapsMatch(lobbyMap: string | undefined, recMapFileName: string): boolean {
-	if (!lobbyMap?.trim() || !recMapFileName?.trim()) return false;
+	if (!lobbyMap?.trim() || !recMapFileName?.trim()) {
+		return false;
+	}
+
 	const lobbyKey = normalizeMapKey(mapFromScenarioPath(lobbyMap));
-	if (!lobbyKey) return false;
+	if (!lobbyKey) {
+		return false;
+	}
+
 	const recKey = normalizeMapKey(mapFromScenarioPath(recMapFileName));
 	return recKey === lobbyKey || normalizeMapKey(recMapFileName).includes(lobbyKey);
 }
@@ -102,12 +111,18 @@ export function replayFactionsMatch(
 	lobbyPlayers: { race: number }[],
 	recPlayers: ReplayHeaderPlayer[]
 ): boolean {
-	if (lobbyPlayers.length === 0 || lobbyPlayers.length !== recPlayers.length) return false;
+	if (lobbyPlayers.length === 0 || lobbyPlayers.length !== recPlayers.length) {
+		return false;
+	}
+
 	const lobbyRaces = lobbyPlayers.map((player) => player.race).sort((a, b) => a - b);
 	const recRaces: number[] = [];
 	for (const player of recPlayers) {
 		const race = raceFromRecFaction(player.faction);
-		if (race == null) return false;
+		if (race == null) {
+			return false;
+		}
+
 		recRaces.push(race);
 	}
 	recRaces.sort((a, b) => a - b);
@@ -118,7 +133,9 @@ export function replayHeaderMatchesLobby(
 	lobby: { map?: string; players: { race: number }[] },
 	rec: { mapFileName: string; players: ReplayHeaderPlayer[] }
 ): boolean {
-	return replayMapsMatch(lobby.map, rec.mapFileName) && replayFactionsMatch(lobby.players, rec.players);
+	return (
+		replayMapsMatch(lobby.map, rec.mapFileName) && replayFactionsMatch(lobby.players, rec.players)
+	);
 }
 
 /** Copies rec names onto log placeholder slots, matching race then index. */
@@ -126,30 +143,34 @@ export function assignReplayNames(
 	lobbyPlayers: { index: number; race: number; name?: string; steamId?: string }[],
 	recPlayers: ReplayHeaderPlayer[]
 ): boolean {
-	if (!replayFactionsMatch(lobbyPlayers, recPlayers)) return false;
+	if (!replayFactionsMatch(lobbyPlayers, recPlayers)) {
+		return false;
+	}
+
 	const used = new Set<number>();
 	const slots = [...lobbyPlayers].sort((a, b) => a.index - b.index);
 	for (const player of slots) {
 		const byIndex = recPlayers[player.index];
 		let recIndex = -1;
-		if (
-			byIndex &&
-			!used.has(player.index) &&
-			raceFromRecFaction(byIndex.faction) === player.race
-		) {
+		if (byIndex && !used.has(player.index) && raceFromRecFaction(byIndex.faction) === player.race) {
 			recIndex = player.index;
 		} else {
 			recIndex = recPlayers.findIndex(
 				(rec, i) => !used.has(i) && raceFromRecFaction(rec.faction) === player.race
 			);
 		}
-		if (recIndex < 0) return false;
+
+		if (recIndex < 0) {
+			return false;
+		}
+
 		used.add(recIndex);
 		const rec = recPlayers[recIndex];
 		const recName = rec.name?.trim();
 		if (recName && isPlaceholderPlayerName(player.name)) {
 			player.name = recName;
 		}
+
 		if (rec.steamId && !player.steamId) {
 			player.steamId = rec.steamId;
 		}
@@ -239,7 +260,9 @@ export class Lobby {
 	}
 
 	get outcomeFormatted(): string {
-		if (!this.outcome) return t('Unknown');
+		if (!this.outcome) {
+			return t('Unknown');
+		}
 
 		switch (this.outcome) {
 			case 'PS_WON':
@@ -306,7 +329,9 @@ export class Lobby {
 	}
 
 	get mapName(): string {
-		if (!this.map) return t('Unknown Map');
+		if (!this.map) {
+			return t('Unknown Map');
+		}
 
 		const match = this.map.match(/^(\d+)p_(.+)$/);
 		if (!match) {
@@ -346,6 +371,7 @@ export class Lobby {
 				existing.matchHistory = undefined;
 				existing.steamId = undefined;
 			}
+
 			existing.playerId = player.playerId;
 			existing.type = player.type;
 			// Keep a resolved faction when a later Populate still has Race 6 (random).
@@ -355,9 +381,13 @@ export class Lobby {
 			if (!resolved) {
 				existing.race = incomingRace;
 			}
+
 			// Relic Team is authoritative for Allies/Axis columns (especially skirmish).
 			existing.team = player.team;
-			if (player.name) existing.name = player.name;
+			if (player.name) {
+				existing.name = player.name;
+			}
+
 			return;
 		}
 

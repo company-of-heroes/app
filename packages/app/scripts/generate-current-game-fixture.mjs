@@ -16,19 +16,40 @@ const MATCH_TYPES = {
 };
 
 function getMatchType(isRanked, playerCount, isSkirmish = false) {
-	if (isSkirmish) return 14;
-	if (!isRanked) return 0;
-	if (playerCount === 2) return 1;
-	if (playerCount === 4) return 2;
-	if (playerCount === 6) return 3;
-	if (playerCount === 8) return 4;
+	if (isSkirmish) {
+		return 14;
+	}
+
+	if (!isRanked) {
+		return 0;
+	}
+
+	if (playerCount === 2) {
+		return 1;
+	}
+
+	if (playerCount === 4) {
+		return 2;
+	}
+
+	if (playerCount === 6) {
+		return 3;
+	}
+
+	if (playerCount === 8) {
+		return 4;
+	}
+
 	return 0;
 }
 
 function formatMapName(map) {
 	const match = map.match(/^(\d+)p_(.+)$/);
 	if (!match) {
-		return map.trim().replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+		return map
+			.trim()
+			.replace(/_/g, ' ')
+			.replace(/\b\w/g, (c) => c.toUpperCase());
 	}
 
 	const [, playerCount, mapNameWithoutPrefix] = match;
@@ -71,7 +92,10 @@ const match = {
 	me
 };
 
-fs.writeFileSync(path.join(outDir, 'current-game-players.json'), JSON.stringify(players, null, '\t'));
+fs.writeFileSync(
+	path.join(outDir, 'current-game-players.json'),
+	JSON.stringify(players, null, '\t')
+);
 
 const { players: _players, me: _me, teams: _teams, ...matchMeta } = match;
 
@@ -95,5 +119,7 @@ ${Object.entries(matchMeta)
 fs.writeFileSync(path.join(outDir, 'current-game-test.ts'), testTs);
 
 console.log(`Wrote fixture from lobby ${LOBBY_ID}`);
-console.log(`map: ${lobby.map}, players: ${players.length}, ranked: ${isRanked}, matchType: ${matchType}`);
+console.log(
+	`map: ${lobby.map}, players: ${players.length}, ranked: ${isRanked}, matchType: ${matchType}`
+);
 console.log(`me: ${me?.profile?.alias ?? 'not found'}`);

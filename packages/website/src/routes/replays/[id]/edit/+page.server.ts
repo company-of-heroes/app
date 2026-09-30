@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { loginRedirectHref } from '$lib/auth/user';
+import { isStaffUser, loginRedirectHref } from '$lib/auth/user';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import type { PageServerLoad } from './$types';
 
@@ -10,7 +10,12 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		redirect(303, loginRedirectHref(url.pathname, locals.locale));
 	}
 
-	const match = await unwrapAsync(locals.services.replays().getMember(params.id));
+	const match = await unwrapAsync(
+		locals.services.memberReplays.get(params.id, {
+			id: locals.user.id,
+			isStaff: isStaffUser(locals.user)
+		})
+	);
 	if (match.kind !== 'member') {
 		error(404, locals.t('That replay is not available.'));
 	}

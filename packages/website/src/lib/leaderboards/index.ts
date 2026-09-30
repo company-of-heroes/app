@@ -87,6 +87,7 @@ export function parseBoardId(value: string | null | undefined): number {
 	if (Number.isInteger(id) && id >= 4 && id <= 19) {
 		return id;
 	}
+
 	return DEFAULT_BOARD_ID;
 }
 
@@ -101,5 +102,6 @@ export function boardIdForMode(mode: LeaderboardMode, currentBoardId: number): n
 	if (mode.factions.some((faction) => faction.value === currentBoardId)) {
 		return currentBoardId;
 	}
+
 	return mode.factions[0].value;
 }

@@ -6,11 +6,11 @@ import type { PageServerLoad } from './$types';
 export const prerender = false;
 
 /**
- * Live detail is always the durable match page. The PocketBase hook sets
- * `lobbies_live.lobby` on every live upsert — no client/session heal here.
+ * Live detail is always the durable match page; every live heartbeat links
+ * `lobbies_live.lobby` (see the live-lobbies service).
  */
 export const load: PageServerLoad = async ({ locals, params }) => {
-	const lobby = await unwrapAsync(locals.services.liveLobbies().get(params.id));
+	const lobby = await unwrapAsync(locals.services.liveLobbies.get(params.id));
 
 	if (!lobby.lobbyId) {
 		error(404, locals.t('That replay is not available.'));

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive, statLosses, statWins, tableHeadRow } from '@company-of-heroes/ui/variants';
@@ -24,66 +25,22 @@
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
 	import { playerPreviewId } from './player-preview-cache';
+	import { useHost } from '../host/host.context';
 
 	type Props = {
 		player: PlayerPageData;
-		flagImageUrl: (country: string | null | undefined) => string | null;
-		playerHref: (steamId: string) => string;
-		resolveFactionFlag: (raceId: number) => string;
-		resolveMapSrc: (map: string | undefined) => string | undefined;
-		resolveAvatarUrl?: (url: string) => string;
-		getRankImage?: (raceId: number, rankLevel: number) => string;
-		formatMapName?: (map: string, includePlayerCount?: boolean) => string;
-		formatTimestamp?: (unixSeconds: number) => string;
-		locale?: string;
-		emptyMessage?: string;
-		changeLabel?: string;
-		teamLabel?: string;
-		eloLabel?: string;
-		rankLabel?: string;
-		playerLabel?: string;
-		winsLabel?: string;
-		lossesLabel?: string;
-		streakLabel?: string;
 		showAvatars?: boolean;
 		showSessionId?: boolean;
-		detailsHref?: (match: TransformedMatch) => string | null;
-		detailsLabel?: string;
-		formatSessionId?: (id: number) => string;
 		matchActions?: Snippet<[{ match: TransformedMatch }]>;
 	};
 
-	let {
-		player,
-		flagImageUrl,
-		playerHref,
-		resolveFactionFlag,
-		resolveMapSrc,
-		resolveAvatarUrl = (url) => url,
-		getRankImage,
-		formatMapName = normalizeMapName,
-		formatTimestamp,
-		locale,
-		emptyMessage = 'No recent Relic matches found.',
-		changeLabel = 'Change',
-		teamLabel = 'Team',
-		eloLabel = 'ELO',
-		rankLabel = 'Rank',
-		playerLabel = 'Player',
-		winsLabel = 'Wins',
-		lossesLabel = 'Losses',
-		streakLabel = 'Streak',
-		showAvatars = false,
-		showSessionId = false,
-		detailsHref,
-		detailsLabel = 'View match',
-		formatSessionId = (id) => `ID: ${id}`,
-		matchActions
-	}: Props = $props();
+	let { player, showAvatars = false, showSessionId = true, matchActions }: Props = $props();
+	const { t } = useI18n();
+	const host = useHost();
 
-	const stamp = $derived(
-		formatTimestamp ?? ((unix: number) => formatMatchStamp(unix, locale))
-	);
+	const stamp = (unix: number) => formatMatchStamp(unix, host.locale());
+	const detailsHref = (match: TransformedMatch) =>
+		match.lobbyId ? host.routes.match(match.lobbyId) : null;
 
 	const matches = $derived(
 		[...player.matchHistory].sort((a, b) => b.completiontime - a.completiontime)
@@ -135,12 +92,12 @@
 {/snippet}
 
 {#snippet rankBadge(matchPlayer: MatchHistoryPlayer, matchTypeId: number)}
-	{#if !isRankedMatchType(matchTypeId) || !getRankImage}
+	{#if !isRankedMatchType(matchTypeId)}
 		<span class="text-secondary-400 tabular-nums">-</span>
 	{:else}
 		<span class="flex items-center justify-center gap-2">
 			<img
-				src={getRankImage(matchPlayer.race_id, matchPlayer.ranklevel ?? 0)}
+				src={host.resolve.rankImageByRace(matchPlayer.race_id, matchPlayer.ranklevel ?? 0)}
 				alt=""
 				class="size-6 shrink-0 object-contain"
 			/>
@@ -157,7 +114,7 @@
 			<span class="border-secondary-800 size-8 shrink-0 overflow-hidden rounded-lg border">
 				{#if matchPlayer.avatarUrl}
 					<img
-						src={resolveAvatarUrl(matchPlayer.avatarUrl)}
+						src={host.resolve.avatarUrl(matchPlayer.avatarUrl)}
 						alt=""
 						class="size-full object-cover"
 					/>
@@ -177,7 +134,7 @@
 		<PlayerLikeCount likeCount={matchPlayer.likeCount} class="shrink-0" />
 		{#if matchPlayer.steamId}
 			<PlayerProfileLink
-				href={playerHref(matchPlayer.steamId)}
+				href={host.routes.player(matchPlayer.steamId)}
 				playerId={playerPreviewId({
 					steamId: matchPlayer.steamId,
 					profileId: matchPlayer.profile_id
@@ -200,12 +157,12 @@
 {/snippet}
 
 {#if matches.length === 0}
-	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
+	<p class="text-secondary-400 px-4 py-3 text-sm">{t('No recent Relic matches found.')}</p>
 {:else}
 	<div>
 		{#each matches as match (match.id)}
 			{@const players = [...match.players].sort((a, b) => a.teamid - b.teamid)}
-			{@const href = detailsHref?.(match)}
+			{@const href = detailsHref(match)}
 			<section class="border-secondary-800 border-b">
 				<div
 					class="border-secondary-800 flex min-w-0 flex-wrap items-center gap-4 border-b px-4 py-2"
@@ -213,18 +170,18 @@
 					<MapImage
 						small
 						map={match.mapname}
-						alt={formatMapName(match.mapname)}
-						{resolveMapSrc}
+						alt={normalizeMapName(match.mapname)}
+						resolveMapSrc={host.resolve.mapSrc}
 					/>
 					<div class="min-w-0 grow">
 						<h3 class="font-heading truncate text-lg font-bold">
-							{formatMapName(match.mapname)}
+							{normalizeMapName(match.mapname)}
 						</h3>
 						<p class="text-secondary-400 text-sm">
 							{stamp(match.startgametime)}
 							{#if showSessionId}
 								<span class="text-secondary-500 text-xs tabular-nums">
-									 · {formatSessionId(match.id)}
+									· {t('ID: {id}', { id: match.id })}
 								</span>
 							{/if}
 						</p>
@@ -234,7 +191,7 @@
 						{#if href}
 							<Button {href} size="sm" variant="secondary">
 								<ChecksIcon class="size-4 text-green-400" />
-								{detailsLabel}
+								{t('View match')}
 							</Button>
 						{/if}
 						<span class="text-secondary-300 flex items-center gap-2 text-sm font-medium">
@@ -257,14 +214,14 @@
 						</colgroup>
 						<thead>
 							<tr class={tableHeadRow}>
-								<th class="px-2 py-2 text-center">{changeLabel}</th>
-								<th class="px-2 py-2 text-center">{eloLabel}</th>
-								<th class="px-2 py-2 text-center">{rankLabel}</th>
-								<th class="px-2 py-2 text-center">{teamLabel}</th>
-								<th class="px-3 py-2 text-left">{playerLabel}</th>
-								<th class="px-2 py-2 text-center">{winsLabel}</th>
-								<th class="px-2 py-2 text-center">{lossesLabel}</th>
-								<th class="px-2 py-2 text-center">{streakLabel}</th>
+								<th class="px-2 py-2 text-center">{t('Change')}</th>
+								<th class="px-2 py-2 text-center">{t('ELO')}</th>
+								<th class="px-2 py-2 text-center">{t('Rank')}</th>
+								<th class="px-2 py-2 text-center">{t('Team')}</th>
+								<th class="px-3 py-2 text-left">{t('Player')}</th>
+								<th class="px-2 py-2 text-center">{t('Wins')}</th>
+								<th class="px-2 py-2 text-center">{t('Losses')}</th>
+								<th class="px-2 py-2 text-center">{t('Streak')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -272,7 +229,7 @@
 								{@const isSelf = matchPlayer.profile_id === player.profileId}
 								{@const elo = displayElo(matchPlayer)}
 								{@const delta = ratingDelta(matchPlayer)}
-								{@const flagUrl = flagImageUrl(matchPlayer.country ?? null)}
+								{@const flagUrl = host.resolve.flagImageUrl(matchPlayer.country ?? null)}
 								<tr
 									class={cn(
 										'border-secondary-800 h-9 border-b',
@@ -297,7 +254,7 @@
 									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
 											<img
-												src={resolveFactionFlag(matchPlayer.race_id)}
+												src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
 												alt=""
 												class="h-auto w-6 shrink-0 object-contain ring-1 ring-black/40"
 											/>
@@ -341,7 +298,7 @@
 						{@const isSelf = matchPlayer.profile_id === player.profileId}
 						{@const elo = displayElo(matchPlayer)}
 						{@const delta = ratingDelta(matchPlayer)}
-						{@const flagUrl = flagImageUrl(matchPlayer.country ?? null)}
+						{@const flagUrl = host.resolve.flagImageUrl(matchPlayer.country ?? null)}
 						<div
 							class={cn(
 								'space-y-2 px-4 py-3',
@@ -349,14 +306,12 @@
 							)}
 						>
 							{@render playerIdentity(matchPlayer, isSelf, flagUrl)}
-							<div
-								class="text-secondary-300 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm"
-							>
+							<div class="text-secondary-300 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
 								{@render ratingDeltaBadge(delta)}
 								{@render eloValue(elo)}
 								{@render rankBadge(matchPlayer, match.matchtype_id)}
 								<img
-									src={resolveFactionFlag(matchPlayer.race_id)}
+									src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
 									alt=""
 									class="h-auto w-6 shrink-0 object-contain ring-1 ring-black/40"
 								/>

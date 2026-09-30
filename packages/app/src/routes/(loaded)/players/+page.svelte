@@ -1,4 +1,14 @@
 <script lang="ts">
+	import { PlayerSearchCard, type PlayerSearchResult } from '@company-of-heroes/ui/player';
+	import type { Profile } from '$lib/components/ui/profile';
+	import {
+		labelsForSteamId,
+		preloadPlayerLabels
+	} from '$core/pocketbase/player-label-cache.svelte';
+	import {
+		likeCountForSteamId,
+		preloadPlayerLikeCounts
+	} from '$core/pocketbase/player-vote-cache.svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import * as Player from '$lib/components/player';
 	import { Button } from '$lib/components/ui/button';
@@ -72,6 +82,30 @@
 		capture: () => playersSearch.capture(),
 		restore: (state) => playersSearch.restore(state)
 	};
+
+	$effect(() => {
+		const ids = playersSearch.results.map((player) => player.steam.steamid).filter(Boolean);
+		if (ids.length > 0) {
+			preloadPlayerLabels(ids);
+			preloadPlayerLikeCounts(ids);
+		}
+	});
+
+	/** Desktop search results carry Relic + Steam profiles; the shared card wants the flat shape. */
+	function toSearchCard(player: Profile) {
+		const steamId = player.steam.steamid;
+		return {
+			profileId: player.relic.profile_id,
+			alias: player.relic.alias,
+			country: player.relic.country ?? null,
+			level: player.relic.level,
+			steamId,
+			avatarUrl: player.steam.avatarfull,
+			likeCount: likeCountForSteamId(steamId) ?? undefined,
+			labels: labelsForSteamId(steamId),
+			leaderboardStats: player.relic.leaderboardStats ?? []
+		} satisfies PlayerSearchResult & Record<string, unknown>;
+	}
 </script>
 
 <Form.Root onsubmit={search}>
@@ -115,7 +149,7 @@
 	</p>
 	<div>
 		{#each playersSearch.results as player (player.relic.profile_id)}
-			<Player.SearchCard {player} />
+			<PlayerSearchCard player={toSearchCard(player)} />
 		{/each}
 	</div>
 {/if}

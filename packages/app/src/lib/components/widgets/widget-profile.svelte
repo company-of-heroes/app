@@ -4,7 +4,7 @@
 	import * as Player from '$lib/components/player';
 	import { app } from '$core/app/context';
 	import { Button } from '$lib/components/ui/button';
-	import { Leaderboard } from '../leaderboard';
+	import { PlayerStatsTable } from '@company-of-heroes/ui/player';
 	import { MatchHistory } from '../match-history';
 	import { relic } from '$lib/relic';
 	import { getPlayerRating } from '$core/pocketbase/player-ratings';
@@ -51,12 +51,11 @@
 						]);
 						app.modal.create({
 							title: t('Profile Stats'),
-							component: Leaderboard,
+							component: PlayerStatsTable,
 							size: 'full',
 							props: {
 								stats,
-								elo: rating?.elo ?? {},
-								wrapperClass: 'p-4'
+								elo: rating?.elo ?? {}
 							}
 						});
 						app.modal.open();
@@ -73,9 +72,8 @@
 						isLoadingRecentGames = true;
 						const profileId = app.game.profile!.relic.profile_id;
 						const matches = await relic.getRecentMatchHistoryForProfile(profileId);
-						const { enrichMatchHistoryRankLevels } = await import(
-							'$lib/player/match-history-ranks'
-						);
+						const { enrichMatchHistoryRankLevels } =
+							await import('$lib/player/match-history-ranks');
 						const enriched = await enrichMatchHistoryRankLevels(
 							matches,
 							profileId,

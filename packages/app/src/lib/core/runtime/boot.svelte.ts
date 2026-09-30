@@ -177,6 +177,7 @@ export class Boot {
 			if (app.settings.locale !== locale) {
 				app.settings.locale = locale;
 			}
+
 			setLocale(locale);
 
 			if (result.source === 'legacy') {

@@ -1,30 +1,39 @@
 <script lang="ts">
-	import * as List from '../ui/list';
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
-	import type { PlayerSearchResult } from './types';
+	import { resource } from 'runed';
+	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
+	import { useHost } from '../host/host.context';
+	import * as List from '../ui/list';
+	import type { LeaderboardStat, PlayerLabel, PlayerSearchResult } from './types';
+	import PlayerLabels from './player-labels.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
 	import { playerPreviewId } from './player-preview-cache';
+	import PlayerStatsTable from './player-stats-table.svelte';
 
 	type Props = {
-		player: PlayerSearchResult;
-		href: string;
-		flagSrc: string | null;
-		resolveAvatarUrl: (url: string) => string;
-		steamIdLabel?: string;
-		profileIdLabel?: string;
+		player: PlayerSearchResult & {
+			labels?: PlayerLabel[];
+			/** When present the card can expand into the ladder stats table. */
+			leaderboardStats?: LeaderboardStat[];
+		};
 	};
 
-	let {
-		player,
-		href,
-		flagSrc,
-		resolveAvatarUrl,
-		steamIdLabel = 'Steam ID:',
-		profileIdLabel = 'Profile ID:'
-	}: Props = $props();
+	let { player }: Props = $props();
+	const { t } = useI18n();
+	const host = useHost();
 
+	let statsExpanded = $state(false);
+	const href = $derived(host.routes.player(player.profileId || player.steamId));
+	const flagSrc = $derived(host.resolve.flagImageUrl(player.country));
+	const statsCount = $derived(player.leaderboardStats?.length ?? 0);
+	const elo = resource(
+		() => (statsExpanded && player.steamId ? player.steamId : null),
+		(steamId) =>
+			steamId ? host.api.players.getElo(steamId).catch(() => ({})) : Promise.resolve({})
+	);
 	const previewId = $derived(
 		playerPreviewId({ steamId: player.steamId, profileId: player.profileId }) ??
 			String(player.profileId)
@@ -32,11 +41,11 @@
 </script>
 
 <div class="border-secondary-800 overflow-clip border-b">
-	<div class="flex gap-4 p-4">
+	<div class={cn('flex gap-4 p-4', statsCount > 0 && 'border-secondary-800 border-b')}>
 		<PlayerProfileLink {href} playerId={previewId} class={cn(interactive, 'shrink-0')}>
 			{#if player.avatarUrl}
 				<img
-					src={resolveAvatarUrl(player.avatarUrl)}
+					src={host.resolve.avatarUrl(player.avatarUrl)}
 					alt={player.alias}
 					class="size-16 rounded-xl border-3 border-gray-400 object-cover"
 				/>
@@ -58,13 +67,33 @@
 				{/if}
 				<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 				<span class="font-heading truncate text-xl font-bold text-white">{player.alias}</span>
+				<PlayerLabels labels={player.labels} class="shrink-0" />
 			</PlayerProfileLink>
 			<List.Root class="gap-x-4">
-				<List.Title>{steamIdLabel}</List.Title>
+				<List.Title>{t('Steam ID:')}</List.Title>
 				<List.Value>{player.steamId || '—'}</List.Value>
-				<List.Title>{profileIdLabel}</List.Title>
+				<List.Title>{t('Profile ID:')}</List.Title>
 				<List.Value>{player.profileId}</List.Value>
 			</List.Root>
 		</div>
 	</div>
+	{#if statsCount > 0}
+		<button
+			type="button"
+			class={cn(
+				interactive,
+				'text-secondary-400 hover:text-primary flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium transition-colors'
+			)}
+			aria-expanded={statsExpanded}
+			onclick={() => (statsExpanded = !statsExpanded)}
+		>
+			<span>{t('Stats ({count})', { count: statsCount })}</span>
+			<CaretDownIcon class={cn('size-4 transition-transform', statsExpanded && 'rotate-180')} />
+		</button>
+		{#if statsExpanded}
+			<div class="border-secondary-800 border-t">
+				<PlayerStatsTable stats={player.leaderboardStats ?? []} elo={elo.current ?? {}} />
+			</div>
+		{/if}
+	{/if}
 </div>

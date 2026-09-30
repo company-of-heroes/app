@@ -14,7 +14,7 @@ The two SvelteKit apps are not interchangeable.
 
 ## `packages/website` (coh1stats.com)
 
-`adapter-cloudflare`. `+page.server.ts` / `+server.ts` / remote functions (`$lib/remote/*.remote.ts`) are allowed. Hooks boot `locals.pocketbase`, `locals.services`, and per-request `locals.locale` / `locals.t` (`$lib/hooks`). Page loads and remotes call `locals.services.*()`, not inline `fetch` against `API_URL`. Prefer **remote `query` / `command` / `form` with Zod v4** over classic `actions` (see `website-remote-functions.mdc`). Set cache headers on public pages. No `$core`, no Tauri.
+`adapter-cloudflare`. `+page.server.ts` / `+server.ts` / remote functions (`$lib/remote/*.remote.ts`) are allowed. Hooks boot `locals.pocketbase`, `locals.services`, and per-request `locals.locale` / `locals.t` (`$lib/hooks`). Page loads and remotes call `locals.services.x` (class instances, see `neverthrow.mdc`), not inline `fetch` against `API_URL`. Prefer **remote `query` / `command` / `form` with Zod v4** over classic `actions` (see `website-remote-functions.mdc`). Set cache headers on public pages. No `$core`, no Tauri.
 
 Website `$lib` layout: `auth/`, `player/`, `leaderboards/`, `replays/`, `site/` (urls, features, privacy, download), `utils/` (cn, variants, player format/steam-id, media, resolvers), plus `components/`, `services/`, `hooks/`, `errors/`, `remote/`, `i18n.ts`. Do not dump new helpers on the `$lib` root — put pure helpers in `utils/` with a domain subfolder when they belong together.
 
@@ -24,6 +24,6 @@ User copy through `t()` from `$lib/i18n` (shared `@company-of-heroes/i18n`). Eng
 // ❌ BAD — packages/app/src/routes/api/foo/+server.ts
 // ❌ BAD — website +page.server.ts fetch(`${API_URL}/api/player/${id}`)
 // ❌ BAD — new website mutations via export const actions
-// ✅ GOOD — public API in PocketBase hooks; website load uses locals.services.players().get(id)
+// ✅ GOOD — public API in PocketBase hooks; website load uses unwrapAsync(locals.services.playerPage.get(id))
 // ✅ GOOD — website writes via $lib/remote/*.remote.ts + Zod
 ```

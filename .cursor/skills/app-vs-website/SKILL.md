@@ -11,13 +11,13 @@ Two SvelteKit hosts share `@company-of-heroes/ui`, `@company-of-heroes/api`, and
 
 Classify the work. Do not start in the package that happens to be open.
 
-| Kind | Where |
-|---|---|
-| Desktop / Tauri / local game | `packages/app` only |
-| Marketing / SEO / Cloudflare site chrome | `packages/website` only |
-| Public product surface (players, leaderboards, replays, comments, account) | **both** hosts; presentational UI in `packages/ui`; client I/O in `packages/api`; public HTTP hooks in `packages/pocketbase` |
-| Presentational UI used by both | `packages/ui` first, then thin host adapters |
-| Shared PocketBase / API client logic | `packages/api` (`createApi`); hosts inject PB + fetch |
+| Kind                                                                       | Where                                                                                                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Desktop / Tauri / local game                                               | `packages/app` only                                                                                                                   |
+| Marketing / SEO / Cloudflare site chrome                                   | `packages/website` only                                                                                                               |
+| Public product surface (players, leaderboards, replays, comments, account) | **both** hosts; the component in `packages/ui` (host context for I/O); client I/O in `packages/api`; public HTTP in website `/api/v1` |
+| UI used by both                                                            | `packages/ui` only; hosts provide the host context once and pass host-only extras as snippets                                         |
+| Shared PocketBase / API client logic                                       | `packages/api` (`createApi`); hosts inject PB + fetch                                                                                 |
 
 **App-only:** live lobby writes from game, current game, history watchers, settings, shortcuts, Twitch, admin, splash/onboarding, Tauri commands, `$core`, `Feature` classes, screenshots/anti-cheat capture, local match list (`Match.ListTable`).
 
@@ -34,7 +34,7 @@ When the user is in one host, or says "also website / also the app / switch":
 1. Identify the surface (route, component, service).
 2. Open the counterpart from the map below. Search names in the other package (`player-profile`, `replay-`, `leaderboard-`, `match-social`, `auth`).
 3. Compare capabilities. Port behavior, not files.
-4. Shared markup → extract or extend `packages/ui`. Host data/i18n/navigation stay in adapters.
+4. Shared markup → move it into `packages/ui` (i18n via `useI18n()`, host differences via `useHost()` ports). Only data loading stays in the host page.
 5. Shared API → method on `@company-of-heroes/api` (and PocketBase hook if new server route), then both hosts consume it.
 6. Changeset: list every host package that users will notice (`@company-of-heroes/app`, `@company-of-heroes/website`, `@company-of-heroes/ui`, `@company-of-heroes/api`, `@company-of-heroes/pocketbase`).
 
@@ -42,19 +42,19 @@ Do not copy a component tree from app into website (or the reverse).
 
 ## Counterpart map
 
-| Surface | App | Website |
-|---|---|---|
-| Player profile | `routes/(loaded)/players/[id]/` | `routes/players/[id=playerid]/` |
-| Player search | `routes/(loaded)/players/` | `routes/players/` |
-| Leaderboards | `routes/(loaded)/leaderboards/` | `routes/leaderboards/` |
-| Replay list | `routes/(loaded)/history/` (local + catalog) | `routes/replays/` |
-| Replay detail | `routes/(loaded)/replays/[replayId]/` | `routes/replays/[id]/` |
-| Match comments/likes | `$lib/components/match/match-comments.svelte` + `app.database.matchSocial` | `$lib/remote/match-social.remote.ts` via `locals.services.matchSocial()` |
-| Auth | `$core/account`, account settings | `/login` `/register` `/logout`, `locals.services.auth()`, `/auth/handoff` |
-| Shared API client | `$core/api` (`createApi` singleton) | `createServices` → `createApi` |
-| Player UI adapter | `$lib/components/player/` | `$lib/components/player/` (thin wrappers around `@company-of-heroes/ui/player`) |
-| Replay UI adapter | `$lib/components/replay/` | `$lib/components/replay/` |
-| Shared primitives | `$lib/components/ui/*` re-exports `@company-of-heroes/ui` | import `@company-of-heroes/ui/*` directly |
+| Surface              | App                                                                        | Website                                                                   |
+| -------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Player profile       | `routes/(loaded)/players/[id]/`                                            | `routes/players/[id=playerid]/`                                           |
+| Player search        | `routes/(loaded)/players/`                                                 | `routes/players/`                                                         |
+| Leaderboards         | `routes/(loaded)/leaderboards/`                                            | `routes/leaderboards/`                                                    |
+| Replay list          | `routes/(loaded)/history/` (local + catalog)                               | `routes/replays/`                                                         |
+| Replay detail        | `routes/(loaded)/replays/[replayId]/`                                      | `routes/replays/[id]/`                                                    |
+| Match comments/likes | `$lib/components/match/match-comments.svelte` + `app.database.matchSocial` | `$lib/remote/match-social.remote.ts` via `locals.services.social`          |
+| Auth                 | `$core/account`, account settings                                          | `/login` `/register` `/logout`, `locals.services.auth`, `/auth/handoff`   |
+| Shared API client    | `$core/api` (`createApi` singleton)                                        | `new Services(locals)` (`locals.services`) + `createApi`                  |
+| Host wiring          | `$lib/host.ts` (`provideAppHost`)                                          | `$lib/host.ts` (`provideWebsiteHost`)                                     |
+| Player / replay UI   | `@company-of-heroes/ui/player`, `…/replay`, `…/comment` (no host copies)   | same                                                                      |
+| Shared primitives    | `$lib/components/ui/*` re-exports `@company-of-heroes/ui`                  | import `@company-of-heroes/ui/*` directly                                 |
 
 App player UI is richer (label editor, screenshots, cheater alert, live game). Do not strip those when touching app. Do not invent Tauri-only widgets on website.
 
@@ -71,7 +71,7 @@ Same product, different wiring.
 
 **Website (`adapter-cloudflare`):**
 
-- Loads, actions, remotes call `locals.services.*()`, not inline `fetch` to `API_URL`.
+- Loads, actions, remotes call `locals.services.x`, not inline `fetch` to `API_URL`.
 - Services are thin wrappers over `createApi` and return `Result` / `ResultAsync` (`neverthrow`). Unwrap in loads/remotes; `failFrom` in form actions.
 - User copy through `t()` / `locals.t`; dictionaries live in `packages/i18n`. English URLs stay unprefixed; `/es` and `/ko` prefixes for other locales. Per-request i18n — never a module singleton.
 - Set cache headers and `<svelte:head>` on public pages.
@@ -84,14 +84,24 @@ Same product, different wiring.
 
 **Shared UI (`packages/ui`):**
 
-- Presentational only. Props for data, map images, hrefs, labels.
-- No `$lib`, `$core`, `$app`, `$features`, Tauri, PocketBase client, or i18n.
+- Every component exists once, here. Hosts do not wrap, copy or re-compose it.
+- Text: call `useI18n()` from `@company-of-heroes/i18n` inside the component. No `*Label` props (only real overrides such as a context-specific `emptyMessage`).
+- Host differences (links, images, auth, data I/O, toasts, navigation) go through the host context: `useHost()` from `@company-of-heroes/ui/host` (`packages/ui/src/host/host.context.ts`). Need something new? Add a port there and implement it in both hosts:
+  - app: `packages/app/src/lib/host.ts` (`provideAppHost()` in `routes/(loaded)/+layout.svelte`)
+  - website: `packages/website/src/lib/host.ts` (`provideWebsiteHost()` in the root `+layout.svelte`)
+- Host-only extras (desktop label editor, screenshots, cheater flags, rename) are snippets on the shared component (`actions`, `screenshots`, `nameExtra`, `extraTabs`…), not a forked component.
+- Still no `$lib`, `$core`, `$app`, `$features`, Tauri or PocketBase client imports.
+- Pure helpers used by both hosts live in ui too (`format/*`, `replay/stats`, `replay/parse`, `replay/links`, `live-lobby/links`, `player/profile`); host modules re-export them instead of copying.
 - New public file → `exports` in `packages/ui/package.json`.
-- Hosts wrap with resolvers (`flagImageUrl`, `resolveAvatarUrl`, `href`) and `t()`.
 
 ```svelte
-<!-- website adapter — pass host resolvers, do not fork the shared component -->
-<PlayerProfileHeader {player} {flagImageUrl} {resolveAvatarUrl} {smurfLenderHref} />
+<!-- website page: data in, nothing else -->
+<PlayerProfile {player} />
+
+<!-- app page: same component, desktop-only extras as snippets -->
+<PlayerProfile player={pagePlayer}>
+	{#snippet actions()}<Player.LabelEditor … />{/snippet}
+</PlayerProfile>
 ```
 
 ```typescript
@@ -99,13 +109,14 @@ Same product, different wiring.
 await app.database.matchSocial.listComments(lobbyId);
 
 // website data
-unwrapAsync(locals.services.matchSocial().listComments(lobbyId));
+unwrapAsync(locals.api.matchSocial.listComments(lobbyId));
 ```
 
 ## Do not
 
 - Copy `$core` / `Feature` / `invoke` into website
-- Put `t()` inside `packages/ui` (pass label props from hosts instead)
+- Add a component to `app/src/lib/components` or `website/src/lib/components` that also exists (or should exist) in the other host — put it in `packages/ui` and extend the host context (`pnpm check:duplicates` fails on same-named host components)
+- Add `*Label` / resolver props to a shared component, or wrap a ui component in a host just to pass labels, hrefs or images
 - Add `+page.server.ts` or remotes to the app
 - Duplicate Button / Leaderboard / Replay / Player chrome in a host when `@company-of-heroes/ui` already exports it
 - Finish a public player/replay/leaderboard/comment/auth change in one host without checking the other

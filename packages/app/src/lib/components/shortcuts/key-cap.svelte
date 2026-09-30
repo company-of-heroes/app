@@ -14,7 +14,7 @@
 <span
 	{...restProps}
 	class={cn(
-		'border-secondary-700 bg-secondary-900/70 inline-flex h-7 min-w-7 items-center justify-center rounded border px-2 font-mono text-[11px] font-semibold tracking-wide text-secondary-100 uppercase',
+		'border-secondary-700 bg-secondary-900/70 text-secondary-100 inline-flex h-7 min-w-7 items-center justify-center rounded border px-2 font-mono text-[11px] font-semibold tracking-wide uppercase',
 		className
 	)}
 >

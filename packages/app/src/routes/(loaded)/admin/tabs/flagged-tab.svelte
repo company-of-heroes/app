@@ -72,9 +72,18 @@
 
 	const rows = $derived(reports.current ?? []);
 	const expandedId = $derived.by(() => {
-		if (expandedOverride === undefined) return rows[0]?.id ?? null;
-		if (expandedOverride === null) return null;
-		if (rows.some((report) => report.id === expandedOverride)) return expandedOverride;
+		if (expandedOverride === undefined) {
+			return rows[0]?.id ?? null;
+		}
+
+		if (expandedOverride === null) {
+			return null;
+		}
+
+		if (rows.some((report) => report.id === expandedOverride)) {
+			return expandedOverride;
+		}
+
 		return rows[0]?.id ?? null;
 	});
 	const expandedReport = $derived(rows.find((report) => report.id === expandedId) ?? null);
@@ -107,7 +116,10 @@
 	const captures = resource(
 		() => (expandedReport ? `${expandedReport.accused}:${expandedReport.session_id}` : null),
 		async () => {
-			if (!expandedReport) return [] as CaptureRecord[];
+			if (!expandedReport) {
+				return [] as CaptureRecord[];
+			}
+
 			try {
 				return await listCapturesForUserSession(expandedReport.accused, expandedReport.session_id);
 			} catch (error) {
@@ -150,24 +162,42 @@
 	]);
 
 	const statusLabel = (status: AntiCheatReportsStatusOptions) => {
-		if (status === 'pending') return t('Pending');
-		if (status === 'confirmed') return t('Confirmed');
+		if (status === 'pending') {
+			return t('Pending');
+		}
+
+		if (status === 'confirmed') {
+			return t('Confirmed');
+		}
+
 		return t('Dismissed');
 	};
 
 	const statusVariant = (status: AntiCheatReportsStatusOptions): SemanticVariant => {
-		if (status === 'confirmed') return 'destructive';
-		if (status === 'pending') return 'warning';
+		if (status === 'confirmed') {
+			return 'destructive';
+		}
+
+		if (status === 'pending') {
+			return 'warning';
+		}
+
 		return 'default';
 	};
 
 	function steamIdsOf(user: ReportUser | undefined): string[] {
-		if (!Array.isArray(user?.steamIds)) return [];
+		if (!Array.isArray(user?.steamIds)) {
+			return [];
+		}
+
 		return user.steamIds.map((id) => String(id)).filter(Boolean);
 	}
 
 	function relicAlias(steamId: string | undefined): string | undefined {
-		if (!steamId) return undefined;
+		if (!steamId) {
+			return undefined;
+		}
+
 		return aliasBySteamId.current?.[steamId];
 	}
 
@@ -183,7 +213,10 @@
 	};
 
 	function formatDate(value: string) {
-		if (!value) return '';
+		if (!value) {
+			return '';
+		}
+
 		return new Date(value).toLocaleDateString(undefined, {
 			year: 'numeric',
 			month: 'short',
@@ -227,7 +260,9 @@
 			t('Mark this player as a cheater? They will get a cheater label, not a ban.'),
 			{ okLabel: t('Mark as cheater'), cancelLabel: t('Cancel'), kind: 'warning' }
 		);
-		if (!confirmed) return;
+		if (!confirmed) {
+			return;
+		}
 
 		updatingId = report.id;
 		try {
@@ -257,13 +292,18 @@
 	};
 
 	const removeCheater = async (report: ReportRow) => {
-		if (!report.accused) return;
+		if (!report.accused) {
+			return;
+		}
+
 		const confirmed = await confirm(t('Remove the cheater label from this player?'), {
 			okLabel: t('Remove cheater label'),
 			cancelLabel: t('Cancel'),
 			kind: 'warning'
 		});
-		if (!confirmed) return;
+		if (!confirmed) {
+			return;
+		}
 
 		updatingId = report.id;
 		try {

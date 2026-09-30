@@ -30,7 +30,9 @@ function registerMemberReplayFieldMetadata(app) {
 	const row = new DynamicModel({ fields: '' });
 	app.db().newQuery("SELECT fields FROM _collections WHERE name='lobbies'").one(row);
 	const fields = JSON.parse(row.fields || '[]');
-	if (fields.some((field) => field.name === 'memberReplay' || field.id === MEMBER_REPLAY_FIELD.id)) {
+	if (
+		fields.some((field) => field.name === 'memberReplay' || field.id === MEMBER_REPLAY_FIELD.id)
+	) {
 		return;
 	}
 

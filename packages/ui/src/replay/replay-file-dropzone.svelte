@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import FileDropzone from '../ui/input/file-dropzone.svelte';
 	import { cn } from '../cn';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
@@ -11,9 +12,6 @@
 		disabled?: boolean;
 		id?: string;
 		label?: string;
-		dropLabel?: string;
-		browseLabel?: string;
-		changeFileLabel?: string;
 		inputProps?: Record<string, unknown>;
 		flush?: boolean;
 		onFileChange: (file: File | null) => void;
@@ -21,15 +19,14 @@
 		zoneClass?: string;
 	};
 
+	const { t } = useI18n();
+
 	let {
 		fileName = null,
 		busy = false,
 		disabled = false,
 		id = 'replay-file-dropzone',
-		label,
-		dropLabel = 'Drop a .rec file here',
-		browseLabel = 'or click to browse',
-		changeFileLabel = 'Change file',
+		label = t('Replay file'),
 		inputProps,
 		flush = false,
 		onFileChange,
@@ -48,9 +45,9 @@
 	{disabled}
 	{id}
 	{label}
-	{dropLabel}
-	{browseLabel}
-	{changeFileLabel}
+	dropLabel={t('Drop a .rec file here')}
+	browseLabel={t('or click to browse')}
+	changeFileLabel={t('Change file')}
 	{inputProps}
 	{flush}
 	{onFileChange}
@@ -83,10 +80,12 @@
 						dragging && 'text-primary'
 					)}
 				>
-					{dropLabel}
+					{t('Drop a .rec file here')}
 				</p>
 				<p id="{id}-hint" class="text-secondary-400 text-sm">
-					<span class="group-hover:text-secondary-200 transition-colors">{browseLabel}</span>
+					<span class="group-hover:text-secondary-200 transition-colors"
+						>{t('or click to browse')}</span
+					>
 					<span class="text-secondary-600 mx-2" aria-hidden="true">·</span>
 					<span
 						class="border-secondary-700 bg-secondary-900/80 text-secondary-300 inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider uppercase"
@@ -117,7 +116,7 @@
 					id="{id}-hint"
 					class="text-secondary-400 group-hover:text-secondary-200 text-sm transition-colors"
 				>
-					{changeFileLabel}
+					{t('Change file')}
 				</p>
 			</div>
 		</div>

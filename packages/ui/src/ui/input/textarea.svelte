@@ -3,7 +3,12 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { controlBase, controlDisabled, flushTextarea } from '../../variants';
 
-	let { value = $bindable(), class: className, flush = false, ...restProps }: TextareaProps = $props();
+	let {
+		value = $bindable(),
+		class: className,
+		flush = false,
+		...restProps
+	}: TextareaProps = $props();
 </script>
 
 <textarea

@@ -40,10 +40,7 @@ function toFiniteNumber(value: unknown): number | null {
  * its Relic leaderboard id. Races: US=0, Wehrmacht=1, Commonwealth=2, PanzerElite=3.
  * Returns null for operations or out-of-range races.
  */
-export function leaderboardIdForMatchRace(
-	matchTypeId: number,
-	race: number
-): number | null {
+export function leaderboardIdForMatchRace(matchTypeId: number, race: number): number | null {
 	if (!Number.isInteger(race) || race < 0 || race > 3) {
 		return null;
 	}
@@ -147,14 +144,9 @@ export function attachLiveLobbyStats(
 
 		const elo =
 			matchTypeId === 14
-				? resolveStoredElo(raw.storedElo, matchTypeId, slim.race) ?? 1000
+				? (resolveStoredElo(raw.storedElo, matchTypeId, slim.race) ?? 1000)
 				: resolveStoredElo(raw.storedElo, matchTypeId, slim.race);
-		const stats = pickPlayerStats(
-			raw.profile?.leaderboardStats,
-			matchTypeId,
-			slim.race,
-			elo
-		);
+		const stats = pickPlayerStats(raw.profile?.leaderboardStats, matchTypeId, slim.race, elo);
 		return stats ? { ...slim, stats } : slim;
 	});
 }
@@ -241,10 +233,7 @@ export type MatchupGapLabels = {
  * Formats the ELO gap for display. Pass host `labels` (i18n) to override the
  * English defaults.
  */
-export function formatMatchupGap(
-	gap: number | null,
-	labels?: Partial<MatchupGapLabels>
-): string {
+export function formatMatchupGap(gap: number | null, labels?: Partial<MatchupGapLabels>): string {
 	if (gap == null) {
 		return labels?.none ?? '—';
 	}

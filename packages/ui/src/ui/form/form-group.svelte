@@ -53,14 +53,14 @@
 	{#if label}
 		{#if inputId}
 			<label for={inputId} class={titleClass}>
-				{label}{#if required}<span class="text-destructive" aria-hidden="true">*</span><span class="sr-only"
-						>({requiredLabel})</span
+				{label}{#if required}<span class="text-destructive" aria-hidden="true">*</span><span
+						class="sr-only">({requiredLabel})</span
 					>{/if}
 			</label>
 		{:else}
 			<p class={titleClass}>
-				{label}{#if required}<span class="text-destructive" aria-hidden="true">*</span><span class="sr-only"
-						>({requiredLabel})</span
+				{label}{#if required}<span class="text-destructive" aria-hidden="true">*</span><span
+						class="sr-only">({requiredLabel})</span
 					>{/if}
 			</p>
 		{/if}

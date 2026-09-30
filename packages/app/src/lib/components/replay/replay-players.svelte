@@ -11,16 +11,16 @@
 	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
 	import { useReplay } from '.';
 	import * as PlayerUi from '$lib/components/player';
-	import { cn, getFactionFlagFromRace, getRankImage } from '$lib/utils';
-	import { isMeReplayAlias } from '$lib/utils/player-me';
-	import { doctrineBannerUrl, raceFromReplayFaction } from '$lib/utils/replay-doctrine';
-	import { getLeaderboardStatsForPlayerByMatchType, getPlayerEloFromMatchHistory } from '$lib/utils/game';
+	import { cn } from '$lib/utils';
+	import {
+		getLeaderboardStatsForPlayerByMatchType,
+		getPlayerEloFromMatchHistory
+	} from '$lib/utils/game';
 	import {
 		getLiveLobbyMatchType,
 		getPlayerAlias,
 		getPlayerProfileId
 	} from '$lib/components/widgets/dashboard-utils';
-	import { getCountryDisplayName } from '$lib/components/leaderboard/leaderboard-utils';
 	import { loadCheaterSteamIds } from '$core/pocketbase/anti-cheat';
 	import { preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 	import {
@@ -29,12 +29,11 @@
 	} from '$core/pocketbase/player-vote-cache.svelte';
 	import { resource } from 'runed';
 	import { useI18n } from '$lib/i18n';
-	import { formatStreak } from '@company-of-heroes/ui/variants';
 
 	type Props = {} & HTMLAttributes<HTMLDivElement> & {
-		flush?: boolean;
-		match?: MatchExpanded | null;
-	};
+			flush?: boolean;
+			match?: MatchExpanded | null;
+		};
 
 	let { flush = false, match = null, class: className, ...restProps }: Props = $props();
 	const { t } = useI18n();
@@ -45,7 +44,11 @@
 		result?.matchtype_id ?? getLiveLobbyMatchType(match?.players ?? [], match?.isRanked ?? false)
 	);
 	const cheaters = resource(
-		() => (match?.players ?? []).map((player) => player.steamId).filter(Boolean).join(','),
+		() =>
+			(match?.players ?? [])
+				.map((player) => player.steamId)
+				.filter(Boolean)
+				.join(','),
 		(key) => loadCheaterSteamIds(key ? key.split(',') : [])
 	);
 
@@ -89,9 +92,7 @@
 		return (match?.players ?? []).map((player, index) => {
 			const profileId = getPlayerProfileId(player) ?? null;
 			const isCpu = player.playerId === -1;
-			const statsRow = isCpu
-				? null
-				: getLeaderboardStatsForPlayerByMatchType(matchType, player);
+			const statsRow = isCpu ? null : getLeaderboardStatsForPlayerByMatchType(matchType, player);
 			const country = isCpu ? null : player.profile?.country || null;
 			const elo = isCpu ? null : getPlayerEloFromMatchHistory(matchType, player);
 			return {
@@ -121,46 +122,18 @@
 	});
 
 	const replayData = $derived(replay as unknown as ReplayData);
-
-	function resolveFactionFlag(raceId: number): string {
-		return getFactionFlagFromRace(raceId);
-	}
-
-	function flagImageUrl(country: string | null | undefined): string | null {
-		if (!country) return null;
-		const region = String(country).trim().toUpperCase();
-		if (!/^[A-Z]{2}$/.test(region)) return null;
-		return `https://flagsapi.com/${region}/shiny/64.png`;
-	}
-
-	function playerHref(player: CommunityPlayer): string | null {
-		if (player.playerId === -1) {
-			return null;
-		}
-
-		const id = player.profile.profile_id;
-		return id > 0 ? `/players/${id}` : null;
-	}
-
-	function playerCpm(data: ReplayData, playerId: number | null): string {
-		if (playerId == null) {
-			return '0';
-		}
-
-		const precomputed = (data as ReplayData & { cpmByPlayerId?: Record<string, string> })
-			.cpmByPlayerId?.[String(playerId)];
-		if (precomputed != null) {
-			return precomputed;
-		}
-
-		return '0';
-	}
 </script>
 
 {#snippet nameExtra(args: { name: string; steamId: string | null; profileId: number | null })}
 	{@const lobbyPlayer = (match?.players ?? []).find((player) => {
-		if (args.profileId != null && getPlayerProfileId(player) === args.profileId) return true;
-		if (args.steamId && player.steamId === args.steamId) return true;
+		if (args.profileId != null && getPlayerProfileId(player) === args.profileId) {
+			return true;
+		}
+
+		if (args.steamId && player.steamId === args.steamId) {
+			return true;
+		}
+
 		return getPlayerAlias(player).trim().toLowerCase() === args.name.trim().toLowerCase();
 	})}
 	{#if lobbyPlayer}
@@ -177,26 +150,5 @@
 	{...restProps}
 	class={cn(flush ? undefined : 'border-secondary-800 overflow-clip rounded-lg border', className)}
 >
-	<Overview
-		match={overviewMatch}
-		replay={replayData}
-		{livePlayers}
-		{playerHref}
-		{flagImageUrl}
-		{getCountryDisplayName}
-		{resolveFactionFlag}
-		{raceFromReplayFaction}
-		{doctrineBannerUrl}
-		{playerCpm}
-		formatStreakLabel={formatStreak}
-		getRankImage={getRankImage}
-		levelLabel={t('Lv')}
-		alliesLabel={t('Allies')}
-		axisLabel={t('Axis')}
-		unknownDoctrineLabel={t('Unknown doctrine')}
-		ratingLabel={t('Rating')}
-		cpmLabel={t('CPM')}
-		isHighlightedName={isMeReplayAlias}
-		{nameExtra}
-	/>
+	<Overview match={overviewMatch} replay={replayData} {livePlayers} {nameExtra} />
 </div>

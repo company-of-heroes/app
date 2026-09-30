@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { Textarea } from '@company-of-heroes/ui/input';
 	import * as Dropdown from '@company-of-heroes/ui/dropdown';
@@ -33,19 +34,6 @@
 		name?: string;
 		placeholder?: string;
 		submitLabel?: string;
-		searchingLabel?: string;
-		noUsersLabel?: string;
-		mentionHintLabel?: string;
-		formattingLabel?: string;
-		boldLabel?: string;
-		italicLabel?: string;
-		strikethroughLabel?: string;
-		codeLabel?: string;
-		linkLabel?: string;
-		highlightLabel?: string;
-		quoteLabel?: string;
-		mentionLabel?: string;
-		cancelLabel?: string;
 		autofocus?: boolean;
 		rows?: number;
 		class?: string;
@@ -65,21 +53,8 @@
 		value = $bindable(''),
 		posting = false,
 		name,
-		placeholder = 'Write a comment',
-		submitLabel = 'Send',
-		searchingLabel = 'Searching...',
-		noUsersLabel = 'No users found.',
-		mentionHintLabel = 'Type a name to mention someone.',
-		formattingLabel = 'Formatting',
-		boldLabel = 'Bold',
-		italicLabel = 'Italic',
-		strikethroughLabel = 'Strikethrough',
-		codeLabel = 'Code',
-		linkLabel = 'Link',
-		highlightLabel = 'Highlight',
-		quoteLabel = 'Quote',
-		mentionLabel = 'Mention',
-		cancelLabel = 'Cancel',
+		placeholder,
+		submitLabel,
 		autofocus = false,
 		rows = 3,
 		class: className,
@@ -94,6 +69,8 @@
 		onpost,
 		oncancel
 	}: Props = $props();
+	const { t } = useI18n();
+	const placeholderText = $derived(placeholder ?? t('Write a comment'));
 
 	let composerEl = $state<HTMLTextAreaElement | undefined>();
 	let cursor = $state(0);
@@ -201,7 +178,8 @@
 		composerEl = el;
 		cursor = el.selectionStart;
 		resize(el);
-		const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(refreshMentionAnchor) : null;
+		const ro =
+			typeof ResizeObserver !== 'undefined' ? new ResizeObserver(refreshMentionAnchor) : null;
 		ro?.observe(el);
 		return () => {
 			ro?.disconnect();
@@ -430,11 +408,11 @@
 			{#if mentionResults.length === 0}
 				<p class="text-secondary-400 px-4 py-2.5 text-xs">
 					{#if remoteMentions.loading}
-						{searchingLabel}
+						{t('Searching...')}
 					{:else if (mention?.query ?? '').trim()}
-						{noUsersLabel}
+						{t('No users found.')}
 					{:else}
-						{mentionHintLabel}
+						{t('Type a name to mention someone.')}
 					{/if}
 				</p>
 			{:else}
@@ -485,8 +463,8 @@
 			{rows}
 			{autofocus}
 			maxlength={COMMENT_MAX_LENGTH}
-			{placeholder}
-			aria-label={placeholder}
+			placeholder={placeholderText}
+			aria-label={placeholderText}
 			onkeydown={onComposerKeydown}
 			oninput={(event: Event) => {
 				syncCursor(event);
@@ -502,7 +480,7 @@
 	<div class="border-secondary-800 flex items-center gap-2 border-t px-2 py-1.5">
 		<div
 			role="toolbar"
-			aria-label={formattingLabel}
+			aria-label={t('Formatting')}
 			tabindex="-1"
 			class="flex min-w-0 flex-1 flex-wrap items-center"
 			onmousedown={(event) => event.preventDefault()}
@@ -512,8 +490,8 @@
 				variant="ghost"
 				size="icon-sm"
 				class={formatBtn}
-				aria-label={boldLabel}
-				title={boldLabel}
+				aria-label={t('Bold')}
+				title={t('Bold')}
 				onclick={() => wrap('**', '**', 'bold')}
 			>
 				<TextBIcon size={16} />
@@ -523,8 +501,8 @@
 				variant="ghost"
 				size="icon-sm"
 				class={formatBtn}
-				aria-label={italicLabel}
-				title={italicLabel}
+				aria-label={t('Italic')}
+				title={t('Italic')}
 				onclick={() => wrap('*', '*', 'italic')}
 			>
 				<TextItalicIcon size={16} />
@@ -534,8 +512,8 @@
 				variant="ghost"
 				size="icon-sm"
 				class={formatBtn}
-				aria-label={strikethroughLabel}
-				title={strikethroughLabel}
+				aria-label={t('Strikethrough')}
+				title={t('Strikethrough')}
 				onclick={() => wrap('~~', '~~', 'text')}
 			>
 				<TextStrikethroughIcon size={16} />
@@ -546,8 +524,8 @@
 				variant="ghost"
 				size="icon-sm"
 				class={formatBtn}
-				aria-label={codeLabel}
-				title={codeLabel}
+				aria-label={t('Code')}
+				title={t('Code')}
 				onclick={formatCode}
 			>
 				<CodeIcon size={16} />
@@ -557,8 +535,8 @@
 				variant="ghost"
 				size="icon-sm"
 				class={formatBtn}
-				aria-label={linkLabel}
-				title={linkLabel}
+				aria-label={t('Link')}
+				title={t('Link')}
 				onclick={formatLink}
 			>
 				<LinkIcon size={16} />
@@ -568,8 +546,8 @@
 				variant="ghost"
 				size="icon-sm"
 				class={formatBtn}
-				aria-label={highlightLabel}
-				title={highlightLabel}
+				aria-label={t('Highlight')}
+				title={t('Highlight')}
 				onclick={() => wrap('==', '==', 'text')}
 			>
 				<HighlighterIcon size={16} />
@@ -579,8 +557,8 @@
 				variant="ghost"
 				size="icon-sm"
 				class={formatBtn}
-				aria-label={quoteLabel}
-				title={quoteLabel}
+				aria-label={t('Quote')}
+				title={t('Quote')}
 				onclick={formatQuote}
 			>
 				<QuotesIcon size={16} />
@@ -591,8 +569,8 @@
 				variant="ghost"
 				size="icon-sm"
 				class={formatBtn}
-				aria-label={mentionLabel}
-				title={mentionLabel}
+				aria-label={t('Mention')}
+				title={t('Mention')}
 				onclick={startMention}
 			>
 				<AtIcon size={16} />
@@ -604,7 +582,7 @@
 				variant="ghost"
 				size="icon-sm"
 				class="text-secondary-400 shrink-0 hover:text-white"
-				aria-label={cancelLabel}
+				aria-label={t('Cancel')}
 				onclick={oncancel}
 			>
 				<XIcon size={16} />
@@ -612,7 +590,7 @@
 		{/if}
 		{#if showSubmit}
 			<Button type="submit" size="sm" class="shrink-0" disabled={!canPost} loading={posting}>
-				{submitLabel}
+				{submitLabel ?? t('Send')}
 			</Button>
 		{/if}
 	</div>

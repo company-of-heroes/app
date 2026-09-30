@@ -29,7 +29,11 @@ describe('fs-json', () => {
 
 		const result = await readJsonWithRecovery(PATH);
 
-		expect(result).toEqual({ ok: true, data: { nested: { value: true } }, recoveredFromTmp: false });
+		expect(result).toEqual({
+			ok: true,
+			data: { nested: { value: true } },
+			recoveredFromTmp: false
+		});
 	});
 
 	it('recovers from the tmp file when the destination is missing (crash mid-swap)', async () => {

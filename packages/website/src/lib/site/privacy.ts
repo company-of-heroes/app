@@ -27,16 +27,19 @@ export function parseInline(input: string): InlineSpan[] {
 		if (index > last) {
 			spans.push({ type: 'text', text: input.slice(last, index) });
 		}
+
 		if (match[1] !== undefined) {
 			spans.push({ type: 'strong', text: match[1] });
 		} else {
 			spans.push({ type: 'link', text: match[2] ?? '', href: match[3] ?? '' });
 		}
+
 		last = index + match[0].length;
 	}
 	if (last < input.length) {
 		spans.push({ type: 'text', text: input.slice(last) });
 	}
+
 	return spans.length > 0 ? spans : [{ type: 'text', text: input }];
 }
 
@@ -51,12 +54,16 @@ export function parsePolicyMarkdown(markdown: string): PolicyDoc {
 	function flushParagraph() {
 		const text = paragraph.join(' ').trim();
 		paragraph = [];
-		if (!text) return;
+		if (!text) {
+			return;
+		}
+
 		const dateMatch = /^\*\*Effective date:\*\*\s*(.+)$/.exec(text);
 		if (dateMatch && !effectiveDate) {
 			effectiveDate = dateMatch[1] ?? '';
 			return;
 		}
+
 		blocks.push({ type: 'p', spans: parseInline(text) });
 	}
 
@@ -65,6 +72,7 @@ export function parsePolicyMarkdown(markdown: string): PolicyDoc {
 			listItems = null;
 			return;
 		}
+
 		blocks.push({ type: 'ul', items: listItems.map(parseInline) });
 		listItems = null;
 	}
@@ -77,30 +85,38 @@ export function parsePolicyMarkdown(markdown: string): PolicyDoc {
 			title = line.slice(2).trim();
 			continue;
 		}
+
 		if (line.startsWith('## ')) {
 			flushList();
 			flushParagraph();
 			blocks.push({ type: 'h2', text: line.slice(3).trim() });
 			continue;
 		}
+
 		if (line.startsWith('### ')) {
 			flushList();
 			flushParagraph();
 			blocks.push({ type: 'h3', text: line.slice(4).trim() });
 			continue;
 		}
+
 		if (line.startsWith('- ')) {
 			flushParagraph();
 			listItems ??= [];
 			listItems.push(line.slice(2).trim());
 			continue;
 		}
+
 		if (line.trim() === '') {
 			flushList();
 			flushParagraph();
 			continue;
 		}
-		if (listItems) flushList();
+
+		if (listItems) {
+			flushList();
+		}
+
 		paragraph.push(line.trim());
 	}
 	flushList();

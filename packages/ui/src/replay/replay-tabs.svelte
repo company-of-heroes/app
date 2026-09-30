@@ -1,13 +1,10 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import * as Tabs from '@company-of-heroes/ui/tabs';
 
 	type Props = {
 		value?: string;
-		overviewLabel?: string;
-		chatLabel?: string;
-		timelineLabel?: string;
-		screenshotsLabel?: string;
 		showChat?: boolean;
 		showTimeline?: boolean;
 		showScreenshots?: boolean;
@@ -17,12 +14,10 @@
 		screenshots?: Snippet;
 	};
 
+	const { t } = useI18n();
+
 	let {
 		value = $bindable('overview'),
-		overviewLabel = 'Overview',
-		chatLabel = 'Chat',
-		timelineLabel = 'Timeline',
-		screenshotsLabel = 'Screenshots',
 		showChat = true,
 		showTimeline = true,
 		showScreenshots = false,
@@ -35,15 +30,15 @@
 
 <Tabs.Root bind:value>
 	<Tabs.List class="border-secondary-800 border-t border-b px-4 py-2.5">
-		<Tabs.Trigger value="overview">{overviewLabel}</Tabs.Trigger>
+		<Tabs.Trigger value="overview">{t('Overview')}</Tabs.Trigger>
 		{#if showChat}
-			<Tabs.Trigger value="chat">{chatLabel}</Tabs.Trigger>
+			<Tabs.Trigger value="chat">{t('Chat')}</Tabs.Trigger>
 		{/if}
 		{#if showTimeline}
-			<Tabs.Trigger value="timeline">{timelineLabel}</Tabs.Trigger>
+			<Tabs.Trigger value="timeline">{t('Timeline')}</Tabs.Trigger>
 		{/if}
 		{#if showScreenshots}
-			<Tabs.Trigger value="screenshots">{screenshotsLabel}</Tabs.Trigger>
+			<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
 		{/if}
 	</Tabs.List>
 	<Tabs.Content value="overview">

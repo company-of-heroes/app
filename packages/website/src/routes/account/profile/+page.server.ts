@@ -9,8 +9,5 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		redirect(303, loginRedirectHref(url.pathname + url.search, locals.locale));
 	}
 
-	return {
-		user: locals.user,
-		saved: url.searchParams.get('saved')
-	};
+	return { user: locals.user };
 };

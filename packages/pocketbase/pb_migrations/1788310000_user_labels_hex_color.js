@@ -9,7 +9,9 @@ migrate((app) => {
 	}
 
 	const color = collection.fields.getByName('color');
-	if (!color || color.type === 'text') return;
+	if (!color || color.type === 'text') {
+		return;
+	}
 
 	collection.fields.removeByName('color');
 	collection.fields.add(

@@ -7,27 +7,9 @@
 	type Props = {
 		/** Website-style back + breadcrumb row. App uses layout breadcrumbs instead. */
 		showNav?: boolean;
-		overviewLabel?: string;
-		chatLabel?: string;
-		timelineLabel?: string;
-		alliesLabel?: string;
-		axisLabel?: string;
-		ratingLabel?: string;
-		cpmLabel?: string;
 	} & HTMLAttributes<HTMLDivElement>;
 
-	let {
-		showNav = true,
-		overviewLabel = 'Overview',
-		chatLabel = 'Chat',
-		timelineLabel = 'Timeline',
-		alliesLabel = 'Allies',
-		axisLabel = 'Axis',
-		ratingLabel = 'Rating',
-		cpmLabel = 'CPM',
-		class: className,
-		...restProps
-	}: Props = $props();
+	let { showNav = true, class: className, ...restProps }: Props = $props();
 </script>
 
 <div
@@ -68,15 +50,5 @@
 		</div>
 	</div>
 
-	<ReplayTabsSkeleton
-		flush
-		showTitle={false}
-		{overviewLabel}
-		{chatLabel}
-		{timelineLabel}
-		{alliesLabel}
-		{axisLabel}
-		{ratingLabel}
-		{cpmLabel}
-	/>
+	<ReplayTabsSkeleton flush showTitle={false} />
 </div>

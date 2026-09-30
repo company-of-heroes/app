@@ -8,7 +8,7 @@
 
 <div aria-busy="true">
 	<div
-		class="border-secondary-800 grid grid-cols-1 border-b sm:grid-cols-3 sm:divide-x sm:divide-secondary-800"
+		class="border-secondary-800 sm:divide-secondary-800 grid grid-cols-1 border-b sm:grid-cols-3 sm:divide-x"
 	>
 		{#each podiumRanks as rank (rank)}
 			<div

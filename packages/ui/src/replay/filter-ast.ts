@@ -63,7 +63,9 @@ export function isFilterLeaf(node: FilterAst): node is FilterLeaf {
 	return 'field' in node;
 }
 
-export function isFilterGroup(node: FilterAst): node is { op: FilterCombinator; children: FilterAst[] } {
+export function isFilterGroup(
+	node: FilterAst
+): node is { op: FilterCombinator; children: FilterAst[] } {
 	return 'op' in node && 'children' in node && !('field' in node);
 }
 
@@ -92,6 +94,7 @@ export function isLeafComplete(leaf: FilterLeaf): boolean {
 			if (leaf.op === 'in') {
 				return Array.isArray(leaf.value) && leaf.value.length > 0;
 			}
+
 			return leaf.value != null && String(leaf.value).length > 0;
 		case 'ranked':
 		case 'pro':
@@ -144,6 +147,7 @@ export function astToRules(ast: FilterAst | null | undefined): FilterRule[] {
 	if (rules.length > 0) {
 		delete rules[0].join;
 	}
+
 	return rules;
 }
 
@@ -154,37 +158,45 @@ export function flatFiltersToAst(flat: FlatHistoryFilters): FilterAst | null {
 	if (flat.ranked) {
 		children.push({ field: 'ranked', op: 'eq', value: true });
 	}
+
 	if (flat.pro) {
 		children.push({ field: 'pro', op: 'eq', value: true });
 	}
+
 	if (flat.playerIds && flat.playerIds.length === 1) {
 		children.push({ field: 'playerId', op: 'eq', value: flat.playerIds[0] });
 	} else if (flat.playerIds && flat.playerIds.length > 1) {
 		children.push({ field: 'playerId', op: 'in', value: [...flat.playerIds] });
 	}
+
 	if (flat.maps && flat.maps.length === 1) {
 		children.push({ field: 'map', op: 'eq', value: flat.maps[0] });
 	} else if (flat.maps && flat.maps.length > 1) {
 		children.push({ field: 'map', op: 'in', value: [...flat.maps] });
 	}
+
 	if (flat.races && flat.races.length === 1) {
 		children.push({ field: 'race', op: 'eq', value: flat.races[0] });
 	} else if (flat.races && flat.races.length > 1) {
 		children.push({ field: 'race', op: 'in', value: [...flat.races] });
 	}
+
 	if (flat.matchups && flat.matchups.length === 1) {
 		children.push({ field: 'matchup', op: 'eq', value: flat.matchups[0] });
 	} else if (flat.matchups && flat.matchups.length > 1) {
 		children.push({ field: 'matchup', op: 'in', value: [...flat.matchups] });
 	}
+
 	if (flat.positions && flat.positions.length === 1) {
 		children.push({ field: 'position', op: 'eq', value: flat.positions[0] });
 	} else if (flat.positions && flat.positions.length > 1) {
 		children.push({ field: 'position', op: 'in', value: [...flat.positions] });
 	}
+
 	if (flat.elo) {
 		children.push({ field: 'elo', op: flat.elo.op, value: flat.elo.value });
 	}
+
 	if (flat.duration) {
 		children.push({ field: 'duration', op: flat.duration.op, value: flat.duration.value });
 	}
@@ -192,9 +204,11 @@ export function flatFiltersToAst(flat: FlatHistoryFilters): FilterAst | null {
 	if (children.length === 0) {
 		return null;
 	}
+
 	if (children.length === 1) {
 		return children[0];
 	}
+
 	return { op: 'and', children };
 }
 
@@ -217,6 +231,7 @@ export function playerIdsFromAst(ast: FilterAst | null | undefined): string[] {
 					}
 				}
 			}
+
 			return;
 		}
 

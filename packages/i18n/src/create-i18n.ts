@@ -1,7 +1,4 @@
-import {
-	createI18n as createI18nInstance,
-	type I18nInstance
-} from '@svelte-i18n/core';
+import { createI18n as createI18nInstance, type I18nInstance } from '@svelte-i18n/core';
 import { locales, type AppLocale } from './locales';
 import { en, es, ko, wrapTranslate, type AppDictionary, type TranslateFn } from './translate';
 

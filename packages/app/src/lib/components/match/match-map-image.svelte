@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { HTMLImgAttributes } from 'svelte/elements';
-	import MapImage from '$lib/components/ui/map-image.svelte';
+	import MapImage from '@company-of-heroes/ui/map-image';
 	import { cn } from '$lib/utils';
 	import { useMatch } from '.';
 
@@ -10,4 +10,10 @@
 	const match = useMatch();
 </script>
 
-<MapImage map={match.map} {small} {flush} {alt} class={className ? cn(className) : undefined} />
+<MapImage
+	map={match.map}
+	{small}
+	{flush}
+	alt={alt ?? undefined}
+	class={className ? cn(className) : undefined}
+/>

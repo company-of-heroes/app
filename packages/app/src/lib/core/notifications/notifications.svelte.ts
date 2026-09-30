@@ -93,9 +93,7 @@ export class NotificationsService {
 		if (matchId) {
 			const targetComment = commentId(notification);
 			const path = resolve('/(loaded)/history/[id]', { id: matchId });
-			await goto(
-				targetComment ? `${path}?comment=${encodeURIComponent(targetComment)}` : path
-			);
+			await goto(targetComment ? `${path}?comment=${encodeURIComponent(targetComment)}` : path);
 			return;
 		}
 
@@ -103,9 +101,7 @@ export class NotificationsService {
 		if (memberReplayId) {
 			const targetComment = replayCommentId(notification);
 			const path = resolve('/(loaded)/replays/[replayId]', { replayId: memberReplayId });
-			await goto(
-				targetComment ? `${path}?comment=${encodeURIComponent(targetComment)}` : path
-			);
+			await goto(targetComment ? `${path}?comment=${encodeURIComponent(targetComment)}` : path);
 			return;
 		}
 
@@ -166,10 +162,14 @@ export class NotificationsService {
 }
 
 function relationId(value: unknown): string {
-	if (!value) return '';
+	if (!value) {
+		return '';
+	}
+
 	if (typeof value === 'object' && value !== null && 'id' in value) {
 		return String((value as { id: string }).id || '');
 	}
+
 	return String(value);
 }
 

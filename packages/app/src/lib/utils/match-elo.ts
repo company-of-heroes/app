@@ -17,9 +17,15 @@ export type MatchEloSource = {
 
 function playerMatchElo(player: MatchEloPlayer): number | null {
 	const previous = Number(player.oldrating);
-	if (Number.isFinite(previous) && previous >= 1) return previous;
+	if (Number.isFinite(previous) && previous >= 1) {
+		return previous;
+	}
+
 	const next = Number(player.newrating);
-	if (Number.isFinite(next) && next >= 1) return next;
+	if (Number.isFinite(next) && next >= 1) {
+		return next;
+	}
+
 	return null;
 }
 
@@ -28,21 +34,29 @@ function rankedPlayerCount(count: number): boolean {
 }
 
 export function isRankedStandardMatch(match: MatchEloSource): boolean {
-	if (!match.isRanked) return false;
+	if (!match.isRanked) {
+		return false;
+	}
+
 	const matchType = Number(match.result?.matchtype_id);
 	if (Number.isInteger(matchType) && RANKED_STANDARD_MATCH_TYPES.has(matchType)) {
 		return true;
 	}
+
 	const players = match.result?.players?.length || match.players?.length || 0;
 	return rankedPlayerCount(players);
 }
 
 function isRanked1v1(match: MatchEloSource): boolean {
 	const matchType = Number(match.result?.matchtype_id);
-	if (matchType === MATCH_TYPE_1V1) return true;
+	if (matchType === MATCH_TYPE_1V1) {
+		return true;
+	}
+
 	if (Number.isInteger(matchType) && RANKED_STANDARD_MATCH_TYPES.has(matchType)) {
 		return false;
 	}
+
 	const players = match.result?.players?.length || match.players?.length || 0;
 	return players === 2;
 }
@@ -53,19 +67,33 @@ export function getProGameplayEloThreshold(match: MatchEloSource): number {
 
 export function getMatchAverageElo(match: MatchEloSource): number | null {
 	const players = match.result?.players;
-	if (!players?.length) return null;
+	if (!players?.length) {
+		return null;
+	}
+
 	const ratings: number[] = [];
 	for (const player of players) {
 		const rating = playerMatchElo(player);
-		if (rating != null) ratings.push(rating);
+		if (rating != null) {
+			ratings.push(rating);
+		}
 	}
-	if (ratings.length < 2) return null;
-	if (ratings.length < players.length / 2) return null;
+	if (ratings.length < 2) {
+		return null;
+	}
+
+	if (ratings.length < players.length / 2) {
+		return null;
+	}
+
 	return ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
 }
 
 export function isProGameplayMatch(match: MatchEloSource): boolean {
-	if (!isRankedStandardMatch(match)) return false;
+	if (!isRankedStandardMatch(match)) {
+		return false;
+	}
+
 	const average = getMatchAverageElo(match);
 	return average != null && average >= getProGameplayEloThreshold(match);
 }

@@ -1,6 +1,6 @@
 import type { Features, RelicProfile } from '@fknoobs/app';
 import type { TypedPocketBase } from '$core/pocketbase/types';
-import type { FlatReplay } from '$lib/utils/flatten-replay';
+import type { FlatReplay } from '@company-of-heroes/ui/replay/parse';
 import type { MatchExpanded } from '../database/matches';
 import { dev } from '$app/environment';
 import { goto } from '$app/navigation';
@@ -24,12 +24,7 @@ import type { AppSettings } from '$core/config/schema';
 import { account } from '$core/account';
 import { game } from '$core/game/process.svelte';
 import { GameLogService } from '$core/game/log/index.svelte';
-import {
-	isPlaceholderPlayerName,
-	Lobby,
-	lobbyPublishKey,
-	type Match
-} from '$core/game/lobby';
+import { isPlaceholderPlayerName, Lobby, lobbyPublishKey, type Match } from '$core/game/lobby';
 import { database } from '$core/app/database';
 import { LOBBIES_LIVE_HEARTBEAT_MS } from '$core/app/database/lobbies-live';
 import { SocketManager, SocketState } from '$core/app/socket.svelte';
@@ -228,6 +223,7 @@ export class AppContext extends Emittery<AppEvents> {
 						if (this.#hadGameRunning) {
 							void this.#finalizeLobbyOnGameExit();
 						}
+
 						return;
 					}
 
@@ -505,17 +501,30 @@ export class AppContext extends Emittery<AppEvents> {
 	}
 
 	async #attachReplayPlayerNames(lobby: Lobby): Promise<void> {
-		if (!lobby.isReplay || !lobby.map) return;
-		if (!lobby.players.some((player) => isPlaceholderPlayerName(player.name))) return;
+		if (!lobby.isReplay || !lobby.map) {
+			return;
+		}
+
+		if (!lobby.players.some((player) => isPlaceholderPlayerName(player.name))) {
+			return;
+		}
+
 		const key = lobbyPublishKey(lobby);
-		if (!key || this.#replayNameAttachKey === key) return;
+		if (!key || this.#replayNameAttachKey === key) {
+			return;
+		}
+
 		this.#replayNameAttachKey = key;
 		try {
 			const recPlayers = await this.features.history.findReplayHeaderPlayers(lobby);
-			if (this.gameLog.lobby !== lobby) return;
+			if (this.gameLog.lobby !== lobby) {
+				return;
+			}
+
 			if (recPlayers?.length) {
 				lobby.applyReplayPlayerNames(recPlayers);
 			}
+
 			const match = lobby.toJSON();
 			this.lobby = match;
 			this.#upsertLiveLobby(match);

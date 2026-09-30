@@ -83,18 +83,27 @@
 			if (capture.steam_id && !ids.includes(capture.steam_id)) {
 				ids.push(capture.steam_id);
 			}
+
 			const userSteamIds = captureUser(capture)?.steamIds;
 			for (const steamId of Array.isArray(userSteamIds) ? userSteamIds : []) {
 				const id = String(steamId);
-				if (id && !ids.includes(id)) ids.push(id);
+				if (id && !ids.includes(id)) {
+					ids.push(id);
+				}
 			}
 		}
 		return ids;
 	}
 
 	function resultSteamId(player: ResultPlayer): string | null {
-		if (player.steamId) return player.steamId;
-		if (player.name?.startsWith('/steam/')) return player.name.slice('/steam/'.length);
+		if (player.steamId) {
+			return player.steamId;
+		}
+
+		if (player.name?.startsWith('/steam/')) {
+			return player.name.slice('/steam/'.length);
+		}
+
 		return null;
 	}
 
@@ -186,13 +195,22 @@
 	]);
 
 	const isSelf = (group: CaptureGroup) => {
-		if (!account.isAuthenticated) return true;
-		if (group.userId && group.userId === account.userId) return true;
+		if (!account.isAuthenticated) {
+			return true;
+		}
+
+		if (group.userId && group.userId === account.userId) {
+			return true;
+		}
+
 		return !!group.steamId && (account.user.steamIds ?? []).includes(group.steamId);
 	};
 
 	const canFlag = (group: CaptureGroup) => {
-		if (!account.isAuthenticated || isSelf(group) || !group.userId) return false;
+		if (!account.isAuthenticated || isSelf(group) || !group.userId) {
+			return false;
+		}
+
 		return !flaggedAccused.has(group.userId);
 	};
 
@@ -201,7 +219,10 @@
 	}
 
 	function formatDate(value: string) {
-		if (!value) return '';
+		if (!value) {
+			return '';
+		}
+
 		return new Date(value).toLocaleDateString(undefined, {
 			year: 'numeric',
 			month: 'short',
@@ -212,14 +233,19 @@
 	}
 
 	const flagPlayer = async (group: CaptureGroup) => {
-		if (!canFlag(group)) return;
+		if (!canFlag(group)) {
+			return;
+		}
+
 		const confirmed = await confirm(
 			t('Flag {name} as suspicious for this match? Staff will review the screenshots.', {
 				name: group.alias
 			}),
 			{ okLabel: t('Flag player'), cancelLabel: t('Cancel'), kind: 'warning' }
 		);
-		if (!confirmed) return;
+		if (!confirmed) {
+			return;
+		}
 
 		flaggingKey = group.key;
 		try {
@@ -265,7 +291,10 @@
 			<PlayerProfileLink
 				href="/players/{row.profileId}"
 				playerId={String(row.profileId)}
-				class={cn(interactive, 'text-secondary-300 hover:text-primary min-w-0 truncate font-medium')}
+				class={cn(
+					interactive,
+					'text-secondary-300 hover:text-primary min-w-0 truncate font-medium'
+				)}
 			>
 				{row.alias}
 			</PlayerProfileLink>

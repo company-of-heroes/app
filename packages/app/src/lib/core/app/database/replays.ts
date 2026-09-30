@@ -18,7 +18,7 @@ import { join } from '@tauri-apps/api/path';
 import { exists, writeFile, remove } from '@tauri-apps/plugin-fs';
 import { t } from '$lib/i18n';
 import { rewriteReplayMapPathsForLocalPlayback } from '$lib/utils/rewrite-replay-map-paths';
-import type { FlatReplayMessage } from '$lib/utils/flatten-replay';
+import type { FlatReplayMessage } from '@company-of-heroes/ui/replay/parse';
 
 export type ReplaysExpanded = Expand<
 	ReplaysResponse<FlatReplayMessage[], Player[], { createdBy: UsersResponse }>

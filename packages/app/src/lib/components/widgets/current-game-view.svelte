@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { SmurfAlert } from '@company-of-heroes/ui/player';
+	import { toPlayerSmurf } from '$lib/player/page-data';
 	import type { LobbyPlayer } from '@fknoobs/app';
 	import type { Match } from '$core/game/lobby';
 	import {
@@ -10,23 +12,20 @@
 	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
 	import * as List from '$lib/components/ui/list';
 	import * as PlayerUi from '$lib/components/player';
-	import MapImage from '$lib/components/ui/map-image.svelte';
+	import MapImage from '@company-of-heroes/ui/map-image';
 	import { LiveBadge } from '$lib/components/ui/badge';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
-	import { getFactionFlagFromRace, getRankImage, normalizeMapName } from '$lib/utils';
-	import { doctrineBannerUrl, raceFromReplayFaction } from '$lib/utils/replay-doctrine';
+	import { normalizeMapName } from '$lib/utils';
 	import { detailMetaGrid } from '$lib/components/ui/variants';
-	import { formatStreak } from '@company-of-heroes/ui/variants';
 	import { getPlayerRatings } from '$core/pocketbase/player-ratings';
 	import { getStoredEloRating, isValidSteamId } from '$lib/utils/player-elo';
-	import { getLeaderboardStatsForPlayerByMatchType, getPlayerEloFromMatchHistory } from '$lib/utils/game';
+	import {
+		getLeaderboardStatsForPlayerByMatchType,
+		getPlayerEloFromMatchHistory
+	} from '$lib/utils/game';
 	import { loadSmurfAlert, type SmurfAlertState } from '$lib/player/smurf';
 	import { loadCheaterSteamIds } from '$core/pocketbase/anti-cheat';
-	import {
-		getCountryDisplayName,
-		getEloColor,
-		getEloTextShadow
-	} from '$lib/components/leaderboard/leaderboard-utils';
+	import { getEloColor, getEloTextShadow } from '$lib/components/leaderboard/leaderboard-utils';
 	import { app } from '$core/app/context';
 	import { resource } from 'runed';
 	import {
@@ -72,10 +71,15 @@
 	const players = $derived.by((): LobbyPlayer[] => {
 		const source = lobby.players;
 		const stored = ratings.current;
-		if (!stored) return source;
+		if (!stored) {
+			return source;
+		}
 
 		return source.map((player) => {
-			if (!player.steamId) return player;
+			if (!player.steamId) {
+				return player;
+			}
+
 			const record = stored.get(player.steamId);
 			return record ? { ...player, storedElo: record.elo } : player;
 		});
@@ -94,13 +98,18 @@
 
 	async function loadSmurfs(source: LobbyPlayer[]): Promise<SmurfMap> {
 		const next: SmurfMap = {};
-		if (source.length === 0) return next;
+		if (source.length === 0) {
+			return next;
+		}
 
 		await Promise.all(
 			source.map(async (player) => {
 				const profileId = getPlayerProfileId(player);
 				const steamId = player.steamId;
-				if (!steamId || !isValidSteamId(steamId)) return;
+				if (!steamId || !isValidSteamId(steamId)) {
+					return;
+				}
+
 				const smurf = await loadSmurfAlert(steamId, profileId, 'lobby_match');
 				if (profileId != null && smurf) {
 					next[profileId] = smurf;
@@ -149,10 +158,22 @@
 	const highest = $derived.by(() => {
 		const alliesMax = matchup.allies.max;
 		const axisMax = matchup.axis.max;
-		if (alliesMax == null && axisMax == null) return { value: null, alias: null };
-		if (alliesMax == null) return { value: axisMax, alias: matchup.axis.maxAlias };
-		if (axisMax == null) return { value: alliesMax, alias: matchup.allies.maxAlias };
-		if (axisMax > alliesMax) return { value: axisMax, alias: matchup.axis.maxAlias };
+		if (alliesMax == null && axisMax == null) {
+			return { value: null, alias: null };
+		}
+
+		if (alliesMax == null) {
+			return { value: axisMax, alias: matchup.axis.maxAlias };
+		}
+
+		if (axisMax == null) {
+			return { value: alliesMax, alias: matchup.allies.maxAlias };
+		}
+
+		if (axisMax > alliesMax) {
+			return { value: axisMax, alias: matchup.axis.maxAlias };
+		}
+
 		return { value: alliesMax, alias: matchup.allies.maxAlias };
 	});
 
@@ -206,9 +227,7 @@
 		return players.map((player, index) => {
 			const profileId = getPlayerProfileId(player) ?? null;
 			const isCpu = player.playerId === -1;
-			const statsRow = isCpu
-				? null
-				: getLeaderboardStatsForPlayerByMatchType(matchType, player);
+			const statsRow = isCpu ? null : getLeaderboardStatsForPlayerByMatchType(matchType, player);
 			const elo = isCpu
 				? null
 				: (getPlayerEloFromMatchHistory(matchType, player) ??
@@ -264,59 +283,10 @@
 		} as ReplayData;
 	});
 
-	function resolveFactionFlag(raceId: number): string {
-		return getFactionFlagFromRace(raceId);
-	}
-
-	function flagImageUrl(country: string | null | undefined): string | null {
-		if (!country) return null;
-		const region = String(country).trim().toUpperCase();
-		if (!/^[A-Z]{2}$/.test(region)) return null;
-		return `https://flagsapi.com/${region}/shiny/64.png`;
-	}
-
-	function playerHref(player: CommunityPlayer): string | null {
-		if (player.playerId === -1) {
-			return null;
-		}
-
-		const id = player.profile.profile_id;
-		return id > 0 ? `/players/${id}` : null;
-	}
-
-	function livePlayerHref(player: LiveLobbyPlayer): string | null {
-		if (player.playerId === -1) {
-			return null;
-		}
-
-		return player.profileId != null && player.profileId > 0
-			? `/players/${player.profileId}`
-			: null;
-	}
-
 	function isHighlightedName(name: string): boolean {
 		const key = name.trim().toLowerCase();
 		const player = players.find((entry) => getPlayerAlias(entry).trim().toLowerCase() === key);
 		return player ? isHighlightedPlayer(player, highlightPlayerId) : false;
-	}
-
-	function playerCpm(data: ReplayData, playerId: number | null): string {
-		if (playerId == null) {
-			return '0';
-		}
-
-		const precomputed = (data as ReplayData & { cpmByPlayerId?: Record<string, string> })
-			.cpmByPlayerId?.[String(playerId)];
-		if (precomputed != null) {
-			return precomputed;
-		}
-
-		const parsed = playbackReplay.current;
-		if (!parsed) {
-			return '0';
-		}
-
-		return parsed.cpmByPlayerId[String(playerId)] ?? '0';
 	}
 </script>
 
@@ -339,8 +309,14 @@
 
 {#snippet nameExtra(args: { name: string; steamId: string | null; profileId: number | null })}
 	{@const lobbyPlayer = players.find((player) => {
-		if (args.profileId != null && getPlayerProfileId(player) === args.profileId) return true;
-		if (args.steamId && player.steamId === args.steamId) return true;
+		if (args.profileId != null && getPlayerProfileId(player) === args.profileId) {
+			return true;
+		}
+
+		if (args.steamId && player.steamId === args.steamId) {
+			return true;
+		}
+
 		return getPlayerAlias(player).trim().toLowerCase() === args.name.trim().toLowerCase();
 	})}
 	{#if lobbyPlayer}
@@ -348,7 +324,10 @@
 		<PlayerUi.Root player={lobbyPlayer} race={lobbyPlayer.race}>
 			<PlayerUi.Labels steamId={lobbyPlayer.steamId} class="shrink-0" />
 			{#if smurf?.status === 'shared'}
-				<PlayerUi.SmurfAlert {smurf} compact />
+				{@const shared = toPlayerSmurf(smurf)}
+				{#if shared}
+					<SmurfAlert smurf={shared} compact />
+				{/if}
 			{/if}
 			{#if lobbyPlayer.steamId && cheaters.current?.has(lobbyPlayer.steamId)}
 				<PlayerUi.CheaterAlert compact />
@@ -380,7 +359,13 @@
 				<List.Value class="tabular-nums">{lobby.sessionId}</List.Value>
 				<List.Title>{t('Match type')}</List.Title>
 				<List.Value>
-					{lobby.isReplay ? t('Replay') : lobby.isSkirmish ? t('Skirmish') : lobby.isRanked ? t('Ranked') : t('Custom')}
+					{lobby.isReplay
+						? t('Replay')
+						: lobby.isSkirmish
+							? t('Skirmish')
+							: lobby.isRanked
+								? t('Ranked')
+								: t('Custom')}
 				</List.Value>
 
 				<List.Title>{t('Game mode')}</List.Title>
@@ -420,22 +405,7 @@
 			match={overviewMatch}
 			replay={overviewReplay}
 			{livePlayers}
-			{playerHref}
-			{flagImageUrl}
-			{getCountryDisplayName}
-			{resolveFactionFlag}
-			{raceFromReplayFaction}
-			{doctrineBannerUrl}
-			{playerCpm}
-			formatStreakLabel={formatStreak}
-			getRankImage={lobby.isReplay ? undefined : getRankImage}
-			levelLabel={t('Lv')}
-			alliesLabel={t('Allies')}
-			axisLabel={t('Axis')}
-			unknownDoctrineLabel={t('Unknown doctrine')}
-			ratingLabel={t('Rating')}
-			cpmLabel={t('CPM')}
-			{livePlayerHref}
+			showRanks={!lobby.isReplay}
 			{isHighlightedName}
 			{nameExtra}
 		/>

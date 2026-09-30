@@ -1,0 +1,57 @@
+# Sits in front of api.coh1stats.com (PocketBase) on the legacy custom-route paths.
+# Paths listed in src/routes.ts are served by the website's /api/v1; everything
+# else on a matched route passes through to PocketBase unchanged.
+name = "coh1stats-api-gateway"
+main = "src/index.ts"
+compatibility_date = "2025-07-10"
+
+[[services]]
+binding = "WEBSITE"
+service = "coh1stats-website"
+
+# Add a route per legacy prefix as it moves to the website, e.g.:
+# routes = [
+#   { pattern = "api.coh1stats.com/overlay/*", zone_name = "coh1stats.com" },
+#   { pattern = "api.coh1stats.com/api/leaderboard/*", zone_name = "coh1stats.com" },
+# ]
+# Collection write paths older apps use (see src/routes.ts) also need a route;
+# reads on those paths pass through. /api/files/* only gets a rate limit, then passes
+# through. Realtime must never match a route.
+
+# OBS overlays (/overlay/{userId}/…): published files in R2, default overlay as assets
+# (built by packages/oppbot-overlay into overlay-default/).
+[[r2_buckets]]
+binding = "OVERLAYS"
+bucket_name = "coh1stats-overlays"
+
+[assets]
+directory = "overlay-default"
+binding = "DEFAULT_OVERLAY"
+run_worker_first = true
+
+# Replay file downloads per IP (src/files.ts; route api.coh1stats.com/api/files/*).
+# Secret REPLAY_PROXY_SECRET (same as the website) lets the website's own file fetches through.
+# Namespace ids are account-unique (the website uses 1001-1004).
+[[ratelimits]]
+name = "FILE_BURST"
+namespace_id = "1011"
+simple = { limit = 8, period = 10 }
+
+[[ratelimits]]
+name = "FILE_MINUTE"
+namespace_id = "1012"
+simple = { limit = 40, period = 60 }
+
+[[ratelimits]]
+name = "FILE_AUTH_BURST"
+namespace_id = "1013"
+simple = { limit = 20, period = 10 }
+
+[[ratelimits]]
+name = "FILE_AUTH_MINUTE"
+namespace_id = "1014"
+simple = { limit = 90, period = 60 }
+
+[observability.logs]
+enabled = true
+invocation_logs = true

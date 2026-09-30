@@ -33,8 +33,13 @@ export function matchtypesForMatchups(matchups: string[]): number[] {
 	const ids = new Set<number>();
 	for (const matchup of matchups) {
 		const types = HISTORY_MATCHUP_TYPES[matchup as HistoryMatchup];
-		if (!types) continue;
-		for (const id of types) ids.add(id);
+		if (!types) {
+			continue;
+		}
+
+		for (const id of types) {
+			ids.add(id);
+		}
 	}
 	return [...ids];
 }
@@ -46,7 +51,10 @@ export function slotsForPositions(positions: string[]): number[] {
 	const slots = new Set<number>();
 	for (const value of positions) {
 		const slot = Number(value);
-		if (!Number.isInteger(slot) || slot < 1 || slot > 8) continue;
+		if (!Number.isInteger(slot) || slot < 1 || slot > 8) {
+			continue;
+		}
+
 		slots.add(slot);
 	}
 	return [...slots];
@@ -203,9 +211,7 @@ export class Matches {
 	#loadedResultKey = $state<string | null>(null);
 	#awaitingScopeFetch = $state(false);
 
-	public resultKey = $derived.by(() =>
-		md5(JSON.stringify({ ...this.query, page: this.page }))
-	);
+	public resultKey = $derived.by(() => md5(JSON.stringify({ ...this.query, page: this.page })));
 
 	public freshResult = $derived(
 		this.#loadedResultKey === this.resultKey ? this.result.current : undefined
@@ -314,6 +320,7 @@ export class Matches {
 			this.sort = field;
 			this.sortDir = 'desc';
 		}
+
 		this.page = 1;
 	}
 
@@ -354,6 +361,26 @@ export class Matches {
 				this.rememberPlayerOptions(options);
 				return options;
 			});
+	}
+
+	/** Names for filtered player ids (profile ids) that were not searched in this session. */
+	async resolvePlayers(ids: string[]) {
+		const numeric = ids.filter((id) => /^\d+$/.test(id));
+		if (numeric.length === 0) {
+			return [];
+		}
+
+		const rows = await app.pocketbase
+			.collection('history_players')
+			.getFullList<{ id: string; alias: string }>({
+				filter: numeric.map((id) => `id = "${id}"`).join(' || '),
+				fields: 'id,alias'
+			});
+		const options = rows
+			.filter((row) => row.alias?.trim())
+			.map((row) => ({ label: row.alias.trim(), value: row.id }));
+		this.rememberPlayerOptions(options);
+		return options;
 	}
 
 	searchMaps(q: string) {

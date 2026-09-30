@@ -72,7 +72,9 @@
 	});
 </script>
 
-<div class="border-secondary-800 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b p-4">
+<div
+	class="border-secondary-800 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b p-4"
+>
 	<ToggleGroup bind:value={scope} items={scopes} class="w-fit" />
 	<div class="flex flex-wrap gap-1">
 		<Button variant="secondary" onclick={() => shortcuts.importSettings()}>
@@ -87,7 +89,9 @@
 </div>
 
 <p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-	{t('Use Global for hotkeys that apply in every match. Faction tabs add extra bindings for that army and override the same key. Hotkeys only work during an active match while Company of Heroes is focused (not in chat). Click a chord field to record keys.')}
+	{t(
+		'Use Global for hotkeys that apply in every match. Faction tabs add extra bindings for that army and override the same key. Hotkeys only work during an active match while Company of Heroes is focused (not in chat). Click a chord field to record keys.'
+	)}
 </p>
 
 <table class="w-full table-fixed">
@@ -126,7 +130,9 @@
 							<p class="text-secondary-500 mt-1 text-sm">
 								{isGlobal
 									? t('These apply in every match, on top of the faction you pick.')
-									: t('Add a binding below, then record what you press and what the game should receive.')}
+									: t(
+											'Add a binding below, then record what you press and what the game should receive.'
+										)}
 							</p>
 						</div>
 					</div>

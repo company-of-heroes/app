@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { Select, type WithoutChildren } from 'bits-ui';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { controlBase, flushSelect, menuItem } from '../../variants';
@@ -23,6 +24,8 @@
 		selectedCountLabel?: (count: number) => string;
 	};
 
+	const { t } = useI18n();
+
 	let {
 		value = $bindable(),
 		items,
@@ -32,8 +35,8 @@
 		flush = false,
 		size = 'md',
 		type = 'single',
-		empty = 'No results found.',
-		selectedCountLabel = (count: number) => `${count} items`,
+		empty = t('No results found.'),
+		selectedCountLabel = (count: number) => t('{count} items', { count }),
 		...restProps
 	}: SelectProps = $props();
 

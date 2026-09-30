@@ -74,14 +74,7 @@ export async function defaultWarningsLogDir(): Promise<string> {
 
 /** Typical Steam install path, used as a hint when detection fails. */
 export async function defaultGameDirPath(): Promise<string> {
-	return join(
-		'C:',
-		'Program Files (x86)',
-		'Steam',
-		'steamapps',
-		'common',
-		COH_GAME_FOLDER
-	);
+	return join('C:', 'Program Files (x86)', 'Steam', 'steamapps', 'common', COH_GAME_FOLDER);
 }
 
 async function warningsLogCandidates(): Promise<string[]> {
@@ -260,7 +253,14 @@ export class Paths {
 
 		return (
 			gameDir ||
-			join('C:', 'Program Files (x86)', 'Steam', 'steamapps', 'common', 'Company of Heroes Relaunch')
+			join(
+				'C:',
+				'Program Files (x86)',
+				'Steam',
+				'steamapps',
+				'common',
+				'Company of Heroes Relaunch'
+			)
 		);
 	}
 

@@ -33,19 +33,46 @@ export function isRankedLeaderboard(leaderboardId: number): boolean {
 }
 
 export function getMatchTypeIdFromLeaderboardId(leaderboardId: number): number | null {
-	if (leaderboardId >= 0 && leaderboardId <= 3) return 0;
-	if (leaderboardId >= 4 && leaderboardId <= 7) return 1;
-	if (leaderboardId >= 8 && leaderboardId <= 11) return 2;
-	if (leaderboardId >= 12 && leaderboardId <= 15) return 3;
-	if (leaderboardId >= 16 && leaderboardId <= 19) return 4;
+	if (leaderboardId >= 0 && leaderboardId <= 3) {
+		return 0;
+	}
+
+	if (leaderboardId >= 4 && leaderboardId <= 7) {
+		return 1;
+	}
+
+	if (leaderboardId >= 8 && leaderboardId <= 11) {
+		return 2;
+	}
+
+	if (leaderboardId >= 12 && leaderboardId <= 15) {
+		return 3;
+	}
+
+	if (leaderboardId >= 16 && leaderboardId <= 19) {
+		return 4;
+	}
+
 	return null;
 }
 
 export function getRaceFromLeaderboardId(leaderboardId: number): number {
-	if ([4, 8, 12, 16, 0, 42, 46, 50, 54].includes(leaderboardId)) return 0;
-	if ([5, 9, 13, 17, 1, 43, 47, 51, 55].includes(leaderboardId)) return 1;
-	if ([6, 10, 14, 18, 2, 44].includes(leaderboardId)) return 2;
-	if ([7, 11, 15, 19, 3, 45].includes(leaderboardId)) return 3;
+	if ([4, 8, 12, 16, 0, 42, 46, 50, 54].includes(leaderboardId)) {
+		return 0;
+	}
+
+	if ([5, 9, 13, 17, 1, 43, 47, 51, 55].includes(leaderboardId)) {
+		return 1;
+	}
+
+	if ([6, 10, 14, 18, 2, 44].includes(leaderboardId)) {
+		return 2;
+	}
+
+	if ([7, 11, 15, 19, 3, 45].includes(leaderboardId)) {
+		return 3;
+	}
+
 	return 0;
 }
 
@@ -86,17 +113,35 @@ export function normalizeMapName(mapName: string, includePlayerCount = true): st
 		.toLowerCase()
 		.replace(/\b\w/g, (c) => c.toUpperCase());
 
-	if (!includePlayerCount) return formattedName;
+	if (!includePlayerCount) {
+		return formattedName;
+	}
+
 	return `${formattedName} (${playerCount})`;
 }
 
 export function formatRelative(unixSeconds: number): string {
 	const delta = Math.max(0, Date.now() / 1000 - unixSeconds);
-	if (delta < 60) return 'just now';
-	if (delta < 3600) return `${Math.floor(delta / 60)}m ago`;
-	if (delta < 86400) return `${Math.floor(delta / 3600)}h ago`;
-	if (delta < 604800) return `${Math.floor(delta / 86400)}d ago`;
-	if (delta < 31536000) return `${Math.floor(delta / 604800)}w ago`;
+	if (delta < 60) {
+		return 'just now';
+	}
+
+	if (delta < 3600) {
+		return `${Math.floor(delta / 60)}m ago`;
+	}
+
+	if (delta < 86400) {
+		return `${Math.floor(delta / 3600)}h ago`;
+	}
+
+	if (delta < 604800) {
+		return `${Math.floor(delta / 86400)}d ago`;
+	}
+
+	if (delta < 31536000) {
+		return `${Math.floor(delta / 604800)}w ago`;
+	}
+
 	return `${Math.floor(delta / 31536000)}y ago`;
 }
 
@@ -124,18 +169,30 @@ export function formatHours(minutes: number): string {
 
 export function winrate(wins: number, losses: number): string {
 	const total = wins + losses;
-	if (total === 0) return '-';
+	if (total === 0) {
+		return '-';
+	}
+
 	return `${Math.round((wins / total) * 100)}%`;
 }
 
 export function formatRatio(wins: number, losses: number): string {
-	if (losses > 0) return (wins / losses).toFixed(2);
-	if (wins > 0) return '∞';
+	if (losses > 0) {
+		return (wins / losses).toFixed(2);
+	}
+
+	if (wins > 0) {
+		return '∞';
+	}
+
 	return '0.00';
 }
 
 export function getRatioValue(wins: number, losses: number): number {
-	if (losses === 0) return wins > 0 ? Infinity : 0;
+	if (losses === 0) {
+		return wins > 0 ? Infinity : 0;
+	}
+
 	return wins / losses;
 }
 
@@ -144,9 +201,18 @@ function lerp(min: number, max: number, t: number): number {
 }
 
 function ratioToProgress(ratio: number): number {
-	if (!Number.isFinite(ratio) || ratio <= 0) return 0;
-	if (ratio >= 5) return 1;
-	if (ratio <= 1) return ratio * 0.5;
+	if (!Number.isFinite(ratio) || ratio <= 0) {
+		return 0;
+	}
+
+	if (ratio >= 5) {
+		return 1;
+	}
+
+	if (ratio <= 1) {
+		return ratio * 0.5;
+	}
+
 	return 0.5 + ((ratio - 1) / 4) * 0.5;
 }
 
@@ -167,15 +233,27 @@ function interpolateRatioColor(t: number): string {
 }
 
 export function getRatioColor(wins: number, losses: number): string {
-	if (wins === 0 && losses === 0) return 'var(--color-secondary-400)';
+	if (wins === 0 && losses === 0) {
+		return 'var(--color-secondary-400)';
+	}
+
 	const ratio = getRatioValue(wins, losses);
-	if (ratio === Infinity) return 'oklch(0.72 0.21 145)';
+	if (ratio === Infinity) {
+		return 'oklch(0.72 0.21 145)';
+	}
+
 	return interpolateRatioColor(ratioToProgress(ratio));
 }
 
 function eloBandProgress(elo: number, min: number, max: number): number {
-	if (elo <= min) return 0;
-	if (elo >= max) return 1;
+	if (elo <= min) {
+		return 0;
+	}
+
+	if (elo >= max) {
+		return 1;
+	}
+
 	return (elo - min) / (max - min);
 }
 
@@ -188,7 +266,10 @@ function lerpOklch(
 }
 
 export function getEloColor(elo: number | null | undefined): string {
-	if (typeof elo !== 'number' || elo < 1) return 'var(--color-secondary-400)';
+	if (typeof elo !== 'number' || elo < 1) {
+		return 'var(--color-secondary-400)';
+	}
+
 	if (elo < 1500) {
 		return lerpOklch(
 			{ l: 0.82, c: 0.09, h: 230 },
@@ -196,6 +277,7 @@ export function getEloColor(elo: number | null | undefined): string {
 			eloBandProgress(elo, 1000, 1500)
 		);
 	}
+
 	if (elo < 1950) {
 		return lerpOklch(
 			{ l: 0.84, c: 0.12, h: 145 },
@@ -203,6 +285,7 @@ export function getEloColor(elo: number | null | undefined): string {
 			eloBandProgress(elo, 1500, 1950)
 		);
 	}
+
 	if (elo < 2400) {
 		return lerpOklch(
 			{ l: 0.9, c: 0.13, h: 90 },
@@ -210,6 +293,7 @@ export function getEloColor(elo: number | null | undefined): string {
 			eloBandProgress(elo, 1950, 2400)
 		);
 	}
+
 	return lerpOklch(
 		{ l: 0.95, c: 0.16, h: 88 },
 		{ l: 0.88, c: 0.2, h: 78 },
@@ -226,7 +310,10 @@ export function isPremiumElo(elo: number | null | undefined): boolean {
 }
 
 export function getEloTextShadow(elo: number | null | undefined): string | undefined {
-	if (!isPremiumElo(elo)) return undefined;
+	if (!isPremiumElo(elo)) {
+		return undefined;
+	}
+
 	const color = getEloColor(elo);
 	if (isEliteElo(elo)) {
 		const t = eloBandProgress(elo!, 2400, 2800);
@@ -239,6 +326,7 @@ export function getEloTextShadow(elo: number | null | undefined): string | undef
 			`0 0 ${outer * 1.6}px color-mix(in oklch, var(--color-primary) 25%, transparent)`
 		].join(', ');
 	}
+
 	const t = eloBandProgress(elo!, 1950, 2400);
 	const glow = lerp(0.28, 0.48, t);
 	const blur = lerp(8, 14, t);
@@ -251,7 +339,10 @@ export function sortLeaderboardStats<T extends { leaderboard_id: number; ranklev
 	return [...stats].sort((a, b) => {
 		const aRanked = isRankedLeaderboard(a.leaderboard_id) ? 0 : 1;
 		const bRanked = isRankedLeaderboard(b.leaderboard_id) ? 0 : 1;
-		if (aRanked !== bRanked) return aRanked - bRanked;
+		if (aRanked !== bRanked) {
+			return aRanked - bRanked;
+		}
+
 		return (b.ranklevel ?? 0) - (a.ranklevel ?? 0);
 	});
 }

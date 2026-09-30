@@ -22,7 +22,7 @@
 		type="button"
 		class={cn(
 			interactive,
-			'flex w-full items-center justify-between gap-3 border-b px-4 py-3 text-left outline-none transition-colors',
+			'flex w-full items-center justify-between gap-3 border-b px-4 py-3 text-left transition-colors outline-none',
 			'focus-visible:ring-primary/25 focus-visible:ring-2 focus-visible:ring-inset',
 			expanded ? 'border-secondary-800/80' : 'border-transparent',
 			'hover:bg-secondary-950/50'
@@ -33,14 +33,14 @@
 		<span class="flex min-w-0 items-center gap-2.5">
 			{#if Icon}
 				<Icon
-					class={cn('size-5 shrink-0 transition-colors', expanded ? 'text-primary' : 'text-secondary-400')}
+					class={cn(
+						'size-5 shrink-0 transition-colors',
+						expanded ? 'text-primary' : 'text-secondary-400'
+					)}
 					weight="duotone"
 				/>
 			{/if}
-			<H
-				level={6}
-				class={cn('mb-0 font-semibold transition-colors', expanded && 'text-primary')}
-			>
+			<H level={6} class={cn('mb-0 font-semibold transition-colors', expanded && 'text-primary')}>
 				{title}
 			</H>
 		</span>

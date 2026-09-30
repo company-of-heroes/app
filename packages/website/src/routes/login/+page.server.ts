@@ -12,12 +12,9 @@ export const actions: Actions = {
 			return fail(400, { message: locals.t('Enter your email and password.'), email });
 		}
 
-		const result = await locals.services.auth().login(email, password);
+		const result = await locals.api.auth.login(email, password);
 		if (result.isErr()) {
-			return failFrom(
-				{ ...result.error, message: locals.t(result.error.message) },
-				{ email }
-			);
+			return failFrom({ ...result.error, message: locals.t(result.error.message) }, { email });
 		}
 
 		redirect(303, safeInternalPath(form.get('redirect'), locals.locale));

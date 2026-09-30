@@ -7,9 +7,20 @@ import { STEAM_ID_REGEX } from '../ratings/ratings';
 import type { ToUploadFileOptions } from '../upload-file';
 import type { PlayerCustomization, PlayerProfileLink } from '@company-of-heroes/ui/player/types';
 
-export const PROFILE_BIO_MAX = 500;
-export const PROFILE_BACKGROUND_MAX_BYTES = 5 * 1024 * 1024;
-export const PROFILE_OTHER_LINKS_MAX = 4;
+import {
+	PROFILE_BACKGROUND_MAX_BYTES,
+	PROFILE_BIO_MAX,
+	PROFILE_OTHER_LINKS_MAX,
+	type ProfileLinkFields
+} from '@company-of-heroes/ui/player/profile';
+
+export {
+	PROFILE_BACKGROUND_MAX_BYTES,
+	PROFILE_BIO_MAX,
+	PROFILE_OTHER_LINKS_MAX,
+	splitProfileLinks,
+	type ProfileLinkFields
+} from '@company-of-heroes/ui/player/profile';
 
 export const BACKGROUND_UPLOAD: ToUploadFileOptions = {
 	maxBytes: PROFILE_BACKGROUND_MAX_BYTES,
@@ -37,12 +48,6 @@ export const playerProfileLinkSchema = z.object({
 });
 
 const profileLinksSchema = z.array(playerProfileLinkSchema).max(PROFILE_OTHER_LINKS_MAX + 2);
-
-export type ProfileLinkFields = {
-	twitchUrl: string;
-	youtubeUrl: string;
-	others: Array<{ label?: string; url?: string }>;
-};
 
 export function validateProfileLinks(
 	links: PlayerProfileLink[]
@@ -76,16 +81,6 @@ export function buildProfileLinks(
 	}
 
 	return validateProfileLinks(links);
-}
-
-export function splitProfileLinks(links: PlayerProfileLink[]): ProfileLinkFields {
-	return {
-		twitchUrl: links.find((link) => link.type === 'twitch')?.url ?? '',
-		youtubeUrl: links.find((link) => link.type === 'youtube')?.url ?? '',
-		others: links
-			.filter((link) => link.type === 'other')
-			.map((link) => ({ label: link.label ?? '', url: link.url }))
-	};
 }
 
 export function parseLinks(raw: unknown): PlayerProfileLink[] {

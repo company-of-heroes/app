@@ -4,5 +4,5 @@ import { unwrapAsync } from '$lib/errors/unwrap';
 
 export const getCompanionUser = query(v.pipe(v.string(), v.minLength(1)), (steamId) => {
 	const { locals } = getRequestEvent();
-	return unwrapAsync(locals.services.auth().findCompanionBySteamId(steamId));
+	return unwrapAsync(locals.api.auth.findCompanionBySteamId(steamId));
 });

@@ -69,7 +69,9 @@ export function getLeaderboardStat(
 ): LeaderboardStat | null {
 	const prefix = getRacePrefix(player.race);
 	const matchLabel = MATCH_TYPES[type];
-	if (!matchLabel) return null;
+	if (!matchLabel) {
+		return null;
+	}
 
 	const leaderBoardId = LEADERBOARD_IDS[`${matchLabel}_${prefix}`];
 	const statGroup = player.profile?.leaderboardStats?.find(
@@ -85,32 +87,46 @@ export function getStoredEloRating(
 	race: number
 ): number | null {
 	const rating = elo?.[String(matchType)]?.[String(race)]?.rating;
-	if (typeof rating !== 'number' || rating < 1) return null;
+	if (typeof rating !== 'number' || rating < 1) {
+		return null;
+	}
+
 	return rating;
 }
 
 function eloTypesToTry(matchType: number): number[] {
-	if (matchType === 0 || matchType === 14) return [matchType, 1, 2, 3, 4];
+	if (matchType === 0 || matchType === 14) {
+		return [matchType, 1, 2, 3, 4];
+	}
+
 	return [matchType];
 }
 
 export function getPlayerEloFromMatchHistory(matchType: number, player: Player): number | null {
 	const history = player.matchHistory;
-	if (!history?.length) return null;
+	if (!history?.length) {
+		return null;
+	}
 
 	const profileId = player.playerId ?? player.profile?.profile_id;
-	if (profileId == null) return null;
+	if (profileId == null) {
+		return null;
+	}
 
 	let elo: number | null = null;
 	let latestCompletion = -1;
 
 	for (const match of history) {
-		if (match.matchtype_id !== matchType) continue;
+		if (match.matchtype_id !== matchType) {
+			continue;
+		}
 
 		const entry = match.players?.find(
 			(p) => p.profile_id === profileId && p.race_id === player.race
 		);
-		if (!entry || typeof entry.newrating !== 'number' || entry.newrating < 1) continue;
+		if (!entry || typeof entry.newrating !== 'number' || entry.newrating < 1) {
+			continue;
+		}
 
 		const completed = match.completiontime ?? match.startgametime ?? 0;
 		if (completed >= latestCompletion) {
@@ -126,9 +142,14 @@ export function getPlayerEloFromMatchHistory(matchType: number, player: Player):
 export function resolvePlayerElo(matchType: number, player: Player): number | null {
 	for (const type of eloTypesToTry(matchType)) {
 		const fromHistory = getPlayerEloFromMatchHistory(type, player);
-		if (fromHistory != null) return fromHistory;
+		if (fromHistory != null) {
+			return fromHistory;
+		}
+
 		const fromStored = getStoredEloRating(player.storedElo, type, player.race);
-		if (fromStored != null) return fromStored;
+		if (fromStored != null) {
+			return fromStored;
+		}
 	}
 	return null;
 }

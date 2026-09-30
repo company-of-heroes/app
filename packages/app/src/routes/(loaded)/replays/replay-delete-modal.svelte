@@ -19,7 +19,10 @@
 	let deleting = $state<ReplayDeleteMode | null>(null);
 
 	async function confirm(mode: ReplayDeleteMode) {
-		if (deleting) return;
+		if (deleting) {
+			return;
+		}
+
 		deleting = mode;
 		try {
 			await onConfirm(mode);
@@ -61,7 +64,9 @@
 				<span class="text-secondary-100 block text-sm font-medium">{t('Local file only')}</span>
 				<span class="text-secondary-400 mt-1 block text-sm leading-relaxed">
 					{#if hasLocal}
-						{t('Removes the `.rec` from your Company of Heroes playback folder. Keeps it in your library so you can download it again later.')}
+						{t(
+							'Removes the `.rec` from your Company of Heroes playback folder. Keeps it in your library so you can download it again later.'
+						)}
 					{:else}
 						{t('No local playback file found for this replay.')}
 					{/if}

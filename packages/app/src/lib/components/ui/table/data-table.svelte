@@ -54,6 +54,7 @@
 		if (headers[column.id]) {
 			return headers[column.id]!;
 		}
+
 		return column.header;
 	}
 
@@ -69,6 +70,7 @@
 		if (column.accessor) {
 			return column.accessor(row);
 		}
+
 		return undefined;
 	}
 
@@ -81,7 +83,10 @@
 			onRowClick(row);
 			return;
 		}
-		if (href) navigate(href);
+
+		if (href) {
+			navigate(href);
+		}
 	}
 
 	const overlayContent =
@@ -96,12 +101,7 @@
 		{@const cellHref = column.href?.(row)}
 		{@const usePad = column.pad !== false}
 		<td
-			class={cn(
-				usePad && cellPad,
-				'relative h-full',
-				column.cellClass?.(row),
-				clickable && 'p-0!'
-			)}
+			class={cn(usePad && cellPad, 'relative h-full', column.cellClass?.(row), clickable && 'p-0!')}
 		>
 			{#if clickable}
 				<button
@@ -192,7 +192,7 @@
 			!expanded && 'border-b',
 			stripeClass,
 			bodyRowClass,
-			clickable && 'hover:text-primary cursor-pointer outline-none transition-colors',
+			clickable && 'hover:text-primary cursor-pointer transition-colors outline-none',
 			clickable && 'hover:bg-secondary-950/60',
 			expanded && 'bg-secondary-950/60 text-primary',
 			rowClass?.(row)
@@ -201,8 +201,14 @@
 		role={href ? 'link' : undefined}
 		aria-expanded={onRowClick ? expanded : undefined}
 		onkeydown={(event) => {
-			if (!clickable) return;
-			if (event.key !== 'Enter' && event.key !== ' ') return;
+			if (!clickable) {
+				return;
+			}
+
+			if (event.key !== 'Enter' && event.key !== ' ') {
+				return;
+			}
+
 			event.preventDefault();
 			activateRow(row, href);
 		}}
@@ -213,10 +219,7 @@
 
 <div class={cn(className)}>
 	<table
-		class={cn(
-			'w-full border-collapse',
-			tableLayout === 'auto' ? 'table-auto' : 'table-fixed'
-		)}
+		class={cn('w-full border-collapse', tableLayout === 'auto' ? 'table-auto' : 'table-fixed')}
 	>
 		<colgroup>
 			{#each columns as column (column.id)}
@@ -252,7 +255,9 @@
 										typeof header === 'string' && 'gap-1',
 										column.headerClass
 									)}
-									aria-label={typeof header === 'string' ? t('Sort by {header}', { header }) : undefined}
+									aria-label={typeof header === 'string'
+										? t('Sort by {header}', { header })
+										: undefined}
 									onclick={column.onSort}
 								>
 									{#if typeof header === 'string'}
@@ -289,7 +294,10 @@
 				{/each}
 			{:else if data.length === 0}
 				<tr>
-					<td colspan={columns.length} class={cn('text-secondary-400 text-sm', cellPad, isCompact ? '' : 'py-3')}>
+					<td
+						colspan={columns.length}
+						class={cn('text-secondary-400 text-sm', cellPad, isCompact ? '' : 'py-3')}
+					>
 						{t(empty)}
 					</td>
 				</tr>
@@ -309,7 +317,10 @@
 		{#if children}
 			<tfoot>
 				<tr>
-					<td colspan={columns.length} class={cn('border-secondary-800 border-t', cellPad, isCompact ? 'py-2' : 'py-3')}>
+					<td
+						colspan={columns.length}
+						class={cn('border-secondary-800 border-t', cellPad, isCompact ? 'py-2' : 'py-3')}
+					>
 						{@render children()}
 					</td>
 				</tr>

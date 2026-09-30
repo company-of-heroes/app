@@ -12,8 +12,6 @@ import MatchHost from './match-host.svelte';
 import MatchStatus from './match-status.svelte';
 import MatchDuration from './match-duration.svelte';
 import MatchListTable from './match-list-table.svelte';
-import MatchLikeButton from './match-like-button.svelte';
-import MatchComments from './match-comments.svelte';
 import MatchSocialCounts from './match-social-counts.svelte';
 import MatchProBadge from './match-pro-badge.svelte';
 import MatchPendingBadge from './match-pending-badge.svelte';
@@ -46,8 +44,6 @@ export {
 	MatchDuration as Duration,
 	MatchListTable as ListTable,
 	MatchListTable,
-	MatchLikeButton as LikeButton,
-	MatchComments as Comments,
 	MatchSocialCounts as SocialCounts,
 	MatchProBadge as ProBadge,
 	MatchPendingBadge as PendingBadge,

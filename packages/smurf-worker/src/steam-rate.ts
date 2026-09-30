@@ -29,9 +29,11 @@ export function minIntervalForEndpoint(endpoint: string): number {
 	if (endpoint.includes('GetOwnedGames')) {
 		return 3500;
 	}
+
 	if (endpoint.includes('IsPlayingSharedGame')) {
 		return 2500;
 	}
+
 	return 2000;
 }
 
@@ -47,9 +49,9 @@ async function readLastCallAt(env: { STEAM_RATE_LIMIT?: KVNamespace }): Promise<
 	return Math.max(memoryLastCallAt, kvLastCall);
 }
 
-export async function getSteamBlockedSeconds(
-	env: { STEAM_RATE_LIMIT?: KVNamespace }
-): Promise<number> {
+export async function getSteamBlockedSeconds(env: {
+	STEAM_RATE_LIMIT?: KVNamespace;
+}): Promise<number> {
 	const blockedUntil = await readBlockedUntil(env);
 	const remainingMs = blockedUntil - Date.now();
 	return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;

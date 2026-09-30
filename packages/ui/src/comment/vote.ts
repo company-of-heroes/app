@@ -4,11 +4,7 @@ export function nextCommentVote(current: CommentVoteValue, next: 1 | -1): Commen
 	return current === next ? 0 : next;
 }
 
-export function nextCommentScore(
-	score: number,
-	current: CommentVoteValue,
-	next: 1 | -1
-): number {
+export function nextCommentScore(score: number, current: CommentVoteValue, next: 1 | -1): number {
 	if (current === next) {
 		return score - next;
 	}

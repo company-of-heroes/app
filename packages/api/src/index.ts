@@ -1,6 +1,7 @@
 export { createApi, type Api } from './client';
-export { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders } from './deps';
+export { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, sendV1, v1Url } from './deps';
 export { apiError, fromUnknown, isApiError, type ApiError } from './errors';
+export { fromClientError } from './pb';
 export { unwrapApi } from './unwrap';
 
 export {
@@ -73,6 +74,12 @@ export {
 } from './leaderboards';
 
 export { TwitchApi, type LiveStream } from './twitch';
+export {
+	StreamingApi,
+	type StreamingProgress,
+	type StreamingReport,
+	type YoutubeTokenBundle
+} from './streaming';
 
 export {
 	ReplaysApi,

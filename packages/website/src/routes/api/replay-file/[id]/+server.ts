@@ -1,33 +1,25 @@
-import type { RequestHandler } from './$types';
+import { isStaffUser } from '$lib/auth/user';
+import { limitDownloads } from '$lib/server/downloads';
+import { handle } from '$lib/server/http';
 
-function errorResponse(status: number, message: string, retryAfter?: number): Response {
-	const headers: Record<string, string> = {
-		'Cache-Control': 'no-store'
-	};
-	if (retryAfter !== undefined) {
-		headers['Retry-After'] = String(retryAfter);
-	}
-
-	return new Response(message, { status, headers });
-}
-
-export const GET: RequestHandler = async ({ locals, params, url, getClientAddress }) => {
-	const stripMetadata = url.searchParams.get('download') === '1';
-	const result = await locals.services.replays().getFile(
-		params.id,
-		getClientAddress(),
-		stripMetadata
-	);
-	if (result.isErr()) {
-		return errorResponse(result.error.status, result.error.message, result.error.retryAfter);
-	}
-
-	const file = result.value;
-	return new Response(file.body, {
-		headers: {
-			'Content-Type': file.contentType,
-			'Content-Disposition': `attachment; filename="${file.filename.replace(/"/g, '')}"`,
-			'Cache-Control': 'public, max-age=3600'
-		}
-	});
-};
+/** Streams a replay file; `?download=1` strips the embedded metadata. */
+export const GET = handle((event) => {
+	const { locals, params, url } = event;
+	const viewer = locals.user ? { id: locals.user.id, isStaff: isStaffUser(locals.user) } : null;
+	return limitDownloads(event, 'file')
+		.andThen(() =>
+			locals.services.replays.file(params.id ?? '', viewer, {
+				stripMetadata: url.searchParams.get('download') === '1'
+			})
+		)
+		.map(
+			(file) =>
+				new Response(file.body, {
+					headers: {
+						'Content-Type': file.contentType,
+						'Content-Disposition': `attachment; filename="${file.filename.replace(/"/g, '')}"`,
+						'Cache-Control': 'public, max-age=3600'
+					}
+				})
+		);
+});

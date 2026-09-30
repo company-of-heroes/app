@@ -13,7 +13,10 @@ export type AuthUserPublic = {
 	verified: boolean;
 };
 
-export function serializeAuthUser(pb: PocketBase, record: RecordModel | null): AuthUserPublic | null {
+export function serializeAuthUser(
+	pb: PocketBase,
+	record: RecordModel | null
+): AuthUserPublic | null {
 	if (!record) {
 		return null;
 	}

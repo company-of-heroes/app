@@ -1,6 +1,6 @@
 import { ok, okAsync, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
-import { normalizeBaseUrl, resolveAuthHeaders, type ApiDeps } from '../deps';
+import { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 
@@ -68,7 +68,7 @@ export class SmurfWatchApi {
 	get(steamId: string): ResultAsync<SmurfWatchRecord | null, ApiError> {
 		return fetchJson(
 			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/smurf-watch/${encodeURIComponent(steamId)}`,
+			`${v1Base(this.deps)}/smurf-watch/${encodeURIComponent(steamId)}`,
 			{
 				fallback: 'Failed to load smurf watch.',
 				schema: smurfWatchSchema,
@@ -88,7 +88,7 @@ export class SmurfWatchApi {
 		priority?: number;
 	}): ResultAsync<void, ApiError> {
 		return ResultAsync.fromPromise(
-			this.deps.fetch(`${normalizeBaseUrl(this.deps.baseUrl)}/api/smurf-watch/enqueue`, {
+			this.deps.fetch(`${v1Base(this.deps)}/smurf-watch/enqueue`, {
 				method: 'POST',
 				headers: resolveAuthHeaders(this.deps, { 'Content-Type': 'application/json' }),
 				body: JSON.stringify({

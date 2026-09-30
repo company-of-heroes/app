@@ -62,6 +62,10 @@ export class TTSPersonalVoices extends Feature<TTSPersonalVoicesSettings> {
 		// voiceId for a user if they have a personal voice assigned.
 		this.unsubscribers.push(
 			tts.on('speak', (options) => {
+				if (options.platform && options.platform !== 'twitch') {
+					return;
+				}
+
 				const userVoiceId = this.getUserVoice(options.user);
 
 				if (userVoiceId) {

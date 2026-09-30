@@ -60,9 +60,9 @@ export class ReputationApi {
 
 	listReputationTypes(): ResultAsync<ReputationType[], ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('reputation_types').getFullList<ReputationType>(
-				pbOptions(this.deps, { sort: 'sort,name' })
-			),
+			this.deps.pocketbase
+				.collection('reputation_types')
+				.getFullList<ReputationType>(pbOptions(this.deps, { sort: 'sort,name' })),
 			'Failed to load reputation types.'
 		);
 	}

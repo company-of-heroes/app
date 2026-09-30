@@ -91,6 +91,7 @@ Lobby started? The app notices. Jump into a live match view and save it when the
 
 **Twitch**  
 Connect your channel and stream with purpose:
+
 - **TTS** — chat read aloud (ElevenLabs, StreamElements, …)
 - **Bot** — commands and moderation helpers
 - **Overlays** — OBS-ready Opponent Bot overlay hosted on api.coh1stats.com
@@ -154,17 +155,17 @@ Auto-updates with changelog · Account sync · Discord, Twitch & GitHub in the s
 
 This is a **pnpm + Turbo monorepo**. Packages:
 
-| Package | Role |
-|---|---|
-| `packages/app` | Tauri desktop app (SvelteKit, adapter-static) |
-| `packages/website` | Public site [coh1stats.com](https://coh1stats.com) (Cloudflare) |
-| `packages/ui` | Shared presentational UI |
-| `packages/api` | Shared PocketBase / API client (`createApi`) |
-| `packages/i18n` | Shared `en` / `es` / `ko` dictionaries |
-| `packages/pocketbase` | Local API (Docker), schema migrations, hooks |
-| `packages/oppbot-overlay` | Opponent Bot overlay source |
-| `packages/smurf-worker` | Cloudflare Worker for smurf scoring |
-| `packages/shared-assets` | Screenshots and static assets |
+| Package                   | Role                                                            |
+| ------------------------- | --------------------------------------------------------------- |
+| `packages/app`            | Tauri desktop app (SvelteKit, adapter-static)                   |
+| `packages/website`        | Public site [coh1stats.com](https://coh1stats.com) (Cloudflare) |
+| `packages/ui`             | Shared presentational UI                                        |
+| `packages/api`            | Shared PocketBase / API client (`createApi`)                    |
+| `packages/i18n`           | Shared `en` / `es` / `ko` dictionaries                          |
+| `packages/pocketbase`     | Local API (Docker), schema migrations, hooks                    |
+| `packages/oppbot-overlay` | Opponent Bot overlay source                                     |
+| `packages/smurf-worker`   | Cloudflare Worker for smurf scoring                             |
+| `packages/shared-assets`  | Screenshots and static assets                                   |
 
 ### Prerequisites
 

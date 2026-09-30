@@ -1,20 +1,29 @@
 /// <reference path="../pb_data/types.d.ts" />
-migrate((app) => {
-  const collection = app.findCollectionByNameOrId("pbc_908767333")
+migrate(
+	(app) => {
+		const collection = app.findCollectionByNameOrId('pbc_908767333');
 
-  // update collection data
-  unmarshal({
-    "deleteRule": "user = @request.auth.id"
-  }, collection)
+		// update collection data
+		unmarshal(
+			{
+				deleteRule: 'user = @request.auth.id'
+			},
+			collection
+		);
 
-  return app.save(collection)
-}, (app) => {
-  const collection = app.findCollectionByNameOrId("pbc_908767333")
+		return app.save(collection);
+	},
+	(app) => {
+		const collection = app.findCollectionByNameOrId('pbc_908767333');
 
-  // update collection data
-  unmarshal({
-    "deleteRule": null
-  }, collection)
+		// update collection data
+		unmarshal(
+			{
+				deleteRule: null
+			},
+			collection
+		);
 
-  return app.save(collection)
-})
+		return app.save(collection);
+	}
+);

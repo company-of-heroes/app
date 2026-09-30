@@ -7,6 +7,8 @@ import { ChatClient, ChatMessage } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { error } from '@tauri-apps/plugin-log';
 import { app } from '$core/app/context';
+import { streamChat } from '$features/streaming/chat';
+import { publishProfileLink } from '$features/streaming/profile-links';
 
 export type ValidatedTokenInfo = TokenInfo & { userId: string };
 
@@ -66,6 +68,22 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 	isConnected = $derived.by(() => this.client !== null && this.token !== null);
 	isLive = $state(false);
 
+	get canSay(): boolean {
+		return (
+			this.isConnected && this.chatClient !== null && Boolean(this.token?.userName) && this.isLive
+		);
+	}
+
+	readonly platform = 'twitch' as const;
+
+	async say(text: string): Promise<void> {
+		if (!this.canSay) {
+			return;
+		}
+
+		await this.chatClient!.say(this.token!.userName!, text);
+	}
+
 	globalBadges: ChatBadgeList | null = null;
 	channelBadges: Map<string, ChatBadgeList> = new Map();
 
@@ -73,6 +91,11 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 	#joinedChannel: string | null = null;
 	#disposeWatchers: (() => void) | null = null;
 	#connectQueue: Promise<void> = Promise.resolve();
+
+	/** Stores a token from the OAuth flow; the channel is then added to the user's profile. */
+	connectWithToken(accessToken: string) {
+		this.settings.accessToken = accessToken;
+	}
 
 	enable(): void {
 		this.#disposeWatchers = $effect.root(() => {
@@ -99,9 +122,7 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 		this.#disposeWatchers?.();
 		this.#disposeWatchers = null;
 
-		this.#connectQueue = this.#connectQueue
-			.then(() => this.#disconnect())
-			.catch(() => undefined);
+		this.#connectQueue = this.#connectQueue.then(() => this.#disconnect()).catch(() => undefined);
 
 		await this.#connectQueue;
 	}
@@ -128,6 +149,7 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 			.getAuthenticatedUser(token.userId, true)
 			.then((user) => {
 				this.user = user;
+				void publishProfileLink('twitch', `https://www.twitch.tv/${user.name}`);
 			})
 			.catch((err) => {
 				void error(`[TWITCH]: Failed to fetch user profile: ${err}`);
@@ -164,6 +186,13 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 
 		this.#chatListener = this.chatClient.onMessage((channel, user, message, msg) => {
 			this.emit('chat-message', { channel, user, message, msg });
+			void streamChat.emit('message', {
+				platform: 'twitch',
+				user,
+				displayName: msg.userInfo.displayName,
+				message,
+				isSubscriber: msg.userInfo.isSubscriber
+			});
 		});
 
 		if (token.userName) {
@@ -320,3 +349,5 @@ export class Twitch extends Feature<TwitchSettings, TwitchEvents> {
 }
 
 export const twitch = new Twitch();
+
+streamChat.registerSink(twitch);

@@ -28,7 +28,8 @@ export const features: Feature[] = [
 		description:
 			'Your profile, today’s matches, and live lobbies from other companion users. Open replays or the current game from here.',
 		image: dashboardImg,
-		imageAlt: 'Companion dashboard with profile, today’s matches, and live lobbies from other users',
+		imageAlt:
+			'Companion dashboard with profile, today’s matches, and live lobbies from other users',
 		icon: GaugeIcon
 	},
 	{

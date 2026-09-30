@@ -103,6 +103,7 @@ export function getRankImageByLeaderboardId(leaderboardId: number, ranklevel?: n
 	if (ranklevel === undefined || ranklevel <= 0 || !Number.isInteger(ranklevel)) {
 		return '/ranks/no_rank_yet.png';
 	}
+
 	return `/ranks/${prefix}_${ranklevel.toString().padStart(2, '0')}.png`;
 }
 
@@ -119,6 +120,7 @@ export function getRankImageByRace(raceId: number, ranklevel?: number): string {
 	if (ranklevel === undefined || ranklevel <= 0 || !Number.isInteger(ranklevel)) {
 		return '/ranks/no_rank_yet.png';
 	}
+
 	return `/ranks/${prefix}_${ranklevel.toString().padStart(2, '0')}.png`;
 }
 
@@ -142,12 +144,21 @@ export function getLeaderboardTypeLabel(leaderboardId: number, fallback = 'Unkno
 }
 
 export function formatStreak(streak: number): string {
-	if (streak > 0) return `+${streak}`;
+	if (streak > 0) {
+		return `+${streak}`;
+	}
+
 	return String(streak);
 }
 
 export function streakClass(streak: number): string {
-	if (streak > 0) return 'text-green-300 tabular-nums';
-	if (streak < 0) return 'text-red-300 tabular-nums';
+	if (streak > 0) {
+		return 'text-green-300 tabular-nums';
+	}
+
+	if (streak < 0) {
+		return 'text-red-300 tabular-nums';
+	}
+
 	return 'text-secondary-400 tabular-nums';
 }

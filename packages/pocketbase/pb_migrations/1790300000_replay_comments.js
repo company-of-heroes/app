@@ -175,10 +175,12 @@ migrate(
 					system: false
 				})
 			);
-			const parentIndex = 'CREATE INDEX `idx_replay_comments_parent` ON `replay_comments` (`parent`)';
+			const parentIndex =
+				'CREATE INDEX `idx_replay_comments_parent` ON `replay_comments` (`parent`)';
 			if (!comments.indexes.includes(parentIndex)) {
 				comments.indexes.push(parentIndex);
 			}
+
 			app.save(comments);
 		}
 
@@ -320,9 +322,11 @@ migrate(
 			if (notifications.fields.getByName('replayComment')) {
 				notifications.fields.removeByName('replayComment');
 			}
+
 			if (notifications.fields.getByName('replay')) {
 				notifications.fields.removeByName('replay');
 			}
+
 			app.save(notifications);
 		} catch {
 			// already gone
