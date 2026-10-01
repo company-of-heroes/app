@@ -26,7 +26,11 @@
 		<div class="py-2">
 			<div class="flex min-w-0 items-center gap-2.5">
 				<Profile.Flag class="relative -ms-0.5" />
-				<PlayerStreamerIcon labels={labelsForSteamId(app.game.profile.steam.steamid)} size={24} />
+				<PlayerStreamerIcon
+					labels={labelsForSteamId(app.game.profile.steam.steamid)}
+					steamId={app.game.profile.steam.steamid}
+					size={24}
+				/>
 				<Profile.Alias class="truncate text-3xl font-bold" />
 				<Player.Labels steamId={app.game.profile.steam.steamid} class="shrink-0" />
 			</div>

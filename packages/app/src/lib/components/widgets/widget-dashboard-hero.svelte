@@ -498,7 +498,11 @@
 										/>
 									{/if}
 									<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
-									<PlayerStreamerIcon labels={labelsForSteamId(profile.steam.steamid)} size={24} />
+									<PlayerStreamerIcon
+										labels={labelsForSteamId(profile.steam.steamid)}
+										steamId={profile.steam.steamid}
+										size={24}
+									/>
 									<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span
 									>
 								</PlayerProfileLink>

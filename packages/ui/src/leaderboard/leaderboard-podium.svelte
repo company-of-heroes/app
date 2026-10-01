@@ -150,7 +150,10 @@
 						/>
 					{/if}
 					<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
-					<PlayerStreamerIcon labels={stat.profile.labels} />
+					<PlayerStreamerIcon
+						labels={stat.profile.labels}
+						steamId={getSteamIdFromName(stat.profile.name)}
+					/>
 					<span class="truncate">{stat.profile.alias}</span>
 					<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
 				</div>
