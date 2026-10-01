@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use warp::ws::{Message, WebSocket, Ws};
-use warp::Filter;
+use warp::{Filter, Reply};
 
 use crate::browser_login::{BrowserLoginQuery, BrowserLoginState, handle_browser_login};
 use tauri::AppHandle;
@@ -52,11 +52,18 @@ pub async fn start_ws_server(
     let topics_filter = warp::any().map(move || topics.clone());
 
     let ws_route = warp::path("ws")
+        .and(warp::header::optional::<String>("origin"))
         .and(warp::ws())
         .and(clients_filter)
         .and(topics_filter)
-        .map(|ws: Ws, clients, topics| {
+        .map(|origin: Option<String>, ws: Ws, clients, topics| {
+            if !is_allowed_origin(origin.as_deref()) {
+                return warp::reply::with_status("Forbidden", warp::http::StatusCode::FORBIDDEN)
+                    .into_response();
+            }
+
             ws.on_upgrade(move |socket| handle_client(socket, clients, topics))
+                .into_response()
         });
 
     let browser_login_route = warp::path("auth")
@@ -82,6 +89,35 @@ pub async fn start_ws_server(
     warp::serve(routes).run(([127, 0, 0, 1], 9842)).await;
 
     Ok(())
+}
+
+/// Browsers send their page's origin with a WebSocket upgrade and CORS does not apply,
+/// so any website could otherwise read the live lobby. Allowed: the app itself, local
+/// pages and files (OBS browser sources) and our own overlay hosts.
+fn is_allowed_origin(origin: Option<&str>) -> bool {
+    let Some(origin) = origin else {
+        return true;
+    };
+
+    if origin == "null" || origin.starts_with("file://") || origin.starts_with("tauri://") {
+        return true;
+    }
+
+    let host = origin
+        .strip_prefix("http://")
+        .or_else(|| origin.strip_prefix("https://"))
+        .map(|rest| rest.split(':').next().unwrap_or(rest));
+    matches!(
+        host,
+        Some(
+            "localhost"
+                | "127.0.0.1"
+                | "tauri.localhost"
+                | "asset.localhost"
+                | "overlay.coh1stats.com"
+                | "api.coh1stats.com"
+        )
+    )
 }
 
 /// Handles a new WebSocket client connection

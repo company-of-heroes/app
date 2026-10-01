@@ -1,1 +1,6 @@
-export { StreamingApi, type StreamingProgress, type StreamingReport } from './streaming';
+export {
+	StreamingApi,
+	type StreamingProgress,
+	type StreamingReport,
+	type YoutubeTokenBundle
+} from './streaming';

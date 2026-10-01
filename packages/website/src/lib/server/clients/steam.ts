@@ -1,4 +1,5 @@
 import { ResultAsync } from 'neverthrow';
+import { upstream } from '../errors';
 import type { Task } from '../result';
 
 export type SteamPlayerSummary = {
@@ -44,6 +45,28 @@ export class SteamClient {
 	/** Recent playtime (minutes) for one app, or null when private/unknown. */
 	recentPlaytime(steamId: string, appId: number): Task<SteamPlaytime | null> {
 		return ResultAsync.fromSafePromise(this.loadPlaytime(steamId, appId));
+	}
+
+	/**
+	 * A raw Web API call for the desktop app (which no longer ships the key), e.g.
+	 * `ISteamUser/GetPlayerSummaries/v2`. Callers whitelist the path and parameters.
+	 */
+	call(path: string, params: Record<string, string>): Task<unknown> {
+		return ResultAsync.fromPromise(
+			(async () => {
+				const query = new URLSearchParams({ ...params, key: this.apiKey });
+				const response = await this.fetch(`https://api.steampowered.com/${path}/?${query}`);
+				if (!response.ok) {
+					throw new Error(`Steam API ${path} failed (${response.status})`);
+				}
+
+				return (await response.json()) as unknown;
+			})(),
+			(error) => {
+				console.warn('[steam] proxy call failed', error);
+				return upstream('Steam API request failed');
+			}
+		);
 	}
 
 	private async loadSummaries(steamIds: string[]): Promise<Map<string, SteamPlayerSummary>> {

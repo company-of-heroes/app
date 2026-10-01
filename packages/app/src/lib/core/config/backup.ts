@@ -12,7 +12,8 @@ import { readJsonWithRecovery, writeJsonAtomic } from './fs-json';
  * folder), so they survive an app update where the user chooses to delete all
  * application data. They contain the full settings tree, including the
  * PocketBase account credentials — restoring a backup therefore restores the
- * user's account.
+ * user's account. Third-party tokens and API keys are left out (Documents is often
+ * synced to the cloud); after a restore those services are connected again.
  */
 
 export type BackupReason =
@@ -21,6 +22,7 @@ export type BackupReason =
 	| 'pre-import'
 	| 'pre-update'
 	| 'account-created'
+	| 'email-sync'
 	| 'manual';
 
 export type BackupCandidate = {
@@ -33,6 +35,26 @@ const LATEST_FILE = 'settings-latest.json';
 const ROTATED_PREFIX = 'settings-';
 const MAX_ROTATED = 10;
 const CHANGE_DEBOUNCE_MS = 30_000;
+
+/** The tree as written to a backup: without Twitch / YouTube tokens or the ElevenLabs key. */
+function backupTree(tree: Settings): Settings {
+	const copy = structuredClone(tree) as Settings & {
+		app: Record<string, unknown>;
+		features: Record<string, Record<string, unknown> | undefined>;
+	};
+	delete copy.app.elevenlabsApiKey;
+	for (const [feature, keys] of [
+		['twitch', ['accessToken']],
+		['youtube', ['accessToken', 'refreshToken', 'expiresAt']]
+	] as const) {
+		const slice = copy.features[feature];
+		if (slice) {
+			keys.forEach((key) => delete slice[key]);
+		}
+	}
+
+	return copy;
+}
 
 function timestamp(date: Date): string {
 	const pad = (n: number) => n.toString().padStart(2, '0');
@@ -95,7 +117,7 @@ export class BackupService {
 				await mkdir(dir, { recursive: true });
 			}
 
-			const tree = this.#getTree();
+			const tree = backupTree(this.#getTree());
 
 			await writeJsonAtomic(await join(dir, LATEST_FILE), tree);
 

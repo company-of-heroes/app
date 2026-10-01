@@ -76,10 +76,13 @@
 	const keepAccount = async (conflict: SteamConflict, keeper: SteamConflictAccount) => {
 		const others = conflictAccounts(conflict).filter((account) => account.id !== keeper.id);
 		const confirmed = await confirm(
-			t('Merge {count} account(s) into {name}? Their matches, replays and comments move over and the accounts are deleted.', {
-				count: others.length,
-				name: keeper.name || keeper.id
-			}),
+			t(
+				'Merge {count} account(s) into {name}? Their matches, replays and comments move over and the accounts are deleted.',
+				{
+					count: others.length,
+					name: keeper.name || keeper.id
+				}
+			),
 			{ okLabel: t('Merge'), cancelLabel: t('Cancel'), kind: 'warning' }
 		);
 		if (!confirmed) {
@@ -206,7 +209,9 @@
 										<Badge variant="default">{t('Requested')}</Badge>
 									{/if}
 									{#if roleLabel(account.role as UsersResponse['role'])}
-										<Badge variant="primary">{roleLabel(account.role as UsersResponse['role'])}</Badge>
+										<Badge variant="primary"
+											>{roleLabel(account.role as UsersResponse['role'])}</Badge
+										>
 									{/if}
 								</span>
 								<Button

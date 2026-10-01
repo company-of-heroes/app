@@ -143,7 +143,8 @@ export type CommunityMatchDetail = {
 
 export type PublishFromMatchInput = {
 	title?: string;
-	description: string;
+	/** Required by the website; checked there. */
+	description?: string;
 	durationInSeconds?: number;
 	players?: unknown;
 };

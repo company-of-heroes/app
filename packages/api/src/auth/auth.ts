@@ -79,6 +79,17 @@ const authExchangeSchema = z.object({
 	record: z.object({ id: z.string().min(1) }).passthrough()
 });
 
+/** The new address in an email-change token (a JWT; its signature is PocketBase's to check). */
+function newEmailOf(token: string): string {
+	try {
+		const payload = token.split('.')[1] ?? '';
+		const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+		return typeof json?.newEmail === 'string' ? json.newEmail : '';
+	} catch {
+		return '';
+	}
+}
+
 export class AuthApi {
 	constructor(private deps: ApiDeps) {}
 
@@ -387,30 +398,22 @@ export class AuthApi {
 			return errAsync(apiError(400, 'Password is required.'));
 		}
 
-		return fetchJson(
-			this.deps.fetch,
-			`${normalizeBaseUrl(this.deps.baseUrl)}/api/collections/users/confirm-email-change`,
-			{
-				fallback: 'Invalid or expired email change link.',
-				schema: authExchangeSchema,
-				onStatus: (status) => {
-					if (status === 400 || status === 401 || status === 404) {
-						return apiError(400, 'Invalid or expired email change link.');
-					}
-
-					return undefined;
-				},
-				init: {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ token: trimmed, password })
-				}
-			}
-		).map((body) => {
-			const record = body.record as AuthUser;
-			this.deps.pocketbase.authStore.save(body.token, record);
-			return record;
-		});
+		// PocketBase answers 204 and ends the old sessions; sign in again with the new
+		// email, which the confirmation token carries.
+		const invalid = () => apiError(400, 'Invalid or expired email change link.');
+		return fromPbPromise(
+			this.deps.pocketbase
+				.collection('users')
+				.confirmEmailChange(trimmed, password, pbOptions(this.deps)),
+			'Invalid or expired email change link.'
+		)
+			.mapErr((error) => ([400, 401, 404].includes(error.status) ? invalid() : error))
+			.andThen(() => {
+				const email = newEmailOf(trimmed);
+				return email
+					? this.login(email, password)
+					: errAsync(apiError(400, 'Your email was changed. Sign in with your new email.'));
+			});
 	}
 
 	findCompanionBySteamId(steamId: string): ResultAsync<CompanionUserDebug | null, ApiError> {

@@ -1,5 +1,5 @@
-import { PUBLIC_STEAM_API_KEY } from '$env/static/public';
-import { fetch } from '$core/http/fetch';
+import { ClientResponseError } from 'pocketbase';
+import { siteApi } from '$core/api';
 
 // Types
 export interface SteamPlayerSummary {
@@ -86,7 +86,6 @@ export class SteamAPIError extends Error {
 }
 
 export class SteamAPI {
-	private readonly baseUrl = 'https://api.steampowered.com';
 	private cache = new Map<string, { data: any; timestamp: number }>();
 	/** Per-steamId profile cache so batch fetches warm individual lookups. */
 	private profileCache = new Map<string, { data: SteamPlayerSummary | null; timestamp: number }>();
@@ -100,15 +99,6 @@ export class SteamAPI {
 	private readonly profileBatchWindow = 25;
 	private readonly profileBatchSize = 100; // Steam's per-request limit
 	private readonly profileBackoff = 30 * 1000;
-
-	private get apiKey(): string {
-		const key = PUBLIC_STEAM_API_KEY;
-		if (!key) {
-			throw new SteamAPIError('STEAM_API_KEY is not configured');
-		}
-
-		return key;
-	}
 
 	private getCacheKey(endpoint: string, params: Record<string, any>): string {
 		return `${endpoint}:${JSON.stringify(params)}`;
@@ -165,37 +155,25 @@ export class SteamAPI {
 			return cached;
 		}
 
-		const url = new URL(`${this.baseUrl}${endpoint}`);
-		url.searchParams.set('key', this.apiKey);
-
+		// The website adds the API key (it is not shipped with the app).
+		const query = new URLSearchParams();
 		for (const [key, value] of Object.entries(params)) {
 			if (value !== undefined && value !== null) {
-				url.searchParams.set(key, String(value));
+				query.set(key, String(value));
 			}
 		}
 
 		try {
-			const response = await fetch(url.toString(), {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
-
-			if (!response.ok) {
+			const data = await siteApi<T>(`/steam${endpoint.replace(/\/+$/, '')}?${query}`);
+			this.setCache(cacheKey, data);
+			return data;
+		} catch (error) {
+			if (error instanceof ClientResponseError) {
 				throw new SteamAPIError(
-					`Steam API request failed: ${response.status} ${response.statusText}`.trim(),
-					response.status,
+					`Steam API request failed: ${error.status}`,
+					error.status,
 					endpoint
 				);
-			}
-
-			const data = await response.json();
-			this.setCache(cacheKey, data);
-			return data as T;
-		} catch (error) {
-			if (error instanceof SteamAPIError) {
-				throw error;
 			}
 
 			throw new SteamAPIError(

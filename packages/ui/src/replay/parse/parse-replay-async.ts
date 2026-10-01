@@ -76,7 +76,7 @@ function callWorker(
 	return new Promise((resolve, reject) => {
 		pending.set(id, { resolve, reject });
 		try {
-			getWorker().postMessage({ id, ...message }, transfer);
+			getWorker().postMessage({ id, ...message }, transfer ?? []);
 		} catch (error) {
 			pending.delete(id);
 			destroyWorker(error instanceof Error ? error.message : 'Failed to parse replay.');

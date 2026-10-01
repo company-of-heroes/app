@@ -166,7 +166,7 @@ export class LogTailer {
 		}
 	}
 
-	async #readAppendedFallback(_size: number): Promise<string | null> {
+	async #readAppendedFallback(size: number): Promise<string | null> {
 		const content = await readTextFile(this.#path);
 
 		// Byte offsets and char offsets differ for multi-byte content; track
@@ -178,7 +178,9 @@ export class LogTailer {
 			return null;
 		}
 
-		return new TextDecoder().decode(bytes.subarray(this.#offset));
+		// Only up to the size the tick saw: the offset moves to that size, so lines
+		// written since are read on the next tick instead of twice.
+		return new TextDecoder().decode(bytes.subarray(this.#offset, Math.min(size, bytes.length)));
 	}
 
 	async #processChunk(text: string): Promise<void> {

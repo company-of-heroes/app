@@ -11,7 +11,11 @@ const body = z.object({
 /** Admins merge duplicate accounts into the one they pick; the keeper keeps its own role. */
 export const POST = handle((event) =>
 	requireStaff(event)
-		.andThen((user) => (user.role === 'admin' ? ok(user) : err(forbidden('Only admins can merge accounts.'))))
+		.andThen((user) =>
+			user.role === 'admin' ? ok(user) : err(forbidden('Only admins can merge accounts.'))
+		)
 		.asyncAndThen(() => parseBody(body, event.request))
-		.andThen(({ keeperId, userIds }) => event.locals.services.users.mergeAccounts(keeperId, userIds))
+		.andThen(({ keeperId, userIds }) =>
+			event.locals.services.users.mergeAccounts(keeperId, userIds)
+		)
 );

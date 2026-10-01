@@ -7,7 +7,11 @@ const body = z.object({ description: z.string().trim().max(2000).optional() });
 export const POST = handle((event) =>
 	requireUser(event).asyncAndThen((user) =>
 		parseBody(body, event.request).andThen(({ description }) =>
-			event.locals.services.memberReplays.publishPrivate(event.params.id ?? '', user.id, description)
+			event.locals.services.memberReplays.publishPrivate(
+				event.params.id ?? '',
+				user.id,
+				description
+			)
 		)
 	)
 );

@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date:** September 30, 2026
+**Effective date:** October 1, 2026
 
 This Privacy Policy explains how **Code IT** (“we”, “us”) collects, uses, shares, and protects information when you use **Company of Heroes Companion** (also called the FKNOOBS App), the website at [https://coh1stats.com](https://coh1stats.com), and the API at [https://api.coh1stats.com](https://api.coh1stats.com) (together, the “Service”).
 
@@ -34,7 +34,9 @@ When you use the desktop app we create or restore an account so your match histo
 - a reputation score derived from comments, votes, replay downloads, player profile votes, and matches you play. We store that score per action type so we can moderate accounts and grant rewards. These scores are not shown on public player pages;
 - the rewards you unlocked and when you unlocked them. Rewards are images with a title and description that staff create; we unlock them automatically when your account meets their conditions, using data we already hold for other features: your matches on every Steam ID on your account (result, faction, mode, map, duration, lobby rating, and your community ELO), matches your app recorded, comments and replies, votes you cast and receive, replays you upload or download and the votes and downloads they receive, your reputation, whether your profile has an avatar, bio, background and link, how long your account exists, your total Company of Heroes streaming time, the number of matches with fair play checks, and whether you published a stream overlay. We do not collect anything new for rewards. This includes matches recorded before a reward existed. Unlocked rewards and their unlock dates are shown on your public player page on the website and in the desktop app; your progress toward rewards you have not unlocked yet is only shown to you.
 
-Website login keeps you signed in with a PocketBase session cookie in your browser. Steam login sends you to Steam to prove your identity; we store the resulting Steam ID on your account and do not receive your Steam password.
+Website login keeps you signed in with a PocketBase session cookie in your browser. Steam login sends you to Steam to prove your identity; we store the resulting Steam ID on your account and do not receive your Steam password. While a Steam login is in progress we set a short-lived cookie (10 minutes) so the login can only finish in the browser that started it.
+
+The desktop app links the Steam ID it sees in your game to your account. If that Steam ID already belongs to another account, we do not link it; instead we record the request (your account, the Steam ID, and the accounts that already use it) so staff can review it and, if the accounts belong to the same person, merge them. Staff can see these requests together with the names, Steam IDs, roles, and last login of the accounts involved.
 
 You can update your display name, avatar, email, and password on the website and in the desktop app. When you verify an email or change to a new one, we send a one-time confirmation message to that address so only you can complete the change. We do not use those messages for marketing.
 
@@ -80,7 +82,9 @@ Fair play checks are **on by default** and can be turned off in Settings. While 
 
 ### e) Settings and optional integrations
 
-Settings, Twitch and YouTube tokens, overlay config, and API keys you enter (for example an ElevenLabs key for TTS) are stored **on your device** unless a feature needs to publish something to our servers (for example a stream overlay or your Streamer badge progress).
+Settings, Twitch and YouTube tokens, overlay config, and API keys you enter (for example an ElevenLabs key for TTS) are stored **on your device** unless a feature needs to publish something to our servers (for example a stream overlay or your Streamer badge progress). The settings backups the app writes to your Documents folder leave out Twitch and YouTube tokens and API keys.
+
+The desktop app looks up Steam profiles (avatar, alias, recently played time) and the current Company of Heroes player count through our website, which adds our Steam Web API key. We pass the Steam IDs on to Steam and may cache Steam's answer for a few minutes; we do not store those lookups.
 
 If you connect Twitch, Twitch provides the account information needed to run chat, rewards, and overlays. If you connect YouTube, sign-in goes through our website so we can exchange Google's authorization code for tokens (the Google client secret stays on our servers and is never shipped in the app). We pass those tokens back to your device in a short-lived handoff and do not keep them; after that, Google provides your channel name, handle, and avatar to the app, and the app reads your YouTube Live chat (for TTS) and posts bot messages to it directly from your device — we do not receive that chat. If you use ElevenLabs, chat text is sent to ElevenLabs with **your** key; we do not keep that key on our servers.
 

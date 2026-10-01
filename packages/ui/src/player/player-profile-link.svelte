@@ -88,18 +88,11 @@
 
 {#if previewEnabled}
 	<LinkPreview.Root bind:open {openDelay} {closeDelay} {onOpenChange}>
-		<LinkPreview.Trigger {href} class={cn(className)} {...restProps}>
+		<LinkPreview.Trigger {href} class={cn(className)} {...restProps as Record<string, unknown>}>
 			{@render children()}
 		</LinkPreview.Trigger>
 		<LinkPreview.Portal>
-			<LinkPreview.Content
-				class="z-50 outline-none"
-				side="top"
-				sideOffset={8}
-				align="start"
-				trapFocus={false}
-				preventScroll={false}
-			>
+			<LinkPreview.Content class="z-50 outline-none" side="top" sideOffset={8} align="start">
 				<PlayerPreviewCard
 					{player}
 					faction={snapshotMode ? preview : null}

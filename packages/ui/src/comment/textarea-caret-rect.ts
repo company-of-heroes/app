@@ -57,7 +57,7 @@ export function getTextareaCaretRect(textarea: HTMLTextAreaElement, position: nu
 	mirrorStyle.left = '-9999px';
 
 	for (const key of MIRROR_STYLE_KEYS) {
-		mirrorStyle[key] = computed[key] as string;
+		mirrorStyle[key] = (computed as unknown as Record<string, string>)[key];
 	}
 
 	// Match wrap behavior when the textarea scrolls vertically.

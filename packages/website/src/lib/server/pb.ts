@@ -102,8 +102,10 @@ export function createAdminPocketBase(fetchFn: Fetch): PocketBase {
 		return { url, options: { ...options, headers, fetch: options.fetch ?? fetchFn } };
 	};
 	pb.afterSend = (response, data) => {
-		// Session revoked (e.g. password changed): log in again on the next request.
-		if (response.status === 401 && !env.PB_SUPERUSER_TOKEN) {
+		// Session revoked (e.g. password changed, token secret rotated): log in again on the
+		// next request. PocketBase treats an invalid token as a guest, so that shows up as a
+		// 403 on superuser-only collections rather than a 401.
+		if ((response.status === 401 || response.status === 403) && !env.PB_SUPERUSER_TOKEN) {
 			superuser = null;
 		}
 

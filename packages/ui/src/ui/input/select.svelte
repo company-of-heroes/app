@@ -22,6 +22,8 @@
 		size?: 'sm' | 'md';
 		empty?: string;
 		selectedCountLabel?: (count: number) => string;
+		/** Accessible name of the trigger button. */
+		'aria-label'?: string;
 	};
 
 	const { t } = useI18n();
@@ -37,6 +39,7 @@
 		type = 'single',
 		empty = t('No results found.'),
 		selectedCountLabel = (count: number) => t('{count} items', { count }),
+		'aria-label': ariaLabel,
 		...restProps
 	}: SelectProps = $props();
 
@@ -65,7 +68,7 @@ get along, so we shut typescript up by casting `value` to `never`, however,
 from the perspective of the consumer of this component, it will be typed appropriately.
 -->
 <Select.Root {...restProps} type={type as never} bind:value={value as never}>
-	<Select.Trigger class={triggerClass}>
+	<Select.Trigger class={triggerClass} aria-label={ariaLabel}>
 		{Array.isArray(value) && value.length
 			? selectedCountLabel(value.length)
 			: selectedLabel

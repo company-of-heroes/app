@@ -84,42 +84,21 @@
 		}
 	);
 
-	const extras = resource(
-		() => {
-			const profile = relicProfile.current;
-			const id = steamId;
-			return profile && id ? `${id}:${profile.profile_id}` : null;
-		},
-		async (key) => {
-			const profile = relicProfile.current;
-			const id = steamId;
-			if (!key || !profile || !id) {
+	// Fast header data loads apart from the slow Relic match history (rank enrichment does
+	// sequential personalstat batches), so ELO and votes no longer wait on it.
+	const header = resource(
+		() => steamId,
+		async (id) => {
+			if (!id) {
 				return null;
 			}
 
-			const [matchHistoryRaw, playerRating, cheater, smurf, likeCount] = await Promise.all([
-				relic.getRecentMatchHistoryForProfile(profile.profile_id, {
-					includeHidden: true
-				}),
-				getPlayerRating(id),
-				findCheaterBySteamId(id),
-				loadSmurfAlert(id, profile.profile_id),
+			const [playerRating, cheater, likeCount] = await Promise.all([
+				getPlayerRating(id).catch(() => null),
+				findCheaterBySteamId(id).catch(() => null),
 				app.database.playerSocial.getLikeCount(id)
 			]);
-			const { enrichMatchHistoryRankLevels } = await import('$lib/player/match-history-ranks');
-			const matchHistory = await enrichMatchHistoryRankLevels(
-				matchHistoryRaw,
-				profile.profile_id,
-				profile.leaderboardStats
-			);
-			return {
-				key,
-				matchHistory,
-				playerRating,
-				cheater: !!cheater,
-				smurf,
-				likeCount
-			};
+			return { steamId: id, playerRating, cheater: !!cheater, likeCount };
 		}
 	);
 
@@ -131,7 +110,7 @@
 			}
 
 			const result = await api.players.getCustomization(id);
-			return result.isOk() ? result.value : null;
+			return { steamId: id, value: result.isOk() ? result.value : null };
 		}
 	);
 
@@ -141,20 +120,72 @@
 		}
 	});
 
-	const extra = $derived.by(() => {
-		const current = extras.current;
+	const profileKey = $derived.by(() => {
 		const profile = relicProfile.current;
-		const id = steamId;
-		if (!current || !profile || !id) {
-			return null;
-		}
-
-		if (current.key !== `${id}:${profile.profile_id}`) {
-			return null;
-		}
-
-		return current;
+		return profile && steamId ? `${steamId}:${profile.profile_id}` : null;
 	});
+
+	const smurf = resource(
+		() => profileKey,
+		async (key) => {
+			const profile = relicProfile.current;
+			if (!key || !profile || !steamId) {
+				return null;
+			}
+
+			const value = await loadSmurfAlert(steamId, profile.profile_id).catch(() => null);
+			return { key, value };
+		}
+	);
+
+	const history = resource(
+		() => profileKey,
+		async (key) => {
+			const profile = relicProfile.current;
+			if (!key || !profile) {
+				return null;
+			}
+
+			const matches = await relic.getRecentMatchHistoryForProfile(profile.profile_id, {
+				includeHidden: true
+			});
+			return { key, matches };
+		}
+	);
+
+	const rawMatches = $derived(
+		history.current && history.current.key === profileKey ? history.current.matches : null
+	);
+
+	const rankedHistory = resource(
+		() => rawMatches,
+		async (matches) => {
+			const profile = relicProfile.current;
+			if (!matches || !profile) {
+				return null;
+			}
+
+			const { enrichMatchHistoryRankLevels } = await import('$lib/player/match-history-ranks');
+			const ranked = await enrichMatchHistoryRankLevels(
+				matches,
+				profile.profile_id,
+				profile.leaderboardStats
+			);
+			return { source: matches, matches: ranked };
+		}
+	);
+
+	const rankedMatches = $derived(
+		rankedHistory.current && rankedHistory.current.source === rawMatches
+			? rankedHistory.current.matches
+			: null
+	);
+
+	const headerData = $derived(header.current?.steamId === steamId ? header.current : null);
+	const customizationData = $derived(
+		customization.current?.steamId === steamId ? customization.current : null
+	);
+	const smurfData = $derived(smurf.current?.key === profileKey ? smurf.current : null);
 
 	const profile = $derived(relicProfile.current);
 	const user = $derived(steamProfile.current?.user);
@@ -166,8 +197,8 @@
 		}
 
 		return mergeEloMaps(
-			extra?.playerRating?.elo,
-			eloMapForSteamId(extra?.matchHistory ?? [], user.steamid, profile.profile_id)
+			headerData?.playerRating?.elo,
+			eloMapForSteamId(rawMatches ?? [], user.steamid, profile.profile_id)
 		);
 	});
 
@@ -182,28 +213,29 @@
 		);
 	});
 
+	const performanceKey = $derived(
+		profile ? `${profile.profile_id}:${isSelf ? `user:${account.userId}` : 'community'}` : null
+	);
+
 	const playerPerformance = resource(
-		[
-			() => profile?.profile_id ?? null,
-			() => (isSelf ? 'user' : 'community'),
-			() => (isSelf ? account.userId : null)
-		],
-		async ([id, scope, userId]) => {
-			if (!id) {
-				return emptyPlayerPerformance();
+		() => performanceKey,
+		async (key) => {
+			const id = profile?.profile_id;
+			const scope = isSelf ? 'user' : 'community';
+			const userId = isSelf ? account.userId : null;
+			if (!key || !id || (scope === 'user' && !userId)) {
+				return { key, value: emptyPlayerPerformance() };
 			}
 
-			if (scope === 'user' && !userId) {
-				return emptyPlayerPerformance();
-			}
+			const value = await getPlayerPerformance({ profileId: id, scope, userId }).catch(() =>
+				emptyPlayerPerformance()
+			);
+			return { key, value };
+		}
+	);
 
-			return getPlayerPerformance({
-				profileId: id,
-				scope,
-				userId
-			});
-		},
-		{ initialValue: emptyPlayerPerformance() }
+	const performanceData = $derived(
+		playerPerformance.current?.key === performanceKey ? playerPerformance.current.value : null
 	);
 
 	$effect(() => {
@@ -213,6 +245,12 @@
 	});
 
 	const labels = $derived(labelsForSteamId(user?.steamid));
+
+	// Keep the skeleton until everything the header shows has arrived, so the profile renders
+	// once instead of shifting per request. Only the match history tab loads progressively.
+	const ready = $derived(
+		Boolean(profile && user && headerData && customizationData && smurfData && performanceData)
+	);
 
 	const pagePlayer = $derived.by(() => {
 		if (!profile || !user) {
@@ -224,12 +262,12 @@
 			user,
 			game,
 			elo: playerElo,
-			performance: playerPerformance.current ?? emptyPlayerPerformance(),
-			matchHistory: extra?.matchHistory ?? [],
-			smurf: extra?.smurf,
+			performance: performanceData ?? emptyPlayerPerformance(),
+			matchHistory: rankedMatches ?? [],
+			smurf: smurfData?.value,
 			labels,
-			likeCount: extra?.likeCount ?? 0,
-			customization: customization.current ?? null
+			likeCount: headerData?.likeCount ?? 0,
+			customization: customizationData?.value ?? null
 		});
 	});
 
@@ -243,13 +281,13 @@
 
 <SetCrumbs items={[{ label: profile?.alias ?? t('Player') }]} />
 
-{#if relicProfile.loading || steamProfile.loading || !profile || !user || !pagePlayer}
+{#if !ready || !profile || !user || !pagePlayer}
 	<Player.ProfileSkeleton />
 {:else}
 	<PlayerProfile
 		player={matchHistory.player ?? pagePlayer}
 		bind:tab={currentTab}
-		matchHistoryLoading={!extra}
+		matchHistoryLoading={!rankedMatches}
 	>
 		{#snippet actions()}
 			<Player.LabelEditor
@@ -258,7 +296,7 @@
 				alias={profile.alias}
 				class="shrink-0"
 			/>
-			{#if extra?.cheater}
+			{#if headerData?.cheater}
 				<CheaterAlert />
 			{/if}
 		{/snippet}
@@ -267,7 +305,7 @@
 				profileId={profile.profile_id}
 				scope={isSelf ? 'user' : 'community'}
 				userId={isSelf ? account.userId : undefined}
-				performance={playerPerformance.current}
+				performance={performanceData}
 				empty={isSelf ? 'self' : 'other'}
 				class="rounded-none border-0"
 			/>

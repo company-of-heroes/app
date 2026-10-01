@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import { marked } from 'marked';
+	import { renderMarkdown } from '$lib/utils/markdown';
 
 	type Props = {
 		body: string;
@@ -8,7 +8,8 @@
 
 	let { body }: Props = $props();
 
-	const html = $derived(marked.parse(body, { breaks: true }) as string);
+	// Sanitized: notification bodies are written by staff accounts, not trusted HTML.
+	const html = $derived(renderMarkdown(body));
 </script>
 
 <div

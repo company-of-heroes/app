@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { tableHeadRow } from '@company-of-heroes/ui/variants';
+	import { tableHeadRow, tableHeadText } from '@company-of-heroes/ui/variants';
 	import {
 		getStoredEloForLeaderboard,
 		getEloColor,
@@ -28,6 +28,8 @@
 	const host = useHost();
 
 	const stats = $derived(sortLeaderboardStats(rawStats));
+	const totalWins = $derived(stats.reduce((sum, stat) => sum + stat.wins, 0));
+	const totalLosses = $derived(stats.reduce((sum, stat) => sum + stat.losses, 0));
 
 	function positionLabel(leaderboardId: number, rank: number): string {
 		if (!isRankedLeaderboard(leaderboardId) || rank <= 0) {
@@ -178,6 +180,28 @@
 					</tr>
 				{/each}
 			</tbody>
+			<tfoot>
+				<tr class="bg-secondary-950/90 h-11">
+					<td colspan="5" class="px-4 py-1.5">
+						<div class="flex items-center gap-2">
+							<span class={tableHeadText}>{t('Total')}</span>
+							<span class="font-medium text-white tabular-nums">{totalWins + totalLosses}</span>
+							<span class="text-secondary-400">{t('Games')}</span>
+						</div>
+					</td>
+					<td class="px-4 py-1.5">
+						<div class="flex h-full w-full min-w-0 items-center justify-center">
+							<LeaderboardStatPill type="wins" wins={totalWins} losses={totalLosses} streak={0} />
+						</div>
+					</td>
+					<td class="px-4 py-1.5">
+						<div class="flex h-full w-full min-w-0 items-center justify-center">
+							<LeaderboardStatPill type="losses" wins={totalWins} losses={totalLosses} streak={0} />
+						</div>
+					</td>
+					<td class="px-4 py-1.5"></td>
+				</tr>
+			</tfoot>
 		</table>
 	</div>
 
@@ -263,5 +287,22 @@
 				</div>
 			</div>
 		{/each}
+		<div
+			class="bg-secondary-950/90 text-secondary-400 flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm"
+		>
+			<span class={tableHeadText}>{t('Total')}</span>
+			<span class="inline-flex items-center gap-1">
+				{t('Games')}
+				<span class="font-medium text-white tabular-nums">{totalWins + totalLosses}</span>
+			</span>
+			<span class="inline-flex items-center gap-1">
+				{t('Wins')}
+				<LeaderboardStatPill type="wins" wins={totalWins} losses={totalLosses} streak={0} />
+			</span>
+			<span class="inline-flex items-center gap-1">
+				{t('Losses')}
+				<LeaderboardStatPill type="losses" wins={totalWins} losses={totalLosses} streak={0} />
+			</span>
+		</div>
 	</div>
 {/if}

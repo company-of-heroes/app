@@ -101,10 +101,12 @@ export class MatchResultsService extends Service {
 	 */
 	fillOne(lobbyId: string): Task<void> {
 		return pbMaybe(
-			this.pb.collection('lobbies').getFirstListItem<PendingLobby>(
-				this.pb.filter('id = {:lobbyId} && needsResult = true && hasFailed != true', { lobbyId }),
-				{ fields: 'id,sessionId,resultAttempts,playerProfileIdsCsv,players,lobbyPlayers' }
-			),
+			this.pb
+				.collection('lobbies')
+				.getFirstListItem<PendingLobby>(
+					this.pb.filter('id = {:lobbyId} && needsResult = true && hasFailed != true', { lobbyId }),
+					{ fields: 'id,sessionId,resultAttempts,playerProfileIdsCsv,players,lobbyPlayers' }
+				),
 			'Could not load match'
 		).andThen((lobby) => {
 			const profileId = lobby ? resultProfileId(lobby) : null;
@@ -114,7 +116,11 @@ export class MatchResultsService extends Service {
 
 			return this.relic.getMany<RelicMatchHistory>([historyUrl(profileId)]).andThen(([history]) => {
 				const matches = history?.ok ? toHistoryMatches(history.body, profileId) : [];
-				return this.settle(lobby, new Map(matches.map((match) => [Number(match.id), match])), false);
+				return this.settle(
+					lobby,
+					new Map(matches.map((match) => [Number(match.id), match])),
+					false
+				);
 			});
 		});
 	}

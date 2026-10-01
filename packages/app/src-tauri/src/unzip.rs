@@ -1,11 +1,37 @@
 use std::fs::{self, File};
 use std::io::{self, Cursor, Write};
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
+use tauri::{AppHandle, Manager, Runtime};
 use zip::write::FileOptions;
 use zip::{ZipArchive, ZipWriter};
 
+/// The zip commands only touch the app's own data and cache folders (overlays live there),
+/// so a script in the webview cannot use them to read or write anywhere else on disk.
+fn ensure_app_path<R: Runtime>(app: &AppHandle<R>, raw: &str) -> Result<PathBuf, String> {
+    let path = Path::new(raw);
+    if !path.is_absolute() || path.components().any(|part| part == Component::ParentDir) {
+        return Err(format!("Path not allowed: {}", raw));
+    }
+
+    let roots = [app.path().app_data_dir(), app.path().app_cache_dir()];
+    let allowed = roots
+        .iter()
+        .filter_map(|root| root.as_ref().ok())
+        .any(|root| path.starts_with(root));
+    if !allowed {
+        return Err(format!("Path not allowed: {}", raw));
+    }
+
+    Ok(path.to_path_buf())
+}
+
 #[tauri::command]
-pub async fn unzip_file(zip_path: String, destination: String) -> Result<(), String> {
+pub async fn unzip_file<R: Runtime>(
+    app: AppHandle<R>,
+    zip_path: String,
+    destination: String,
+) -> Result<(), String> {
+    let destination = ensure_app_path(&app, &destination)?;
     // Open the zip file
     let file = File::open(&zip_path).map_err(|e| format!("Failed to open zip file: {}", e))?;
 
@@ -66,7 +92,12 @@ pub async fn unzip_file(zip_path: String, destination: String) -> Result<(), Str
 }
 
 #[tauri::command]
-pub async fn unzip_bytes(zip_data: Vec<u8>, destination: String) -> Result<(), String> {
+pub async fn unzip_bytes<R: Runtime>(
+    app: AppHandle<R>,
+    zip_data: Vec<u8>,
+    destination: String,
+) -> Result<(), String> {
+    let destination = ensure_app_path(&app, &destination)?;
     let cursor = Cursor::new(zip_data);
     let mut archive =
         ZipArchive::new(cursor).map_err(|e| format!("Failed to read zip archive: {}", e))?;
@@ -162,11 +193,15 @@ fn add_dir_to_zip<W: Write + io::Seek>(
 }
 
 #[tauri::command]
-pub async fn zip_directory(source: String, subdir: Option<String>) -> Result<Vec<u8>, String> {
-    let source_path = Path::new(&source);
+pub async fn zip_directory<R: Runtime>(
+    app: AppHandle<R>,
+    source: String,
+    subdir: Option<String>,
+) -> Result<Vec<u8>, String> {
+    let source_path = ensure_app_path(&app, &source)?;
     let zip_root = match subdir.as_deref() {
-        Some(name) => source_path.join(name),
-        None => source_path.to_path_buf(),
+        Some(name) => ensure_app_path(&app, &source_path.join(name).to_string_lossy())?,
+        None => source_path,
     };
 
     if !zip_root.is_dir() {

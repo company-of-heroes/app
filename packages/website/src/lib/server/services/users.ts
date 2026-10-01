@@ -148,7 +148,9 @@ export class UsersService extends Service {
 				.map((owner) => owner.id);
 			if (others.length > 0) {
 				return this.recordConflict(userId, steamId, others).andThen(() =>
-					errAsync(conflict('This Steam account belongs to another account. Staff have been notified.'))
+					errAsync(
+						conflict('This Steam account belongs to another account. Staff have been notified.')
+					)
 				);
 			}
 
@@ -236,10 +238,9 @@ export class UsersService extends Service {
 		)
 			.andThen((rows) => this.sharedSteamIds().map((shared) => [...rows, ...shared]))
 			.andThen((rows) =>
-			this.usersByIds(
-				[...new Set(rows.flatMap((row) => [row.user, ...ownerIds(row)]))].filter(Boolean)
-			).map(
-				(users) => {
+				this.usersByIds(
+					[...new Set(rows.flatMap((row) => [row.user, ...ownerIds(row)]))].filter(Boolean)
+				).map((users) => {
 					const byId = new Map(users.map((user) => [user.id, user]));
 					const account = (id: string): ConflictAccount | null => {
 						const user = byId.get(id);
@@ -264,9 +265,8 @@ export class UsersService extends Service {
 							.map(account)
 							.filter((owner): owner is ConflictAccount => owner !== null)
 					}));
-				}
-			)
-		);
+				})
+			);
 	}
 
 	dismissConflict(id: string): Task<void> {

@@ -377,7 +377,10 @@ export class LobbiesService extends Service {
 						console.error(`[lobbies] could not merge session ${sessionId}`, error);
 						return okAsync(0);
 					})
-			).map((merged) => ({ processed: merged.reduce<number>((sum, n) => sum + n, 0), more: false }));
+			).map((merged) => ({
+				processed: merged.reduce<number>((sum, n) => sum + n, 0),
+				more: false
+			}));
 		});
 	}
 

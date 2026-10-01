@@ -81,8 +81,7 @@ export class SocialService extends Service {
 		return this.getOrNull<Record<string, unknown>>(KIND[target.kind].records, target.id).andThen(
 			(record) => {
 				const visible =
-					!!record &&
-					(target.kind === 'lobby' ? !record.isHidden : record.visibility === 'member');
+					!!record && (target.kind === 'lobby' ? !record.isHidden : record.visibility === 'member');
 				return visible
 					? ok(String(record[KIND[target.kind].owner] ?? ''))
 					: err(notFoundFor(target.kind));

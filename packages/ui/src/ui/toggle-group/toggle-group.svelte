@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { ToggleGroup, type ToggleGroupRootProps } from 'bits-ui';
+	import { ToggleGroup } from 'bits-ui';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { watch } from 'runed';
 
@@ -14,10 +14,12 @@
 			value: string;
 			label: Snippet | string;
 		}[];
-		type?: 'single' | 'multiple';
 		size?: 'sm' | 'md';
 		class?: string;
-	} & Omit<ToggleGroupRootProps, 'type' | 'value' | 'children' | 'class'>;
+		onValueChange?: (value: string) => void;
+		disabled?: boolean;
+		'aria-label'?: string;
+	};
 
 	let { value = $bindable(), items, size = 'md', class: className, ...restProps }: Props = $props();
 

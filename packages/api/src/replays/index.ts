@@ -16,6 +16,7 @@ export {
 	type MatchResult,
 	type MatchResultPlayer,
 	type MemberReplayDetail,
+	type MemberReplayStatsPreview,
 	type MemberReplayList,
 	type MemberReplayUploadInput,
 	type MemberReplayUpdateInput,
