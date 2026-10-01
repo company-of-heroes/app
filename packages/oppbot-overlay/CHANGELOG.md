@@ -1,5 +1,9 @@
 # @company-of-heroes/oppbot-overlay
 
+## 3.2.4
+
+- enhance; build the default overlay into the api gateway instead of PocketBase
+
 ## 3.2.3
 
 - fix; detect skirmish (match type 14) for overlay and live lobbies, including cpu race updates

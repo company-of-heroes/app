@@ -1,5 +1,15 @@
 # @company-of-heroes/pocketbase
 
+## 0.13.0
+
+- fix; stop anonymous lobby creation and edits to other players' lobbies, and require replays, emails and roles to be changed only by their owner or the website
+- security; steam ids are linked only when no other account owns them (staff resolve conflicts), match results and ratings come only from Relic, emails no longer leak in expanded records, overlays move to overlay.coh1stats.com, and the desktop app refreshes its session, sanitizes notifications and no longer ships the Steam API key
+- fix; store match duration, average ELO, player outcomes and Steam ids for every saved match, and keep large player filters in match history from failing
+- enhance; move all PocketBase hook logic (lobby pipeline, social, reputation, ratings, smurf watch, user merge, hidden matches, overlays, Steam login) into website services; PocketBase keeps only a Relic proxy and a session route
+- feat; unlock rewards: admins create rewards with a 150x150 image, title, description and conditions (matches played or won per faction, mode, map, ranked, Pro or high-ELO lobby and match length; upset wins, win streaks, rating reached, hours played, matches recorded; reputation, comments, replies, upvotes given and received, replays uploaded or downloaded; profile complete, account age, hours streamed, fair play matches and overlay published); players unlock them automatically (past matches count too) with a notification; unlocked rewards show as icons under the bio on player profiles in the app and on the website (hover for title and description), and on your own profile locked rewards show too, with your progress
+- fix; players who start the same match at the same moment no longer save it twice; a second report fills in what the saved match is still missing, and matches already saved twice are merged into one
+- feat; rename the Twitch page to Streaming and add YouTube Live (connect via website OAuth so the Google client secret stays server-side, TTS from live chat, bot messages and player stats in chat); connecting Twitch or YouTube shows the channel under your name on your profile (disconnecting removes it, and the Twitch/YouTube URL fields are gone from Update profile), and 12 hours of streaming Company of Heroes grants the Streamer badge automatically, which turns green while that player is streaming
+
 ## 0.12.1
 
 - fix; reliable profile background and avatar uploads on the website
