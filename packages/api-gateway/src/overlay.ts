@@ -1,9 +1,15 @@
 /**
  * OBS overlays at /overlay/{userId}/…: the user's published files from R2, else
  * the default overlay (static assets of this Worker). index.html gets a <base>
- * for the user path and points the overlay at this origin's PocketBase API.
+ * for the user path and points the overlay at the PocketBase API.
+ *
+ * Overlays are user code, so they live on their own host: on the API host they could
+ * read the PocketBase admin UI's token (same origin). The API host redirects there.
  */
 export type OverlayEnv = { OVERLAYS: R2Bucket; DEFAULT_OVERLAY: Fetcher };
+
+export const OVERLAY_HOST = 'overlay.coh1stats.com';
+const API_HOST = 'api.coh1stats.com';
 
 const USER_ID = /^[a-z0-9]{15}$/;
 
@@ -11,7 +17,7 @@ function notFound(): Response {
 	return new Response('Not found', { status: 404 });
 }
 
-function withBase(html: string, userId: string): string {
+function withBase(html: string, userId: string, apiOrigin: string): string {
 	let out = html;
 	if (!out.includes('<base ')) {
 		out = out.replace('<head>', `<head>\n\t\t<base href="/overlay/${userId}/" />`);
@@ -20,7 +26,7 @@ function withBase(html: string, userId: string): string {
 	if (!out.includes('__OPP_PB_URL')) {
 		out = out.replace(
 			'<head>',
-			'<head>\n\t\t<script>window.__OPP_PB_URL=location.origin;</script>'
+			`<head>\n\t\t<script>window.__OPP_PB_URL=${JSON.stringify(apiOrigin)};</script>`
 		);
 	}
 
@@ -33,6 +39,10 @@ export async function serveOverlay(request: Request, env: OverlayEnv): Promise<R
 	const match = url.pathname.match(/^\/overlay\/([^/]+)(\/.*)?$/);
 	if (!match || (request.method !== 'GET' && request.method !== 'HEAD')) {
 		return null;
+	}
+
+	if (url.hostname === API_HOST) {
+		return Response.redirect(`https://${OVERLAY_HOST}${url.pathname}${url.search}`, 301);
 	}
 
 	const [, userId, rest] = match;
@@ -65,15 +75,20 @@ export async function serveOverlay(request: Request, env: OverlayEnv): Promise<R
 		contentType = fallback.headers.get('content-type') ?? 'application/octet-stream';
 	}
 
-	const isHtml = path.endsWith('.html');
+	// Published files keep their names between versions; only the default overlay's
+	// build assets are content-hashed.
 	const headers = {
 		'content-type': contentType,
-		'cache-control': isHtml
-			? 'no-cache, no-store, must-revalidate'
-			: 'public, max-age=31536000, immutable'
+		'cache-control':
+			path.endsWith('.html') || object
+				? 'no-cache, no-store, must-revalidate'
+				: 'public, max-age=31536000, immutable'
 	};
 	if (path === 'index.html') {
-		return new Response(withBase(await new Response(body).text(), userId), { headers });
+		const apiOrigin = url.hostname === OVERLAY_HOST ? `https://${API_HOST}` : url.origin;
+		return new Response(withBase(await new Response(body).text(), userId, apiOrigin), {
+			headers
+		});
 	}
 
 	return new Response(body, { headers });

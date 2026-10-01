@@ -2,7 +2,7 @@ import { ClientResponseError } from 'pocketbase';
 import { fetch } from '$core/http/fetch';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
-import { isEmpty, uniq } from 'lodash-es';
+import { isEmpty } from 'lodash-es';
 import { pocketbase } from '$core/pocketbase';
 import { UsersRoleOptions, type UsersResponse } from '$core/pocketbase/types';
 import { settings } from '$core/config/settings.svelte';
@@ -17,6 +17,9 @@ import { canRequestEmailChange, isPlaceholderEmail } from '@company-of-heroes/ap
 export type User = UsersResponse<Record<string, any>, string[], Record<string, any>>;
 
 export type AccountStatus = 'idle' | 'authenticating' | 'authenticated' | 'error';
+
+/** Well inside PocketBase's one-week session lifetime. */
+const SESSION_REFRESH_MS = 12 * 60 * 60 * 1000;
 
 function metaWithVersion(meta: Record<string, any> | null | undefined, version: string) {
 	return { ...(meta && typeof meta === 'object' ? meta : {}), version };
@@ -44,6 +47,8 @@ function fieldErrorMessage(error: ClientResponseError): string {
  */
 export class AccountService {
 	#user = $state<User | null>(null);
+	#conflictedSteamIds = new Set<string>();
+	#refreshTimer: ReturnType<typeof setInterval> | null = null;
 
 	status = $state<AccountStatus>('idle');
 	lastError = $state<string | null>(null);
@@ -107,8 +112,42 @@ export class AccountService {
 
 		this.status = 'authenticated';
 		void this.#postLogin();
+		this.#startSessionRefresh();
 
 		return outcome;
+	}
+
+	/** Sessions expire after a week; the app often runs longer than that. */
+	#startSessionRefresh() {
+		if (this.#refreshTimer) {
+			return;
+		}
+
+		this.#refreshTimer = setInterval(() => void this.#refreshSession(), SESSION_REFRESH_MS);
+	}
+
+	/** Renews the session, or signs in again with the stored credentials when it cannot. */
+	async #refreshSession() {
+		if (this.isImpersonating) {
+			return;
+		}
+
+		try {
+			const auth = await pocketbase.collection('users').authRefresh<User>({ fetch });
+			this.#user = auth.record;
+		} catch (error) {
+			console.warn('[ACCOUNT]: session refresh failed, signing in again:', error);
+			const result = await this.#authenticate($state.snapshot(settings.tree.account)).catch(
+				(loginError) => {
+					console.error('[ACCOUNT]: sign-in after refresh failed:', loginError);
+					return 'invalid' as const;
+				}
+			);
+			if (result !== 'ok') {
+				this.status = 'error';
+				this.lastError = t('Could not restore your account');
+			}
+		}
 	}
 
 	async #authenticate(credentials: AccountSettings): Promise<AuthResult> {
@@ -332,10 +371,13 @@ export class AccountService {
 		}
 	}
 
-	/** Links a Steam ID to the account (idempotent). */
-	async attachSteamId(steamId: string): Promise<User> {
+	/**
+	 * Links a Steam ID to the account through the website (idempotent). Returns an error
+	 * message once per session when another account already owns the ID.
+	 */
+	async attachSteamId(steamId: string): Promise<string | null> {
 		if (this.isImpersonating) {
-			return this.user;
+			return null;
 		}
 
 		const user = this.#user;
@@ -344,23 +386,24 @@ export class AccountService {
 			throw new Error('No authenticated user to attach Steam ID to.');
 		}
 
-		if (user.steamIds?.includes(steamId)) {
-			return this.user;
+		if (user.steamIds?.includes(steamId) || this.#conflictedSteamIds.has(steamId)) {
+			return null;
 		}
 
-		const version = await getVersion();
-		this.#user = (await pocketbase.collection('users').update(
-			user.id,
-			{
-				steamIds: uniq([...(user.steamIds || []), steamId]),
-				meta: metaWithVersion(user.meta, version)
-			},
-			{ fetch }
-		)) as User;
+		const result = await api.auth.linkSteamId(steamId);
+		if (result.isErr()) {
+			if (result.error.status !== 409) {
+				throw new Error(result.error.message);
+			}
 
+			this.#conflictedSteamIds.add(steamId);
+			return t(result.error.message);
+		}
+
+		this.#user = { ...user, steamIds: result.value.steamIds } as User;
 		void this.#enrichFromSteam();
 
-		return this.user;
+		return null;
 	}
 
 	/**

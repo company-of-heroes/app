@@ -17,7 +17,26 @@ async function sha256(text: string): Promise<string> {
 	return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function sameText(a: string, b: string): boolean {
+async function hmacSha256(text: string, secret: string): Promise<string> {
+	const key = await crypto.subtle.importKey(
+		'raw',
+		new TextEncoder().encode(secret),
+		{ name: 'HMAC', hash: 'SHA-256' },
+		false,
+		['sign']
+	);
+	const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(text));
+	return [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/** A random value tying a Steam login to the browser that started it. */
+export function loginNonce(): string {
+	return [...crypto.getRandomValues(new Uint8Array(16))]
+		.map((byte) => byte.toString(16).padStart(2, '0'))
+		.join('');
+}
+
+export function sameText(a: string, b: string): boolean {
 	if (a.length !== b.length) {
 		return false;
 	}
@@ -68,15 +87,19 @@ export function safeRedirectPath(raw: unknown): string {
 	return value.startsWith('/') && !value.startsWith('//') && !value.includes('\\') ? value : '/';
 }
 
-/** `{origin}~{redirect}~{expiresAt}~{signature}`, carried through Steam's login. */
+/**
+ * `{origin}~{redirect}~{expiresAt}~{nonce}~{hmac}`, carried through Steam's login. The
+ * nonce is also in a cookie of the browser that started the login (see `steamCallback`).
+ */
 export async function createSteamState(
 	origin: string,
 	redirect: string,
+	nonce: string,
 	secret: string,
 	now = Date.now()
 ): Promise<string> {
-	const body = `${encodeURIComponent(origin)}~${encodeURIComponent(redirect)}~${now + STEAM_STATE_TTL_MS}`;
-	return `${body}~${await sha256(`${body}|${secret}`)}`;
+	const body = `${encodeURIComponent(origin)}~${encodeURIComponent(redirect)}~${now + STEAM_STATE_TTL_MS}~${nonce}`;
+	return `${body}~${await hmacSha256(body, secret)}`;
 }
 
 export async function readSteamState(
@@ -84,22 +107,22 @@ export async function readSteamState(
 	secret: string,
 	allowedOrigins: string[],
 	now = Date.now()
-): Promise<{ origin: string; redirect: string } | null> {
+): Promise<{ origin: string; redirect: string; nonce: string } | null> {
 	const parts = raw.trim().split('~');
-	if (parts.length !== 4) {
+	if (parts.length !== 5) {
 		return null;
 	}
 
-	const [origin, redirect, expiresAt, signature] = parts;
-	const expected = await sha256(`${origin}~${redirect}~${expiresAt}|${secret}`);
-	if (!sameText(signature, expected) || !(Number(expiresAt) > now)) {
+	const [origin, redirect, expiresAt, nonce, signature] = parts;
+	const expected = await hmacSha256(`${origin}~${redirect}~${expiresAt}~${nonce}`, secret);
+	if (!nonce || !sameText(signature, expected) || !(Number(expiresAt) > now)) {
 		return null;
 	}
 
 	try {
 		const decoded = decodeURIComponent(origin).replace(/\/$/, '');
 		return allowedOrigins.includes(decoded)
-			? { origin: decoded, redirect: safeRedirectPath(decodeURIComponent(redirect)) }
+			? { origin: decoded, redirect: safeRedirectPath(decodeURIComponent(redirect)), nonce }
 			: null;
 	} catch {
 		return null;

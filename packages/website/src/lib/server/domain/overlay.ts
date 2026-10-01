@@ -45,11 +45,31 @@ export function readOverlayBundle(zip: Uint8Array): OverlayBundle {
 		throw new Error('Overlay bundle is too large.');
 	}
 
+	// Limits are checked on the sizes the zip declares, before anything is inflated
+	// (fflate inflates each entry into a buffer of exactly that size).
+	let declared = 0;
+	let count = 0;
+	let tooLarge = false;
 	let entries: Record<string, Uint8Array>;
 	try {
-		entries = unzipSync(zip);
+		entries = unzipSync(zip, {
+			filter: (file) => {
+				if (!bundlePath(file.name)) {
+					return false;
+				}
+
+				count += 1;
+				declared += file.originalSize;
+				tooLarge ||= count > MAX_FILES || declared > MAX_UNZIPPED_BYTES;
+				return !tooLarge;
+			}
+		});
 	} catch {
 		throw new Error('Overlay bundle is not a valid zip file.');
+	}
+
+	if (tooLarge) {
+		throw new Error('Overlay bundle is too large.');
 	}
 
 	const files = new Map<string, Uint8Array>();

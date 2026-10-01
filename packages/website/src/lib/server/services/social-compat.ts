@@ -1,6 +1,7 @@
 import type { RecordModel } from 'pocketbase';
 import { err, errAsync, ok, okAsync } from 'neverthrow';
 import { badRequest, forbidden, notFound } from '../errors';
+import { publicRecord } from '../domain/public-record';
 import { fromPb, pbMaybe, type Task } from '../result';
 import { Service } from './service';
 import type { SocialActor, TargetKind, Vote } from './social';
@@ -73,7 +74,9 @@ export class SocialCompatService extends Service {
 	}
 
 	private record(collection: CompatCollection, id: string, options: RecordOptions) {
-		return fromPb(this.pb.collection(collection).getOne(id, options), 'Record not found');
+		return fromPb(this.pb.collection(collection).getOne(id, options), 'Record not found').map(
+			publicRecord
+		);
 	}
 
 	create(

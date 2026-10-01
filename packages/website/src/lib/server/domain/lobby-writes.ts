@@ -22,25 +22,59 @@ export const lobbyCreateSchema = z.object({
 	title: z.string().max(200).default(''),
 	map: z.string().max(200).default('Unknown'),
 	needsResult: bool.default(true),
-	players: players.default([]),
-	result: z.unknown().optional()
+	players: players.default([])
 });
 export type LobbyCreate = z.infer<typeof lobbyCreateSchema>;
 
-/** Fields the lobby's owner may change; everything else is derived or protected. */
+/**
+ * Fields the lobby's owner may change; everything else is derived or protected. The
+ * result only ever comes from Relic (`needsResult` is a request, see `LobbiesService.update`).
+ */
 export const lobbyUpdateSchema = z
 	.object({
 		isRanked: bool,
 		title: z.string().max(200),
 		map: z.string().max(200),
 		needsResult: bool,
-		players,
-		result: z.unknown(),
-		hasFailed: bool,
-		resultAttempts: z.coerce.number().int().min(0)
+		players
 	})
 	.partial();
 export type LobbyUpdate = z.infer<typeof lobbyUpdateSchema>;
+
+/** PocketBase stores a missing value as '', 0, null, [] or {}; "Unknown" is the map placeholder. */
+function isBlank(value: unknown): boolean {
+	if (value === null || value === undefined) {
+		return true;
+	}
+
+	if (typeof value === 'string') {
+		return value.trim() === '' || value === 'Unknown';
+	}
+
+	if (Array.isArray(value)) {
+		return value.length === 0;
+	}
+
+	return typeof value === 'object' && Object.keys(value).length === 0;
+}
+
+/**
+ * What `input` adds to a stored lobby: only fields the lobby is still missing, so a
+ * second app reporting the same session fills gaps without overwriting anything.
+ */
+export function missingLobbyFields(
+	lobby: Record<string, unknown>,
+	input: LobbyUpdate
+): LobbyUpdate {
+	const patch: LobbyUpdate = {};
+	for (const key of ['title', 'map', 'players'] as const) {
+		if (isBlank(lobby[key]) && !isBlank(input[key])) {
+			Object.assign(patch, { [key]: input[key] });
+		}
+	}
+
+	return patch;
+}
 
 /** What a companion app publishes while its player is in a lobby or game. */
 export const livePublishSchema = z.object({

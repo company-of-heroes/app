@@ -5,18 +5,44 @@ name = "coh1stats-api-gateway"
 main = "src/index.ts"
 compatibility_date = "2025-07-10"
 
+# One route per legacy prefix in src/routes.ts, plus the overlays. Paths a route matches
+# but no rule rewrites pass through to PocketBase unchanged. Collection write paths older
+# apps use also need a route; reads on those paths pass through. /api/files/* only gets a
+# rate limit (add it once REPLAY_PROXY_SECRET is set here and on the website).
+# Realtime must never match a route. Overlays are served from their own host (a custom
+# domain: Cloudflare creates its DNS record); /overlay* on the API host redirects there.
+routes = [
+	{ pattern = "overlay.coh1stats.com", custom_domain = true },
+	{ pattern = "api.coh1stats.com/overlay*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/overlay/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/match*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/history-*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/twitch/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/leaderboard/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/player*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/member-replays*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/replay-filters*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/smurf-watch/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/live-lobbies*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/auth/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/impersonate/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/lobbies/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/lobbies/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/lobbies_live/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/hidden_matches/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/hidden_match_keywords/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/lobby_likes/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/replay_likes/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/lobby_comments/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/replay_comments/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/lobby_comment_likes/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/replay_comment_likes/*", zone_name = "coh1stats.com" },
+	{ pattern = "api.coh1stats.com/api/collections/player_likes/*", zone_name = "coh1stats.com" }
+]
+
 [[services]]
 binding = "WEBSITE"
 service = "coh1stats-website"
-
-# Add a route per legacy prefix as it moves to the website, e.g.:
-# routes = [
-#   { pattern = "api.coh1stats.com/overlay/*", zone_name = "coh1stats.com" },
-#   { pattern = "api.coh1stats.com/api/leaderboard/*", zone_name = "coh1stats.com" },
-# ]
-# Collection write paths older apps use (see src/routes.ts) also need a route;
-# reads on those paths pass through. /api/files/* only gets a rate limit, then passes
-# through. Realtime must never match a route.
 
 # OBS overlays (/overlay/{userId}/…): published files in R2, default overlay as assets
 # (built by packages/oppbot-overlay into overlay-default/).

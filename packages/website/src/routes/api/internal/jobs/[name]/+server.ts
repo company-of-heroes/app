@@ -13,7 +13,7 @@ const JOBS: Record<string, (services: Services) => Task<{ processed: number; mor
 	'result-fill': (services) => services.matchResults.fill(),
 	'ratings-harvest': (services) => services.ratingHarvest.harvestDue(),
 	'ladder-harvest': (services) => services.ratingHarvest.harvestLadder(),
-	'user-merge': (services) => services.users.mergeDuplicates(),
+	'lobby-merge': (services) => services.lobbies.mergeDuplicates(),
 	'rewards-evaluate': (services) => services.rewards.evaluateDue(),
 	// One-time (run by hand until done): overlays published before R2.
 	'overlay-backfill': (services) => services.overlays.backfill()

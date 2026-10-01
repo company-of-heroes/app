@@ -2,12 +2,12 @@ import { ClientResponseError, type RecordModel } from 'pocketbase';
 import { errAsync, ok, okAsync, Result, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
 import type { ApiDeps } from '../deps';
-import { normalizeBaseUrl, siteUrl, v1Base } from '../deps';
+import { normalizeBaseUrl, sendV1, siteUrl, v1Base } from '../deps';
 import { apiError, fromUnknown, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import { generateUniqueId } from '../id';
 import { escapePocketBaseString, fromPbPromise, pbOptions, requireAuth } from '../pb';
-import { isStaff } from '../staff';
+import { isStaff, requireStaff } from '../staff';
 import { readMetaVersion } from '../companion/meta';
 import { toUploadFile } from '../upload-file';
 
@@ -39,6 +39,23 @@ export type CompanionUserDebug = {
 	created?: string;
 	updated?: string;
 	appVersion: string | null;
+};
+
+export type SteamConflictAccount = {
+	id: string;
+	name: string;
+	role: string;
+	steamIds: string[];
+	lastLogin: string;
+};
+
+/** A Steam id claimed by several accounts; `shared:` ids are older duplicates without a requester. */
+export type SteamConflict = {
+	id: string;
+	steamId: string;
+	created: string;
+	requester: SteamConflictAccount | null;
+	owners: SteamConflictAccount[];
 };
 
 export type AuthExchange = {
@@ -227,6 +244,57 @@ export class AuthApi {
 				.then((record) => this.#saveAuthRecord(record as AuthUser)),
 			'Could not update your password.'
 		);
+	}
+
+	/** Links a Steam id seen in the game log; 409 when another account already owns it. */
+	linkSteamId(steamId: string): ResultAsync<AuthUser, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		return fromPbPromise(
+			sendV1<{ steamIds: string[] }>(this.deps, '/account/steam-ids', {
+				method: 'POST',
+				body: { steamId }
+			}),
+			'Could not link your Steam account.'
+		).map(({ steamIds }) => {
+			const record = this.deps.pocketbase.authStore.record as AuthUser | null;
+			return this.#saveAuthRecord({ ...(record ?? {}), steamIds } as AuthUser);
+		});
+	}
+
+	listSteamConflicts(): ResultAsync<SteamConflict[], ApiError> {
+		const staff = requireStaff(this.deps);
+		if (staff.isErr()) {
+			return errAsync(staff.error);
+		}
+
+		return fromPbPromise(
+			sendV1<{ conflicts: SteamConflict[] }>(this.deps, '/users/steam-conflicts'),
+			'Could not load Steam conflicts.'
+		).map(({ conflicts }) => conflicts);
+	}
+
+	dismissSteamConflict(id: string): ResultAsync<void, ApiError> {
+		const staff = requireStaff(this.deps);
+		if (staff.isErr()) {
+			return errAsync(staff.error);
+		}
+
+		return fromPbPromise(
+			sendV1(this.deps, `/users/steam-conflicts/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+			'Could not dismiss the Steam conflict.'
+		).map(() => undefined);
+	}
+
+	/** Admins: merges `userIds` into `keeperId` (the keeper keeps its own role). */
+	mergeAccounts(keeperId: string, userIds: string[]): ResultAsync<void, ApiError> {
+		return fromPbPromise(
+			sendV1(this.deps, '/users/merge', { method: 'POST', body: { keeperId, userIds } }),
+			'Could not merge the accounts.'
+		).map(() => undefined);
 	}
 
 	#saveAuthRecord(record: AuthUser): AuthUser {

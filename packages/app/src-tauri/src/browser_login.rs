@@ -105,10 +105,10 @@ pub async fn handle_browser_login(
                                 throw new Error('Desktop app is still starting. Try again in a moment.');
                             }
                             const code = await create();
-                            await window.__TAURI__.core.invoke('complete_browser_login', { code });
+                            await window.__TAURI_INTERNALS__.invoke('complete_browser_login', { code });
                         } catch (error) {
                             const message = error instanceof Error ? error.message : String(error);
-                            await window.__TAURI__.core.invoke('complete_browser_login', { error: message });
+                            await window.__TAURI_INTERNALS__.invoke('complete_browser_login', { error: message });
                         }
                     })();
                 "#,

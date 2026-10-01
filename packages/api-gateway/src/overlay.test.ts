@@ -29,7 +29,7 @@ function env(files: Record<string, string>): OverlayEnv {
 }
 
 const get = (path: string, files: Record<string, string> = {}) =>
-	serveOverlay(new Request(`https://api.coh1stats.com${path}`), env(files));
+	serveOverlay(new Request(`https://overlay.coh1stats.com${path}`), env(files));
 
 test('other paths are not overlays', async () => {
 	assert.equal(await get('/api/leaderboard/4'), null);

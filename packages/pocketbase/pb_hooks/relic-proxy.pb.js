@@ -9,7 +9,8 @@
 // -> { "results": [{ "url", "ok": true, "body" } | { "url", "ok": false, "error" }] }
 routerAdd('POST', '/api/_relic', (e) => {
 	const token = $os.getenv('SERVICE_TOKEN') || '';
-	if (!token || e.request.header.get('Authorization') !== `Bearer ${token}`) {
+	const header = e.request.header.get('Authorization') || '';
+	if (!token || !$security.equal(header, `Bearer ${token}`)) {
 		return e.json(401, { message: 'Unauthorized' });
 	}
 

@@ -19,6 +19,9 @@
 	import { cn } from '$lib/utils';
 	import { footerAction, interactive } from '$lib/components/ui/variants';
 	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
+	import type { SteamConflict, SteamConflictAccount } from '@company-of-heroes/api';
+	import { api } from '$core/api';
+	import { onMount } from 'svelte';
 
 	const { t } = useI18n();
 
@@ -50,6 +53,69 @@
 
 		return user.steamIds.map(String).find(Boolean) ?? '';
 	};
+
+	let conflicts = $state.raw<SteamConflict[]>([]);
+	let busyConflictId = $state<string | null>(null);
+	const isAdmin = $derived(app.account.isAdmin);
+
+	const conflictAccounts = (conflict: SteamConflict) =>
+		[conflict.requester, ...conflict.owners].filter(
+			(account): account is SteamConflictAccount => account !== null
+		);
+
+	const loadConflicts = async () => {
+		const result = await api.auth.listSteamConflicts();
+		if (result.isErr()) {
+			app.toast.error(t(result.error.message));
+			return;
+		}
+
+		conflicts = result.value;
+	};
+
+	const keepAccount = async (conflict: SteamConflict, keeper: SteamConflictAccount) => {
+		const others = conflictAccounts(conflict).filter((account) => account.id !== keeper.id);
+		const confirmed = await confirm(
+			t('Merge {count} account(s) into {name}? Their matches, replays and comments move over and the accounts are deleted.', {
+				count: others.length,
+				name: keeper.name || keeper.id
+			}),
+			{ okLabel: t('Merge'), cancelLabel: t('Cancel'), kind: 'warning' }
+		);
+		if (!confirmed) {
+			return;
+		}
+
+		busyConflictId = conflict.id;
+		const result = await api.auth.mergeAccounts(
+			keeper.id,
+			others.map((account) => account.id)
+		);
+		busyConflictId = null;
+		if (result.isErr()) {
+			app.toast.error(t(result.error.message));
+			return;
+		}
+
+		app.toast.success(t('Accounts merged.'));
+		await loadConflicts();
+	};
+
+	const dismissConflict = async (conflict: SteamConflict) => {
+		busyConflictId = conflict.id;
+		const result = await api.auth.dismissSteamConflict(conflict.id);
+		busyConflictId = null;
+		if (result.isErr()) {
+			app.toast.error(t(result.error.message));
+			return;
+		}
+
+		conflicts = conflicts.filter((row) => row.id !== conflict.id);
+	};
+
+	onMount(() => {
+		void loadConflicts();
+	});
 
 	const searchUsers = async () => {
 		const query = userQuery.trim();
@@ -111,6 +177,68 @@
 		}
 	};
 </script>
+
+{#if conflicts.length > 0}
+	<section class="border-secondary-800 mb-6 border-b">
+		<div class="border-secondary-800 border-b px-4 py-3">
+			<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">
+				{t('Steam conflicts')}
+			</p>
+			<p class="text-secondary-400 mt-1 text-xs">
+				{t('These Steam IDs are claimed by more than one account. Pick the account to keep.')}
+			</p>
+		</div>
+		<ul class="divide-secondary-800 divide-y">
+			{#each conflicts as conflict (conflict.id)}
+				<li class="flex flex-col gap-2 px-4 py-3">
+					<span class="flex items-center gap-2 text-sm">
+						<span class="font-mono">{conflict.steamId}</span>
+						{#if !conflict.requester}
+							<Badge variant="default">{t('Already shared')}</Badge>
+						{/if}
+					</span>
+					<ul class="flex flex-col gap-1">
+						{#each conflictAccounts(conflict) as account (account.id)}
+							<li class="flex items-center gap-2 text-sm">
+								<span class="min-w-0 flex-1 truncate">
+									{account.name || account.id}
+									{#if account.id === conflict.requester?.id}
+										<Badge variant="default">{t('Requested')}</Badge>
+									{/if}
+									{#if roleLabel(account.role as UsersResponse['role'])}
+										<Badge variant="primary">{roleLabel(account.role as UsersResponse['role'])}</Badge>
+									{/if}
+								</span>
+								<Button
+									type="button"
+									variant="secondary"
+									size="sm"
+									disabled={!isAdmin || busyConflictId !== null}
+									loading={busyConflictId === conflict.id}
+									onclick={() => keepAccount(conflict, account)}
+								>
+									{t('Keep this account')}
+								</Button>
+							</li>
+						{/each}
+					</ul>
+					{#if conflict.requester}
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							class="w-fit"
+							disabled={busyConflictId !== null}
+							onclick={() => dismissConflict(conflict)}
+						>
+							{t('Dismiss')}
+						</Button>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+	</section>
+{/if}
 
 <Form.Group
 	inputId="admin-user-search"

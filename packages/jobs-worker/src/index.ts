@@ -6,7 +6,7 @@ const JOBS: { name: string; every: number; offset: number }[] = [
 	{ name: 'result-fill', every: 1, offset: 0 },
 	{ name: 'ladder-harvest', every: 5, offset: 2 },
 	{ name: 'ratings-harvest', every: 5, offset: 3 },
-	{ name: 'user-merge', every: 5, offset: 4 },
+	{ name: 'lobby-merge', every: 5, offset: 1 },
 	{ name: 'rewards-evaluate', every: 1, offset: 0 }
 ];
 

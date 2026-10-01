@@ -4,6 +4,8 @@
 name = "coh1stats-jobs-worker"
 main = "src/index.ts"
 compatibility_date = "2025-07-10"
+workers_dev = false
+preview_urls = false
 
 [triggers]
 crons = ["* * * * *"]

@@ -1,6 +1,6 @@
 /**
  * Accounts: one person may end up with several `users` rows sharing a Steam id
- * (signed up twice, app and website). Those are merged into one keeper.
+ * (signed up twice, app and website). Staff merge those into a keeper they pick.
  */
 
 export type UserRow = {
@@ -12,8 +12,6 @@ export type UserRow = {
 	lastLogin?: string;
 	created?: string;
 };
-
-const ROLE_RANK: Record<string, number> = { admin: 2, moderator: 1 };
 
 export function steamIdsOf(user: Pick<UserRow, 'steamIds'>): string[] {
 	const list = Array.isArray(user.steamIds) ? user.steamIds : [];
@@ -53,17 +51,11 @@ export function byRecency(a: UserRow, b: UserRow): number {
 	);
 }
 
-export function pickKeeper(users: UserRow[], preferId?: string): UserRow {
-	return users.find((user) => user.id === preferId) ?? [...users].sort(byRecency)[0];
-}
-
-/** The keeper's profile after a merge: every Steam id, the highest role, a name, the latest login. */
+/**
+ * The keeper's profile after a merge: every Steam id, a name, the latest login.
+ * The role stays the keeper's own: a merge never grants another account's rights.
+ */
 export function mergedProfile(keeper: UserRow, users: UserRow[]) {
-	const role = users.reduce(
-		(best, user) =>
-			(ROLE_RANK[user.role ?? ''] ?? 0) > (ROLE_RANK[best] ?? 0) ? (user.role ?? '') : best,
-		keeper.role ?? ''
-	);
 	const name =
 		keeper.name?.trim() ||
 		[...users]
@@ -77,7 +69,6 @@ export function mergedProfile(keeper: UserRow, users: UserRow[]) {
 	);
 	return {
 		steamIds: [...new Set(users.flatMap(steamIdsOf))],
-		...(role ? { role } : {}),
 		...(name ? { name } : {}),
 		...(lastLogin ? { lastLogin } : {})
 	};

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { errAsync, ok } from 'neverthrow';
+import { errAsync } from 'neverthrow';
 import { badRequest } from '$lib/server/errors';
-import { handle, parseBody, requireService } from '$lib/server/http';
+import { handle, parseBody, requireSmurfService } from '$lib/server/http';
 import { SMURF_SOURCE_PRIORITY, type SmurfSource } from '$lib/server/services/smurf';
 
 const body = z.object({
@@ -25,7 +25,7 @@ const body = z.object({
 
 /**
  * Queues a Steam account for smurf screening. Reporting who lends the account
- * (closing the case) needs a signed-in user or the service token.
+ * (closing the case) needs the smurf worker's service token.
  */
 export const POST = handle((event) =>
 	parseBody(body, event.request).andThen((input) => {
@@ -43,7 +43,7 @@ export const POST = handle((event) =>
 		const { smurf } = event.locals.services;
 
 		if (lenderSteamId) {
-			return (event.locals.user ? ok(undefined) : requireService(event))
+			return requireSmurfService(event)
 				.asyncAndThen(() =>
 					smurf.markLender({
 						steamId,

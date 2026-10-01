@@ -19,7 +19,7 @@ function isServiceRequest(e) {
 	}
 
 	const auth = e.request.header.get('Authorization') || '';
-	return auth === `Bearer ${token}`;
+	return $security.equal(auth, `Bearer ${token}`);
 }
 
 function handleWorkerBatch(e) {

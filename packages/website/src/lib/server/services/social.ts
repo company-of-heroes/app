@@ -76,6 +76,20 @@ export class SocialService extends Service {
 		);
 	}
 
+	/** Owner of a match or replay the public can see: hidden matches and unpublished replays are not found. */
+	private visibleOwnerOf(target: Target): Task<string> {
+		return this.getOrNull<Record<string, unknown>>(KIND[target.kind].records, target.id).andThen(
+			(record) => {
+				const visible =
+					!!record &&
+					(target.kind === 'lobby' ? !record.isHidden : record.visibility === 'member');
+				return visible
+					? ok(String(record[KIND[target.kind].owner] ?? ''))
+					: err(notFoundFor(target.kind));
+			}
+		);
+	}
+
 	/** Stored counters follow the count views (the source of truth). */
 	recount(target: Target): Task<Counts> {
 		const kind = KIND[target.kind];
@@ -176,7 +190,7 @@ export class SocialService extends Service {
 		{ toggle = false } = {}
 	): Task<{ vote: Vote; likeCount: number; recordId: string }> {
 		const kind = KIND[target.kind];
-		return this.ownerOf(target).andThen((authorId) =>
+		return this.visibleOwnerOf(target).andThen((authorId) =>
 			this.upsertVote(kind.likes, { [kind.field]: target.id, user: userId }, value, toggle)
 				.andThen((stored) =>
 					this.voteReputation(stored, userId, authorId, 'replay').map(() => stored)
@@ -248,7 +262,7 @@ export class SocialService extends Service {
 		const body = text.trim();
 		return ensure(body, badRequest('Enter a comment.'))
 			.andThen(() => ensure(body.length <= 5000, badRequest('That comment is too long.')))
-			.asyncAndThen(() => this.ownerOf(target))
+			.asyncAndThen(() => this.visibleOwnerOf(target))
 			.andThen(() => this.checkParent(target, parentId))
 			.andThen(() =>
 				fromPb(

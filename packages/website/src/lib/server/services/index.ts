@@ -23,6 +23,7 @@ import { PlayerSocialService } from './player-social';
 import { PlayersService } from './players';
 import { RatingHarvestService } from './rating-harvest';
 import { RatingsService } from './ratings';
+import { RelationsService } from './relations';
 import { ReplaysService } from './replays';
 import { ReputationService } from './reputation';
 import { RewardsService } from './rewards';
@@ -174,6 +175,10 @@ export class Services {
 
 	get ratings() {
 		return this.#get('ratings', RatingsService);
+	}
+
+	get relations() {
+		return this.#get('relations', RelationsService);
 	}
 
 	get replays() {

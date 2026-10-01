@@ -1,3 +1,4 @@
+import { okAsync } from 'neverthrow';
 import { RELIC_BASE } from '../clients/relic';
 import { MAX_RESULT_ATTEMPTS, resultProfileId } from '../domain/lobby-writes';
 import {
@@ -5,7 +6,7 @@ import {
 	type HistoryMatch,
 	type RelicMatchHistory
 } from '../domain/relic-matches';
-import { fromPb, sequence, type Task } from '../result';
+import { fromPb, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
 /** Lobbies per run, and Relic match histories fetched per run. */
@@ -34,7 +35,11 @@ export class MatchResultsService extends Service {
 		return fromPb(
 			this.pb
 				.collection('lobbies_live')
-				.getFullList<{ sessionId: number; lobby: string }>({ fields: 'sessionId,lobby' }),
+				// Replay viewers only point at a match; they do not hold up its result.
+				.getFullList<{ sessionId: number; lobby: string }>({
+					filter: 'isReplay != true',
+					fields: 'sessionId,lobby'
+				}),
 			'Could not load live lobbies'
 		).andThen((live) => {
 			const liveSessions = new Set(live.map((row) => Number(row.sessionId)).filter((id) => id > 0));
@@ -69,11 +74,15 @@ export class MatchResultsService extends Service {
 		).map(() => undefined);
 	}
 
-	/** Stores the result when Relic knew the session, else counts a miss. */
-	private settle(lobby: PendingLobby, bySession: Map<number, HistoryMatch>): Task<void> {
+	/** Stores the result when Relic knew the session, else counts a miss (when `countMiss`). */
+	private settle(
+		lobby: PendingLobby,
+		bySession: Map<number, HistoryMatch>,
+		countMiss = true
+	): Task<void> {
 		const result = bySession.get(Number(lobby.sessionId));
 		if (!result) {
-			return this.miss(lobby);
+			return countMiss ? this.miss(lobby) : okAsync(undefined);
 		}
 
 		return fromPb(
@@ -84,6 +93,30 @@ export class MatchResultsService extends Service {
 		)
 			.andThen(() => this.services.lobbies.process(lobby.id))
 			.map(() => undefined);
+	}
+
+	/**
+	 * One lobby, right away (the app saw the game end). A miss is not counted: the
+	 * scheduled `fill` keeps trying.
+	 */
+	fillOne(lobbyId: string): Task<void> {
+		return pbMaybe(
+			this.pb.collection('lobbies').getFirstListItem<PendingLobby>(
+				this.pb.filter('id = {:lobbyId} && needsResult = true && hasFailed != true', { lobbyId }),
+				{ fields: 'id,sessionId,resultAttempts,playerProfileIdsCsv,players,lobbyPlayers' }
+			),
+			'Could not load match'
+		).andThen((lobby) => {
+			const profileId = lobby ? resultProfileId(lobby) : null;
+			if (!lobby || profileId === null) {
+				return okAsync(undefined);
+			}
+
+			return this.relic.getMany<RelicMatchHistory>([historyUrl(profileId)]).andThen(([history]) => {
+				const matches = history?.ok ? toHistoryMatches(history.body, profileId) : [];
+				return this.settle(lobby, new Map(matches.map((match) => [Number(match.id), match])), false);
+			});
+		});
 	}
 
 	/** One run: fills what Relic knows, counts a miss for the rest. */

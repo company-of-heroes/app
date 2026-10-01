@@ -85,6 +85,16 @@ export function requireService(
 	return ok(undefined);
 }
 
+/**
+ * The smurf worker's routes: its own `SMURF_SERVICE_TOKEN` (so that worker never holds the
+ * main service token), or the main one.
+ */
+export function requireSmurfService(event: RequestEvent): Result<void, AppError> {
+	return env.SMURF_SERVICE_TOKEN
+		? requireService(event, env.SMURF_SERVICE_TOKEN).orElse(() => requireService(event))
+		: requireService(event);
+}
+
 function timingSafeEqual(a: string, b: string): boolean {
 	if (a.length !== b.length) {
 		return false;

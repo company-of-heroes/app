@@ -7,10 +7,15 @@ compatibility_flags = ["nodejs_als"]
 [placement]
 mode = "smart"
 
+[observability.logs]
+enabled = true
+invocation_logs = true
+
 # Secrets (wrangler secret put): PB_SUPERUSER_EMAIL, PB_SUPERUSER_PASSWORD (a dedicated superuser
 # without MFA; PB_SUPERUSER_TOKEN overrides the login), SERVICE_TOKEN, REPLAY_PROXY_SECRET,
 # STEAM_API_KEY, AUTH_HANDOFF_SECRET, TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET,
-# YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET
+# YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, AUTH_TOKEN_SECRET (PocketBase's /api/_auth/token,
+# same value there), SMURF_SERVICE_TOKEN (the smurf worker's own token, same value there)
 
 # Replay download limits per IP (src/lib/server/downloads.ts); namespace ids are account-unique.
 [[ratelimits]]

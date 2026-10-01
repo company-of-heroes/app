@@ -9,11 +9,13 @@ import {
 	STEAM_OPENID_LOGIN,
 	createHandoffCode,
 	createSteamState,
+	loginNonce,
 	openIdParams,
 	readHandoffCode,
 	readSteamState,
 	returnsTo,
 	safeRedirectPath,
+	sameText,
 	steamIdFromClaim,
 	steamLoginUrl
 } from '../domain/auth';
@@ -50,7 +52,11 @@ export class AuthService extends Service {
 			return err(internal());
 		}
 
-		return ok({ serviceToken: env.SERVICE_TOKEN, handoffSecret: env.AUTH_HANDOFF_SECRET });
+		// PocketBase's session route has its own secret once AUTH_TOKEN_SECRET is set.
+		return ok({
+			serviceToken: env.AUTH_TOKEN_SECRET || env.SERVICE_TOKEN,
+			handoffSecret: env.AUTH_HANDOFF_SECRET
+		});
 	}
 
 	/** A regular PocketBase session for the user (what password login would return). */
@@ -104,8 +110,16 @@ export class AuthService extends Service {
 		);
 	}
 
-	/** Where to send the browser to log in with Steam. */
-	steamStart(siteOrigin: string, requestedOrigin: string | null, redirect: unknown): Task<string> {
+	/**
+	 * Where to send the browser to log in with Steam, and the nonce the caller stores in
+	 * a cookie: the callback only continues in the browser that started the login.
+	 */
+	steamStart(
+		siteOrigin: string,
+		requestedOrigin: string | null,
+		redirect: unknown
+	): Task<{ url: string; nonce: string }> {
+		const nonce = loginNonce();
 		const origin = (requestedOrigin ?? siteOrigin).replace(/\/$/, '');
 		return this.secrets()
 			.andThen((secrets) =>
@@ -116,16 +130,17 @@ export class AuthService extends Service {
 			)
 			.asyncAndThen(({ handoffSecret }) =>
 				fromAsync(
-					createSteamState(origin, safeRedirectPath(redirect), handoffSecret),
+					createSteamState(origin, safeRedirectPath(redirect), nonce, handoffSecret),
 					'Could not start Steam login'
 				)
 			)
-			.map((state) =>
-				steamLoginUrl(
+			.map((state) => ({
+				url: steamLoginUrl(
 					`${siteOrigin}${CALLBACK_PATH}?state=${encodeURIComponent(state)}`,
 					`${siteOrigin}/`
-				)
-			);
+				),
+				nonce
+			}));
 	}
 
 	/** Asks Steam whether the login response is genuine; returns the Steam id. */
@@ -204,7 +219,7 @@ export class AuthService extends Service {
 	 * the site with a handoff code (the site sets its cookie when it redeems the code).
 	 * Returns the absolute URL to redirect to; failures redirect to the login page.
 	 */
-	steamCallback(query: URLSearchParams, siteOrigin: string): Task<string> {
+	steamCallback(query: URLSearchParams, siteOrigin: string, nonce: string): Task<string> {
 		return this.secrets()
 			.asyncAndThen(({ handoffSecret }) =>
 				fromAsync(
@@ -215,7 +230,7 @@ export class AuthService extends Service {
 			.andThen((state) => {
 				const origin = state?.origin ?? siteOrigin;
 				const failed = (message: string) => `${origin}/login?error=${encodeURIComponent(message)}`;
-				if (!state) {
+				if (!state || !nonce || !sameText(state.nonce, nonce)) {
 					return okAsync(failed('Invalid or expired Steam login.'));
 				}
 

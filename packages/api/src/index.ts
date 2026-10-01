@@ -46,6 +46,8 @@ export {
 	type AuthExchange,
 	type AuthUser,
 	type CompanionUserDebug,
+	type SteamConflict,
+	type SteamConflictAccount,
 	type UserRole
 } from './auth';
 

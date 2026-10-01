@@ -191,9 +191,12 @@ export abstract class Overlay {
 		return join(await this.getPath(), this.publishPath);
 	}
 
+	/** Overlays live on their own host in production; a local PocketBase serves them itself. */
 	getHostedUrl(userId: string) {
 		const baseUrl = (pocketbase.baseUrl || 'https://api.coh1stats.com').replace(/\/$/, '');
-		return `${baseUrl}/overlay/${userId}/`;
+		const host =
+			baseUrl === 'https://api.coh1stats.com' ? 'https://overlay.coh1stats.com' : baseUrl;
+		return `${host}/overlay/${userId}/`;
 	}
 
 	async getServerOverlay(): Promise<UserOverlaysResponse | null> {

@@ -7,7 +7,7 @@ import type {
 	ReplaysQuery
 } from '@company-of-heroes/ui/replay/types';
 import type { LiveLobbyPlayer, LiveLobbyPlayerStats } from '@company-of-heroes/ui/live-lobby/types';
-import { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, v1Base } from '../deps';
+import { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, sendV1, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import { currentUserId, fromPbPromise, pbOptions } from '../pb';
@@ -819,18 +819,15 @@ export class ReplaysApi {
 		}));
 	}
 
-	publish(id: string, description?: string): ResultAsync<ReplayCatalogRecord, ApiError> {
+	/** Publishes one of the user's private replays (the website checks it and freezes the ratings). */
+	publish(id: string, description?: string): ResultAsync<void, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('replays').update<ReplayCatalogRecord>(
-				id,
-				{
-					visibility: 'member',
-					...(description != null ? { description } : {})
-				},
-				pbOptions(this.deps)
-			),
+			sendV1(this.deps, `/member-replays/${encodeURIComponent(id)}/publish`, {
+				method: 'POST',
+				body: description != null ? { description } : {}
+			}),
 			'Failed to publish replay.'
-		);
+		).map(() => undefined);
 	}
 
 	publishFromMatch(

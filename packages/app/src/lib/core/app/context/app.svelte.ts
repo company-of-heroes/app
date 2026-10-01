@@ -356,7 +356,10 @@ export class AppContext extends Emittery<AppEvents> {
 		this.game.steamId = steamId;
 
 		try {
-			await this.account.attachSteamId(steamId);
+			const conflict = await this.account.attachSteamId(steamId);
+			if (conflict) {
+				this.toast.error(conflict);
+			}
 		} catch (error) {
 			console.warn('[APP]: Failed to attach Steam ID:', error);
 		}

@@ -2,16 +2,13 @@ import { err, errAsync, ok, okAsync } from 'neverthrow';
 import { cached } from '../cache';
 import { badRequest, notFound } from '../errors';
 import {
-	asList,
 	eloHistoryPoints,
 	isValidSteamId,
 	mergeElo,
 	mergeRatingUpdates,
-	normalizeSlot,
 	toEloMap,
 	type EloHistoryPoint,
-	type EloMap,
-	type EloSlotUpdate
+	type EloMap
 } from '../domain/ratings';
 import { sameJson } from '../domain/json';
 import type { RatingUpdate } from '../domain/lobby-derive';
@@ -179,19 +176,23 @@ export class RatingsService extends Service {
 			.map((saved) => saved.filter((rating): rating is PlayerRating => rating !== null));
 	}
 
-	/** Ratings the app saw in its own match history (older apps send these after each game). */
+	/**
+	 * Players the app saw in a lobby or match history. What the app reports is never
+	 * stored: their profiles are refreshed from Relic (on-demand harvest, capped and
+	 * skipping recent ones) and the stored ratings come back.
+	 */
 	ingest(players: Record<string, unknown>[]): Task<PlayerRating[]> {
-		const now = Math.floor(Date.now() / 1000);
-		return this.apply(
-			players.map((player) => ({
-				steamId: String(player.steamId ?? player.steam_id ?? ''),
-				profileId: Number(player.profileId ?? player.profile_id) || 0,
-				alias: typeof player.alias === 'string' ? player.alias.trim() : '',
-				slots: asList<Record<string, unknown>>(player.slots)
-					.map((slot) => normalizeSlot(slot, now))
-					.filter((slot): slot is EloSlotUpdate => slot !== null)
-			}))
-		);
+		const steamIds = [
+			...new Set(players.map((player) => String(player.steamId ?? player.steam_id ?? '')))
+		].filter(isValidSteamId);
+		const profileIds = players
+			.map((player) => Number(player.profileId ?? player.profile_id) || 0)
+			.filter((profileId) => profileId > 0);
+		return this.services.ratingHarvest
+			.harvest(profileIds)
+			.orElse(() => okAsync(null))
+			.andThen(() => (steamIds.length > 0 ? this.rowsFor(steamIds) : okAsync([])))
+			.map((rows) => rows.map(toRating));
 	}
 
 	/** Marks players as refreshed from Relic (`at` in the past or future moves their next turn). */

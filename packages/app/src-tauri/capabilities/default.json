@@ -128,8 +128,6 @@
 				}
 			]
 		},
-		"shell:default",
-		"shell:allow-open",
 		{
 			"identifier": "http:default",
 			"allow": [
@@ -180,6 +178,9 @@
 				},
 				{
 					"url": "https://*.coh1stats.com"
+				},
+				{
+					"url": "https://coh1stats.com/*"
 				}
 			]
 		},
@@ -188,7 +189,6 @@
 		"dialog:default",
 		"log:default",
 		"cache:default",
-		"upload:default",
 		"sql:allow-close",
 		"sql:allow-execute",
 		"sql:allow-load",

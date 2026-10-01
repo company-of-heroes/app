@@ -55,7 +55,7 @@ type ReplayRecord = {
 	vpCount: number;
 	gameDate: string;
 	messages: unknown;
-	expand?: { createdBy?: { id: string; name?: string; email?: string } };
+	expand?: { createdBy?: { id: string; name?: string } };
 };
 
 export type MemberReplayViewer = { id: string; isStaff: boolean } | null;
@@ -90,7 +90,7 @@ export function memberQueryFromReplaysQuery(
 }
 
 const LIST_FIELDS =
-	'id,title,description,isRanked,createdAt,durationInSeconds,likeCount,downloadCount,commentCount,file,players,statsSnapshot,mapName,mapFilename,visibility,createdBy,expand.createdBy.id,expand.createdBy.name,expand.createdBy.email';
+	'id,title,description,isRanked,createdAt,durationInSeconds,likeCount,downloadCount,commentCount,file,players,statsSnapshot,mapName,mapFilename,visibility,createdBy,expand.createdBy.id,expand.createdBy.name';
 
 const replayNotFound = () => notFound('Replay not found');
 
@@ -106,9 +106,7 @@ function uploaderOf(record: ReplayRecord) {
 		return null;
 	}
 
-	const name = user.name?.trim();
-	const email = user.email?.trim();
-	return { id: user.id, alias: name || (email ? email.split('@')[0] || email : user.id) };
+	return { id: user.id, alias: user.name?.trim() || 'Anonymous' };
 }
 
 /** A replay as the site and apps show it; `profileIds` maps roster Steam ids to Relic profiles. */
@@ -187,17 +185,19 @@ export type MemberReplayPage = {
 	items: MemberReplayView[];
 };
 
-function checkFile(file: Blob): Result<void, AppError> {
-	if (file.size < MIN_REPLAY_BYTES) {
+function checkSize(size: number): Result<void, AppError> {
+	if (size < MIN_REPLAY_BYTES) {
 		return err(badRequest('Replay file is empty or corrupt.'));
 	}
 
-	if (file.size > MAX_REPLAY_BYTES) {
+	if (size > MAX_REPLAY_BYTES) {
 		return err(badRequest('Replay file is too large.'));
 	}
 
 	return ok(undefined);
 }
+
+const checkFile = (file: Blob) => checkSize(file.size);
 
 type PublishableLobby = {
 	id: string;
@@ -502,6 +502,62 @@ export class MemberReplaysService extends Service {
 					}
 				)
 			);
+	}
+
+	/**
+	 * The owner publishes one of their private replays (the app keeps those in
+	 * `replays` itself): the stored file is checked and the ratings are frozen.
+	 */
+	publishPrivate(id: string, userId: string, description?: string): Task<MemberReplayView> {
+		return pbMaybe(this.replays.getOne<ReplayRecord>(id))
+			.andThen((record) => {
+				if (!record || record.visibility === 'deleted') {
+					return err(replayNotFound());
+				}
+
+				if (record.createdBy !== userId) {
+					return err(forbidden('You can only publish your own replays.'));
+				}
+
+				return ok(record);
+			})
+			.andThen((record) =>
+				record.visibility === 'member'
+					? okAsync(undefined)
+					: this.storedFileSize(record)
+							.andThen(checkSize)
+							.andThen(() =>
+								this.snapshotOf(
+									parseJsonList<ReplayRosterPlayer>(record.players),
+									record.isRanked,
+									Number(record.durationInSeconds) || 0
+								)
+							)
+							.andThen((statsSnapshot) =>
+								fromPb(
+									this.replays.update(id, {
+										visibility: 'member',
+										statsSnapshot,
+										...(description !== undefined ? { description } : {})
+									}),
+									'Could not publish replay'
+								)
+							)
+							.andThen(() => this.services.rewards.markDirty([{ id: userId }]))
+			)
+			.andThen(() => this.get(id, { id: userId, isStaff: false }));
+	}
+
+	private storedFileSize(record: ReplayRecord): Task<number> {
+		if (!record.file) {
+			return okAsync(0);
+		}
+
+		return fromAsync(
+			this.fileFetch(this.pb.files.getURL(record, record.file), { method: 'HEAD' }),
+			'Could not check the replay file',
+			502
+		).map((response) => (response.ok ? Number(response.headers.get('content-length')) || 0 : 0));
 	}
 
 	/** The uploader's own public (or, for a repeat delete, deleted) replay. */

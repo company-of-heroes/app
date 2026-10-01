@@ -5,10 +5,18 @@ import { upstream, type AppError } from './errors';
 
 export type Task<T> = ResultAsync<T, AppError>;
 
-/** Failures a caller cannot act on (network, 5xx, bugs) are logged; `handle()` only sees the mapped error. */
+/**
+ * Failures a caller cannot act on (network, 5xx, auth, bugs) are logged; `handle()` only
+ * sees the mapped error, which turns every 401 into the same "Log in to do that.".
+ */
 function logUnexpected(error: unknown, fallback: string) {
-	if (!(error instanceof ClientResponseError) || error.status === 0 || error.status >= 500) {
+	if (!(error instanceof ClientResponseError)) {
 		console.error(`[services] ${fallback}`, error);
+		return;
+	}
+
+	if (error.status === 0 || error.status === 401 || error.status === 403 || error.status >= 500) {
+		console.error(`[services] ${fallback} (${error.status} ${error.url})`, error.response);
 	}
 }
 

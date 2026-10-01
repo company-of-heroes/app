@@ -150,4 +150,38 @@ export class ReputationService extends Service {
 				: okAsync(new Set<string>())
 		);
 	}
+
+	/**
+	 * Merged duplicates: awards for `fromId` now count for `toId`. An award the user
+	 * already holds for `toId` is dropped (it was earned twice for one thing).
+	 */
+	moveSource(fromId: string, toId: string): Task<void> {
+		type Award = { id: string; user: string; type: string };
+		const awards = (sourceId: string) =>
+			fromPb(
+				this.ledger.getFullList<Award>({
+					filter: this.pb.filter('source = {:sourceId}', { sourceId }),
+					fields: 'id,user,type'
+				}),
+				'Could not load reputation'
+			);
+		return all([awards(fromId), awards(toId)])
+			.andThen(([moving, held]) => {
+				const key = (award: Award) => `${award.user}:${award.type}`;
+				const heldKeys = new Set(held.map(key));
+				return sequence(moving, (award) =>
+					fromPb<unknown>(
+						heldKeys.has(key(award))
+							? this.ledger.delete(award.id)
+							: this.ledger.update(award.id, { source: toId }),
+						'Could not update reputation'
+					)
+				).andThen(() =>
+					sequence([...new Set(moving.map((award) => award.user))], (userId) =>
+						this.refreshUserTotal(userId)
+					)
+				);
+			})
+			.map(() => undefined);
+	}
 }

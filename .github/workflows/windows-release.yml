@@ -148,6 +148,14 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Write app env
+        shell: pwsh
+        run: |
+          $pbUrl = if ('${{ vars.PUBLIC_PB_URL }}') { '${{ vars.PUBLIC_PB_URL }}' } else { 'https://api.coh1stats.com' }
+          $siteUrl = if ('${{ vars.PUBLIC_SITE_URL }}') { '${{ vars.PUBLIC_SITE_URL }}' } else { 'https://coh1stats.com' }
+          $envFile = "PUBLIC_PB_URL=$pbUrl`nPUBLIC_SITE_URL=$siteUrl`n"
+          [System.IO.File]::WriteAllText((Join-Path $pwd 'packages/app/.env.production'), $envFile)
+
       - name: Build and publish
         uses: tauri-apps/tauri-action@v0
         env:

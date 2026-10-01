@@ -1,125 +1,46 @@
-import { ok, okAsync } from 'neverthrow';
-import { mergedProfile, pickKeeper, steamIdsOf, uniquePeers, type UserRow } from '../domain/users';
-import { fromPb, sequence, type Task } from '../result';
+import { errAsync, okAsync } from 'neverthrow';
+import { mergedProfile, steamIdsOf, type UserRow } from '../domain/users';
+import { conflict, notFound } from '../errors';
+import { fromPb, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
-/** A field somewhere that points at a user, found from the schema (never a hand-kept list). */
-type UserRelation = { collection: string; field: string; multiple: boolean; peers: string[][] };
-type Row = Record<string, unknown> & { id: string };
 type MergeResult =
 	| { merged: false; keeperId?: undefined; loserIds?: undefined }
 	| { merged: boolean; keeperId: string; loserIds: string[] };
 
+type ConflictAccount = {
+	id: string;
+	name: string;
+	role: string;
+	steamIds: string[];
+	lastLogin: string;
+};
+
+export type SteamConflict = {
+	id: string;
+	steamId: string;
+	created: string;
+	requester: ConflictAccount | null;
+	owners: ConflictAccount[];
+};
+
+type ConflictRow = { id: string; user: string; steamId: string; owners: unknown; created: string };
+
 const USERS = '_pb_users_auth_';
+const ACCOUNT_FIELDS = 'id,name,role,steamIds,meta,lastLogin,created';
+
+const ownerIds = (row: Pick<ConflictRow, 'owners'>) =>
+	(Array.isArray(row.owners) ? row.owners : []).map(String);
+
 /**
- * Accounts: merging duplicates (several `users` rows with one Steam id) and the
+ * Accounts: linking Steam ids, the staff merge of duplicate accounts and the
  * anti-cheat labels that follow a user's Steam ids.
  */
 export class UsersService extends Service {
-	#relations?: UserRelation[];
-
-	/** Every relation field to `users` in a base collection, with its unique-index peers. */
-	private userRelations(): Task<UserRelation[]> {
-		if (this.#relations) {
-			return okAsync(this.#relations);
-		}
-
-		return fromPb(
-			this.pb.collections.getFullList<{
-				name: string;
-				type: string;
-				indexes: string[];
-				fields: { name: string; type: string; collectionId?: string; maxSelect?: number }[];
-			}>(),
-			'Could not load collections'
-		).map((collections) => {
-			this.#relations = collections
-				.filter((collection) => collection.type === 'base')
-				.flatMap((collection) =>
-					collection.fields
-						.filter((field) => field.type === 'relation' && field.collectionId === USERS)
-						.map((field) => ({
-							collection: collection.name,
-							field: field.name,
-							multiple: (field.maxSelect ?? 1) > 1,
-							peers: uniquePeers(collection.indexes ?? [], field.name)
-						}))
-				);
-			return this.#relations;
-		});
-	}
-
-	/** Would the keeper already have this row (by a unique index)? Loser ids among the peers count as the keeper. */
-	private keeperHasTwin(
-		relation: UserRelation,
-		row: Row,
-		loserId: string,
-		keeperId: string
-	): Task<boolean> {
-		return sequence(relation.peers, (peers) => {
-			const conditions = [
-				this.pb.filter(`${relation.field} = {:keeper}`, { keeper: keeperId }),
-				...peers.map((peer) =>
-					this.pb.filter(`${peer} = {:value}`, {
-						value: row[peer] === loserId ? keeperId : row[peer]
-					})
-				)
-			];
-			return fromPb(
-				this.pb
-					.collection(relation.collection)
-					.getList(1, 1, { filter: conditions.join(' && '), fields: 'id', skipTotal: true }),
-				'Could not load rows'
-			).map((twin) => twin.items.length > 0);
-		}).map((twins) => twins.some(Boolean));
-	}
-
-	/** Moves one row from the loser to the keeper (or drops it when the keeper has its twin). */
-	private moveRow(relation: UserRelation, row: Row, loserId: string, keeperId: string) {
-		const collection = this.pb.collection(relation.collection);
-		if (relation.multiple) {
-			const ids = (row[relation.field] as string[]).map((id) => (id === loserId ? keeperId : id));
-			return fromPb(collection.update(row.id, { [relation.field]: [...new Set(ids)] }));
-		}
-
-		return this.keeperHasTwin(relation, row, loserId, keeperId).andThen((twin) =>
-			twin
-				? fromPb(collection.delete(row.id))
-				: fromPb(collection.update(row.id, { [relation.field]: keeperId }))
-		);
-	}
-
-	/** Moves one relation's rows; returns how many could not be moved. */
-	private moveRelation(relation: UserRelation, loserId: string, keeperId: string): Task<number> {
-		return fromPb(
-			this.pb.collection(relation.collection).getFullList<Row>({
-				filter: this.pb.filter(`${relation.field} ${relation.multiple ? '?=' : '='} {:loser}`, {
-					loser: loserId
-				})
-			}),
-			'Could not load rows'
-		).andThen((rows) =>
-			sequence(rows, (row) =>
-				this.moveRow(relation, row, loserId, keeperId)
-					.map(() => 0)
-					.orElse((error) => {
-						console.warn('[users] merge: could not move', relation.collection, row.id, error);
-						return ok(1);
-					})
-			).map((failures) => failures.reduce((sum, failed) => sum + failed, 0))
-		);
-	}
-
-	/** Moves everything that points at the loser to the keeper; returns how many rows could not be moved. */
-	private moveRows(loserId: string, keeperId: string): Task<number> {
-		return this.userRelations()
-			.andThen((relations) =>
-				sequence(relations, (relation) => this.moveRelation(relation, loserId, keeperId))
-			)
-			.map((failures) => failures.reduce((sum, failed) => sum + failed, 0));
-	}
-
-	/** Uploads the same replay twice (title, file name and game date) keep the newest. */
+	/**
+	 * Uploads of the same replay (title, file name and game date) keep the newest. Replays
+	 * without a game date or title cannot be told apart, so they are never removed.
+	 */
 	private dedupeReplays(userId: string): Task<void> {
 		return fromPb(
 			this.pb
@@ -134,7 +55,12 @@ export class UsersService extends Service {
 			.andThen((rows) => {
 				const seen = new Set<string>();
 				const duplicates = rows.filter((row) => {
-					const key = `${row.title}||${row.filename}||${row.gameDate}`;
+					const title = row.title?.trim() ?? '';
+					if (!row.gameDate || !title || title === '-') {
+						return false;
+					}
+
+					const key = `${title}||${row.filename}||${row.gameDate}`;
 					const duplicate = seen.has(key);
 					seen.add(key);
 					return duplicate;
@@ -183,45 +109,213 @@ export class UsersService extends Service {
 		});
 	}
 
-	/** Users sharing any Steam id with the given ones, followed transitively. */
-	private accountGroup(
-		next: string[],
-		searched = new Set<string>(),
-		users = new Map<string, UserRow>()
-	): Task<UserRow[]> {
-		const pending = [...new Set(next)].filter((steamId) => !searched.has(steamId));
-		if (pending.length === 0) {
-			return okAsync([...users.values()]);
+	/** The Steam ids linked to the account. */
+	steamIdsOf(userId: string): Task<string[]> {
+		return fromPb(
+			this.pb.collection('users').getOne<UserRow>(userId, { fields: 'steamIds' }),
+			'User not found'
+		).map(steamIdsOf);
+	}
+
+	private usersByIds(ids: string[], fields = ACCOUNT_FIELDS): Task<UserRow[]> {
+		if (ids.length === 0) {
+			return okAsync([]);
 		}
 
-		pending.forEach((steamId) => searched.add(steamId));
 		return fromPb(
 			this.pb.collection('users').getFullList<UserRow>({
-				filter: pending
-					.map((steamId) => this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }))
-					.join(' || '),
-				fields: 'id,name,role,steamIds,meta,lastLogin,created'
+				filter: ids.map((id) => this.pb.filter('id = {:id}', { id })).join(' || '),
+				fields
 			}),
 			'Could not load users'
-		).andThen((found) => {
-			found.forEach((user) => users.set(user.id, user));
-			return this.accountGroup(found.flatMap(steamIdsOf), searched, users);
-		});
+		);
 	}
 
 	/**
-	 * Merges the accounts into one keeper (`preferId`, else the most recently used).
-	 * A loser is only deleted once all of its rows moved; a failed run is retried by the job.
+	 * Links a Steam id the desktop app saw in the game log (trust on first use): only an
+	 * id no other account has is added. Otherwise staff get a conflict to resolve.
 	 */
-	merge(users: UserRow[], preferId?: string): Task<MergeResult> {
-		if (users.length < 2) {
+	linkSteamId(userId: string, steamId: string): Task<{ steamIds: string[] }> {
+		return fromPb(
+			this.pb.collection('users').getFullList<UserRow>({
+				filter: this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }),
+				fields: 'id,steamIds'
+			}),
+			'Could not load users'
+		).andThen((owners) => {
+			const others = owners
+				.filter((owner) => owner.id !== userId && steamIdsOf(owner).includes(steamId))
+				.map((owner) => owner.id);
+			if (others.length > 0) {
+				return this.recordConflict(userId, steamId, others).andThen(() =>
+					errAsync(conflict('This Steam account belongs to another account. Staff have been notified.'))
+				);
+			}
+
+			return this.addSteamId(userId, steamId);
+		});
+	}
+
+	private addSteamId(userId: string, steamId: string): Task<{ steamIds: string[] }> {
+		return fromPb(
+			this.pb.collection('users').getOne<UserRow>(userId, { fields: 'steamIds' }),
+			'User not found'
+		).andThen((user) => {
+			const steamIds = steamIdsOf(user);
+			if (steamIds.includes(steamId)) {
+				return okAsync({ steamIds });
+			}
+
+			const next = [...steamIds, steamId];
+			return fromPb(
+				this.pb.collection('users').update(userId, { steamIds: next }),
+				'Could not link the Steam account'
+			)
+				.andThen(() => this.syncCheaterLabels(userId))
+				.map(() => ({ steamIds: next }));
+		});
+	}
+
+	private recordConflict(userId: string, steamId: string, owners: string[]): Task<void> {
+		const conflicts = this.pb.collection('steam_link_conflicts');
+		return pbMaybe(
+			conflicts.getFirstListItem<{ id: string }>(
+				this.pb.filter('user = {:userId} && steamId = {:steamId}', { userId, steamId })
+			),
+			'Could not load Steam conflicts'
+		)
+			.andThen((existing) =>
+				fromPb(
+					existing
+						? conflicts.update(existing.id, { owners, resolved: false })
+						: conflicts.create({ user: userId, steamId, owners }),
+					'Could not save Steam conflict'
+				)
+			)
+			.map(() => undefined);
+	}
+
+	/**
+	 * Steam ids several accounts already share (linked before trust on first use). They show
+	 * up as conflicts without a requester; staff merge them, they cannot be dismissed.
+	 */
+	private sharedSteamIds(): Task<ConflictRow[]> {
+		return fromPb(
+			this.pb.collection('user_steam_duplicates').getFullList<{ id: string }>({ fields: 'id' }),
+			'Could not load duplicate accounts'
+		).andThen((duplicates) =>
+			sequence(duplicates, (duplicate) =>
+				fromPb(
+					this.pb.collection('users').getFullList<UserRow>({
+						filter: this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${duplicate.id}"` }),
+						fields: 'id,steamIds,created'
+					}),
+					'Could not load users'
+				).map(
+					(owners): ConflictRow => ({
+						id: `shared:${duplicate.id}`,
+						user: '',
+						steamId: duplicate.id,
+						owners: owners
+							.filter((owner) => steamIdsOf(owner).includes(duplicate.id))
+							.map((owner) => owner.id),
+						created: ''
+					})
+				)
+			)
+		);
+	}
+
+	/** Open Steam conflicts for the staff admin tab, with the accounts involved. */
+	listConflicts(): Task<SteamConflict[]> {
+		return fromPb(
+			this.pb
+				.collection('steam_link_conflicts')
+				.getFullList<ConflictRow>({ filter: 'resolved = false', sort: '-created' }),
+			'Could not load Steam conflicts'
+		)
+			.andThen((rows) => this.sharedSteamIds().map((shared) => [...rows, ...shared]))
+			.andThen((rows) =>
+			this.usersByIds(
+				[...new Set(rows.flatMap((row) => [row.user, ...ownerIds(row)]))].filter(Boolean)
+			).map(
+				(users) => {
+					const byId = new Map(users.map((user) => [user.id, user]));
+					const account = (id: string): ConflictAccount | null => {
+						const user = byId.get(id);
+						if (!user) {
+							return null;
+						}
+
+						return {
+							id,
+							name: user.name ?? '',
+							role: user.role ?? '',
+							steamIds: steamIdsOf(user),
+							lastLogin: user.lastLogin ?? ''
+						};
+					};
+					return rows.map((row) => ({
+						id: row.id,
+						steamId: row.steamId,
+						created: row.created,
+						requester: account(row.user),
+						owners: ownerIds(row)
+							.map(account)
+							.filter((owner): owner is ConflictAccount => owner !== null)
+					}));
+				}
+			)
+		);
+	}
+
+	dismissConflict(id: string): Task<void> {
+		return fromPb(
+			this.pb.collection('steam_link_conflicts').update(id, { resolved: true }),
+			'Steam conflict not found'
+		).map(() => undefined);
+	}
+
+	/**
+	 * Staff merge: every account in `userIds` moves into `keeperId`, which keeps its own role.
+	 * A loser is only deleted once all of its rows moved; run it again after a partial failure.
+	 */
+	mergeAccounts(keeperId: string, userIds: string[]): Task<MergeResult> {
+		const ids = [...new Set([keeperId, ...userIds])];
+		return this.usersByIds(ids).andThen((users) => {
+			const keeper = users.find((user) => user.id === keeperId);
+			if (!keeper || users.length !== ids.length) {
+				return errAsync(notFound('Account not found'));
+			}
+
+			return this.merge(keeper, users).andThen((result) =>
+				this.resolveConflictsOf(ids).map(() => result)
+			);
+		});
+	}
+
+	private resolveConflictsOf(userIds: string[]): Task<void> {
+		return fromPb(
+			this.pb.collection('steam_link_conflicts').getFullList<{ id: string }>({
+				filter: userIds.map((id) => this.pb.filter('user = {:id}', { id })).join(' || '),
+				fields: 'id'
+			}),
+			'Could not load Steam conflicts'
+		)
+			.andThen((rows) => sequence(rows, (row) => this.dismissConflict(row.id)))
+			.map(() => undefined);
+	}
+
+	private merge(keeper: UserRow, users: UserRow[]): Task<MergeResult> {
+		const losers = users.filter((user) => user.id !== keeper.id);
+		if (losers.length === 0) {
 			return okAsync({ merged: false });
 		}
 
-		const keeper = pickKeeper(users, preferId);
-		const losers = users.filter((user) => user.id !== keeper.id);
 		return sequence(losers, (loser) =>
-			this.moveRows(loser.id, keeper.id).map((failed) => (failed === 0 ? loser.id : ''))
+			this.services.relations
+				.move(USERS, loser.id, keeper.id)
+				.map((failed) => (failed === 0 ? loser.id : ''))
 		)
 			.map((ids) => ids.filter(Boolean))
 			.andThen((deleted) =>
@@ -245,34 +339,5 @@ export class UsersService extends Service {
 						})
 					)
 			);
-	}
-
-	/** After a user's Steam ids changed: merge with every other account using them. */
-	mergeFor(userId: string): Task<MergeResult> {
-		return fromPb(
-			this.pb.collection('users').getOne<UserRow>(userId, { fields: 'steamIds' }),
-			'User not found'
-		)
-			.andThen((user) => this.accountGroup(steamIdsOf(user)))
-			.andThen((group) => this.merge(group, userId));
-	}
-
-	/** Scheduled: one group of accounts sharing a Steam id (older apps edit steamIds directly). */
-	mergeDuplicates(): Task<{ processed: number; more: boolean }> {
-		return fromPb(
-			this.pb
-				.collection('user_steam_duplicates')
-				.getList<{ id: string }>(1, 1, { skipTotal: true }),
-			'Could not load duplicate accounts'
-		).andThen((rows) => {
-			const duplicate = rows.items[0];
-			if (!duplicate) {
-				return okAsync({ processed: 0, more: false });
-			}
-
-			return this.accountGroup([duplicate.id])
-				.andThen((group) => this.merge(group))
-				.map((result) => ({ processed: result.merged ? 1 : 0, more: result.merged }));
-		});
 	}
 }

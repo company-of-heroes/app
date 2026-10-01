@@ -17,7 +17,8 @@
 		"tauri:build:macos": "tauri build --target x86_64-apple-darwin",
 		"tauri:build:windows": "tauri build --target x86_64-pc-windows-msvc",
 		"pocketbase:typegen": "npx pocketbase-typegen --env --out src/lib/core/pocketbase/types.ts",
-		"replays:reparse": "node ./scripts/fix-replays.mjs"
+		"replays:reparse": "node ./scripts/fix-replays.mjs",
+		"duplicate:users": "node ./scripts/merge-duplicate-users.mjs"
 	},
 	"license": "MIT",
 	"dependencies": {

@@ -5,13 +5,14 @@ import { cached } from '../cache';
 import { notFound } from '../errors';
 import { fromPb, pbMaybe, sequence, type Task } from '../result';
 import { sameJson } from '../domain/json';
+import { publicRecord } from '../domain/public-record';
 import {
 	LIVE_STALE_MS,
 	lobbySteamIds,
 	titleFromLive,
 	type LivePublish
 } from '../domain/lobby-writes';
-import type { RecordOptions } from './lobbies';
+import type { LobbyRecord, RecordOptions } from './lobbies';
 import { Service } from './service';
 
 /** Short shared cache for the public reads: the list changes with every heartbeat. */
@@ -61,7 +62,10 @@ export class LiveLobbiesService extends Service {
 		).map((rows) => rows.items[0]);
 	}
 
-	/** The durable lobby for a live game; an in-progress one follows the live player list. */
+	/**
+	 * The durable lobby for a live game; an in-progress one follows the live player list,
+	 * but only when the reporter is one of its players.
+	 */
 	private durableLobby(userId: string, input: LivePublish): Task<string> {
 		const lobbies = this.services.lobbies;
 		return lobbies.bySession(input.sessionId).andThen((existing) => {
@@ -78,33 +82,39 @@ export class LiveLobbiesService extends Service {
 					.map(({ id }) => id);
 			}
 
-			if (!existing.needsResult) {
-				return okAsync(existing.id);
-			}
+			// Someone else's match: no link (a live row pointing at it would hold up its result).
+			return lobbies.isParticipant(existing, userId).andThen((participant) => {
+				if (!participant) {
+					return okAsync('');
+				}
 
-			const next = {
-				map: input.map || existing.map || 'Unknown',
-				isRanked: input.isRanked,
-				players: input.players,
-				...(String(existing.title ?? '').trim() ? {} : { title: titleFromLive(input) })
-			};
-			const current = {
-				map: existing.map,
-				isRanked: existing.isRanked,
-				players: existing.players,
-				...('title' in next ? { title: existing.title } : {})
-			};
-			if (sameJson(current, next)) {
-				return okAsync(existing.id);
-			}
-
-			return fromPb(
-				this.pb.collection('lobbies').update(existing.id, next),
-				'Could not update match'
-			)
-				.andThen(() => lobbies.process(existing.id))
-				.map(() => existing.id);
+				return (existing.needsResult ? this.followLive(existing, input) : okAsync(undefined)).map(
+					() => existing.id
+				);
+			});
 		});
+	}
+
+	private followLive(existing: LobbyRecord, input: LivePublish): Task<void> {
+		const next = {
+			map: input.map || existing.map || 'Unknown',
+			isRanked: input.isRanked,
+			players: input.players,
+			...(String(existing.title ?? '').trim() ? {} : { title: titleFromLive(input) })
+		};
+		const current = {
+			map: existing.map,
+			isRanked: existing.isRanked,
+			players: existing.players,
+			...('title' in next ? { title: existing.title } : {})
+		};
+		if (sameJson(current, next)) {
+			return okAsync(undefined);
+		}
+
+		return fromPb(this.pb.collection('lobbies').update(existing.id, next), 'Could not update match')
+			.andThen(() => this.services.lobbies.process(existing.id))
+			.map(() => undefined);
 	}
 
 	/** Screens new faces: on the first heartbeat, or when the players change. */
@@ -153,7 +163,7 @@ export class LiveLobbiesService extends Service {
 						'Could not save live lobby'
 					);
 				})
-				.andThen((record) => this.screenPlayers(input, previous).map(() => record))
+				.andThen((record) => this.screenPlayers(input, previous).map(() => publicRecord(record)))
 		);
 	}
 

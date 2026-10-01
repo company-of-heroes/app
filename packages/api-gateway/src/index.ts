@@ -1,8 +1,31 @@
 import { limitFileDownload, type FilesEnv } from './files.ts';
-import { serveOverlay, type OverlayEnv } from './overlay.ts';
+import { OVERLAY_HOST, serveOverlay, type OverlayEnv } from './overlay.ts';
 import { rewrite, rewritesPath } from './routes.ts';
 
 type Env = OverlayEnv & FilesEnv & { WEBSITE: Fetcher };
+
+/** PocketBase's fixed `_superusers` collection id. */
+const SUPERUSERS_COLLECTION_ID = 'pbc_3142635823';
+
+/**
+ * Superuser calls (the website's own services) go straight to PocketBase, never to
+ * the website's user-facing compat routes. The token is not verified here: PocketBase
+ * does that, so a forged one only reaches PocketBase as it would without the gateway.
+ */
+function isSuperuserRequest(request: Request): boolean {
+	const token = (request.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
+	const payload = token.split('.')[1];
+	if (!payload) {
+		return false;
+	}
+
+	try {
+		const claims = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+		return claims?.collectionId === SUPERUSERS_COLLECTION_ID;
+	} catch {
+		return false;
+	}
+}
 
 /** PocketBase answered every origin; rewritten paths keep that for browser clients. */
 function cors(request: Request): Record<string, string> {
@@ -21,17 +44,21 @@ export default {
 			return overlay;
 		}
 
+		const url = new URL(request.url);
+		if (url.hostname === OVERLAY_HOST) {
+			return new Response('Not found', { status: 404 });
+		}
+
 		const limited = await limitFileDownload(request, env);
 		if (limited) {
 			return limited;
 		}
 
-		const url = new URL(request.url);
 		if (request.method === 'OPTIONS' && rewritesPath(url.pathname)) {
 			return new Response(null, { status: 204, headers: cors(request) });
 		}
 
-		const v1Path = rewrite(request.method, url.pathname);
+		const v1Path = isSuperuserRequest(request) ? null : rewrite(request.method, url.pathname);
 		if (!v1Path) {
 			return fetch(request); // PocketBase origin
 		}

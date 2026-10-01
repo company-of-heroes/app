@@ -12,8 +12,10 @@ services:
       - PB_PORT=${PB_PORT:-8090}
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
-      # Only the website may call /api/_relic and /api/_auth/token (same value as its SERVICE_TOKEN).
+      # Only the website may call /api/_relic (same value as its SERVICE_TOKEN) and
+      # /api/_auth/token (AUTH_TOKEN_SECRET, same value as the website's; SERVICE_TOKEN until set).
       - SERVICE_TOKEN=${SERVICE_TOKEN}
+      - AUTH_TOKEN_SECRET=${AUTH_TOKEN_SECRET}
     env_file:
       - path: ./.env
         required: false

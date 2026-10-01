@@ -1,5 +1,6 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { isStaffUser } from '$lib/auth/user';
+import { publicRecord } from '$lib/server/domain/public-record';
 import { handle, readRecordBody, requireUser } from '$lib/server/http';
 
 /**
@@ -23,17 +24,17 @@ function context(event: RequestEvent) {
 
 export const POST = handle((event) =>
 	context(event).asyncAndThen(({ handler, actor, options }) =>
-		readRecordBody(event.request).andThen(({ data, files }) =>
-			handler.create(data, files, actor, options)
-		)
+		readRecordBody(event.request)
+			.andThen(({ data, files }) => handler.create(data, files, actor, options))
+			.map(publicRecord)
 	)
 );
 
 export const PATCH = handle((event) =>
 	context(event).asyncAndThen(({ handler, id, actor, options }) =>
-		readRecordBody(event.request).andThen(({ data, files }) =>
-			handler.update(id, data, files, actor, options)
-		)
+		readRecordBody(event.request)
+			.andThen(({ data, files }) => handler.update(id, data, files, actor, options))
+			.map(publicRecord)
 	)
 );
 
