@@ -43,7 +43,6 @@
 		className: string;
 		iconClass: string;
 		preview: PlayerFactionPreview;
-		focus: boolean;
 	};
 
 	const host = useHost();
@@ -116,24 +115,19 @@
 		return parts.filter(Boolean).join(' · ');
 	}
 
-	/** Filtered players get a blue tile; your own accounts are marked on the icon instead. */
-	function tileClass(kind: 'filtered' | 'me' | null) {
-		const plain = kind !== 'filtered';
+	/** Flat player entry like the lobby rows: rank icon + position, or a faction flag. */
+	function entryClass(kind: 'filtered' | 'me' | null, ranked: boolean) {
 		return cn(
-			'group inline-flex size-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md transition-colors',
-			kind === 'filtered' && 'bg-blue-800/30',
-			plain && outcome === 'win' && 'bg-green-500/5 hover:bg-green-500/10',
-			plain && outcome === 'loss' && 'bg-red-500/5 hover:bg-red-500/10',
-			plain &&
-				outcome !== 'win' &&
-				outcome !== 'loss' &&
-				'bg-secondary-900/60 hover:bg-secondary-800/50'
+			'inline-flex shrink-0 items-center gap-1.5 text-xs font-medium tabular-nums',
+			kind === 'me' && 'text-primary font-semibold',
+			kind === 'filtered' && 'text-info',
+			kind === null && 'text-secondary-500 hover:text-white',
+			!ranked && 'px-1'
 		);
 	}
 
 	function toChip(player: TeamSkillPlayer, index: number): Chip {
 		const kind = focusOf(player);
-		const focus = kind !== null;
 		const ranked = Boolean(showRankBadges && player.stats);
 		const level = player.stats?.rankLevel ?? 0;
 		const ranking = player.stats?.rank ?? 0;
@@ -149,12 +143,10 @@
 			ranked,
 			src,
 			levelText: ranked ? (ranking > 0 ? `#${ranking}` : levelFallback) : null,
-			className: cn(href && interactive, tileClass(kind)),
+			className: cn(href && interactive, entryClass(kind, ranked)),
 			iconClass: cn(
-				focus ? 'opacity-100 grayscale-0' : 'opacity-70 grayscale-50',
-				// Your own accounts: gold ring on a faction icon, gold glow on a rank icon.
-				kind === 'me' && (ranked ? 'drop-shadow-[0_0_6px_var(--color-primary)]' : 'ring-primary'),
-				'group-hover:opacity-100 group-hover:grayscale-0'
+				!ranked && kind === 'me' && 'ring-primary',
+				!ranked && kind === 'filtered' && 'ring-info'
 			),
 			preview: {
 				alias: player.alias,
@@ -166,8 +158,7 @@
 				stats: player.stats,
 				rankImageSrc: rankSrc,
 				factionFlagSrc: host.resolve.factionFlagByRace(player.race ?? 0)
-			},
-			focus
+			}
 		};
 	}
 
@@ -178,25 +169,20 @@
 	<img
 		src={chip.src}
 		alt={chip.ranked ? '' : chip.label}
-		class={cn(
-			chip.ranked ? 'size-5' : factionIcon,
-			chip.iconClass,
-			!chip.ranked && 'transition-all'
-		)}
+		class={cn(chip.ranked ? 'size-5 shrink-0' : factionIcon, chip.iconClass)}
 	/>
 	{#if chip.levelText}
-		<span
-			class={cn(
-				'text-[11px] leading-none tabular-nums',
-				chip.focus ? 'text-white' : 'text-secondary-300 group-hover:text-white'
-			)}
-		>
-			{chip.levelText}
-		</span>
+		<span>{chip.levelText}</span>
 	{/if}
 {/snippet}
 
-<span class="inline-flex items-center gap-1">
+<span
+	class={cn(
+		'inline-flex h-9 items-center gap-3 rounded-md px-2.5 whitespace-nowrap',
+		outcome === 'win' && 'bg-success/5',
+		outcome === 'loss' && 'bg-destructive/5'
+	)}
+>
 	{#each chips as chip (chip.key)}
 		{#if chip.href && chip.previewId}
 			<PlayerProfileLink

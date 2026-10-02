@@ -10,6 +10,7 @@ import type {
 import type { TransformedMatch as AppTransformedMatch } from '@fknoobs/app';
 import type { SteamPlayerSummary } from '$core/steam';
 import type { SmurfAlertState } from '$lib/player/smurf';
+import type { PlayerRewards } from '@company-of-heroes/ui/reward/types';
 
 type RelicProfileLike = {
 	profile_id: number;
@@ -81,6 +82,7 @@ export function toPlayerPageData(input: {
 	labels?: PlayerLabel[] | null;
 	likeCount?: number;
 	customization?: PlayerCustomization | null;
+	rewards?: PlayerRewards | null;
 }): PlayerPageData {
 	return {
 		steamId: input.user.steamid,
@@ -102,6 +104,7 @@ export function toPlayerPageData(input: {
 		smurf: toPlayerSmurf(input.smurf),
 		labels: input.labels ?? [],
 		likeCount: input.likeCount ?? 0,
-		customization: input.customization ?? null
+		customization: input.customization ?? null,
+		rewards: input.rewards
 	};
 }

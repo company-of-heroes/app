@@ -1,5 +1,6 @@
 import type { PlayerLabel } from '../format/types';
 import type { LiveLobbyPlayerStats } from '../live-lobby/types';
+import type { PlayerRewards } from '../reward/types';
 
 export type { PlayerLabel };
 
@@ -112,6 +113,8 @@ export type PlayerPageData = {
 	labels?: PlayerLabel[];
 	likeCount?: number;
 	customization?: PlayerCustomization | null;
+	/** Preloaded rewards; when left out the header fetches them itself. */
+	rewards?: PlayerRewards | null;
 };
 
 export type PlayerSearchResult = {

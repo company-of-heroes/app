@@ -64,7 +64,7 @@ The homepage lists those live companion lobbies (map, players, and host display 
 
 Staff can hide match results from those public listings (for example during a tournament), either one match at a time or by a word list that matches Relic lobby names. Hidden matches stay visible to staff in the desktop app and on the website so they can restore them or change the word list. Relic’s own APIs are unchanged and may still show the same match.
 
-We may also show smurf / related-account labels when our systems link Steam accounts that appear to be used together.
+We may also show smurf / related-account labels when our systems link Steam accounts that appear to be used together. To do this we check public Steam data for players seen in matches. That includes asking Steam's public Web API, while a match is running, whether the game is borrowed through Steam Family Sharing and from which Steam account. We store the result (lending Steam ID, ownership, and a screening score) with that player's Steam ID.
 
 Staff can attach public badges (for example Premium or Streamer) to Relic/Steam player identities. We store those assignments (Steam ID, Relic profile ID, and an alias snapshot) so the badges can be shown next to in-game names in the desktop app and on the public website.
 

@@ -1358,5 +1358,19 @@
 	"Keep this account": "Conservar esta cuenta",
 	"Your email was changed. Sign in with your new email.": "Tu correo se ha cambiado. Inicia sesión con tu nuevo correo.",
 	"You can only publish your own replays.": "Solo puedes publicar tus propias repeticiones.",
-	"Could not publish replay": "No se pudo publicar la repetición"
+	"Could not publish replay": "No se pudo publicar la repetición",
+	"The app could not start": "No se pudo iniciar la aplicación",
+	"Something went wrong while starting. Check your internet connection and try again.": "Algo salió mal al iniciar. Revisa tu conexión a internet e inténtalo de nuevo.",
+	"Maintenance": "Mantenimiento",
+	"Maintenance in progress": "Mantenimiento en curso",
+	"Our server is temporarily unavailable while we perform maintenance. The app will be back online shortly and reconnects automatically.": "Nuestro servidor no está disponible temporalmente mientras realizamos tareas de mantenimiento. La aplicación volverá a estar en línea en breve y se reconectará automáticamente.",
+	"Did you know?": "¿Sabías que…?",
+	"Every match you play is saved to your history, so you can review it later.": "Cada partida que juegas se guarda en tu historial para que puedas revisarla más tarde.",
+	"Upload your replays to share them with other players on coh1stats.com.": "Sube tus repeticiones para compartirlas con otros jugadores en coh1stats.com.",
+	"Possible smurf accounts are labelled next to player names.": "Las posibles cuentas smurf se marcan junto al nombre del jugador.",
+	"Add a Twitch overlay to show your current match on stream.": "Añade un overlay de Twitch para mostrar tu partida actual en el stream.",
+	"The Twitch bot can answer chat commands about the game you are playing.": "El bot de Twitch puede responder a comandos del chat sobre la partida que estás jugando.",
+	"Open the live page to see which matches are being played right now.": "Abre la página en directo para ver qué partidas se están jugando ahora mismo.",
+	"Check the leaderboards to see how you rank against other players.": "Consulta las clasificaciones para ver tu posición frente a otros jugadores.",
+	"Set up keyboard shortcuts to control the app while you are in game.": "Configura atajos de teclado para controlar la app mientras juegas."
 }

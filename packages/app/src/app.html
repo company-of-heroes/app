@@ -16,7 +16,7 @@
 				justify-content: center;
 				gap: 1.25rem;
 				background: oklch(29% 0.003 285);
-				color: oklch(66% 0.005 285);
+				color: oklch(75% 0.004 285);
 				font-family:
 					system-ui,
 					-apple-system,
@@ -25,89 +25,51 @@
 				font-weight: 600;
 			}
 
-			#boot-splash .boot-splash-spinner {
-				width: 48px;
-				height: 48px;
-				border-radius: 9999px;
-				border: 2.5px solid oklch(41% 0.004 285 / 0.55);
-				border-top-color: oklch(0.88 0.11 80);
-				animation: boot-spin 1.5s linear infinite;
+			/* Empty slot where the animated logo draws in once Svelte mounts. */
+			#boot-splash .boot-splash-logo {
+				width: 96px;
+				height: 96px;
+			}
+
+			#boot-splash .boot-splash-status {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.75rem;
+				margin-top: 1.5rem;
 			}
 
 			#boot-splash .boot-splash-label {
 				margin: 0;
 			}
 
-			#boot-splash .boot-splash-dots {
-				display: flex;
-				gap: 0.4rem;
-				margin: -0.25rem 0 0;
-				padding: 0;
-				list-style: none;
-			}
-
-			#boot-splash .boot-splash-dots li {
-				width: 0.35rem;
-				height: 0.35rem;
+			#boot-splash .boot-splash-track {
+				width: 13rem;
+				height: 3px;
 				border-radius: 9999px;
-				background: oklch(0.88 0.11 80);
-				opacity: 0.35;
-				animation: boot-dot-pulse 1.2s ease-in-out infinite;
+				background: oklch(35% 0.004 285);
 			}
 
-			#boot-splash .boot-splash-dots li:nth-child(2) {
-				animation-delay: 0.2s;
-			}
-
-			#boot-splash .boot-splash-dots li:nth-child(3) {
-				animation-delay: 0.4s;
-			}
-
-			@keyframes boot-spin {
-				to {
-					transform: rotate(360deg);
-				}
-			}
-
-			@keyframes boot-dot-pulse {
-				0%,
-				100% {
-					opacity: 0.25;
-					transform: scale(1);
-				}
-
-				50% {
-					opacity: 1;
-					transform: scale(1.15);
-				}
-			}
-
-			@media (prefers-reduced-motion: reduce) {
-				#boot-splash .boot-splash-spinner,
-				#boot-splash .boot-splash-dots li {
-					animation: none;
-				}
-
-				#boot-splash .boot-splash-dots li {
-					opacity: 0.6;
-				}
+			#boot-splash .boot-splash-tip {
+				height: 3rem;
+				margin-top: 2.5rem;
 			}
 		</style>
 		%sveltekit.head%
 	</head>
 	<body class="overflow-hidden text-white">
 		<div id="boot-splash" aria-live="polite" aria-busy="true">
-			<div class="boot-splash-spinner" aria-hidden="true"></div>
-			<p class="boot-splash-label">Starting...</p>
-			<ul class="boot-splash-dots" aria-hidden="true">
-				<li></li>
-				<li></li>
-				<li></li>
-			</ul>
+			<div class="boot-splash-logo" aria-hidden="true"></div>
+			<div class="boot-splash-status">
+				<p class="boot-splash-label">Starting...</p>
+				<div class="boot-splash-track" aria-hidden="true"></div>
+			</div>
+			<div class="boot-splash-tip" aria-hidden="true"></div>
 		</div>
 		<div style="display: contents">%sveltekit.body%</div>
 		<script>
-			if (!/\/splashscreen\/?$/.test(location.pathname)) {
+			// Fresh loads boot via /splashscreen, which removes this itself.
+			if (/^\/setup\/?$/.test(location.pathname)) {
 				document.getElementById('boot-splash')?.remove();
 			}
 		</script>

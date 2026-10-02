@@ -50,6 +50,8 @@ const PRIVATE_RECHECK_SEC = 7 * 24 * 60 * 60;
 const WATCHING_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000;
 const WATCHING_EXPIRY_LIVE_MS = 90 * 24 * 60 * 60 * 1000;
 const MAIN_ANALYSES_PER_RUN = 3;
+/** Lender checks for online accounts whose game details are hidden. */
+const BLIND_LENDER_CHECKS_PER_RUN = 5;
 const MAIN_CANDIDATE_LIMIT = 100;
 
 type ScreeningContext = {
@@ -591,12 +593,16 @@ async function pollRecord(
 	env: Env,
 	record: SmurfWatchRecord,
 	summary: PlayerPresence | undefined,
-	budget: SteamCallBudget
+	budget: SteamCallBudget,
+	blindCheck = false
 ): Promise<PollingOutcome> {
 	const startedAt = Date.now();
 	const now = isoNow();
+	const playing = isPlayingCoH(summary);
+	const lender =
+		playing || blindCheck ? await getLenderSteamId(env, record.steam_id, budget) : null;
 
-	if (!isPlayingCoH(summary)) {
+	if (!playing && !lender) {
 		if (isWatchingExpired(record, Date.now())) {
 			// Library-only "owns" watches expire as not_smurf; never-owned stays expired
 			// so a later live lobby sight can reopen screening.
@@ -647,8 +653,6 @@ async function pollRecord(
 		return 'skipped_offline';
 	}
 
-	const lender = await getLenderSteamId(env, record.steam_id, budget);
-
 	if (lender) {
 		const score = computeSmurfScore({
 			lenderSteamId: lender,
@@ -661,6 +665,7 @@ async function pollRecord(
 			relic: null
 		});
 
+		// Only the verdict: bans, Relic stats and playtime from screening stay as they are.
 		await patchSmurfWatch(
 			env,
 			record.id,
@@ -671,7 +676,10 @@ async function pollRecord(
 				lender_source: 'live',
 				last_checked_at: now,
 				next_check_at: null,
-				...buildScoreFields(summary, undefined, undefined, null, score)
+				signals: score.signals,
+				smurf_score: score.score,
+				verdict: score.verdict,
+				score_computed_at: now
 			},
 			{ phase: 'polling', outcome: 'resolved_live' }
 		);
@@ -753,16 +761,39 @@ async function pollRecords(
 	}
 
 	const playingCoH = records.filter((record) => isPlayingCoH(summaries.get(record.steam_id)));
+	// Hidden game details leave `gameid` empty: online accounts without their own copy get
+	// asked for a lender anyway (a few per run).
+	const blindChecks = new Set(
+		records
+			.filter((record) => {
+				const summary = summaries.get(record.steam_id);
+				return (
+					record.owns_coh === false &&
+					!isPlayingCoH(summary) &&
+					!summary?.gameid &&
+					(summary?.personastate ?? 0) > 0
+				);
+			})
+			.slice(0, BLIND_LENDER_CHECKS_PER_RUN)
+			.map((record) => record.id)
+	);
 
 	log('info', 'polling split', {
 		total: records.length,
 		playingCoH: playingCoH.length,
+		blindChecks: blindChecks.size,
 		offline: records.length - playingCoH.length
 	});
 
 	for (const record of records) {
 		try {
-			const outcome = await pollRecord(env, record, summaries.get(record.steam_id), budget);
+			const outcome = await pollRecord(
+				env,
+				record,
+				summaries.get(record.steam_id),
+				budget,
+				blindChecks.has(record.id)
+			);
 			outcomes[outcome] = (outcomes[outcome] ?? 0) + 1;
 			processed++;
 		} catch (error) {
@@ -829,28 +860,29 @@ export async function runSmurfWorker(env: Env): Promise<void> {
 			log('warn', 'screening queue backlog high', { totalPending: batch.total_pending });
 		}
 
-		const screeningStartedAt = Date.now();
+		// Polling first: a lender can only be seen while the player is in-game, screening can wait.
+		const pollingStartedAt = Date.now();
 
-		await screenRecords(env, batch.screening, budget);
+		await pollRecords(env, batch.polling, budget);
 
-		log('info', 'screening phase complete', {
-			durationMs: Date.now() - screeningStartedAt,
+		log('info', 'polling phase complete', {
+			durationMs: Date.now() - pollingStartedAt,
 			steamCallsSpent: budget.spent,
 			steamBudgetRemaining: budget.remaining
 		});
 
-		const pollingStartedAt = Date.now();
+		const screeningStartedAt = Date.now();
 
 		if (budget.canSpend()) {
-			await pollRecords(env, batch.polling, budget);
+			await screenRecords(env, batch.screening, budget);
 		} else {
-			log('warn', 'polling skipped: steam budget exhausted after screening', {
+			log('warn', 'screening skipped: steam budget exhausted after polling', {
 				steamCallsSpent: budget.spent
 			});
 		}
 
-		log('info', 'polling phase complete', {
-			durationMs: Date.now() - pollingStartedAt,
+		log('info', 'screening phase complete', {
+			durationMs: Date.now() - screeningStartedAt,
 			steamCallsSpent: budget.spent,
 			steamBudgetRemaining: budget.remaining
 		});

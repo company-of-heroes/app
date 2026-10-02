@@ -64,6 +64,15 @@ export function computeSmurfScore(input: ScoreInput): ScoreResult {
 	const relic = input.relic;
 	const winratePct = relic?.winrate != null ? Math.round(relic.winrate * 100) : null;
 
+	// A visible library without CoH, yet ranked games on record: a borrowed copy.
+	if (input.ownsCoH === false && relic && relic.totalGames > 0) {
+		signals.push({
+			id: 'plays_without_owning',
+			points: 60,
+			detail: `Does not own CoH but has ${relic.totalGames} ranked games`
+		});
+	}
+
 	if (
 		input.cohPlaytimeMinutes != null &&
 		input.cohPlaytimeMinutes < 3000 &&

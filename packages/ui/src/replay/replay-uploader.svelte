@@ -78,6 +78,8 @@
 	let tab = $state('overview');
 	let parsed = $state.raw<ParsedReplay | null>(null);
 	let isRanked = $state(false);
+	/** The saved match's own Relic result (publish from match); it outranks the ladder preview. */
+	let matchResult = $state.raw<CommunityMatchDetail['result'] | null>(null);
 	let linkedLabels = $state.raw<Record<string, string>>({});
 	let submitError = $state<string | null>(null);
 	let busy = $state(false);
@@ -200,7 +202,7 @@
 			likeCount: 0,
 			downloadCount: 0,
 			players,
-			result: {
+			result: matchResult ?? {
 				matchtype_id: preview?.matchtype_id,
 				startgametime: 0,
 				completiontime: parsed.duration || 0,
@@ -223,6 +225,7 @@
 		title = '';
 		tab = 'overview';
 		isRanked = false;
+		matchResult = null;
 		linkedLabels = {};
 		submitError = null;
 		busy = false;
@@ -258,6 +261,31 @@
 			delete nextLabels[previous];
 			linkedLabels = nextLabels;
 		}
+	}
+
+	/** The .rec has no Steam ids; take them from the saved match by player name. */
+	function linkMatchPlayers(players: { name: string; steamId: string | null }[]) {
+		if (!parsed?.players) {
+			return;
+		}
+
+		const key = (name: string | undefined) => (name ?? '').trim().toLowerCase();
+		const byName = new Map(
+			players
+				.filter((player) => player.steamId && key(player.name))
+				.map((player) => [key(player.name), String(player.steamId)])
+		);
+		if (byName.size === 0) {
+			return;
+		}
+
+		parsed = {
+			...parsed,
+			players: parsed.players.map((player) => {
+				const steamId = byName.get(key(player.name));
+				return player.steamId || !steamId ? player : { ...player, steamId };
+			})
+		};
 	}
 
 	async function onFilePicked(next: File | null) {
@@ -322,6 +350,12 @@
 			}
 
 			await onFilePicked(match.file);
+			linkMatchPlayers(match.players ?? []);
+			if (match.isRanked !== undefined) {
+				isRanked = match.isRanked;
+			}
+
+			matchResult = match.result?.players?.length ? match.result : null;
 			if (!title.trim()) {
 				title =
 					(match.title && match.title !== '-' ? match.title : '') ||

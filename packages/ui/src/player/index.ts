@@ -1,5 +1,6 @@
 import PlayerLabels from './player-labels.svelte';
 import PlayerLikeCount from './player-like-count.svelte';
+import PlayerLinks from './player-links.svelte';
 import SmurfAlert from './smurf-alert.svelte';
 import PlayerProfileHeader from './player-profile-header.svelte';
 import PlayerProfile from './player-profile.svelte';
@@ -20,6 +21,7 @@ import YoutubeLogo from './youtube-logo.svelte';
 export {
 	PlayerLabels,
 	PlayerLikeCount,
+	PlayerLinks,
 	SmurfAlert,
 	PlayerProfileHeader,
 	PlayerProfile,

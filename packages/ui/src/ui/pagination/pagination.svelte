@@ -101,7 +101,7 @@
 					}}
 					oninput={(event) => (pageInput = event.currentTarget.value)}
 					onblur={commitPageInput}
-					class={cn(controlBase, 'h-9 w-12 rounded-none px-1 text-center text-sm')}
+					class={cn(controlBase, 'h-9 w-12 px-1 text-center text-sm')}
 				/>
 				<span>/ {totalPages}</span>
 			</div>

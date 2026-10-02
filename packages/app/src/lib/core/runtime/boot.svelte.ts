@@ -6,6 +6,7 @@ import type { BackupCandidate } from '$core/config/backup';
 import { account } from '$core/account';
 import { registerBrowserHandoffGlobal } from '$core/account/browser-handoff-global';
 import { game } from '$core/game/process.svelte';
+import { pocketbase } from '$core/pocketbase';
 import { resolveAppLocale, setLocale, t } from '$lib/i18n';
 
 export type BootPhase =
@@ -42,6 +43,9 @@ export class Boot {
 	phase = $state<BootPhase>('idle');
 	error = $state<string | null>(null);
 
+	/** True when boot failed because the remote server did not respond (maintenance/outage). */
+	serverUnavailable = $state(false);
+
 	/** True while the mandatory CoH paths are missing/invalid. */
 	needsOnboarding = $state(false);
 
@@ -56,6 +60,9 @@ export class Boot {
 
 	/** Incremented to restart the splash intro (e.g. after retry). */
 	splashSession = $state(0);
+
+	/** Route to open after the splash, when a reload started on another page. */
+	returnTo: string | null = null;
 
 	resetSplashIntro(): void {
 		this.splashIntroComplete = false;
@@ -72,7 +79,9 @@ export class Boot {
 			return;
 		}
 
-		await goto('/');
+		const target = this.returnTo ?? '/';
+		this.returnTo = null;
+		await goto(target);
 	}
 
 	get phaseLabel(): string {
@@ -150,9 +159,20 @@ export class Boot {
 		await goto('/splashscreen');
 	}
 
+	/** True when the remote server answers its health check. */
+	async isServerReachable(): Promise<boolean> {
+		try {
+			await pocketbase.health.check({ requestKey: null });
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
 	/** Retries a failed boot. */
 	async retry(): Promise<void> {
 		this.error = null;
+		this.serverUnavailable = false;
 		this.phase = 'idle';
 		this.#startPromise = null;
 		this.resetSplashIntro();
@@ -206,6 +226,8 @@ export class Boot {
 			const outcome = await account.ensureAccount();
 
 			if (outcome.action === 'failed') {
+				this.serverUnavailable =
+					outcome.reason === 'error' && !(await this.isServerReachable());
 				this.phase = 'error';
 				this.error =
 					outcome.reason === 'declined'
@@ -250,6 +272,7 @@ export class Boot {
 			return true;
 		} catch (error) {
 			console.error('[BOOT]: boot failed:', error);
+			this.serverUnavailable = !(await this.isServerReachable());
 			this.phase = 'error';
 			this.error = t('Something went wrong: {message}', {
 				message: error instanceof Error ? error.message : String(error)

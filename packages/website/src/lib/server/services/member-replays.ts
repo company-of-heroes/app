@@ -21,6 +21,7 @@ import {
 import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
 import { MAX_REPLAY_BYTES, MIN_REPLAY_BYTES, replayFileName } from '../domain/lobby-writes';
 import {
+	alignSnapshotToRoster,
 	publishDuration,
 	rosterFromMatch,
 	snapshotFromResult,
@@ -667,8 +668,9 @@ export class MemberReplaysService extends Service {
 		const roster = (input.players as ReplayRosterPlayer[] | undefined)?.length
 			? (input.players as ReplayRosterPlayer[])
 			: rosterFromMatch(lobby.players, result);
-		const fromResult =
-			!input.players?.length && snapshotFromResult(result, lobby.isRanked, durationInSeconds);
+		// The match's own ratings and W/L, also when the client sends its parsed roster.
+		const matchSnapshot = snapshotFromResult(result, lobby.isRanked, durationInSeconds);
+		const fromResult = matchSnapshot && alignSnapshotToRoster(matchSnapshot, roster);
 		const mapFilename = lobby.map?.trim() || 'Unknown';
 		const mapName = displayMapName(lobby.map?.trim() ?? '', mapFilename);
 

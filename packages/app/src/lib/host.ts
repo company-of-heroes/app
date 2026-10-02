@@ -3,6 +3,7 @@ import { page } from '$app/state';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
 import { toPlayerPreviewData, type PlayerEloMap } from '@company-of-heroes/ui/player';
+import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
 import { buildProfileLinks, pickOwnedSteamId } from '@company-of-heroes/api';
 import { account } from '$core/account';
 import { api, unwrapApi } from '$core/api';
@@ -245,7 +246,13 @@ export function provideAppHost(): HostContext {
 							type: 'application/octet-stream'
 						}),
 						title: match.title,
-						map: match.map
+						map: match.map,
+						isRanked: match.isRanked,
+						players: (match.players ?? []).map((player) => ({
+							name: player.name || player.profile?.alias || '',
+							steamId: player.steamId ?? null
+						})),
+						result: match.result as CommunityMatchDetail['result'] | null
 					};
 				}
 			},

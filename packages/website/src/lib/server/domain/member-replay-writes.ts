@@ -135,6 +135,30 @@ export function snapshotFromResult(
 	};
 }
 
+/**
+ * The match snapshot in roster order (stats are read per slot). Null when a roster
+ * player has no result entry by Steam id or alias.
+ */
+export function alignSnapshotToRoster(
+	snapshot: StatsSnapshot,
+	roster: ReplayRosterPlayer[]
+): StatsSnapshot | null {
+	const key = (value: unknown) => String(value ?? '').trim().toLowerCase();
+	const players = roster.map((player) => {
+		const steamId = normalizeSteamId(player.steamId);
+		const name = key(player.name || player.alias);
+		return (
+			(steamId && snapshot.players.find((entry) => entry.steamId === steamId)) ||
+			(name ? snapshot.players.find((entry) => key(entry.alias) === name) : undefined)
+		);
+	});
+	if (players.some((player) => !player)) {
+		return null;
+	}
+
+	return { ...snapshot, players: players as StatsSnapshot['players'] };
+}
+
 /** Requested duration, else the match's; PocketBase treats 0 as blank, so at least 1. */
 export function publishDuration(
 	requested: number | undefined,

@@ -1358,5 +1358,19 @@
 	"Keep this account": "Keep this account",
 	"Your email was changed. Sign in with your new email.": "Your email was changed. Sign in with your new email.",
 	"You can only publish your own replays.": "You can only publish your own replays.",
-	"Could not publish replay": "Could not publish replay"
+	"Could not publish replay": "Could not publish replay",
+	"The app could not start": "The app could not start",
+	"Something went wrong while starting. Check your internet connection and try again.": "Something went wrong while starting. Check your internet connection and try again.",
+	"Maintenance": "Maintenance",
+	"Maintenance in progress": "Maintenance in progress",
+	"Our server is temporarily unavailable while we perform maintenance. The app will be back online shortly and reconnects automatically.": "Our server is temporarily unavailable while we perform maintenance. The app will be back online shortly and reconnects automatically.",
+	"Did you know?": "Did you know?",
+	"Every match you play is saved to your history, so you can review it later.": "Every match you play is saved to your history, so you can review it later.",
+	"Upload your replays to share them with other players on coh1stats.com.": "Upload your replays to share them with other players on coh1stats.com.",
+	"Possible smurf accounts are labelled next to player names.": "Possible smurf accounts are labelled next to player names.",
+	"Add a Twitch overlay to show your current match on stream.": "Add a Twitch overlay to show your current match on stream.",
+	"The Twitch bot can answer chat commands about the game you are playing.": "The Twitch bot can answer chat commands about the game you are playing.",
+	"Open the live page to see which matches are being played right now.": "Open the live page to see which matches are being played right now.",
+	"Check the leaderboards to see how you rank against other players.": "Check the leaderboards to see how you rank against other players.",
+	"Set up keyboard shortcuts to control the app while you are in game.": "Set up keyboard shortcuts to control the app while you are in game."
 }

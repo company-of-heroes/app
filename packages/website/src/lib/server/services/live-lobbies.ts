@@ -40,6 +40,18 @@ const pbDate = (ms: number) => new Date(ms).toISOString().replace('T', ' ');
 
 const isFresh = (row: LiveRow) =>
 	!row.isReplay && Date.now() - new Date(row.updatedAt).getTime() < LIVE_STALE_MS;
+/** Players with a Steam id, for smurf screening. */
+const steamPlayers = (input: LivePublish) =>
+	input.players
+		.filter((player) => player.steamId ?? player.steam_id)
+		.map((player) => {
+			const profile = (player.profile ?? {}) as { profile_id?: unknown };
+			const profileId = Number(profile.profile_id ?? player.profile_id);
+			return {
+				steamId: String(player.steamId ?? player.steam_id),
+				profileId: Number.isFinite(profileId) && profileId > 0 ? profileId : null
+			};
+		});
 const toPublic = (row: LiveRow, hosts: Map<string, string>) =>
 	toLiveLobbyRecord({ ...row, lobbyId: row.lobby || null, hostName: hosts.get(row.user) ?? '' });
 /**
@@ -125,16 +137,18 @@ export class LiveLobbiesService extends Service {
 			return okAsync(undefined);
 		}
 
-		const players = input.players.filter((player) => player.steamId ?? player.steam_id);
-		return sequence(players, (player) => {
-			const profile = (player.profile ?? {}) as { profile_id?: unknown };
-			const profileId = Number(profile.profile_id ?? player.profile_id);
-			return this.services.smurf.enqueue({
-				steamId: String(player.steamId ?? player.steam_id),
-				profileId: Number.isFinite(profileId) && profileId > 0 ? profileId : null,
-				source: 'lobby_live'
-			});
-		}).map(() => undefined);
+		return sequence(steamPlayers(input), (player) =>
+			this.services.smurf.enqueue({ ...player, source: 'lobby_live' })
+		).map(() => undefined);
+	}
+
+	/** Every heartbeat proves the players are in-game: ask Steam about borrowed copies. */
+	private checkLenders(input: LivePublish): Task<void> {
+		if (input.isReplay) {
+			return okAsync(undefined);
+		}
+
+		return this.services.smurf.checkLiveLenders(steamPlayers(input));
 	}
 
 	/** Creates or refreshes the user's live lobby (the app's heartbeat). */
@@ -163,7 +177,11 @@ export class LiveLobbiesService extends Service {
 						'Could not save live lobby'
 					);
 				})
-				.andThen((record) => this.screenPlayers(input, previous).map(() => publicRecord(record)))
+				.andThen((record) =>
+					this.screenPlayers(input, previous)
+						.andThen(() => this.checkLenders(input))
+						.map(() => publicRecord(record))
+				)
 		);
 	}
 

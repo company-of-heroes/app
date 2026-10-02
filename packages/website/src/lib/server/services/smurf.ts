@@ -20,6 +20,7 @@ type SmurfWatchRecord = {
 	suspected_main_steam_id: string;
 	main_confidence: number;
 	score_computed_at: string;
+	last_live_check_at: string;
 };
 
 /** Where a Steam id was seen; higher priority is screened first. */
@@ -35,6 +36,11 @@ export type SmurfSource = keyof typeof SMURF_SOURCE_PRIORITY;
 /** Seen in a lobby: may reopen accounts that were cleared earlier. */
 const LIVE_SIGHTS: SmurfSource[] = ['lobby_live', 'lobby_match'];
 const REOPENABLE = ['not_smurf', 'expired', 'unknown_private'];
+/** Company of Heroes (New Steam Version). */
+const COH_APP_ID = '228200';
+/** Minimum gap between live lender checks for one account. */
+const LIVE_CHECK_INTERVAL_MS = 10 * 60 * 1000;
+const STEAM_ID = /^7656\d{13}$/;
 /** Most frequent teammates whose games are searched for a main account. */
 const COPLAY_SECOND_ORDER_TEAMMATES = 50;
 
@@ -67,7 +73,7 @@ const WORKER_FIELDS = [
 
 type IndexRow = { lobby: string; profile_id: number };
 type PlayerMeta = { alias: string | null; steam_id: string | null };
-/** Smurf screening state per Steam account (`smurf_watch`, scored by the jobs worker). */
+/** Smurf screening state per Steam account (`smurf_watch`, scored by the smurf worker). */
 export class SmurfService extends Service {
 	get(steamId: string) {
 		return ensure(steamId, badRequest('steamId is required'))
@@ -185,6 +191,8 @@ export class SmurfService extends Service {
 			status: 'resolved',
 			lender_steam_id: input.lenderSteamId,
 			lender_source: input.lenderSource || 'live',
+			smurf_score: 100,
+			verdict: 'confirmed_shared',
 			last_checked_at: new Date().toISOString(),
 			next_check_at: null,
 			...(input.profileId !== null ? { profile_id: input.profileId } : {})
@@ -202,6 +210,85 @@ export class SmurfService extends Service {
 				'Could not save lender'
 			)
 		);
+	}
+
+	/**
+	 * Asks Steam who lends CoH to each player of a running game. The app's heartbeat
+	 * proves they are in-game right now, so this does not depend on the worker seeing
+	 * them online. Throttled per account; Steam failures are ignored.
+	 */
+	checkLiveLenders(players: { steamId: string; profileId: number | null }[]): Task<void> {
+		const candidates = players.filter((player) => STEAM_ID.test(player.steamId));
+		if (candidates.length === 0 || !this.steam.configured) {
+			return okAsync(undefined);
+		}
+
+		const conditions = candidates.map((player) =>
+			this.pb.filter('steam_id = {:steamId}', { steamId: player.steamId })
+		);
+		return sequence(anyOfChunks(conditions), (filter) =>
+			fromPb(
+				this.pb.collection('smurf_watch').getFullList<SmurfWatchRecord>({
+					filter,
+					fields: 'id,steam_id,status,last_live_check_at'
+				}),
+				'Could not load smurf watch'
+			)
+		)
+			.map((chunks) => new Map(chunks.flat().map((record) => [record.steam_id, record])))
+			.andThen((records) => {
+				const threshold = Date.now() - LIVE_CHECK_INTERVAL_MS;
+				const due = candidates.filter((player) => {
+					const record = records.get(player.steamId);
+					if (!record) {
+						return true;
+					}
+
+					const lastCheck = Date.parse(record.last_live_check_at || '');
+					return record.status !== 'resolved' && (Number.isNaN(lastCheck) || lastCheck < threshold);
+				});
+				return sequence(due, (player) => this.checkLiveLender(player, records.get(player.steamId)));
+			})
+			.map(() => undefined)
+			.orElse((error) => {
+				console.warn('[smurf] live lender check failed', error);
+				return okAsync(undefined);
+			});
+	}
+
+	private checkLiveLender(
+		player: { steamId: string; profileId: number | null },
+		record: SmurfWatchRecord | undefined
+	): Task<void> {
+		return this.steam
+			.call('IPlayerService/IsPlayingSharedGame/v1', {
+				steamid: player.steamId,
+				appid_playing: COH_APP_ID
+			})
+			.andThen((data) => {
+				const lender = String(
+					(data as { response?: { lender_steamid?: unknown } })?.response?.lender_steamid ?? ''
+				);
+				if (STEAM_ID.test(lender) && lender !== player.steamId) {
+					return this.markLender({
+						steamId: player.steamId,
+						profileId: player.profileId,
+						source: 'lobby_live',
+						lenderSteamId: lender,
+						lenderSource: 'live'
+					}).map(() => undefined);
+				}
+
+				return record
+					? fromPb(
+							this.pb
+								.collection('smurf_watch')
+								.update(record.id, { last_live_check_at: new Date().toISOString() }),
+							'Could not save live check'
+						).map(() => undefined)
+					: okAsync(undefined);
+			})
+			.orElse(() => okAsync(undefined));
 	}
 
 	/** Work for the smurf worker: accounts due for screening, and watched accounts due a poll. */

@@ -1,19 +1,20 @@
 <script lang="ts">
 	import { useHost } from '../host/host.context';
 	import RewardIcon from './reward-icon.svelte';
-	import type { RewardView } from './types';
+	import type { PlayerRewards, RewardView } from './types';
 
 	type Props = {
 		/** Player whose rewards to show. */
 		steamId: string;
+		/** Preloaded by the host so the row does not pop in after render; fetched otherwise. */
+		rewards?: PlayerRewards | null;
 	};
 
-	let { steamId }: Props = $props();
+	let { steamId, rewards: preloaded }: Props = $props();
 	const host = useHost();
 
 	/** Unlocked first (newest first); the owner also sees locked ones, closest first. Secret locked ones stay hidden. */
-	async function load(id: string): Promise<RewardView[]> {
-		const data = await host.api.rewards.forPlayer(id).catch(() => null);
+	function order(data: PlayerRewards | null): RewardView[] {
 		if (!data) {
 			return [];
 		}
@@ -31,10 +32,17 @@
 		return [...unlocked, ...locked];
 	}
 
-	const rewards = $derived(load(steamId));
+	const fetched = $derived(
+		preloaded === undefined
+			? host.api.rewards
+					.forPlayer(steamId)
+					.catch(() => null)
+					.then(order)
+			: null
+	);
 </script>
 
-{#await rewards then list}
+{#snippet icons(list: RewardView[])}
 	{#if list.length > 0}
 		<div class="mb-4 flex flex-wrap items-center gap-1.5">
 			{#each list as reward (reward.id)}
@@ -42,4 +50,12 @@
 			{/each}
 		</div>
 	{/if}
-{/await}
+{/snippet}
+
+{#if fetched}
+	{#await fetched then list}
+		{@render icons(list)}
+	{/await}
+{:else}
+	{@render icons(order(preloaded ?? null))}
+{/if}

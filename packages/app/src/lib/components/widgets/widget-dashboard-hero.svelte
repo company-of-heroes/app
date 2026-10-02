@@ -26,14 +26,12 @@
 	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/matches';
 	import { upperCase } from 'lodash-es';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
-	import LinkIcon from 'phosphor-svelte/lib/LinkIcon';
 	import * as Player from '$lib/components/player';
 	import {
+		PlayerLinks,
 		PlayerProfileLink,
 		playerPreviewId,
-		PlayerStreamerIcon,
-		TwitchLogo,
-		YoutubeLogo
+		PlayerStreamerIcon
 	} from '@company-of-heroes/ui/player';
 	import * as List from '$lib/components/ui/list';
 	import { Badge, LiveBadge, PendingBadge } from '$lib/components/ui/badge';
@@ -518,27 +516,7 @@
 						</div>
 
 						{#if streamingLinks.length > 0}
-							<div class="mb-3 flex flex-wrap items-center gap-4">
-								{#each streamingLinks as link (link.url)}
-									<a
-										href={link.url}
-										target="_blank"
-										rel="noopener noreferrer"
-										class={cn(
-											interactive,
-											'inline-flex items-center gap-2 text-sm font-medium underline'
-										)}
-									>
-										{#if link.type === 'twitch'}
-											<TwitchLogo size={20} class="text-[#9146FF]" />
-											<span>{t('Twitch')}</span>
-										{:else}
-											<YoutubeLogo size={20} />
-											<span>{t('YouTube')}</span>
-										{/if}
-									</a>
-								{/each}
-							</div>
+							<PlayerLinks links={streamingLinks} class="mb-3" />
 						{/if}
 
 						{#if bio || otherLinks.length > 0}
@@ -547,24 +525,7 @@
 									<p class="text-secondary-400 mb-3 max-w-2xl text-sm whitespace-pre-wrap">{bio}</p>
 								{/if}
 								{#if otherLinks.length > 0}
-									<div class="mb-3 flex flex-wrap items-center gap-4">
-										{#each otherLinks as link (link.url)}
-											<a
-												href={link.url}
-												target="_blank"
-												rel="noopener noreferrer"
-												class={cn(
-													interactive,
-													'text-secondary-300 hover:text-primary inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm transition-colors'
-												)}
-											>
-												<LinkIcon size={18} />
-												{#if link.label}
-													<span>{link.label}</span>
-												{/if}
-											</a>
-										{/each}
-									</div>
+									<PlayerLinks links={otherLinks} class="mb-3" />
 								{/if}
 							</div>
 						{/if}

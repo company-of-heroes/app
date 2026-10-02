@@ -69,6 +69,13 @@ export const load = async ({ url }: LoadEvent) => {
 		return { i18n };
 	}
 
+	// Fresh document load on another route (e.g. Ctrl+R): boot via the splash
+	// and return to this page once it is ready.
+	if (boot.phase === 'idle') {
+		boot.returnTo = url.pathname + url.search;
+		redirect(307, '/splashscreen');
+	}
+
 	const next = await boot.advance(url.pathname);
 	if (next) {
 		redirect(307, next);

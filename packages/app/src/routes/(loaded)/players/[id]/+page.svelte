@@ -18,7 +18,7 @@
 	import { findCheaterBySteamId } from '$core/pocketbase/anti-cheat';
 	import { account } from '$core/account';
 	import { app } from '$core/app/context';
-	import { api } from '$core/api';
+	import { api, unwrapApi } from '$core/api';
 	import { getPlayerRating } from '$core/pocketbase/player-ratings';
 	import {
 		emptyPlayerPerformance,
@@ -26,10 +26,7 @@
 	} from '$core/pocketbase/player-performance';
 	import { eloMapForSteamId, mergeEloMaps } from '$lib/utils/player-elo';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import {
-		labelsForSteamId,
-		preloadPlayerLabels
-	} from '$core/pocketbase/player-label-cache.svelte';
+	import { labelsForSteamId, loadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import { useI18n } from '$lib/i18n';
 
@@ -93,12 +90,14 @@
 				return null;
 			}
 
-			const [playerRating, cheater, likeCount] = await Promise.all([
+			const [playerRating, cheater, likeCount, rewards] = await Promise.all([
 				getPlayerRating(id).catch(() => null),
 				findCheaterBySteamId(id).catch(() => null),
-				app.database.playerSocial.getLikeCount(id)
+				app.database.playerSocial.getLikeCount(id),
+				unwrapApi(api.rewards.forPlayer(id)).catch(() => null),
+				loadPlayerLabels([id])
 			]);
-			return { steamId: id, playerRating, cheater: !!cheater, likeCount };
+			return { steamId: id, playerRating, cheater: !!cheater, likeCount, rewards };
 		}
 	);
 
@@ -146,9 +145,9 @@
 				return null;
 			}
 
-			const matches = await relic.getRecentMatchHistoryForProfile(profile.profile_id, {
-				includeHidden: true
-			});
+			const matches = await relic
+				.getRecentMatchHistoryForProfile(profile.profile_id, { includeHidden: true })
+				.catch(() => []);
 			return { key, matches };
 		}
 	);
@@ -224,32 +223,39 @@
 			const scope = isSelf ? 'user' : 'community';
 			const userId = isSelf ? account.userId : null;
 			if (!key || !id || (scope === 'user' && !userId)) {
-				return { key, value: emptyPlayerPerformance() };
+				return { profileId: id, value: emptyPlayerPerformance() };
 			}
 
 			const value = await getPlayerPerformance({ profileId: id, scope, userId }).catch(() =>
 				emptyPlayerPerformance()
 			);
-			return { key, value };
+			return { profileId: id, value };
 		}
 	);
 
+	// Matched on the profile only: when `isSelf` flips after the account loads, the old numbers
+	// stay up while the scoped ones load instead of dropping back to the skeleton.
 	const performanceData = $derived(
-		playerPerformance.current?.key === performanceKey ? playerPerformance.current.value : null
+		profile && playerPerformance.current?.profileId === profile.profile_id
+			? playerPerformance.current.value
+			: null
 	);
-
-	$effect(() => {
-		if (user?.steamid) {
-			preloadPlayerLabels([user.steamid]);
-		}
-	});
 
 	const labels = $derived(labelsForSteamId(user?.steamid));
 
 	// Keep the skeleton until everything the header shows has arrived, so the profile renders
-	// once instead of shifting per request. Only the match history tab loads progressively.
+	// once instead of shifting per request. The raw Relic history is included because its ratings
+	// fill ELO gaps; only the rank enrichment for the match history tab loads afterwards.
 	const ready = $derived(
-		Boolean(profile && user && headerData && customizationData && smurfData && performanceData)
+		Boolean(
+			profile &&
+				user &&
+				headerData &&
+				customizationData &&
+				smurfData &&
+				performanceData &&
+				rawMatches
+		)
 	);
 
 	const pagePlayer = $derived.by(() => {
@@ -267,7 +273,8 @@
 			smurf: smurfData?.value,
 			labels,
 			likeCount: headerData?.likeCount ?? 0,
-			customization: customizationData?.value ?? null
+			customization: customizationData?.value ?? null,
+			rewards: headerData?.rewards ?? null
 		});
 	});
 
@@ -287,7 +294,7 @@
 	<PlayerProfile
 		player={matchHistory.player ?? pagePlayer}
 		bind:tab={currentTab}
-		matchHistoryLoading={!rankedMatches}
+		matchHistoryLoading={!rankedMatches || !matchHistory.ready}
 	>
 		{#snippet actions()}
 			<Player.LabelEditor

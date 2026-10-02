@@ -172,10 +172,17 @@ export type HostApi = {
 		/**
 		 * Replay file of a saved match the viewer may publish. Throws with a user-facing message;
 		 * resolves null when the host already navigated away (e.g. it is published already).
+		 * `players` pre-links Steam ids the .rec file does not carry; `result` holds the match's
+		 * own ratings for the preview.
 		 */
-		loadMatchForPublish: (
-			lobbyId: string
-		) => Promise<{ file: File; title?: string; map?: string } | null>;
+		loadMatchForPublish: (lobbyId: string) => Promise<{
+			file: File;
+			title?: string;
+			map?: string;
+			isRanked?: boolean;
+			players?: { name: string; steamId: string | null }[];
+			result?: CommunityMatchDetail['result'] | null;
+		} | null>;
 		/** Owner edit of a member replay. */
 		update: (
 			replayId: string,

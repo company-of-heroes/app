@@ -1358,5 +1358,19 @@
 	"Keep this account": "이 계정 유지",
 	"Your email was changed. Sign in with your new email.": "이메일이 변경되었습니다. 새 이메일로 로그인하세요.",
 	"You can only publish your own replays.": "자신의 리플레이만 게시할 수 있습니다.",
-	"Could not publish replay": "리플레이를 게시할 수 없습니다"
+	"Could not publish replay": "리플레이를 게시할 수 없습니다",
+	"The app could not start": "앱을 시작할 수 없습니다",
+	"Something went wrong while starting. Check your internet connection and try again.": "시작하는 중 문제가 발생했습니다. 인터넷 연결을 확인한 후 다시 시도하세요.",
+	"Maintenance": "점검 중",
+	"Maintenance in progress": "점검 진행 중",
+	"Our server is temporarily unavailable while we perform maintenance. The app will be back online shortly and reconnects automatically.": "점검 작업으로 인해 서버를 일시적으로 사용할 수 없습니다. 앱은 곧 다시 온라인 상태가 되며 자동으로 다시 연결됩니다.",
+	"Did you know?": "알고 계셨나요?",
+	"Every match you play is saved to your history, so you can review it later.": "플레이한 모든 경기는 기록에 저장되어 나중에 다시 볼 수 있습니다.",
+	"Upload your replays to share them with other players on coh1stats.com.": "리플레이를 업로드하여 coh1stats.com에서 다른 플레이어와 공유하세요.",
+	"Possible smurf accounts are labelled next to player names.": "스머프로 의심되는 계정은 플레이어 이름 옆에 표시됩니다.",
+	"Add a Twitch overlay to show your current match on stream.": "Twitch 오버레이를 추가하여 방송에 현재 경기를 표시하세요.",
+	"The Twitch bot can answer chat commands about the game you are playing.": "Twitch 봇이 현재 플레이 중인 게임에 대한 채팅 명령어에 답할 수 있습니다.",
+	"Open the live page to see which matches are being played right now.": "라이브 페이지에서 지금 진행 중인 경기를 확인하세요.",
+	"Check the leaderboards to see how you rank against other players.": "리더보드에서 다른 플레이어와 비교한 내 순위를 확인하세요.",
+	"Set up keyboard shortcuts to control the app while you are in game.": "단축키를 설정하여 게임 중에도 앱을 조작하세요."
 }

@@ -51,6 +51,14 @@ export function preloadPlayerLabels(steamIds: string[]) {
 	}, 0);
 }
 
+/** Like `preloadPlayerLabels`, but resolves once the labels are in the cache. */
+export async function loadPlayerLabels(steamIds: string[]) {
+	const missing = [...new Set(steamIds.filter(Boolean))].filter((id) => !fetched.has(id));
+	if (missing.length > 0) {
+		await fetchIds(missing);
+	}
+}
+
 /** Loads the labels again, e.g. after the server granted one during this session. */
 export function refreshPlayerLabels(steamIds: string[]) {
 	for (const id of steamIds) {

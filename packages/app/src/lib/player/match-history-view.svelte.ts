@@ -75,7 +75,7 @@ export class MatchHistoryView {
 		() => this.#steamIdsKey,
 		async (key) => {
 			if (!key) {
-				return new Map<string, string>();
+				return { key, map: new Map<string, string>() };
 			}
 
 			const profiles = await steam.getUserProfiles(key.split(',')).catch((error) => {
@@ -83,13 +83,15 @@ export class MatchHistoryView {
 				return [];
 			});
 
-			return new Map(
-				profiles
-					.filter((profile) => profile.avatarfull)
-					.map((profile) => [profile.steamid, profile.avatarfull])
-			);
-		},
-		{ initialValue: new Map<string, string>() }
+			return {
+				key,
+				map: new Map(
+					profiles
+						.filter((profile) => profile.avatarfull)
+						.map((profile) => [profile.steamid, profile.avatarfull])
+				)
+			};
+		}
 	);
 
 	readonly #savedBySession = resource(
@@ -106,6 +108,14 @@ export class MatchHistoryView {
 		}
 	);
 
+	/** Hidden filters and avatars are in, so the list renders once instead of filling in. */
+	readonly ready = $derived(
+		(this.isStaff ||
+			(this.#hiddenIds.current != null && this.#hiddenWords.current != null) ||
+			Boolean(this.#hiddenIds.error || this.#hiddenWords.error)) &&
+			this.#avatars.current?.key === this.#steamIdsKey
+	);
+
 	/** The page player with the match history replaced by the enriched, visible matches. */
 	readonly player = $derived.by((): PlayerPageData | null => {
 		const player = this.#getPlayer();
@@ -113,7 +123,7 @@ export class MatchHistoryView {
 			return null;
 		}
 
-		const avatars = this.#avatars.current ?? new Map<string, string>();
+		const avatars = this.#avatars.current?.map ?? new Map<string, string>();
 		const saved = this.#savedBySession.current;
 		return {
 			...player,

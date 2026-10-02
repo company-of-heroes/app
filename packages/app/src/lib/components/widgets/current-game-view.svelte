@@ -110,7 +110,7 @@
 					return;
 				}
 
-				const smurf = await loadSmurfAlert(steamId, profileId, 'lobby_match');
+				const smurf = await loadSmurfAlert(steamId, profileId, 'lobby_live');
 				if (profileId != null && smurf) {
 					next[profileId] = smurf;
 				}

@@ -1,6 +1,7 @@
 import { afterNavigate, goto, replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
+import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
 import { authDisplayName, isStaffUser, loginRedirectHref, meSteamIds } from '$lib/auth/user';
 import { toast } from '@company-of-heroes/ui/toasts';
 import { currentLocale, href, unlocalizedPath } from '$lib/i18n';
@@ -187,8 +188,16 @@ export function provideWebsiteHost(): HostContext {
 					}
 
 					const buffer = await response.arrayBuffer();
+					const fromMatch = page.data.fromMatch as CommunityMatchDetail | null | undefined;
+					const match = fromMatch?.id === lobbyId ? fromMatch : null;
 					return {
-						file: new File([buffer], `${lobbyId}.rec`, { type: 'application/octet-stream' })
+						file: new File([buffer], `${lobbyId}.rec`, { type: 'application/octet-stream' }),
+						isRanked: match?.isRanked,
+						players: (match?.players ?? []).map((player) => ({
+							name: player.profile?.alias || '',
+							steamId: player.steamId ?? null
+						})),
+						result: match?.result ?? null
 					};
 				}
 			},

@@ -3,7 +3,6 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive, statLosses, statWins } from '@company-of-heroes/ui/variants';
-	import LinkIcon from 'phosphor-svelte/lib/LinkIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import { formatDate } from '../format/date';
 	import {
@@ -23,12 +22,11 @@
 	import type { PlayerPageData } from './types';
 	import PlayerCompanionStaffDebug from './player-companion-staff-debug.svelte';
 	import PlayerLabels from './player-labels.svelte';
+	import PlayerLinks from './player-links.svelte';
 	import RewardIcons from '../reward/reward-icons.svelte';
 	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import { isStreamingLink } from './profile';
 	import SmurfAlert from './smurf-alert.svelte';
-	import TwitchLogo from './twitch-logo.svelte';
-	import YoutubeLogo from './youtube-logo.svelte';
 
 	type Props = {
 		player: PlayerPageData;
@@ -154,27 +152,7 @@
 					{@render afterName?.()}
 				</div>
 				{#if streamingLinks.length > 0}
-					<div class="mb-3 flex flex-wrap items-center gap-4">
-						{#each streamingLinks as link (link.url)}
-							<a
-								href={link.url}
-								target="_blank"
-								rel="noopener noreferrer"
-								class={cn(
-									interactive,
-									'inline-flex items-center gap-2 text-sm font-medium underline'
-								)}
-							>
-								{#if link.type === 'twitch'}
-									<TwitchLogo size={20} class="text-[#9146FF]" />
-									<span>Twitch</span>
-								{:else}
-									<YoutubeLogo size={20} />
-									<span>YouTube</span>
-								{/if}
-							</a>
-						{/each}
-					</div>
+					<PlayerLinks links={streamingLinks} class="mb-3" />
 				{/if}
 				{#if bio || otherLinks.length > 0}
 					<div class="my-4">
@@ -182,28 +160,11 @@
 							<p class="text-secondary-200 mb-3 max-w-2xl whitespace-pre-wrap">{bio}</p>
 						{/if}
 						{#if otherLinks.length > 0}
-							<div class="mb-3 flex flex-wrap items-center gap-4">
-								{#each otherLinks as link (link.url)}
-									<a
-										href={link.url}
-										target="_blank"
-										rel="noopener noreferrer"
-										class={cn(
-											interactive,
-											'text-secondary-300 hover:text-primary inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm transition-colors'
-										)}
-									>
-										<LinkIcon size={18} />
-										{#if link.label}
-											<span>{link.label}</span>
-										{/if}
-									</a>
-								{/each}
-							</div>
+							<PlayerLinks links={otherLinks} class="mb-3" />
 						{/if}
 					</div>
 				{/if}
-				<RewardIcons steamId={player.steamId} />
+				<RewardIcons steamId={player.steamId} rewards={player.rewards} />
 				<div class="grid grid-cols-1 items-start gap-x-6 gap-y-1 sm:grid-cols-2">
 					<List.Root class={metaList}>
 						<List.Title>{t('Steam ID:')}</List.Title>
