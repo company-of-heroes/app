@@ -1,5 +1,9 @@
 # @company-of-heroes/app
 
+## 0.66.3
+
+- fix; link the Steam account from warnings.log and fill in name and avatar again on new installs
+
 ## 0.66.2
 
 - enhance; redesigned startup error screen and show a maintenance notice that reconnects automatically when the server is unreachable
