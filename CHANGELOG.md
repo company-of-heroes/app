@@ -1,3 +1,13 @@
+### v0.66.2
+
+- enhance; redesigned startup error screen and show a maintenance notice that reconnects automatically when the server is unreachable
+- enhance; redesigned the startup splash with an animated logo, boot progress, rotating tips and the app version
+- enhance; flatter player columns in match lists with the win/loss colour across the whole team cell
+- fix; publishing a match replay keeps the match's player links, ratings and win/loss stats
+- fix; smurf detection finds the family-sharing lender while a match is running and flags accounts that play without owning CoH
+- fix; external links on player profiles (Steam, Twitch, YouTube, bio links) open in the browser again, now shown as clearer link chips
+- enhance; cleaner streamer badge progress on the streaming page, styled in the badge's own purple
+
 ### v0.66.1
 
 - enhance; devtools (inspect element / console) available in release builds

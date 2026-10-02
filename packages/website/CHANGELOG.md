@@ -1,5 +1,11 @@
 # @company-of-heroes/website
 
+## 1.9.1
+
+- enhance; flatter player columns in match lists with the win/loss colour across the whole team cell
+- fix; smurf detection finds the family-sharing lender while a match is running and flags accounts that play without owning CoH
+- fix; live lobbies on the website show player stats (ELO, level, position, W/L, streak) again when expanded
+
 ## 1.9.0
 
 - fix; keep reputation, likes and profile customizations when duplicate accounts are merged

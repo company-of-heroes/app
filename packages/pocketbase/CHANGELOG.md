@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.13.1
+
+- fix; smurf detection finds the family-sharing lender while a match is running and flags accounts that play without owning CoH
+
 ## 0.13.0
 
 - fix; stop anonymous lobby creation and edits to other players' lobbies, and require replays, emails and roles to be changed only by their owner or the website
