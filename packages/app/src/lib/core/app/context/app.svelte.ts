@@ -311,6 +311,7 @@ export class AppContext extends Emittery<AppEvents> {
 			this.isReady = true;
 		});
 
+		this.gameLog.on('steamId', ({ steamId }) => void this.#onSteamId(steamId));
 		this.gameLog.on('authenticated', ({ steamId, relicProfile, steamProfile }) =>
 			this.#onAuthenticated(
 				steamId,
@@ -347,14 +348,8 @@ export class AppContext extends Emittery<AppEvents> {
 		);
 	}
 
-	async #onAuthenticated(
-		steamId: string,
-		relicProfile: RelicProfile,
-		steamProfile: SteamPlayerSummary
-	) {
-		this.game.profile = { relic: relicProfile, steam: steamProfile };
-		this.game.steamId = steamId;
-
+	/** Links the Steam id from warnings.log to the account; name and avatar follow from it. */
+	async #onSteamId(steamId: string) {
 		try {
 			const conflict = await this.account.attachSteamId(steamId);
 			if (conflict) {
@@ -363,7 +358,15 @@ export class AppContext extends Emittery<AppEvents> {
 		} catch (error) {
 			console.warn('[APP]: Failed to attach Steam ID:', error);
 		}
+	}
 
+	async #onAuthenticated(
+		steamId: string,
+		relicProfile: RelicProfile,
+		steamProfile: SteamPlayerSummary
+	) {
+		this.game.profile = { relic: relicProfile, steam: steamProfile };
+		this.game.steamId = steamId;
 		this.emit('game.login', { steamId, relicProfile, steamProfile });
 	}
 

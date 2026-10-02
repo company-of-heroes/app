@@ -250,11 +250,17 @@ export class AccountService {
 		await this.#enrichFromSteam();
 	}
 
-	/** Fills in display name/avatar from the user's Steam profile when missing. */
+	/** Fills in display name and avatar from the user's Steam profile, each when missing. */
 	async #enrichFromSteam(): Promise<void> {
 		const user = this.#user;
 
-		if (!user || isEmpty(user.steamIds) || (user.name && !isEmpty(user.name))) {
+		if (!user || isEmpty(user.steamIds) || this.isImpersonating) {
+			return;
+		}
+
+		const needsName = isEmpty(user.name?.trim());
+		const needsAvatar = isEmpty(user.avatar);
+		if (!needsName && !needsAvatar) {
 			return;
 		}
 
@@ -267,9 +273,13 @@ export class AccountService {
 
 			let avatar: File | undefined;
 
-			if ((!user.avatar || isEmpty(user.avatar)) && !isEmpty(profile.avatarfull)) {
+			if (needsAvatar && !isEmpty(profile.avatarfull)) {
 				try {
 					const response = await fetch(profile.avatarfull);
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status}`);
+					}
+
 					const blob = new Blob([await response.arrayBuffer()], {
 						type: response.headers.get('Content-Type') || 'image/png'
 					});
@@ -279,9 +289,22 @@ export class AccountService {
 				}
 			}
 
+			const update: { name?: string; avatar?: File } = {};
+			if (needsName && !isEmpty(profile.personaname)) {
+				update.name = profile.personaname;
+			}
+
+			if (avatar) {
+				update.avatar = avatar;
+			}
+
+			if (isEmpty(update)) {
+				return;
+			}
+
 			this.#user = (await pocketbase
 				.collection('users')
-				.update(user.id, { name: profile.personaname, avatar }, { fetch })) as User;
+				.update(user.id, update, { fetch })) as User;
 		} catch (error) {
 			console.warn('[ACCOUNT]: Steam profile enrichment failed:', error);
 		}

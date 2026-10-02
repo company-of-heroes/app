@@ -34,6 +34,8 @@ export type SessionDeps = {
 };
 
 export type SessionEvents = {
+	/** The local player's Steam id, as soon as the log reveals it (before any profile lookup). */
+	steamId: { steamId: string };
 	authenticated: { steamId: string; relicProfile: unknown; steamProfile: unknown };
 	logout: undefined;
 	'lobby.joined': Lobby;
@@ -111,6 +113,9 @@ export class LogSession extends Emittery<SessionEvents> {
 	}
 
 	async #onFoundProfile({ steamId }: TriggerEvents['LOG:FOUND:PROFILE']): Promise<void> {
+		// Account linking must not depend on the Relic/Steam lookups below succeeding.
+		await this.emitSerial('steamId', { steamId });
+
 		try {
 			const [relicProfile, steamProfile] = await Promise.all([
 				this.#deps.getProfileBySteamId(steamId),

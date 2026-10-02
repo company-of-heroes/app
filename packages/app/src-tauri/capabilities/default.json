@@ -172,6 +172,9 @@
 					"url": "https://api.steampowered.com"
 				},
 				{
+					"url": "https://*.steamstatic.com"
+				},
+				{
 					"url": "https://github.com/fknoobs/*"
 				},
 				{
