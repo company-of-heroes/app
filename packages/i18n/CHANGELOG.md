@@ -1,5 +1,10 @@
 # @company-of-heroes/i18n
 
+## 0.1.10
+
+- enhance; redesigned startup error screen and show a maintenance notice that reconnects automatically when the server is unreachable
+- enhance; redesigned the startup splash with an animated logo, boot progress, rotating tips and the app version
+
 ## 0.1.9
 
 - security; steam ids are linked only when no other account owns them (staff resolve conflicts), match results and ratings come only from Relic, emails no longer leak in expanded records, overlays move to overlay.coh1stats.com, and the desktop app refreshes its session, sanitizes notifications and no longer ships the Steam API key
