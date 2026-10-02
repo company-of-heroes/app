@@ -1,5 +1,9 @@
 # @company-of-heroes/app
 
+## 0.66.1
+
+- enhance; devtools (inspect element / console) available in release builds
+
 ## 0.66.0
 
 - enhance; talk to the website API for everything but plain records (match saves, live lobbies, votes, comments, match history, ratings, replay uploads)
