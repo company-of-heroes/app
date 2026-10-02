@@ -1,6 +1,10 @@
 import type { RecordModel } from 'pocketbase';
 import { err, ok, okAsync } from 'neverthrow';
 import { toLiveLobbyRecord, type LiveLobbyRecord } from '@company-of-heroes/ui/live-lobby/slim';
+import {
+	attachLiveLobbyStats,
+	type LiveLobbyRawPlayer
+} from '@company-of-heroes/ui/live-lobby/stats';
 import { cached } from '../cache';
 import { notFound } from '../errors';
 import { fromPb, pbMaybe, sequence, type Task } from '../result';
@@ -52,8 +56,23 @@ const steamPlayers = (input: LivePublish) =>
 				profileId: Number.isFinite(profileId) && profileId > 0 ? profileId : null
 			};
 		});
-const toPublic = (row: LiveRow, hosts: Map<string, string>) =>
-	toLiveLobbyRecord({ ...row, lobbyId: row.lobby || null, hostName: hosts.get(row.user) ?? '' });
+/** Public record with per-player stats (stored ELO + Relic leaderboard) for the expand table. */
+const toPublic = (row: LiveRow, hosts: Map<string, string>): LiveLobbyRecord | null => {
+	const record = toLiveLobbyRecord({
+		...row,
+		lobbyId: row.lobby || null,
+		hostName: hosts.get(row.user) ?? ''
+	});
+	if (!record) {
+		return null;
+	}
+
+	const rawPlayers = (Array.isArray(row.players) ? row.players : []) as LiveLobbyRawPlayer[];
+	return {
+		...record,
+		players: attachLiveLobbyStats(record.players, rawPlayers, record.isRanked, record.matchType)
+	};
+};
 /**
  * Live lobbies: one `lobbies_live` row per user while their game runs, refreshed by
  * the app's heartbeat. A live game also gets its durable `lobbies` row right away,

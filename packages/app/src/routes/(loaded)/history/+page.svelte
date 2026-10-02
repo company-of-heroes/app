@@ -2,6 +2,9 @@
 	import type { Snapshot } from './$types';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import * as Match from '$lib/components/match';
+	import { TeamPlayerSkillsSkeleton } from '@company-of-heroes/ui/match';
+	import { resolveTeamOutcome, toMatchView } from '$lib/components/match/match-view';
+	import { outcomeSurface } from '@company-of-heroes/ui/variants';
 	import { cn } from '$lib/utils';
 	import { tabTrigger } from '$lib/components/ui/variants';
 	import { Pagination } from '$lib/components/ui/pagination';
@@ -193,7 +196,8 @@
 			header: t('Allies'),
 			class: 'flex items-center px-2',
 			pad: false,
-			cellClass: () => 'whitespace-nowrap',
+			cellClass: (row) =>
+				cn('whitespace-nowrap', outcomeSurface(resolveTeamOutcome(toMatchView(row), 'allies'))),
 			headerCellClass: 'px-2 py-3 whitespace-nowrap'
 		},
 		{
@@ -201,7 +205,8 @@
 			header: t('Axis'),
 			class: 'flex items-center px-2',
 			pad: false,
-			cellClass: () => 'whitespace-nowrap',
+			cellClass: (row) =>
+				cn('whitespace-nowrap', outcomeSurface(resolveTeamOutcome(toMatchView(row), 'axis'))),
 			headerCellClass: 'px-2 py-3 whitespace-nowrap'
 		},
 		{
@@ -352,9 +357,8 @@
 			</div>
 		{/snippet}
 		{#snippet skeleton_team()}
-			<div class="flex h-11 items-center gap-1">
-				<Skeleton class="size-11 shrink-0 rounded-md" />
-				<Skeleton class="size-11 shrink-0 rounded-md" />
+			<div class="flex h-11 items-center">
+				<TeamPlayerSkillsSkeleton />
 			</div>
 		{/snippet}
 		{#snippet skeleton_duration()}

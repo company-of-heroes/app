@@ -5,7 +5,7 @@
 	import MapImage from '../ui/map-image.svelte';
 	import { Badge } from '../ui/badge';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive, tableHeadRow } from '@company-of-heroes/ui/variants';
+	import { interactive, outcomeSurface, tableHeadRow } from '@company-of-heroes/ui/variants';
 	import type { CommunityMatch, CommunityPlayer, HistorySortDir, HistorySortField } from './types';
 	import {
 		formatDurationSeconds,
@@ -65,7 +65,7 @@
 	}
 </script>
 
-{#snippet teamFlags(match: CommunityMatch, team: 'allies' | 'axis')}
+{#snippet teamFlags(match: CommunityMatch, team: 'allies' | 'axis', tinted = true)}
 	<TeamPlayerSkills
 		players={teamPlayers(match, team).map((player) => ({
 			race: player.race,
@@ -78,7 +78,7 @@
 		}))}
 		{meSteamIds}
 		{highlightedPlayers}
-		outcome={teamOutcome(match, team)}
+		outcome={tinted ? teamOutcome(match, team) : null}
 		modeLabel={matchModeLabel(match)}
 		showRankBadges={match.isRanked}
 	/>
@@ -160,11 +160,18 @@
 						<td class="text-secondary-400 px-4 py-0 whitespace-nowrap">
 							{matchModeLabel(match)}
 						</td>
-						<td class="px-2 py-0 whitespace-nowrap">
-							{@render teamFlags(match, 'allies')}
+						<td
+							class={cn(
+								'px-2 py-0 whitespace-nowrap',
+								outcomeSurface(teamOutcome(match, 'allies'))
+							)}
+						>
+							{@render teamFlags(match, 'allies', false)}
 						</td>
-						<td class="px-2 py-0 whitespace-nowrap">
-							{@render teamFlags(match, 'axis')}
+						<td
+							class={cn('px-2 py-0 whitespace-nowrap', outcomeSurface(teamOutcome(match, 'axis')))}
+						>
+							{@render teamFlags(match, 'axis', false)}
 						</td>
 						<td class="text-secondary-400 px-4 py-0 whitespace-nowrap tabular-nums">
 							<a href={replayHref(match)} class={cn(interactive, 'hover:text-white')}>

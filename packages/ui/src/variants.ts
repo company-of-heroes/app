@@ -106,6 +106,19 @@ export const tabTrigger =
 
 export const mePlayerText = 'text-primary font-semibold';
 
+/** Win/loss tint for a team cell — same tokens as the lobby result rows. */
+export function outcomeSurface(outcome: 'win' | 'loss' | null | undefined): string {
+	if (outcome === 'win') {
+		return 'bg-success/5';
+	}
+
+	if (outcome === 'loss') {
+		return 'bg-destructive/5';
+	}
+
+	return '';
+}
+
 export const detailMetaGrid =
 	'grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr_auto_1fr] sm:gap-x-6';
 

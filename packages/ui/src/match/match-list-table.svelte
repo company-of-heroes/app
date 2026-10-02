@@ -9,7 +9,7 @@
 	import { Button } from '../ui/button';
 	import { Skeleton } from '../ui/skeleton';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive, tableHeadRow } from '@company-of-heroes/ui/variants';
+	import { interactive, outcomeSurface, tableHeadRow } from '@company-of-heroes/ui/variants';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
 	import MinusIcon from 'phosphor-svelte/lib/MinusIcon';
@@ -19,6 +19,7 @@
 	import { DEFAULT_MATCH_LIST_COLUMNS, type MatchListColumnId, type MatchListRow } from './types';
 	import { defaultFormatDuration } from './utils';
 	import TeamPlayerSkills from './team-player-skills.svelte';
+	import TeamPlayerSkillsSkeleton from './team-player-skills-skeleton.svelte';
 
 	type Props = {
 		rows: MatchListRow[];
@@ -189,19 +190,19 @@
 			>{row.modeLabel ?? ''}</td
 		>
 	{:else if column === 'allies'}
-		<td class="px-2 py-0 whitespace-nowrap">
+		<td class={cn('px-2 py-0 whitespace-nowrap', outcomeSurface(row.alliesOutcome))}>
 			{@render factionFlags(
 				teamPlayers(row.players, 'allies'),
-				row.alliesOutcome,
+				null,
 				row.isRanked !== false,
 				row.modeLabel
 			)}
 		</td>
 	{:else if column === 'axis'}
-		<td class="px-2 py-0 whitespace-nowrap">
+		<td class={cn('px-2 py-0 whitespace-nowrap', outcomeSurface(row.axisOutcome))}>
 			{@render factionFlags(
 				teamPlayers(row.players, 'axis'),
-				row.axisOutcome,
+				null,
 				row.isRanked !== false,
 				row.modeLabel
 			)}
@@ -243,10 +244,7 @@
 {/snippet}
 
 {#snippet factionFlagsSkeleton()}
-	<span class="flex h-11 items-center gap-1">
-		<Skeleton class="size-11 shrink-0 rounded-md" />
-		<Skeleton class="size-11 shrink-0 rounded-md" />
-	</span>
+	<TeamPlayerSkillsSkeleton />
 {/snippet}
 
 {#snippet desktopSkeletonCell(column: MatchListColumnId)}

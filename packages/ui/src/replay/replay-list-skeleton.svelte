@@ -2,6 +2,7 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import { tableHeadRow } from '@company-of-heroes/ui/variants';
+	import TeamPlayerSkillsSkeleton from '../match/team-player-skills-skeleton.svelte';
 
 	type Props = {
 		rowCount?: number;
@@ -17,9 +18,8 @@
 
 {#snippet teamCell()}
 	<td class="px-2 py-0 whitespace-nowrap">
-		<div class="flex h-11 items-center gap-1">
-			<Skeleton class="size-11 shrink-0 rounded-md" />
-			<Skeleton class="size-11 shrink-0 rounded-md" />
+		<div class="flex h-11 items-center">
+			<TeamPlayerSkillsSkeleton />
 		</div>
 	</td>
 {/snippet}
@@ -88,14 +88,8 @@
 					</div>
 				</div>
 				<div class="mt-2 flex items-center gap-4">
-					<div class="flex items-center gap-1">
-						<Skeleton class="size-11 shrink-0 rounded-md" />
-						<Skeleton class="size-11 shrink-0 rounded-md" />
-					</div>
-					<div class="flex items-center gap-1">
-						<Skeleton class="size-11 shrink-0 rounded-md" />
-						<Skeleton class="size-11 shrink-0 rounded-md" />
-					</div>
+					<TeamPlayerSkillsSkeleton />
+					<TeamPlayerSkillsSkeleton />
 				</div>
 				<div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
 					<Skeleton class="h-3.5 w-12" />

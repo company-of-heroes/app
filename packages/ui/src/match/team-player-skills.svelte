@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { useHost } from '../host/host.context';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { factionIcon, interactive } from '@company-of-heroes/ui/variants';
+	import { factionIcon, interactive, outcomeSurface } from '@company-of-heroes/ui/variants';
 	import { getRaceLabel } from '../format/player-format';
 	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { LiveLobbyPlayerStats } from '../live-lobby/types';
@@ -176,11 +176,10 @@
 	{/if}
 {/snippet}
 
-<span
+<div
 	class={cn(
-		'inline-flex h-9 items-center gap-3 rounded-md px-2.5 whitespace-nowrap',
-		outcome === 'win' && 'bg-success/5',
-		outcome === 'loss' && 'bg-destructive/5'
+		'flex items-center gap-3 whitespace-nowrap',
+		outcome && cn('h-9 rounded-md px-2.5', outcomeSurface(outcome))
 	)}
 >
 	{#each chips as chip (chip.key)}
@@ -203,4 +202,4 @@
 			</span>
 		{/if}
 	{/each}
-</span>
+</div>

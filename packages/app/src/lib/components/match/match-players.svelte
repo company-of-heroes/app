@@ -6,20 +6,18 @@
 	import { getLeaderboardStatsForPlayerByMatchType, Race } from '$lib/utils/game';
 	import { getMeSteamIds } from '$lib/utils/player-me';
 	import { useI18n } from '$lib/i18n';
-	import { resolveTeamOutcome } from './match-view';
 	import { TeamPlayerSkills } from '@company-of-heroes/ui/match';
 	import { getModeLabel } from '@company-of-heroes/ui/format/player-format';
 
 	type Props = {
 		team: 'allies' | 'axis';
 		highlightedPlayers?: string[];
-	} & HTMLAttributes<HTMLSpanElement>;
+	} & HTMLAttributes<HTMLDivElement>;
 
 	let { team, highlightedPlayers = [], ...restProps }: Props = $props();
 	const { t } = useI18n();
 	const match = useMatch();
 	const meSteamIds = $derived(getMeSteamIds());
-	const outcome = $derived(resolveTeamOutcome(match, team) ?? null);
 
 	function onTeam(player: LobbyPlayer, side: 'allies' | 'axis') {
 		if (player.team === 0 || player.team === 1) {
@@ -126,14 +124,13 @@
 	const modeLabel = $derived(getModeLabel(matchTypeId));
 </script>
 
-<span {...restProps} class={cn('inline-flex items-center', restProps.class)}>
+<div {...restProps} class={cn('flex items-center', restProps.class)}>
 	<TeamPlayerSkills
 		players={skillPlayers}
 		{meSteamIds}
 		{highlightedPlayers}
-		{outcome}
 		{modeLabel}
 		levelFallback="-"
 		showRankBadges={match.isRanked}
 	/>
-</span>
+</div>

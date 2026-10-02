@@ -6,6 +6,8 @@
 	import { tooltip } from '$lib/attachments';
 	import { interactive } from '$lib/components/ui/variants';
 	import * as Match from '$lib/components/match';
+	import { resolveTeamOutcome, toMatchView } from '$lib/components/match/match-view';
+	import { outcomeSurface } from '@company-of-heroes/ui/variants';
 	import SortAscendingIcon from 'phosphor-svelte/lib/ArrowDownIcon';
 	import SortDescendingIcon from 'phosphor-svelte/lib/ArrowUpIcon';
 	import SortableIcon from 'phosphor-svelte/lib/ArrowsDownUpIcon';
@@ -64,7 +66,11 @@
 			header: t('Allies'),
 			class: 'flex items-center',
 			pad: false,
-			cellClass: () => 'px-2 whitespace-nowrap',
+			cellClass: (row) =>
+				cn(
+					'px-2 whitespace-nowrap',
+					outcomeSurface(resolveTeamOutcome(toMatchView(row), 'allies'))
+				),
 			headerCellClass: 'px-2 py-3 whitespace-nowrap'
 		},
 		{
@@ -72,7 +78,8 @@
 			header: t('Axis'),
 			class: 'flex items-center',
 			pad: false,
-			cellClass: () => 'px-2 whitespace-nowrap',
+			cellClass: (row) =>
+				cn('px-2 whitespace-nowrap', outcomeSurface(resolveTeamOutcome(toMatchView(row), 'axis'))),
 			headerCellClass: 'px-2 py-3 whitespace-nowrap'
 		},
 		{
