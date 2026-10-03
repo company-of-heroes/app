@@ -1,3 +1,14 @@
+### v0.67.0
+
+- feat; spotlight top replays and add replay upload prompts across the website
+- enhance; compact discord-style splash window that restores your last window size and position
+- fix; show elo, wins and losses on the match page right after a game instead of only names and cpm
+- fix; basic matches are no longer shown, titled or filtered as ranked, and the elo chart opens on ranked
+- fix; faction and map stats count only ranked games of the profile you are looking at, not other linked steam accounts
+- fix; a replay or next game is no longer attached to the previous match when the game log skips its end
+- fix; hide duplicate copies of the same match in history
+- feat; switch between linked steam accounts in the dashboard profile widget
+
 ### v0.66.3
 
 - fix; link the Steam account from warnings.log and fill in name and avatar again on new installs
