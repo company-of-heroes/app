@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.13.2
+
+- fix; keep realtime connections open behind cloudflare so live lobby results update again
+
 ## 0.13.1
 
 - fix; smurf detection finds the family-sharing lender while a match is running and flags accounts that play without owning CoH
