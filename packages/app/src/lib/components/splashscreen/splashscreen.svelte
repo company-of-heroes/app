@@ -8,24 +8,16 @@
 	import WrenchIcon from 'phosphor-svelte/lib/WrenchIcon';
 	import SplashAnimated from './splash-animated.svelte';
 	import { SPLASH_INTRO_MS, removeBootSplash } from './splash';
-	import { SPLASH_TIPS, SPLASH_TIP_MS } from './tips';
+	import { expandToMain } from '$core/runtime/window-bounds';
 	import { onMount } from 'svelte';
 	import { useI18n } from '$lib/i18n';
 
 	const { t } = useI18n();
 
 	const SERVER_POLL_MS = 15_000;
-	const PHASE_STEPS = ['idle', 'settings', 'account', 'services', 'features', 'game', 'ready'];
 
 	let introComplete = $state(false);
 	let version = $state<string | null>(null);
-	let tipIndex = $state(Math.floor(Math.random() * SPLASH_TIPS.length));
-
-	const progress = $derived.by(() => {
-		const phase = boot.phase === 'onboarding' ? 'settings' : boot.phase;
-		const step = Math.max(PHASE_STEPS.indexOf(phase), 0);
-		return ((step + 1) / PHASE_STEPS.length) * 100;
-	});
 
 	const startIntroTimer = () => {
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -51,15 +43,9 @@
 	});
 
 	$effect(() => {
-		const interval = window.setInterval(() => {
-			tipIndex = (tipIndex + 1) % SPLASH_TIPS.length;
-		}, SPLASH_TIP_MS);
-
-		return () => window.clearInterval(interval);
-	});
-
-	$effect(() => {
 		if (boot.phase === 'error') {
+			// The error card needs the full-size window.
+			void expandToMain();
 			return;
 		}
 
@@ -104,10 +90,10 @@
 	});
 </script>
 
-<div
-	class="bg-secondary-950 relative flex h-screen w-screen flex-col items-center justify-center gap-5 font-sans"
->
-	{#if boot.phase === 'error'}
+{#if boot.phase === 'error'}
+	<div
+		class="bg-secondary-950 relative flex h-screen w-screen flex-col items-center justify-center gap-5 font-sans"
+	>
 		<div class="flex w-full max-w-xl flex-col gap-6 px-6 text-white">
 			<div class="flex items-center gap-4 px-1">
 				<SplashAnimated animate={false} size={40} />
@@ -150,40 +136,203 @@
 				</div>
 			</Box>
 		</div>
-	{:else}
-		{#key boot.splashSession}
-			<SplashAnimated />
+	</div>
+{:else}
+	<!-- Frameless splash window: the whole surface drags the window. -->
+	<div
+		data-tauri-drag-region
+		class="bg-secondary-950 relative flex h-screen w-screen cursor-default flex-col items-center justify-center gap-4 font-sans select-none"
+	>
+		<div class="loader pointer-events-none" aria-hidden="true"></div>
+		<span class="sr-only">{t('Loading...')}</span>
+		{#key boot.phase}
+			<span class="phase-label text-secondary-500 pointer-events-none text-xs font-semibold">
+				{boot.phaseLabel}
+			</span>
 		{/key}
-		<div class="mt-6 flex flex-col items-center gap-3">
-			{#key boot.phase}
-				<span class="phase-label text-secondary-300 font-semibold">{boot.phaseLabel}</span>
-			{/key}
-			<div class="bg-secondary-800 h-[3px] w-52 overflow-hidden rounded-full" aria-hidden="true">
-				<div class="progress-fill bg-primary h-full rounded-full" style:width="{progress}%"></div>
-			</div>
-		</div>
-		<div class="mt-10 h-12 max-w-sm px-6 text-center text-sm">
-			{#key tipIndex}
-				<p class="tip text-secondary-500">
-					<span class="text-primary font-semibold">{t('Did you know?')}</span>
-					{t(SPLASH_TIPS[tipIndex])}
-				</p>
-			{/key}
-		</div>
 		{#if version}
-			<span class="text-secondary-600 absolute bottom-4 text-xs">v{version}</span>
+			<span class="text-secondary-700 pointer-events-none absolute bottom-3 text-[10px]">
+				v{version}
+			</span>
 		{/if}
-	{/if}
-</div>
+	</div>
+{/if}
 
 <style>
-	.phase-label,
-	.tip {
+	.phase-label {
 		animation: phase-fade 0.35s ease-out;
 	}
 
-	.progress-fill {
-		transition: width 0.4s ease;
+	.loader {
+		--w: 10ch;
+		--c: var(--color-secondary-200);
+		width: var(--w);
+		overflow: hidden;
+		font-family: monospace;
+		font-size: 30px;
+		font-weight: bold;
+		line-height: 1.4em;
+		letter-spacing: var(--w);
+		white-space: nowrap;
+		color: #0000;
+		text-shadow:
+			calc(0 * var(--w)) 0 var(--c),
+			calc(-1 * var(--w)) 0 var(--c),
+			calc(-2 * var(--w)) 0 var(--c),
+			calc(-3 * var(--w)) 0 var(--c),
+			calc(-4 * var(--w)) 0 var(--c),
+			calc(-5 * var(--w)) 0 var(--c),
+			calc(-6 * var(--w)) 0 var(--c),
+			calc(-7 * var(--w)) 0 var(--c),
+			calc(-8 * var(--w)) 0 var(--c),
+			calc(-9 * var(--w)) 0 var(--c);
+		animation: loader-wave 2s infinite linear;
+	}
+
+	.loader::before {
+		content: 'Loading...';
+	}
+
+	@keyframes loader-wave {
+		9.09% {
+			text-shadow:
+				calc(0 * var(--w)) -10px var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		18.18% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) -10px var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		27.27% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) -10px var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		36.36% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) -10px var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		45.45% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) -10px var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		54.55% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) -10px var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		63.64% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) -10px var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		72.73% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) -10px var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		81.82% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) -10px var(--c),
+				calc(-9 * var(--w)) 0 var(--c);
+		}
+
+		90.91% {
+			text-shadow:
+				calc(0 * var(--w)) 0 var(--c),
+				calc(-1 * var(--w)) 0 var(--c),
+				calc(-2 * var(--w)) 0 var(--c),
+				calc(-3 * var(--w)) 0 var(--c),
+				calc(-4 * var(--w)) 0 var(--c),
+				calc(-5 * var(--w)) 0 var(--c),
+				calc(-6 * var(--w)) 0 var(--c),
+				calc(-7 * var(--w)) 0 var(--c),
+				calc(-8 * var(--w)) 0 var(--c),
+				calc(-9 * var(--w)) -10px var(--c);
+		}
 	}
 
 	@keyframes phase-fade {
@@ -200,12 +349,8 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		.phase-label,
-		.tip {
+		.loader {
 			animation: none;
-		}
-
-		.progress-fill {
-			transition: none;
 		}
 	}
 </style>

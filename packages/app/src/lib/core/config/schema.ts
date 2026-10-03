@@ -21,6 +21,15 @@ import { t } from '$lib/i18n';
  */
 export const SCHEMA_VERSION = 2;
 
+/** Last known main window bounds (physical pixels), restored after the splash. */
+export const windowBoundsSchema = z.object({
+	x: z.number(),
+	y: z.number(),
+	width: z.number(),
+	height: z.number(),
+	maximized: z.boolean().default(false)
+});
+
 export const appSettingsSchema = z
 	.object({
 		autostart: z.boolean().default(true),
@@ -28,7 +37,8 @@ export const appSettingsSchema = z
 		isStreamer: z.boolean().default(false),
 		locale: z.string().default(''),
 		companyOfHeroesConfigPath: z.string().default(''),
-		companyOfHeroesInstallationPath: z.string().default('')
+		companyOfHeroesInstallationPath: z.string().default(''),
+		window: windowBoundsSchema.nullable().catch(null).default(null)
 	})
 	.loose();
 
@@ -64,6 +74,7 @@ export const settingsSchema = z
 	.loose();
 
 export type AppSettings = z.infer<typeof appSettingsSchema> & { [key: string]: any };
+export type WindowBounds = z.infer<typeof windowBoundsSchema>;
 export type AccountSettings = z.infer<typeof accountSettingsSchema>;
 export type FeatureSlice = z.infer<typeof featureSliceSchema> & { [key: string]: unknown };
 export type Settings = z.infer<typeof settingsSchema>;

@@ -10,6 +10,7 @@
 	import { onMount } from 'svelte';
 	import { watch } from 'runed';
 	import { boot } from '$core/runtime/boot.svelte';
+	import { expandToMain } from '$core/runtime/window-bounds';
 	import { settings } from '$core/config/settings.svelte';
 	import {
 		defaultGameDirPath,
@@ -105,6 +106,7 @@
 	};
 
 	onMount(() => {
+		void expandToMain();
 		void detectPaths();
 	});
 

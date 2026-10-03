@@ -8,6 +8,7 @@ import { registerBrowserHandoffGlobal } from '$core/account/browser-handoff-glob
 import { game } from '$core/game/process.svelte';
 import { pocketbase } from '$core/pocketbase';
 import { resolveAppLocale, setLocale, t } from '$lib/i18n';
+import { expandToMain } from './window-bounds';
 
 export type BootPhase =
 	| 'idle'
@@ -81,6 +82,7 @@ export class Boot {
 
 		const target = this.returnTo ?? '/';
 		this.returnTo = null;
+		await expandToMain();
 		await goto(target);
 	}
 
@@ -226,8 +228,7 @@ export class Boot {
 			const outcome = await account.ensureAccount();
 
 			if (outcome.action === 'failed') {
-				this.serverUnavailable =
-					outcome.reason === 'error' && !(await this.isServerReachable());
+				this.serverUnavailable = outcome.reason === 'error' && !(await this.isServerReachable());
 				this.phase = 'error';
 				this.error =
 					outcome.reason === 'declined'

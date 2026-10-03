@@ -14,57 +14,199 @@
 				flex-direction: column;
 				align-items: center;
 				justify-content: center;
-				gap: 1.25rem;
+				gap: 1rem;
 				background: oklch(29% 0.003 285);
-				color: oklch(75% 0.004 285);
-				font-family:
-					system-ui,
-					-apple-system,
-					sans-serif;
-				font-size: 1rem;
-				font-weight: 600;
-			}
-
-			/* Empty slot where the animated logo draws in once Svelte mounts. */
-			#boot-splash .boot-splash-logo {
-				width: 96px;
-				height: 96px;
-			}
-
-			#boot-splash .boot-splash-status {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				gap: 0.75rem;
-				margin-top: 1.5rem;
 			}
 
 			#boot-splash .boot-splash-label {
 				margin: 0;
+				color: oklch(57% 0.006 285);
+				font-family:
+					system-ui,
+					-apple-system,
+					sans-serif;
+				font-size: 0.75rem;
+				font-weight: 600;
 			}
 
-			#boot-splash .boot-splash-track {
-				width: 13rem;
-				height: 3px;
-				border-radius: 9999px;
-				background: oklch(35% 0.004 285);
+			#boot-splash .boot-splash-loader {
+				--w: 10ch;
+				--c: oklch(84% 0.003 285);
+				width: var(--w);
+				overflow: hidden;
+				font-family: monospace;
+				font-size: 30px;
+				font-weight: bold;
+				line-height: 1.4em;
+				letter-spacing: var(--w);
+				white-space: nowrap;
+				color: #0000;
+				text-shadow:
+					calc(0 * var(--w)) 0 var(--c),
+					calc(-1 * var(--w)) 0 var(--c),
+					calc(-2 * var(--w)) 0 var(--c),
+					calc(-3 * var(--w)) 0 var(--c),
+					calc(-4 * var(--w)) 0 var(--c),
+					calc(-5 * var(--w)) 0 var(--c),
+					calc(-6 * var(--w)) 0 var(--c),
+					calc(-7 * var(--w)) 0 var(--c),
+					calc(-8 * var(--w)) 0 var(--c),
+					calc(-9 * var(--w)) 0 var(--c);
+				animation: boot-splash-wave 2s infinite linear;
 			}
 
-			#boot-splash .boot-splash-tip {
-				height: 3rem;
-				margin-top: 2.5rem;
+			#boot-splash .boot-splash-loader::before {
+				content: 'Loading...';
+			}
+
+			@keyframes boot-splash-wave {
+				9.09% {
+					text-shadow:
+						calc(0 * var(--w)) -10px var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				18.18% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) -10px var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				27.27% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) -10px var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				36.36% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) -10px var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				45.45% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) -10px var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				54.55% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) -10px var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				63.64% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) -10px var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				72.73% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) -10px var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				81.82% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) -10px var(--c),
+						calc(-9 * var(--w)) 0 var(--c);
+				}
+
+				90.91% {
+					text-shadow:
+						calc(0 * var(--w)) 0 var(--c),
+						calc(-1 * var(--w)) 0 var(--c),
+						calc(-2 * var(--w)) 0 var(--c),
+						calc(-3 * var(--w)) 0 var(--c),
+						calc(-4 * var(--w)) 0 var(--c),
+						calc(-5 * var(--w)) 0 var(--c),
+						calc(-6 * var(--w)) 0 var(--c),
+						calc(-7 * var(--w)) 0 var(--c),
+						calc(-8 * var(--w)) 0 var(--c),
+						calc(-9 * var(--w)) -10px var(--c);
+				}
 			}
 		</style>
 		%sveltekit.head%
 	</head>
 	<body class="overflow-hidden text-white">
 		<div id="boot-splash" aria-live="polite" aria-busy="true">
-			<div class="boot-splash-logo" aria-hidden="true"></div>
-			<div class="boot-splash-status">
-				<p class="boot-splash-label">Starting...</p>
-				<div class="boot-splash-track" aria-hidden="true"></div>
-			</div>
-			<div class="boot-splash-tip" aria-hidden="true"></div>
+			<div class="boot-splash-loader" aria-hidden="true"></div>
+			<p class="boot-splash-label">Starting...</p>
 		</div>
 		<div style="display: contents">%sveltekit.body%</div>
 		<script>
