@@ -499,7 +499,7 @@
 					{/if}
 
 					<div class="min-w-0 px-5 py-4">
-						<div class="mb-2.5">
+						<div class="mb-2.5 flex flex-wrap items-center gap-1">
 							{#if profileHref}
 								<Button href={profileHref} variant="secondary" size="sm" class="shrink-0">
 									{t('View profile')}
