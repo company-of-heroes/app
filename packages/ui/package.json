@@ -45,6 +45,7 @@
 		"./format/ranks": "./src/format/ranks.ts",
 		"./format/types": "./src/format/types.ts",
 		"./format/labels": "./src/format/labels.ts",
+		"./format/match-type": "./src/format/match-type.ts",
 		"./leaderboard": "./src/leaderboard/index.ts",
 		"./player": "./src/player/index.ts",
 		"./player/types": "./src/player/types.ts",

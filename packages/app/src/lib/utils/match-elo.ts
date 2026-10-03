@@ -1,3 +1,5 @@
+import { isRankedMatch } from '@company-of-heroes/ui/format/match-type';
+
 /** Ranked 1v1, 2v2, 3v3, 4v4 (including AT). */
 const RANKED_STANDARD_MATCH_TYPES = new Set([1, 2, 3, 4, 5, 6, 7]);
 const MATCH_TYPE_1V1 = 1;
@@ -34,7 +36,7 @@ function rankedPlayerCount(count: number): boolean {
 }
 
 export function isRankedStandardMatch(match: MatchEloSource): boolean {
-	if (!match.isRanked) {
+	if (!isRankedMatch(match.isRanked, match.result)) {
 		return false;
 	}
 

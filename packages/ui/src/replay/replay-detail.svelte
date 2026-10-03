@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { resource } from 'runed';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
@@ -13,6 +13,7 @@
 	import Comments from '../comment/comments.svelte';
 	import LikeButton from '../comment/like-button.svelte';
 	import { formatDate } from '../format/date';
+	import { isRankedMatch } from '../format/match-type';
 	import { normalizeMapName } from '../format/player-format';
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
@@ -26,6 +27,7 @@
 	import MemberReplayDetailHeader from './member-replay-detail-header.svelte';
 	import { loadReplayActionsAsync, parseReplayAsync } from './parse/parse-replay-async';
 	import ReplayActions from './replay-actions.svelte';
+	import ReplayAttachCallout from './replay-attach-callout.svelte';
 	import ReplayChat from './replay-chat.svelte';
 	import ReplayDetailHeader from './replay-detail-header.svelte';
 	import ReplayOverview from './replay-overview.svelte';
@@ -90,13 +92,16 @@
 	let errorMessage = $state('');
 	const replayData = $derived(replay as ReplayData | null);
 
+	// Keyed on the replay file, so refetching the match (e.g. when its result arrives) keeps the parse.
+	const replayKey = $derived(hasReplay ? `${match.id}:${match.replay ?? ''}` : '');
+
 	$effect(() => {
-		const current = match;
-		if (!(current.hasReplay ?? Boolean(current.replay))) {
+		if (!replayKey) {
 			loading = false;
 			return;
 		}
 
+		const current = untrack(() => match);
 		let cancelled = false;
 		loading = true;
 		errorMessage = '';
@@ -179,7 +184,9 @@
 			: normalizeMapName(match.map);
 	});
 	const isRanked = $derived(
-		replay && parsedPlayers ? replay.matchType === 'automatch' : match.isRanked
+		replay && parsedPlayers
+			? replay.matchType === 'automatch'
+			: isRankedMatch(match.isRanked, match.result)
 	);
 	const durationSeconds = $derived(
 		replay?.duration && replay.duration > 0 ? replay.duration : matchDurationSeconds(match)
@@ -199,7 +206,7 @@
 		isRanked ? (match.title ?? '') : match.result?.description || match.title || '—'
 	);
 	const gameMode = $derived(isRanked ? t('Ranked') : t('Custom match'));
-	const statusPending = $derived(!!match.needsResult && !hasReplay);
+	const statusPending = $derived(!!match.needsResult);
 	const isPro = $derived(isProGameplayMatch(match));
 	const submittedBy = $derived(match.submittedBy ?? null);
 	const submittedByHref = $derived(
@@ -479,6 +486,9 @@
 {/snippet}
 
 {#if !hasReplay || (errorMessage && match.players.length > 0)}
+	{#if !hasReplay && !isMember}
+		<ReplayAttachCallout {match} />
+	{/if}
 	{#if errorMessage}
 		<p class="text-secondary-400 px-4 py-3 text-sm">
 			{errorMessage}

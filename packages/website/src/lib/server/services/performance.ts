@@ -38,8 +38,10 @@ export class PerformanceService extends Service {
 	}
 
 	/**
-	 * The signed-in user's record: their Steam accounts, plus `profileId` when it
-	 * belongs to one of them (or the account has no Steam ids linked yet).
+	 * The signed-in user's record for `profileId` when it is one of their accounts (or the
+	 * account has no Steam ids linked yet). Other linked Steam accounts (a shared PC, a
+	 * second account) do not count; only when the profile is not provably theirs do all
+	 * their Steam accounts.
 	 */
 	private ofUser(userId: string, profileId: number): Task<PlayerPerformance> {
 		return cached(`performance:user:${userId}:${profileId}`, CACHE_SECONDS, () =>
@@ -49,10 +51,11 @@ export class PerformanceService extends Service {
 			)
 				.andThen((user) => {
 					const steamIds = Array.isArray(user.steamIds) ? user.steamIds.map(String) : [];
-					return this.profileBelongsTo(profileId, steamIds).map((profileIsMine) => [
-						...steamIds.map((steamId) => this.pb.filter('steam_id = {:steamId}', { steamId })),
-						...(profileIsMine ? [this.pb.filter('profile_id = {:profileId}', { profileId })] : [])
-					]);
+					return this.ownsProfile(profileId, steamIds).map((profileIsMine) =>
+						profileIsMine
+							? [this.pb.filter('profile_id = {:profileId}', { profileId })]
+							: steamIds.map((steamId) => this.pb.filter('steam_id = {:steamId}', { steamId }))
+					);
 				})
 				.andThen((identity) =>
 					identity.length > 0 ? this.rowsFor(identity.join(' || ')) : okAsync([])
@@ -62,7 +65,7 @@ export class PerformanceService extends Service {
 	}
 
 	/** Whether the profile's stored Steam id is one of these (any profile counts without Steam ids). */
-	private profileBelongsTo(profileId: number, steamIds: string[]): Task<boolean> {
+	ownsProfile(profileId: number, steamIds: string[]): Task<boolean> {
 		if (steamIds.length === 0) {
 			return okAsync(true);
 		}

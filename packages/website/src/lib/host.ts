@@ -1,4 +1,4 @@
-import { afterNavigate, goto, replaceState } from '$app/navigation';
+import { afterNavigate, goto, invalidateAll, replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
 import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
@@ -20,6 +20,7 @@ import {
 import { pickOwnedSteamId } from '@company-of-heroes/api';
 import { getPlayerElo, getPlayerPreview } from '$lib/remote/player-preview.remote';
 import {
+	attachMatchReplay,
 	previewMemberReplayRatings,
 	publishMatchAsMemberReplay,
 	deleteMemberReplay,
@@ -179,6 +180,11 @@ export function provideWebsiteHost(): HostContext {
 					});
 					markReplayDownload(match.id);
 					return result.counted ? { downloadCount: (match.downloadCount ?? 0) + 1 } : undefined;
+				},
+				attach: async (lobbyId, file, durationSeconds) => {
+					const result = await attachMatchReplay({ lobbyId, file, durationSeconds });
+					await invalidateAll();
+					return result;
 				},
 				loadMatchForPublish: async (lobbyId) => {
 					// Ownership / already-published checks run in the upload page load.

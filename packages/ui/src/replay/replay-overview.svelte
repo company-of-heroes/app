@@ -332,10 +332,13 @@
 						profile: { profile_id: 0, alias: player.name }
 					})
 				: null))}
-	{@const elo = result ? displayElo(result) : null}
-	{@const change = result ? ratingDelta(result) : undefined}
-	{@const race = result?.race_id ?? lobby?.race ?? raceFromReplayFaction(player.faction)}
 	{@const liveStats = live?.stats ?? liveStatsForReplay(player)}
+	{@const elo = result ? displayElo(result) : (liveStats?.elo ?? null)}
+	{@const change = result ? ratingDelta(result) : undefined}
+	{@const record = result
+		? { wins: result.wins ?? 0, losses: result.losses ?? 0, streak: result.streak ?? 0 }
+		: (liveStats ?? null)}
+	{@const race = result?.race_id ?? lobby?.race ?? raceFromReplayFaction(player.faction)}
 	{@const banner = doctrineBannerUrl(player)}
 	{@const country = result?.country ?? live?.country ?? null}
 	{@const flagUrl = host.resolve.flagImageUrl(country)}
@@ -412,29 +415,29 @@
 					{#if !cpu}
 						{@render rankBadge(race ?? 0, liveStats?.rankLevel)}
 					{/if}
-					{#if result}
+					{#if record}
 						<span class="text-secondary-600" aria-hidden="true">·</span>
 						<span class="inline-flex items-center gap-1">
-							<span class={statWins}>{result.wins ?? 0}</span>
+							<span class={statWins}>{record.wins}</span>
 							<span class="text-secondary-500">/</span>
-							<span class={statLosses}>{result.losses ?? 0}</span>
+							<span class={statLosses}>{record.losses}</span>
 						</span>
-						{#if result.streak}
+						{#if record.streak}
 							<span class="text-secondary-600" aria-hidden="true">·</span>
 							<span
-								class={result.streak > 0
+								class={record.streak > 0
 									? 'text-green-300'
-									: result.streak < 0
+									: record.streak < 0
 										? 'text-red-300'
 										: 'text-secondary-400'}
 							>
-								{formatStreak(result.streak)}
+								{formatStreak(record.streak)}
 							</span>
 						{/if}
 					{/if}
 				</div>
 			</div>
-			{#if result}
+			{#if result || elo != null}
 				<div class="flex shrink-0 items-center gap-2.5 tabular-nums">
 					{#if change !== undefined}
 						<span class="inline-flex items-center gap-0.5 text-sm">

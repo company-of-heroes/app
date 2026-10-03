@@ -45,6 +45,10 @@ export type {
 export const REPLAYS_PER_PAGE = 30;
 export const HOME_RECENT_MATCHES = 10;
 export const HOME_RECENT_MEMBER_UPLOADS = 10;
+/** Spotlight cards on the home and replays pages. */
+export const TOP_REPLAYS = 4;
+/** Window of the "top replays" spotlight. */
+export const TOP_REPLAYS_DAYS = 7;
 
 export type ReplaysListTab = 'community' | 'member' | 'mine';
 
@@ -177,6 +181,7 @@ export type CommunityMatchDetail = {
 	roster?: unknown[];
 	memberReplayId?: string | null;
 	canPublish?: boolean;
+	canAttachReplay?: boolean;
 };
 
 const SORT_FIELDS = new Set<HistorySortField>([
@@ -345,6 +350,11 @@ export function replaysHref(query: ReplaysQuery, tab: ReplaysListTab = 'communit
 
 	const search = params.toString();
 	return search ? `/replays?${search}` : '/replays';
+}
+
+/** Upload page, or login first (it returns to the upload page) when signed out. */
+export function uploadReplayPath(signedIn: boolean): string {
+	return signedIn ? '/replays/upload' : `/login?redirect=${encodeURIComponent('/replays/upload')}`;
 }
 
 export function recentMemberQuery(): ReplaysQuery {

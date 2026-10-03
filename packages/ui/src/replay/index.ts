@@ -1,6 +1,8 @@
 import ReplayChat from './replay-chat.svelte';
 import ReplayActions from './replay-actions.svelte';
 import ReplayList from './replay-list.svelte';
+import ReplayCard from './replay-card.svelte';
+import ReplayCardSkeleton from './replay-card-skeleton.svelte';
 import ReplayOverview from './replay-overview.svelte';
 import ReplayTabs from './replay-tabs.svelte';
 import ReplayListSkeleton from './replay-list-skeleton.svelte';
@@ -22,6 +24,8 @@ export {
 	ReplayChat as Chat,
 	ReplayActions as Actions,
 	ReplayList as List,
+	ReplayCard as Card,
+	ReplayCardSkeleton as CardSkeleton,
 	ReplayOverview as Overview,
 	ReplayTabs as Tabs,
 	ReplayListSkeleton as ListSkeleton,

@@ -13,7 +13,8 @@
 		match.modeLabel ||
 			getMatchModeLabel({
 				players: match.players,
-				isRanked: match.isRanked
+				isRanked: match.isRanked,
+				result: match.result
 			} as MatchExpanded)
 	);
 </script>

@@ -12,10 +12,12 @@
 		Sort
 	} from '@company-of-heroes/ui/replay';
 	import ReplayFilters from '$lib/components/replay/replay-filters.svelte';
+	import TopReplays from '$lib/components/replay/top-replays.svelte';
 	import {
 		REPLAYS_PER_PAGE,
 		rememberReplaysListHref,
 		replaysHref,
+		uploadReplayPath,
 		type HistorySortField,
 		type ReplaysListTab,
 		type ReplaysQuery
@@ -38,11 +40,7 @@
 	const canonical = $derived(`${SITE_URL}${href(replaysHref(query, tab))}`);
 	const user = $derived(page.data.user);
 	const mySteamIds = $derived(meSteamIds(user));
-	const uploadHref = $derived(
-		user
-			? href('/replays/upload')
-			: href(`/login?redirect=${encodeURIComponent('/replays/upload')}`)
-	);
+	const uploadHref = $derived(href(uploadReplayPath(!!user)));
 	const filtersActive = $derived(query.filter != null);
 
 	const tabs = $derived.by(() => {
@@ -140,10 +138,6 @@
 	<div>
 		<div class="border-secondary-800 flex flex-wrap items-center gap-3 border-b px-4 py-2.5">
 			<h1 class="font-heading text-xl font-bold text-white">{t('Replays')}</h1>
-			<Button href={uploadHref} variant="primary" size="sm">
-				<UploadSimpleIcon class="size-4" />
-				{t('Upload replay')}
-			</Button>
 		</div>
 		<ReplaySectionTabs {tabs} active={tab}>
 			{#snippet trailing()}
@@ -192,6 +186,13 @@
 	</div>
 
 	<div class="min-w-0 flex-1 overflow-x-hidden">
+		{#if data.topReplays && !switching}
+			{#await data.topReplays}
+				<TopReplays matches={[]} loading variant="strip" />
+			{:then topReplays}
+				<TopReplays matches={topReplays} variant="strip" />
+			{/await}
+		{/if}
 		{#if switching}
 			{@render listSkeleton()}
 		{:else if data.result}

@@ -130,21 +130,22 @@ export function titleFromLive(
 	live: Pick<LivePublish, 'matchType' | 'players' | 'isRanked'>
 ): string {
 	const matchType = live.matchType;
-	if (matchType !== undefined && matchType >= 1 && matchType <= 4) {
-		return `${matchType} VS. ${matchType}`;
-	}
-
 	if (matchType === 14) {
 		return 'Skirmish';
 	}
 
-	const humans = live.players.filter((player) => Number(player.playerId) > 0).length;
-	if (humans >= 2) {
-		const side = Math.max(1, Math.floor(humans / 2));
-		return `${side} VS. ${side}`;
+	// Custom games are Basic Matches; only automatch games get a "N VS. N" ladder title.
+	if (!live.isRanked || matchType === 0) {
+		return 'Basic Match';
 	}
 
-	return live.isRanked ? 'Basic Match' : 'Custom Game';
+	if (matchType !== undefined && matchType >= 1 && matchType <= 4) {
+		return `${matchType} VS. ${matchType}`;
+	}
+
+	const humans = live.players.filter((player) => Number(player.playerId) > 0).length;
+	const side = Math.max(1, Math.floor(humans / 2));
+	return `${side} VS. ${side}`;
 }
 
 /** Keeps "<name>.rec" (safe characters only); anything else becomes "replay.rec". */

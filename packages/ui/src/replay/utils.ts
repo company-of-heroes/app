@@ -5,6 +5,7 @@ import type {
 	MatchResultPlayer,
 	ReplayPlayer
 } from './types';
+import { isRankedMatch } from '../format/match-type';
 import { getModeLabel } from '../format/player-format';
 import { getLiveLobbyMatchTypeId } from '../live-lobby/slim';
 
@@ -137,7 +138,7 @@ export function matchModeLabel(match: CommunityMatch | CommunityMatchDetail): st
 			match.players.map((player) => ({
 				playerId: player.playerId ?? 0
 			})),
-			match.isRanked,
+			isRankedMatch(match.isRanked, match.result),
 			matchType
 		)
 	);
@@ -168,7 +169,7 @@ function rankedPlayerCount(count: number): boolean {
 }
 
 export function isRankedStandardMatch(match: CommunityMatch | CommunityMatchDetail): boolean {
-	if (!match.isRanked) {
+	if (!isRankedMatch(match.isRanked, match.result)) {
 		return false;
 	}
 

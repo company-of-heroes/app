@@ -432,6 +432,10 @@ export class LogSession extends Emittery<SessionEvents> {
 			lobby.sessionId = syntheticReplaySessionId(lobby.startedAt);
 		}
 
+		// A Matchinfo session id belongs to one match. When "APP -- Game Stop" is missed and the
+		// next game logs no new id, keeping it would file that game under this match's result.
+		this.sessionId = null;
+
 		const profileIds = lobby.getPlayerIds().filter((id) => id > 0);
 		lobby.started = true;
 
@@ -524,6 +528,8 @@ export class LogSession extends Emittery<SessionEvents> {
 		this.lobby = undefined;
 		this.sessionId = null;
 		this.#didEnrichLiveHistory = false;
+		this.#pendingAutomatchType = null;
+		this.#pendingGameSetupType = null;
 		this.#clearReplayBuffer();
 	}
 

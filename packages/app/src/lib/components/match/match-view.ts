@@ -2,6 +2,7 @@ import type { LobbyPlayer, Match as LobbyMatch } from '@fknoobs/app';
 import type { Player as ReplayPlayer } from '@fknoobs/replay-parser';
 import type { LiveLobby, LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
 import { isOccupiedLiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
+import { isRankedMatch } from '@company-of-heroes/ui/format/match-type';
 import { toMatchListRowFromLiveLobby } from '@company-of-heroes/ui/match';
 import type { MatchExpanded } from '$core/app/database/matches';
 import type { ReplaysExpanded } from '$core/app/database/replays';
@@ -145,7 +146,7 @@ export function fromMatchExpanded(match: MatchExpanded): MatchView {
 		durationSeconds,
 		result: match.result,
 		title: match.title,
-		isRanked: match.isRanked,
+		isRanked: isRankedMatch(match.isRanked, match.result),
 		needsResult: match.needsResult,
 		sessionId: match.sessionId,
 		lobbyId: match.id,

@@ -174,4 +174,6 @@ export type CommunityMatchDetail = {
 	memberReplayId?: string | null;
 	/** Only true for the uploader. */
 	canPublish?: boolean;
+	/** The viewer played this match and may attach its missing replay. */
+	canAttachReplay?: boolean;
 };

@@ -42,6 +42,7 @@ const querySchema = z.object({
 		})
 		.pipe(filterAstSchema.nullable()),
 	profileId: z.coerce.number().int().positive().optional().catch(undefined),
+	profileOnly: z.stringbool().catch(false),
 	includeSkirmish: z.stringbool().catch(false),
 	sort: z.enum(['createdAt', 'likeCount', 'downloadCount', 'commentCount']).catch('createdAt'),
 	sortDir: z.enum(['asc', 'desc']).catch('desc'),
@@ -123,6 +124,7 @@ export const GET = handle(({ url, locals }) =>
 				perPage: query.perPage,
 				filter: filterFrom(query),
 				profileId: query.profileId,
+				profileOnly: query.profileOnly,
 				includeSkirmish: query.includeSkirmish,
 				sort: query.sort,
 				sortDir: query.sortDir

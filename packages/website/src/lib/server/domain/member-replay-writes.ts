@@ -1,3 +1,4 @@
+import { resultMatchTypeId } from '@company-of-heroes/ui/format/match-type';
 import { z } from 'zod';
 import {
 	matchTypeFromPlayerCount,
@@ -56,7 +57,7 @@ export const publishFromMatchSchema = z.object({
 });
 export type PublishFromMatch = z.infer<typeof publishFromMatchSchema>;
 
-const FACTIONS = ['allies', 'axis', 'allies_commonwealth', 'axis_panzerelite'];
+const FACTIONS = ['allies', 'axis', 'allies_commonwealth', 'axis_panzer_elite'];
 
 type MatchResult = {
 	matchtype_id?: number;
@@ -115,8 +116,10 @@ export function snapshotFromResult(
 		return null;
 	}
 
+	// Relic's type wins, including 0 (Basic Match); the player count is only a fallback.
+	const matchtypeId = resultMatchTypeId(result);
 	return {
-		matchtype_id: Number(result.matchtype_id) || matchTypeFromPlayerCount(players.length, isRanked),
+		matchtype_id: matchtypeId ?? matchTypeFromPlayerCount(players.length, isRanked),
 		startgametime: Number(result.startgametime) || 0,
 		completiontime: Number(result.completiontime) || Math.max(durationInSeconds, 0),
 		players: players.map((player, i) => ({
@@ -143,7 +146,10 @@ export function alignSnapshotToRoster(
 	snapshot: StatsSnapshot,
 	roster: ReplayRosterPlayer[]
 ): StatsSnapshot | null {
-	const key = (value: unknown) => String(value ?? '').trim().toLowerCase();
+	const key = (value: unknown) =>
+		String(value ?? '')
+			.trim()
+			.toLowerCase();
 	const players = roster.map((player) => {
 		const steamId = normalizeSteamId(player.steamId);
 		const name = key(player.name || player.alias);

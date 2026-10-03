@@ -2,7 +2,9 @@ import {
 	HOME_RECENT_MATCHES,
 	HOME_RECENT_MEMBER_UPLOADS,
 	recentCommunityQuery,
-	recentMemberQuery
+	recentMemberQuery,
+	TOP_REPLAYS,
+	TOP_REPLAYS_DAYS
 } from '$lib/replays';
 import type { Task } from '$lib/server/result';
 import { historyInputFromQuery } from '$lib/server/services/match-history';
@@ -28,6 +30,9 @@ function section<T>(items: Task<T[]>): Promise<SectionResult<T>> {
 export const load: PageServerLoad = ({ locals }) => {
 	return {
 		liveLobbies: section(locals.services.liveLobbies.list()),
+		topReplays: section(
+			locals.services.replays.top({ days: TOP_REPLAYS_DAYS, limit: TOP_REPLAYS })
+		),
 		recentMatches: section(
 			locals.services.matchHistory
 				.list(historyInputFromQuery(recentCommunityQuery(), 'community', HOME_RECENT_MATCHES), null)

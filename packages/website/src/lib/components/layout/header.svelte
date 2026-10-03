@@ -7,9 +7,11 @@
 	import LocaleSwitcher from '$lib/components/layout/locale-switcher.svelte';
 	import MobileNav from '$lib/components/layout/mobile-nav.svelte';
 	import { cn } from '$lib/utils/cn';
-	import { rememberedReplaysListHref } from '$lib/replays';
+	import { Button } from '@company-of-heroes/ui/button';
+	import { rememberedReplaysListHref, uploadReplayPath } from '$lib/replays';
 	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
 	import { interactive } from '$lib/utils/variants';
+	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 
 	const { t } = useI18n();
 
@@ -21,6 +23,7 @@
 	]);
 
 	let replaysListHref = $state('/replays');
+	const uploadHref = $derived(href(uploadReplayPath(!!page.data.user)));
 
 	afterNavigate(() => {
 		replaysListHref = rememberedReplaysListHref();
@@ -88,6 +91,12 @@
 	</nav>
 
 	<div class="border-secondary-800 ms-auto flex shrink-0 items-stretch border-l sm:ms-0">
+		<div class="border-secondary-800 hidden h-full items-center border-r px-3 sm:flex">
+			<Button href={uploadHref} variant="primary" size="sm" class="px-3" title={t('Upload replay')}>
+				<UploadSimpleIcon class="size-4" />
+				<span class="hidden lg:inline">{t('Upload replay')}</span>
+			</Button>
+		</div>
 		<div class="border-secondary-800 hidden h-full items-stretch border-r sm:flex">
 			<LocaleSwitcher />
 		</div>

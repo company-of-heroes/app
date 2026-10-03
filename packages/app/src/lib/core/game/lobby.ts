@@ -138,6 +138,59 @@ export function replayHeaderMatchesLobby(
 	);
 }
 
+type RosterPlayer = {
+	race: number;
+	name?: string;
+	steamId?: string;
+	profile?: { alias?: string };
+};
+
+function steamDigits(value: string | undefined): string {
+	return value?.match(/\d{17}/)?.[0] ?? '';
+}
+
+function nameKey(value: string | undefined): string {
+	return value?.trim().toLowerCase() ?? '';
+}
+
+/**
+ * Whether the rec was played by the lobby's players (by Steam id, else name): map and
+ * factions alone also match another game on the same map. Players without a usable name
+ * or Steam id are skipped; when no player has one, map and factions decide.
+ */
+export function replayRosterMatches(
+	lobbyPlayers: RosterPlayer[],
+	recPlayers: ReplayHeaderPlayer[]
+): boolean {
+	const recSteamIds = new Set(recPlayers.map((player) => steamDigits(player.steamId)));
+	const recNames = new Set(recPlayers.map((player) => nameKey(player.name)));
+	let known = 0;
+	let found = 0;
+	for (const player of lobbyPlayers) {
+		const steamId = steamDigits(player.steamId);
+		const name = nameKey(
+			isPlaceholderPlayerName(player.name) ? player.profile?.alias : player.name
+		);
+		if (!steamId && !name) {
+			continue;
+		}
+
+		known++;
+		if ((steamId && recSteamIds.has(steamId)) || (name && recNames.has(name))) {
+			found++;
+		}
+	}
+	return known === 0 || found * 2 >= known;
+}
+
+/** A rec to attach to a saved match: same map, factions and players. */
+export function replayBelongsToLobby(
+	lobby: { map?: string; players: RosterPlayer[] },
+	rec: { mapFileName: string; players: ReplayHeaderPlayer[] }
+): boolean {
+	return replayHeaderMatchesLobby(lobby, rec) && replayRosterMatches(lobby.players, rec.players);
+}
+
 /** Copies rec names onto log placeholder slots, matching race then index. */
 export function assignReplayNames(
 	lobbyPlayers: { index: number; race: number; name?: string; steamId?: string }[],

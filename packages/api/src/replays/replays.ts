@@ -581,23 +581,27 @@ export class ReplaysApi {
 
 	/** Resolve a public replay id as a community match or member upload. */
 	getAny(id: string, options?: ReplayAuthOptions): ResultAsync<CommunityMatchDetail, ApiError> {
-		const fulfill = (result: ResultAsync<CommunityMatchDetail, ApiError>) =>
-			result.match(
-				(value) => Promise.resolve(value),
-				(error) => Promise.reject(error)
-			);
-
-		// Race both lookups so member ids are not delayed by a community 404 first.
-		return ResultAsync.fromPromise(
-			Promise.any([fulfill(this.get(id, options)), fulfill(this.getMember(id, options))]),
-			(reason) => {
-				if (reason instanceof AggregateError) {
-					const errors = reason.errors as ApiError[];
-					return errors.find((error) => error.status !== 404) ?? errors[0]!;
+		// The server tries both, so the other kind's 404 never reaches the browser console.
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/replays/${encodeURIComponent(id)}`, {
+			fallback: 'Failed to load this replay. Please try again later.',
+			schema: communityMatchDetailSchema,
+			init: {
+				headers: resolveAuthHeaders(this.deps, options?.headers)
+			},
+			onStatus: (status) => {
+				if (status === 404) {
+					return apiError(404, 'That replay is not available.');
 				}
-
-				return (reason as ApiError) ?? apiError(404, 'That replay is not available.');
 			}
+		}).map((match) =>
+			match.kind === 'member'
+				? { ...match, hasReplay: true }
+				: {
+						...match,
+						kind: 'match' as const,
+						hasReplay: match.hasReplay ?? Boolean(match.replay),
+						needsResult: match.needsResult === true
+					}
 		);
 	}
 

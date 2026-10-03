@@ -6,6 +6,7 @@ import { sameJson } from '../domain/json';
 import { publicRecord } from '../domain/public-record';
 import {
 	deriveLobby,
+	TRANSLATED_TITLES,
 	type IndexRow,
 	type LobbyDerivation,
 	type StoredLobby
@@ -66,9 +67,31 @@ function changedColumns(
 	);
 }
 
+const SETTLED_FIELDS = new Set(['players', 'map', 'isRanked']);
+
+/**
+ * What the owner may change. Once Relic's result is in, the players, map and ranked flag
+ * are settled: a late write (e.g. from the next game under a stale session id) must not
+ * pair another game's roster with this result.
+ */
+function ownerFields(
+	lobby: LobbyRecord,
+	fields: Omit<LobbyUpdate, 'needsResult'>
+): Partial<LobbyUpdate> {
+	if (!lobby.result) {
+		return fields;
+	}
+
+	return Object.fromEntries(Object.entries(fields).filter(([key]) => !SETTLED_FIELDS.has(key)));
+}
+
 const matchNotFound = () => notFound('Match not found.');
 /** Duplicate sessions merged per scheduled run. */
 const MERGE_BATCH = 10;
+/** Duplicate sessions looked at per run, so sessions that keep failing do not block the rest. */
+const MERGE_SCAN = 100;
+/** Lobbies re-derived per `reprocessStale` run. */
+const REPROCESS_BATCH = 50;
 
 function checkReplay(upload: ReplayUpload): Result<void, AppError> {
 	if (upload.file.size < MIN_REPLAY_BYTES) {
@@ -358,37 +381,80 @@ export class LobbiesService extends Service {
 		);
 	}
 
+	/** Merges sessions in order until `MERGE_BATCH` succeeded; failures are logged and skipped. */
+	private mergeSessions(sessionIds: number[], merged = 0): Task<number> {
+		const [sessionId, ...rest] = sessionIds;
+		if (sessionId === undefined || merged >= MERGE_BATCH) {
+			return okAsync(merged);
+		}
+
+		return this.mergeSession(sessionId)
+			.map(() => 1)
+			.orElse((error) => {
+				console.error(`[lobbies] could not merge session ${sessionId}`, error);
+				return okAsync(0);
+			})
+			.andThen((n) => this.mergeSessions(rest, merged + n));
+	}
+
 	/**
-	 * Scheduled: Relic sessions with more than one lobby are merged into their oldest.
-	 * A session that fails is logged and skipped, so it cannot hold up the others.
+	 * Scheduled: re-derives finished lobbies whose stored ranked
+	 * flag or title disagrees with Relic's result (Basic Matches saved as ranked or titled
+	 * "2 VS. 2", titles saved translated). A processed lobby no longer matches the filter.
+	 */
+	reprocessStale(): Task<{ processed: number; more: boolean }> {
+		const translated = [...TRANSLATED_TITLES.keys()].map((title) =>
+			this.pb.filter('title = {:title}', { title })
+		);
+		const filter = [
+			'(needsResult = false && result != null && (',
+			'(isRanked = true && (matchtypeId = 0 || matchtypeId >= 8)) ||',
+			'(isRanked = false && matchtypeId >= 1 && matchtypeId <= 7) ||',
+			"(isRanked = false && (title = '1 VS. 1' || title = '2 VS. 2' || title = '3 VS. 3' || title = '4 VS. 4'))",
+			`)) || ${translated.join(' || ')}`
+		].join(' ');
+		return fromPb(
+			this.lobbies.getList<{ id: string }>(1, REPROCESS_BATCH, {
+				filter,
+				sort: 'id',
+				fields: 'id'
+			}),
+			'Could not load matches'
+		).andThen((rows) =>
+			sequence(rows.items, (row) => this.process(row.id)).map(() => ({
+				processed: rows.items.length,
+				more: rows.totalItems > rows.items.length
+			}))
+		);
+	}
+
+	/**
+	 * Scheduled: Relic sessions with more than one lobby are merged into their oldest,
+	 * newest sessions first. A session that keeps failing is skipped, so it cannot hold
+	 * up the others.
 	 */
 	mergeDuplicates(): Task<{ processed: number; more: boolean }> {
 		return fromPb(
 			this.pb
 				.collection('lobby_session_duplicates')
-				.getList<{ id: string }>(1, MERGE_BATCH, { sort: 'id', skipTotal: true }),
+				.getList<{ id: string }>(1, MERGE_SCAN, { sort: '-id', skipTotal: true }),
 			'Could not load duplicate matches'
-		).andThen((rows) => {
-			const sessionIds = rows.items.map((row) => Number(row.id)).filter((id) => id > 0);
-			return sequence(sessionIds, (sessionId) =>
-				this.mergeSession(sessionId)
-					.map(() => 1)
-					.orElse((error) => {
-						console.error(`[lobbies] could not merge session ${sessionId}`, error);
-						return okAsync(0);
-					})
-			).map((merged) => ({
-				processed: merged.reduce<number>((sum, n) => sum + n, 0),
-				more: false
-			}));
-		});
+		).andThen((rows) =>
+			this.mergeSessions(rows.items.map((row) => Number(row.id)).filter((id) => id > 0)).map(
+				(processed) => ({ processed, more: processed >= MERGE_BATCH })
+			)
+		);
 	}
 
 	/**
 	 * The owner, or a player in the match by one of the user's Steam ids. A lobby without
 	 * players yet also accepts someone who is in `players` (what they report).
 	 */
-	isParticipant(lobby: LobbyRecord, userId: string, players?: unknown): Task<boolean> {
+	isParticipant(
+		lobby: Pick<LobbyRecord, 'user' | 'players'>,
+		userId: string,
+		players?: unknown
+	): Task<boolean> {
 		if (lobby.user === userId) {
 			return okAsync(true);
 		}
@@ -468,7 +534,7 @@ export class LobbiesService extends Service {
 					const owner = lobby.user === userId;
 					const skirmish = (fields.title ?? lobby.title) === 'Skirmish';
 					const patch: Record<string, unknown> = {
-						...(owner ? fields : missingLobbyFields(lobby, fields)),
+						...(owner ? ownerFields(lobby, fields) : missingLobbyFields(lobby, fields)),
 						...(owner && needsResult === false && skirmish ? { needsResult: false } : {}),
 						...(owner && needsResult === true && !lobby.needsResult && !lobby.result
 							? { needsResult: true, hasFailed: false, resultAttempts: 0 }

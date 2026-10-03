@@ -1,5 +1,11 @@
 import type { MatchExpanded } from '$core/app/database/matches';
-import { replayHeaderMatchesLobby, type Match, type ReplayHeaderPlayer } from '$core/game/lobby';
+import {
+	MATCH_TYPES,
+	replayBelongsToLobby,
+	replayHeaderMatchesLobby,
+	type Match,
+	type ReplayHeaderPlayer
+} from '$core/game/lobby';
 import { app } from '$core/app/context';
 import { account } from '$core/account';
 import { Feature } from '../feature.svelte';
@@ -111,6 +117,8 @@ export class History extends Feature<HistorySettings> {
 					return;
 				}
 
+				// A new game overwrites temp.rec, so the previous game's pending replay is gone too.
+				this.#clearPendingSessionId();
 				this.#setPendingSessionId(match.sessionId);
 				void this.#harvestPlayerRatings(match);
 				this.#startLiveReplayPolling();
@@ -183,7 +191,7 @@ export class History extends Feature<HistorySettings> {
 
 			if (local.replay) {
 				if (
-					!replayHeaderMatchesLobby(
+					!replayBelongsToLobby(
 						{ map: existing.map, players: existing.players ?? [] },
 						{
 							mapFileName: local.replay.mapFileName,
@@ -279,7 +287,7 @@ export class History extends Feature<HistorySettings> {
 			}
 
 			if (
-				!replayHeaderMatchesLobby(
+				!replayBelongsToLobby(
 					{ map: lobby.map, players: lobby.players },
 					{
 						mapFileName: local.replay.mapFileName,
@@ -384,7 +392,8 @@ export class History extends Feature<HistorySettings> {
 			const needsResult = !lobby.isSkirmish;
 			const payload = {
 				isRanked: lobby.isRanked,
-				title: lobby.type,
+				// Untranslated: the server compares it (e.g. "Skirmish").
+				title: MATCH_TYPES[lobby.matchType] ?? 'Custom Game',
 				map: lobby.map || 'Unknown',
 				needsResult,
 				players,
@@ -406,7 +415,7 @@ export class History extends Feature<HistorySettings> {
 					// Unparsed temp.rec — leave pending so recovery can retry with a header match.
 					console.warn('[HISTORY]: skipping replay attach without parsed header');
 				} else if (
-					!replayHeaderMatchesLobby(
+					!replayBelongsToLobby(
 						{ map: lobby.map, players: lobby.players },
 						{
 							mapFileName: parsedReplay.mapFileName,

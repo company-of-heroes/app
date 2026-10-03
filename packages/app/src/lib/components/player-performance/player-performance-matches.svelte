@@ -61,6 +61,9 @@
 			scope,
 			userId: userId ?? undefined,
 			profileId,
+			// Same games the totals count: this profile only, ranked unless a mode was picked.
+			profileOnly: scope === 'user',
+			ranked: matchtypes.length === 0,
 			maps,
 			races: races.map(String),
 			matchtypes,

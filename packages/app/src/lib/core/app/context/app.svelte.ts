@@ -129,6 +129,8 @@ export class AppContext extends Emittery<AppEvents> {
 	#liveLobbyGeneration = 0;
 	/** Emits `lobby.saved` once when the server hook links a durable lobby id. */
 	#durableLobbyEmittedKey: string | null = null;
+	#liveUpsertInFlight = false;
+	#liveUpsertPending: Match | null = null;
 	/** True once the game process has been seen running this session. */
 	#hadGameRunning = false;
 	/** Last published `game.lobby.joined` match key (once per match). */
@@ -491,6 +493,7 @@ export class AppContext extends Emittery<AppEvents> {
 		// Invalidate in-flight upserts from a previous lobby without deleting the new row.
 		this.#liveLobbyGeneration += 1;
 		this.#durableLobbyEmittedKey = null;
+		this.#liveUpsertPending = null;
 		this.#stopLiveLobbyHeartbeat();
 
 		console.log('lobby started', match);
@@ -647,6 +650,14 @@ export class AppContext extends Emittery<AppEvents> {
 	 * `lobbies` row and sets `lobby` on the live record — client does not.
 	 */
 	#upsertLiveLobby(match: Match) {
+		// One request at a time, the newest match last: the burst at match start (per Steam
+		// slot, race change, profile enrichment) let the server create the durable lobby twice.
+		if (this.#liveUpsertInFlight) {
+			this.#liveUpsertPending = match;
+			return;
+		}
+
+		this.#liveUpsertInFlight = true;
 		const generation = this.#liveLobbyGeneration;
 		this.database.lobbiesLive
 			.setLobby(match)
@@ -676,13 +687,22 @@ export class AppContext extends Emittery<AppEvents> {
 					sessionId: match.sessionId
 				} as MatchExpanded);
 			})
-			.catch((error) => console.warn('[APP]: lobbies_live upsert failed:', error));
+			.catch((error) => console.warn('[APP]: lobbies_live upsert failed:', error))
+			.finally(() => {
+				this.#liveUpsertInFlight = false;
+				const next = this.#liveUpsertPending;
+				this.#liveUpsertPending = null;
+				if (next) {
+					this.#upsertLiveLobby(next);
+				}
+			});
 	}
 
 	/** Clears local lobby state and deletes the user's lobbies_live row. */
 	#clearLiveLobbyOnGameExit() {
 		this.#liveLobbyGeneration += 1;
 		this.#durableLobbyEmittedKey = null;
+		this.#liveUpsertPending = null;
 		this.#stopLiveLobbyHeartbeat();
 		this.#publishedJoinedKey = null;
 		this.#publishedStartedKey = null;

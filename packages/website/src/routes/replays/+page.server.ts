@@ -1,4 +1,10 @@
-import { parseReplaysQuery, parseReplaysTab, REPLAYS_PER_PAGE } from '$lib/replays';
+import {
+	parseReplaysQuery,
+	parseReplaysTab,
+	REPLAYS_PER_PAGE,
+	TOP_REPLAYS,
+	TOP_REPLAYS_DAYS
+} from '$lib/replays';
 import { isStaffUser, loginRedirectHref } from '$lib/auth/user';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import { historyInputFromQuery } from '$lib/server/services/match-history';
@@ -16,11 +22,19 @@ export const load: PageServerLoad = ({ locals, url }) => {
 
 	const query = parseReplaysQuery(url.searchParams);
 	const viewer = locals.user ? { id: locals.user.id, isStaff: isStaffUser(locals.user) } : null;
+	// Spotlight on the unfiltered first page of the public tabs only.
+	const unfiltered =
+		query.filter == null && !query.ranked && query.maps.length === 0 && !query.playerIds.length;
+	const topReplays =
+		tab !== 'mine' && query.page === 1 && unfiltered
+			? locals.services.replays.top({ days: TOP_REPLAYS_DAYS, limit: TOP_REPLAYS }).unwrapOr([])
+			: null;
 
 	if (tab === 'member') {
 		return {
 			tab,
 			query,
+			topReplays,
 			result: unwrapAsync(
 				locals.services.memberReplays.list(
 					memberQueryFromReplaysQuery(query, REPLAYS_PER_PAGE),
@@ -38,6 +52,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 	return {
 		tab,
 		query,
+		topReplays,
 		result: unwrapAsync(locals.services.matchHistory.list(input, viewer))
 	};
 };

@@ -13,6 +13,8 @@ export type HistoryListQuery = {
 	scope: 'user' | 'community';
 	userId?: string;
 	profileId?: number;
+	/** User scope: only `profileId`'s games, not every linked Steam account's. */
+	profileOnly?: boolean;
 	ranked?: boolean;
 	pro?: boolean;
 	playerIds?: string[];
@@ -245,6 +247,10 @@ export class MatchesApi {
 
 		if (query.includeSkirmish) {
 			params.set('includeSkirmish', 'true');
+		}
+
+		if (query.profileOnly) {
+			params.set('profileOnly', 'true');
 		}
 
 		if (!hasAst && query.eloOp && query.elo != null && Number.isFinite(query.elo)) {

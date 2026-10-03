@@ -48,7 +48,7 @@ const OPERATORS: Record<CompareOp | 'eq', string> = {
 	eq: '='
 };
 
-/** Relic match type ids per UI matchup (2v2 = ranked 2 or basic 5, ...). */
+/** Relic match type ids per UI matchup (2v2 = ranked 2 or arranged team 5, ...). */
 const MATCHUP_TYPES: Record<string, number[]> = {
 	'1v1': [1],
 	'2v2': [2, 5],
@@ -58,9 +58,6 @@ const MATCHUP_TYPES: Record<string, number[]> = {
 export function matchtypesForMatchups(matchups: string[]): number[] {
 	return [...new Set(matchups.flatMap((matchup) => MATCHUP_TYPES[matchup] ?? []))];
 }
-
-/** Humans per match type, for lobbies whose result has no match type. */
-const PLAYERS_PER_TYPE: Record<number, number> = { 1: 2, 2: 4, 3: 6, 4: 8, 5: 4, 6: 6, 7: 8 };
 
 const oneOrMany = <T extends z.ZodType>(item: T) =>
 	z
@@ -98,7 +95,7 @@ const leafSchema = z.discriminatedUnion('field', [
 	z.object({ field: z.literal('elo'), op: compareOp, value: z.number().finite() }),
 	/** Minutes (UI unit). */
 	z.object({ field: z.literal('duration'), op: compareOp, value: z.number().finite().min(0) }),
-	/** Raw match type ids from the legacy flat query parameters; `exact` skips the player-count fallback. */
+	/** Raw match type ids from the legacy flat query parameters (`exact` is accepted but ignored). */
 	z.object({
 		field: z.literal('matchtype'),
 		op: z.literal('in'),
@@ -226,23 +223,17 @@ function rowConditions(leaves: PlayerLeaf[], prefix: string, any: boolean): stri
 	return conditions.join(' && ');
 }
 
-function matchtypeCondition(ids: number[], exact: boolean, prefix: string): string | null {
+/**
+ * Lobbies of these Relic match types. There is no player-count fallback: `playerCount`
+ * comes from the result, so it only ever matched Basic Matches (type 0) of that size.
+ */
+function matchtypeCondition(ids: number[], prefix: string): string | null {
 	const unique = [...new Set(ids)];
 	if (unique.length === 0) {
 		return null;
 	}
 
-	const parts = unique.map((id) => `${prefix}matchtypeId = ${id}`);
-	const counts = exact
-		? []
-		: [...new Set(unique.map((id) => PLAYERS_PER_TYPE[id]).filter(Boolean))];
-	if (counts.length > 0) {
-		parts.push(
-			`(${prefix}matchtypeId = 0 && ${anyOf(counts.map((count) => `${prefix}playerCount = ${count}`))})`
-		);
-	}
-
-	return anyOf(parts);
+	return anyOf(unique.map((id) => `${prefix}matchtypeId = ${id}`));
 }
 
 function lobbyCondition(leaf: LobbyLeaf, prefix: string): string | null {
@@ -256,9 +247,9 @@ function lobbyCondition(leaf: LobbyLeaf, prefix: string): string | null {
 		case 'duration':
 			return `${prefix}durationSeconds ${OPERATORS[leaf.op]} ${Math.round(leaf.value * 60)}`;
 		case 'matchup':
-			return matchtypeCondition(matchtypesForMatchups(leaf.value), false, prefix);
+			return matchtypeCondition(matchtypesForMatchups(leaf.value), prefix);
 		case 'matchtype':
-			return matchtypeCondition(leaf.value, leaf.exact, prefix);
+			return matchtypeCondition(leaf.value, prefix);
 	}
 }
 
@@ -361,7 +352,13 @@ function containsSubject(node: Node | null): boolean {
 // ---- plan ----------------------------------------------------------------------
 
 export type HistoryScope =
-	| { kind: 'community'; includeHidden: boolean; includeSkirmish: boolean }
+	| {
+			kind: 'community';
+			includeHidden: boolean;
+			includeSkirmish: boolean;
+			/** Only matches created at or after this PocketBase datetime. */
+			since?: string;
+	  }
 	| {
 			kind: 'user';
 			userId: string;
@@ -413,6 +410,9 @@ function scopeConditions(scope: HistoryScope, prefix: string): string[] {
 				? `${prefix}hasReplay = true && ${prefix}memberReplay = ''`
 				: `${prefix}isCommunity = true`
 		);
+		if (scope.since) {
+			conditions.push(`${prefix}createdAt >= ${quote(scope.since)}`);
+		}
 	}
 
 	return conditions;
@@ -554,5 +554,9 @@ export function planHistoryQuery(ast: FilterAst | null, scope: HistoryScope): Hi
 		};
 	}
 
-	return { groups, unfiltered: tree === null, render };
+	return {
+		groups,
+		unfiltered: tree === null && !(scope.kind === 'community' && scope.since),
+		render
+	};
 }

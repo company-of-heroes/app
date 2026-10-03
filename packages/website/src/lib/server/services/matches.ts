@@ -49,6 +49,8 @@ export type MatchDetail = {
 	memberReplayId: string | null;
 	/** Only true for the uploader, so the response must not be shared-cached when signed in. */
 	canPublish: boolean;
+	/** A signed-in participant may attach the missing replay (viewer-specific, like `canPublish`). */
+	canAttachReplay: boolean;
 	/** Staff only. */
 	updatedAt?: string;
 	owner?: string | null;
@@ -119,10 +121,15 @@ export class MatchesService extends Service {
 		const steamIds = [...players, ...livePlayers]
 			.map((player) => player.steamId)
 			.filter((steamId): steamId is string => !!steamId);
+		const canAttach: Task<boolean> =
+			viewer && !record.hasReplay && !record.replay
+				? this.services.lobbies.isParticipant(record, viewer.id)
+				: okAsync(false);
 		return ResultAsync.combine([
 			this.services.playerInfo.likeCounts(steamIds),
-			this.services.hiddenMatches.rules()
-		]).map(([likes, rules]) => {
+			this.services.hiddenMatches.rules(),
+			canAttach
+		]).map(([likes, rules, canAttachReplay]) => {
 			for (const player of [...players, ...livePlayers]) {
 				if (player.steamId && likes.has(player.steamId)) {
 					player.likeCount = likes.get(player.steamId);
@@ -138,7 +145,7 @@ export class MatchesService extends Service {
 				id: record.id,
 				map: record.map || '',
 				title: record.title || '',
-				isRanked: record.isRanked,
+				isRanked: row.isRanked,
 				createdAt: record.createdAt,
 				durationSeconds: row.durationSeconds,
 				likeCount: record.likeCount || 0,
@@ -157,7 +164,8 @@ export class MatchesService extends Service {
 				livePlayers,
 				result: record.result,
 				memberReplayId: record.memberReplay || null,
-				canPublish: !!viewer && viewer.id === record.user && hasReplay && !record.memberReplay
+				canPublish: !!viewer && viewer.id === record.user && hasReplay && !record.memberReplay,
+				canAttachReplay
 			};
 			if (viewer?.isStaff) {
 				detail.updatedAt = record.updatedAt;

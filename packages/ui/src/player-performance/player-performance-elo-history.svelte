@@ -3,6 +3,7 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive, tabTrigger } from '@company-of-heroes/ui/variants';
+	import { isRankedMatchType } from '../format/match-type';
 	import { getModeLabel, getRaceLabel } from '../format/player-format';
 	import { Axis, Circle, Highlight, Layer, LineChart, Spline, Text, Tooltip } from 'layerchart';
 	import { IsInViewport } from 'runed';
@@ -43,10 +44,11 @@
 	type GroupedPoints = Record<number, Record<number, EloHistoryPoint[]>>;
 
 	const grouped = $derived(groupPoints(points));
+	// Ranked ladders first, so the chart opens on ranked ELO rather than Basic Match.
 	const modeIds = $derived(
 		Object.keys(grouped)
 			.map(Number)
-			.sort((a, b) => a - b)
+			.sort((a, b) => Number(isRankedMatchType(b)) - Number(isRankedMatchType(a)) || a - b)
 	);
 
 	let selectedMode = $state<number | null>(null);

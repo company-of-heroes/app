@@ -8,6 +8,7 @@
 	import { useI18n } from '$lib/i18n';
 	import { TeamPlayerSkills } from '@company-of-heroes/ui/match';
 	import { getModeLabel } from '@company-of-heroes/ui/format/player-format';
+	import { isRankedMatch } from '@company-of-heroes/ui/format/match-type';
 
 	type Props = {
 		team: 'allies' | 'axis';
@@ -34,7 +35,7 @@
 	const players = $derived(match.players?.filter((player) => onTeam(player, team)) || []);
 
 	const matchTypeId = $derived.by(() => {
-		if (!match.isRanked) {
+		if (!isRankedMatch(match.isRanked, match.result)) {
 			return 0;
 		}
 

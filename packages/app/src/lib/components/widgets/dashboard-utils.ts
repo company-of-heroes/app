@@ -1,4 +1,5 @@
 import type { LobbyPlayer } from '@fknoobs/app';
+import { isRankedMatch, resultMatchTypeId } from '@company-of-heroes/ui/format/match-type';
 import type { LiveLobby } from '$core/app/database/lobbies-live';
 import type { MatchExpanded } from '$core/app/database/matches';
 import type { TransformedMatch } from '@fknoobs/app';
@@ -83,8 +84,13 @@ export function getLiveLobbyModeLabel(
 	return t(MATCH_TYPES[getLiveLobbyMatchType(players, isRanked, matchType)] ?? 'Custom Game');
 }
 
+/** Relic's result decides the mode once it is in; a custom game is a Basic Match. */
 export function getMatchModeLabel(match: MatchExpanded): string {
-	return getLiveLobbyModeLabel(match.players ?? [], match.isRanked);
+	return getLiveLobbyModeLabel(
+		match.players ?? [],
+		isRankedMatch(match.isRanked, match.result),
+		resultMatchTypeId(match.result)
+	);
 }
 
 export function getPlayerProfileId(player: LobbyPlayer): number | undefined {

@@ -187,3 +187,41 @@ export const recordReplayDownload = command(
 			countDownload(getRequestEvent(), kind === 'member' ? 'replay' : 'lobby', matchId, visitorId)
 		)
 );
+
+const attachMatchReplaySchema = z.object({
+	lobbyId: z.string().min(1),
+	file: uploadMemberReplaySchema.shape.file,
+	durationSeconds: z.number().nonnegative()
+});
+
+/** A match participant adds the replay a saved match is missing (the longer file is kept). */
+export const attachMatchReplay = command(
+	attachMatchReplaySchema,
+	async ({ lobbyId, file, durationSeconds }) => {
+		const { locals } = getRequestEvent();
+		if (!locals.user) {
+			error(401, locals.t('Sign in to upload the replay.'));
+		}
+
+		const result = await unwrapAsync(
+			locals.services.lobbies.attachReplay(lobbyId, locals.user.id, {
+				file,
+				seconds: durationSeconds
+			})
+		);
+		return { keptExisting: result.keptExisting };
+	}
+);
+
+const PLAYER_REPLAYS = 20;
+
+/** Public replays a player appears in, for the profile's Replays tab. */
+export const getPlayerReplays = query(
+	z.object({ steamId: z.string().regex(/^\d{10,}$/), profileId: z.number().int() }),
+	({ steamId, profileId }) => {
+		const { locals } = getRequestEvent();
+		return unwrapAsync(
+			locals.services.replays.forPlayer({ steamId, profileId, limit: PLAYER_REPLAYS })
+		);
+	}
+);

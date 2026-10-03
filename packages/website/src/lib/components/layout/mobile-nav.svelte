@@ -5,7 +5,8 @@
 	import { flushHeader, flushHeaderTitle, tabTrigger } from '@company-of-heroes/ui/variants';
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import { cn } from '$lib/utils/cn';
-	import { rememberedReplaysListHref } from '$lib/replays';
+	import { Button } from '@company-of-heroes/ui/button';
+	import { rememberedReplaysListHref, uploadReplayPath } from '$lib/replays';
 	import {
 		currentLocale,
 		href,
@@ -19,6 +20,7 @@
 	import { interactive } from '$lib/utils/variants';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import ListIcon from 'phosphor-svelte/lib/ListIcon';
+	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 
 	const { t } = useI18n();
@@ -26,6 +28,7 @@
 	let open = $state(false);
 	let replaysListHref = $state('/replays');
 	const locale = $derived(currentLocale());
+	const uploadHref = $derived(href(uploadReplayPath(!!page.data.user)));
 
 	const navLinks = $derived([
 		{ href: '/players', label: t('Players') },
@@ -108,6 +111,17 @@
 				</Dialog.Close>
 			</div>
 			<nav class="flex flex-1 flex-col overflow-y-auto">
+				<div class="border-secondary-800 border-b px-4 py-3">
+					<Button
+						href={uploadHref}
+						variant="primary"
+						class="w-full justify-center"
+						onclick={() => (open = false)}
+					>
+						<UploadSimpleIcon class="size-4" />
+						{t('Upload replay')}
+					</Button>
+				</div>
 				{#each navLinks as link (link.href)}
 					<a
 						href={navHref(link.href)}

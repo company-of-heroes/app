@@ -6,6 +6,7 @@
 	import HomeMemberUploads from '$lib/components/home/home-member-uploads.svelte';
 	import HomeLiveStreams from '$lib/components/home/home-live-streams.svelte';
 	import DonationSection from '$lib/components/home/donation-section.svelte';
+	import TopReplays from '$lib/components/replay/top-replays.svelte';
 	import { SITE_URL } from '$lib/site/urls';
 	import { href, useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
@@ -59,12 +60,12 @@
 <main>
 	<Hero />
 	<HomePlayerSearch />
-	{#await data.liveLobbies}
-		<HomeLiveLobbies lobbies={[]} loading />
-	{:then liveLobbies}
-		<HomeLiveLobbies lobbies={liveLobbies.items} error={liveLobbies.error} />
+	{#await data.topReplays}
+		<TopReplays matches={[]} loading />
+	{:then topReplays}
+		<TopReplays matches={topReplays.items} error={topReplays.error} />
 	{:catch}
-		<HomeLiveLobbies lobbies={[]} error={t('Could not load live lobbies.')} />
+		<TopReplays matches={[]} error={t('Could not load top replays.')} />
 	{/await}
 	{#await data.recentMatches}
 		<HomeRecentMatches matches={[]} loading />
@@ -79,6 +80,13 @@
 		<HomeMemberUploads matches={recentMemberUploads.items} error={recentMemberUploads.error} />
 	{:catch}
 		<HomeMemberUploads matches={[]} error={t('Could not load member uploads.')} />
+	{/await}
+	{#await data.liveLobbies}
+		<HomeLiveLobbies lobbies={[]} loading />
+	{:then liveLobbies}
+		<HomeLiveLobbies lobbies={liveLobbies.items} error={liveLobbies.error} />
+	{:catch}
+		<HomeLiveLobbies lobbies={[]} error={t('Could not load live lobbies.')} />
 	{/await}
 	{#await data.streams}
 		<HomeLiveStreams streams={[]} loading />

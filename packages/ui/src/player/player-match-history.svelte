@@ -5,8 +5,9 @@
 	import { interactive, statLosses, statWins, tableHeadRow } from '@company-of-heroes/ui/variants';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
-	import ChecksIcon from 'phosphor-svelte/lib/ChecksIcon';
 	import ClockIcon from 'phosphor-svelte/lib/ClockIcon';
+	import DownloadSimpleIcon from 'phosphor-svelte/lib/DownloadSimpleIcon';
+	import FilmReelIcon from 'phosphor-svelte/lib/FilmReelIcon';
 	import MinusIcon from 'phosphor-svelte/lib/MinusIcon';
 	import { Button } from '../ui/button';
 	import MapImage from '../ui/map-image.svelte';
@@ -27,6 +28,7 @@
 	import PlayerProfileLink from './player-profile-link.svelte';
 	import { playerPreviewId } from './player-preview-cache';
 	import { useHost } from '../host/host.context';
+	import type { CommunityMatchDetail } from '../replay/types';
 
 	type Props = {
 		player: PlayerPageData;
@@ -42,6 +44,9 @@
 	const stamp = (unix: number) => formatMatchStamp(unix, host.locale());
 	const detailsHref = (match: TransformedMatch) =>
 		match.lobbyId ? host.routes.match(match.lobbyId) : null;
+	// A `lobbyId` is only set for matches with a stored replay.
+	const replayOf = (lobbyId: string) =>
+		({ id: lobbyId, kind: 'match', downloadCount: 0 }) as CommunityMatchDetail;
 
 	const matches = $derived(
 		[...player.matchHistory].sort((a, b) => b.completiontime - a.completiontime)
@@ -190,10 +195,23 @@
 					</div>
 					<div class="flex min-w-0 shrink-0 flex-wrap items-center gap-4">
 						{@render matchActions?.({ match })}
-						{#if href}
+						{#if href && match.lobbyId}
+							{@const replay = replayOf(match.lobbyId)}
+							{@const downloadHref = host.api.replays.downloadHref(replay)}
 							<Button {href} size="sm" variant="secondary">
-								<ChecksIcon class="size-4 text-green-400" />
-								{t('View match')}
+								<FilmReelIcon class="text-primary size-4" weight="duotone" />
+								{t('Watch replay')}
+							</Button>
+							<Button
+								href={downloadHref ?? undefined}
+								download={downloadHref ? '' : undefined}
+								onclick={() => void host.api.replays.download(replay).catch(() => {})}
+								size="icon-sm"
+								variant="secondary"
+								title={t('Download replay')}
+								aria-label={t('Download replay')}
+							>
+								<DownloadSimpleIcon class="size-4" />
 							</Button>
 						{/if}
 						<span class="text-secondary-300 flex items-center gap-2 text-sm font-medium">

@@ -4,6 +4,7 @@
 	import { ReplayDetail, PageSkeleton as ReplayPageSkeleton } from '@company-of-heroes/ui/replay';
 	import { resource, watch } from 'runed';
 	import { api, unwrapApi } from '$core/api';
+	import { app } from '$core/app/context';
 	import { loadCheaterSteamIds } from '$core/pocketbase/anti-cheat';
 	import * as Match from '$lib/components/match';
 	import * as Player from '$lib/components/player';
@@ -46,7 +47,7 @@
 
 	// Pending results fill in on the server; keep the page current while it waits.
 	watch(
-		() => [page.params.id, !!detail?.needsResult && !detail?.hasReplay] as const,
+		() => [page.params.id, !!detail?.needsResult] as const,
 		([id, pending]) => {
 			if (!id || !pending) {
 				return;
@@ -56,6 +57,14 @@
 			return () => clearInterval(interval);
 		}
 	);
+
+	$effect(() => {
+		return app.on('match.result', (updated) => {
+			if (updated.id === page.params.id) {
+				void match.refetch();
+			}
+		});
+	});
 </script>
 
 <SetCrumbs items={[{ label: detail ? normalizeMapName(detail.map) : t('Match') }]} />

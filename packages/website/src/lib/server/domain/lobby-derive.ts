@@ -1,3 +1,6 @@
+import es from '@company-of-heroes/i18n/locales/es.json';
+import ko from '@company-of-heroes/i18n/locales/ko.json';
+import { isRankedMatch } from '@company-of-heroes/ui/format/match-type';
 import { leaderboardIdForMatchRace } from './relic-matches';
 import { isValidSteamId, steamIdFromRelicName, type EloSlotUpdate } from './ratings';
 
@@ -110,6 +113,31 @@ export type HiddenRules = { sessions: Set<number>; keywords: string[] };
 
 /** Written by the app but never read back; `matchHistory` alone was ~438 KB per lobby. */
 const HEAVY_PLAYER_KEYS = ['matchHistory', 'storedElo'];
+
+const LADDER_TITLE = /^\d VS\. \d$/;
+/** Match types older app versions stored translated in `lobbies.title`, by translation. */
+export const TRANSLATED_TITLES = new Map<string, string>(
+	['Basic Match', 'Custom Game', 'Skirmish'].flatMap((key) =>
+		[es, ko].map((locale) => [(locale as Record<string, string>)[key], key] as [string, string])
+	)
+);
+
+/**
+ * The stored title in English (the server compares it, e.g. "Skirmish"). Older servers
+ * titled custom games by their size ("2 VS. 2"); with a Basic Match result that is wrong.
+ */
+function matchTitle(
+	title: string | undefined,
+	isRanked: boolean,
+	result: MatchResult | null
+): string | undefined {
+	const english = title ? (TRANSLATED_TITLES.get(title) ?? title) : title;
+	if (result && !isRanked && LADDER_TITLE.test(english ?? '')) {
+		return 'Basic Match';
+	}
+
+	return english;
+}
 
 const finite = (value: unknown): number | null => {
 	if (value === null || value === undefined || value === '') {
@@ -481,6 +509,8 @@ export type LobbyDerivation = {
 		lobbyPlayers?: PlayerSummary[];
 		playerProfileIdsCsv?: string;
 		hasReplay: boolean;
+		isRanked?: boolean;
+		title?: string;
 		durationSeconds?: number;
 		avgElo?: number;
 		matchtypeId: number;
@@ -498,13 +528,16 @@ export type LobbyDerivation = {
 };
 
 export function deriveLobby(
-	lobby: StoredLobby,
+	stored: StoredLobby,
 	hidden: HiddenRules,
 	now = Math.floor(Date.now() / 1000)
 ): LobbyDerivation {
+	const result = parseResult(stored.result);
+	// Relic's match type decides once there is a result: a Basic Match is never ranked.
+	const isRanked = isRankedMatch(stored.isRanked, result);
+	const lobby = { ...stored, title: matchTitle(stored.title, isRanked, result) };
 	const slim = slimPlayers(parsePlayers(lobby.players));
-	const result = parseResult(lobby.result);
-	const summaries = summarizePlayers(slim.players, !!lobby.isRanked, result);
+	const summaries = summarizePlayers(slim.players, isRanked, result);
 	// Never clear stored summaries when the players did not parse.
 	const effectiveSummaries =
 		summaries.length > 0
@@ -521,13 +554,21 @@ export function deriveLobby(
 		hasReplay,
 		matchtypeId: matchtypeId === null ? 0 : Math.trunc(matchtypeId),
 		playerCount: playerCount ?? 0,
-		isPro: isPro(!!lobby.isRanked, avgElo, matchtypeId, playerCount),
+		isPro: isPro(isRanked, avgElo, matchtypeId, playerCount),
 		isCommunity:
 			!lobby.needsResult && lobby.title !== 'Skirmish' && hasReplay && !lobby.memberReplay,
 		isHidden:
 			hidden.sessions.has(Number(lobby.sessionId)) ||
 			titleIsHidden(result?.description, hidden.keywords)
 	};
+	if (result && isRanked !== !!stored.isRanked) {
+		columns.isRanked = isRanked;
+	}
+
+	if (lobby.title !== stored.title) {
+		columns.title = lobby.title;
+	}
+
 	if (slim.changed) {
 		columns.players = slim.players;
 	}

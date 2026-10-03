@@ -2,6 +2,7 @@
  * Member-uploaded replays (`replays` collection): roster, frozen rating snapshot,
  * and the JSON the replay pages expect. Pure functions; the service does the reads.
  */
+import { isCpuPlayerName } from '@company-of-heroes/ui/replay/utils';
 import { isValidSteamId, type EloMap } from './ratings';
 
 /** A roster entry as parsed from the .rec file. */
@@ -246,6 +247,41 @@ export function snapshotNeedsRepair(
 	);
 }
 
+/** A snapshot frozen from a match result: its ratings are set, Relic's rank and level are not. */
+export function snapshotNeedsRanks(snapshot: StatsSnapshot | null): boolean {
+	return !!snapshot?.players.some(
+		(player) => normalizeSteamId(player.steamId) && player.rankLevel === undefined
+	);
+}
+
+/** Adds Relic's rank, level and country; keeps the snapshot's own ratings and W/L. */
+export function withLadderRanks(
+	snapshot: StatsSnapshot,
+	ladders: Map<string, SteamLadder>
+): StatsSnapshot {
+	return {
+		...snapshot,
+		players: snapshot.players.map((player) => {
+			const steamId = normalizeSteamId(player.steamId);
+			const relic = steamId ? ladders.get(steamId)?.relic : undefined;
+			if (!relic || player.rankLevel !== undefined) {
+				return player;
+			}
+
+			const stat = relic.leaderboardStats.find(
+				(entry) => Number(entry.leaderboard_id) === snapshot.matchtype_id * 4 + player.race_id
+			);
+			const country = player.country || relic.country?.trim();
+			return {
+				...player,
+				rank: Number(stat?.rank) > 0 ? Number(stat?.rank) : 0,
+				rankLevel: Number(stat?.ranklevel) > 0 ? Number(stat?.ranklevel) : 0,
+				...(country ? { country } : {})
+			};
+		})
+	};
+}
+
 export type CommunityPlayer = {
 	playerId: number;
 	steamId: string | null;
@@ -274,8 +310,9 @@ export function toCommunityPlayers(
 		const profileId = (steamId && profileIdBySteamId.get(steamId)) || 0;
 		const faction = (player.faction ?? '').trim();
 		const doctrineName = (player.doctrineName ?? '').trim();
+		// -1 marks a CPU (lists label the game Skirmish); a human without a known profile is 0.
 		return {
-			playerId: profileId > 0 ? profileId : -1,
+			playerId: profileId > 0 ? profileId : isCpuPlayerName(aliasOf(player, i)) ? -1 : 0,
 			steamId,
 			race: raceFromFaction(faction),
 			...(faction ? { faction } : {}),

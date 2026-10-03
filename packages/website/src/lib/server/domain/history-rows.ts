@@ -1,3 +1,4 @@
+import { isRankedMatch } from '@company-of-heroes/ui/format/match-type';
 import { leaderboardIdForMatchRace } from './relic-matches';
 
 /**
@@ -228,7 +229,7 @@ export function toHistoryRow(record: LobbyListRecord): HistoryRow {
 				}
 			: null,
 		createdAt: record.createdAt,
-		isRanked: record.isRanked,
+		isRanked: isRankedMatch(record.isRanked, result),
 		sessionId: record.sessionId,
 		needsResult: record.needsResult,
 		hasReplay: record.hasReplay,
@@ -349,7 +350,7 @@ export function attachPlayerStats(rows: HistoryRow[], rawById: Map<string, RawLo
 		const raw = rawById.get(row.id);
 		const rawPlayers = raw?.players ?? [];
 		const result = raw ? raw.result : (row.result as ResultJson | null);
-		const isRanked = raw ? raw.isRanked : row.isRanked;
+		const isRanked = isRankedMatch(raw ? raw.isRanked : row.isRanked, result);
 		const matchTypeId = ladderMatchType(
 			result,
 			rawPlayers.length > 0

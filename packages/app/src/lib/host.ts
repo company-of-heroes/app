@@ -1,4 +1,4 @@
-import { goto, replaceState } from '$app/navigation';
+import { goto, invalidateAll, replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
@@ -218,6 +218,13 @@ export function provideAppHost(): HostContext {
 					}
 
 					return { downloadCount: result.downloadCount };
+				},
+				attach: async (lobbyId, file, durationSeconds) => {
+					const result = await app.database.matches.attachReplay(lobbyId, file, {
+						durationSeconds
+					});
+					await invalidateAll();
+					return { keptExisting: result.keptExisting };
 				},
 				loadMatchForPublish: async (lobbyId) => {
 					const match = await app.database.matches.getById(lobbyId);

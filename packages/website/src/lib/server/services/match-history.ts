@@ -31,9 +31,13 @@ export type HistoryListInput = {
 	page: number;
 	perPage: number;
 	filter: FilterAst | null;
-	/** Relic profile to count as "me" in user scope, besides the account's Steam ids. */
+	/** Relic profile to count as "me" in user scope (when it is one of the user's accounts). */
 	profileId?: number;
+	/** User scope: only `profileId`'s games, not every linked Steam account's. */
+	profileOnly?: boolean;
 	includeSkirmish: boolean;
+	/** Community scope: only matches created at or after this PocketBase datetime. */
+	since?: string;
 	sort: HistorySort;
 	sortDir: 'asc' | 'desc';
 };
@@ -83,6 +87,28 @@ export function historyInputFromQuery(
 }
 
 const COMMUNITY_COUNT_TTL = 300;
+
+/**
+ * One row per Relic session: until the scheduled merge runs, two players starting the
+ * same match can each have created a lobby. Copies are created together, so they share
+ * a page; the first in list order stays.
+ */
+function oneLobbyPerSession(records: LobbyListRecord[]): LobbyListRecord[] {
+	const seen = new Set<number>();
+	return records.filter((record) => {
+		const sessionId = Number(record.sessionId);
+		if (!(sessionId > 0)) {
+			return true;
+		}
+
+		if (seen.has(sessionId)) {
+			return false;
+		}
+
+		seen.add(sessionId);
+		return true;
+	});
+}
 const PB_MAX_PER_PAGE = 500;
 
 type SortEntry = { id: string; createdAt: string; value: number };
@@ -132,22 +158,30 @@ export class MatchHistoryService extends Service {
 	private scopeFor(input: HistoryListInput, viewer: HistoryViewer): Task<HistoryScope> {
 		const includeHidden = !!viewer?.isStaff;
 		if (input.scope === 'community') {
-			return okAsync({ kind: 'community', includeHidden, includeSkirmish: input.includeSkirmish });
+			return okAsync({
+				kind: 'community',
+				includeHidden,
+				includeSkirmish: input.includeSkirmish,
+				since: input.since
+			});
 		}
 
 		if (!viewer) {
 			return errAsync(signInError());
 		}
 
-		return this.steamIdsOf(viewer.id).map(
-			(steamIds): HistoryScope => ({
-				kind: 'user',
-				userId: viewer.id,
-				steamIds,
-				profileIds: input.profileId ? [input.profileId] : [],
-				includeHidden,
-				includeSkirmish: input.includeSkirmish
-			})
+		const profileId = input.profileId;
+		return this.steamIdsOf(viewer.id).andThen((steamIds) =>
+			(profileId ? this.services.performance.ownsProfile(profileId, steamIds) : okAsync(false)).map(
+				(owned): HistoryScope => ({
+					kind: 'user',
+					userId: viewer.id,
+					steamIds: owned && input.profileOnly ? [] : steamIds,
+					profileIds: owned && profileId ? [profileId] : [],
+					includeHidden,
+					includeSkirmish: input.includeSkirmish
+				})
+			)
 		);
 	}
 
@@ -366,7 +400,7 @@ export class MatchHistoryService extends Service {
 							)
 				)
 				.andThen(({ records, total }) => {
-					const rows = records.map(toHistoryRow);
+					const rows = oneLobbyPerSession(records).map(toHistoryRow);
 					return this.loadRawPlayers(rowsNeedingRawPlayers(rows)).map((raw) => {
 						attachPlayerStats(rows, raw);
 						return {

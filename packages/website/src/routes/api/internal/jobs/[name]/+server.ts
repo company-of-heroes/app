@@ -16,7 +16,9 @@ const JOBS: Record<string, (services: Services) => Task<{ processed: number; mor
 	'lobby-merge': (services) => services.lobbies.mergeDuplicates(),
 	'rewards-evaluate': (services) => services.rewards.evaluateDue(),
 	// One-time (run by hand until done): overlays published before R2.
-	'overlay-backfill': (services) => services.overlays.backfill()
+	'overlay-backfill': (services) => services.overlays.backfill(),
+	// Basic Matches stored as ranked, translated titles; finds nothing once repaired.
+	'lobby-reprocess': (services) => services.lobbies.reprocessStale()
 };
 
 export const POST = handle((event) =>

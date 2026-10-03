@@ -7,6 +7,8 @@ const JOBS: { name: string; every: number; offset: number }[] = [
 	{ name: 'ladder-harvest', every: 5, offset: 2 },
 	{ name: 'ratings-harvest', every: 5, offset: 3 },
 	{ name: 'lobby-merge', every: 5, offset: 1 },
+	// Self-limiting: only lobbies whose stored ranked flag or title is stale; idle afterwards.
+	{ name: 'lobby-reprocess', every: 5, offset: 4 },
 	{ name: 'rewards-evaluate', every: 1, offset: 0 }
 ];
 

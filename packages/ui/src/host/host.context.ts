@@ -199,6 +199,16 @@ export type HostApi = {
 		 * Resolves the new download count when the host knows it.
 		 */
 		download: (match: CommunityMatchDetail) => Promise<{ downloadCount?: number } | void>;
+		/**
+		 * A participant attaches the missing replay of a saved match; the longer (or larger)
+		 * file is kept. Hosts refresh the match afterwards. Throws with a user-facing message.
+		 * Hosts without it hide the upload prompt.
+		 */
+		attach?: (
+			lobbyId: string,
+			file: File,
+			durationSeconds: number
+		) => Promise<{ keptExisting: boolean }>;
 	};
 	hiddenMatches: {
 		isHidden: (sessionId: number) => Promise<boolean>;

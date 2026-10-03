@@ -12,8 +12,10 @@ import {
 	parseJsonList,
 	parseSnapshot,
 	resultPlayers,
+	snapshotNeedsRanks,
 	snapshotNeedsRepair,
 	toCommunityPlayers,
+	withLadderRanks,
 	type ReplayRosterPlayer,
 	type SteamLadder,
 	type StatsSnapshot
@@ -71,6 +73,10 @@ export type MemberReplayListQuery = {
 	filter: unknown;
 	sort: 'createdAt' | 'likeCount' | 'downloadCount' | 'commentCount';
 	sortDir: 'asc' | 'desc';
+	/** Only replays uploaded at or after this PocketBase datetime. */
+	since?: string;
+	/** Only replays with this Steam id in the roster. */
+	steamId?: string;
 };
 
 /** The replays page query (URL state) as a member-replay list request. */
@@ -271,6 +277,57 @@ export class MemberReplaysService extends Service {
 		);
 	}
 
+	/** A match result's snapshot with Relic's rank and level added. */
+	private withRanks(roster: ReplayRosterPlayer[], snapshot: StatsSnapshot): Task<StatsSnapshot> {
+		return this.laddersFor(roster).map((ladders) => withLadderRanks(snapshot, ladders));
+	}
+
+	/**
+	 * The stored snapshot, completed when it lacks ladder data (Relic was down at upload) or
+	 * rank and level (published from a match result). A complete one is saved, so the list
+	 * and the replay page show the same stats and stop re-fetching them.
+	 */
+	private snapshotFor(record: ReplayRecord): Task<StatsSnapshot | null> {
+		const roster = parseJsonList<ReplayRosterPlayer>(record.players);
+		const stored = parseSnapshot(record.statsSnapshot);
+		if (snapshotNeedsRepair(stored, roster)) {
+			return this.completed(
+				record.id,
+				stored,
+				() => this.snapshotOf(roster, record.isRanked, Number(record.durationInSeconds) || 0),
+				(snapshot) => !snapshotNeedsRepair(snapshot, roster)
+			);
+		}
+
+		if (stored && snapshotNeedsRanks(stored)) {
+			return this.completed(
+				record.id,
+				stored,
+				() => this.withRanks(roster, stored),
+				(snapshot) => !snapshotNeedsRanks(snapshot)
+			);
+		}
+
+		return okAsync(stored);
+	}
+
+	private completed(
+		id: string,
+		stored: StatsSnapshot | null,
+		load: () => Task<StatsSnapshot>,
+		isComplete: (snapshot: StatsSnapshot) => boolean
+	): Task<StatsSnapshot | null> {
+		return cached(`member-replay:snapshot:${id}`, 300, () =>
+			load().andThen((snapshot) =>
+				isComplete(snapshot)
+					? fromPb(this.replays.update(id, { statsSnapshot: snapshot }), 'Could not update replay')
+							.map(() => snapshot)
+							.orElse(() => ok(snapshot))
+					: okAsync(snapshot)
+			)
+		).orElse(() => ok(stored));
+	}
+
 	private serialize(
 		record: ReplayRecord,
 		snapshot: StatsSnapshot | null,
@@ -288,6 +345,14 @@ export class MemberReplaysService extends Service {
 				? "(visibility = 'member' || visibility = 'deleted')"
 				: "visibility = 'member'"
 		];
+		if (query.since) {
+			filters.push(this.pb.filter('createdAt >= {:since}', { since: query.since }));
+		}
+
+		if (query.steamId) {
+			filters.push(this.pb.filter('players ~ {:steamId}', { steamId: query.steamId }));
+		}
+
 		const ast = this.filterFromAst(query.filter);
 		if (ast !== null) {
 			if (ast) {
@@ -325,7 +390,7 @@ export class MemberReplaysService extends Service {
 		).andThen((page) =>
 			ResultAsync.combine(
 				page.items.map((record) =>
-					this.serialize(record, parseSnapshot(record.statsSnapshot), false)
+					this.snapshotFor(record).andThen((snapshot) => this.serialize(record, snapshot, false))
 				)
 			).map((items) => ({
 				page: query.page,
@@ -369,9 +434,7 @@ export class MemberReplaysService extends Service {
 	}
 
 	/**
-	 * One replay with full detail. A snapshot from before ladder data was captured
-	 * is rebuilt on the fly (and cached); the stored one is fixed on the next write.
-	 */
+	/** One replay with full detail. */
 	get(id: string, viewer: MemberReplayViewer): Task<MemberReplayView> {
 		return pbMaybe(
 			this.replays.getOne<ReplayRecord>(id, { expand: 'createdBy' }),
@@ -383,16 +446,9 @@ export class MemberReplaysService extends Service {
 					(record.visibility === 'member' || (record.visibility === 'deleted' && viewer?.isStaff));
 				return record && visible && record.file ? ok(record) : err(replayNotFound());
 			})
-			.andThen((record) => {
-				const roster = parseJsonList<ReplayRosterPlayer>(record.players);
-				const stored = parseSnapshot(record.statsSnapshot);
-				const snapshot: Task<StatsSnapshot | null> = snapshotNeedsRepair(stored, roster)
-					? cached(`member-replay:snapshot:${record.id}`, 300, () =>
-							this.snapshotOf(roster, record.isRanked, Number(record.durationInSeconds) || 0)
-						)
-					: okAsync(stored);
-				return snapshot.andThen((snapshot) => this.serialize(record, snapshot, true));
-			});
+			.andThen((record) =>
+				this.snapshotFor(record).andThen((snapshot) => this.serialize(record, snapshot, true))
+			);
 	}
 
 	/** Maps used by public member replays. */
@@ -676,7 +732,9 @@ export class MemberReplaysService extends Service {
 
 		return ResultAsync.combine([
 			this.matchReplayFile(lobby),
-			fromResult ? okAsync(fromResult) : this.snapshotOf(roster, lobby.isRanked, durationInSeconds)
+			fromResult
+				? this.withRanks(roster, fromResult)
+				: this.snapshotOf(roster, lobby.isRanked, durationInSeconds)
 		])
 			.andThen(([bytes, snapshot]) =>
 				this.createReplay(

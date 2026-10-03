@@ -26,6 +26,10 @@
 	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/matches';
 	import { upperCase } from 'lodash-es';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
+	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
+	import UserSwitchIcon from 'phosphor-svelte/lib/UserSwitchIcon';
+	import * as Dropdown from '$lib/components/ui/dropdown';
+	import { dropdownItemIcon } from '@company-of-heroes/ui/variants';
 	import * as Player from '$lib/components/player';
 	import {
 		PlayerLinks,
@@ -82,8 +86,31 @@
 	let profilePollTimer: ReturnType<typeof setInterval> | null = null;
 	const { t } = useI18n();
 
+	const liveSteamId = $derived(app.game.profile?.steam.steamid ?? null);
+	const linkedSteamIds = $derived(app.features.auth.user.steamIds ?? []);
+	/** Another linked account to look at; back to the in-game account when the game logs in. */
+	let selectedSteamId = $state<string | null>(null);
+	watch(
+		() => liveSteamId,
+		() => {
+			selectedSteamId = null;
+		}
+	);
+
 	const steamId = $derived(
-		app.game.profile?.steam.steamid ?? app.features.auth.user.steamIds[0] ?? null
+		(selectedSteamId && linkedSteamIds.includes(selectedSteamId) ? selectedSteamId : null) ??
+			liveSteamId ??
+			linkedSteamIds[0] ??
+			null
+	);
+	const viewingLive = $derived(liveSteamId !== null && steamId === liveSteamId);
+
+	const linkedProfiles = resource(
+		() => linkedSteamIds.join(','),
+		async (key) => {
+			const ids = key.split(',').filter(Boolean);
+			return ids.length > 1 ? steam.getUserProfiles(ids) : [];
+		}
 	);
 
 	const customization = resource(
@@ -115,7 +142,7 @@
 	);
 
 	const resolvedProfile = resource(
-		() => [app.game.profile ?? null, steamId] as const,
+		() => [viewingLive ? (app.game.profile ?? null) : null, steamId] as const,
 		async ([live, id]) => {
 			if (live) {
 				return live;
@@ -137,9 +164,11 @@
 		}
 	);
 
-	const profile = $derived(app.game.profile ?? resolvedProfile.current ?? null);
+	const profile = $derived(
+		viewingLive ? (app.game.profile ?? null) : (resolvedProfile.current ?? null)
+	);
 	const profileId = $derived(profile?.relic.profile_id ?? null);
-	const todaySteamIds = $derived(collectTodayMatchSteamIds(app.features.auth.user.steamIds));
+	const todaySteamIds = $derived(collectTodayMatchSteamIds(steamId ? [steamId] : []));
 
 	function bumpStats() {
 		invalidatePlayerPerformanceCache(profileId ?? undefined);
@@ -165,7 +194,7 @@
 				return;
 			}
 
-			const live = app.game.profile;
+			const live = viewingLive ? app.game.profile : null;
 			if (live) {
 				const previous = relicLeaderboardFingerprint(live.relic.leaderboardStats);
 				const next = relicLeaderboardFingerprint(relicProfile.leaderboardStats);
@@ -225,7 +254,7 @@
 
 			const matches = await relic.getRecentMatchHistoryForProfile(id);
 			const { enrichMatchHistoryRankLevels } = await import('$lib/player/match-history-ranks');
-			const ownerStats = app.game.profile?.relic.leaderboardStats;
+			const ownerStats = profile?.relic.leaderboardStats;
 			return enrichMatchHistoryRankLevels(matches, id, ownerStats);
 		},
 		{ initialValue: [] }
@@ -371,7 +400,9 @@
 	const recentMatchLoss =
 		'border-destructive/15 bg-destructive/5 text-destructive/45 group-hover:border-destructive/50 group-hover:bg-destructive/25 group-hover:text-red-300 group-focus-visible:border-destructive/50 group-focus-visible:bg-destructive/25 group-focus-visible:text-red-300';
 
-	const avatarBorder = $derived(app.lobby ? 'border-green-500' : 'border-secondary-800');
+	const avatarBorder = $derived(
+		app.lobby && viewingLive ? 'border-green-500' : 'border-secondary-800'
+	);
 	const profileHref = $derived(
 		profileId != null
 			? resolve('/(loaded)/players/[id]', { id: String(profileId) })
@@ -477,6 +508,34 @@
 							<Button href={updateProfileHref} variant="secondary" size="sm" class="shrink-0">
 								{t('Update profile')}
 							</Button>
+							{#if linkedSteamIds.length > 1}
+								<Dropdown.Root class="w-64">
+									{#snippet trigger({ props })}
+										<Button {...props} variant="secondary" size="sm" class="shrink-0">
+											<UserSwitchIcon size={16} weight="duotone" />
+											{t('Switch account')}
+										</Button>
+									{/snippet}
+									{#each linkedSteamIds as id (id)}
+										{@const account = linkedProfiles.current?.find((item) => item.steamid === id)}
+										<Dropdown.Item
+											class={dropdownItemIcon}
+											onSelect={() => (selectedSteamId = id === liveSteamId ? null : id)}
+										>
+											{#if account?.avatar}
+												<img src={account.avatar} alt="" class="size-6 shrink-0 rounded-xs" />
+											{/if}
+											<span class="min-w-0 flex-1 truncate">{account?.personaname ?? id}</span>
+											{#if id === liveSteamId}
+												<Badge variant="default" class="shrink-0">{t('In game')}</Badge>
+											{/if}
+											{#if id === steamId}
+												<CheckIcon size={16} class="text-primary shrink-0" />
+											{/if}
+										</Dropdown.Item>
+									{/each}
+								</Dropdown.Root>
+							{/if}
 						</div>
 						<div class="mb-3 flex flex-wrap items-center gap-2.5">
 							{#if profileHref && previewId}
@@ -506,7 +565,7 @@
 								</PlayerProfileLink>
 							{/if}
 							<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
-							{#if app.lobby}
+							{#if app.lobby && viewingLive}
 								<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
 									<LiveBadge label={t('In match')} />
 								</a>

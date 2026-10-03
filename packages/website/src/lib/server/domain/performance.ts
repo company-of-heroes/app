@@ -1,3 +1,5 @@
+import { isRankedMatchType } from '@company-of-heroes/ui/format/match-type';
+
 /** Win/loss summary of one player's (or the signed-in user's) finished games. */
 
 export type WinLoss = { wins: number; losses: number };
@@ -48,8 +50,10 @@ const isRankedMode = (matchtypeId: number) => matchtypeId >= 1 && matchtypeId <=
 
 /**
  * Aggregates index rows into totals, per map (top 8), per faction and per mode, plus
- * the last 10 results. A session counts once, even when the user played it on two
- * linked accounts (first row by id wins, as before).
+ * the last 10 results. Totals, maps, factions and form are ranked games only (Basic
+ * Matches against friends would skew them); the per-mode table keeps every mode. A
+ * session counts once, even when the user played it on two linked accounts (first
+ * row by id wins, as before).
  */
 export function summarizePerformance(rows: PerformanceRow[]): PlayerPerformance {
 	const decided = rows.filter(
@@ -62,10 +66,13 @@ export function summarizePerformance(rows: PerformanceRow[]): PlayerPerformance 
 		}
 	}
 	const games = [...perSession.values()];
+	const ranked = games.filter(
+		(row) => row.matchtype_id !== null && isRankedMatchType(row.matchtype_id)
+	);
 
-	const tally = <K>(key: (row: PerformanceRow) => K | null) => {
+	const tally = <K>(rows: PerformanceRow[], key: (row: PerformanceRow) => K | null) => {
 		const counts = new Map<K, WinLoss>();
-		for (const row of games) {
+		for (const row of rows) {
 			const k = key(row);
 			if (k === null) {
 				continue;
@@ -83,14 +90,14 @@ export function summarizePerformance(rows: PerformanceRow[]): PlayerPerformance 
 		return [...counts];
 	};
 
-	const wins = games.filter((row) => row.outcome === 1).length;
-	const losses = games.length - wins;
+	const wins = ranked.filter((row) => row.outcome === 1).length;
+	const losses = ranked.length - wins;
 
 	return {
 		matchCount: wins + losses,
 		wins,
 		losses,
-		recentMatches: games
+		recentMatches: ranked
 			.sort((a, b) => b.session_id - a.session_id)
 			.slice(0, FORM_LIMIT)
 			.map((row) => ({
@@ -100,16 +107,16 @@ export function summarizePerformance(rows: PerformanceRow[]): PlayerPerformance 
 				raceId: row.race_id,
 				matchtypeId: row.matchtype_id
 			})),
-		byMap: tally((row) => row.map || 'Unknown')
+		byMap: tally(ranked, (row) => row.map || 'Unknown')
 			.map(([map, count]) => ({ map, ...count }))
 			.sort(byGames)
 			.slice(0, MAP_LIMIT),
-		byFaction: tally((row) =>
+		byFaction: tally(ranked, (row) =>
 			row.race_id !== null && row.race_id >= 0 && row.race_id <= 3 ? row.race_id : null
 		)
 			.map(([raceId, count]) => ({ raceId, ...count }))
 			.sort(byGames),
-		byMode: tally((row) => row.matchtype_id)
+		byMode: tally(games, (row) => row.matchtype_id)
 			.map(([matchtypeId, count]) => ({ matchtypeId, ...count }))
 			.sort((a, b) =>
 				isRankedMode(a.matchtypeId) !== isRankedMode(b.matchtypeId)
