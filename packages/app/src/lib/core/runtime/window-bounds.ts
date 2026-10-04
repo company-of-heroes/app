@@ -10,8 +10,10 @@ import { settings } from '$core/config/settings.svelte';
 import type { WindowBounds } from '$core/config/schema';
 
 /** Logical size of the main window when no previous bounds are known. */
-const DEFAULT_WIDTH = 1800;
-const DEFAULT_HEIGHT = 1000;
+const DEFAULT_WIDTH = 1280;
+const DEFAULT_HEIGHT = 800;
+/** Share of the monitor work area the default window may take up at most. */
+const MAX_WORK_AREA_RATIO = 0.9;
 
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -53,8 +55,12 @@ async function expand(): Promise<void> {
 
 	const saved = settings.tree.app.window ?? null;
 	const monitors = await availableMonitors();
-	if (saved && saved.width > 0 && saved.height > 0 && monitors.some((m) => overlaps(saved, m))) {
-		await window.setSize(new PhysicalSize(saved.width, saved.height));
+	const savedMonitor = saved ? monitors.find((m) => overlaps(saved, m)) : undefined;
+	if (saved && saved.width > 0 && saved.height > 0 && savedMonitor) {
+		const { size } = savedMonitor.workArea;
+		await window.setSize(
+			new PhysicalSize(Math.min(saved.width, size.width), Math.min(saved.height, size.height))
+		);
 		await window.setPosition(new PhysicalPosition(saved.x, saved.y));
 		if (saved.maximized) {
 			await window.maximize();
@@ -64,8 +70,8 @@ async function expand(): Promise<void> {
 		let width = Math.round(DEFAULT_WIDTH * (monitor?.scaleFactor ?? 1));
 		let height = Math.round(DEFAULT_HEIGHT * (monitor?.scaleFactor ?? 1));
 		if (monitor) {
-			width = Math.min(width, monitor.workArea.size.width);
-			height = Math.min(height, monitor.workArea.size.height);
+			width = Math.min(width, Math.round(monitor.workArea.size.width * MAX_WORK_AREA_RATIO));
+			height = Math.min(height, Math.round(monitor.workArea.size.height * MAX_WORK_AREA_RATIO));
 		}
 
 		await window.setSize(new PhysicalSize(width, height));
