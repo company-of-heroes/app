@@ -1,5 +1,16 @@
 # @company-of-heroes/website
 
+## 1.11.0
+
+- feat; in-game style replay timeline with action icons per row (structures, units, defenses, upgrades, abilities, doctrine) on faction and doctrine art, including cancelled production and upgrades, Wehrmacht veterancy stripes, a hover popover with each order’s resource cost and in-game description (click to pin), and estimated resources spent per player
+- enhance; toggle groups show each option as a button, with the selected option in a lighter secondary colour
+- feat; add a Replay Manager download to the homepage banner and explain how it differs from the companion app
+- fix; website no longer scrolls horizontally on mobile and replay chat reads better on small screens
+- enhance; larger tooltips that match the app's popover styling
+- enhance; faction flags use the same round icon everywhere (stats, match history, leaderboards, performance, dashboard)
+- enhance; slimmer scrollbars with rounded thumbs
+- enhance; modals open and close instantly without animation
+
 ## 1.10.0
 
 - feat; spotlight top replays and add replay upload prompts across the website
