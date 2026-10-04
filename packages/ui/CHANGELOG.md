@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.8.1
+
+- fix; website no longer scrolls horizontally on mobile and replay chat reads better on small screens
+
 ## 0.8.0
 
 - feat; spotlight top replays and add replay upload prompts across the website
