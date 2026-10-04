@@ -261,11 +261,15 @@ function versionPackage(pkg, packageChangesets) {
 	const newVersion = bumpVersion(currentVersion, bump);
 	const bullets = toBullets(packageChangesets);
 	const isApp = pkg.name === APP_PACKAGE;
+	const tauri = tauriPaths(pkg.name);
 
 	if (DRY_RUN) {
 		console.log(`[dry-run] ${pkg.name} ${currentVersion} -> ${newVersion} (${bump})`);
-		if (isApp) {
+		if (tauri) {
 			console.log('[dry-run] Would sync version in package.json, tauri.conf.json, Cargo.toml.');
+		}
+
+		if (isApp) {
 			console.log(`[dry-run] Would prepend to CHANGELOG.md:\n`);
 			console.log(`### v${newVersion}\n\n${bullets.join('\n')}\n`);
 		}
