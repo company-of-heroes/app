@@ -1,5 +1,12 @@
 # @company-of-heroes/website
 
+## 1.12.0
+
+- feat; the desktop app opens on a login screen (steam, email and password, register a personal account or create an anonymous one) instead of silently creating an account; the warnings.log and game folder are now optional and only the features that need them turn off
+- fix; show cancelled buildings under construction in the replay timeline with a cancel mark and refunded cost
+- feat; copy a shareable coh1stats.com link to a replay from the replay detail page
+- fix; show player rank and ladder position in match history, including arranged team and 2v2 assault / panzerkrieg games, using the rank at match time when the match was saved
+
 ## 1.11.0
 
 - feat; in-game style replay timeline with action icons per row (structures, units, defenses, upgrades, abilities, doctrine) on faction and doctrine art, including cancelled production and upgrades, Wehrmacht veterancy stripes, a hover popover with each order’s resource cost and in-game description (click to pin), and estimated resources spent per player

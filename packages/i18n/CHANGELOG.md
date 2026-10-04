@@ -1,5 +1,12 @@
 # @company-of-heroes/i18n
 
+## 0.1.12
+
+- feat; the desktop app opens on a login screen (steam, email and password, register a personal account or create an anonymous one) instead of silently creating an account; the warnings.log and game folder are now optional and only the features that need them turn off
+- feat; staff can copy the raw Relic JSON of a match history item
+- fix; show cancelled buildings under construction in the replay timeline with a cancel mark and refunded cost
+- feat; copy a shareable coh1stats.com link to a replay from the replay detail page
+
 ## 0.1.11
 
 - feat; add a Replay Manager download to the homepage banner and explain how it differs from the companion app

@@ -1,5 +1,9 @@
 # @company-of-heroes/api
 
+## 0.5.2
+
+- fix; show player rank and ladder position in match history, including arranged team and 2v2 assault / panzerkrieg games, using the rank at match time when the match was saved
+
 ## 0.5.1
 
 - fix; show elo, wins and losses on the match page right after a game instead of only names and cpm
