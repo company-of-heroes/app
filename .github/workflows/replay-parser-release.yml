@@ -152,19 +152,34 @@ jobs:
           releaseDraft: ${{ github.event_name == 'workflow_dispatch' }}
           prerelease: true
 
+      # Checks what users get: the published installers, and the app exe inside the MSI.
+      # The loose target/release exe is not what ships, so it is not checked.
       - name: Verify Authenticode signatures
         if: steps.codesign.outputs.enabled == 'true'
         shell: pwsh
         run: |
-          $files = Get-ChildItem 'packages/replay-parser/src-tauri/target/release' -Recurse -Include *.exe, *.msi |
-            Where-Object { $_.FullName -match '\\bundle\\|coh_replay_parser\.exe$' }
-          if (-not $files) {
-            throw 'No built executables or installers found to verify.'
-          }
-          foreach ($file in $files) {
-            $signature = Get-AuthenticodeSignature $file.FullName
-            Write-Host "$($file.Name): $($signature.Status) ($($signature.SignerCertificate.Subject))"
+          function Assert-Signed([string] $path) {
+            $signature = Get-AuthenticodeSignature $path
+            Write-Host "$(Split-Path $path -Leaf): $($signature.Status) ($($signature.SignerCertificate.Subject))"
             if ($signature.Status -ne 'Valid') {
-              throw "$($file.Name) is not validly signed: $($signature.Status)"
+              throw "$(Split-Path $path -Leaf) is not validly signed: $($signature.Status)"
             }
           }
+
+          $bundle = 'packages/replay-parser/src-tauri/target/release/bundle'
+          $installers = Get-ChildItem $bundle -Recurse -Include *-setup.exe, *.msi
+          if (-not $installers) {
+            throw "No installers found in $bundle."
+          }
+          foreach ($installer in $installers) {
+            Assert-Signed $installer.FullName
+          }
+
+          $msi = $installers | Where-Object { $_.Extension -eq '.msi' } | Select-Object -First 1
+          $extracted = Join-Path $env:RUNNER_TEMP 'msi-contents'
+          Start-Process msiexec.exe -Wait -NoNewWindow -ArgumentList '/a', "`"$($msi.FullName)`"", '/qn', "TARGETDIR=`"$extracted`""
+          $appExe = Get-ChildItem $extracted -Recurse -Filter *.exe | Select-Object -First 1
+          if (-not $appExe) {
+            throw 'No app executable found inside the MSI.'
+          }
+          Assert-Signed $appExe.FullName
