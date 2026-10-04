@@ -2,7 +2,13 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive, statLosses, statWins, tableHeadRow } from '@company-of-heroes/ui/variants';
+	import {
+		interactive,
+		statLosses,
+		statWins,
+		tableHeadRow,
+		factionIcon
+	} from '@company-of-heroes/ui/variants';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
 	import ClockIcon from 'phosphor-svelte/lib/ClockIcon';
@@ -276,7 +282,7 @@
 											<img
 												src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
 												alt=""
-												class="h-auto w-6 shrink-0 object-contain ring-1 ring-black/40"
+												class={factionIcon}
 											/>
 										</div>
 									</td>
@@ -333,7 +339,7 @@
 								<img
 									src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
 									alt=""
-									class="h-auto w-6 shrink-0 object-contain ring-1 ring-black/40"
+									class={factionIcon}
 								/>
 								<span class="{statWins} font-medium tabular-nums">{matchPlayer.wins}</span>
 								<span class="{statLosses} font-medium tabular-nums">{matchPlayer.losses}</span>

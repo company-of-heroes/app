@@ -15,7 +15,13 @@
 		normalizeMapName,
 		winrate
 	} from '../format/player-format';
-	import { interactive, statLosses, statWins, tableHeadRow } from '@company-of-heroes/ui/variants';
+	import {
+		interactive,
+		statLosses,
+		statWins,
+		tableHeadRow,
+		factionIcon
+	} from '@company-of-heroes/ui/variants';
 	import ChartLineIcon from 'phosphor-svelte/lib/ChartLineIcon';
 	import MapTrifoldIcon from 'phosphor-svelte/lib/MapTrifoldIcon';
 	import FlagIcon from 'phosphor-svelte/lib/FlagIcon';
@@ -187,11 +193,7 @@
 
 {#snippet factionMobileCard(row: { raceId: number; wins: number; losses: number })}
 	<div class="flex min-w-0 items-center gap-2">
-		<img
-			src={host.resolve.factionFlagByRace(row.raceId)}
-			alt=""
-			class="w-6 shrink-0 ring-2 ring-black"
-		/>
+		<img src={host.resolve.factionFlagByRace(row.raceId)} alt="" class={factionIcon} />
 		<span class="min-w-0 truncate font-medium">{getRaceLabel(row.raceId)}</span>
 	</div>
 	{@render statMeta(row)}
@@ -235,7 +237,7 @@
 									<img
 										src={host.resolve.factionFlagByRace(row.raceId)}
 										alt=""
-										class="w-6 shrink-0 ring-2 ring-black"
+										class={factionIcon}
 									/>
 									<span class="min-w-0 truncate">{getRaceLabel(row.raceId)}</span>
 								</div>
@@ -273,11 +275,7 @@
 						</span>
 					</div>
 					<div class="mt-2 flex min-w-0 items-center gap-2 text-sm">
-						<img
-							src={host.resolve.factionFlagByRace(row.raceId)}
-							alt=""
-							class="w-6 shrink-0 ring-2 ring-black"
-						/>
+						<img src={host.resolve.factionFlagByRace(row.raceId)} alt="" class={factionIcon} />
 						<span class="text-secondary-300 min-w-0 truncate">{getRaceLabel(row.raceId)}</span>
 					</div>
 				</div>
@@ -405,7 +403,7 @@
 									<img
 										src={host.resolve.factionFlagByRace(row.raceId)}
 										alt=""
-										class="w-6 shrink-0 ring-2 ring-black"
+										class={factionIcon}
 									/>
 									<span class="min-w-0 truncate text-white">{getRaceLabel(row.raceId)}</span>
 								</div>

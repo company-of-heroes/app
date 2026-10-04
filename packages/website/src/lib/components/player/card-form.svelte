@@ -66,7 +66,7 @@
 	/>
 	<Button
 		type="submit"
-		variant={prominent ? 'primary' : 'secondary'}
+		variant="secondary"
 		class="w-fit shrink-0"
 		loading={pending}
 		disabled={!canSearch}

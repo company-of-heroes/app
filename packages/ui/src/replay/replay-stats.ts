@@ -123,3 +123,65 @@ export function playerCpm(replay: ReplayData, playerId: number | null | undefine
 		: Math.max(replay.duration / 60, 1 / 60);
 	return String(Math.round(keys.size / minutes));
 }
+
+/** Per-replay cache of {@link timelineActions}, keyed on the actions array (replaced when actions load). */
+const timelineCache = new WeakMap<ReplayAction[], Map<number, ReplayAction[]>>();
+
+/**
+ * Labelled actions for every player in one pass over the replay: up to (and including) an AI
+ * takeover, without CPM spam, one per (tick, commandID, objectID). Cached per actions array.
+ */
+export function timelineActionsByPlayer(replay: ReplayData): Map<number, ReplayAction[]> {
+	const cached = timelineCache.get(replay.actions);
+	if (cached) {
+		return cached;
+	}
+
+	const byPlayer = new Map<number, ReplayAction[]>();
+	const seen = new Map<number, Set<string>>();
+	const takenOver = new Set<number>();
+	for (const action of replay.actions) {
+		const playerId = action.playerID;
+		if (playerId == null || takenOver.has(playerId)) {
+			continue;
+		}
+
+		if (isAiTakeoverAction(action)) {
+			takenOver.add(playerId);
+			continue;
+		}
+
+		if (!action.command?.description || isCpmExcludedAction(action)) {
+			continue;
+		}
+
+		const key = `${action.tick}|${action.commandID ?? 0}|${action.objectID ?? 0}`;
+		let keys = seen.get(playerId);
+		if (!keys) {
+			keys = new Set();
+			seen.set(playerId, keys);
+			byPlayer.set(playerId, []);
+		}
+
+		if (keys.has(key)) {
+			continue;
+		}
+
+		keys.add(key);
+		byPlayer.get(playerId)!.push(action);
+	}
+	timelineCache.set(replay.actions, byPlayer);
+	return byPlayer;
+}
+
+/** Labelled player actions for the timeline views (see {@link timelineActionsByPlayer}). */
+export function timelineActions(
+	replay: ReplayData,
+	playerId: number | null | undefined
+): ReplayAction[] {
+	if (playerId == null) {
+		return [];
+	}
+
+	return timelineActionsByPlayer(replay).get(playerId) ?? [];
+}

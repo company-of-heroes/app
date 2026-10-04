@@ -35,7 +35,9 @@ onmessage = async ({ data }: MessageEvent<ParseRequest>) => {
 							name: action.command.name,
 							description: action.command.description
 						}
-					: null
+					: null,
+				icon: action.icon ?? null,
+				cancelled: action.cancelled ?? null
 			}));
 			postMessage({ id: data.id, success: true, actions });
 			return;

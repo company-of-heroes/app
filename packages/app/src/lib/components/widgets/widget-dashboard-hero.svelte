@@ -16,7 +16,7 @@
 		normalizeMapName
 	} from '$lib/utils';
 	import { getFactionFlagFromLeaderboardId } from '$lib/utils/game';
-	import { interactive, statLosses, statWins } from '$lib/components/ui/variants';
+	import { interactive, statLosses, statWins, factionIcon } from '$lib/components/ui/variants';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { resource, watch } from 'runed';
 	import { onDestroy, onMount } from 'svelte';
@@ -445,7 +445,7 @@
 			return mode;
 		}
 
-		return `<span class="inline-flex items-center gap-1.5 leading-none"><span class="inline-flex p-[3px]"><img src="${getFactionFlagFromRace(match.raceId)}" alt="" class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4" /></span>${mode}</span>`;
+		return `<span class="inline-flex items-center gap-1.5 leading-none"><span class="inline-flex p-[3px]"><img src="${getFactionFlagFromRace(match.raceId)}" alt="" class="${factionIcon}" /></span>${mode}</span>`;
 	}
 
 	function winratePercent(wins: number, losses: number): string {
@@ -600,7 +600,7 @@
 										<img
 											src={getFactionFlagFromLeaderboardId(featuredMode.stat.leaderboard_id)}
 											alt={getRaceLabelFromLeaderboardId(featuredMode.stat.leaderboard_id)}
-											class="size-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
+											class={factionIcon}
 										/>
 										{#if featuredMode.rating == null}
 											<span class="text-secondary-500">{t('N/A')}</span>
@@ -742,7 +742,7 @@
 										<img
 											src={getFactionFlagFromRace(mainFaction.raceId)}
 											alt={getRaceLabel(mainFaction.raceId)}
-											class="size-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
+											class={factionIcon}
 										/>
 										<span class="text-secondary-300">{getRaceLabel(mainFaction.raceId)}</span>
 										<span class={statWins}>{t('{count}W', { count: mainFaction.wins })}</span>

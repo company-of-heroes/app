@@ -5,6 +5,7 @@
 	import { cn } from '../cn';
 	import { formatDate } from '../format/date';
 	import { tryUseHost } from '../host/host.context';
+	import { tooltipPanel } from '../variants';
 	import { formatRewardCondition } from './metrics';
 	import type { RewardView } from './types';
 
@@ -45,7 +46,7 @@
 
 	const content = $derived(
 		[
-			'<span class="bg-secondary-950 border-secondary-800 block max-w-64 rounded border px-3 py-2 text-left text-sm">',
+			`<span class="${cn(tooltipPanel, 'max-w-64 font-normal')}">`,
 			`<span class="block font-semibold text-white">${escape(reward.title)}</span>`,
 			reward.description
 				? `<span class="text-secondary-300 mt-0.5 block">${escape(reward.description)}</span>`

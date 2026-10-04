@@ -438,7 +438,8 @@
 	});
 
 	$effect(() => {
-		if (tab !== 'timeline' || !parsed || parseId == null || actionsLoaded) {
+		// The timeline is part of the overview, so actions load as soon as the file is parsed.
+		if (!parsed || parseId == null || actionsLoaded) {
 			return;
 		}
 
@@ -453,14 +454,11 @@
 
 				parsed = { ...parsed, actions: actions as ReplayAction[] };
 				actionsLoaded = true;
+				actionsPending = false;
 			})
 			.catch(() => {
 				if (!cancelled) {
 					actionsLoaded = true;
-				}
-			})
-			.finally(() => {
-				if (!cancelled) {
 					actionsPending = false;
 				}
 			});
@@ -645,19 +643,15 @@
 				replay={replayData}
 				livePlayers={ratingPreview.current?.livePlayers ?? []}
 			/>
+			{#if actionsPending || (!actionsLoaded && parseId != null)}
+				<p class="text-secondary-400 px-4 py-6 text-sm">{t('Loading…')}</p>
+			{:else}
+				<ReplayActions replay={replayData} />
+			{/if}
 		{/snippet}
 		{#snippet chat()}
 			{#if tab === 'chat'}
 				<ReplayChat messages={parsedReplay.messages} playerCount={parsedReplay.playerCount} />
-			{/if}
-		{/snippet}
-		{#snippet timeline()}
-			{#if tab === 'timeline'}
-				{#if actionsPending}
-					<p class="text-secondary-400 px-4 py-6 text-sm">{t('Loading…')}</p>
-				{:else}
-					<ReplayActions replay={replayData} />
-				{/if}
 			{/if}
 		{/snippet}
 	</ReplayTabs>

@@ -8,7 +8,8 @@
 		interactive,
 		statLosses,
 		statStreakClass,
-		statWins
+		statWins,
+		factionIcon
 	} from '@company-of-heroes/ui/variants';
 	import { getEloColor, getEloTextShadow } from '@company-of-heroes/ui/format/player-format';
 	import { hasLiveLobbyStats } from './stats';
@@ -68,10 +69,7 @@
 					<img
 						src={host.resolve.factionFlagByRace(player.race)}
 						alt=""
-						class={cn(
-							'ring-secondary-800 !size-5 shrink-0 rounded-full object-cover ring-4',
-							isMe && 'ring-primary'
-						)}
+						class={cn(factionIcon, isMe && 'ring-primary')}
 					/>
 				</PlayerProfileLink>
 			{:else}
@@ -79,10 +77,7 @@
 					<img
 						src={host.resolve.factionFlagByRace(player.race)}
 						alt=""
-						class={cn(
-							'ring-secondary-800 !size-5 shrink-0 rounded-full object-cover ring-4',
-							isMe && 'ring-primary'
-						)}
+						class={cn(factionIcon, isMe && 'ring-primary')}
 					/>
 				</a>
 			{/if}
@@ -91,10 +86,7 @@
 				src={host.resolve.factionFlagByRace(player.race)}
 				alt=""
 				title={label}
-				class={cn(
-					'ring-secondary-800 !size-5 shrink-0 rounded-full object-cover opacity-70 ring-4',
-					isMe && 'ring-primary'
-				)}
+				class={cn(factionIcon, 'opacity-70', isMe && 'ring-primary')}
 			/>
 		{/if}
 		{#if !cpu}

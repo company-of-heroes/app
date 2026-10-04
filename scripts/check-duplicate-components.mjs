@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Components live once, in packages/ui. Fails when the same component file name exists in both
- * hosts (packages/app and packages/website); warns when a host file shares its name with a ui
- * component (usually a leftover wrapper — move the logic into ui + the host context instead).
+ * Components live once, in packages/ui. Fails when the same component file name exists in more
+ * than one host (packages/app, packages/website, packages/replay-parser); warns when a host file
+ * shares its name with a ui component (usually a leftover wrapper — move the logic into ui + the
+ * host context instead).
  */
 import { readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -28,23 +29,28 @@ function components(dir) {
 
 const app = components('packages/app/src/lib/components');
 const website = components('packages/website/src/lib/components');
+const replayParser = components('packages/replay-parser/src/lib/components');
 const ui = components('packages/ui/src');
+const hosts = [app, website, replayParser];
 
-const duplicates = [...app.keys()].filter((name) => website.has(name));
-const shadowed = [...app.keys(), ...website.keys()].filter((name) => ui.has(name));
+const pathsOf = (name) => hosts.flatMap((host) => host.get(name) ?? []);
+const names = new Set(hosts.flatMap((host) => [...host.keys()]));
+const duplicates = [...names].filter((name) => hosts.filter((host) => host.has(name)).length > 1);
+const shadowed = [...names].filter((name) => ui.has(name));
 
 for (const name of shadowed) {
-	const hosts = [...(app.get(name) ?? []), ...(website.get(name) ?? [])].join(', ');
-	console.warn(`warn: ${hosts} has the same name as ${ui.get(name).join(', ')}`);
+	console.warn(`warn: ${pathsOf(name).join(', ')} has the same name as ${ui.get(name).join(', ')}`);
 }
 
 if (duplicates.length > 0) {
-	console.error('\nComponents that exist in both hosts (move them into packages/ui):');
+	console.error('\nComponents that exist in more than one host (move them into packages/ui):');
 	for (const name of duplicates) {
-		console.error(`  ${name}: ${[...app.get(name), ...website.get(name)].join(', ')}`);
+		console.error(`  ${name}: ${pathsOf(name).join(', ')}`);
 	}
 
 	process.exit(1);
 }
 
-console.log(`ok: no component exists in both hosts (${app.size} app, ${website.size} website).`);
+console.log(
+	`ok: no component exists in more than one host (${app.size} app, ${website.size} website, ${replayParser.size} replay parser).`
+);

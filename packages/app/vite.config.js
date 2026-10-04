@@ -78,6 +78,20 @@ function whatsNewPlugin() {
 	};
 }
 
+/**
+ * Watch `packages/shared-assets` in dev. It sits outside the app root, so Vite would not see new
+ * files there and `import.meta.glob` results (action icons, timeline art) stayed stale until a
+ * restart. Once watched, Vite's own glob handling picks up added and removed files.
+ */
+function sharedAssetsWatchPlugin() {
+	return {
+		name: 'shared-assets-watch',
+		configureServer(server) {
+			server.watcher.add(path.resolve(__dirname, '../shared-assets'));
+		}
+	};
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	// Production builds must never ship with a localhost PocketBase / site URL,
@@ -105,7 +119,14 @@ export default defineConfig(({ mode }) => {
 				)
 			}
 		},
-		plugins: [base64Plugin(), whatsNewPlugin(), sveltekit(), tailwindcss(), base64()],
+		plugins: [
+			base64Plugin(),
+			whatsNewPlugin(),
+			sharedAssetsWatchPlugin(),
+			sveltekit(),
+			tailwindcss(),
+			base64()
+		],
 		// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 		//
 		// 1. prevent vite from obscuring rust errors

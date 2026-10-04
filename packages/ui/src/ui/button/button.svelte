@@ -41,7 +41,7 @@
 		variant === 'success' && 'bg-success border-success text-success-foreground',
 		variant === 'warning' && 'bg-warning border-warning text-warning-foreground',
 		variant === 'ghost' && 'active:bg-secondary-900 border-0',
-		variant === 'link' && 'text-primary hover:text-primary-300 border-0 bg-transparent font-medium',
+		variant === 'link' && 'text-primary hover:text-primary-300 border-0 bg-transparent font-medium underline-offset-4 hover:underline',
 		restProps.class
 	)}
 	disabled={loading || restProps.disabled}

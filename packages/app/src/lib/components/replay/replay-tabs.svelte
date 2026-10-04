@@ -39,20 +39,17 @@
 		>
 			<Tabs.Trigger value="overview">{t('Overview')}</Tabs.Trigger>
 			<Tabs.Trigger value="chat">{t('Chat')}</Tabs.Trigger>
-			<Tabs.Trigger value="timeline">{t('Timeline')}</Tabs.Trigger>
 			{#if showScreenshots}
 				<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
 			{/if}
 		</Tabs.List>
 		<Tabs.Content value="overview" class={flush ? undefined : 'flex grow flex-col gap-4'}>
 			<ReplayPlayers {flush} {match} class={flush ? 'p-0' : undefined} />
+			<Actions replay={replayData} />
 			{@render overviewExtra?.()}
 		</Tabs.Content>
 		<Tabs.Content value="chat" class={flush ? undefined : 'flex grow flex-col gap-4'}>
 			<Chat messages={replay.messages} playerCount={replay.playerCount} class="grow" />
-		</Tabs.Content>
-		<Tabs.Content value="timeline" class={flush ? undefined : 'flex grow flex-col gap-4'}>
-			<Actions replay={replayData} />
 		</Tabs.Content>
 		{#if showScreenshots}
 			<Tabs.Content value="screenshots" class={flush ? undefined : 'flex grow flex-col gap-4'}>

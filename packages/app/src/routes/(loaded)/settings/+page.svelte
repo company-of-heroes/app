@@ -162,11 +162,9 @@
 		layout="stacked"
 	>
 		<FileSelection
-			name="pathToConfig"
 			bind:value={app.settings.companyOfHeroesConfigPath}
 			filters={[{ name: 'warnings.log', extensions: ['log'] }]}
 			defaultPath={app.settings.companyOfHeroesConfigPath || expectedLogDir}
-			showStatus={false}
 		/>
 		<div
 			class={[
@@ -212,11 +210,9 @@
 		layout="stacked"
 	>
 		<FileSelection
-			name="pathToInstallation"
 			directory
 			bind:value={app.settings.companyOfHeroesInstallationPath}
 			defaultPath={app.settings.companyOfHeroesInstallationPath || expectedGameDir}
-			showStatus={false}
 		/>
 		<div
 			class={[

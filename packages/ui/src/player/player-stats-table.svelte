@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { tableHeadRow, tableHeadText } from '@company-of-heroes/ui/variants';
+	import { tableHeadRow, tableHeadText, factionIcon } from '@company-of-heroes/ui/variants';
 	import {
 		getStoredEloForLeaderboard,
 		getEloColor,
@@ -127,7 +127,7 @@
 								<img
 									src={host.resolve.factionFlagByLeaderboard(stat.leaderboard_id)}
 									alt=""
-									class="w-6 shrink-0 ring-2 ring-black"
+									class={factionIcon}
 								/>
 								<span class="shrink-0 text-base whitespace-nowrap">
 									{getLeaderboardTypeLabel(stat.leaderboard_id)}
@@ -214,7 +214,7 @@
 					<img
 						src={host.resolve.factionFlagByLeaderboard(stat.leaderboard_id)}
 						alt=""
-						class="w-6 shrink-0 ring-2 ring-black"
+						class={factionIcon}
 					/>
 					<span class="min-w-0 truncate text-base whitespace-nowrap">
 						{getLeaderboardTypeLabel(stat.leaderboard_id)}

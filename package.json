@@ -13,6 +13,8 @@
 		"oppbot:build": "turbo run build --filter=@company-of-heroes/oppbot-overlay",
 		"website:dev": "pnpm --filter @company-of-heroes/website dev",
 		"website:build": "turbo run build --filter=@company-of-heroes/website",
+		"replay-parser:dev": "pnpm --filter @company-of-heroes/replay-parser dev",
+		"replay-parser:build": "pnpm --filter @company-of-heroes/replay-parser tauri build",
 		"check": "node scripts/check-duplicate-components.mjs && turbo run check",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",

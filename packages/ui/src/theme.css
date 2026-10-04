@@ -111,6 +111,16 @@
 	background-color: var(--color-gray-950);
 }
 
+/* tippy.js CSS is not imported; fade tooltips in/out ourselves. */
+.tippy-box {
+	transition-property: opacity, transform;
+}
+
+.tippy-box[data-state='hidden'] {
+	opacity: 0;
+	transform: translateY(2px);
+}
+
 /* bits-ui copies z-index onto this wrapper only when the menu mounts while open.
    Header menus stay mounted while closed, so the wrapper never gets a z-index
    and page content with its own stacking level paints over the menu. */

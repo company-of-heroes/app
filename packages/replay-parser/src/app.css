@@ -1,0 +1,59 @@
+@import 'tailwindcss';
+@import '@company-of-heroes/ui/theme.css';
+@import 'tw-animate-css';
+
+@source '../node_modules/layerchart/dist';
+@source '../../ui/src';
+
+/* Tailwind `bg-*` uses color-mix(..., transparent); WebView2 then composites menus as glass. */
+[data-dropdown-menu-content],
+[data-context-menu-content],
+[data-popover-content],
+[data-select-content] {
+	background-color: var(--color-gray-950);
+	box-shadow: none;
+}
+
+html {
+	font-size: 18px;
+}
+
+html,
+body {
+	background-color: var(--color-secondary-950);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-heading);
+	font-weight: 700;
+}
+
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--color-secondary-600);
+	background-clip: padding-box;
+	border: 2px solid transparent;
+	border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: var(--color-secondary-400);
+}
+
+[data-sonner-toaster] {
+	font-family: var(--default-font-family);
+}

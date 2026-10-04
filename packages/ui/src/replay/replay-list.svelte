@@ -32,6 +32,8 @@
 		onSort: (field: HistorySortField) => void;
 		emptyMessage?: string;
 		mapLabel?: string;
+		/** Likes, comments and downloads; off for hosts without community data (local replays). */
+		showEngagement?: boolean;
 	};
 
 	const { t } = useI18n();
@@ -45,7 +47,8 @@
 		sortDir: _sortDir,
 		onSort: _onSort,
 		emptyMessage = t('No community replays found.'),
-		mapLabel = t('Map')
+		mapLabel = t('Map'),
+		showEngagement = true
 	}: Props = $props();
 
 	const replayHref = (match: CommunityMatch) => replayDetailHref(match, host.routes);
@@ -120,7 +123,9 @@
 					<th class="px-2 py-2 whitespace-nowrap">{t('Allies')}</th>
 					<th class="px-2 py-2 whitespace-nowrap">{t('Axis')}</th>
 					<th class="px-4 py-2 whitespace-nowrap">{t('Duration')}</th>
-					<th class="px-4 py-2 whitespace-nowrap"></th>
+					{#if showEngagement}
+						<th class="px-4 py-2 whitespace-nowrap"></th>
+					{/if}
 					<th class="px-4 py-2 text-end whitespace-nowrap">{t('Date')}</th>
 				</tr>
 			</thead>
@@ -178,7 +183,9 @@
 								{formatDurationSeconds(matchDurationSeconds(match))}
 							</a>
 						</td>
-						{@render engagementCell(match)}
+						{#if showEngagement}
+							{@render engagementCell(match)}
+						{/if}
 						<td
 							class="text-secondary-400 px-4 py-0 text-end text-sm whitespace-nowrap tabular-nums"
 						>
@@ -226,25 +233,27 @@
 					</a>
 					<span>{formatMatchDate(match.createdAt, host.locale())}</span>
 				</div>
-				<div class="text-secondary-400 mt-1.5 flex items-center gap-3 text-sm tabular-nums">
-					<span
-						class={cn(
-							'inline-flex items-center gap-1',
-							scoreClassName(match.likeCount ?? 0, 'text-secondary-400')
-						)}
-					>
-						<CaretUpIcon size={14} weight="fill" />
-						{match.likeCount ?? 0}
-					</span>
-					<span class="inline-flex items-center gap-1">
-						<ChatCircleIcon size={14} weight="duotone" />
-						{match.commentCount ?? 0}
-					</span>
-					<span class="inline-flex items-center gap-1">
-						<DownloadIcon size={14} weight="duotone" />
-						{match.downloadCount ?? 0}
-					</span>
-				</div>
+				{#if showEngagement}
+					<div class="text-secondary-400 mt-1.5 flex items-center gap-3 text-sm tabular-nums">
+						<span
+							class={cn(
+								'inline-flex items-center gap-1',
+								scoreClassName(match.likeCount ?? 0, 'text-secondary-400')
+							)}
+						>
+							<CaretUpIcon size={14} weight="fill" />
+							{match.likeCount ?? 0}
+						</span>
+						<span class="inline-flex items-center gap-1">
+							<ChatCircleIcon size={14} weight="duotone" />
+							{match.commentCount ?? 0}
+						</span>
+						<span class="inline-flex items-center gap-1">
+							<DownloadIcon size={14} weight="duotone" />
+							{match.downloadCount ?? 0}
+						</span>
+					</div>
+				{/if}
 			</div>
 		{/each}
 	</div>

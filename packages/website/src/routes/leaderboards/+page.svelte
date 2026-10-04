@@ -17,7 +17,7 @@
 	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
 	import { SITE_URL } from '$lib/site/urls';
 	import { cn } from '$lib/utils/cn';
-	import { controlBase, tabTrigger } from '$lib/utils/variants';
+	import { controlBase, tabTrigger, factionIcon } from '$lib/utils/variants';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
 	import type { PageData } from './$types';
 
@@ -115,11 +115,7 @@
 						aria-label={t(faction.label)}
 						onclick={() => selectBoard(faction.value)}
 					>
-						<img
-							src={getFactionFlagByRace(faction.race)}
-							alt=""
-							class="h-5 w-auto border border-black"
-						/>
+						<img src={getFactionFlagByRace(faction.race)} alt="" class={factionIcon} />
 					</button>
 				{/each}
 			</div>

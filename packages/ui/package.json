@@ -40,6 +40,7 @@
 		"./sheet": "./src/ui/sheet/index.ts",
 		"./form": "./src/ui/form/index.ts",
 		"./toasts": "./src/ui/toasts/index.ts",
+		"./splash": "./src/splash/index.ts",
 		"./context-menu": "./src/ui/context-menu/index.ts",
 		"./format/player-format": "./src/format/player-format.ts",
 		"./format/ranks": "./src/format/ranks.ts",
@@ -56,6 +57,7 @@
 		"./replay/filter-ast": "./src/replay/filter-ast.ts",
 		"./replay/utils": "./src/replay/utils.ts",
 		"./replay/stats": "./src/replay/replay-stats.ts",
+		"./replay/action-icons": "./src/replay/action-icons.ts",
 		"./replay/roster": "./src/replay/roster.ts",
 		"./replay/parse": "./src/replay/parse/index.ts",
 		"./comment": "./src/comment/index.ts",
@@ -74,12 +76,13 @@
 	},
 	"dependencies": {
 		"@company-of-heroes/i18n": "workspace:*",
+		"@fknoobs/replay-parser": "github:fknoobs/replay-analyzer",
 		"clsx": "^2.1.1",
+		"d3-shape": "^3.2.0",
 		"emittery": "^1.2.1",
 		"marked": "17.0.6",
 		"tailwind-merge": "^3.6.0",
-		"tippy.js": "^6.3.7",
-		"@fknoobs/replay-parser": "github:fknoobs/replay-analyzer"
+		"tippy.js": "^6.3.7"
 	},
 	"peerDependencies": {
 		"bits-ui": "^2.19.0",
@@ -90,13 +93,14 @@
 		"svelte-sonner": "^1.2.1"
 	},
 	"devDependencies": {
+		"@types/d3-shape": "^3",
 		"bits-ui": "^2.19.0",
 		"layerchart": "2.0.0-next.43",
 		"phosphor-svelte": "^3.1.0",
 		"runed": "^0.37.1",
 		"svelte": "^5.57.0",
 		"svelte-check": "^4.7.6",
-		"typescript": "~5.6.3",
-		"svelte-sonner": "1.2.1"
+		"svelte-sonner": "1.2.1",
+		"typescript": "~5.6.3"
 	}
 }

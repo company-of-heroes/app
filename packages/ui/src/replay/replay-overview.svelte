@@ -7,7 +7,8 @@
 		interactive,
 		mePlayerText,
 		statLosses,
-		statWins
+		statWins,
+		factionIcon
 	} from '@company-of-heroes/ui/variants';
 	import { getEloColor, getEloTextShadow, isEliteElo } from '../format/player-format';
 	import type {
@@ -404,11 +405,7 @@
 					{/if}
 				</div>
 				<div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base tabular-nums">
-					<img
-						src={host.resolve.factionFlagByRace(race ?? 0)}
-						alt=""
-						class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
-					/>
+					<img src={host.resolve.factionFlagByRace(race ?? 0)} alt="" class={factionIcon} />
 					<span class="text-secondary-200 truncate">
 						{player.doctrineName || t('Unknown doctrine')}
 					</span>
@@ -531,11 +528,7 @@
 					{/if}
 				</div>
 				<div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base tabular-nums">
-					<img
-						src={host.resolve.factionFlagByRace(player.race)}
-						alt=""
-						class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
-					/>
+					<img src={host.resolve.factionFlagByRace(player.race)} alt="" class={factionIcon} />
 					<span class="text-secondary-400">—</span>
 					{#if !cpu}
 						{@render rankBadge(player.race, stats?.rankLevel)}

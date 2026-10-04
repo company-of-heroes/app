@@ -6,11 +6,9 @@
 	type Props = {
 		value?: string;
 		showChat?: boolean;
-		showTimeline?: boolean;
 		showScreenshots?: boolean;
 		overview?: Snippet;
 		chat?: Snippet;
-		timeline?: Snippet;
 		screenshots?: Snippet;
 	};
 
@@ -19,11 +17,9 @@
 	let {
 		value = $bindable('overview'),
 		showChat = true,
-		showTimeline = true,
 		showScreenshots = false,
 		overview,
 		chat,
-		timeline,
 		screenshots
 	}: Props = $props();
 </script>
@@ -33,9 +29,6 @@
 		<Tabs.Trigger value="overview">{t('Overview')}</Tabs.Trigger>
 		{#if showChat}
 			<Tabs.Trigger value="chat">{t('Chat')}</Tabs.Trigger>
-		{/if}
-		{#if showTimeline}
-			<Tabs.Trigger value="timeline">{t('Timeline')}</Tabs.Trigger>
 		{/if}
 		{#if showScreenshots}
 			<Tabs.Trigger value="screenshots">{t('Screenshots')}</Tabs.Trigger>
@@ -47,11 +40,6 @@
 	{#if showChat}
 		<Tabs.Content value="chat">
 			{@render chat?.()}
-		</Tabs.Content>
-	{/if}
-	{#if showTimeline}
-		<Tabs.Content value="timeline">
-			{@render timeline?.()}
 		</Tabs.Content>
 	{/if}
 	{#if showScreenshots}

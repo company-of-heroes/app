@@ -77,6 +77,12 @@ export const surfaceModal = surfaceOverlay;
 export const dropdownPanel =
 	'border-secondary-800 bg-gray-950 overflow-hidden rounded-md border p-0 shadow-none';
 
+export const tooltipPanel = cn(
+	'block max-w-72 rounded-md border px-3 py-2',
+	'text-left text-sm leading-snug font-medium text-white',
+	'border-secondary-800 bg-gray-950 shadow-lg shadow-black/30'
+);
+
 export const dropdownHeader =
 	'border-secondary-800 flex items-center justify-between border-b px-4 py-3';
 
@@ -103,6 +109,35 @@ export const tabTrigger =
 	'not-disabled:hover:bg-secondary-950/50 ' +
 	'not-disabled:data-[state=active]:border-primary/20 not-disabled:data-[state=active]:bg-primary/5 not-disabled:data-[state=active]:text-primary ' +
 	'disabled:text-secondary-500';
+
+/**
+ * Spreadsheet-style tab on top of a panel. The active tab uses the header background
+ * (`gray-950`, same as the replay timeline toolbar) and covers the strip's bottom line (an
+ * inset shadow) so it flows into the panel below. Pass as `class` on `Tabs.Trigger`.
+ */
+export const sheetTabTrigger = cn(
+	interactive,
+	'flex h-8 max-w-56 shrink-0 items-center gap-2 px-3 py-0 text-sm font-medium',
+	'rounded-t-md rounded-b-none border border-b-0 border-white/10 transition-colors duration-150',
+	'bg-secondary-950/70 text-secondary-400 not-disabled:hover:bg-secondary-900 not-disabled:hover:text-white',
+	'not-disabled:data-[state=active]:relative not-disabled:data-[state=active]:z-10',
+	'not-disabled:data-[state=active]:border-white/15 not-disabled:data-[state=active]:bg-gray-950 not-disabled:data-[state=active]:text-[#ece4cf]'
+);
+
+/**
+ * Series colours for multi-line charts (one per player). Muted to sit next to the gold
+ * `primary` and the game resource colours on the dark surfaces.
+ */
+export const chartSeriesColours = [
+	'#7fb2e5',
+	'#e8c766',
+	'#e07a6f',
+	'#8fca8a',
+	'#c49be0',
+	'#5fc4bd',
+	'#e6a15c',
+	'#d98bb3'
+] as const;
 
 export const mePlayerText = 'text-primary font-semibold';
 

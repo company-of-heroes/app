@@ -7,9 +7,10 @@
 // per-package files are what `changesets/action` reads to build the "Version
 // Packages" PR body.
 //
-// The app is special-cased: tauri.conf.json is the source of truth for its
-// version, Cargo.toml is kept in sync, and its summaries are also prepended to
-// the root CHANGELOG.md in the format the in-app changelog dialog renders:
+// Tauri apps (the companion app and the replay parser) are special-cased:
+// tauri.conf.json is the source of truth for their version and Cargo.toml is
+// kept in sync. The companion app's summaries are also prepended to the root
+// CHANGELOG.md in the format the in-app changelog dialog renders:
 //
 //   ### vX.Y.Z
 //
@@ -25,6 +26,11 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, basename } from 'node:path';
 
 const APP_PACKAGE = '@company-of-heroes/app';
+/** Tauri apps by package name → their `src-tauri` folder. */
+const TAURI_PACKAGES = {
+	[APP_PACKAGE]: 'packages/app/src-tauri',
+	'@company-of-heroes/replay-parser': 'packages/replay-parser/src-tauri'
+};
 const BUMP_RANK = { patch: 1, minor: 2, major: 3 };
 const DRY_RUN = process.argv.includes('--dry-run');
 const CHECK_ONLY = process.argv.includes('--check');
@@ -35,10 +41,15 @@ const root = join(scriptDir, '..');
 const paths = {
 	packagesDir: join(root, 'packages'),
 	changesetDir: join(root, '.changeset'),
-	changelog: join(root, 'CHANGELOG.md'),
-	tauriConf: join(root, 'packages/app/src-tauri/tauri.conf.json'),
-	cargoToml: join(root, 'packages/app/src-tauri/Cargo.toml')
+	changelog: join(root, 'CHANGELOG.md')
 };
+
+function tauriPaths(packageName) {
+	const dir = TAURI_PACKAGES[packageName];
+	return dir
+		? { tauriConf: join(root, dir, 'tauri.conf.json'), cargoToml: join(root, dir, 'Cargo.toml') }
+		: null;
+}
 
 /** Every package under `packages/*`, keyed by its package.json name. */
 function readWorkspacePackages() {
@@ -141,9 +152,9 @@ function highestBump(changesets) {
 		.reduce((highest, current) => (BUMP_RANK[current] > BUMP_RANK[highest] ? current : highest));
 }
 
-/** tauri.conf.json is the source of truth for the app version. */
-function readAppVersion() {
-	const conf = JSON.parse(readFileSync(paths.tauriConf, 'utf8'));
+/** tauri.conf.json is the source of truth for a Tauri app's version. */
+function readTauriVersion(tauri) {
+	const conf = JSON.parse(readFileSync(tauri.tauriConf, 'utf8'));
 	if (!conf.version) {
 		throw new Error('No "version" found in tauri.conf.json');
 	}
@@ -152,8 +163,9 @@ function readAppVersion() {
 }
 
 function readCurrentVersion(pkg) {
-	if (pkg.name === APP_PACKAGE) {
-		return readAppVersion();
+	const tauri = tauriPaths(pkg.name);
+	if (tauri) {
+		return readTauriVersion(tauri);
 	}
 
 	if (!pkg.version) {
@@ -173,8 +185,8 @@ function replaceFirst(filePath, regex, replacement) {
 }
 
 /** Replaces the `version = "..."` line inside Cargo.toml's [package] section only. */
-function writeCargoVersion(newVersion) {
-	const content = readFileSync(paths.cargoToml, 'utf8');
+function writeCargoVersion(cargoToml, newVersion) {
+	const content = readFileSync(cargoToml, 'utf8');
 	const lines = content.split(/\r?\n/);
 
 	let inPackage = false;
@@ -200,7 +212,7 @@ function writeCargoVersion(newVersion) {
 		throw new Error('Could not find [package] version in Cargo.toml');
 	}
 
-	writeFileSync(paths.cargoToml, lines.join('\n'));
+	writeFileSync(cargoToml, lines.join('\n'));
 }
 
 /** Turns changeset bodies into CHANGELOG bullet lines. */
@@ -265,9 +277,12 @@ function versionPackage(pkg, packageChangesets) {
 
 	replaceFirst(pkg.packageJsonPath, /("version":\s*")[^"]+(")/, `$1${newVersion}$2`);
 
+	if (tauri) {
+		replaceFirst(tauri.tauriConf, /("version":\s*")[^"]+(")/, `$1${newVersion}$2`);
+		writeCargoVersion(tauri.cargoToml, newVersion);
+	}
+
 	if (isApp) {
-		replaceFirst(paths.tauriConf, /("version":\s*")[^"]+(")/, `$1${newVersion}$2`);
-		writeCargoVersion(newVersion);
 		prependChangelog(newVersion, bullets);
 	}
 

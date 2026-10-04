@@ -8,6 +8,7 @@
 		"./page-bg": "./assets/art_ui_textures_textures_fe_bkg_cxp1.png",
 		"./screens/*": "./screens/*",
 		"./ranks/*": "./ranks/*",
-		"./factions/*": "./factions/*"
+		"./factions/*": "./factions/*",
+		"./actions/*": "./actions/*"
 	}
 }

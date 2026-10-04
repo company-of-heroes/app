@@ -94,11 +94,7 @@
 						class="size-5 shrink-0"
 					/>
 				{:else}
-					<img
-						src={host.resolve.factionFlagByRace(player.race ?? 0)}
-						alt=""
-						class={cn(factionIcon, '!size-4 ring-2')}
-					/>
+					<img src={host.resolve.factionFlagByRace(player.race ?? 0)} alt="" class={factionIcon} />
 				{/if}
 				<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 				<PlayerStreamerIcon steamId={player.steamId} />

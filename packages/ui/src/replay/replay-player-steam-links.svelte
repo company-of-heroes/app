@@ -3,6 +3,7 @@
 	import { Selection } from '../ui/input';
 	import { Button } from '../ui/button';
 	import { cn } from '../cn';
+	import { factionIcon } from '../variants';
 	import { useHost } from '../host/host.context';
 	import { raceFromReplayFaction } from './replay-stats';
 	import ArrowSquareOutIcon from 'phosphor-svelte/lib/ArrowSquareOutIcon';
@@ -283,7 +284,7 @@
 						<img
 							src={host.resolve.factionFlagByRace(factionRace(player.faction))}
 							alt=""
-							class="ring-secondary-800 size-5 shrink-0 rounded-full object-cover ring-4"
+							class={factionIcon}
 						/>
 						<div class="min-w-0">
 							<p class="truncate text-sm font-medium text-white">{player.name}</p>

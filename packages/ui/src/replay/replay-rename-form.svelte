@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import * as Form from '$lib/components/ui/form';
-	import { useI18n } from '$lib/i18n';
+	import { useI18n } from '@company-of-heroes/i18n';
+	import { Button } from '../ui/button';
+	import { Input } from '../ui/input';
+	import * as Form from '../ui/form';
 
 	type Props = {
 		initialName: string;

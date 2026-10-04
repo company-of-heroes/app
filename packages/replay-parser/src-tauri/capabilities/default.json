@@ -1,0 +1,62 @@
+{
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "default",
+	"description": "Capability for the main window",
+	"windows": ["main"],
+	"permissions": [
+		"core:default",
+		"core:window:allow-minimize",
+		"core:window:allow-toggle-maximize",
+		"core:window:allow-close",
+		"core:window:allow-start-dragging",
+		"core:window:allow-set-size",
+		"core:window:allow-set-min-size",
+		"core:window:allow-set-resizable",
+		"core:window:allow-set-maximizable",
+		"core:window:allow-center",
+		"dialog:default",
+		"store:default",
+		"opener:allow-reveal-item-in-dir",
+		{
+			"identifier": "opener:allow-open-url",
+			"allow": [
+				{
+					"url": "https://github.com/company-of-heroes/app/releases/*"
+				},
+				{
+					"url": "https://coh1stats.com"
+				},
+				{
+					"url": "https://coh1stats.com/*"
+				},
+				{
+					"url": "https://www.paypal.com/donate/?*"
+				},
+				{
+					"url": "https://www.twitch.tv/fknoobscoh"
+				}
+			]
+		},
+		{
+			"identifier": "opener:allow-open-path",
+			"allow": [
+				{
+					"path": "**"
+				}
+			]
+		},
+		"fs:read-all",
+		"fs:allow-write-file",
+		"fs:allow-rename",
+		"fs:allow-remove",
+		"fs:allow-copy-file",
+		{
+			"identifier": "fs:scope",
+			"allow": [
+				{
+					"path": "**"
+				}
+			]
+		}
+	]
+}

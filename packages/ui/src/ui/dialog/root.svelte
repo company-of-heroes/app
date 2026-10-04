@@ -53,7 +53,7 @@
 			)}
 		>
 			{#if dialog.title}
-				<Dialog.Title class={cn(flushHeader, 'bg-gray-950')}>
+				<Dialog.Title class={cn(flushHeader, 'rounded-tl-md bg-gray-950')}>
 					<div class="flex items-start justify-between gap-4">
 						<div class="min-w-0">
 							{#if typeof dialog.title === 'string'}

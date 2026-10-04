@@ -2,7 +2,7 @@
 	import { useHost } from '../host/host.context';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive, tabTrigger } from '@company-of-heroes/ui/variants';
+	import { interactive, tabTrigger, factionIcon } from '@company-of-heroes/ui/variants';
 	import { isRankedMatchType } from '../format/match-type';
 	import { getModeLabel, getRaceLabel } from '../format/player-format';
 	import { Axis, Circle, Highlight, Layer, LineChart, Spline, Text, Tooltip } from 'layerchart';
@@ -176,7 +176,7 @@
 							<img
 								src={host.resolve.factionFlagByRace(raceId)}
 								alt={raceLabel(raceId)}
-								class="h-3.5 shrink-0"
+								class={factionIcon}
 							/>
 							<span class="min-w-0 flex-1 truncate">{raceLabel(raceId)}</span>
 						</button>

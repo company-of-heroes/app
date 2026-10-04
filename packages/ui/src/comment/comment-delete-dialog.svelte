@@ -90,16 +90,13 @@
 			class={cn(
 				overlayBackdrop,
 				'fixed inset-0 z-50',
-				'data-[state=open]:animate-in data-[state=open]:fade-in-0',
-				'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:fill-mode-forwards',
 				'flex items-center justify-center overflow-y-auto p-4'
 			)}
 		/>
 		<Dialog.Content
 			class={cn(
-				'data-[state=open]:animate-in data-[state=open]:zoom-in absolute duration-75',
-				'data-[state=closed]:animate-out data-[state=closed]:zoom-out data-[state=closed]:fade-out data-[state=closed]:fill-mode-forwards',
-				'top-0 left-1/2 z-50 mx-auto mt-12 w-[480px] max-w-[calc(100%-2rem)] -translate-x-1/2 outline-hidden',
+				'absolute',
+				'top-0 left-1/2 z-50 mx-auto mt-12 w-[480px] max-w-[calc(100%-2rem)] -translate-x-1/2 overflow-hidden outline-hidden',
 				surfaceModal
 			)}
 		>

@@ -124,6 +124,8 @@ export type HostResolvers = {
 	gameString?: (key: string) => string | null;
 	/** URL for a doctrine banner file name (see `doctrineBannerFile`). */
 	doctrineBanner: (file: string) => string;
+	/** URL for a replay action icon key (see `actionIconKey`). */
+	actionIcon: (key: string) => string | undefined;
 	/** Avatar for a comment author / mention; hosts may add a generated fallback. */
 	userAvatar: (user: { id: string; avatarUrl?: string }) => string | undefined;
 };

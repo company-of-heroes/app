@@ -4,6 +4,7 @@ import {
 	type Player,
 	type Replay
 } from '@fknoobs/replay-parser';
+import { actionIconKey } from '../action-icons';
 
 /** Legacy flat chat line (UI / PocketBase `messages` JSON). */
 export type FlatReplayMessage = {
@@ -23,6 +24,13 @@ export type FlatReplayAction = {
 	commandID?: number;
 	objectID?: number;
 	command?: { type?: string; name?: string; description?: string } | null;
+	icon?: string | null;
+	cancelled?: {
+		tick: number;
+		commandID: number;
+		objectID: number;
+		command?: { type?: string; name?: string; description?: string } | null;
+	} | null;
 };
 
 /**
@@ -81,14 +89,26 @@ export function flattenReplay(
 			tick: message.tick
 		})),
 		actions: includeActions
-			? replay.actions.map((action) => ({
-					tick: action.tick,
-					timestamp: formatTickTimestamp(action.tick),
-					playerID: action.playerId,
-					commandID: action.commandId,
-					objectID: action.objectId,
-					command: action.command ?? null
-				}))
+			? replay.actions.map((action) => {
+					const cancelled = action.cancelled
+						? {
+								tick: action.cancelled.tick,
+								commandID: action.cancelled.commandId,
+								objectID: action.cancelled.objectId,
+								command: action.cancelled.command ?? null
+							}
+						: null;
+					return {
+						tick: action.tick,
+						timestamp: formatTickTimestamp(action.tick),
+						playerID: action.playerId,
+						commandID: action.commandId,
+						objectID: action.objectId,
+						command: action.command ?? null,
+						icon: actionIconKey({ objectID: action.objectId, command: action.command, cancelled }),
+						cancelled
+					};
+				})
 			: [],
 		replayName: header.replayName,
 		playerCount: replay.players.length,

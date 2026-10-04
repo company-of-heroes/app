@@ -9,6 +9,7 @@ import Select from './select.svelte';
 import Slider from './slider.svelte';
 import Textarea from './textarea.svelte';
 import FileDropzone from './file-dropzone.svelte';
+import PathSelection from './path-selection.svelte';
 
 export type InputProps = Omit<HTMLInputAttributes, 'size'> & {
 	flush?: boolean;
@@ -25,6 +26,7 @@ export type TextareaProps = HTMLTextareaAttributes & {
 };
 
 export type { FileDropzoneProps } from './file-dropzone.svelte';
+export type { PathSelectionProps } from './path-selection.svelte';
 export type { CompareOperatorOption, CompareInputProps } from './compare-input.svelte';
 export type { SelectProps, SelectItem } from './select.svelte';
 
@@ -37,5 +39,6 @@ export {
 	Select,
 	Slider,
 	Textarea,
-	FileDropzone
+	FileDropzone,
+	PathSelection
 };

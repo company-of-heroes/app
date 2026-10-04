@@ -24,6 +24,14 @@ export type ReplayCommand = {
 	description?: string;
 };
 
+/** The queued order a `CANCEL_QUEUE` action removed (parser `CancelledOrder`). */
+export type ReplayCancelledOrder = {
+	tick: number;
+	commandID: number;
+	objectID: number;
+	command?: ReplayCommand | null;
+};
+
 export type ReplayAction = {
 	tick: number;
 	timestamp: string;
@@ -31,6 +39,10 @@ export type ReplayAction = {
 	commandID?: number;
 	objectID?: number;
 	command?: ReplayCommand;
+	/** In-game icon key (see `actionIconKey`); resolve to a URL with `host.resolve.actionIcon`. */
+	icon?: string | null;
+	/** On `CANCEL_QUEUE` actions: the order that was cancelled. */
+	cancelled?: ReplayCancelledOrder | null;
 };
 
 export type ReplayData = {

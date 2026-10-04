@@ -22,6 +22,7 @@ import {
 	getString
 } from '$lib/utils/game';
 import { flagImageUrl } from '$lib/utils/leaderboard-resolvers';
+import { getActionIcon } from '$lib/utils/action-icons';
 import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 import { isStreamerLive } from '$core/pocketbase/live-streamers-cache.svelte';
 
@@ -71,6 +72,7 @@ export function provideAppHost(): HostContext {
 			gameString: (key) => getString(key) || null,
 			doctrineBanner: (file) =>
 				Object.entries(doctrineBanners).find(([path]) => path.endsWith(`/${file}`))?.[1] ?? '',
+			actionIcon: getActionIcon,
 			userAvatar: (user) => user.avatarUrl || userAvatarSrc({ id: user.id })
 		},
 		auth: {

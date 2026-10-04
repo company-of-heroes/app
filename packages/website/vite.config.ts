@@ -1,13 +1,27 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import { fileURLToPath } from 'node:url';
 
 const websiteRoot = fileURLToPath(new URL('.', import.meta.url));
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
+/**
+ * Watch `packages/shared-assets` in dev. It sits outside the website root, so Vite would not see
+ * new files there and `import.meta.glob` results (action icons, timeline art) stayed stale until a
+ * restart. Once watched, Vite's own glob handling picks up added and removed files.
+ */
+function sharedAssetsWatchPlugin(): Plugin {
+	return {
+		name: 'shared-assets-watch',
+		configureServer(server) {
+			server.watcher.add(fileURLToPath(new URL('../shared-assets', import.meta.url)));
+		}
+	};
+}
+
 export default defineConfig({
-	plugins: [sveltekit(), tailwindcss()],
+	plugins: [sharedAssetsWatchPlugin(), sveltekit(), tailwindcss()],
 	optimizeDeps: {
 		include: ['@fknoobs/replay-parser']
 	},

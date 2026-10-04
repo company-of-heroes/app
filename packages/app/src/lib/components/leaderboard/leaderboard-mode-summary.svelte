@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LeaderboardStat } from '@fknoobs/app';
 	import { cn, getRankImageByLeaderboardId } from '$lib/utils';
+	import { factionIcon } from '$lib/components/ui/variants';
 	import { getFactionFlagFromLeaderboardId } from '$lib/utils/game';
 	import type { PlayerEloMap } from '$lib/utils/player-elo';
 	import {
@@ -38,7 +39,7 @@
 					<img
 						src={getFactionFlagFromLeaderboardId(row.stat.leaderboard_id)}
 						alt={getRaceLabelFromLeaderboardId(row.stat.leaderboard_id)}
-						class="h-4 w-4 shrink-0 rounded-full object-cover ring-1 ring-black/40"
+						class={factionIcon}
 					/>
 					{#if row.rating == null}
 						<span class="text-secondary-500 text-sm">{t('N/A')}</span>

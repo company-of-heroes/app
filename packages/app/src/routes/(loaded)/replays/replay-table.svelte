@@ -20,7 +20,7 @@
 	import type { ReplayList } from './replay-list.svelte';
 	import { app } from '$core/app/context';
 	import { resource } from 'runed';
-	import ReplayRenameModal from './replay-rename-modal.svelte';
+	import { ReplayRenameForm } from '@company-of-heroes/ui/replay';
 	import ReplayDeleteModal from './replay-delete-modal.svelte';
 	import { useI18n } from '$lib/i18n';
 
@@ -170,7 +170,7 @@
 		app.modal.create({
 			title: t('Rename replay'),
 			size: 'sm',
-			component: ReplayRenameModal,
+			component: ReplayRenameForm,
 			props: {
 				initialName: row.title === '-' ? '' : row.title,
 				onCancel: () => app.modal.close(),

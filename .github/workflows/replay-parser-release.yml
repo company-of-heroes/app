@@ -1,0 +1,170 @@
+name: Replay Manager Release
+
+on:
+  push:
+    tags:
+      - 'replay-parser-v*'
+  workflow_dispatch:
+  # Called from Release after the Version Packages PR is merged and tagged.
+  # GITHUB_TOKEN tag pushes do not trigger this workflow on their own.
+  workflow_call:
+
+# Not github.workflow: in a workflow_call that is the caller's name ("Release"),
+# which would share a group with the parent and deadlock (see windows-release.yml).
+concurrency:
+  group: replay-parser-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: packages/replay-parser/src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Authenticode via Azure Artifact Signing, same account and secrets as the companion app
+      # (windows-release.yml). Inert until AZURE_CLIENT_ID is set.
+      # Secrets: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
+      # Variables: AZURE_SIGNING_ENDPOINT, AZURE_SIGNING_ACCOUNT
+      # Optional variable: AZURE_SIGNING_PROFILE (defaults to coh1stats)
+      - name: Enable Windows Authenticode signing
+        id: codesign
+        shell: pwsh
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+        run: |
+          if (-not $env:AZURE_CLIENT_ID) {
+            Write-Host "Skipping Authenticode signing; AZURE_CLIENT_ID is not set."
+            echo 'enabled=false' >> $env:GITHUB_OUTPUT
+            echo 'args=' >> $env:GITHUB_OUTPUT
+            return
+          }
+          foreach ($name in @('AZURE_CLIENT_SECRET', 'AZURE_TENANT_ID', 'AZURE_SIGNING_ENDPOINT', 'AZURE_SIGNING_ACCOUNT')) {
+            if ([string]::IsNullOrWhiteSpace((Get-Item "env:$name" -ErrorAction SilentlyContinue).Value)) {
+              throw "$name is required when AZURE_CLIENT_ID is set."
+            }
+          }
+          $profile = if ($env:AZURE_SIGNING_PROFILE) { $env:AZURE_SIGNING_PROFILE } else { 'coh1stats' }
+          $signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Directory |
+            Sort-Object Name -Descending |
+            ForEach-Object { Join-Path $_.FullName 'x64\signtool.exe' } |
+            Where-Object { Test-Path $_ } |
+            Select-Object -First 1
+          if (-not $signtool) {
+            throw 'signtool.exe not found. Install a Windows 10/11 SDK on the runner.'
+          }
+          $az = 'C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd'
+          if (-not (Test-Path $az)) {
+            throw "Azure CLI not found at $az"
+          }
+          $tools = Join-Path $env:RUNNER_TEMP 'artifact-signing'
+          New-Item -ItemType Directory -Force -Path $tools | Out-Null
+          $cli = Join-Path $tools 'artifact-signing-cli.exe'
+          Invoke-WebRequest -Uri 'https://github.com/Levminer/artifact-signing-cli/releases/download/0.11.0/artifact-signing-cli.exe' -OutFile $cli
+          & $cli --help | Out-Host
+          az login --service-principal --tenant $env:AZURE_TENANT_ID --username $env:AZURE_CLIENT_ID --password $env:AZURE_CLIENT_SECRET
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Azure service principal login failed. Check AZURE_CLIENT_ID / SECRET / TENANT_ID and the Artifact Signing Certificate Profile Signer role.'
+          }
+          $endpoint = $env:AZURE_SIGNING_ENDPOINT.TrimEnd('/')
+          $overlay = @{
+            bundle = @{
+              windows = @{
+                signCommand = @{
+                  cmd = $cli
+                  args = @(
+                    '--sign-tool-path', $signtool,
+                    '--azure-cli-path', $az,
+                    '-e', $endpoint,
+                    '-a', $env:AZURE_SIGNING_ACCOUNT,
+                    '-c', $profile,
+                    '-d', 'Company of Heroes - Replay Manager',
+                    '%1'
+                  )
+                }
+              }
+            }
+          } | ConvertTo-Json -Depth 8
+          $overlayPath = Join-Path $pwd 'packages/replay-parser/src-tauri/tauri.codesign.conf.json'
+          [System.IO.File]::WriteAllText($overlayPath, $overlay)
+          Write-Host $overlay
+          echo "SIGNTOOL_PATH=$signtool" >> $env:GITHUB_ENV
+          echo "AZURE_CLI_PATH=$az" >> $env:GITHUB_ENV
+          echo $tools >> $env:GITHUB_PATH
+          echo 'enabled=true' >> $env:GITHUB_OUTPUT
+          echo 'args= --verbose --config src-tauri/tauri.codesign.conf.json' >> $env:GITHUB_OUTPUT
+          echo "signtool=$signtool" >> $env:GITHUB_OUTPUT
+          Write-Host "Authenticode signing enabled ($endpoint / $($env:AZURE_SIGNING_ACCOUNT) / $profile)"
+          Write-Host "signtool: $signtool"
+
+      - name: Setup .NET
+        if: steps.codesign.outputs.enabled == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Published as a prerelease: the companion app's updater reads
+      # releases/latest/latest.json, so this release must never become "latest".
+      - name: Build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          SIGNTOOL_PATH: ${{ steps.codesign.outputs.signtool }}
+          AZURE_CLI_PATH: C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.cmd
+        with:
+          projectPath: packages/replay-parser
+          tauriScript: pnpm tauri
+          args: --bundles nsis,msi${{ steps.codesign.outputs.args }}
+          tagName: replay-parser-v__VERSION__
+          releaseName: Replay Manager v__VERSION__
+          releaseBody: Company of Heroes - Replay Manager for your local playback folder.
+          releaseDraft: ${{ github.event_name == 'workflow_dispatch' }}
+          prerelease: true
+
+      - name: Verify Authenticode signatures
+        if: steps.codesign.outputs.enabled == 'true'
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem 'packages/replay-parser/src-tauri/target/release' -Recurse -Include *.exe, *.msi |
+            Where-Object { $_.FullName -match '\\bundle\\|coh_replay_parser\.exe$' }
+          if (-not $files) {
+            throw 'No built executables or installers found to verify.'
+          }
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature $file.FullName
+            Write-Host "$($file.Name): $($signature.Status) ($($signature.SignerCertificate.Subject))"
+            if ($signature.Status -ne 'Valid') {
+              throw "$($file.Name) is not validly signed: $($signature.Status)"
+            }
+          }

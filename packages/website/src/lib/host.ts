@@ -43,6 +43,7 @@ import {
 	voteComment
 } from '$lib/remote/match-social.remote';
 import { getFactionFlagByLeaderboardId } from '$lib/utils/media/ranks';
+import { getActionIcon } from '$lib/utils/media/action-icons';
 import {
 	flagImageUrl,
 	getRankImageByLeaderboardId,
@@ -99,6 +100,7 @@ export function provideWebsiteHost(): HostContext {
 			rankImageByRace: getRankImageByRace,
 			rankImageByLeaderboard: getRankImageByLeaderboardId,
 			doctrineBanner: (file) => `/doctrines/${file}`,
+			actionIcon: getActionIcon,
 			userAvatar: (user) => user.avatarUrl
 		},
 		auth: {

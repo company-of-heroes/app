@@ -237,11 +237,9 @@
 						{/if}
 					{/snippet}
 					<FileSelection
-						name="pathToConfig"
 						bind:value={settings.tree.app.companyOfHeroesConfigPath}
 						filters={[{ name: 'warnings.log', extensions: ['log'] }]}
 						defaultPath={settings.tree.app.companyOfHeroesConfigPath || expectedLogDir}
-						showStatus={false}
 					/>
 					<div
 						class={[
@@ -305,11 +303,9 @@
 						{/if}
 					{/snippet}
 					<FileSelection
-						name="pathToInstallation"
 						directory
 						bind:value={settings.tree.app.companyOfHeroesInstallationPath}
 						defaultPath={settings.tree.app.companyOfHeroesInstallationPath || expectedGameDir}
-						showStatus={false}
 					/>
 					<div
 						class={[

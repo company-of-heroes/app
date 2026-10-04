@@ -141,7 +141,8 @@
 	});
 
 	$effect(() => {
-		if (tab !== 'timeline' || !replay || parseId == null || actionsLoaded) {
+		// The timeline is part of the overview, so actions load as soon as the replay is parsed.
+		if (!replay || parseId == null || actionsLoaded) {
 			return;
 		}
 
@@ -153,15 +154,12 @@
 				if (!cancelled && replay) {
 					replay = { ...replay, actions: actions as ReplayAction[] };
 					actionsLoaded = true;
+					actionsPending = false;
 				}
 			})
 			.catch(() => {
 				if (!cancelled) {
 					actionsLoaded = true;
-				}
-			})
-			.finally(() => {
-				if (!cancelled) {
 					actionsPending = false;
 				}
 			});
@@ -495,13 +493,7 @@
 			{#if downloadHref}{t('You can still download the .rec file above.')}{/if}
 		</p>
 	{/if}
-	<ReplayTabs
-		bind:value={tab}
-		showChat={false}
-		showTimeline={false}
-		showScreenshots={!!screenshots}
-		{screenshots}
-	>
+	<ReplayTabs bind:value={tab} showChat={false} showScreenshots={!!screenshots} {screenshots}>
 		{#snippet overview()}
 			<ReplayOverview {match} {livePlayers} {nameExtra} />
 			{@render comments()}
@@ -517,17 +509,15 @@
 	<ReplayTabs bind:value={tab} showScreenshots={!!screenshots} {screenshots}>
 		{#snippet overview()}
 			<ReplayOverview {match} replay={replayData} {livePlayers} {nameExtra} />
-			{@render comments()}
-		{/snippet}
-		{#snippet chat()}
-			<ReplayChat messages={parsedReplay.messages} playerCount={parsedReplay.playerCount} />
-		{/snippet}
-		{#snippet timeline()}
-			{#if actionsPending}
+			{#if actionsPending || (!actionsLoaded && parseId != null)}
 				<p class="text-secondary-400 px-4 py-6 text-sm">{t('Loading…')}</p>
 			{:else}
 				<ReplayActions replay={replayData} />
 			{/if}
+			{@render comments()}
+		{/snippet}
+		{#snippet chat()}
+			<ReplayChat messages={parsedReplay.messages} playerCount={parsedReplay.playerCount} />
 		{/snippet}
 	</ReplayTabs>
 {/if}
