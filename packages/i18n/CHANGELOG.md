@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.1.11
+
+- feat; add a Replay Manager download to the homepage banner and explain how it differs from the companion app
+
 ## 0.1.10
 
 - enhance; redesigned startup error screen and show a maintenance notice that reconnects automatically when the server is unreachable
