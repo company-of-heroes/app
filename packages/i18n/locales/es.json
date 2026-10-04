@@ -1470,5 +1470,9 @@
 	"Donate": "Donar",
 	"CP": "PM",
 	"Click for details": "Haz clic para ver detalles",
-	"Reading replays...": "Leyendo repeticiones..."
+	"Reading replays...": "Leyendo repeticiones...",
+	"Downloading update…": "Descargando actualización…",
+	"Could not install the update.": "No se pudo instalar la actualización.",
+	"Replay Manager {version} is available.": "Replay Manager {version} está disponible.",
+	"Install and restart": "Instalar y reiniciar"
 }

@@ -23,6 +23,7 @@
 	import WindowControls from '$lib/components/window-controls.svelte';
 	import { provideI18n, useI18n } from '$lib/i18n';
 	import { provideLocalHost } from '$lib/host';
+	import { checkForUpdate } from '$lib/updater';
 	import { createReplayLibrary, ReplayLibrary } from '$lib/library/replay-library.svelte';
 	import { expandToMain } from '$lib/window';
 	import type { LayoutProps } from './$types';
@@ -66,7 +67,11 @@
 			return;
 		}
 
-		void expandToMain().then(() => (booted = true));
+		void expandToMain().then(() => {
+			booted = true;
+			// Once the main window shows, so the update toast is visible.
+			void checkForUpdate();
+		});
 	});
 
 	const WEBSITE_URL = 'https://coh1stats.com';

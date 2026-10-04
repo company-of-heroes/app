@@ -1470,5 +1470,9 @@
 	"Donate": "Donate",
 	"CP": "CP",
 	"Click for details": "Click for details",
-	"Reading replays...": "Reading replays..."
+	"Reading replays...": "Reading replays...",
+	"Downloading update…": "Downloading update…",
+	"Could not install the update.": "Could not install the update.",
+	"Replay Manager {version} is available.": "Replay Manager {version} is available.",
+	"Install and restart": "Install and restart"
 }

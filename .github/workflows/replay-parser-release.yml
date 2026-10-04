@@ -137,6 +137,9 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Same updater key as the companion app; the app checks updates against its public key.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -151,6 +154,30 @@ jobs:
           releaseBody: Company of Heroes - Replay Manager for your local playback folder.
           releaseDraft: ${{ github.event_name == 'workflow_dispatch' }}
           prerelease: true
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true
+
+      # The app's updater reads a fixed URL. Version releases are prereleases (never "latest",
+      # that is the companion app's), so copy this release's latest.json to the fixed
+      # replay-manager-latest release. Skipped for manual (draft) runs.
+      - name: Publish update manifest
+        if: github.event_name != 'workflow_dispatch'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content 'packages/replay-parser/src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json).version
+          $manifest = Join-Path $env:RUNNER_TEMP 'manifest'
+          gh release download "replay-parser-v$version" --repo $env:GITHUB_REPOSITORY --pattern latest.json --dir $manifest --clobber
+          if ($LASTEXITCODE -ne 0) {
+            throw "latest.json not found on release replay-parser-v$version."
+          }
+          gh release view replay-manager-latest --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create replay-manager-latest --repo $env:GITHUB_REPOSITORY --prerelease --title 'Replay Manager updates' --notes 'Update manifest for the Replay Manager. Do not delete; installed apps read latest.json from here.'
+          }
+          gh release upload replay-manager-latest (Join-Path $manifest 'latest.json') --repo $env:GITHUB_REPOSITORY --clobber
+          Write-Host "Published update manifest for Replay Manager $version"
 
       # Checks what users get: the published installers, and the app exe inside the MSI.
       # The loose target/release exe is not what ships, so it is not checked.

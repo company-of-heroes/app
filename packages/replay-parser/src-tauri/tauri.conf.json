@@ -43,6 +43,7 @@
 	},
 	"bundle": {
 		"active": true,
+		"createUpdaterArtifacts": true,
 		"publisher": "Code IT Ninja",
 		"copyright": "Copyright © Code IT Ninja",
 		"targets": ["nsis", "msi"],
@@ -59,6 +60,17 @@
 			},
 			"nsis": {
 				"installMode": "currentUser"
+			}
+		}
+	},
+	"plugins": {
+		"updater": {
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEM2Mzc3RDBEM0FBOEVEOTEKUldTUjdhZzZEWDAzeHZ6d053OUNpTXdlQmllVzN0bklqOGEySjRsRlpvTVVLTDNsb08wMWxuVGYK",
+			"endpoints": [
+				"https://github.com/company-of-heroes/app/releases/download/replay-manager-latest/latest.json"
+			],
+			"windows": {
+				"installMode": "passive"
 			}
 		}
 	}

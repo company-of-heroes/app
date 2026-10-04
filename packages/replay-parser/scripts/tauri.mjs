@@ -3,12 +3,33 @@
  * `tauri dev` with the first free port from 1430 up, so it runs next to the companion app
  * (1420) or a leftover dev server. Vite reads `REPLAY_PARSER_PORT`; Tauri gets the matching
  * `devUrl` through a `--config` override. Other commands pass straight through.
+ *
+ * Also loads the updater signing key for local `tauri build` when CI secrets are not set
+ * (same key and location as the companion app, see packages/app/scripts/tauri.mjs).
  */
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:net';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 
 const FIRST_PORT = 1430;
+const DEFAULT_KEY = join(homedir(), '.tauri', 'coh-companion.key');
+
+if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
+	const keyPath = process.env.TAURI_SIGNING_PRIVATE_KEY_PATH || DEFAULT_KEY;
+	if (existsSync(keyPath)) {
+		process.env.TAURI_SIGNING_PRIVATE_KEY = keyPath;
+	}
+}
+
+if (
+	process.env.TAURI_SIGNING_PRIVATE_KEY &&
+	process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD === undefined
+) {
+	process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD = '';
+}
 
 function isFree(port) {
 	return new Promise((resolve) => {
