@@ -55,7 +55,7 @@
 				<Skeleton class="h-3.5 w-8" />
 			</div>
 		</td>
-		<td class="px-2 py-1.5">
+		<td class="py-1.5 pr-4 pl-2">
 			<div class="flex w-full justify-center">
 				<Skeleton class="h-3.5 w-8" />
 			</div>
@@ -89,7 +89,7 @@
 						<col />
 						<col class="w-14" />
 						<col class="w-14" />
-						<col class="w-14" />
+						<col class="w-20" />
 					</colgroup>
 					<thead>
 						<tr class={tableHeadRow}>
@@ -100,7 +100,7 @@
 							<th class="px-3 py-2 text-left">{t('Player')}</th>
 							<th class="px-2 py-2 text-center">{t('Wins')}</th>
 							<th class="px-2 py-2 text-center">{t('Losses')}</th>
-							<th class="px-2 py-2 text-center">{t('Streak')}</th>
+							<th class="py-2 pr-4 pl-2 text-center">{t('Streak')}</th>
 						</tr>
 					</thead>
 					<tbody>

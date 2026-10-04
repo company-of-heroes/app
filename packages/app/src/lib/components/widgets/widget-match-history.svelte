@@ -11,9 +11,9 @@
 	import WidgetPanel from './widget-panel.svelte';
 	import {
 		collectTodayMatchSteamIds,
-		isMatchFromLocalToday,
+		isMatchFromLast24Hours,
 		matchIncludesSteamIds,
-		todayPlayedMatchesFilter
+		recentPlayedMatchesFilter
 	} from './dashboard-utils';
 	import { useI18n } from '$lib/i18n';
 
@@ -31,11 +31,11 @@
 			}
 
 			const items = await app.database.matches.getList({
-				filter: todayPlayedMatchesFilter(ids),
+				filter: recentPlayedMatchesFilter(ids),
 				sort: '-createdAt'
 			});
 			return items.filter(
-				(match) => isMatchFromLocalToday(match) && matchIncludesSteamIds(match, ids)
+				(match) => isMatchFromLast24Hours(match) && matchIncludesSteamIds(match, ids)
 			);
 		}
 	);
@@ -62,7 +62,7 @@
 					'*',
 					(e) => {
 						const match = exp(e.record) as MatchExpanded;
-						if (!isMatchFromLocalToday(match) || !matchIncludesSteamIds(match, ids)) {
+						if (!isMatchFromLast24Hours(match) || !matchIncludesSteamIds(match, ids)) {
 							return;
 						}
 
@@ -80,7 +80,7 @@
 						}
 					},
 					{
-						filter: todayPlayedMatchesFilter(ids),
+						filter: recentPlayedMatchesFilter(ids),
 						sort: '-createdAt',
 						fetch
 					}
@@ -103,7 +103,7 @@
 </script>
 
 <WidgetPanel
-	title={t('Matches played today')}
+	title={t('Recent matches')}
 	summary={!matches.loading ? t('{count} played', { count: matchCount }) : undefined}
 >
 	{#snippet trailing()}
@@ -113,7 +113,7 @@
 		<TodayMatchesTable matches={[]} loading />
 	{:else if !matches.current || matches.current.length === 0}
 		<p class="text-secondary-400 px-4 py-3 text-sm">
-			{t('You have not played any matches today.')}
+			{t('You have not played any matches in the last 24 hours.')}
 		</p>
 	{:else}
 		<TodayMatchesTable matches={matches.current} />

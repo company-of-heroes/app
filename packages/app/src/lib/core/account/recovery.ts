@@ -5,9 +5,9 @@ import { t } from '$lib/i18n';
  * Account recovery decision tree (pure, fully testable).
  *
  * Guarantees:
- * - A new account is NEVER created silently while existing credentials might
- *   still be recoverable (backup restore is tried first, then the user is
- *   asked explicitly).
+ * - A new account is NEVER created while existing credentials might still be
+ *   recoverable: backups are tried first, then the user signs in again (or
+ *   picks an anonymous account on the sign-in screen).
  * - Network errors never lead to account creation; they fail the flow so the
  *   caller can retry.
  */
@@ -21,8 +21,6 @@ export type RecoveryPorts = {
 	createAccount(credentials: AccountSettings): Promise<void>;
 	/** Finds account credentials in external backups, if any. */
 	findBackupAccount(): Promise<AccountSettings | null>;
-	/** Asks the user to confirm creating a brand new account (data loss for the old one). */
-	confirmCreateNew(): Promise<boolean>;
 	/** Generates fresh random credentials. */
 	generateCredentials(): AccountSettings;
 };
@@ -34,14 +32,25 @@ export type RecoveryOutcome =
 			created: boolean;
 			restoredFromBackup: boolean;
 	  }
-	| { action: 'failed'; reason: 'declined' | 'error'; error?: string };
+	| { action: 'failed'; reason: 'error' | 'signed-out'; error?: string };
 
-function hasCredentials(account: AccountSettings): boolean {
-	return account.userId !== '' && account.email !== '' && account.password !== '';
+/** A password login, or a Steam login's session token. */
+export function hasCredentials(account: AccountSettings): boolean {
+	if (account.userId === '') {
+		return false;
+	}
+
+	if (account.authMode === 'session') {
+		return account.token !== '';
+	}
+
+	return account.email !== '' && account.password !== '';
 }
 
 function sameCredentials(a: AccountSettings, b: AccountSettings): boolean {
-	return a.userId === b.userId && a.email === b.email && a.password === b.password;
+	return (
+		a.userId === b.userId && a.email === b.email && a.password === b.password && a.token === b.token
+	);
 }
 
 export async function ensureAccountFlow(
@@ -74,30 +83,12 @@ export async function ensureAccountFlow(
 				}
 			}
 
-			// Nothing recoverable: only create a new account with explicit consent.
-			if (!(await ports.confirmCreateNew())) {
-				return { action: 'failed', reason: 'declined' };
-			}
-
-			return await createNewAccount(ports);
+			// Nothing recoverable: back to the sign-in screen, never a new account.
+			return { action: 'failed', reason: 'signed-out' };
 		}
 
-		// 2. No local credentials (fresh install): silently recover the user's
-		// own account from a backup when possible.
-		const backup = await ports.findBackupAccount();
-
-		if (backup && hasCredentials(backup)) {
-			if ((await ports.authenticate(backup)) === 'ok') {
-				return {
-					action: 'authenticated',
-					credentials: backup,
-					created: false,
-					restoredFromBackup: true
-				};
-			}
-		}
-
-		// 3. Genuinely new user.
+		// 2. No local credentials: the user chose "Create anonymous account" on the
+		// sign-in screen (boot already restored a backup on fresh installs).
 		return await createNewAccount(ports);
 	} catch (error) {
 		return {

@@ -258,6 +258,11 @@ export function todayStartFilterValue(): string {
 	return dayjs().startOf('day').toISOString().replace('T', ' ');
 }
 
+/** PocketBase autodate filter value for 24 hours ago. */
+export function last24HoursStartFilterValue(): string {
+	return dayjs().subtract(24, 'hour').toISOString().replace('T', ' ');
+}
+
 function matchResultIncludesSubject(
 	match: MatchExpanded,
 	profileId?: number,
@@ -381,6 +386,15 @@ export function matchIncludesSteamIds(match: MatchExpanded, steamIds: string[]):
  * matchHistory hits in `players` are not counted as participation.
  */
 export function todayPlayedMatchesFilter(steamIds: string[] = []): string {
+	return playedMatchesSinceFilter(steamIds, todayStartFilterValue());
+}
+
+/** Matches played in the last 24 hours for the logged-in account. */
+export function recentPlayedMatchesFilter(steamIds: string[] = []): string {
+	return playedMatchesSinceFilter(steamIds, last24HoursStartFilterValue());
+}
+
+function playedMatchesSinceFilter(steamIds: string[], since: string): string {
 	const who: string[] = [];
 	for (const steamId of uniq(steamIds.filter(isValidSteamId))) {
 		who.push(`lobbyPlayers ~ "${steamId}"`);
@@ -393,10 +407,15 @@ export function todayPlayedMatchesFilter(steamIds: string[] = []): string {
 	}
 
 	const clause = who.length === 1 ? who[0]! : `(${who.join(' || ')})`;
-	return `createdAt >= "${todayStartFilterValue()}" && ${clause}`;
+	return `createdAt >= "${since}" && ${clause}`;
 }
 
 /** Local-calendar "today" check for match timestamps. */
 export function isMatchFromLocalToday(match: Pick<MatchExpanded, 'createdAt'>): boolean {
 	return dayjs(match.createdAt).isSame(dayjs(), 'day');
+}
+
+/** Rolling 24-hour window check for match timestamps. */
+export function isMatchFromLast24Hours(match: Pick<MatchExpanded, 'createdAt'>): boolean {
+	return dayjs(match.createdAt).isAfter(dayjs().subtract(24, 'hour'));
 }

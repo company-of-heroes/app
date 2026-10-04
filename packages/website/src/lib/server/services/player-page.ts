@@ -6,7 +6,6 @@ import { badRequest, notFound, upstream } from '../errors';
 import { chunk, ensure, fromPb, sequence, type Task } from '../result';
 import { isValidSteamId, steamIdFromRelicName, toEloMap, type EloMap } from '../domain/ratings';
 import {
-	attachRankLevels,
 	titleHasHiddenKeyword,
 	toHistoryMatches,
 	type HistoryMatch,
@@ -16,6 +15,13 @@ import {
 	type RelicPersonalStat,
 	type RelicProfile
 } from '../domain/relic-matches';
+import {
+	attachMatchHistoryRankLevels,
+	ladderStatsFromPersonalStats,
+	rankSnapshotsFromLobbies,
+	type MatchHistoryLadderStats,
+	type MatchRankSnapshots
+} from '@company-of-heroes/ui/player/match-history-ranks';
 import type { PlayerPerformance } from '../domain/performance';
 import type { PlayerLabel } from './player-info';
 import { Service } from './service';
@@ -77,40 +83,30 @@ export class PlayerPageService extends Service {
 			);
 	}
 
-	/** Current ladder stats for everyone in the match history, 10 profiles per Relic call. */
+	/**
+	 * Current ladder stats for everyone in the match history, 10 profiles per Relic call:
+	 * personal ladders plus the arranged-team statgroups those players belong to.
+	 */
 	private ladderStats(
 		profileIds: number[],
 		known: Map<number, LeaderboardStat[]>
-	): Task<Map<number, LeaderboardStat[]>> {
-		const missing = [...new Set(profileIds)].filter((id) => id > 0 && !known.has(id));
+	): Task<MatchHistoryLadderStats> {
+		const ids = [...new Set(profileIds)].filter((id) => id > 0);
 		const urls: string[] = [];
-		for (let i = 0; i < missing.length; i += PERSONAL_STAT_BATCH) {
-			const ids = missing.slice(i, i + PERSONAL_STAT_BATCH);
+		for (let i = 0; i < ids.length; i += PERSONAL_STAT_BATCH) {
+			const batch = ids.slice(i, i + PERSONAL_STAT_BATCH);
 			urls.push(
-				`${RELIC_BASE}${personalStatPath(`profile_ids=${encodeURIComponent(JSON.stringify(ids))}`)}`
+				`${RELIC_BASE}${personalStatPath(`profile_ids=${encodeURIComponent(JSON.stringify(batch))}`)}`
 			);
 		}
-		return this.relic.getMany<RelicPersonalStat>(urls).map((results) => {
-			const stats = new Map(known);
-			for (const result of results) {
-				if (!result.ok) {
-					continue;
-				}
-
-				const all = result.body.leaderboardStats ?? [];
-				for (const group of result.body.statGroups ?? []) {
-					const member = group.members?.[0];
-					if (member && member.profile_id > 0) {
-						stats.set(
-							member.profile_id,
-							all.filter((stat) => stat.statgroup_id === member.personal_statgroup_id)
-						);
-					}
-				}
-			}
-			return stats;
-		});
+		return this.relic.getMany<RelicPersonalStat>(urls).map((results) =>
+			ladderStatsFromPersonalStats(
+				results.flatMap((result) => (result.ok ? [result.body] : [])),
+				known
+			)
+		);
 	}
+
 	/** Community lobbies with a replay for these Relic sessions: finished first, then newest. */
 	private replayLobbyIds(sessionIds: number[]): Task<Map<number, string>> {
 		const unique = [...new Set(sessionIds.filter((id) => id > 0))];
@@ -138,6 +134,22 @@ export class PlayerPageService extends Service {
 			}
 			return new Map([...preferred].map(([sessionId, lobby]) => [sessionId, lobby.id]));
 		});
+	}
+
+	/** Ladder stats the companion captured when these Relic sessions' lobbies started. */
+	private rankSnapshots(sessionIds: number[]): Task<MatchRankSnapshots> {
+		const unique = [...new Set(sessionIds.filter((id) => id > 0))];
+		return sequence(chunk(unique, 100), (ids) =>
+			fromPb(
+				this.pb.collection('lobbies').getFullList<{ sessionId: number; players?: unknown }>({
+					filter: ids
+						.map((sessionId) => this.pb.filter('sessionId = {:sessionId}', { sessionId }))
+						.join(' || '),
+					fields: 'sessionId,players'
+				}),
+				'Could not load matches'
+			)
+		).map((pages) => rankSnapshotsFromLobbies(pages.flat()));
 	}
 
 	/** An account flagged as someone's smurf shows its (resolved) original account. */
@@ -214,11 +226,14 @@ export class PlayerPageService extends Service {
 			this.ladderStats(
 				matches.flatMap((match) => match.players.map((player) => Number(player.profile_id))),
 				ownStats
-			).orElse(() => ok(ownStats)),
-			this.replayLobbyIds(matches.map((match) => Number(match.id)))
-		]).map(([labels, likes, stats, lobbyIds]) => {
-			attachRankLevels(matches, stats);
-			for (const match of matches) {
+			).orElse(() => ok<MatchHistoryLadderStats>({ personal: ownStats, teams: [] })),
+			this.replayLobbyIds(matches.map((match) => Number(match.id))),
+			this.rankSnapshots(matches.map((match) => Number(match.id))).orElse(() =>
+				ok<MatchRankSnapshots>(new Map())
+			)
+		]).map(([labels, likes, stats, lobbyIds, snapshots]) => {
+			const ranked = attachMatchHistoryRankLevels(matches, stats.personal, stats.teams, snapshots);
+			for (const match of ranked) {
 				match.lobbyId = lobbyIds.get(Number(match.id)) ?? null;
 				for (const player of match.players) {
 					player.labels = labels.get(player.steamId) ?? [];
@@ -227,7 +242,7 @@ export class PlayerPageService extends Service {
 					}
 				}
 			}
-			return { matches, labels: labels.get(steamId) ?? [] };
+			return { matches: ranked, labels: labels.get(steamId) ?? [] };
 		});
 	}
 

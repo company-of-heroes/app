@@ -36,7 +36,7 @@
 		type VeterancyStep
 	} from './replay-timeline';
 	import { raceFromReplayFaction, timelineActionsByPlayer } from './replay-stats';
-	import type { ReplayAction, ReplayData, ReplayPlayer } from './types';
+	import { isCancelAction, type ReplayAction, type ReplayData, type ReplayPlayer } from './types';
 
 	type Props = {
 		replay: ReplayData;
@@ -125,7 +125,7 @@
 			vetSteps,
 			initials: initials(name),
 			src: resolveIcon(actionIconKey(action)),
-			cancelled: action.command?.type === 'CANCEL_QUEUE',
+			cancelled: isCancelAction(action),
 			veterancy: vetSteps.at(-1)?.level ?? 0
 		};
 	}
@@ -309,7 +309,8 @@
 		UNIT_COMMAND: 'Unit command',
 		SPECIAL_ABILITY: 'Special ability',
 		DOCTRINAL: 'Doctrine',
-		CANCEL_QUEUE: 'Cancelled order'
+		CANCEL_QUEUE: 'Cancelled order',
+		CANCEL_CONSTRUCTION: 'Cancelled building'
 	};
 	const RESOURCE_LABELS = {
 		manpower: 'Manpower',

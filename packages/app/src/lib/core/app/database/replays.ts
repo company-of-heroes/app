@@ -117,11 +117,13 @@ export class Replays {
 		const updated = await this.update(id, { title, file });
 
 		try {
-			const localPath = await join(await app.paths.cohPlaybackDir(), localName);
-			await writeFile(
-				localPath,
-				rewriteReplayMapPathsForLocalPlayback(bytes, await app.paths.cohDocumentsDir())
-			);
+			if (app.cohPaths.warningsLog) {
+				const localPath = await join(await app.paths.cohPlaybackDir(), localName);
+				await writeFile(
+					localPath,
+					rewriteReplayMapPathsForLocalPlayback(bytes, await app.paths.cohDocumentsDir())
+				);
+			}
 		} catch (error) {
 			console.warn('[REPLAYS]: failed to write renamed local replay', localName, error);
 		}
@@ -139,7 +141,7 @@ export class Replays {
 	}
 
 	async localExists(filename: string): Promise<boolean> {
-		if (!filename) {
+		if (!filename || !app.cohPaths.warningsLog) {
 			return false;
 		}
 
@@ -151,7 +153,7 @@ export class Replays {
 	}
 
 	async deleteLocal(filename: string): Promise<boolean> {
-		if (!filename) {
+		if (!filename || !app.cohPaths.warningsLog) {
 			return false;
 		}
 
@@ -165,6 +167,10 @@ export class Replays {
 	}
 
 	async download(id: string) {
+		if (!app.cohPaths.warningsLog) {
+			throw new Error(t('Set your warnings.log in Settings to download replays.'));
+		}
+
 		const record = await unwrapApi(api.replays.getById(id));
 		const localName = String(record.filename || record.file || '');
 		if (!localName || !record.file) {

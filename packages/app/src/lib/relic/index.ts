@@ -2,6 +2,7 @@ import type {
 	LeaderBoardResponse,
 	LeaderboardStat,
 	LeaderboardStatWithProfile,
+	OriginalMatchHistory,
 	PersonalStat,
 	RelicProfile,
 	TransformedMatch
@@ -27,9 +28,13 @@ export function relicLeaderboardFingerprint(stats?: LeaderboardStat[] | null): s
 		.join('|');
 }
 
+/** Most recent raw match history items kept for the staff "Copy JSON" action. */
+const RAW_MATCH_CACHE_SIZE = 500;
+
 export class RelicClient {
 	private readonly baseUrl: string;
 	private readonly defaultFetchOptions: RequestInit;
+	private readonly rawMatches = new Map<number, unknown>();
 
 	/**
 	 * Constructs a new RelicClient instance.
@@ -136,6 +141,32 @@ export class RelicClient {
 			});
 
 			out.push(...filteredMembers);
+		}
+
+		return out;
+	}
+
+	/**
+	 * Raw personalstat responses (personal and arranged-team statgroups) for up to
+	 * 10 profile ids per request; failed chunks are skipped.
+	 */
+	async getPersonalStats(ids: number[]): Promise<PersonalStat[]> {
+		const unique = [...new Set(ids.filter((id) => Number.isInteger(id) && id > 0))];
+		const MAX_PER_REQUEST = 10;
+		const out: PersonalStat[] = [];
+
+		for (let i = 0; i < unique.length; i += MAX_PER_REQUEST) {
+			const chunk = unique.slice(i, i + MAX_PER_REQUEST);
+			try {
+				out.push(
+					await this.request<PersonalStat>(['community', 'leaderboard', 'getpersonalstat'], {
+						title: 'coh1',
+						profile_ids: JSON.stringify(chunk)
+					})
+				);
+			} catch (error) {
+				console.warn('[RELIC]: personalstat batch failed:', error);
+			}
 		}
 
 		return out;
@@ -273,6 +304,7 @@ export class RelicClient {
 			}
 		);
 
+		this.rememberRawMatches(result);
 		const matches = transformMatchHistory(result, profileId);
 		void import('$core/pocketbase/player-ratings')
 			.then(({ ingestRatingsFromMatchHistory }) => {
@@ -291,6 +323,35 @@ export class RelicClient {
 		} catch (error) {
 			console.warn('[relic] public match history filter skipped', error);
 			return matches;
+		}
+	}
+
+	/**
+	 * The raw Relic response for one match history item (the item plus its players'
+	 * profiles), as last fetched; null when it has not been loaded this session.
+	 */
+	getRawMatchHistoryItem(matchId: number): unknown {
+		return this.rawMatches.get(matchId) ?? null;
+	}
+
+	private rememberRawMatches(response: OriginalMatchHistory & { result?: unknown }): void {
+		const profiles = new Map(response.profiles.map((profile) => [profile.profile_id, profile]));
+		for (const item of response.matchHistoryStats) {
+			const ids = new Set(item.matchhistorymember.map((member) => member.profile_id));
+			this.rawMatches.delete(item.id);
+			this.rawMatches.set(item.id, {
+				result: response.result,
+				matchHistoryStats: [item],
+				profiles: [...ids].flatMap((id) => profiles.get(id) ?? [])
+			});
+		}
+
+		for (const id of this.rawMatches.keys()) {
+			if (this.rawMatches.size <= RAW_MATCH_CACHE_SIZE) {
+				break;
+			}
+
+			this.rawMatches.delete(id);
 		}
 	}
 

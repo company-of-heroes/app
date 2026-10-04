@@ -1,8 +1,9 @@
 services:
   pocketbase:
     restart: 'no'
+    # pb_data stays in the named volume from docker-compose.yml: a Windows bind mount
+    # makes SQLite page reads ~20x slower (minutes to start with a large logs DB).
     volumes:
-      - ./pb_data:/pb_data
       - ./pb_hooks:/pb_hooks
       - ./pb_migrations:/pb_migrations
     env_file:

@@ -1,14 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
+	import { LoginForm } from '@company-of-heroes/ui/auth';
 	import { Button } from '@company-of-heroes/ui/button';
-	import * as Form from '@company-of-heroes/ui/form';
-	import { Input } from '@company-of-heroes/ui/input';
 	import { cn } from '$lib/utils/cn';
 	import { interactive } from '$lib/utils/variants';
 	import { href, useI18n } from '$lib/i18n';
 	import DesktopIcon from 'phosphor-svelte/lib/DesktopIcon';
-	import SteamLogoIcon from 'phosphor-svelte/lib/SteamLogo';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import type { ActionData } from './$types';
 
@@ -83,57 +81,25 @@
 	</div>
 </div>
 
-<form method="POST" use:enhance={onSubmit}>
+<LoginForm
+	method="POST"
+	bind:email
+	bind:password
+	{error}
+	{submitting}
+	steamPending={steamLoginPending}
+	busy={appLoginPending}
+	onSteam={loginWithSteam}
+	{@attach (node: HTMLFormElement) => enhance(node, onSubmit).destroy}
+>
 	<input type="hidden" name="redirect" value={redirectTarget} />
-	<Form.Group label={t('Email')} inputId="login-email">
-		<Input
-			id="login-email"
-			name="email"
-			type="email"
-			autocomplete="email"
-			required
-			bind:value={email}
-		/>
-	</Form.Group>
-	<Form.Group label={t('Password')} inputId="login-password">
-		<Input
-			id="login-password"
-			name="password"
-			type="password"
-			autocomplete="current-password"
-			required
-			bind:value={password}
-		/>
-	</Form.Group>
-	{#if error}
-		<p class="text-destructive border-secondary-800 border-b px-4 py-3 text-sm">{error}</p>
-	{/if}
-	<Form.Group>
-		{#snippet footer()}
-			<Button type="submit" loading={submitting} disabled={submitting || altLoginBusy}>
-				{t('Log in')}
-			</Button>
-			<p class="text-secondary-400 text-sm">
-				{t('No account?')}
-				<a href={href('/register')} class={linkClass}>{t('Create one')}</a>
-			</p>
-		{/snippet}
-	</Form.Group>
-</form>
-
-<div class="border-secondary-800 border-b px-4 py-3">
-	<div class="flex flex-wrap items-center gap-3">
-		<span class="text-secondary-500 text-xs tracking-wide uppercase">{t('OR')}</span>
-		<Button
-			type="button"
-			variant="secondary"
-			loading={steamLoginPending}
-			disabled={submitting || altLoginBusy}
-			onclick={loginWithSteam}
-		>
-			<SteamLogoIcon size={18} weight="fill" class="text-primary shrink-0" />
-			{t('Log in with Steam')}
-		</Button>
+	{#snippet footer()}
+		<p class="text-secondary-400 text-sm">
+			{t('No account?')}
+			<a href={href('/register')} class={linkClass}>{t('Create one')}</a>
+		</p>
+	{/snippet}
+	{#snippet alternatives()}
 		<Button
 			type="button"
 			variant="secondary"
@@ -144,8 +110,8 @@
 			<DesktopIcon size={18} weight="duotone" class="text-primary shrink-0" />
 			{t('Log in with app')}
 		</Button>
-	</div>
-</div>
+	{/snippet}
+</LoginForm>
 
 <p class="text-secondary-500 border-secondary-800 border-b px-4 py-3 text-sm">
 	{t('By signing in you agree to our')}

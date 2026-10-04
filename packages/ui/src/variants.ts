@@ -88,10 +88,12 @@ export const dropdownHeader =
 
 export const dropdownSubheader = 'border-secondary-800 border-b px-4 py-3';
 
-export const dropdownItem =
-	'cursor-pointer rounded-none border-secondary-800 border-b px-4 py-2.5 text-sm text-secondary-200 transition-colors last:border-b-0 hover:bg-secondary-800/40 hover:text-white data-highlighted:bg-secondary-800/40 data-highlighted:text-white';
+export const dropdownItem = cn(
+	'text-secondary-200 cursor-pointer items-center rounded-sm px-3 py-2 text-sm transition-colors',
+	'hover:bg-secondary-800/40 data-highlighted:bg-secondary-800/40 hover:text-white data-highlighted:text-white'
+);
 
-export const dropdownItemIcon = 'flex items-center gap-3 text-white';
+export const dropdownItemIcon = 'flex gap-3 text-white';
 
 export const menuItem = dropdownItem;
 

@@ -269,9 +269,7 @@
 	</div>
 {/snippet}
 
-<div
-	class="divide-secondary-800 border-secondary-800 grid grid-cols-1 border-b md:grid-cols-2 md:divide-x"
->
+<div class="divide-secondary-800 grid grid-cols-1 md:grid-cols-2 md:divide-x">
 	{@render teamColumn(t('Allies'), allies)}
 	{@render teamColumn(t('Axis'), axis)}
 </div>

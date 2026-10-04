@@ -7,6 +7,7 @@
 	import EyeIcon from 'phosphor-svelte/lib/Eye';
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlash';
 	import HourglassIcon from 'phosphor-svelte/lib/HourglassIcon';
+	import LinkIcon from 'phosphor-svelte/lib/LinkIcon';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import { cn } from '../cn';
@@ -79,6 +80,9 @@
 		match.memberReplayId ? host.routes.memberReplay(match.memberReplayId) : null
 	);
 	const listHref = $derived(host.routes.replayList());
+	const shareUrl = $derived(
+		!isDeleted && host.routes.shareReplay ? host.routes.shareReplay(match.id) : null
+	);
 	const livePlayers = $derived(match.livePlayers ?? []);
 	const sessionId = $derived(match.sessionId ?? 0);
 
@@ -246,6 +250,28 @@
 		}
 	}
 
+	// --- share link -----------------------------------------------------------------
+	let linkCopied = $state(false);
+	let linkCopiedTimer: ReturnType<typeof setTimeout> | undefined;
+
+	async function copyShareLink() {
+		if (!shareUrl) {
+			return;
+		}
+
+		try {
+			await navigator.clipboard.writeText(shareUrl);
+			host.notify.success(t('Replay link copied to clipboard.'));
+			linkCopied = true;
+			clearTimeout(linkCopiedTimer);
+			linkCopiedTimer = setTimeout(() => (linkCopied = false), 2000);
+		} catch {
+			host.notify.error(t('Could not copy the replay link.'));
+		}
+	}
+
+	$effect(() => () => clearTimeout(linkCopiedTimer));
+
 	// --- staff: hide from public overviews -------------------------------------------
 	const hiddenRecord = resource(
 		() => (isStaff && sessionId > 0 ? sessionId : null),
@@ -304,12 +330,7 @@
 
 {#snippet hideButton()}
 	{#if isStaff && sessionId > 0}
-		<Button
-			type="button"
-			variant="secondary"
-			loading={hidePending}
-			onclick={() => void toggleHidden()}
-		>
+		<Button type="button" variant="ghost" loading={hidePending} onclick={() => void toggleHidden()}>
 			{#if isManuallyHidden}
 				<EyeIcon class="size-4" />
 				{t('Show match')}
@@ -334,6 +355,25 @@
 				<CheckIcon class="size-4" />
 			{/if}
 			{t('Download replay')}
+		</Button>
+	{/if}
+{/snippet}
+
+{#snippet shareButton()}
+	{#if shareUrl}
+		<Button
+			type="button"
+			variant="ghost"
+			disabled={linkCopied}
+			class={cn('transition-none', linkCopied && 'hover:bg-transparent')}
+			onclick={() => void copyShareLink()}
+		>
+			{#if linkCopied}
+				<ChecksIcon class="size-4 text-green-400" />
+			{:else}
+				<LinkIcon class="size-4" />
+			{/if}
+			{t('Copy link')}
 		</Button>
 	{/if}
 {/snippet}
@@ -383,6 +423,7 @@
 	>
 		{#snippet actions()}
 			{@render downloadButton()}
+			{@render shareButton()}
 			{#if editHref}
 				<Button type="button" variant="secondary" href={editHref}>{t('Edit')}</Button>
 			{/if}
@@ -473,6 +514,7 @@
 					{t('View member replay')}
 				</Button>
 			{/if}
+			{@render shareButton()}
 			{@render hostActions?.()}
 			{@render hideButton()}
 		{/snippet}

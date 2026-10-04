@@ -183,7 +183,7 @@ pnpm install
 pnpm dev
 ```
 
-This starts PocketBase on `http://localhost:8090` and launches the Tauri dev window. PocketBase data is stored in `packages/pocketbase/pb_data`.
+This starts PocketBase on `http://localhost:8090` and launches the Tauri dev window. PocketBase data is stored in the Docker volume `pocketbase_pocketbase_data` (not a Windows bind mount, which makes SQLite very slow).
 
 Website (separate from the desktop app):
 
@@ -228,7 +228,7 @@ pnpm --filter app tauri:build:linux
 
 ### Notes
 
-- `packages/pocketbase/pb_data` is gitignored.
+- `packages/pocketbase/pb_data` is gitignored. Dev data lives in the `pocketbase_pocketbase_data` volume; copy a local `pb_data` into it with `docker run --rm -v "$PWD/packages/pocketbase/pb_data:/src:ro" -v pocketbase_pocketbase_data:/dst alpine cp -a /src/. /dst/`.
 - OppBot overlay: `pnpm overlays:dev` / `pnpm overlays:build` (copies into PocketBase public). Do not hand-edit hashed files under `packages/pocketbase/pb_hooks/public/overlay-default/`.
 
 ---

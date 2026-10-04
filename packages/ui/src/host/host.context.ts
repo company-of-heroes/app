@@ -65,6 +65,8 @@ export type HostRoutes = {
 	publishReplay: (lobbyId: string) => string;
 	/** Back link of replay detail pages (the list the viewer came from). */
 	replayList: () => string;
+	/** Absolute public website URL of a match / member replay; offline hosts omit it. */
+	shareReplay?: (id: string) => string;
 	/** Owner edit page of a member replay; hosts that edit in place omit it. */
 	editReplay?: (replayId: string) => string;
 };

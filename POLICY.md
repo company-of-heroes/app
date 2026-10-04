@@ -23,7 +23,7 @@ It applies to:
 
 ### a) App and website accounts
 
-When you use the desktop app we create or restore an account so your match history can sync. You can also **create an account or log in on the website** with the same email and password, or **log in with Steam** (OpenID). That account may include:
+When you use the desktop app you can log in with an existing account (email and password, or Steam), register a personal account with your own email and password, or create an anonymous account with a generated login; if the app finds a settings backup with your account, it restores that account so your match history keeps syncing. You can also **create an account or log in on the website** with the same email and password, or **log in with Steam** (OpenID). That account may include:
 
 - a display name and avatar (optional);
 - one or more Steam IDs (including the Steam ID used when you sign in with Steam);
@@ -35,6 +35,8 @@ When you use the desktop app we create or restore an account so your match histo
 - the rewards you unlocked and when you unlocked them. Rewards are images with a title and description that staff create; we unlock them automatically when your account meets their conditions, using data we already hold for other features: your matches on every Steam ID on your account (result, faction, mode, map, duration, lobby rating, and your community ELO), matches your app recorded, comments and replies, votes you cast and receive, replays you upload or download and the votes and downloads they receive, your reputation, whether your profile has an avatar, bio, background and link, how long your account exists, your total Company of Heroes streaming time, the number of matches with fair play checks, and whether you published a stream overlay. We do not collect anything new for rewards. This includes matches recorded before a reward existed. Unlocked rewards and their unlock dates are shown on your public player page on the website and in the desktop app; your progress toward rewards you have not unlocked yet is only shown to you.
 
 Website login keeps you signed in with a PocketBase session cookie in your browser. Steam login sends you to Steam to prove your identity; we store the resulting Steam ID on your account and do not receive your Steam password. While a Steam login is in progress we set a short-lived cookie (10 minutes) so the login can only finish in the browser that started it.
+
+When you log in with Steam in the desktop app, the app opens that same Steam login in your browser. Afterwards the website sends a short-lived login code (valid for 5 minutes) to the app on your own computer (`localhost`), and the app exchanges it for a session. The app keeps that session token in its settings on your device, and in the settings backups it writes to your Documents folder, so you stay signed in; it renews the token while it runs. Signing out in the app removes it.
 
 The desktop app links the Steam ID it sees in your game to your account. If that Steam ID already belongs to another account, we do not link it; instead we record the request (your account, the Steam ID, and the accounts that already use it) so staff can review it and, if the accounts belong to the same person, merge them. Staff can see these requests together with the names, Steam IDs, roles, and last login of the accounts involved.
 
@@ -82,7 +84,7 @@ Fair play checks are **on by default** and can be turned off in Settings. While 
 
 ### e) Settings and optional integrations
 
-Settings, Twitch and YouTube tokens, overlay config, and API keys you enter (for example an ElevenLabs key for TTS) are stored **on your device** unless a feature needs to publish something to our servers (for example a stream overlay or your Streamer badge progress). The settings backups the app writes to your Documents folder leave out Twitch and YouTube tokens and API keys.
+Settings, Twitch and YouTube tokens, overlay config, and API keys you enter (for example an ElevenLabs key for TTS) are stored **on your device** unless a feature needs to publish something to our servers (for example a stream overlay or your Streamer badge progress). The settings backups the app writes to your Documents folder leave out Twitch and YouTube tokens and API keys (they do include your app account login, so a backup can restore your account).
 
 The desktop app looks up Steam profiles (avatar, alias, recently played time) and the current Company of Heroes player count through our website, which adds our Steam Web API key. We pass the Steam IDs on to Steam and may cache Steam's answer for a few minutes; we do not store those lookups.
 

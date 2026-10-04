@@ -95,7 +95,7 @@ importers:
         version: 2.1.0
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/8404b71ed3bbf3ea1f057f49401a575b43459487
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -425,7 +425,7 @@ importers:
         version: link:../ui
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/8404b71ed3bbf3ea1f057f49401a575b43459487
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -530,7 +530,7 @@ importers:
         version: link:../i18n
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/8404b71ed3bbf3ea1f057f49401a575b43459487
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -594,7 +594,7 @@ importers:
         version: link:../ui
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/8404b71ed3bbf3ea1f057f49401a575b43459487
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -1724,8 +1724,8 @@ packages:
   '@fabianlars/tauri-plugin-oauth@2.1.0':
     resolution: {integrity: sha512-KElVn5VWJ7FPTbWvZ38NNWsxTMQ4wKNnWSB75eIh/CwO0RLLNH1eL3POdulluiaS4f0TWGdkL9nlD2ZKhi8DIQ==}
 
-  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/8404b71ed3bbf3ea1f057f49401a575b43459487':
-    resolution: {tarball: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/8404b71ed3bbf3ea1f057f49401a575b43459487}
+  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b':
+    resolution: {tarball: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b}
     version: 2.1.0
 
   '@floating-ui/core@1.8.0':
@@ -6659,7 +6659,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.11.1
 
-  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/8404b71ed3bbf3ea1f057f49401a575b43459487': {}
+  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b': {}
 
   '@floating-ui/core@1.8.0':
     dependencies:

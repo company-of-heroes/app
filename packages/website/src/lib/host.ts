@@ -75,6 +75,7 @@ export function provideWebsiteHost(): HostContext {
 			memberReplay: (id) => href(`/replays/${id}`),
 			publishReplay: (lobbyId) => href(`/replays/upload?fromMatch=${lobbyId}`),
 			replayList: () => href(rememberedReplaysListHref()),
+			shareReplay: (id) => `${page.url.origin}${href(`/replays/${id}`)}`,
 			editReplay: (id) => href(`/replays/${id}/edit`)
 		},
 		url: {

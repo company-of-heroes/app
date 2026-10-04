@@ -24,7 +24,7 @@ export type ReplayCommand = {
 	description?: string;
 };
 
-/** The queued order a `CANCEL_QUEUE` action removed (parser `CancelledOrder`). */
+/** The queued order or building site a cancel action removed (parser `CancelledOrder`). */
 export type ReplayCancelledOrder = {
 	tick: number;
 	commandID: number;
@@ -41,9 +41,15 @@ export type ReplayAction = {
 	command?: ReplayCommand;
 	/** In-game icon key (see `actionIconKey`); resolve to a URL with `host.resolve.actionIcon`. */
 	icon?: string | null;
-	/** On `CANCEL_QUEUE` actions: the order that was cancelled. */
+	/** On cancel actions (see `isCancelAction`): the order or building that was cancelled. */
 	cancelled?: ReplayCancelledOrder | null;
 };
+
+/** Cancel of a queued order (`CANCEL_QUEUE`) or of a building under construction (`CANCEL_CONSTRUCTION`). */
+export function isCancelAction(action: Pick<ReplayAction, 'command'>): boolean {
+	const type = action.command?.type;
+	return type === 'CANCEL_QUEUE' || type === 'CANCEL_CONSTRUCTION';
+}
 
 export type ReplayData = {
 	playerCount: number;

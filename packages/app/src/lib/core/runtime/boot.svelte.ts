@@ -2,8 +2,8 @@ import { goto } from '$app/navigation';
 import { getVersion } from '@tauri-apps/api/app';
 import { app } from '$core/app/context';
 import { settings } from '$core/config/settings.svelte';
-import type { BackupCandidate } from '$core/config/backup';
 import { account } from '$core/account';
+import { hasCredentials } from '$core/account/recovery';
 import { registerBrowserHandoffGlobal } from '$core/account/browser-handoff-global';
 import { game } from '$core/game/process.svelte';
 import { pocketbase } from '$core/pocketbase';
@@ -47,11 +47,17 @@ export class Boot {
 	/** True when boot failed because the remote server did not respond (maintenance/outage). */
 	serverUnavailable = $state(false);
 
-	/** True while the mandatory CoH paths are missing/invalid. */
+	/** True on a fresh install (no account yet) or after a sign-out / expired session. */
 	needsOnboarding = $state(false);
 
-	/** Backup proposed for restore during onboarding (fresh installs). */
-	restoreCandidate = $state<BackupCandidate | null>(null);
+	/** Why the sign-in screen is shown for an existing install (expired session, rejected login). */
+	signInMessage = $state<string | null>(null);
+
+	/** A fresh install restores its best backup once; a failed restore ends on the sign-in screen. */
+	#restoreTried = false;
+
+	/** Set once the setup finished this run ("continue without account" has no account yet). */
+	#onboarded = false;
 
 	#settingsLoaded = false;
 	#startPromise: Promise<boolean> | null = null;
@@ -118,16 +124,16 @@ export class Boot {
 			return null;
 		}
 
-		this.needsOnboarding = !(await app.isConfigured());
+		// Fresh installs (or wiped app data): restore the backup with an account, if any.
+		// Not after a sign-out: that keeps its settings file and must stay signed out.
+		if (settings.loadResult?.source === 'fresh' && !hasCredentials(settings.tree.account)) {
+			await this.#restoreBackup();
+		}
+
+		this.needsOnboarding = !this.#onboarded && !hasCredentials(settings.tree.account);
 
 		if (this.needsOnboarding) {
 			this.phase = 'onboarding';
-
-			// Fresh installs (or wiped app data): offer a backup restore.
-			if (this.restoreCandidate === null && account.userId === '') {
-				this.restoreCandidate = await settings.backup.findBestRestoreCandidate();
-			}
-
 			if (pathname !== '/setup') {
 				return '/setup';
 			}
@@ -136,6 +142,11 @@ export class Boot {
 		}
 
 		const ready = await this.#ensureStarted();
+
+		// The stored Steam session expired: back to the setup's sign-in step.
+		if (this.needsOnboarding) {
+			return pathname === '/setup' ? null : '/setup';
+		}
 
 		if (ready && pathname === '/setup') {
 			return '/';
@@ -149,13 +160,34 @@ export class Boot {
 		return null;
 	}
 
-	/** Called by the setup wizard once both paths validate. */
+	async #restoreBackup(): Promise<void> {
+		if (this.#restoreTried) {
+			return;
+		}
+
+		this.#restoreTried = true;
+		const candidate = await settings.backup.findBestRestoreCandidate();
+		if (!candidate || !hasCredentials(candidate.settings.account)) {
+			return;
+		}
+
+		const result = await settings.replace(candidate.settings);
+		if (!result.success) {
+			console.warn('[BOOT]: backup restore failed:', result.error);
+			return;
+		}
+
+		console.info('[BOOT]: restored settings and account from a backup');
+	}
+
+	/** Called by the setup wizard once the account step is done (paths are optional). */
 	async completeOnboarding(): Promise<void> {
 		await settings.persistNow();
 		await settings.backup.backupNow('manual');
 
+		this.#onboarded = true;
 		this.needsOnboarding = false;
-		this.restoreCandidate = null;
+		this.signInMessage = null;
 		this.resetSplashIntro();
 
 		await goto('/splashscreen');
@@ -227,15 +259,23 @@ export class Boot {
 			this.phase = 'account';
 			const outcome = await account.ensureAccount();
 
+			// No working login and no working backup: open on the sign-in screen.
+			if (outcome.action === 'failed' && outcome.reason === 'signed-out') {
+				this.signInMessage = account.lastError;
+				await account.signOut();
+				this.#onboarded = false;
+				this.needsOnboarding = true;
+				this.phase = 'onboarding';
+				this.#startPromise = null;
+				return false;
+			}
+
 			if (outcome.action === 'failed') {
 				this.serverUnavailable = outcome.reason === 'error' && !(await this.isServerReachable());
 				this.phase = 'error';
-				this.error =
-					outcome.reason === 'declined'
-						? t('Account setup was cancelled. The app needs an account to function.')
-						: t('Could not sign in: {message}', {
-								message: outcome.error ?? t('unknown error')
-							});
+				this.error = t('Could not sign in: {message}', {
+					message: outcome.error ?? t('unknown error')
+				});
 				this.#startPromise = null;
 				return false;
 			}
@@ -250,8 +290,10 @@ export class Boot {
 				void settings.flush();
 			});
 
-			// Features (error-isolated; a broken feature never blocks boot)
+			// Features (error-isolated; a broken feature never blocks boot). Path checks
+			// first: features that need warnings.log stay unavailable without it.
 			this.phase = 'features';
+			await app.watchCohPaths();
 
 			for (const feature of app._features.values()) {
 				try {

@@ -404,6 +404,29 @@ export class MatchesApi {
 		});
 	}
 
+	/** Raw `players` (with the ladder stats captured at lobby start) of saved lobbies per session. */
+	getPlayersBySessionIds(
+		sessionIds: number[]
+	): ResultAsync<{ sessionId: number; players: unknown }[], ApiError> {
+		const unique = [...new Set(sessionIds.filter((id) => Number.isInteger(id) && id > 0))];
+		if (unique.length === 0) {
+			return okAsync([]);
+		}
+
+		return fromPbPromise(
+			this.deps.pocketbase.collection('lobbies').getList<{ sessionId: number; players: unknown }>(
+				1,
+				Math.min(500, unique.length * 5),
+				pbOptions(this.deps, {
+					filter: unique.map((id) => `sessionId=${id}`).join(' || '),
+					fields: 'sessionId,players',
+					sort: '-createdAt'
+				})
+			),
+			'Failed to load matches.'
+		).map((records) => records.items);
+	}
+
 	getByIds(ids: string[]): ResultAsync<MatchRecord[], ApiError> {
 		const unique = [...new Set(ids.filter(Boolean))];
 		if (unique.length === 0) {

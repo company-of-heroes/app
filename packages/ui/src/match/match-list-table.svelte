@@ -337,7 +337,7 @@
 				</thead>
 				<tbody>
 					{#each Array(3) as _, index (index)}
-						<tr class="border-secondary-800 h-11 border-b">
+						<tr class={cn('border-secondary-800 h-11 border-b', !footer && 'last:border-b-0')}>
 							{#each columns as column (column)}
 								{@render desktopSkeletonCell(column)}
 							{/each}
@@ -348,7 +348,7 @@
 		</div>
 		<div class="md:hidden">
 			{#each Array(3) as _, index (index)}
-				<div class="border-secondary-800 border-b px-4 py-3">
+				<div class={cn('border-secondary-800 border-b px-4 py-3', !footer && 'last:border-b-0')}>
 					<div class="flex gap-3">
 						<Skeleton class="size-11 shrink-0 rounded-none" />
 						<div class="min-w-0 flex-1">
@@ -401,6 +401,7 @@
 							class={cn(
 								interactive,
 								'border-secondary-800 text-secondary-300 h-11 border-b transition-colors',
+								!footer && 'last:border-b-0',
 								'hover:bg-secondary-950/60 hover:text-primary',
 								expanded && 'bg-secondary-950/60 text-primary',
 								!canExpand && 'cursor-default'
@@ -413,7 +414,7 @@
 							{/each}
 						</tr>
 						{#if expanded}
-							<tr>
+							<tr class={cn('border-secondary-800 border-b', !footer && 'last:border-b-0')}>
 								<td colspan={columnCount} class="p-0">
 									{@render rowExpand(row)}
 								</td>
@@ -432,6 +433,7 @@
 					class={cn(
 						interactive,
 						'border-secondary-800 text-secondary-300 border-b transition-colors',
+						!footer && 'last:border-b-0',
 						'hover:bg-secondary-950/60 hover:text-primary',
 						expanded && 'bg-secondary-950/60 text-primary',
 						!canExpand && 'cursor-default'

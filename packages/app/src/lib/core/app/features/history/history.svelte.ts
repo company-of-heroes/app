@@ -51,6 +51,11 @@ type HistorySettings = {
 export class History extends Feature<HistorySettings> {
 	name = 'history';
 
+	/** Needs warnings.log: lobbies and replays come from the game's log folder. */
+	protected get available(): boolean {
+		return app.cohPaths.warningsLog;
+	}
+
 	matches!: Matches;
 	memberQuery = $state<ReplaysQuery>({
 		page: 1,
@@ -836,6 +841,11 @@ export class History extends Feature<HistorySettings> {
 	}
 
 	async downloadReplay(match: MatchExpanded): Promise<{ ok: boolean; downloadCount?: number }> {
+		if (!app.cohPaths.warningsLog) {
+			app.toast.error(t('Set your warnings.log in Settings to download replays.'));
+			return { ok: false };
+		}
+
 		try {
 			const path = await join(await app.paths.cohPlaybackDir(), match.replay);
 			const bytes = await getFile(match, match.replay);
@@ -862,6 +872,10 @@ export class History extends Feature<HistorySettings> {
 	}
 
 	async downloadExists(match: MatchExpanded): Promise<boolean> {
+		if (!app.cohPaths.warningsLog) {
+			return false;
+		}
+
 		const path = await join(await app.paths.cohPlaybackDir(), match.replay);
 
 		return await exists(path);

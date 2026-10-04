@@ -14,7 +14,7 @@ import {
 } from '$core/config/import-export';
 import { t } from '$lib/i18n';
 
-export type FeatureStatus = 'disabled' | 'starting' | 'active' | 'error';
+export type FeatureStatus = 'disabled' | 'unavailable' | 'starting' | 'active' | 'error';
 
 export interface Feature<
 	Settings extends Record<string, unknown> | { enabled: boolean } = { enabled: boolean }
@@ -47,6 +47,19 @@ export abstract class Feature<
 
 	/** Whether the feature should be running. */
 	enabled = $derived.by(() => this.settings.enabled);
+
+	/**
+	 * Whether the feature's preconditions are met (e.g. a valid warnings.log).
+	 * An enabled feature that is unavailable stays stopped with status 'unavailable'.
+	 */
+	protected get available(): boolean {
+		return true;
+	}
+
+	/** Enabled by the user and able to run. */
+	get running(): boolean {
+		return this.enabled && this.available;
+	}
 
 	/** Current lifecycle status. */
 	status = $state<FeatureStatus>('disabled');
@@ -84,15 +97,15 @@ export abstract class Feature<
 				}
 			);
 
-			// React to enable/disable toggles.
+			// React to enable/disable toggles and preconditions.
 			watch(
-				() => this.enabled,
-				(enabled, previous) => {
+				() => [this.enabled, this.running] as const,
+				([, running], previous) => {
 					if (previous === undefined) {
 						return;
 					}
 
-					void this.#transition(enabled);
+					void this.#transition(running);
 				}
 			);
 		});
@@ -102,7 +115,7 @@ export abstract class Feature<
 			void this.#reload();
 		});
 
-		await this.#transition(this.enabled);
+		await this.#transition(this.running);
 
 		return this;
 	}
@@ -124,7 +137,7 @@ export abstract class Feature<
 	async #reload(): Promise<void> {
 		await this.#transition(false);
 		await this.#loadSettings();
-		await this.#transition(this.enabled);
+		await this.#transition(this.running);
 	}
 
 	#transition(target: boolean): Promise<void> {
@@ -150,7 +163,9 @@ export abstract class Feature<
 					}
 				}
 			} else {
-				if (this.status === 'disabled') {
+				const stopped = this.enabled ? 'unavailable' : 'disabled';
+				if (this.status === 'disabled' || this.status === 'unavailable') {
+					this.status = stopped;
 					return;
 				}
 
@@ -160,7 +175,7 @@ export abstract class Feature<
 					console.error(`[FEATURE:${this.name}]: failed to stop:`, error);
 				}
 
-				this.status = 'disabled';
+				this.status = stopped;
 			}
 		});
 
@@ -232,7 +247,7 @@ export abstract class Feature<
 				...validated,
 				enabled: Boolean((validated as { enabled?: boolean }).enabled ?? false)
 			};
-			await this.#transition(this.enabled);
+			await this.#transition(this.running);
 
 			toast.success(t('Settings imported successfully!'));
 		} catch (error) {

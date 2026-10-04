@@ -8,6 +8,7 @@ import { buildProfileLinks, pickOwnedSteamId } from '@company-of-heroes/api';
 import { account } from '$core/account';
 import { api, unwrapApi } from '$core/api';
 import { app } from '$core/app/context';
+import { SITE_URL } from '$core/site/urls';
 import { findCompanionUserBySteamId, readMetaVersion } from '$core/pocketbase/companion-user';
 import { findHiddenMatch, hideMatch, unhideMatch } from '$core/pocketbase/hidden-matches';
 import { userAvatarSrc } from '$lib/components/user/user-avatar-src';
@@ -45,7 +46,8 @@ export function provideAppHost(): HostContext {
 			memberReplays: () => '/history?tab=member',
 			memberReplay: (id) => `/replays/${id}`,
 			publishReplay: (lobbyId) => `/replays/upload?fromMatch=${lobbyId}`,
-			replayList: () => '/history'
+			replayList: () => '/history',
+			shareReplay: (id) => `${SITE_URL}/replays/${id}`
 		},
 		url: {
 			param: (name) => page.url.searchParams.get(name),

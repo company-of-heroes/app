@@ -1,12 +1,14 @@
 import { ClientResponseError } from 'pocketbase';
+import { cancel, onInvalidUrl, onUrl, start } from '@fabianlars/tauri-plugin-oauth';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { fetch } from '$core/http/fetch';
-import { confirm } from '@tauri-apps/plugin-dialog';
 import { getVersion } from '@tauri-apps/api/app';
 import { isEmpty } from 'lodash-es';
 import { pocketbase } from '$core/pocketbase';
 import { UsersRoleOptions, type UsersResponse } from '$core/pocketbase/types';
 import { settings } from '$core/config/settings.svelte';
-import type { AccountSettings } from '$core/config/schema';
+import { accountSettingsSchema, type AccountSettings } from '$core/config/schema';
+import { SITE_URL } from '$core/site/urls';
 import { generatePassword, generateUniqueId } from '$lib/utils/password';
 import { steam } from '$core/steam';
 import { ensureAccountFlow, type AuthResult, type RecoveryOutcome } from './recovery';
@@ -16,10 +18,18 @@ import { canRequestEmailChange, isPlaceholderEmail } from '@company-of-heroes/ap
 
 export type User = UsersResponse<Record<string, any>, string[], Record<string, any>>;
 
-export type AccountStatus = 'idle' | 'authenticating' | 'authenticated' | 'error';
+export type AccountStatus = 'idle' | 'authenticating' | 'authenticated' | 'signed-out' | 'error';
 
 /** Well inside PocketBase's one-week session lifetime. */
 const SESSION_REFRESH_MS = 12 * 60 * 60 * 1000;
+/** Loopback ports for the Steam login callback (the website allows exactly these). */
+const LOGIN_PORTS = [8001, 8002, 8003, 8004, 8005];
+/** How long the browser Steam login may take before the app stops listening. */
+const STEAM_LOGIN_TIMEOUT_MS = 5 * 60 * 1000;
+
+function isAuthRejection(error: unknown): boolean {
+	return error instanceof ClientResponseError && [400, 401, 403, 404].includes(error.status);
+}
 
 function metaWithVersion(meta: Record<string, any> | null | undefined, version: string) {
 	return { ...(meta && typeof meta === 'object' ? meta : {}), version };
@@ -53,6 +63,10 @@ export class AccountService {
 	status = $state<AccountStatus>('idle');
 	lastError = $state<string | null>(null);
 
+	/** True while the browser Steam login is waiting for its callback. */
+	isSteamLoginPending = $state(false);
+	#cancelSteamLogin: (() => void) | null = null;
+
 	/**
 	 * Authenticates the account, recovering or creating it when necessary.
 	 * Returns the outcome; on success the credentials are persisted and
@@ -66,26 +80,23 @@ export class AccountService {
 			authenticate: (credentials) => this.#authenticate(credentials),
 			createAccount: (credentials) => this.#createAccount(credentials),
 			findBackupAccount: () => this.#findBackupAccount(),
-			confirmCreateNew: () =>
-				confirm(
-					t(
-						'Your account could not be found and no working backup was detected.\n\nDo you want to create a new account? Your previous match history will no longer be linked.'
-					),
-					{ okLabel: t('Create new account'), cancelLabel: t('Cancel'), kind: 'warning' }
-				),
 			generateCredentials: () => ({
 				userId: generateUniqueId(),
 				email: crypto.randomUUID() + '@fknoobs.com',
 				password: generatePassword(),
-				pendingEmail: ''
+				pendingEmail: '',
+				authMode: 'password',
+				token: ''
 			})
 		});
 
 		if (outcome.action === 'failed') {
-			this.status = 'error';
+			this.status = outcome.reason === 'signed-out' ? 'signed-out' : 'error';
 			this.lastError =
-				outcome.reason === 'declined'
-					? t('Account setup cancelled')
+				outcome.reason === 'signed-out'
+					? settings.tree.account.authMode === 'session'
+						? t('Your session has expired. Please sign in again.')
+						: t('Your saved login no longer works. Please sign in again.')
 					: (outcome.error ?? t('Unknown account error'));
 			console.error('[ACCOUNT]: ensureAccount failed:', outcome);
 			return outcome;
@@ -135,6 +146,7 @@ export class AccountService {
 		try {
 			const auth = await pocketbase.collection('users').authRefresh<User>({ fetch });
 			this.#user = auth.record;
+			await this.#storeSessionToken(auth.token);
 		} catch (error) {
 			console.warn('[ACCOUNT]: session refresh failed, signing in again:', error);
 			const result = await this.#authenticate($state.snapshot(settings.tree.account)).catch(
@@ -144,13 +156,20 @@ export class AccountService {
 				}
 			);
 			if (result !== 'ok') {
-				this.status = 'error';
-				this.lastError = t('Could not restore your account');
+				const expired = settings.tree.account.authMode === 'session';
+				this.status = expired ? 'signed-out' : 'error';
+				this.lastError = expired
+					? t('Your session has expired. Please sign in again.')
+					: t('Could not restore your account');
 			}
 		}
 	}
 
 	async #authenticate(credentials: AccountSettings): Promise<AuthResult> {
+		if (credentials.authMode === 'session') {
+			return this.#resumeSession(credentials.token);
+		}
+
 		const tryAuth = async (email: string) => {
 			const auth = await pocketbase
 				.collection('users')
@@ -199,6 +218,177 @@ export class AccountService {
 
 			throw error;
 		}
+	}
+
+	/** Continues a Steam login's session; a rejected token means the user signs in again. */
+	async #resumeSession(token: string): Promise<AuthResult> {
+		pocketbase.authStore.save(token, null);
+		try {
+			const auth = await pocketbase.collection('users').authRefresh<User>({ fetch });
+			this.#user = auth.record;
+			await this.#storeSessionToken(auth.token);
+			return 'ok';
+		} catch (error) {
+			if (isAuthRejection(error)) {
+				pocketbase.authStore.clear();
+				return 'invalid';
+			}
+
+			throw error;
+		}
+	}
+
+	/** Keeps the stored token current: an old one expires a week after it was issued. */
+	async #storeSessionToken(token: string): Promise<void> {
+		const current = settings.tree.account;
+		if (current.authMode !== 'session' || current.token === token || this.isImpersonating) {
+			return;
+		}
+
+		settings.tree.account = { ...current, token };
+		await settings.persistNow();
+	}
+
+	/** Stores an existing account; the caller reloads so every service starts as that user. */
+	async #useAccount(credentials: AccountSettings): Promise<void> {
+		settings.tree.account = credentials;
+		await settings.persistNow();
+		await settings.backup.backupNow('change');
+	}
+
+	/** Signs in with an existing account's email and password. Returns an error message. */
+	async loginWithPassword(email: string, password: string): Promise<string | null> {
+		try {
+			const auth = await pocketbase
+				.collection('users')
+				.authWithPassword<User>(email.trim(), password, { fetch });
+			await this.#useAccount(
+				accountSettingsSchema.parse({
+					userId: auth.record.id,
+					email: auth.record.email || email.trim(),
+					password,
+					authMode: 'password'
+				})
+			);
+			return null;
+		} catch (error) {
+			if (isAuthRejection(error)) {
+				return t('Invalid email or password.');
+			}
+
+			console.error('[ACCOUNT]: password login failed:', error);
+			return t('Could not sign in. Please try again.');
+		}
+	}
+
+	/** Creates a personal account with the user's own email and password. Returns an error message. */
+	async register(email: string, password: string): Promise<string | null> {
+		const result = await api.auth.register(email, password);
+		if (result.isErr()) {
+			return t(result.error.message);
+		}
+
+		await this.#useAccount(
+			accountSettingsSchema.parse({
+				userId: result.value.id,
+				email: result.value.email || email.trim(),
+				password,
+				authMode: 'password'
+			})
+		);
+		return null;
+	}
+
+	/**
+	 * Signs in with Steam: the website runs the Steam login in the browser and sends a
+	 * short-lived code back to a loopback port, which the app trades for a session.
+	 */
+	async loginWithSteam(): Promise<{ error: string | null; cancelled?: boolean }> {
+		this.isSteamLoginPending = true;
+		const unlisten: Array<() => void> = [];
+		let port: number | null = null;
+		let timer: ReturnType<typeof setTimeout> | null = null;
+		try {
+			port = await start({ ports: LOGIN_PORTS });
+			const origin = `http://localhost:${port}`;
+			const result = await new Promise<{ code?: string; error?: string } | null>((resolve) => {
+				this.#cancelSteamLogin = () => resolve(null);
+				timer = setTimeout(
+					() => resolve({ error: t('Steam login timed out.') }),
+					STEAM_LOGIN_TIMEOUT_MS
+				);
+				void onUrl((raw) => {
+					const params = new URL(raw).searchParams;
+					const code = params.get('code');
+					resolve(code ? { code } : { error: params.get('error') || t('Steam login failed.') });
+				}).then((off) => unlisten.push(off));
+				void onInvalidUrl(() => resolve({ error: t('Steam login failed.') })).then((off) =>
+					unlisten.push(off)
+				);
+				const url = new URL('/auth/steam/start', SITE_URL);
+				url.searchParams.set('origin', origin);
+				void openUrl(url.toString());
+			});
+
+			if (!result) {
+				return { error: null, cancelled: true };
+			}
+
+			if (!result.code) {
+				return { error: result.error ?? t('Steam login failed.') };
+			}
+
+			const exchanged = await api.auth.exchangeHandoffCode(result.code);
+			if (exchanged.isErr()) {
+				return { error: t(exchanged.error.message) };
+			}
+
+			const { token, record } = exchanged.value;
+			pocketbase.authStore.save(token, record);
+			await this.#useAccount(
+				accountSettingsSchema.parse({
+					userId: record.id,
+					email: record.email ?? '',
+					authMode: 'session',
+					token
+				})
+			);
+			return { error: null };
+		} catch (error) {
+			console.error('[ACCOUNT]: Steam login failed:', error);
+			return { error: t('Steam login failed.') };
+		} finally {
+			if (timer) {
+				clearTimeout(timer);
+			}
+
+			unlisten.forEach((off) => off());
+			if (port !== null) {
+				void cancel(port);
+			}
+
+			this.#cancelSteamLogin = null;
+			this.isSteamLoginPending = false;
+		}
+	}
+
+	/** Stops waiting for the browser Steam login. */
+	cancelSteamLogin(): void {
+		this.#cancelSteamLogin?.();
+	}
+
+	/** Forgets the stored account; the caller reloads into the setup's sign-in step. */
+	async signOut(): Promise<void> {
+		pocketbase.authStore.clear();
+		this.#user = null;
+		this.status = 'idle';
+		settings.tree.account = accountSettingsSchema.parse({});
+		await settings.persistNow();
+	}
+
+	/** Signed in with Steam: there is no password to show or change. */
+	get isSessionLogin(): boolean {
+		return settings.tree.account.authMode === 'session';
 	}
 
 	async #createAccount(credentials: AccountSettings): Promise<void> {
@@ -449,7 +639,8 @@ export class AccountService {
 		}
 
 		const current = settings.tree.account;
-		const passwordChanged = password !== current.password;
+		// Steam sessions have no known password; PocketBase needs the old one to change it.
+		const passwordChanged = current.authMode !== 'session' && password !== current.password;
 
 		try {
 			const updatePayload: Record<string, unknown> = {};

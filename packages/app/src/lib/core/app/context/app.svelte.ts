@@ -3,7 +3,6 @@ import type { TypedPocketBase } from '$core/pocketbase/types';
 import type { FlatReplay } from '@company-of-heroes/ui/replay/parse';
 import type { MatchExpanded } from '../database/matches';
 import { dev } from '$app/environment';
-import { goto } from '$app/navigation';
 import type { SteamPlayerSummary } from '$core/steam';
 import Emittery from 'emittery';
 import { watch } from 'runed';
@@ -115,6 +114,9 @@ export class AppContext extends Emittery<AppEvents> {
 	/** Notification audio element. */
 	audio: HTMLAudioElement = new Audio();
 
+	/** Which optional CoH paths are valid; features that need one are unavailable without it. */
+	cohPaths = $state({ warningsLog: false, gameDir: false });
+
 	statuses = $state<Statuses>({
 		companyOfHeroes: 'idle',
 		websocketServer: 'loading'
@@ -123,6 +125,7 @@ export class AppContext extends Emittery<AppEvents> {
 	_features: SvelteMap<FeatureKey, Features[FeatureKey]> = new SvelteMap();
 
 	#wired = false;
+	#cohPathsCheck = 0;
 	#logStopTimer: ReturnType<typeof setTimeout> | null = null;
 	#liveLobbyHeartbeat: ReturnType<typeof setInterval> | null = null;
 	/** Bumps on clear/start so in-flight upserts don't resurrect a deleted row. */
@@ -174,14 +177,40 @@ export class AppContext extends Emittery<AppEvents> {
 		this._features.set(name, feature);
 	}
 
-	/** Whether the mandatory CoH paths are configured and valid. */
-	async isConfigured(): Promise<boolean> {
+	/** Re-validates the optional CoH paths; features that need them follow `cohPaths`. */
+	async refreshCohPaths(): Promise<void> {
+		const check = ++this.#cohPathsCheck;
 		const [logResult, dirResult] = await Promise.all([
 			validateWarningsLog(this.settings.companyOfHeroesConfigPath),
 			validateGameDir(this.settings.companyOfHeroesInstallationPath)
 		]);
 
-		return logResult.valid && dirResult.valid;
+		// A newer check (path edited while this one ran) wins.
+		if (check === this.#cohPathsCheck) {
+			this.cohPaths = { warningsLog: logResult.valid, gameDir: dirResult.valid };
+		}
+	}
+
+	/**
+	 * Keeps `cohPaths` in sync with the settings. The game is re-checked on launch:
+	 * warnings.log only exists after the first start. Called once by the boot pipeline.
+	 */
+	async watchCohPaths(): Promise<void> {
+		await this.refreshCohPaths();
+		$effect.root(() => {
+			watch(
+				() =>
+					[
+						this.settings.companyOfHeroesConfigPath,
+						this.settings.companyOfHeroesInstallationPath,
+						this.game.isRunning
+					] as const,
+				() => {
+					void this.refreshCohPaths();
+				},
+				{ lazy: true }
+			);
+		});
 	}
 
 	/**
@@ -205,7 +234,11 @@ export class AppContext extends Emittery<AppEvents> {
 
 			// Start/stop the log watcher with the game process.
 			watch(
-				() => [this.settings.companyOfHeroesConfigPath, this.game.isRunning] as const,
+				() =>
+					[
+						this.cohPaths.warningsLog ? this.settings.companyOfHeroesConfigPath : '',
+						this.game.isRunning
+					] as const,
 				([path, isRunning]) => {
 					if (this.#logStopTimer) {
 						clearTimeout(this.#logStopTimer);
@@ -797,12 +830,6 @@ export class AppContext extends Emittery<AppEvents> {
 			}
 
 			this.toast.success(t('Settings imported and applied.'));
-
-			// Imported paths may be invalid on this machine: send the user
-			// through the setup wizard instead of failing silently.
-			if (!(await this.isConfigured())) {
-				await goto('/setup');
-			}
 		} catch (error) {
 			console.error('[APP]: Failed to import settings:', error);
 			this.toast.error(t('Failed to import settings. Please try again.'));

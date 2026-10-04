@@ -62,6 +62,7 @@ export function toUiMatchHistory(matches: AppTransformedMatch[]): TransformedMat
 				oldrating: enriched.oldrating,
 				newrating: enriched.newrating,
 				ranklevel: enriched.ranklevel,
+				rank: enriched.rank,
 				country: enriched.country,
 				labels: enriched.labels,
 				likeCount: enriched.likeCount,

@@ -6,6 +6,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { flushHeader, flushHeaderDescription } from '$lib/components/ui/variants';
 	import { open } from '@tauri-apps/plugin-dialog';
+	import { Alert } from '$lib/components/ui/alert';
 	import ImageCropper from '$lib/components/modals/image-cropper.svelte';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { useI18n } from '$lib/i18n';
@@ -31,6 +32,7 @@
 	const canChangeEmail = $derived(app.account.canChangeEmail);
 	const isPlaceholder = $derived(app.account.isPlaceholderEmail);
 	const needsVerification = $derived(!verified && !isPlaceholder);
+	const isSessionLogin = $derived(app.account.isSessionLogin);
 	const rewardsSteamId = $derived(
 		pickOwnedSteamId(app.features.auth.user.steamIds, [app.game.profile?.steam.steamid])
 	);
@@ -135,9 +137,13 @@
 
 <div class={flushHeader}>
 	<p class={flushHeaderDescription}>
-		{t(
-			'When you install the app, we automatically create a default account for you using a randomly generated email address and password. Set a display name, email, and password you recognize — the same credentials log you in on'
-		)}
+		{#if isSessionLogin}
+			{t('You are signed in with Steam. Steam sign-in works on')}
+		{:else}
+			{t(
+				'Without an existing account, the app creates one for you with a randomly generated email address and password. Set a display name, email, and password you recognize — the same credentials log you in on'
+			)}
+		{/if}
 		<Button variant="link" class="h-auto px-0" type="button" onclick={() => openUrl(SITE_URL)}>
 			{SITE_URL}
 		</Button>
@@ -158,6 +164,12 @@
 		{/if}
 	</p>
 </div>
+
+{#if app.account.status === 'signed-out'}
+	<Alert variant="warning" size="sm" class="m-4">
+		{t('Your session has expired. Please sign in again.')}
+	</Alert>
+{/if}
 
 <Form.Root>
 	<Form.Group label={t('Update Account Settings')} />
@@ -267,9 +279,11 @@
 			<p class="text-success text-sm">{emailMessage}</p>
 		</Form.Group>
 	{/if}
-	<Form.Group label={t('Password')}>
-		<Input type="password" bind:value={password} />
-	</Form.Group>
+	{#if !isSessionLogin}
+		<Form.Group label={t('Password')}>
+			<Input type="password" bind:value={password} />
+		</Form.Group>
+	{/if}
 	<Form.Group>
 		{#snippet footer()}
 			<Button type="button" loading={saving} disabled={saving} onclick={saveAccount}>

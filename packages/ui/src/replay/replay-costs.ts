@@ -1,6 +1,6 @@
 import { ACTION_COSTS } from './action-costs';
 import { timelineActionsByPlayer } from './replay-stats';
-import type { ReplayAction, ReplayData } from './types';
+import { isCancelAction, type ReplayAction, type ReplayData } from './types';
 
 /** Resource cost of an order, from the game's attrib data (see `action-costs.ts`). */
 export type ActionCost = {
@@ -49,7 +49,9 @@ const TYPE_BY_OPCODE: Record<number, string> = {
 	0x52: 'UNIT',
 	0x34: 'UPGRADE',
 	0x14: 'UPGRADE',
-	0x33: 'REINFORCE'
+	0x33: 'REINFORCE',
+	0x57: 'BUILDING',
+	0x64: 'BUILDING'
 };
 
 export type BlueprintRef = { list: string; objectID: number };
@@ -64,7 +66,7 @@ function ref(type: string | undefined, objectID: number | undefined): BlueprintR
  * Shared by the cost table and the in-game descriptions (`replay-action-info.ts`).
  */
 export function blueprintRef(action: ReplayAction): BlueprintRef | null {
-	if (action.command?.type === 'CANCEL_QUEUE') {
+	if (isCancelAction(action)) {
 		const order = action.cancelled;
 		return order
 			? ref(order.command?.type ?? TYPE_BY_OPCODE[order.commandID], order.objectID)
@@ -82,7 +84,7 @@ export function blueprintRef(action: ReplayAction): BlueprintRef | null {
 
 /**
  * Cost of an action. A cancel returns the cost of the order it removed with `refunded: true`
- * (CoH1 refunds cancelled queue items in full).
+ * (CoH1 refunds cancelled queue items and building sites in full).
  */
 export function actionCost(action: ReplayAction): (ActionCost & { refunded?: boolean }) | null {
 	const target = blueprintRef(action);
@@ -91,7 +93,7 @@ export function actionCost(action: ReplayAction): (ActionCost & { refunded?: boo
 		return null;
 	}
 
-	return action.command?.type === 'CANCEL_QUEUE' ? { ...cost, refunded: true } : cost;
+	return isCancelAction(action) ? { ...cost, refunded: true } : cost;
 }
 
 export type SpendPoint = { second: number } & Record<SpentResource, number>;

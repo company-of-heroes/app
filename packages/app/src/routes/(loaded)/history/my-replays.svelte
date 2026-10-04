@@ -7,6 +7,7 @@
 	import ReplayFilters from '../replays/replay-filters.svelte';
 	import ReplayTable from '../replays/replay-table.svelte';
 	import { Alert } from '$lib/components/ui/alert';
+	import GameLogNotice from '$lib/components/widgets/game-log-notice.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Sheet } from '@company-of-heroes/ui/sheet';
 	import { useI18n } from '$lib/i18n';
@@ -74,12 +75,16 @@
 <div class="flex min-h-0 flex-1 flex-col">
 	<Alert variant="info" size="sm" class="rounded-none border-x-0 border-t-0">
 		<p>{t('These replays come from your local Company of Heroes playback folder.')}</p>
-		{#if playbackDir.current}
+		{#if playbackDir.current && app.cohPaths.warningsLog}
 			<p class="mt-1 font-mono text-xs opacity-80">
 				{t('Playback folder: {path}', { path: playbackDir.current })}
 			</p>
 		{/if}
 	</Alert>
+	<GameLogNotice
+		class="rounded-none border-x-0 border-t-0"
+		message={t('Set your Company of Heroes warnings.log in Settings to find your local replays.')}
+	/>
 	<div
 		class="border-secondary-800 flex flex-wrap items-center justify-end gap-3 border-b px-4 py-2"
 	>

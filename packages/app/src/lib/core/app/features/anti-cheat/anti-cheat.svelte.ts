@@ -110,6 +110,11 @@ function base64ToJpegFile(base64: string): File {
 export class AntiCheat extends Feature<AntiCheatSettings> {
 	name = 'anti-cheat';
 
+	/** Needs warnings.log: matches are detected from the game log. */
+	protected get available(): boolean {
+		return app.cohPaths.warningsLog;
+	}
+
 	#unsubscribers: (() => void)[] = [];
 	#disposeWatchers: (() => void) | null = null;
 	#captureTimers: ReturnType<typeof setTimeout>[] = [];
@@ -724,7 +729,9 @@ export class AntiCheat extends Feature<AntiCheatSettings> {
 		const allowlist = this.#moduleAllowlist
 			.filter((item) => item.enabled !== false)
 			.map((item) => item.name);
-		const gameRoot = app.settings.companyOfHeroesInstallationPath?.trim() || null;
+		const gameRoot = app.cohPaths.gameDir
+			? app.settings.companyOfHeroesInstallationPath.trim()
+			: null;
 		const hits = await invoke<UnknownGameModule[]>('find_unknown_game_modules', {
 			processName: 'RelicCOH.exe',
 			gameRoot,

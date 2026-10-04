@@ -3,9 +3,19 @@
 	import WidgetLiveLobbies from '$lib/components/widgets/widget-live-lobbies.svelte';
 	import WidgetLiveStreams from '$lib/components/widgets/widget-live-streams.svelte';
 	import WidgetMatchHistory from '$lib/components/widgets/widget-match-history.svelte';
+	import GameLogNotice from '$lib/components/widgets/game-log-notice.svelte';
+	import { useI18n } from '$lib/i18n';
+
+	const { t } = useI18n();
 </script>
 
 <div>
+	<GameLogNotice
+		class="m-4"
+		message={t(
+			'Set your Company of Heroes warnings.log in Settings to turn on live game tracking and match recording.'
+		)}
+	/>
 	<WidgetDashboardHero />
 	<WidgetLiveLobbies />
 	<WidgetLiveStreams />

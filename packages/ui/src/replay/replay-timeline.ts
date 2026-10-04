@@ -62,6 +62,14 @@ export function timelineRow(action: ReplayAction): TimelineRowKey | null {
 			return 'doctrine';
 		case 'CANCEL_QUEUE':
 			return cancelledRow(action);
+		case 'CANCEL_CONSTRUCTION':
+			return action.cancelled
+				? timelineRow({
+						...action,
+						command: { type: 'BUILDING' },
+						objectID: action.cancelled.objectID
+					})
+				: null;
 		default:
 			return null;
 	}

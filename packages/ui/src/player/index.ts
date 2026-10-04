@@ -66,5 +66,10 @@ export {
 	attachMatchHistoryRankLevels,
 	collectMatchHistoryProfileIds,
 	isRankedMatchType,
-	rankLevelForMatchPlayer
+	isTeamMatchType,
+	ladderStatsFromPersonalStats,
+	matchHistoryLeaderboardId,
+	rankLevelForMatchPlayer,
+	type MatchHistoryLadderStats,
+	type TeamLadderStats
 } from './match-history-ranks';

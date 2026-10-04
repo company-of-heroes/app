@@ -22,12 +22,7 @@
 	}
 </script>
 
-<div
-	class={cn(
-		'border-secondary-900 overflow-clip border-b',
-		'hover:border-secondary-700 transition-colors'
-	)}
->
+<div class="border-secondary-900 overflow-clip border-b">
 	<div class={cn('flex items-center gap-3', expanded && 'border-secondary-800 border-b')}>
 		<button
 			type="button"

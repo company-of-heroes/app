@@ -13,6 +13,11 @@ export type ReplayAnalyzerSettings = {
 export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 	name = 'replay-analyzer';
 
+	/** Needs warnings.log: replays live in its playback folder. */
+	protected get available(): boolean {
+		return app.cohPaths.warningsLog;
+	}
+
 	progress = $state({
 		total: 0,
 		processed: 0,

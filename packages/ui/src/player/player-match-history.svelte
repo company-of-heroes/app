@@ -27,13 +27,13 @@
 	} from '../format/player-format';
 	import { formatStreak, streakClass } from '../format/ranks';
 	import type { MatchHistoryPlayer, PlayerPageData, TransformedMatch } from './types';
-	import { isRankedMatchType } from './match-history-ranks';
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
 	import { playerPreviewId } from './player-preview-cache';
 	import { useHost } from '../host/host.context';
+	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { CommunityMatchDetail } from '../replay/types';
 
 	type Props = {
@@ -103,20 +103,21 @@
 	{/if}
 {/snippet}
 
-{#snippet rankBadge(matchPlayer: MatchHistoryPlayer, matchTypeId: number)}
-	{#if !isRankedMatchType(matchTypeId)}
-		<span class="text-secondary-400 tabular-nums">-</span>
-	{:else}
+{#snippet rankBadge(matchPlayer: MatchHistoryPlayer)}
+	{#if (matchPlayer.ranklevel ?? 0) > 0}
 		<span class="flex items-center justify-center gap-2">
 			<img
 				src={host.resolve.rankImageByRace(matchPlayer.race_id, matchPlayer.ranklevel ?? 0)}
-				alt=""
+				alt={t('Rank {level}', { level: matchPlayer.ranklevel ?? 0 })}
 				class="size-6 shrink-0 object-contain"
+				{@attach tooltip(t('Rank {level}', { level: matchPlayer.ranklevel ?? 0 }))}
 			/>
 			<span class="font-semibold tabular-nums">
-				{(matchPlayer.ranklevel ?? 0) > 0 ? matchPlayer.ranklevel : '-'}
+				{(matchPlayer.rank ?? 0) > 0 ? `#${matchPlayer.rank}` : matchPlayer.ranklevel}
 			</span>
 		</span>
+	{:else}
+		<span class="text-secondary-400 tabular-nums">-</span>
 	{/if}
 {/snippet}
 
@@ -154,14 +155,14 @@
 				}) ?? matchPlayer.steamId}
 				class={cn(
 					interactive,
-					'hover:text-primary min-w-0 flex-1 truncate transition-colors',
+					'hover:text-primary min-w-0 truncate transition-colors',
 					isSelf && 'text-primary font-semibold'
 				)}
 			>
 				{matchPlayer.alias}
 			</PlayerProfileLink>
 		{:else}
-			<span class={cn('min-w-0 flex-1 truncate', isSelf && 'text-primary font-semibold')}>
+			<span class={cn('min-w-0 truncate', isSelf && 'text-primary font-semibold')}>
 				{matchPlayer.alias}
 			</span>
 		{/if}
@@ -231,12 +232,12 @@
 						<colgroup>
 							<col class="w-14" />
 							<col class="w-14" />
-							<col class="w-[4.5rem]" />
+							<col class="w-24" />
 							<col class="w-12" />
 							<col />
 							<col class="w-14" />
 							<col class="w-14" />
-							<col class="w-14" />
+							<col class="w-20" />
 						</colgroup>
 						<thead>
 							<tr class={tableHeadRow}>
@@ -247,7 +248,7 @@
 								<th class="px-3 py-2 text-left">{t('Player')}</th>
 								<th class="px-2 py-2 text-center">{t('Wins')}</th>
 								<th class="px-2 py-2 text-center">{t('Losses')}</th>
-								<th class="px-2 py-2 text-center">{t('Streak')}</th>
+								<th class="py-2 pr-4 pl-2 text-center">{t('Streak')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -274,7 +275,7 @@
 									</td>
 									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
-											{@render rankBadge(matchPlayer, match.matchtype_id)}
+											{@render rankBadge(matchPlayer)}
 										</div>
 									</td>
 									<td class="px-2 py-1.5 text-center">
@@ -303,7 +304,7 @@
 											</span>
 										</div>
 									</td>
-									<td class="px-2 py-1.5 text-center">
+									<td class="py-1.5 pr-4 pl-2 text-center">
 										<div class="flex w-full justify-center">
 											<span
 												class="text-center font-medium tabular-nums {streakClass(
@@ -335,7 +336,7 @@
 							<div class="text-secondary-300 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
 								{@render ratingDeltaBadge(delta)}
 								{@render eloValue(elo)}
-								{@render rankBadge(matchPlayer, match.matchtype_id)}
+								{@render rankBadge(matchPlayer)}
 								<img
 									src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
 									alt=""

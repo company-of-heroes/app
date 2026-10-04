@@ -27,6 +27,14 @@ const SITE_ORIGINS = [
 	'http://localhost:5174',
 	'http://127.0.0.1:5174'
 ];
+/**
+ * The desktop app's loopback listener (tauri-plugin-oauth, same ports as its Twitch and
+ * YouTube logins): the app opens Steam login in the browser and receives the code here.
+ */
+const APP_LOOPBACK_ORIGINS = [8001, 8002, 8003, 8004, 8005].map(
+	(port) => `http://localhost:${port}`
+);
+const LOGIN_ORIGINS = [...SITE_ORIGINS, ...APP_LOOPBACK_ORIGINS];
 /** Where Steam sends users back: the website, and PocketBase's old route (logins already under way). */
 const CALLBACK_PATH = '/api/v1/auth/steam/callback';
 const LEGACY_CALLBACK_PATH = '/api/auth/steam/callback';
@@ -124,7 +132,7 @@ export class AuthService extends Service {
 		return this.secrets()
 			.andThen((secrets) =>
 				ensure(
-					SITE_ORIGINS.includes(origin) || origin === siteOrigin,
+					LOGIN_ORIGINS.includes(origin) || origin === siteOrigin,
 					badRequest('Invalid origin.')
 				).map(() => secrets)
 			)
@@ -223,7 +231,7 @@ export class AuthService extends Service {
 		return this.secrets()
 			.asyncAndThen(({ handoffSecret }) =>
 				fromAsync(
-					readSteamState(query.get('state') ?? '', handoffSecret, [...SITE_ORIGINS, siteOrigin]),
+					readSteamState(query.get('state') ?? '', handoffSecret, [...LOGIN_ORIGINS, siteOrigin]),
 					'Invalid or expired Steam login.'
 				).orElse(() => ok(null))
 			)

@@ -8,10 +8,14 @@
 	import {
 		ListTable as MatchListTable,
 		LIVE_MATCH_LIST_COLUMNS,
-		toMatchListRowFromLiveLobby
+		toMatchListRowFromLiveLobby,
+		type MatchListRow
 	} from '@company-of-heroes/ui/match';
 	import type { LiveLobby as AppLiveLobby } from '$core/app/database/lobbies-live';
 	import WidgetPanel from './widget-panel.svelte';
+	import LobbyPlayersGrid from './lobby-players-grid.svelte';
+	import { getLiveLobbyMatchType } from './dashboard-utils';
+	import { isOccupiedLobbySlot } from '@company-of-heroes/ui/live-lobby/slim';
 	import { LiveLobbiesFeed } from './live-lobbies.svelte';
 	import { MATCH_TYPES } from '$core/game/lobby';
 	import { app } from '$core/app/context';
@@ -33,6 +37,8 @@
 	);
 
 	const rows = $derived(lobbies.map(toMatchListRowFromLiveLobby));
+	const lobbyById = $derived(new Map(feed.items.map((lobby) => [lobby.id, lobby])));
+	const highlightPlayerId = $derived(app.game.profile?.relic.profile_id);
 
 	const meSteamIds = $derived((app.features.auth.user.steamIds ?? []).filter(Boolean) as string[]);
 
@@ -117,6 +123,18 @@
 	}
 </script>
 
+{#snippet lobbyPlayers({ row }: { row: MatchListRow })}
+	{@const lobby = lobbyById.get(row.id)}
+	{#if lobby}
+		{@const players = (lobby.players ?? []).filter(isOccupiedLobbySlot)}
+		<LobbyPlayersGrid
+			{players}
+			matchType={getLiveLobbyMatchType(players, lobby.isRanked, lobby.matchType)}
+			{highlightPlayerId}
+		/>
+	{/if}
+{/snippet}
+
 <WidgetPanel
 	title={t('Live lobbies')}
 	summary={feed.isLoading ? undefined : t('{count} active', { count: rows.length })}
@@ -140,6 +158,7 @@
 		{rows}
 		loading={feed.isLoading}
 		columns={LIVE_MATCH_LIST_COLUMNS}
+		expandContent={lobbyPlayers}
 		emptyMessage={feed.error
 			? t('Could not load live lobbies.')
 			: t('No community members are in a match right now.')}

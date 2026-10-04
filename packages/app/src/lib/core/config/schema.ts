@@ -48,7 +48,11 @@ export const accountSettingsSchema = z
 		email: z.string().default(''),
 		password: z.string().default(''),
 		/** Set when an email change was requested; used to re-auth after website confirm. */
-		pendingEmail: z.string().default('')
+		pendingEmail: z.string().default(''),
+		/** 'password' signs in with email + password; 'session' (Steam login) resumes `token`. */
+		authMode: z.enum(['password', 'session']).catch('password').default('password'),
+		/** PocketBase session token, only for `authMode: 'session'`. */
+		token: z.string().default('')
 	})
 	.loose();
 

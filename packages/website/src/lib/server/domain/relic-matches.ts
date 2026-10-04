@@ -60,6 +60,7 @@ export type HistoryMatchPlayer = RelicMatchProfile &
 	Omit<RelicMember, 'profile_id'> & {
 		steamId: string;
 		ranklevel?: number;
+		rank?: number;
 		labels?: PlayerLabel[];
 		likeCount?: number;
 	};
@@ -159,30 +160,6 @@ export function leaderboardIdForMatchRace(matchTypeId: number, race: number): nu
 	return matchTypeId * 4 + race;
 }
 
-/** Current rank level per player for ranked matches (automatch 1-4, skirmish 14); 0 otherwise. */
-export function attachRankLevels(
-	matches: HistoryMatch[],
-	statsByProfileId: Map<number, LeaderboardStat[]>
-): void {
-	for (const match of matches) {
-		const matchType = Number(match.matchtype_id);
-		const ranked = (matchType >= 1 && matchType <= 4) || matchType === 14;
-		for (const player of match.players) {
-			const leaderboardId = ranked
-				? leaderboardIdForMatchRace(matchType, Number(player.race_id))
-				: null;
-			const stat =
-				leaderboardId === null
-					? undefined
-					: statsByProfileId
-							.get(Number(player.profile_id))
-							?.find((entry) => Number(entry.leaderboard_id) === leaderboardId);
-			const level = Number(stat?.ranklevel);
-			player.ranklevel = Number.isFinite(level) && level > 0 ? level : 0;
-		}
-	}
-}
-
 /** Staff hide keywords match whole words in the match title (case-insensitive). */
 export function titleHasHiddenKeyword(title: string | undefined, keywords: string[]): boolean {
 	const text = title ?? '';
@@ -200,6 +177,8 @@ export function titleHasHiddenKeyword(title: string | undefined, keywords: strin
 /** Relic `getpersonalstat` response. */
 export type RelicPersonalStat = {
 	statGroups?: {
+		id: number;
+		type?: number;
 		members?: {
 			profile_id: number;
 			alias?: string;

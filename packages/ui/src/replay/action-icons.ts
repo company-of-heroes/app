@@ -1,4 +1,4 @@
-import type { ReplayAction } from './types';
+import { isCancelAction, type ReplayAction } from './types';
 
 /**
  * In-game icon per replay action, keyed by `command.type` → `objectID`.
@@ -620,7 +620,7 @@ export function actionIconKey(
 	}
 
 	const type = action.command?.type;
-	if (type === 'CANCEL_QUEUE') {
+	if (isCancelAction(action)) {
 		// Show what was cancelled; the timeline adds a cancel mark on top.
 		const order = action.cancelled;
 		return order

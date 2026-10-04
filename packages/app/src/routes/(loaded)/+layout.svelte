@@ -12,7 +12,6 @@
 		useBreadcrumbs
 	} from '$lib/components/ui/breadcrumb';
 	import { ToastReplaysProgress } from '$lib/components/toasts';
-	import { Avatar } from '$lib/components/ui/avatar';
 	import { page } from '$app/state';
 	import { afterNavigate } from '$app/navigation';
 	import { scheduleGoto } from '$core/runtime/schedule-goto';
@@ -36,7 +35,7 @@
 	import BriefcaseIcon from 'phosphor-svelte/lib/BriefcaseIcon';
 	import NotificationBell from '$lib/components/notifications/notification-bell.svelte';
 	import HeaderSteamPlayers from '$lib/components/layout/header-steam-players.svelte';
-	import * as User from '$lib/components/user';
+	import AccountMenu from '$lib/components/account/account-menu.svelte';
 	import { provideAppHost } from '$lib/host';
 	import { useI18n } from '$lib/i18n';
 
@@ -175,20 +174,7 @@
 						</Nav.Link>
 					{/if}
 					<div class="mt-3 mb-4 flex items-center gap-2 px-4">
-						<a
-							class="group hover:text-secondary-200 flex min-w-0 grow items-center gap-2 text-sm transition-colors"
-							href="/account"
-							data-active={page.url.pathname === '/account'}
-						>
-							<Avatar />
-							{#if app.account.user}
-								<User.Root user={app.account.user}>
-									<User.Name class="text-sm" />
-								</User.Root>
-							{:else}
-								<span class="truncate">{t('My account')}</span>
-							{/if}
-						</a>
+						<AccountMenu active={page.url.pathname === '/account'} />
 						{#if app.account.isAuthenticated}
 							<NotificationBell />
 						{/if}

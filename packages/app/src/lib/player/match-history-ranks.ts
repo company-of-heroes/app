@@ -1,38 +1,17 @@
 import {
 	attachMatchHistoryRankLevels,
 	collectMatchHistoryProfileIds,
-	type TransformedMatch as UiTransformedMatch
-} from '@company-of-heroes/ui/player';
+	ladderStatsFromPersonalStats,
+	rankSnapshotsFromLobbies
+} from '@company-of-heroes/ui/player/match-history-ranks';
 import type { LeaderboardStat, TransformedMatch } from '@fknoobs/app';
+import { api } from '$core/api';
 import { relic } from '$lib/relic';
 
-/** Relic getpersonalstat only accepts 1–10 profile_ids per request. */
-const PERSONAL_STAT_BATCH = 10;
-
-type StatsMap = Map<number, LeaderboardStat[]>;
-
-async function fetchStatsByProfileIds(profileIds: number[], seed: StatsMap): Promise<StatsMap> {
-	const byId = new Map(seed);
-	const missing = profileIds.filter((id) => !byId.has(id));
-
-	for (let i = 0; i < missing.length; i += PERSONAL_STAT_BATCH) {
-		const chunk = missing.slice(i, i + PERSONAL_STAT_BATCH);
-		try {
-			const profiles = await relic.getProfileByIds(chunk);
-			for (const profile of profiles) {
-				byId.set(profile.profile_id, profile.leaderboardStats ?? []);
-			}
-		} catch (error) {
-			console.warn('[MATCH-HISTORY]: rank enrichment batch failed:', error);
-		}
-	}
-
-	return byId;
-}
-
 /**
- * Attach current Relic ranklevel to each match player (mode + race).
- * Reuses ownerStats when provided; batches personalstat for opponents.
+ * Attach the Relic ranklevel to each match player (mode + race, or the premade team's ladder
+ * in arranged team modes): the rank at match time from a saved lobby, else the current one.
+ * Reuses ownerStats when provided.
  */
 export async function enrichMatchHistoryRankLevels(
 	matches: TransformedMatch[],
@@ -43,15 +22,17 @@ export async function enrichMatchHistoryRankLevels(
 		return matches;
 	}
 
-	const seed: StatsMap = new Map();
-	if (Array.isArray(ownerStats)) {
-		seed.set(ownerProfileId, ownerStats);
+	// Team statgroups only come back from personalstat, so the owner is fetched too.
+	const [responses, lobbies] = await Promise.all([
+		relic.getPersonalStats(collectMatchHistoryProfileIds(matches)),
+		api.matches
+			.getPlayersBySessionIds(matches.map((match) => match.id))
+			.unwrapOr([] as { sessionId: number; players: unknown }[])
+	]);
+	const { personal, teams } = ladderStatsFromPersonalStats(responses);
+	if (Array.isArray(ownerStats) && !personal.has(ownerProfileId)) {
+		personal.set(ownerProfileId, ownerStats);
 	}
 
-	const profileIds = collectMatchHistoryProfileIds(matches as UiTransformedMatch[]);
-	const statsByProfileId = await fetchStatsByProfileIds(profileIds, seed);
-	return attachMatchHistoryRankLevels(
-		matches as UiTransformedMatch[],
-		statsByProfileId
-	) as TransformedMatch[];
+	return attachMatchHistoryRankLevels(matches, personal, teams, rankSnapshotsFromLobbies(lobbies));
 }
