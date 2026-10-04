@@ -1,5 +1,9 @@
 # @company-of-heroes/replay-parser
 
+## 1.1.1
+
+- fix; replay manager release builds again after aligning the tauri crate versions with the app
+
 ## 1.1.0
 
 - enhance; gold app icon and logo so the replay parser is easy to tell apart from the companion app in the taskbar
