@@ -8,7 +8,7 @@
 	import { BootSplash } from '@company-of-heroes/ui/splash';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
-	import logo from '@assets/logo-transparent-bg.png';
+	import logo from '$lib/assets/logo-gold.png';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
 	import ArrowClockwiseIcon from 'phosphor-svelte/lib/ArrowClockwiseIcon';
 	import GearSixIcon from 'phosphor-svelte/lib/GearSixIcon';
