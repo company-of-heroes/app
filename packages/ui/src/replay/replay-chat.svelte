@@ -25,7 +25,7 @@
 	let translating = $state(false);
 
 	const messageRow =
-		'grid grid-cols-[3.75rem_minmax(0,auto)_1fr] sm:grid-cols-[4.5rem_minmax(0,auto)_1fr] items-start gap-x-2 sm:gap-x-3 gap-y-0.5 px-4 py-2.5 border-secondary-800 border-b last:border-b-0';
+		'grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[4.5rem_minmax(0,auto)_1fr] items-baseline gap-x-3 gap-y-0.5 px-4 py-2.5 border-secondary-800 border-b last:border-b-0';
 
 	function messageKey(message: ReplayMessage, index: number) {
 		return `${message.playerID}-${index}`;
@@ -123,16 +123,24 @@
 		{/if}
 		{#each messages as message, i (message.playerID + '-' + i)}
 			<div class={cn(messageRow, messageTone(message))}>
-				<span class="text-secondary-500 pt-0.5 text-xs tabular-nums">{message.timestamp}</span>
-				<span class="flex shrink-0 items-center gap-1.5 pt-0.5 font-semibold whitespace-nowrap">
+				<span
+					class="text-secondary-500 col-start-2 row-start-1 text-xs tabular-nums sm:col-start-1"
+				>
+					{message.timestamp}
+				</span>
+				<span
+					class="col-start-1 row-start-1 flex min-w-0 items-center gap-1.5 font-semibold whitespace-nowrap sm:col-start-2"
+				>
 					{#if message.recipient === 3}
 						<ArrowBendDownLeftIcon class="size-3.5 shrink-0" />
 					{:else if message.recipient === 4}
 						<ArrowBendUpRightIcon class="size-3.5 shrink-0" />
 					{/if}
-					{message.sender}:
+					<span class="min-w-0 truncate">{message.sender}:</span>
 				</span>
-				<span class="text-secondary-200 min-w-0 pt-0.5 wrap-break-word">
+				<span
+					class="text-secondary-200 col-span-2 min-w-0 wrap-break-word sm:col-span-1 sm:col-start-3 sm:row-start-1"
+				>
 					{translated?.get(messageKey(message, i)) ?? message.content}
 				</span>
 			</div>

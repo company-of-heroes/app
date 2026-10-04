@@ -52,7 +52,7 @@
 </svelte:head>
 
 <I18nBoot {locale}>
-	<div class="min-h-screen font-sans">
+	<div class="min-h-screen overflow-x-clip font-sans">
 		<div aria-hidden="true" class="pointer-events-none fixed inset-0">
 			<div class="absolute inset-y-0 left-0 w-[max(0px,calc((100%-72rem)/2))] overflow-hidden">
 				<img src={pageBackgroundImage} alt="" class="size-full object-cover object-left" />

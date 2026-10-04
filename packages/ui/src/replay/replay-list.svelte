@@ -213,7 +213,7 @@
 						{/if}
 					</div>
 				</a>
-				<div class="mt-2 flex items-center gap-4">
+				<div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
 					{@render teamFlags(match, 'allies')}
 					{@render teamFlags(match, 'axis')}
 				</div>
