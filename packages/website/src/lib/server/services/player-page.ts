@@ -1,7 +1,7 @@
 import { err, errAsync, ok, okAsync, ResultAsync } from 'neverthrow';
 import { cached } from '../cache';
 import { RELIC_BASE } from '../clients/relic';
-import { avatarOf, type SteamPlayerSummary } from '../clients/steam';
+import { avatarOf, type SteamBans, type SteamPlayerSummary } from '../clients/steam';
 import { badRequest, notFound, upstream } from '../errors';
 import { chunk, ensure, fromPb, sequence, type Task } from '../result';
 import { isValidSteamId, steamIdFromRelicName, toEloMap, type EloMap } from '../domain/ratings';
@@ -54,6 +54,7 @@ export type PlayerPage = {
 		lenderAlias: string;
 		lenderAvatarUrl: string | null;
 	} | null;
+	steamBans: SteamBans | null;
 	labels: PlayerLabel[];
 	likeCount: number;
 };
@@ -261,9 +262,19 @@ export class PlayerPageService extends Service {
 				this.eloOfProfile(profile.profile_id),
 				performance.ofProfile(profile.profile_id).orElse(() => ok<PlayerPerformance | null>(null)),
 				this.smurfOf(steamId),
+				this.steam.playerBans(steamId),
 				hiddenMatches.rules()
 			]).andThen(
-				([summaries, playtime, history, elo, communityPerformance, smurf, hiddenRules]) => {
+				([
+					summaries,
+					playtime,
+					history,
+					elo,
+					communityPerformance,
+					smurf,
+					steamBans,
+					hiddenRules
+				]) => {
 					const summary: SteamPlayerSummary | undefined = summaries.get(steamId);
 					if (!summary) {
 						return errAsync(notFound('Player not found'));
@@ -288,6 +299,7 @@ export class PlayerPageService extends Service {
 							performance: communityPerformance,
 							matchHistory: matches,
 							smurf,
+							steamBans,
 							labels
 						})
 					);

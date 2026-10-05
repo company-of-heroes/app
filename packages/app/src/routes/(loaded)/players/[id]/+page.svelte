@@ -69,15 +69,16 @@
 				return null;
 			}
 
-			const [user, game] = await Promise.all([
+			const [user, game, bans] = await Promise.all([
 				steam.getUserProfile(id),
-				steam.getRecentlyPlayedGameByAppId(id, 228200)
+				steam.getRecentlyPlayedGameByAppId(id, 228200),
+				steam.getPlayerBans(id).catch(() => [])
 			]);
 			if (!user) {
 				throw new Error(t('Profile not found'));
 			}
 
-			return { user, game };
+			return { user, game, bans: bans[0] ?? null };
 		}
 	);
 
@@ -189,6 +190,7 @@
 	const profile = $derived(relicProfile.current);
 	const user = $derived(steamProfile.current?.user);
 	const game = $derived(steamProfile.current?.game);
+	const bans = $derived(steamProfile.current?.bans);
 
 	const playerElo = $derived.by(() => {
 		if (!profile || !user) {
@@ -271,6 +273,7 @@
 			performance: performanceData ?? emptyPlayerPerformance(),
 			matchHistory: rankedMatches ?? [],
 			smurf: smurfData?.value,
+			bans,
 			labels,
 			likeCount: headerData?.likeCount ?? 0,
 			customization: customizationData?.value ?? null,

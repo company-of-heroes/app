@@ -80,6 +80,12 @@ export type PlayerSmurf = {
 	lenderAvatarUrl: string | null;
 };
 
+export type PlayerSteamBans = {
+	vacBans: number;
+	gameBans: number;
+	daysSinceLastBan: number;
+};
+
 export type PlayerProfileLinkType = 'twitch' | 'youtube' | 'other';
 
 export type PlayerProfileLink = {
@@ -112,6 +118,8 @@ export type PlayerPageData = {
 	performance: PlayerPerformance | null;
 	matchHistory: TransformedMatch[];
 	smurf?: PlayerSmurf | null;
+	/** VAC and game bans on the Steam account; null when it has none. */
+	steamBans?: PlayerSteamBans | null;
 	labels?: PlayerLabel[];
 	likeCount?: number;
 	customization?: PlayerCustomization | null;

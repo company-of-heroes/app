@@ -81,6 +81,10 @@ const playerPageSchema: z.ZodType<PlayerPageData> = z
 		performance: z.any(),
 		matchHistory: z.array(z.any()),
 		smurf: z.any().optional().nullable(),
+		steamBans: z
+			.object({ vacBans: z.number(), gameBans: z.number(), daysSinceLastBan: z.number() })
+			.optional()
+			.nullable(),
 		labels: z.array(z.any()).optional(),
 		likeCount: z.number().optional(),
 		customization: z.any().optional().nullable()

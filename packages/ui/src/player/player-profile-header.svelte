@@ -27,6 +27,7 @@
 	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import { isStreamingLink } from './profile';
 	import SmurfAlert from './smurf-alert.svelte';
+	import SteamBanAlert from './steam-ban-alert.svelte';
 
 	type Props = {
 		player: PlayerPageData;
@@ -151,6 +152,9 @@
 					</span>
 					{@render afterName?.()}
 				</div>
+				{#if player.steamBans}
+					<SteamBanAlert bans={player.steamBans} class="mb-3" />
+				{/if}
 				{#if streamingLinks.length > 0}
 					<PlayerLinks links={streamingLinks} class="mb-3" />
 				{/if}

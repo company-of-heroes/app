@@ -5,10 +5,11 @@ import type {
 	PlayerPageData,
 	PlayerPerformance,
 	PlayerSmurf,
+	PlayerSteamBans,
 	TransformedMatch
 } from '@company-of-heroes/ui/player';
 import type { TransformedMatch as AppTransformedMatch } from '@fknoobs/app';
-import type { SteamPlayerSummary } from '$core/steam';
+import type { SteamBans, SteamPlayerSummary } from '$core/steam';
 import type { SmurfAlertState } from '$lib/player/smurf';
 import type { PlayerRewards } from '@company-of-heroes/ui/reward/types';
 
@@ -31,6 +32,16 @@ export function toPlayerSmurf(smurf: SmurfAlertState | null | undefined): Player
 		lenderAlias: smurf.lenderProfile?.alias ?? smurf.lenderSteam?.personaname ?? 'Original account',
 		lenderAvatarUrl: smurf.lenderSteam?.avatarfull ?? null
 	};
+}
+
+export function toPlayerSteamBans(bans: SteamBans | null | undefined): PlayerSteamBans | null {
+	const vacBans = bans?.NumberOfVACBans ?? 0;
+	const gameBans = bans?.NumberOfGameBans ?? 0;
+	if (vacBans + gameBans === 0) {
+		return null;
+	}
+
+	return { vacBans, gameBans, daysSinceLastBan: bans?.DaysSinceLastBan ?? 0 };
 }
 
 export function toUiMatchHistory(matches: AppTransformedMatch[]): TransformedMatch[] {
@@ -80,6 +91,7 @@ export function toPlayerPageData(input: {
 	performance?: PlayerPerformance | null;
 	matchHistory?: AppTransformedMatch[];
 	smurf?: SmurfAlertState | null;
+	bans?: SteamBans | null;
 	labels?: PlayerLabel[] | null;
 	likeCount?: number;
 	customization?: PlayerCustomization | null;
@@ -103,6 +115,7 @@ export function toPlayerPageData(input: {
 		performance: input.performance ?? null,
 		matchHistory: toUiMatchHistory(input.matchHistory ?? []),
 		smurf: toPlayerSmurf(input.smurf),
+		steamBans: toPlayerSteamBans(input.bans),
 		labels: input.labels ?? [],
 		likeCount: input.likeCount ?? 0,
 		customization: input.customization ?? null,

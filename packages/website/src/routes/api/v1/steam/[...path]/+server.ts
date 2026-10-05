@@ -6,6 +6,7 @@ import { handle, requireUser } from '$lib/server/http';
 /** The Steam Web API calls the desktop app makes, with the parameters each may send. */
 const ENDPOINTS: Record<string, Record<string, RegExp>> = {
 	'ISteamUser/GetPlayerSummaries/v2': { steamids: /^\d{17}(,\d{17}){0,99}$/ },
+	'ISteamUser/GetPlayerBans/v1': { steamids: /^\d{17}(,\d{17}){0,99}$/ },
 	'IPlayerService/GetRecentlyPlayedGames/v1': { steamid: /^\d{17}$/, count: /^\d{1,3}$/ },
 	'ISteamUserStats/GetNumberOfCurrentPlayers/v1': { appid: /^\d{1,10}$/ }
 };

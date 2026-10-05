@@ -18,6 +18,8 @@ export type SteamPlayerSummary = {
 
 export type SteamPlaytime = { playtime_forever?: number; playtime_2weeks?: number };
 
+export type SteamBans = { vacBans: number; gameBans: number; daysSinceLastBan: number };
+
 /** Largest available avatar. */
 export function avatarOf(summary: SteamPlayerSummary | undefined): string {
 	return summary?.avatarfull || summary?.avatarmedium || summary?.avatar || '';
@@ -45,6 +47,11 @@ export class SteamClient {
 	/** Recent playtime (minutes) for one app, or null when private/unknown. */
 	recentPlaytime(steamId: string, appId: number): Task<SteamPlaytime | null> {
 		return ResultAsync.fromSafePromise(this.loadPlaytime(steamId, appId));
+	}
+
+	/** VAC and game bans, or null when the account has none (or the lookup failed). */
+	playerBans(steamId: string): Task<SteamBans | null> {
+		return ResultAsync.fromSafePromise(this.loadBans(steamId));
 	}
 
 	/**
@@ -98,6 +105,40 @@ export class SteamClient {
 			}
 		}
 		return summaries;
+	}
+
+	private async loadBans(steamId: string): Promise<SteamBans | null> {
+		if (!this.apiKey) {
+			return null;
+		}
+
+		try {
+			const params = new URLSearchParams({ key: this.apiKey, steamids: steamId });
+			const response = await this.fetch(
+				`https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?${params}`
+			);
+			if (!response.ok) {
+				return null;
+			}
+
+			const data = (await response.json()) as {
+				players?: {
+					NumberOfVACBans?: number;
+					NumberOfGameBans?: number;
+					DaysSinceLastBan?: number;
+				}[];
+			};
+			const bans = data.players?.[0];
+			const vacBans = Number(bans?.NumberOfVACBans ?? 0);
+			const gameBans = Number(bans?.NumberOfGameBans ?? 0);
+			if (vacBans + gameBans === 0) {
+				return null;
+			}
+
+			return { vacBans, gameBans, daysSinceLastBan: Number(bans?.DaysSinceLastBan ?? 0) };
+		} catch {
+			return null;
+		}
 	}
 
 	private async loadPlaytime(steamId: string, appId: number): Promise<SteamPlaytime | null> {
