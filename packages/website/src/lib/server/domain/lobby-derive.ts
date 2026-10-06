@@ -125,6 +125,7 @@ export const TRANSLATED_TITLES = new Map<string, string>(
 /**
  * The stored title in English (the server compares it, e.g. "Skirmish"). Older servers
  * titled custom games by their size ("2 VS. 2"); with a Basic Match result that is wrong.
+ * Relic's skirmish type (14) always wins, whatever the app logged.
  */
 function matchTitle(
 	title: string | undefined,
@@ -132,6 +133,10 @@ function matchTitle(
 	result: MatchResult | null
 ): string | undefined {
 	const english = title ? (TRANSLATED_TITLES.get(title) ?? title) : title;
+	if (finite(result?.matchtype_id) === 14) {
+		return 'Skirmish';
+	}
+
 	if (result && !isRanked && LADDER_TITLE.test(english ?? '')) {
 		return 'Basic Match';
 	}

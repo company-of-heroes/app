@@ -30,6 +30,7 @@ import { RewardsService } from './rewards';
 import { SmurfService } from './smurf';
 import { SocialService } from './social';
 import { SocialCompatService } from './social-compat';
+import { StatisticsService } from './statistics';
 import { StreamingService } from './streaming';
 import { TwitchService } from './twitch';
 import { UsersService } from './users';
@@ -203,6 +204,10 @@ export class Services {
 
 	get socialCompat() {
 		return this.#get('socialCompat', SocialCompatService);
+	}
+
+	get statistics() {
+		return this.#get('statistics', StatisticsService);
 	}
 
 	get streaming() {

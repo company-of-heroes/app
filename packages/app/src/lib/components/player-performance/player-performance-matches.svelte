@@ -6,7 +6,6 @@
 	import { MatchListTable } from '$lib/components/match';
 	import { watch } from 'runed';
 	import { useI18n } from '$lib/i18n';
-	import { dev } from '$app/environment';
 
 	type Props = {
 		profileId: number;
@@ -61,15 +60,14 @@
 			scope,
 			userId: userId ?? undefined,
 			profileId,
-			// Same games the totals count: this profile only, ranked unless a mode was picked.
+			// Same games the totals count: this profile only, ranked unless a mode was picked, never Skirmish.
 			profileOnly: scope === 'user',
 			ranked: matchtypes.length === 0,
 			maps,
 			races: races.map(String),
 			matchtypes,
 			exactMatchtypes: matchtypes.length > 0,
-			playerIds,
-			includeSkirmish: dev
+			playerIds
 		});
 	}
 

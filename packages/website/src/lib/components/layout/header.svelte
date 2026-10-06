@@ -18,6 +18,7 @@
 	const navLinks = $derived([
 		{ href: '/players', label: t('Players') },
 		{ href: '/leaderboards', label: t('Leaderboards') },
+		{ href: '/stats', label: t('Stats') },
 		{ href: '/replays', label: t('Replays') },
 		{ href: '/#donate', label: t('Donations') }
 	]);
@@ -45,6 +46,10 @@
 
 		if (path === '/leaderboards') {
 			return current.startsWith('/leaderboards');
+		}
+
+		if (path === '/stats') {
+			return current.startsWith('/stats');
 		}
 
 		if (path === '/replays') {

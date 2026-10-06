@@ -531,6 +531,9 @@ importers:
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
         version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
+      '@internationalized/date':
+        specifier: ^3.12.0
+        version: 3.12.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1

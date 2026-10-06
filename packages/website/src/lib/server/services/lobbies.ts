@@ -21,6 +21,9 @@ import {
 	type LobbyCreate,
 	type LobbyUpdate
 } from '../domain/lobby-writes';
+import { replayHasAi, SKIRMISH_FIELDS } from '../domain/replay-skirmish';
+import { summarizeReplay } from '../domain/replay-summary';
+import type { ReplaySummary } from '@company-of-heroes/ui/statistics/types';
 import { Service } from './service';
 
 export type LobbyRecord = StoredLobby &
@@ -92,6 +95,12 @@ const MERGE_BATCH = 10;
 const MERGE_SCAN = 100;
 /** Lobbies re-derived per `reprocessStale` run. */
 const REPROCESS_BATCH = 50;
+/** Index rows scanned per `repairStaleIndex` run (several rows per lobby). */
+const INDEX_REPAIR_SCAN = 200;
+/** Stored replays downloaded and checked for AI per `markReplaySkirmishes` run. */
+const SKIRMISH_SCAN_BATCH = 25;
+/** Stored replays fully parsed per `summarizeReplays` run (a parse costs ~10-100 ms CPU). */
+const REPLAY_STATS_BATCH = 8;
 
 function checkReplay(upload: ReplayUpload): Result<void, AppError> {
 	if (upload.file.size < MIN_REPLAY_BYTES) {
@@ -105,7 +114,13 @@ function checkReplay(upload: ReplayUpload): Result<void, AppError> {
 	return ok(undefined);
 }
 
-type ReplayFields = { replay: File; replayBytes: number; replayDurationSeconds: number };
+type ReplayFields = {
+	replay: File;
+	replayBytes: number;
+	replayDurationSeconds: number;
+	/** Cleared so the `replay-stats` job summarizes the new file. */
+	replayStats: null;
+} & Partial<typeof SKIRMISH_FIELDS>;
 /**
  * Lobbies (durable match records) and their write pipeline. Every write ends in
  * `process`, which brings everything derived from the lobby up to date; it is
@@ -322,7 +337,8 @@ export class LobbiesService extends Service {
 					type: 'application/octet-stream'
 				}),
 				replayBytes: bytes.byteLength,
-				replayDurationSeconds: Number(loser.replayDurationSeconds) || 0
+				replayDurationSeconds: Number(loser.replayDurationSeconds) || 0,
+				replayStats: null
 			}));
 		});
 	}
@@ -400,7 +416,7 @@ export class LobbiesService extends Service {
 	/**
 	 * Scheduled: re-derives finished lobbies whose stored ranked
 	 * flag or title disagrees with Relic's result (Basic Matches saved as ranked or titled
-	 * "2 VS. 2", titles saved translated). A processed lobby no longer matches the filter.
+	 * "2 VS. 2", skirmishes under another title, titles saved translated). A processed lobby no longer matches the filter.
 	 */
 	reprocessStale(): Task<{ processed: number; more: boolean }> {
 		const translated = [...TRANSLATED_TITLES.keys()].map((title) =>
@@ -410,7 +426,8 @@ export class LobbiesService extends Service {
 			'(needsResult = false && result != null && (',
 			'(isRanked = true && (matchtypeId = 0 || matchtypeId >= 8)) ||',
 			'(isRanked = false && matchtypeId >= 1 && matchtypeId <= 7) ||',
-			"(isRanked = false && (title = '1 VS. 1' || title = '2 VS. 2' || title = '3 VS. 3' || title = '4 VS. 4'))",
+			"(isRanked = false && (title = '1 VS. 1' || title = '2 VS. 2' || title = '3 VS. 3' || title = '4 VS. 4')) ||",
+			"(matchtypeId = 14 && title != 'Skirmish')",
 			`)) || ${translated.join(' || ')}`
 		].join(' ');
 		return fromPb(
@@ -426,6 +443,131 @@ export class LobbiesService extends Service {
 				more: rows.totalItems > rows.items.length
 			}))
 		);
+	}
+
+	/**
+	 * One-time (run by hand until done): lobbies whose index rows were written before
+	 * Relic's result came in and never rebuilt (no Steam id, outcome/race/type stored as 0),
+	 * so performance counted them as lost Basic Matches. Walks lobby ids after `after`.
+	 */
+	repairStaleIndex(after = ''): Task<{ processed: number; more: boolean; after: string }> {
+		return fromPb(
+			this.pb.collection('lobby_player_index').getList<{ lobby: string }>(1, INDEX_REPAIR_SCAN, {
+				filter: this.pb.filter(
+					"lobby > {:after} && lobby.result != null && steam_id = '' && outcome = 0 && race_id = 0 && matchtype_id = 0",
+					{ after }
+				),
+				sort: 'lobby',
+				fields: 'lobby'
+			}),
+			'Could not load lobby players'
+		).andThen((rows) => {
+			const lobbyIds = [...new Set(rows.items.map((row) => row.lobby))];
+			return sequence(lobbyIds, (id) =>
+				this.process(id)
+					.map(() => 1)
+					.orElse((error) => {
+						console.error(`[lobbies] could not reprocess ${id}`, error);
+						return okAsync(0);
+					})
+			).map((done) => ({
+				processed: done.reduce((sum, n) => sum + n, 0),
+				more: rows.totalItems > rows.items.length,
+				after: lobbyIds.at(-1) ?? after
+			}));
+		});
+	}
+
+	/**
+	 * One-time (run by hand until done): lobbies without a Relic result whose stored replay
+	 * has AI players become skirmishes. Walks ids after `after`; feed back the returned cursor.
+	 */
+	markReplaySkirmishes(after = ''): Task<{ processed: number; more: boolean; after: string }> {
+		return fromPb(
+			this.lobbies.getList<LobbyRecord>(1, SKIRMISH_SCAN_BATCH, {
+				filter: this.pb.filter(
+					"replay != '' && result = null && title != 'Skirmish' && id > {:after}",
+					{ after }
+				),
+				sort: 'id',
+				fields: 'id,collectionId,replay,result,title'
+			}),
+			'Could not load matches'
+		).andThen((rows) =>
+			sequence(rows.items, (lobby) => this.markReplaySkirmish(lobby)).map((marked) => ({
+				processed: marked.filter(Boolean).length,
+				more: rows.totalItems > rows.items.length,
+				after: rows.items.at(-1)?.id ?? after
+			}))
+		);
+	}
+
+	/** Downloads the stored replay; true when it made the lobby a skirmish. Failures are skipped. */
+	private markReplaySkirmish(lobby: LobbyRecord): Task<boolean> {
+		return fromAsync(
+			this.fileFetch(this.pb.files.getURL(lobby, lobby.replay)),
+			'Could not download replay',
+			502
+		)
+			.andThen((response) =>
+				response.ok
+					? fromAsync(response.arrayBuffer(), 'Could not read replay', 502)
+					: errAsync(upstream('Could not download replay'))
+			)
+			.andThen((bytes) =>
+				replayHasAi(bytes)
+					? fromPb(this.lobbies.update(lobby.id, SKIRMISH_FIELDS), 'Could not update match')
+							.andThen(() => this.process(lobby.id))
+							.map(() => true)
+					: okAsync(false)
+			)
+			.orElse((error) => {
+				console.error(`[lobbies] could not check replay of ${lobby.id}`, error);
+				return okAsync(false);
+			});
+	}
+
+	/**
+	 * Scheduled: summarizes stored replays that have no `replayStats` yet (doctrines, units,
+	 * upgrades, openings for community statistics). A replay that cannot be downloaded gets an
+	 * empty summary with version 0, so it does not block the queue.
+	 */
+	summarizeReplays(): Task<{ processed: number; more: boolean }> {
+		return fromPb(
+			this.lobbies.getList<LobbyRecord>(1, REPLAY_STATS_BATCH, {
+				filter: "replay != '' && replayStats = null",
+				sort: 'id',
+				fields: 'id,collectionId,replay'
+			}),
+			'Could not load matches'
+		).andThen((rows) =>
+			sequence(rows.items, (lobby) => this.summarizeStoredReplay(lobby)).map((done) => ({
+				processed: done.length,
+				more: rows.totalItems > rows.items.length
+			}))
+		);
+	}
+
+	private summarizeStoredReplay(lobby: LobbyRecord): Task<void> {
+		return fromAsync(
+			this.fileFetch(this.pb.files.getURL(lobby, lobby.replay)),
+			'Could not download replay',
+			502
+		)
+			.andThen((response) =>
+				response.ok
+					? fromAsync(response.arrayBuffer(), 'Could not read replay', 502)
+					: errAsync(upstream('Could not download replay'))
+			)
+			.map((bytes): ReplaySummary => summarizeReplay(bytes))
+			.orElse((error) => {
+				console.error(`[lobbies] could not summarize replay of ${lobby.id}`, error);
+				return okAsync<ReplaySummary>({ v: 0, players: [] });
+			})
+			.andThen((replayStats) =>
+				fromPb(this.lobbies.update(lobby.id, { replayStats }), 'Could not update match')
+			)
+			.map(() => undefined);
 	}
 
 	/**
@@ -487,23 +629,43 @@ export class LobbiesService extends Service {
 		).map((response) => (response.ok ? Number(response.headers.get('content-length')) || 0 : 0));
 	}
 
-	/** The replay fields to save, or null when the stored replay is better. */
+	/**
+	 * The replay fields to save, or null when the stored replay is better. A replay with
+	 * AI players makes a lobby without Relic result a skirmish (the game log can miss it).
+	 */
 	private replayFields(lobby: LobbyRecord, upload: ReplayUpload): Task<ReplayFields | null> {
 		const seconds = Math.max(0, Math.floor(upload.seconds || 0));
-		return this.storedReplayBytes(lobby).map((bytes) => {
+		return this.storedReplayBytes(lobby).andThen((bytes) => {
 			const keep = !shouldReplaceReplay(
 				{ bytes: upload.file.size, seconds },
 				{ bytes, seconds: Number(lobby.replayDurationSeconds) || 0 }
 			);
 			if (keep) {
-				return null;
+				return okAsync(null);
 			}
 
 			const file = new File([upload.file], replayFileName(upload.file.name || ''), {
 				type: 'application/octet-stream'
 			});
-			return { replay: file, replayBytes: upload.file.size, replayDurationSeconds: seconds };
+			return this.skirmishFields(lobby, upload.file).map((skirmish) => ({
+				replay: file,
+				replayBytes: upload.file.size,
+				replayDurationSeconds: seconds,
+				replayStats: null,
+				...skirmish
+			}));
 		});
+	}
+
+	/** `SKIRMISH_FIELDS` when the lobby has no Relic result yet and the replay has AI players. */
+	private skirmishFields(lobby: LobbyRecord, replay: Blob): Task<Partial<typeof SKIRMISH_FIELDS>> {
+		if (lobby.result || lobby.title === 'Skirmish') {
+			return okAsync({});
+		}
+
+		return fromAsync(replay.arrayBuffer(), 'Could not read replay', 400).map((bytes) =>
+			replayHasAi(bytes) ? SKIRMISH_FIELDS : {}
+		);
 	}
 
 	/** Owners may change anything; other participants only add what is missing. */
@@ -532,11 +694,12 @@ export class LobbiesService extends Service {
 				.andThen(() => (replay ? this.replayFields(lobby, replay) : okAsync(null)))
 				.andThen((replayFields) => {
 					const owner = lobby.user === userId;
-					const skirmish = (fields.title ?? lobby.title) === 'Skirmish';
+					const skirmish =
+						replayFields?.title === 'Skirmish' || (fields.title ?? lobby.title) === 'Skirmish';
 					const patch: Record<string, unknown> = {
 						...(owner ? ownerFields(lobby, fields) : missingLobbyFields(lobby, fields)),
 						...(owner && needsResult === false && skirmish ? { needsResult: false } : {}),
-						...(owner && needsResult === true && !lobby.needsResult && !lobby.result
+						...(owner && needsResult === true && !lobby.needsResult && !lobby.result && !skirmish
 							? { needsResult: true, hasFailed: false, resultAttempts: 0 }
 							: {}),
 						...(replayFields ?? {})
@@ -552,7 +715,7 @@ export class LobbiesService extends Service {
 								// Best effort: the scheduled fill catches up when Relic is slow.
 								this.services.matchResults.fillOne(id).orElse(() => okAsync(undefined))
 							)
-						: owner && needsResult === true
+						: owner && needsResult === true && !skirmish
 							? saved.andThen(() => this.reopenResultFill(id))
 							: saved;
 				})

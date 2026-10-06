@@ -10,6 +10,7 @@ const PAGES: { path: string; changefreq: string }[] = [
 	{ path: '/', changefreq: 'hourly' },
 	{ path: '/players', changefreq: 'daily' },
 	{ path: '/leaderboards', changefreq: 'hourly' },
+	{ path: '/stats', changefreq: 'daily' },
 	{ path: '/replays', changefreq: 'hourly' },
 	{ path: '/privacy', changefreq: 'monthly' }
 ];

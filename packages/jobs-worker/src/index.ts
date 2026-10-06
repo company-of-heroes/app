@@ -9,7 +9,9 @@ const JOBS: { name: string; every: number; offset: number }[] = [
 	{ name: 'lobby-merge', every: 5, offset: 1 },
 	// Self-limiting: only lobbies whose stored ranked flag or title is stale; idle afterwards.
 	{ name: 'lobby-reprocess', every: 5, offset: 4 },
-	{ name: 'rewards-evaluate', every: 1, offset: 0 }
+	{ name: 'rewards-evaluate', every: 1, offset: 0 },
+	// Self-limiting: stored replays without a statistics summary; idle once caught up.
+	{ name: 'replay-stats', every: 1, offset: 0 }
 ];
 
 /** A job reports `more` while work is left; keep one tick well inside the time limit. */

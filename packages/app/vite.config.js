@@ -102,6 +102,8 @@ export default defineConfig(({ mode }) => {
 	}
 
 	const host = process.env.TAURI_DEV_HOST;
+	// scripts/tauri.mjs picks a free port and passes the same one to Tauri's devUrl.
+	const port = Number(process.env.APP_DEV_PORT) || 1420;
 
 	return {
 		define: {
@@ -131,19 +133,19 @@ export default defineConfig(({ mode }) => {
 		//
 		// 1. prevent vite from obscuring rust errors
 		clearScreen: false,
-		// 2. tauri expects a fixed port, fail if that port is not available
+		// 2. tauri expects the port from scripts/tauri.mjs, fail if it is not available
 		server: {
 			fs: {
 				allow: ['..']
 			},
-			port: 1420,
+			port,
 			strictPort: true,
 			host: host || false,
 			hmr: host
 				? {
 						protocol: 'ws',
 						host,
-						port: 1421
+						port: port + 1
 					}
 				: undefined,
 			watch: {

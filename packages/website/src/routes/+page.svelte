@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Hero from '$lib/components/home/hero.svelte';
+	import HomeStatistics from '$lib/components/home/home-statistics.svelte';
 	import HomePlayerSearch from '$lib/components/home/home-player-search.svelte';
 	import HomeLiveLobbies from '$lib/components/home/home-live-lobbies.svelte';
 	import HomeRecentMatches from '$lib/components/home/home-recent-matches.svelte';
@@ -59,6 +60,13 @@
 
 <main>
 	<Hero />
+	{#await data.statistics}
+		<HomeStatistics statistics={null} loading />
+	{:then statistics}
+		<HomeStatistics {statistics} />
+	{:catch}
+		<HomeStatistics statistics={null} />
+	{/await}
 	<HomePlayerSearch />
 	{#await data.topReplays}
 		<TopReplays matches={[]} loading />

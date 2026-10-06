@@ -2,8 +2,8 @@ import { err, errAsync, ok, okAsync, ResultAsync, type Result } from 'neverthrow
 import type { ReplaysQuery } from '@company-of-heroes/api';
 import { cached } from '../cache';
 import { RELIC_BASE } from '../clients/relic';
-import { badRequest, conflict, forbidden, notFound, type AppError } from '../errors';
-import { ensure, fromAsync, fromPb, pbMaybe, type Task } from '../result';
+import { badRequest, conflict, forbidden, notFound, upstream, type AppError } from '../errors';
+import { ensure, fromAsync, fromPb, pbMaybe, sequence, type Task } from '../result';
 import {
 	buildStatsSnapshot,
 	displayMapName,
@@ -31,7 +31,12 @@ import {
 	type MemberUpload,
 	type PublishFromMatch
 } from '../domain/member-replay-writes';
+import { summarizeReplay } from '../domain/replay-summary';
+import type { ReplaySummary } from '@company-of-heroes/ui/statistics/types';
 import { Service } from './service';
+
+/** Uploaded replays fully parsed per `summarizeUploads` run (a parse costs ~10-100 ms CPU). */
+const UPLOAD_STATS_BATCH = 20;
 
 type ReplayRecord = {
 	id: string;
@@ -499,6 +504,53 @@ export class MemberReplaysService extends Service {
 			);
 			return { maps: [...maps].sort(), players: [...names].map((name) => ({ name })) };
 		});
+	}
+
+	/**
+	 * Scheduled: summarizes uploaded replays (member and personal library) that have no
+	 * `replayStats` yet, for the community statistics (anonymous totals only). A file that
+	 * cannot be downloaded gets an empty summary with version 0, so it does not block the queue.
+	 */
+	summarizeUploads(): Task<{ processed: number; more: boolean }> {
+		return fromPb(
+			this.replays.getList<{ id: string; collectionId: string; file: string }>(
+				1,
+				UPLOAD_STATS_BATCH,
+				{
+					filter: "replayStats = null && visibility != 'deleted'",
+					sort: 'id',
+					fields: 'id,collectionId,file'
+				}
+			),
+			'Could not load replays'
+		).andThen((rows) =>
+			sequence(rows.items, (record) => this.summarizeUpload(record)).map((done) => ({
+				processed: done.length,
+				more: rows.totalItems > rows.items.length
+			}))
+		);
+	}
+
+	private summarizeUpload(record: { id: string; collectionId: string; file: string }): Task<void> {
+		return fromAsync(
+			this.fileFetch(this.pb.files.getURL(record, record.file)),
+			'Could not download replay',
+			502
+		)
+			.andThen((response) =>
+				response.ok
+					? fromAsync(response.arrayBuffer(), 'Could not read replay', 502)
+					: errAsync(upstream('Could not download replay'))
+			)
+			.map((bytes): ReplaySummary => summarizeReplay(bytes))
+			.orElse((error) => {
+				console.error(`[member-replays] could not summarize replay ${record.id}`, error);
+				return okAsync<ReplaySummary>({ v: 0, players: [] });
+			})
+			.andThen((replayStats) =>
+				fromPb(this.replays.update(record.id, { replayStats }), 'Could not update replay')
+			)
+			.map(() => undefined);
 	}
 
 	/** Shared by upload and publish: a public member replay with a frozen rating snapshot. */

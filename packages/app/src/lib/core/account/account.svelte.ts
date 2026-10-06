@@ -57,6 +57,8 @@ function fieldErrorMessage(error: ClientResponseError): string {
  */
 export class AccountService {
 	#user = $state<User | null>(null);
+	/** Set only by {@link impersonate}; any real sign-in clears it. */
+	#impersonating = $state(false);
 	#conflictedSteamIds = new Set<string>();
 	#refreshTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -166,6 +168,7 @@ export class AccountService {
 	}
 
 	async #authenticate(credentials: AccountSettings): Promise<AuthResult> {
+		this.#impersonating = false;
 		if (credentials.authMode === 'session') {
 			return this.#resumeSession(credentials.token);
 		}
@@ -381,6 +384,7 @@ export class AccountService {
 	async signOut(): Promise<void> {
 		pocketbase.authStore.clear();
 		this.#user = null;
+		this.#impersonating = false;
 		this.status = 'idle';
 		settings.tree.account = accountSettingsSchema.parse({});
 		await settings.persistNow();
@@ -568,6 +572,7 @@ export class AccountService {
 
 		pocketbase.authStore.save(auth.token, auth.record);
 		this.#user = auth.record;
+		this.#impersonating = true;
 		return this.user;
 	}
 
@@ -780,7 +785,7 @@ export class AccountService {
 	}
 
 	get isImpersonating(): boolean {
-		return this.#user !== null && this.#user.id !== settings.tree.account.userId;
+		return this.#impersonating;
 	}
 
 	get userId(): string {

@@ -1,3 +1,4 @@
+import { okAsync, ResultAsync } from 'neverthrow';
 import {
 	HOME_RECENT_MATCHES,
 	HOME_RECENT_MEMBER_UPLOADS,
@@ -28,8 +29,13 @@ function section<T>(items: Task<T[]>): Promise<SectionResult<T>> {
 
 /** Stream each section so client nav to `/` is not blocked on Twitch / match APIs. */
 export const load: PageServerLoad = ({ locals }) => {
+	const liveLobbies = locals.services.liveLobbies.list();
+	const memberUploads = locals.services.memberReplays.list(
+		memberQueryFromReplaysQuery(recentMemberQuery(), HOME_RECENT_MEMBER_UPLOADS),
+		null
+	);
 	return {
-		liveLobbies: section(locals.services.liveLobbies.list()),
+		liveLobbies: section(liveLobbies),
 		topReplays: section(
 			locals.services.replays.top({ days: TOP_REPLAYS_DAYS, limit: TOP_REPLAYS })
 		),
@@ -38,10 +44,18 @@ export const load: PageServerLoad = ({ locals }) => {
 				.list(historyInputFromQuery(recentCommunityQuery(), 'community', HOME_RECENT_MATCHES), null)
 				.map((list) => list.items)
 		),
-		recentMemberUploads: section(
-			locals.services.memberReplays
-				.list(memberQueryFromReplaysQuery(recentMemberQuery(), HOME_RECENT_MEMBER_UPLOADS), null)
-				.map((list) => list.items)
+		recentMemberUploads: section(memberUploads.map((list) => list.items)),
+		statistics: ResultAsync.combine([
+			locals.services.statistics.get({ period: '30' }),
+			locals.services.statistics.totals(),
+			liveLobbies.map((lobbies) => lobbies.length).orElse(() => okAsync(0)),
+			memberUploads.map((list) => list.totalItems).orElse(() => okAsync(0))
+		]).match(
+			([stats, totals, liveNow, replaysUploaded]) => ({
+				stats,
+				headline: { ...totals, liveNow, replaysUploaded }
+			}),
+			() => null
 		),
 		streams: locals.services.twitch.listStreams().unwrapOr([])
 	};

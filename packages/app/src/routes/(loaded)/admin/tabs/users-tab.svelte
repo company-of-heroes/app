@@ -17,7 +17,8 @@
 	import UserIcon from 'phosphor-svelte/lib/UserIcon';
 	import { useI18n } from '$lib/i18n';
 	import { cn } from '$lib/utils';
-	import { footerAction, interactive } from '$lib/components/ui/variants';
+	import { interactive } from '$lib/components/ui/variants';
+	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 	import type { SteamConflict, SteamConflictAccount } from '@company-of-heroes/api';
 	import { api } from '$core/api';
@@ -31,6 +32,13 @@
 	let impersonatingId = $state<string | null>(null);
 	let searched = $state(false);
 	const canSearch = $derived(userQuery.trim().length >= 2 && !isSearching);
+
+	const columns: ColumnDef<UsersResponse>[] = [
+		{ id: 'user', header: t('Name'), width: 'w-9/24' },
+		{ id: 'role', header: t('Role'), width: 'w-4/24' },
+		{ id: 'reputation', header: t('Reputation'), width: 'w-3/24', class: 'tabular-nums' },
+		{ id: 'actions', header: '', width: 'w-8/24', class: 'text-right' }
+	];
 
 	const userLabel = (user: UsersResponse) => user.name || user.email || user.id;
 
@@ -280,68 +288,73 @@
 		<div class="border-secondary-800 border-b px-4 py-3">
 			<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">{t('Users')}</p>
 		</div>
-		{#if searchResults.length === 0}
-			<p class="text-secondary-400 px-4 py-6 text-sm">{t('No users found.')}</p>
-		{:else}
-			<ul class="divide-secondary-800 divide-y">
-				{#each searchResults as row (row.id)}
-					{@const steamId = profileSteamId(row)}
-					<li class="flex min-h-11 items-stretch">
-						<div class="flex min-w-0 flex-1 items-center px-4 py-2">
-							<User.Root user={row} class="flex min-w-0 flex-col">
-								<span class="flex min-w-0 flex-wrap items-center gap-2">
-									{#if steamId}
-										<PlayerProfileLink
-											href={resolve('/(loaded)/players/[id]', { id: steamId })}
-											playerId={steamId}
-											class={cn(
-												interactive,
-												'hover:text-primary min-w-0 font-medium transition-colors'
-											)}
-										>
-											<User.Name class="font-medium" />
-										</PlayerProfileLink>
-									{:else}
-										<User.Name class="font-medium" />
-									{/if}
-									{#if roleLabel(row.role)}
-										<Badge variant="primary">{roleLabel(row.role)}</Badge>
-									{/if}
-									<Badge variant="default">
-										{t('{count} reputation', { count: row.reputation || 0 })}
-									</Badge>
-								</span>
-								{#if row.name && row.email}
-									<span class="text-secondary-400 text-xs">{row.email}</span>
-								{/if}
-							</User.Root>
-						</div>
-						<div class="border-secondary-800 flex items-stretch border-l">
-							<Button
-								href={steamId ? resolve('/(loaded)/players/[id]', { id: steamId }) : undefined}
-								type="button"
-								variant="ghost"
-								class={cn(footerAction, 'text-secondary-400 hover:text-white')}
-								disabled={!steamId}
-							>
-								<UserIcon size={16} />
-								{t('View Profile')}
-							</Button>
-							<Button
-								type="button"
-								variant="ghost"
-								class={cn(footerAction, 'text-secondary-400 hover:text-white', 'border-r-0')}
-								disabled={row.id === app.account.userId}
-								loading={impersonatingId === row.id}
-								onclick={() => loginAs(row)}
-							>
-								<SignInIcon size={16} />
-								{t('Login as')}
-							</Button>
-						</div>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+		{#snippet cell_user({ row }: { row: UsersResponse })}
+			{@const steamId = profileSteamId(row)}
+			<User.Root user={row} class="flex min-w-0 flex-col">
+				{#if steamId}
+					<PlayerProfileLink
+						href={resolve('/(loaded)/players/[id]', { id: steamId })}
+						playerId={steamId}
+						class={cn(interactive, 'hover:text-primary min-w-0 truncate transition-colors')}
+					>
+						<User.Name class="font-medium" />
+					</PlayerProfileLink>
+				{:else}
+					<User.Name class="truncate font-medium" />
+				{/if}
+				{#if row.name && row.email}
+					<span class="text-secondary-500 truncate text-xs">{row.email}</span>
+				{/if}
+			</User.Root>
+		{/snippet}
+		{#snippet cell_role({ row }: { row: UsersResponse })}
+			{#if roleLabel(row.role)}
+				<Badge variant="primary">{roleLabel(row.role)}</Badge>
+			{:else}
+				<span class="text-secondary-500">—</span>
+			{/if}
+		{/snippet}
+		{#snippet cell_reputation({ row }: { row: UsersResponse })}
+			{row.reputation || 0}
+		{/snippet}
+		{#snippet cell_actions({ row }: { row: UsersResponse })}
+			{@const steamId = profileSteamId(row)}
+			<div class="flex justify-end gap-2">
+				{#if steamId}
+					<Button
+						href={resolve('/(loaded)/players/[id]', { id: steamId })}
+						variant="secondary"
+						size="sm"
+					>
+						<UserIcon size={16} />
+						{t('View Profile')}
+					</Button>
+				{/if}
+				<Button
+					type="button"
+					variant="secondary"
+					size="sm"
+					disabled={row.id === app.account.userId}
+					loading={impersonatingId === row.id}
+					onclick={() => loginAs(row)}
+				>
+					<SignInIcon size={16} />
+					{t('Login as')}
+				</Button>
+			</div>
+		{/snippet}
+		<DataTable
+			data={searchResults}
+			{columns}
+			rowKey={(row) => row.id}
+			empty={t('No users found.')}
+			class="rounded-none border-0"
+			cells={{
+				user: cell_user,
+				role: cell_role,
+				reputation: cell_reputation,
+				actions: cell_actions
+			}}
+		/>
 	</section>
 {/if}

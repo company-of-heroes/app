@@ -86,7 +86,10 @@
 	let profilePollTimer: ReturnType<typeof setInterval> | null = null;
 	const { t } = useI18n();
 
-	const liveSteamId = $derived(app.game.profile?.steam.steamid ?? null);
+	/** The running game is the admin's own; ignore it while impersonating. */
+	const liveSteamId = $derived(
+		app.account.isImpersonating ? null : (app.game.profile?.steam.steamid ?? null)
+	);
 	const linkedSteamIds = $derived(app.features.auth.user.steamIds ?? []);
 	/** Another linked account to look at; back to the in-game account when the game logs in. */
 	let selectedSteamId = $state<string | null>(null);

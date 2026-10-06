@@ -5,7 +5,7 @@ import type {
 	MatchResultPlayer,
 	ReplayPlayer
 } from './types';
-import { isRankedMatch } from '../format/match-type';
+import { isRankedMatch, resultMatchTypeId } from '../format/match-type';
 import { getModeLabel } from '../format/player-format';
 import { getLiveLobbyMatchTypeId } from '../live-lobby/slim';
 
@@ -131,8 +131,8 @@ export function findResultPlayer(
 
 /** Ranked ladder / custom / skirmish label for community list rows. */
 export function matchModeLabel(match: CommunityMatch | CommunityMatchDetail): string {
-	const fromResult = Number(match.result?.matchtype_id);
-	const matchType = Number.isFinite(fromResult) ? fromResult : null;
+	// Skirmishes vs AI have no Relic result and often no AI slots in `players`; the stored title says so.
+	const matchType = match.title === 'Skirmish' ? 14 : resultMatchTypeId(match.result);
 	return getModeLabel(
 		getLiveLobbyMatchTypeId(
 			match.players.map((player) => ({
