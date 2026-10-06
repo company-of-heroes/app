@@ -1,4 +1,6 @@
-FROM ghcr.io/muchobien/pocketbase:latest
+# Pinned: `latest` can pull a new PocketBase on any build, whose system migrations slow the
+# next start. Bump this on purpose.
+FROM ghcr.io/muchobien/pocketbase:0.40.4
 
 # python3 runs lib/fetch-insecure.py for the Relic proxy (relic-proxy.pb.js).
 RUN apk add --no-cache python3
