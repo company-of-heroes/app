@@ -356,6 +356,12 @@ importers:
         specifier: ^3.2.7
         version: 3.2.7(@types/node@26.4.0)(happy-dom@18.0.1)(jiti@2.7.0)(lightningcss@1.33.0)
 
+  packages/game-data:
+    devDependencies:
+      typescript:
+        specifier: ~5.6.3
+        version: 5.6.3
+
   packages/i18n:
     dependencies:
       '@svelte-i18n/core':
@@ -525,6 +531,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@company-of-heroes/game-data':
+        specifier: workspace:*
+        version: link:../game-data
       '@company-of-heroes/i18n':
         specifier: workspace:*
         version: link:../i18n
@@ -583,6 +592,9 @@ importers:
       '@company-of-heroes/api':
         specifier: workspace:*
         version: link:../api
+      '@company-of-heroes/game-data':
+        specifier: workspace:*
+        version: link:../game-data
       '@company-of-heroes/i18n':
         specifier: workspace:*
         version: link:../i18n

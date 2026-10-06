@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "bundler",
+		"module": "ESNext",
+		"target": "ESNext",
+		"strict": true,
+		"skipLibCheck": true,
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
+		"resolveJsonModule": true,
+		"noEmit": true
+	},
+	"include": ["src/**/*.ts", "data/**/*.json"]
+}

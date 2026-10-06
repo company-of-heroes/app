@@ -62,6 +62,7 @@
 		"./replay/action-icons": "./src/replay/action-icons.ts",
 		"./replay/roster": "./src/replay/roster.ts",
 		"./replay/parse": "./src/replay/parse/index.ts",
+		"./docs": "./src/docs/index.ts",
 		"./comment": "./src/comment/index.ts",
 		"./comment/vote": "./src/comment/vote.ts",
 		"./live-lobby": "./src/live-lobby/index.ts",
@@ -77,6 +78,7 @@
 		"./twitch/types": "./src/twitch/types.ts"
 	},
 	"dependencies": {
+		"@company-of-heroes/game-data": "workspace:*",
 		"@company-of-heroes/i18n": "workspace:*",
 		"@fknoobs/replay-parser": "github:fknoobs/replay-analyzer",
 		"clsx": "^2.1.1",

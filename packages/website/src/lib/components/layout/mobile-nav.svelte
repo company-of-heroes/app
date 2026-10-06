@@ -34,6 +34,7 @@
 		{ href: '/players', label: t('Players') },
 		{ href: '/leaderboards', label: t('Leaderboards') },
 		{ href: '/replays', label: t('Replays') },
+		{ href: '/docs', label: t('Docs') },
 		{ href: '/#donate', label: t('Donations') }
 	]);
 
@@ -62,6 +63,10 @@
 
 		if (path === '/replays') {
 			return current.startsWith('/replays');
+		}
+
+		if (path === '/docs') {
+			return current.startsWith('/docs');
 		}
 
 		return false;

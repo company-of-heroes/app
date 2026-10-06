@@ -6,6 +6,7 @@ import { createAdminPocketBase } from '../pb';
 import { AuthService } from './auth';
 import { CompatService } from './compat';
 import { DevSeedService } from './dev-seed';
+import { DocsService } from './docs';
 import { HiddenMatchesService } from './hidden-matches';
 import { LeaderboardService } from './leaderboard';
 import { LiveLobbiesService } from './live-lobbies';
@@ -107,6 +108,10 @@ export class Services {
 
 	get devSeed() {
 		return this.#get('devSeed', DevSeedService);
+	}
+
+	get docs() {
+		return this.#get('docs', DocsService);
 	}
 
 	get hiddenMatches() {

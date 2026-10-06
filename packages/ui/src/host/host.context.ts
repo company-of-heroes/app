@@ -7,6 +7,8 @@ import type { PlayerLabel } from '../format/types';
 import type { PlayerCustomization, PlayerEloMap, PlayerPreviewData } from '../player/types';
 import type { CommunityMatchDetail, MatchResultPlayer } from '../replay/types';
 import type { PlayerRewards } from '../reward/types';
+import type { DocKind } from '@company-of-heroes/game-data/types';
+import type { DocsNote } from '../docs/types';
 
 /**
  * Everything a shared component needs from the host (desktop app or website).
@@ -245,6 +247,11 @@ export type HostApi = {
 	};
 	staff: {
 		getCompanionUser: (steamId: string) => Promise<CompanionUserDebug | null>;
+	};
+	/** Optional: staff tips on the docs pages. Hosts without docs omit it. */
+	docs?: {
+		/** Staff only; an empty body removes the tip. Rejects with a user-facing message. */
+		saveNote: (kind: DocKind, slug: string, body: string) => Promise<DocsNote | null>;
 	};
 	/** Optional: machine-translate chat text. Hosts without it hide the translate controls. */
 	translate?: (text: string, to: string) => Promise<string>;

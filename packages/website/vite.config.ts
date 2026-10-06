@@ -35,6 +35,7 @@ export default defineConfig({
 			'layerchart',
 			'@svelte-i18n/core',
 			'@company-of-heroes/i18n',
+			'@company-of-heroes/game-data',
 			'@fknoobs/replay-parser'
 		]
 	},

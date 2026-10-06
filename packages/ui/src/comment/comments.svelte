@@ -7,7 +7,7 @@
 	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
-	import { footerAction, interactive, mePlayerText } from '../variants';
+	import { footerAction, interactive, markdownProse, mePlayerText } from '../variants';
 	import CommentComposer from './comment-composer.svelte';
 	import CommentDeleteDialog from './comment-delete-dialog.svelte';
 	import CommentDeletedNote from './comment-deleted-note.svelte';
@@ -98,23 +98,6 @@
 
 		return out;
 	});
-
-	const markdownClass = cn(
-		'prose prose-sm text-secondary-200 max-w-none min-w-0 break-words',
-		'prose-headings:my-1 prose-headings:text-sm prose-headings:leading-snug prose-headings:text-white',
-		'prose-h1:text-base prose-strong:text-white',
-		'prose-code:bg-secondary-800 prose-code:text-primary prose-code:rounded prose-code:px-1 prose-code:py-0.5',
-		'prose-code:before:content-none prose-code:after:content-none',
-		'prose-pre:my-1 prose-pre:overflow-x-auto prose-pre:bg-secondary-900 prose-pre:border-secondary-800 prose-pre:border',
-		'prose-a:text-primary prose-a:no-underline hover:prose-a:underline',
-		'prose-blockquote:border-secondary-700 prose-blockquote:text-primary',
-		'prose-li:marker:text-secondary-400',
-		'[&_mark]:bg-primary/20 [&_mark]:text-primary [&_mark]:rounded-sm',
-		'[&_.mention]:text-primary [&_.mention]:font-medium',
-		'[&_a.mention]:cursor-pointer hover:[&_a.mention]:underline',
-		'prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-blockquote:my-1',
-		'[&>*:first-child]:mt-0 [&>*:last-child]:mb-0'
-	);
 
 	function buildTree(list: LobbyComment[]): CommentNode[] {
 		const ids: Record<string, true> = {};
@@ -774,7 +757,7 @@
 							{t('Comment has been deleted')}
 						</p>
 					{:else}
-						<div class={cn(markdownClass, 'mt-1.5')}>
+						<div class={cn(markdownProse, 'mt-1.5')}>
 							{@html renderMarkdown(displayText(comment))}
 						</div>
 					{/if}

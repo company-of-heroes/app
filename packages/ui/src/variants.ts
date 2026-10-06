@@ -203,3 +203,21 @@ export function semanticVariant(variant: SemanticVariant = 'default') {
 /** Shared toast chrome — pairs with Sonner `classes.toast` when unstyled. */
 export const toastBase =
 	'relative flex w-[min(22rem,calc(100vw-2rem))] items-center gap-2.5 rounded-md border border-secondary-800 bg-secondary-950 px-3 py-2.5 text-sm text-secondary-100 shadow-md';
+
+/** Rendered markdown (comments, replay descriptions, docs tips). */
+export const markdownProse = cn(
+	'prose prose-sm text-secondary-200 max-w-none min-w-0 break-words',
+	'prose-headings:my-1 prose-headings:text-sm prose-headings:leading-snug prose-headings:text-white',
+	'prose-h1:text-base prose-strong:text-white',
+	'prose-code:bg-secondary-800 prose-code:text-primary prose-code:rounded prose-code:px-1 prose-code:py-0.5',
+	'prose-code:before:content-none prose-code:after:content-none',
+	'prose-pre:my-1 prose-pre:overflow-x-auto prose-pre:bg-secondary-900 prose-pre:border-secondary-800 prose-pre:border',
+	'prose-a:text-primary prose-a:no-underline hover:prose-a:underline',
+	'prose-blockquote:border-secondary-700 prose-blockquote:text-primary',
+	'prose-li:marker:text-secondary-400',
+	'[&_mark]:bg-primary/20 [&_mark]:text-primary [&_mark]:rounded-sm',
+	'[&_.mention]:text-primary [&_.mention]:font-medium',
+	'[&_a.mention]:cursor-pointer hover:[&_a.mention]:underline',
+	'prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-blockquote:my-1',
+	'[&>*:first-child]:mt-0 [&>*:last-child]:mb-0'
+);
