@@ -81,6 +81,8 @@
 	const TRACK_INSET_PX = 20;
 	const MIN_ZOOM = 1;
 	const MAX_ZOOM = 40;
+	/** Same ability within 3s (8 ticks/s) of the previous click counts as one use. */
+	const ABILITY_REPEAT_TICKS = 3 * 8;
 
 	let scroller = $state<HTMLDivElement>();
 	let scrollerWidth = $state(0);
@@ -135,8 +137,19 @@
 		const byRow = new Map<TimelineRowKey, TimelineItem[]>(
 			TIMELINE_ROWS.map((row) => [row.key, []])
 		);
+		const lastAbilityTick = new Map<string, number>();
 		actions.forEach((action, index) => {
 			const row = timelineRow(action);
+			if (row === 'abilities') {
+				// Repeated clicks on the same ability (one per selected squad / spam) show once.
+				const key = `${action.commandID ?? 0}|${action.objectID ?? 0}`;
+				const last = lastAbilityTick.get(key);
+				lastAbilityTick.set(key, action.tick);
+				if (last != null && action.tick - last <= ABILITY_REPEAT_TICKS) {
+					return;
+				}
+			}
+
 			if (row) {
 				const category = veterancy && wehrmachtUnitCategory(action);
 				byRow.get(row)!.push(toItem(action, index, category ? veterancy.get(category) : undefined));
