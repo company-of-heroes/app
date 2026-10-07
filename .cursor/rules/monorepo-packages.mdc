@@ -15,6 +15,7 @@ pnpm + Turbo. Edit the package that owns the concern; do not copy UI or API logi
 | `packages/app` | Tauri desktop (adapter-static). Features, `$core`, game, account. Module-singleton `t()`. |
 | `packages/website` | Public site (Cloudflare). Fetches `api.coh1stats.com`. Per-request `t()` + `/es` `/ko` URL prefixes. No Tauri / `$core`. |
 | `packages/replay-parser` | Standalone Tauri replay parser (adapter-static). Lists and edits `.rec` files in the local playback folder. Fully offline: no account, PocketBase or `$core`; shared UI via a local `HostContext`. |
+| `packages/game-data` | Generated unit / building / commander / weapon documentation (JSON from `company-of-heroes-assets/tools/extract_docs.py`) + types and lookups (`loadGameDocs`). No Svelte/Tauri. Regenerate after a game patch; do not hand-edit `data/`. |
 | `packages/pocketbase` | Schema migrations + JS hooks. Public HTTP APIs live here. |
 | `packages/oppbot-overlay` | Overlay source. `pnpm overlays:build` copies dist into PocketBase public. |
 | `packages/smurf-worker` | Cloudflare Worker for smurf scoring. Not app/website code. |

@@ -12,6 +12,7 @@ import {
 	replayDownloadVisitorId
 } from '$lib/replays/downloads';
 import { getHiddenMatch, hideMatch, unhideMatch } from '$lib/remote/hidden-matches.remote';
+import { saveDocsNote } from '$lib/remote/docs.remote';
 import { getCompanionUser } from '$lib/remote/companion-user.remote';
 import {
 	getProfileCustomization,
@@ -222,6 +223,9 @@ export function provideWebsiteHost(): HostContext {
 			},
 			labels: {
 				forSteamId: (steamId) => getPlayerLabels(steamId).current ?? []
+			},
+			docs: {
+				saveNote: (kind, slug, body) => saveDocsNote({ kind, slug, body })
 			},
 			streaming: {
 				isLive: (steamId) => (getLiveStreamerIds().current ?? []).includes(steamId)

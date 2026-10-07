@@ -12,6 +12,8 @@ const PAGES: { path: string; changefreq: string }[] = [
 	{ path: '/leaderboards', changefreq: 'hourly' },
 	{ path: '/stats', changefreq: 'daily' },
 	{ path: '/replays', changefreq: 'hourly' },
+	{ path: '/docs', changefreq: 'weekly' },
+	{ path: '/docs/weapons', changefreq: 'weekly' },
 	{ path: '/privacy', changefreq: 'monthly' }
 ];
 
@@ -46,15 +48,17 @@ function lastmod(replay: SitemapReplay): string {
 		: `<lastmod>${date.toISOString().slice(0, 10)}</lastmod>`;
 }
 
-/** Static pages in every locale, plus the newest public replays (English URL with alternates). */
+/** Static pages in every locale, docs pages and the newest public replays (English URL with alternates). */
 export const GET: RequestHandler = async ({ locals }) => {
 	const replays = await locals.services.replays.sitemapEntries().unwrapOr([]);
+	const docs = await locals.services.docs.paths().unwrapOr([]);
 	const urls = [
 		...PAGES.flatMap(({ path, changefreq }) =>
 			[undefined, ...LOCALES].map((locale) =>
 				entry(localeUrl(path, locale), path, `<changefreq>${changefreq}</changefreq>`)
 			)
 		),
+		...docs.map((path) => entry(localeUrl(path), path, '<changefreq>monthly</changefreq>')),
 		...replays.map((replay) => {
 			const path = `/replays/${encodeURIComponent(replay.id)}`;
 			return entry(localeUrl(path), path, lastmod(replay));
