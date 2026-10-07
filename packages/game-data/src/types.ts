@@ -240,7 +240,8 @@ export type DocUpgradeEntry = DocUpgrade & {
 export type UnitPage = {
 	unit: DocUnit;
 	weapons: DocWeapon[];
-	abilities: DocAbility[];
+	/** With the upgrades each ability needs (`requiredRefs`, e.g. Mk2 Grenades for Throw Grenade). */
+	abilities: (DocAbility & { requiredRefs: DocRef[] })[];
 	upgrades: DocUpgradeEntry[];
 	/** Building research that applies to this unit (BARs for riflemen), with where it is researched. */
 	research: (DocUpgradeEntry & { researchedAt: DocRef[] })[];

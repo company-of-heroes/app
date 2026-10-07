@@ -24,6 +24,7 @@
 			| DocUpgrade
 			| DocUpgradeEntry
 			| (DocUpgradeEntry & { researchedAt: DocRef[] })
+			| (DocAbility & { requiredRefs: DocRef[] })
 		)[];
 	};
 
@@ -105,6 +106,18 @@ when two lists sit side by side. -->
 								{ref.name}</a
 							>{#if index < entry.weaponRefs.length - 1}<span class="text-secondary-500">·</span
 								>{/if}
+						{/each}
+					</p>
+				{/if}
+				{#if 'requiredRefs' in entry && entry.requiredRefs.length}
+					<!-- Abilities that need research first (Throw Grenade → Mk2 Grenades). -->
+					<p class="text-secondary-400 mt-0.5 flex flex-wrap items-center gap-x-2 text-sm">
+						{t('Requires')}
+						{#each entry.requiredRefs as upgrade (upgrade.slug)}
+							<span class="inline-flex items-center gap-1.5 font-medium text-white">
+								<DocsIcon icon={upgrade.icon} name={upgrade.name} class="size-5" />
+								{upgrade.name}
+							</span>
 						{/each}
 					</p>
 				{/if}

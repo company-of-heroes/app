@@ -384,7 +384,17 @@ export class GameDocs {
 		return {
 			unit,
 			weapons: [...weaponSlugs].map((item) => this.weapons.get(item)).filter(defined),
-			abilities: (unit.abilities ?? []).map((item) => this.abilities.get(item)).filter(defined),
+			// Abilities with the research they need (Throw Grenade → Mk2 Grenades).
+			abilities: (unit.abilities ?? [])
+				.map((item) => this.abilities.get(item))
+				.filter(defined)
+				.map((ability) => ({
+					...ability,
+					requiredRefs: (ability.requires ?? [])
+						.map((slug) => this.upgrades.get(slug))
+						.filter(defined)
+						.map((upgrade) => this.upgradeRef(upgrade))
+				})),
 			upgrades: upgrades.filter((upgrade) => !vetTrack(upgrade.slug)),
 			research,
 			vetUpgrades: {
