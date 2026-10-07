@@ -69,7 +69,7 @@ export type UploadRow = {
 	races: number[];
 };
 
-/** Replay picks of one day and mode, summed; merging days gives any date range. */
+/** Replay picks of one day, mode and map, summed; merging days gives any date range. */
 export type ReplayTally = {
 	matches: number;
 	/** Race → player-games with a summary. */
@@ -82,7 +82,7 @@ export type ReplayTally = {
 	openings: Record<string, { count: number; players: number }>;
 };
 
-/** `${day}|${mode}` → that day's replay picks. */
+/** `${day}|${mode}|${map}` → that day's replay picks on that map. */
 export type DayReplays = Record<string, ReplayTally>;
 
 /** Everything the statistics are computed from, cached between requests. */
@@ -137,15 +137,14 @@ function addCount(
 	entry.players++;
 }
 
-/** Adds what one replay's human players picked and built to its day and mode. */
+/** Adds what one replay's human players picked and built to its day, mode and map. */
 export function tallyReplay(
 	replays: DayReplays,
-	day: string,
-	mode: StatisticsMode,
-	alliesWon: boolean | null,
+	match: Pick<StatisticsMatch, 'day' | 'mode' | 'map' | 'alliesWon'>,
 	players: ReplaySummaryPlayer[]
 ) {
-	const tally = (replays[`${day}|${mode}`] ??= emptyTally());
+	const { day, mode, map, alliesWon } = match;
+	const tally = (replays[`${day}|${mode}|${map}`] ??= emptyTally());
 	tally.matches++;
 	for (const player of players) {
 		if (!isFaction(player.race)) {
@@ -254,7 +253,7 @@ export function buildMatches(
 		matches.push(match);
 		const replay = replays.get(lobby);
 		if (replay && hasReplay(lobby)) {
-			tallyReplay(tallies, match.day, mode, match.alliesWon, replay.players);
+			tallyReplay(tallies, match, replay.players);
 		}
 	}
 
@@ -283,8 +282,8 @@ function uploadMode(upload: UploadRow): StatisticsMode {
 	return upload.isRanked ? (HUMANS_PER_RANKED_MODE[upload.races.length] ?? 'basic') : 'basic';
 }
 
-/** Where a counted upload goes: its replay summary is added to this day and mode. */
-export type KeptUploads = Map<string, { day: string; mode: StatisticsMode }>;
+/** Where a counted upload goes: its replay summary is added to this day, mode and map. */
+export type KeptUploads = Map<string, { day: string; mode: StatisticsMode; map: string }>;
 
 /**
  * Uploaded replays as matches, minus copies of a game that is already counted: a lobby (or
@@ -339,7 +338,7 @@ function uploadMatches(
 		const date = new Date(time);
 		const day = date.toISOString().slice(0, 10);
 		const mode = uploadMode(upload);
-		kept.set(upload.id, { day, mode });
+		kept.set(upload.id, { day, mode, map });
 		matches.push({
 			lobby: upload.id,
 			upload: true,
@@ -360,7 +359,7 @@ function uploadMatches(
 	return { matches, kept };
 }
 
-/** Adds the replay summaries of counted uploads to their day and mode (no result: no wins). */
+/** Adds the replay summaries of counted uploads to their day, mode and map (no result: no wins). */
 export function tallyUploads(
 	replays: DayReplays,
 	kept: KeptUploads,
@@ -369,7 +368,7 @@ export function tallyUploads(
 	for (const record of records) {
 		const place = kept.get(record.id);
 		if (place && Array.isArray(record.replayStats?.players)) {
-			tallyReplay(replays, place.day, place.mode, null, record.replayStats.players);
+			tallyReplay(replays, { ...place, alliesWon: null }, record.replayStats.players);
 		}
 	}
 }
@@ -480,6 +479,32 @@ function mergeTally(bucket: Bucket, tally: ReplayTally) {
 	mergeBlueprints(bucket.openings, tally.openings);
 }
 
+function addMap(bucket: Bucket, match: StatisticsMatch) {
+	if (!match.map) {
+		return;
+	}
+
+	const map = bucket.maps.get(match.map) ?? {
+		played: 0,
+		durationSum: 0,
+		durationCount: 0,
+		decided: 0,
+		alliesWins: 0
+	};
+	map.played++;
+	if (match.durationSeconds !== null) {
+		map.durationSum += match.durationSeconds;
+		map.durationCount++;
+	}
+
+	if (match.alliesWon !== null) {
+		map.decided++;
+		map.alliesWins += match.alliesWon ? 1 : 0;
+	}
+
+	bucket.maps.set(match.map, map);
+}
+
 function addMatch(bucket: Bucket, match: StatisticsMatch) {
 	const { alliesWon } = match;
 	bucket.matchCount++;
@@ -494,28 +519,6 @@ function addMatch(bucket: Bucket, match: StatisticsMatch) {
 
 	bucket.hours[match.hour]++;
 	const duration = match.durationSeconds;
-	if (match.map) {
-		const map = bucket.maps.get(match.map) ?? {
-			played: 0,
-			durationSum: 0,
-			durationCount: 0,
-			decided: 0,
-			alliesWins: 0
-		};
-		map.played++;
-		if (duration !== null) {
-			map.durationSum += duration;
-			map.durationCount++;
-		}
-
-		if (alliesWon !== null) {
-			map.decided++;
-			map.alliesWins += alliesWon ? 1 : 0;
-		}
-
-		bucket.maps.set(match.map, map);
-	}
-
 	// Only lobbies: the fact links to the match page, and uploads may be private.
 	if (
 		!match.upload &&
@@ -570,11 +573,18 @@ function addMatch(bucket: Bucket, match: StatisticsMatch) {
 	}
 }
 
-/** The top `limit` blueprints of every faction, named from the game's own strings. */
+/**
+ * The top `limit` blueprints of every faction, named from the game's own strings. Ids without a
+ * name (e.g. summaries from an older parser, until the replay-stats job redoes them) are left out.
+ */
 function topPerFaction(tally: BlueprintTally, list: string, limit: number): StatisticsBlueprint[] {
 	const byRace = new Map<number, StatisticsBlueprint[]>();
 	for (const entry of tally.values()) {
-		const name = ACTION_INFO[list]?.[entry.id]?.name ?? `#${entry.id}`;
+		const name = ACTION_INFO[list]?.[entry.id]?.name;
+		if (!name) {
+			continue;
+		}
+
 		byRace.set(entry.raceId, [...(byRace.get(entry.raceId) ?? []), { ...entry, name }]);
 	}
 
@@ -648,22 +658,42 @@ function finish(bucket: Bucket): CommunityStatistics {
 	};
 }
 
-/** Every mode's statistics over the matches played in `range`. */
-export function summarizeStatistics(data: StatisticsData, range: DayRange): StatisticsByMode {
+/**
+ * Every mode's statistics over the matches played in `range`. With a `map`, everything but the
+ * map list (which stays complete, to pick another map from) covers that map only, in the modes
+ * where it was played in `range`; the other modes stay unfiltered.
+ */
+export function summarizeStatistics(
+	data: StatisticsData,
+	range: DayRange,
+	map: string | null = null
+): StatisticsByMode {
 	const inRange = (day: string) =>
 		!((range.from && day < range.from) || (range.to && day > range.to));
 	const buckets = Object.fromEntries(
 		STATISTICS_MODES.map((mode) => [mode, emptyBucket()])
 	) as Record<StatisticsMode, Bucket>;
+	const filtered = new Set(
+		data.matches
+			.filter((match) => map && match.map === map && inRange(match.day))
+			.map((match) => match.mode)
+	);
+	const counts = (mode: StatisticsMode, matchMap: string) =>
+		!filtered.has(mode) || matchMap === map;
 	for (const match of data.matches) {
-		if (inRange(match.day)) {
+		if (!inRange(match.day)) {
+			continue;
+		}
+
+		addMap(buckets[match.mode], match);
+		if (counts(match.mode, match.map)) {
 			addMatch(buckets[match.mode], match);
 		}
 	}
 
 	for (const [key, tally] of Object.entries(data.replays)) {
-		const [day, mode] = key.split('|') as [string, StatisticsMode];
-		if (inRange(day) && buckets[mode]) {
+		const [day, mode, ...rest] = key.split('|') as [string, StatisticsMode, ...string[]];
+		if (inRange(day) && buckets[mode] && counts(mode, rest.join('|'))) {
 			mergeTally(buckets[mode], tally);
 		}
 	}

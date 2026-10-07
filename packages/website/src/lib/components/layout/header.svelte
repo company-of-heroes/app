@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import logo from '@assets/logo-transparent-bg.png';
+	import logo128 from '@assets/logo/logo-128.webp';
+	import logo256 from '@assets/logo/logo-256.webp';
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import HeaderAuth from '$lib/components/layout/header-auth.svelte';
 	import LocaleSwitcher from '$lib/components/layout/locale-switcher.svelte';
@@ -11,17 +12,17 @@
 	import { rememberedReplaysListHref, uploadReplayPath } from '$lib/replays';
 	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
 	import { interactive } from '$lib/utils/variants';
+	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 
 	const { t } = useI18n();
 
 	const navLinks = $derived([
-		{ href: '/players', label: t('Players') },
 		{ href: '/leaderboards', label: t('Leaderboards') },
-		{ href: '/stats', label: t('Stats') },
+		{ href: '/players', label: t('Players') },
 		{ href: '/replays', label: t('Replays') },
-		{ href: '/docs', label: t('Docs') },
-		{ href: '/#donate', label: t('Donations') }
+		{ href: '/stats', label: t('Stats') },
+		{ href: '/wiki', label: t('Wiki') }
 	]);
 
 	let replaysListHref = $state('/replays');
@@ -57,8 +58,8 @@
 			return current.startsWith('/replays');
 		}
 
-		if (path === '/docs') {
-			return current.startsWith('/docs');
+		if (path === '/wiki') {
+			return current.startsWith('/wiki');
 		}
 
 		return false;
@@ -67,18 +68,16 @@
 
 <header class="border-secondary-800 sticky top-0 z-50 flex h-16 items-stretch border-b bg-gray-950">
 	<a href={href('/')} class={cn(interactive, 'flex min-w-0 items-stretch')}>
-		<span
-			class="border-secondary-800 relative h-full w-16 shrink-0 overflow-clip border-r bg-black"
-		>
+		<span class="border-secondary-800 flex w-16 shrink-0 items-center border-r p-1">
 			<img
-				src={logo}
+				src={logo128}
+				srcset="{logo128} 1x, {logo256} 2x"
 				alt={t('Company of Heroes - Companion app')}
-				class="absolute inset-0 size-full object-cover"
+				class="size-full"
 			/>
 		</span>
 		<div class="flex min-w-0 flex-col justify-center px-4">
-			<p class="truncate font-medium text-white">{t('Company of Heroes')}</p>
-			<p class="text-primary truncate text-xs font-medium">{t('Stats')}</p>
+			<p class="truncate font-medium text-white">{t('Global Community')}</p>
 		</div>
 	</a>
 
@@ -95,12 +94,17 @@
 				{link.label}
 			</a>
 		{/each}
-		<DiscordMenu class="hover:text-secondary-400 text-sm font-medium text-white transition-colors">
-			Discord
-		</DiscordMenu>
 	</nav>
 
 	<div class="border-secondary-800 ms-auto flex shrink-0 items-stretch border-l sm:ms-0">
+		<div class="border-secondary-800 hidden h-full items-stretch border-r md:flex">
+			<DiscordMenu
+				label={t('Join Discord')}
+				class="hover:bg-secondary-950/50 hover:text-secondary-400 inline-flex h-full items-center px-4 text-white transition-colors"
+			>
+				<DiscordLogoIcon class="size-5" weight="fill" />
+			</DiscordMenu>
+		</div>
 		<div class="border-secondary-800 hidden h-full items-center border-r px-3 sm:flex">
 			<Button href={uploadHref} variant="primary" size="sm" class="px-3" title={t('Upload replay')}>
 				<UploadSimpleIcon class="size-4" />

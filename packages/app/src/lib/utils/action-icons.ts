@@ -1,13 +1,17 @@
 /**
- * Replay action icons from shared-assets, keyed by file name without `.png`.
+ * Replay action icons and docs icons from shared-assets, keyed by file name without `.png`
+ * (same as the website: some game icons, e.g. doctrine unlocks, only exist in `docs`).
  * Relative glob (not kit alias) so Rolldown/Vite always expands the files; `no-inline`
  * keeps the icons and timeline art out of the JS bundle.
  */
-const actionIconModules = import.meta.glob<string>('../../../../shared-assets/actions/*.{png,webp}', {
-	eager: true,
-	query: '?no-inline',
-	import: 'default'
-});
+const actionIconModules = import.meta.glob<string>(
+	['../../../../shared-assets/actions/*.{png,webp}', '../../../../shared-assets/docs/*.png'],
+	{
+		eager: true,
+		query: '?no-inline',
+		import: 'default'
+	}
+);
 
 const actionIconsByKey = new Map(
 	Object.entries(actionIconModules).map(([path, url]) => {

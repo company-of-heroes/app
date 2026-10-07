@@ -2,7 +2,7 @@
 	import type { DocKind } from '@company-of-heroes/game-data/types';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { markdownProse } from '@company-of-heroes/ui/variants';
+	import { flushHeader, flushHeaderTitle, markdownProse } from '@company-of-heroes/ui/variants';
 	import LightbulbIcon from 'phosphor-svelte/lib/LightbulbIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import { renderMarkdown } from '../comment/markdown';
@@ -58,20 +58,20 @@
 </script>
 
 {#if current || canEdit}
-	<div class="border-secondary-800 border-b p-4">
-		<section class="border-primary/30 bg-primary/5 rounded-md border p-4">
-			<div class="mb-2 flex items-center justify-between gap-3">
-				<h3 class="text-primary flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
-					<LightbulbIcon size={18} weight="fill" />
-					{t('When to use it')}
-				</h3>
-				{#if canEdit && !editing}
-					<Button variant="ghost" size="sm" onclick={edit}>
-						<PencilSimpleIcon size={16} />
-						{current ? t('Edit tip') : t('Add tip')}
-					</Button>
-				{/if}
-			</div>
+	<section class="bg-primary/5">
+		<div class={cn(flushHeader, 'flex min-h-12 items-center justify-between gap-3')}>
+			<h2 class={cn(flushHeaderTitle, 'text-primary flex items-center gap-2')}>
+				<LightbulbIcon size={16} weight="fill" />
+				{t('When to use it')}
+			</h2>
+			{#if canEdit && !editing}
+				<Button variant="ghost" size="sm" onclick={edit}>
+					<PencilSimpleIcon size={16} />
+					{current ? t('Edit tip') : t('Add tip')}
+				</Button>
+			{/if}
+		</div>
+		<div class="px-4 py-3">
 			{#if editing}
 				<Textarea
 					bind:value={draft}
@@ -105,6 +105,6 @@
 			{:else}
 				<p class="text-secondary-400 text-sm">{t('No tip yet. Staff can add one.')}</p>
 			{/if}
-		</section>
-	</div>
+		</div>
+	</section>
 {/if}

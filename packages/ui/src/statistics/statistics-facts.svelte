@@ -17,16 +17,18 @@
 		statistics: CommunityStatistics;
 		/** Show at most this many facts. */
 		limit?: number;
+		/** Filtered on one map: "most played map" would just name it, so it is left out. */
+		filtered?: boolean;
 		class?: string;
 	};
 
-	let { statistics, limit, class: className }: Props = $props();
+	let { statistics, limit, filtered = false, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
 	const facts = $derived.by(() => {
 		const { longestMatch, mostActive, busiestHour, topDoctrine, topUnit } = statistics.facts;
-		const topMap = statistics.maps[0];
+		const topMap = filtered ? undefined : statistics.maps[0];
 		const list: {
 			key: string;
 			icon: typeof ClockIcon;
@@ -103,19 +105,27 @@
 
 <ul class={cn('divide-secondary-800 divide-y text-sm', className)}>
 	{#each facts as fact (fact.key)}
-		<li class="flex items-center gap-3 px-4 py-2">
-			<fact.icon size={18} weight="duotone" class="text-primary shrink-0" />
-			<span class="text-secondary-400 shrink-0">{fact.label}</span>
-			{#if fact.href}
-				<a
-					href={fact.href}
-					class={cn(interactive, 'ml-auto min-w-0 truncate font-medium text-white hover:underline')}
-				>
-					{fact.value}
-				</a>
-			{:else}
-				<span class="ml-auto min-w-0 truncate font-medium text-white">{fact.value}</span>
-			{/if}
+		<li class="flex items-start gap-3 px-4 py-2 sm:items-center">
+			<fact.icon size={18} weight="duotone" class="text-primary mt-px shrink-0 sm:mt-0" />
+			<!-- Stacks label over value on narrow screens so long values are not cut off. -->
+			<div class="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-3">
+				<span class="text-secondary-400 sm:shrink-0">{fact.label}</span>
+				{#if fact.href}
+					<a
+						href={fact.href}
+						class={cn(
+							interactive,
+							'min-w-0 font-medium break-words text-white hover:underline sm:ml-auto sm:truncate'
+						)}
+					>
+						{fact.value}
+					</a>
+				{:else}
+					<span class="min-w-0 font-medium break-words text-white sm:ml-auto sm:truncate"
+						>{fact.value}</span
+					>
+				{/if}
+			</div>
 		</li>
 	{/each}
 </ul>

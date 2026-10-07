@@ -92,6 +92,17 @@ export function ensure(condition: unknown, error: AppError): Result<void, AppErr
 	return condition ? ok(undefined) : err(error);
 }
 
+/** Runs `fn` over the items, at most `concurrency` at a time, collecting the values in order. */
+export function inParallel<T, R>(
+	items: readonly T[],
+	concurrency: number,
+	fn: (item: T) => Task<R>
+): Task<R[]> {
+	return sequence(chunk(items, concurrency), (batch) => all(batch.map(fn))).map((lists) =>
+		lists.flat()
+	);
+}
+
 /** Splits a list into slices of at most `size` items. */
 export function chunk<T>(items: readonly T[], size: number): T[][] {
 	const slices: T[][] = [];

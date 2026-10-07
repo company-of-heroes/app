@@ -11,6 +11,8 @@ import type { PageServerLoad } from './$types';
 export const prerender = false;
 
 const day = z.iso.date();
+/** A lobby map name (`2p_semois`); anything else shows every map. */
+const mapName = z.string().regex(/^[\w .()'-]{1,64}$/);
 
 function pick<T extends string>(values: readonly T[], value: string | null, fallback: T): T {
 	return values.find((entry) => entry === value) ?? fallback;
@@ -34,9 +36,11 @@ function rangeFrom(params: URLSearchParams): StatisticsRange {
 export const load: PageServerLoad = ({ locals, url }) => {
 	const mode: StatisticsMode = pick(STATISTICS_MODES, url.searchParams.get('mode'), '1v1');
 	const range = rangeFrom(url.searchParams);
+	const map = mapName.safeParse(url.searchParams.get('map')).data ?? null;
 	return {
 		mode,
 		range,
-		statistics: unwrapAsync(locals.services.statistics.get(range))
+		map,
+		statistics: unwrapAsync(locals.services.statistics.get(range, map))
 	};
 };

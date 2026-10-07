@@ -217,7 +217,7 @@ export class StatisticsService extends Service {
 			return okAsync(memo.data);
 		}
 
-		return cached('statistics:data:v5', CACHE_SECONDS, () =>
+		return cached('statistics:data:v6', CACHE_SECONDS, () =>
 			ResultAsync.combine([this.rows(), this.replays(), this.uploads()]).andThen(
 				([{ rows, linked }, replays, uploads]) => {
 					const { kept, ...data } = buildStatistics(rows, replays, uploads, linked);
@@ -230,16 +230,19 @@ export class StatisticsService extends Service {
 		});
 	}
 
-	/** Statistics of every mode in a preset period or a custom range of days. */
-	get(range: StatisticsRange): Task<StatisticsByMode> {
+	/**
+	 * Statistics of every mode in a preset period or a custom range of days, optionally on one
+	 * map (see `summarizeStatistics`).
+	 */
+	get(range: StatisticsRange, map: string | null = null): Task<StatisticsByMode> {
+		const summarize = (days: DayRange) =>
+			this.data().map((data) => summarizeStatistics(data, days, map));
 		if ('from' in range) {
-			return this.data().map((data) =>
-				summarizeStatistics(data, { from: range.from, to: range.to })
-			);
+			return summarize({ from: range.from, to: range.to });
 		}
 
-		return cached(`statistics:period:v5:${range.period}`, CACHE_SECONDS, () =>
-			this.data().map((data) => summarizeStatistics(data, periodDays(range.period)))
+		return cached(`statistics:period:v7:${range.period}:${map ?? ''}`, CACHE_SECONDS, () =>
+			summarize(periodDays(range.period))
 		);
 	}
 

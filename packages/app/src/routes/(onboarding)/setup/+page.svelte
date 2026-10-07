@@ -23,7 +23,8 @@
 		validateWarningsLog,
 		type PathValidation
 	} from '$core/config/paths';
-	import Logo from '$lib/files/logo-transparent-bg.png?url';
+	import logo64 from '@assets/logo/logo-64.webp';
+	import logo128 from '@assets/logo/logo-128.webp';
 	import CheckCircleIcon from 'phosphor-svelte/lib/CheckCircleIcon';
 	import WarningCircleIcon from 'phosphor-svelte/lib/WarningCircleIcon';
 	import ArrowSquareOutIcon from 'phosphor-svelte/lib/ArrowSquareOutIcon';
@@ -146,7 +147,12 @@
 <div class="flex min-h-screen w-screen justify-center overflow-auto bg-gray-950/90 font-sans">
 	<div class="flex w-full max-w-xl flex-col gap-6 px-6 py-12 text-white">
 		<div class="flex items-center gap-4 px-1">
-			<img src={Logo} alt={t('Fknoobscoh - CoH app')} class="size-10" />
+			<img
+				src={logo64}
+				srcset="{logo64} 1x, {logo128} 2x"
+				alt={t('Fknoobscoh - CoH app')}
+				class="size-10"
+			/>
 			<div>
 				<p class="font-medium">{t('Company of Heroes')}</p>
 				<p class="text-secondary-400 text-sm">

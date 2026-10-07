@@ -7,8 +7,9 @@
 	import WarningCircleIcon from 'phosphor-svelte/lib/WarningCircleIcon';
 	import WrenchIcon from 'phosphor-svelte/lib/WrenchIcon';
 	import { BootSplash } from '@company-of-heroes/ui/splash';
-	import SplashAnimated from './splash-animated.svelte';
-	import { SPLASH_INTRO_MS, removeBootSplash } from './splash';
+	import { removeBootSplash } from './splash';
+	import logo64 from '@assets/logo/logo-64.webp';
+	import logo128 from '@assets/logo/logo-128.webp';
 	import { expandToMain } from '$core/runtime/window-bounds';
 	import { onMount } from 'svelte';
 	import { useI18n } from '$lib/i18n';
@@ -17,24 +18,7 @@
 
 	const SERVER_POLL_MS = 15_000;
 
-	let introComplete = $state(false);
 	let version = $state<string | null>(null);
-
-	const startIntroTimer = () => {
-		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-			introComplete = true;
-			boot.markSplashIntroComplete();
-			return undefined;
-		}
-
-		introComplete = false;
-		boot.splashIntroComplete = false;
-
-		return window.setTimeout(() => {
-			introComplete = true;
-			boot.markSplashIntroComplete();
-		}, SPLASH_INTRO_MS);
-	};
 
 	onMount(() => {
 		removeBootSplash();
@@ -47,22 +31,11 @@
 		if (boot.phase === 'error') {
 			// The error card needs the full-size window.
 			void expandToMain();
-			return;
 		}
-
-		void boot.splashSession;
-
-		const timer = startIntroTimer();
-
-		return () => {
-			if (timer !== undefined) {
-				window.clearTimeout(timer);
-			}
-		};
 	});
 
 	$effect(() => {
-		if (boot.phase === 'ready' && introComplete) {
+		if (boot.phase === 'ready') {
 			void boot.dismissSplash();
 		}
 	});
@@ -97,9 +70,14 @@
 	>
 		<div class="flex w-full max-w-xl flex-col gap-6 px-6 text-white">
 			<div class="flex items-center gap-4 px-1">
-				<SplashAnimated animate={false} size={40} />
+				<img
+					src={logo64}
+					srcset="{logo64} 1x, {logo128} 2x"
+					alt={t('Fknoobscoh - CoH app')}
+					class="-my-3 size-14"
+				/>
 				<div>
-					<p class="font-medium">{t('Company of Heroes')}</p>
+					<p class="font-medium">{t('Global Community')}</p>
 					<p class="text-secondary-400 text-sm">
 						{boot.serverUnavailable ? t('Maintenance') : t('Startup failed')}
 					</p>

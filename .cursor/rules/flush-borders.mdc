@@ -1,0 +1,48 @@
+---
+description: Check every flush panel, list and grid for missing and double borders before finishing UI work
+alwaysApply: true
+---
+
+# Flush Borders
+
+The website and app use flush panels: rows, columns and sections are separated by 1px `border-secondary-800` lines, not by gaps or cards. Every UI change must end with **exactly one line** between two blocks: never a missing line, never two lines stacked.
+
+## Check before finishing
+
+Look at (or screenshot) every edited panel and check these spots:
+
+- **Shorter column in a grid**: when two or more columns sit side by side, the shorter one must still close with a line under its last row
+- **Last row of a list or panel**: its bottom line must not stack on the parent's bottom border
+- **Last block on the page**: the site footer has its own `border-t`; the block above it must not add a `border-b`
+- **Stacked on mobile**: a `divide-y` between columns that already close with their own line gives a double line below `lg`
+- **Clipped grids**: `overflow-hidden` + negative margins can hide a bottom line you still need
+
+## Patterns
+
+- **Columns of rows**: give each row/cell `border-b` (not `divide-y`) and pull the list `-mb-px` so its last line lands on the parent's closing border
+- **Grid cells**: cells draw `border-r border-b`; the wrapper is `-mb-px overflow-hidden` and the grid `-mr-px` (see `packages/ui/src/docs/docs-ref-grid.svelte`)
+- **Two-column layouts**: `lg:divide-x` only; each column's children close themselves (`[&>*]:border-b`) and the grid is `-mb-px` (see `docs-layout.svelte`)
+
+```svelte
+<!-- ❌ BAD — shorter column has no closing line; on mobile divide-y doubles the line -->
+<div class="grid divide-y lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+	<ul class="divide-y">…</ul>
+	<ul class="divide-y">…</ul>
+</div>
+
+<!-- ✅ GOOD — every row closes itself; the list overlaps the panel's closing line -->
+<div class="grid lg:grid-cols-2 lg:divide-x">
+	<ul class="-mb-px">
+		<li class="border-secondary-800 border-b">…</li>
+	</ul>
+	<ul class="-mb-px">
+		<li class="border-secondary-800 border-b">…</li>
+	</ul>
+</div>
+```
+
+## Do not
+
+- Finish a layout change without checking the bottom of every column and the line above the footer
+- Add `border-b` to the last block before the footer
+- Use `divide-y` on a grid whose columns stack on mobile and already end with a line

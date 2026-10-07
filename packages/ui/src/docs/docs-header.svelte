@@ -3,12 +3,8 @@
 	import type { DocCost, Faction } from '@company-of-heroes/game-data/types';
 	import { FACTION_RACE_ID } from '@company-of-heroes/game-data/factions';
 	import { useI18n } from '@company-of-heroes/i18n';
-	import { cn } from '@company-of-heroes/ui/cn';
-	import { factionIcon, interactive } from '@company-of-heroes/ui/variants';
-	import ArrowLeftIcon from 'phosphor-svelte/lib/ArrowLeftIcon';
 	import { getRaceLabel } from '../format/player-format';
-	import { useHost } from '../host/host.context';
-	import { Badge } from '../ui/badge';
+	import DocsBreadcrumb from './docs-breadcrumb.svelte';
 	import DocsCost from './docs-cost.svelte';
 	import DocsIcon from './docs-icon.svelte';
 
@@ -23,58 +19,59 @@
 		extra?: string;
 		cost?: DocCost;
 		pop?: number;
+		/** A breadcrumb step between the wiki and this page (the weapons list on weapon pages). */
+		parent?: { label: string; href: string };
+		/** Doctrine banner, faded behind the header like in the stats popover. */
+		banner?: string | null;
 		/** Extra content under the description (e.g. reinforce cost). */
 		children?: Snippet;
 	};
 
-	let { name, icon, faction, kicker, help, extra, cost, pop, children }: Props = $props();
-	const host = useHost();
+	let { name, icon, faction, kicker, help, extra, cost, pop, banner, parent, children }: Props =
+		$props();
 	const { t } = useI18n();
 
 	const raceId = $derived(faction ? FACTION_RACE_ID[faction] : null);
-	const backHref = $derived(host.href(faction ? `/docs?faction=${faction}` : '/docs'));
 </script>
 
-<header class="border-secondary-800 border-b p-4">
-	<a
-		href={backHref}
-		class={cn(
-			interactive,
-			'text-secondary-400 hover:text-primary mb-4 inline-flex items-center gap-1.5 text-sm transition-colors'
-		)}
-	>
-		<ArrowLeftIcon size={14} />
-		{t('Documentation')}
-	</a>
-	<div class="flex items-start gap-4">
-		<DocsIcon {icon} {name} class="size-16 sm:size-20" />
+<DocsBreadcrumb {faction} {parent} current={name} />
+
+<!-- The stats popover header at page size: icon, name, kind · faction, cost, help. -->
+<header class="border-secondary-800 relative isolate overflow-hidden border-b px-4 py-6">
+	{#if banner}
+		<img
+			src={banner}
+			alt=""
+			aria-hidden="true"
+			class="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover object-left opacity-35"
+		/>
+		<div
+			class="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-gray-950/30 via-gray-950/70 to-gray-950"
+		></div>
+	{/if}
+	<div class="flex items-center gap-4">
+		<DocsIcon {icon} {name} class="size-16" />
 		<div class="min-w-0 flex-1">
-			<p
-				class="text-secondary-400 flex items-center gap-2 text-xs font-semibold tracking-wider uppercase"
-			>
-				{#if raceId !== null}
-					<img
-						src={host.resolve.factionFlagByRace(raceId)}
-						alt=""
-						class={cn(factionIcon, 'size-4')}
-					/>
-					{t(getRaceLabel(raceId))} ·
-				{/if}
+			<h1 class="font-heading text-3xl leading-tight font-bold text-white">{name}</h1>
+			<p class="text-secondary-400 mt-1 text-sm">
 				{kicker}
+				{#if raceId !== null}
+					<span class="text-secondary-500">·</span>
+					{t(getRaceLabel(raceId))}
+				{/if}
 			</p>
-			<h1 class="font-heading mt-1 text-2xl font-bold text-white sm:text-3xl">{name}</h1>
-			{#if cost || pop}
-				<DocsCost {cost} {pop} class="mt-2" />
-			{/if}
 		</div>
 	</div>
+	{#if cost || pop}
+		<DocsCost {cost} {pop} class="mt-4" />
+	{/if}
 	{#if help || extra}
-		<div class="mt-4 max-w-3xl">
+		<div class="mt-3 max-w-3xl text-sm">
 			{#if help}
-				<p class="text-secondary-200">{help}</p>
+				<p class="text-secondary-300 leading-relaxed">{help}</p>
 			{/if}
 			{#if extra}
-				<Badge variant="default" class="mt-2">{extra}</Badge>
+				<p class="text-primary mt-1.5 font-semibold">{extra}</p>
 			{/if}
 		</div>
 	{/if}

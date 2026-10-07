@@ -38,9 +38,7 @@
 				<p class={cn('font-bold tabular-nums', winRateClass(row.wins, decided))}>
 					{percent(row.wins, decided)}
 				</p>
-				{#if !compact}
-					<p class="text-secondary-500 text-xs">{t('win rate')}</p>
-				{/if}
+				<p class="text-secondary-500 text-xs">{t('win rate')}</p>
 			</div>
 		</li>
 	{/each}

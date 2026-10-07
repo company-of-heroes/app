@@ -83,6 +83,9 @@ export const tooltipPanel = cn(
 	'border-secondary-800 bg-gray-950 shadow-lg shadow-black/30'
 );
 
+/** A section of an edge-to-edge popover (`tooltipPanel` with `p-0`): full-width divider on top. */
+export const popoverSection = 'border-secondary-800 border-t px-3 py-2.5';
+
 export const dropdownHeader =
 	'border-secondary-800 flex items-center justify-between border-b px-4 py-3';
 
@@ -111,6 +114,26 @@ export const tabTrigger =
 	'not-disabled:hover:bg-secondary-950/50 ' +
 	'not-disabled:data-[state=active]:border-primary/20 not-disabled:data-[state=active]:bg-primary/5 not-disabled:data-[state=active]:text-primary ' +
 	'disabled:text-secondary-500';
+
+/** Warm block for what a row unlocks or researches (a building's upgrades, a doctrine tier's unlocks). */
+export const accentBlock = cn(
+	'from-primary/[0.14] to-primary/[0.05] bg-linear-to-b',
+	'shadow-[inset_2px_0_0_var(--color-primary)]'
+);
+
+/** The orange label at the top of an `accentBlock`. */
+export const accentBlockLabel = cn(
+	tableHeadText,
+	'text-primary flex items-center gap-1.5 px-4 pt-2.5 pb-1.5'
+);
+
+/** Bold page tab (stats mode, wiki factions); the selected one (`data-state="on"`) gets the dark secondary fill. */
+export const pageTab = cn(
+	'inline-flex shrink-0 items-center gap-2 rounded-md border border-transparent px-4 py-1.5 font-bold whitespace-nowrap text-white transition-colors duration-150',
+	'disabled:text-secondary-500 cursor-pointer disabled:cursor-not-allowed',
+	'not-disabled:hover:bg-secondary-950/50',
+	'data-[state=on]:border-secondary-700 data-[state=on]:bg-secondary-800 data-[state=on]:not-disabled:hover:bg-secondary-800'
+);
 
 /**
  * Spreadsheet-style tab on top of a panel. The active tab uses the header background

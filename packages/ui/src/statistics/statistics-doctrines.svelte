@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { factionIcon } from '@company-of-heroes/ui/variants';
+	import { factionIcon, interactive, tableHeadText } from '@company-of-heroes/ui/variants';
 	import { useHost } from '../host/host.context';
 	import { getRaceLabel } from '../format/player-format';
 	import { doctrineBannerFile } from '../replay/replay-stats';
 	import { formatCount, percent, winRateClass } from './format';
 	import type { StatisticsDoctrine, StatisticsReplayPlayers } from './types';
+	import { InfoPopover } from './info-popover.svelte';
+	import StatisticsInfoPopover from './statistics-info-popover.svelte';
 
 	type Props = {
 		doctrines: StatisticsDoctrine[];
@@ -19,6 +21,7 @@
 	const host = useHost();
 
 	const RACES = [0, 2, 1, 3];
+	const popover = new InfoPopover();
 
 	function bannerUrl(row: StatisticsDoctrine): string | null {
 		const file = doctrineBannerFile({
@@ -34,10 +37,13 @@
 		{@const rows = doctrines.filter((row) => row.raceId === raceId)}
 		{@const picks = rows.reduce((total, row) => total + row.picks, 0)}
 		<section class="bg-gray-950">
-			<h3 class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white">
+			<h3 class={cn('bg-secondary-950/90 flex items-center gap-2 px-4 py-2.5', tableHeadText)}>
 				<img src={host.resolve.factionFlagByRace(raceId)} alt="" class={factionIcon} />
-				{t(getRaceLabel(raceId))}
-				<span class="text-secondary-500 ml-auto text-xs font-normal tabular-nums">
+				<!-- Trims the line box to the caps so uppercase text centres on the flag. -->
+				<span class="[text-box:trim-both_cap_alphabetic]">{t(getRaceLabel(raceId))}</span>
+				<span
+					class="text-secondary-500 ml-auto font-normal tracking-normal normal-case tabular-nums [text-box:trim-both_cap_alphabetic]"
+				>
 					{t('{count} players', {
 						count: formatCount(
 							replayPlayers.find((entry) => entry.raceId === raceId)?.players ?? 0,
@@ -63,7 +69,19 @@
 							class="from-secondary-950/25 via-secondary-950/60 to-secondary-950/92 pointer-events-none absolute inset-0 bg-linear-to-r"
 						></div>
 					{/if}
-					<div class="relative flex items-center gap-3 px-4 py-2.5">
+					<button
+						type="button"
+						class={cn(
+							interactive,
+							'hover:bg-secondary-950/40 relative flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors'
+						)}
+						{...popover.trigger({
+							kind: 'doctrine',
+							raceId,
+							doctrine: row.doctrine,
+							name: row.name
+						})}
+					>
 						<div class="min-w-0 flex-1">
 							<p class="truncate font-medium text-white">{row.name}</p>
 							<p class="text-secondary-400 text-xs tabular-nums">
@@ -76,9 +94,11 @@
 							</p>
 							<p class="text-secondary-500 text-xs">{t('win rate')}</p>
 						</div>
-					</div>
+					</button>
 				</div>
 			{/each}
 		</section>
 	{/each}
 </div>
+
+<StatisticsInfoPopover {popover} />

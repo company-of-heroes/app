@@ -95,7 +95,7 @@ importers:
         version: 2.1.0
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/7e06b18ba4eba1eeef560e7322bb17568f022a65
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -431,7 +431,7 @@ importers:
         version: link:../ui
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/7e06b18ba4eba1eeef560e7322bb17568f022a65
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -539,7 +539,7 @@ importers:
         version: link:../i18n
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/7e06b18ba4eba1eeef560e7322bb17568f022a65
       '@internationalized/date':
         specifier: ^3.12.0
         version: 3.12.0
@@ -609,7 +609,7 @@ importers:
         version: link:../ui
       '@fknoobs/replay-parser':
         specifier: github:fknoobs/replay-analyzer
-        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b
+        version: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/7e06b18ba4eba1eeef560e7322bb17568f022a65
       '@fontsource/nunito-sans':
         specifier: ^5.3.0
         version: 5.3.0
@@ -1739,8 +1739,8 @@ packages:
   '@fabianlars/tauri-plugin-oauth@2.1.0':
     resolution: {integrity: sha512-KElVn5VWJ7FPTbWvZ38NNWsxTMQ4wKNnWSB75eIh/CwO0RLLNH1eL3POdulluiaS4f0TWGdkL9nlD2ZKhi8DIQ==}
 
-  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b':
-    resolution: {tarball: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b}
+  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/7e06b18ba4eba1eeef560e7322bb17568f022a65':
+    resolution: {tarball: https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/7e06b18ba4eba1eeef560e7322bb17568f022a65}
     version: 2.1.0
 
   '@floating-ui/core@1.8.0':
@@ -3661,8 +3661,8 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  electron-to-chromium@1.5.444:
-    resolution: {integrity: sha512-5ss/uJfoDYDHT0lfJzT6FbcskIzROIOPf0BbbFkGcvDzoJU7i//9GDrwwIHQVmIsrAGiF3ihpADBRIsrEFt1rQ==}
+  electron-to-chromium@1.5.447:
+    resolution: {integrity: sha512-vhYiRwTPq7tvwplP6fOFVRJxfZifavlr6tK8FD1EO5RxRuvZ9qdQM0lr1mvNBeDe1s2XrfL3n5BBwvigXJ7KuA==}
 
   emittery@1.2.1:
     resolution: {integrity: sha512-sFz64DCRjirhwHLxofFqxYQm6DCp6o0Ix7jwKQvuCHPn4GMRZNuBZyLPu9Ccmk/QSCAMZt6FOUqA8JZCQvA9fw==}
@@ -6674,7 +6674,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.11.1
 
-  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/f8395c83de96213aae60917db22caa065c70345b': {}
+  '@fknoobs/replay-parser@https://codeload.github.com/fknoobs/replay-analyzer/tar.gz/7e06b18ba4eba1eeef560e7322bb17568f022a65': {}
 
   '@floating-ui/core@1.8.0':
     dependencies:
@@ -8362,7 +8362,7 @@ snapshots:
     dependencies:
       baseline-browser-mapping: 2.11.27
       caniuse-lite: 1.0.30001814
-      electron-to-chromium: 1.5.444
+      electron-to-chromium: 1.5.447
       node-releases: 2.0.57
       update-browserslist-db: 1.3.3(browserslist@4.29.3)
 
@@ -8620,7 +8620,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  electron-to-chromium@1.5.444: {}
+  electron-to-chromium@1.5.447: {}
 
   emittery@1.2.1: {}
 

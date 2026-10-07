@@ -46,6 +46,8 @@ export type DocModel = {
 
 export type DocUnit = {
 	slug: string;
+	/** Replay objectId: index in the game's sorted blueprint list. */
+	id?: number;
 	faction: Faction;
 	kind?: 'soldiers' | 'vehicles';
 	name: string;
@@ -58,17 +60,23 @@ export type DocUnit = {
 	reinforce?: DocCost;
 	size?: number;
 	models?: DocModel[];
-	/** In-game 1–5 ratings (`infantry`, `lightarmor`, `heavyarmor`, `structures`). */
+	/** In-game 1–10 ratings (`infantry`, `lightarmor`, `heavyarmor`, `structures`). */
 	ratings?: Record<string, number>;
+	/** Suppression recovery and speed per cover type; only types that differ from 1. */
+	cover?: Record<string, DocUnitCover>;
 	abilities?: string[];
 	upgrades?: string[];
 	veterancy?: DocVeterancyRank[];
 	/** Building or squad (Commonwealth trucks) slugs. */
 	producedBy?: string[];
+	/** Doctrine call-in ability, when no building produces it; `cost` is then that call-in's cost. */
+	callIn?: string;
 };
 
 export type DocBuilding = {
 	slug: string;
+	/** Replay objectId: index in the game's sorted blueprint list. */
+	id?: number;
 	faction: Faction;
 	name: string;
 	help?: string;
@@ -84,6 +92,8 @@ export type DocBuilding = {
 
 export type DocCommander = {
 	slug: string;
+	/** Replay objectId of the doctrine pick (its lock upgrade). */
+	id?: number;
 	faction: Faction;
 	name: string;
 	help?: string;
@@ -97,6 +107,8 @@ export type DocCommander = {
 
 export type DocUpgrade = {
 	slug: string;
+	/** Replay objectId: index in the game's sorted blueprint list. */
+	id?: number;
 	factions: Faction[];
 	name: string;
 	help?: string;
@@ -106,10 +118,14 @@ export type DocUpgrade = {
 	requires?: string[];
 	unlocks?: { units?: string[]; abilities?: string[]; upgrades?: string[] };
 	effects?: DocModifier[];
+	/** Weapons of the slot items it adds (weapon packages). */
+	weapons?: string[];
 };
 
 export type DocAbility = {
 	slug: string;
+	/** Replay objectId: index in the game's sorted blueprint list. */
+	id?: number;
 	factions: Faction[];
 	name: string;
 	help?: string;
@@ -130,6 +146,22 @@ export type DocWeaponTarget = {
 	accuracy?: number;
 	penetration?: number;
 	suppression?: number;
+};
+
+/** A weapon's multipliers against a target in one cover type. */
+export type DocCoverMultipliers = {
+	accuracy?: number;
+	damage?: number;
+	penetration?: number;
+	suppression?: number;
+};
+
+/** How a squad fares in one cover type. */
+export type DocUnitCover = {
+	/** Suppression recovery rate multiplier. */
+	suppressionRecovery?: number;
+	/** Move speed multiplier. */
+	speed?: number;
 };
 
 export type DocWeapon = {
@@ -156,6 +188,8 @@ export type DocWeapon = {
 	areaDamage?: DocByRange;
 	/** Multipliers against target types that differ from 1. */
 	targets?: Record<string, DocWeaponTarget>;
+	/** Multipliers against a target in each cover type (`tp_heavy`, `tp_light`, …); only types that differ from 1. */
+	cover?: Record<string, DocCoverMultipliers>;
 };
 
 export type DocMeta = {
@@ -168,11 +202,22 @@ export type DocMeta = {
 export type DocRef = {
 	kind: DocKind | 'ability' | 'upgrade';
 	slug: string;
+	/** Replay objectId (doctrine id for commanders); opens the stats popover. */
+	id?: number;
+	/** Upgrades that add a weapon: that weapon's slug, so the upgrade links to the weapon page. */
+	weapon?: string;
 	name: string;
 	icon?: string;
 	faction?: Faction;
 	cost?: DocCost;
 };
+
+/** A weapon in the weapons table: its ref with the numbers the table shows. */
+export type DocWeaponRow = DocRef &
+	Pick<DocWeapon, 'damage' | 'range' | 'accuracy'> & {
+		/** Units and buildings that carry it, or can get it from an upgrade. */
+		usedBy: number;
+	};
 
 export type CommanderTier = {
 	upgrade: DocUpgrade;
@@ -184,11 +229,23 @@ export type CommanderTier = {
 
 export type UnitCallIn = { commander: DocRef; tier: DocRef; ability?: DocRef };
 
+/** An upgrade in a page list, with links to the weapons it adds. */
+export type DocUpgradeEntry = DocUpgrade & {
+	/** The one weapon the upgrade is about (title link); see `GameDocs.mainWeapon`. */
+	weapon?: string;
+	/** Every weapon it adds, also through the abilities it unlocks. */
+	weaponRefs: DocRef[];
+};
+
 export type UnitPage = {
 	unit: DocUnit;
 	weapons: DocWeapon[];
 	abilities: DocAbility[];
-	upgrades: DocUpgrade[];
+	upgrades: DocUpgradeEntry[];
+	/** Building research that applies to this unit (BARs for riflemen), with where it is researched. */
+	research: (DocUpgradeEntry & { researchedAt: DocRef[] })[];
+	/** Panzer Elite veterancy, bought per rank on one of two tracks, in rank order. */
+	vetUpgrades: { offensive: DocUpgradeEntry[]; defensive: DocUpgradeEntry[] };
 	producedBy: DocRef[];
 	calledInBy: UnitCallIn[];
 };
@@ -196,7 +253,7 @@ export type UnitPage = {
 export type BuildingPage = {
 	building: DocBuilding;
 	produces: DocRef[];
-	research: DocUpgrade[];
+	research: DocUpgradeEntry[];
 	abilities: DocAbility[];
 	weapons: DocWeapon[];
 };
@@ -209,12 +266,19 @@ export type CommanderPage = {
 export type WeaponPage = {
 	weapon: DocWeapon;
 	usedBy: DocRef[];
+	/** Upgrades that add this weapon, with the units (or the building) that get it. */
+	upgradeFor: { upgrade: DocRef; units: DocRef[] }[];
 };
 
 export type FactionOverview = {
 	faction: Faction;
-	/** Buildings that produce units, with what they produce. */
-	buildings: (DocRef & { produces: DocRef[] })[];
+	/** Buildings that produce units, with what they produce and the upgrades researched there. */
+	buildings: (DocRef & {
+		/** "HQ", "T1", …; missing for producers outside the tech order. */
+		tier?: string;
+		produces: DocRef[];
+		research: DocRef[];
+	})[];
 	/** Defenses, emplacements and other structures (one per name). */
 	structures: DocRef[];
 	/** Units no building produces: commander call-ins, emplacement crews, starting units. */

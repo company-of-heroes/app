@@ -1,7 +1,7 @@
 import type { RecordModel } from 'pocketbase';
 import { err, errAsync, ok, okAsync, ResultAsync, type Result } from 'neverthrow';
 import { badRequest, forbidden, notFound, upstream, type AppError } from '../errors';
-import { ensure, fromAsync, fromPb, pbMaybe, sequence, type Task } from '../result';
+import { ensure, fromAsync, fromPb, inParallel, pbMaybe, sequence, type Task } from '../result';
 import { sameJson } from '../domain/json';
 import { publicRecord } from '../domain/public-record';
 import {
@@ -22,7 +22,7 @@ import {
 	type LobbyUpdate
 } from '../domain/lobby-writes';
 import { replayHasAi, SKIRMISH_FIELDS } from '../domain/replay-skirmish';
-import { summarizeReplay } from '../domain/replay-summary';
+import { REPLAY_SUMMARY_VERSION, summarizeReplay } from '../domain/replay-summary';
 import type { ReplaySummary } from '@company-of-heroes/ui/statistics/types';
 import { Service } from './service';
 
@@ -100,7 +100,9 @@ const INDEX_REPAIR_SCAN = 200;
 /** Stored replays downloaded and checked for AI per `markReplaySkirmishes` run. */
 const SKIRMISH_SCAN_BATCH = 25;
 /** Stored replays fully parsed per `summarizeReplays` run (a parse costs ~10-100 ms CPU). */
-const REPLAY_STATS_BATCH = 8;
+const REPLAY_STATS_BATCH = 32;
+/** Stored replays downloaded and parsed at the same time (downloads dominate the wait). */
+const REPLAY_STATS_CONCURRENCY = 6;
 
 function checkReplay(upload: ReplayUpload): Result<void, AppError> {
 	if (upload.file.size < MIN_REPLAY_BYTES) {
@@ -528,20 +530,22 @@ export class LobbiesService extends Service {
 	}
 
 	/**
-	 * Scheduled: summarizes stored replays that have no `replayStats` yet (doctrines, units,
-	 * upgrades, openings for community statistics). A replay that cannot be downloaded gets an
-	 * empty summary with version 0, so it does not block the queue.
+	 * Scheduled: summarizes stored replays that have no `replayStats` yet, or one from an older
+	 * summary version (doctrines, units, upgrades, openings for community statistics). A replay
+	 * that cannot be downloaded gets an empty summary with version 0, so it does not block the queue.
 	 */
 	summarizeReplays(): Task<{ processed: number; more: boolean }> {
 		return fromPb(
 			this.lobbies.getList<LobbyRecord>(1, REPLAY_STATS_BATCH, {
-				filter: "replay != '' && replayStats = null",
+				filter: `replay != '' && (replayStats = null || (replayStats.v > 0 && replayStats.v < ${REPLAY_SUMMARY_VERSION}))`,
 				sort: 'id',
 				fields: 'id,collectionId,replay'
 			}),
 			'Could not load matches'
 		).andThen((rows) =>
-			sequence(rows.items, (lobby) => this.summarizeStoredReplay(lobby)).map((done) => ({
+			inParallel(rows.items, REPLAY_STATS_CONCURRENCY, (lobby) =>
+				this.summarizeStoredReplay(lobby)
+			).map((done) => ({
 				processed: done.length,
 				more: rows.totalItems > rows.items.length
 			}))

@@ -5,22 +5,17 @@
 	import ArrowsInLineHorizontalIcon from 'phosphor-svelte/lib/ArrowsInLineHorizontal';
 	import MagnifyingGlassMinusIcon from 'phosphor-svelte/lib/MagnifyingGlassMinus';
 	import MagnifyingGlassPlusIcon from 'phosphor-svelte/lib/MagnifyingGlassPlus';
-	import ClockIcon from 'phosphor-svelte/lib/Clock';
 	import InfoIcon from 'phosphor-svelte/lib/Info';
 	import { tooltip } from '@company-of-heroes/ui/tooltip';
 	import { Popover } from 'bits-ui';
 	import { tryUseHost } from '../host/host.context';
 	import { Button } from '../ui/button';
-	import { interactive, tooltipPanel } from '../variants';
+	import { interactive, popoverSection, tooltipPanel } from '../variants';
 	import TimelineRowIcon from './replay-timeline-row-icon.svelte';
+	import ActionCostChips from './action-cost-chips.svelte';
+	import BlueprintStats from './blueprint-stats.svelte';
 	import { actionIconKey } from './action-icons';
-	import {
-		actionCost,
-		blueprintRef,
-		RESOURCE_COLOURS,
-		type ActionCost,
-		type BlueprintRef
-	} from './replay-costs';
+	import { actionCost, blueprintRef, type ActionCost, type BlueprintRef } from './replay-costs';
 	import { loadActionInfo, lookupActionInfo, type ActionInfo } from './replay-action-info';
 	import {
 		doctrineArt,
@@ -325,18 +320,6 @@
 		CANCEL_QUEUE: 'Cancelled order',
 		CANCEL_CONSTRUCTION: 'Cancelled building'
 	};
-	const RESOURCE_LABELS = {
-		manpower: 'Manpower',
-		fuel: 'Fuel',
-		munition: 'Munitions',
-		popcap: 'Population'
-	} as const;
-	const COST_RESOURCES = ['manpower', 'fuel', 'munition', 'popcap'] as const;
-	const resourceIcons = Object.fromEntries(
-		COST_RESOURCES.map((resource) => [resource, resolveIcon(`resource_${resource}`)])
-	);
-	const formatAmount = (value: number) => Math.round(value).toLocaleString();
-
 	/** Icon width (size-12) plus the stack offset and badge: closer icons would overlap. */
 	const ICON_SLOT_PX = 60;
 	/** Maximum fan-out of a stack's back cards, however many actions it holds. */
@@ -766,83 +749,57 @@
 			onCloseAutoFocus={(event) => event.preventDefault()}
 			class={cn(
 				tooltipPanel,
-				'z-50 w-64 max-w-none p-3',
+				'z-50 w-64 max-w-none overflow-hidden p-0',
 				pinned ? 'ring-primary/40 ring-1' : 'pointer-events-none'
 			)}
 		>
 			{#if shown}
 				{@const item = shown.item}
 				{@const cost = item.cost}
-				<div class="flex items-center gap-3">
-					{@render iconBox({ ...item, veterancy: 0 }, shown.row, 'shrink-0')}
-					<div class="min-w-0 flex-1">
-						<p class="flex items-center gap-1.5 leading-tight font-semibold text-white">
-							<span class="truncate">{shownInfo?.name ?? item.name}</span>
-							{#if pinned && shownInfo && (shownInfo.help || shownInfo.extra)}
-								<button
-									type="button"
-									class={cn(interactive, 'text-secondary-400 hover:text-primary shrink-0')}
-									aria-label={t('Description')}
-									{@attach tooltip(infoTooltip(shownInfo), {
-										placement: 'right',
-										delay: [0, null],
-										maxWidth: 300
-									})}
-								>
-									<InfoIcon class="size-4" weight="bold" />
-								</button>
-							{/if}
-						</p>
-						<p class="text-secondary-400 mt-1 text-xs">
-							{t(TYPE_LABELS[item.type] ?? item.type)}
-							<span class="text-secondary-500">·</span>
-							<span class="tabular-nums">{item.timestamp}</span>
-						</p>
+				<div class="p-3">
+					<div class="flex items-center gap-3">
+						{@render iconBox({ ...item, veterancy: 0 }, shown.row, 'shrink-0')}
+						<div class="min-w-0 flex-1">
+							<p class="flex items-center gap-1.5 leading-tight font-semibold text-white">
+								<span class="truncate">{shownInfo?.name ?? item.name}</span>
+								{#if pinned && shownInfo && (shownInfo.help || shownInfo.extra)}
+									<button
+										type="button"
+										class={cn(interactive, 'text-secondary-400 hover:text-primary shrink-0')}
+										aria-label={t('Description')}
+										{@attach tooltip(infoTooltip(shownInfo), {
+											placement: 'right',
+											delay: [0, null],
+											maxWidth: 300
+										})}
+									>
+										<InfoIcon class="size-4" weight="bold" />
+									</button>
+								{/if}
+							</p>
+							<p class="text-secondary-400 mt-1 text-xs">
+								{t(TYPE_LABELS[item.type] ?? item.type)}
+								<span class="text-secondary-500">·</span>
+								<span class="tabular-nums">{item.timestamp}</span>
+							</p>
+						</div>
 					</div>
-				</div>
-				{#if cost}
-					<div class="mt-3 flex flex-wrap items-center gap-1.5">
-						{#each COST_RESOURCES as resource (resource)}
-							{#if cost[resource]}
-								<span
-									class={cn(
-										'bg-secondary-900 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm font-semibold tabular-nums',
-										cost.refunded && 'line-through opacity-60'
-									)}
-									style:color={RESOURCE_COLOURS[resource]}
-								>
-									{#if resourceIcons[resource]}
-										<img
-											src={resourceIcons[resource]}
-											alt={t(RESOURCE_LABELS[resource])}
-											class="size-4"
-										/>
-									{/if}
-									{formatAmount(cost[resource]!)}
-								</span>
-							{/if}
-						{/each}
-						{#if cost.command}
-							<span
-								class="bg-secondary-900 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm tabular-nums"
-							>
-								<span class="text-[10px] font-bold text-yellow-300">CP</span>
-								{formatAmount(cost.command)}
-							</span>
+					{#if cost}
+						<ActionCostChips {cost} class="mt-3" />
+						{#if cost.refunded}
+							<p class="mt-1.5 text-xs font-medium text-green-400">{t('Refunded')}</p>
 						{/if}
-						{#if cost.seconds}
-							<span class="text-secondary-400 inline-flex items-center gap-1 text-xs tabular-nums">
-								<ClockIcon class="size-3.5" />
-								{Math.round(cost.seconds)}s
-							</span>
-						{/if}
-					</div>
-					{#if cost.refunded}
-						<p class="mt-1.5 text-xs font-medium text-green-400">{t('Refunded')}</p>
 					{/if}
+					{#if !pinned}
+						<p class="text-secondary-500 mt-2.5 text-[11px]">{t('Click for details')}</p>
+					{/if}
+				</div>
+				<!-- Game stats only once pinned: hovering stays a quick glance. -->
+				{#if pinned && item.ref}
+					<BlueprintStats list={item.ref.list} id={item.ref.objectID} />
 				{/if}
 				{#if item.vetSteps.length > 0}
-					<div class="border-secondary-800 mt-3 space-y-1 border-t pt-2 text-xs">
+					<div class={cn(popoverSection, 'space-y-1 text-xs')}>
 						{#each item.vetSteps as step (step.level)}
 							<p class="flex items-center gap-2">
 								{#if veterancyIcons[step.level - 1]}
@@ -854,9 +811,6 @@
 						{/each}
 					</div>
 				{/if}
-			{/if}
-			{#if shown && !pinned}
-				<p class="text-secondary-500 mt-2.5 text-[11px]">{t('Click for details')}</p>
 			{/if}
 		</Popover.Content>
 	</Popover.Portal>

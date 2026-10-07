@@ -105,7 +105,7 @@
 		<div class="bg-secondary-800 grid gap-px sm:grid-cols-2 xl:grid-cols-4">
 			{#each [0, 1, 2, 3] as column (column)}
 				<div class="bg-gray-950">
-					<div class="flex items-center gap-2 px-4 py-2.5">
+					<div class="bg-secondary-950/90 flex items-center gap-2 px-4 py-2.5">
 						<Skeleton class="size-5 shrink-0 rounded-full" />
 						{@render line('h-5', 'w-24', 'h-3.5')}
 					</div>

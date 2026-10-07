@@ -3,7 +3,7 @@ import type { ReplaysQuery } from '@company-of-heroes/api';
 import { cached } from '../cache';
 import { RELIC_BASE } from '../clients/relic';
 import { badRequest, conflict, forbidden, notFound, upstream, type AppError } from '../errors';
-import { ensure, fromAsync, fromPb, pbMaybe, sequence, type Task } from '../result';
+import { ensure, fromAsync, fromPb, inParallel, pbMaybe, type Task } from '../result';
 import {
 	buildStatsSnapshot,
 	displayMapName,
@@ -31,12 +31,14 @@ import {
 	type MemberUpload,
 	type PublishFromMatch
 } from '../domain/member-replay-writes';
-import { summarizeReplay } from '../domain/replay-summary';
+import { REPLAY_SUMMARY_VERSION, summarizeReplay } from '../domain/replay-summary';
 import type { ReplaySummary } from '@company-of-heroes/ui/statistics/types';
 import { Service } from './service';
 
 /** Uploaded replays fully parsed per `summarizeUploads` run (a parse costs ~10-100 ms CPU). */
-const UPLOAD_STATS_BATCH = 20;
+const UPLOAD_STATS_BATCH = 30;
+/** Uploads downloaded and parsed at the same time (downloads dominate the wait). */
+const UPLOAD_STATS_CONCURRENCY = 6;
 
 type ReplayRecord = {
 	id: string;
@@ -508,7 +510,8 @@ export class MemberReplaysService extends Service {
 
 	/**
 	 * Scheduled: summarizes uploaded replays (member and personal library) that have no
-	 * `replayStats` yet, for the community statistics (anonymous totals only). A file that
+	 * `replayStats` yet, or one from an older summary version, for the community statistics
+	 * (anonymous totals only). A file that
 	 * cannot be downloaded gets an empty summary with version 0, so it does not block the queue.
 	 */
 	summarizeUploads(): Task<{ processed: number; more: boolean }> {
@@ -517,14 +520,16 @@ export class MemberReplaysService extends Service {
 				1,
 				UPLOAD_STATS_BATCH,
 				{
-					filter: "replayStats = null && visibility != 'deleted'",
+					filter: `(replayStats = null || (replayStats.v > 0 && replayStats.v < ${REPLAY_SUMMARY_VERSION})) && visibility != 'deleted'`,
 					sort: 'id',
 					fields: 'id,collectionId,file'
 				}
 			),
 			'Could not load replays'
 		).andThen((rows) =>
-			sequence(rows.items, (record) => this.summarizeUpload(record)).map((done) => ({
+			inParallel(rows.items, UPLOAD_STATS_CONCURRENCY, (record) =>
+				this.summarizeUpload(record)
+			).map((done) => ({
 				processed: done.length,
 				more: rows.totalItems > rows.items.length
 			}))

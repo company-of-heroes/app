@@ -1,55 +1,28 @@
 <script lang="ts">
 	import type { DocRef } from '@company-of-heroes/game-data/types';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive } from '@company-of-heroes/ui/variants';
-	import { useHost } from '../host/host.context';
-	import DocsCost from './docs-cost.svelte';
-	import DocsIcon from './docs-icon.svelte';
-	import { docsPath } from './format';
+	import DocsRefRow from './docs-ref-row.svelte';
 
 	type Props = {
 		refs: DocRef[];
-		/** Hide costs (e.g. weapon lists). */
-		showCost?: boolean;
+		/** Small grey line under every name (e.g. "Upgrade"). */
+		note?: string;
+		/** Classes for the grid itself (e.g. column overrides). */
 		class?: string;
 	};
 
-	let { refs, showCost = true, class: className }: Props = $props();
-	const host = useHost();
-
-	const row = 'border-secondary-800 flex min-w-0 items-center gap-3 rounded-sm border p-2';
+	let { refs, note, class: className }: Props = $props();
 </script>
 
-<ul class={cn('grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3', className)}>
-	{#each refs as ref (`${ref.kind}:${ref.slug}`)}
-		{@const path = docsPath(ref)}
-		<li class="min-w-0">
-			{#if path}
-				<a
-					href={host.href(path)}
-					class={cn(
-						interactive,
-						row,
-						'hover:border-secondary-600 hover:bg-secondary-900/50 transition-colors'
-					)}
-				>
-					{@render content(ref)}
-				</a>
-			{:else}
-				<div class={row}>
-					{@render content(ref)}
-				</div>
-			{/if}
-		</li>
-	{/each}
-</ul>
-
-{#snippet content(ref: DocRef)}
-	<DocsIcon icon={ref.icon} name={ref.name} />
-	<span class="min-w-0">
-		<span class="block truncate text-sm font-semibold text-white">{ref.name}</span>
-		{#if showCost && ref.cost}
-			<DocsCost cost={ref.cost} compact class="text-secondary-300" />
-		{/if}
-	</span>
-{/snippet}
+<!-- Stats rows in columns: every cell draws its right and bottom line. The wrapper clips the right
+edge and overlaps the panel's bottom border by a pixel, so short columns still end in a line
+without a double line under the longest one. -->
+<div class="-mb-px overflow-hidden">
+	<ul class={cn('-mr-px grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3', className)}>
+		{#each refs as ref (`${ref.kind}:${ref.slug}`)}
+			<li class="border-secondary-800 min-w-0 border-r border-b">
+				<DocsRefRow {ref} {note} />
+			</li>
+		{/each}
+	</ul>
+</div>

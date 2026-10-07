@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { ToggleGroup } from 'bits-ui';
 	import { cn } from '@company-of-heroes/ui/cn';
+	import { pageTab } from '@company-of-heroes/ui/variants';
 	import { watch } from 'runed';
 
 	function isEmpty(value: string) {
@@ -64,13 +65,7 @@
 		<ToggleGroup.Item
 			value={item.value}
 			class={variant === 'tabs'
-				? cn(
-						// Bold page tabs; the selected one gets the dark secondary fill.
-						'inline-flex shrink-0 items-center gap-2 rounded-md border border-transparent px-4 py-1.5 font-bold whitespace-nowrap text-white transition-colors duration-150',
-						'disabled:text-secondary-500 cursor-pointer disabled:cursor-not-allowed',
-						'not-disabled:hover:bg-secondary-950/50',
-						'data-[state=on]:border-secondary-700 data-[state=on]:bg-secondary-800 data-[state=on]:not-disabled:hover:bg-secondary-800'
-					)
+				? pageTab
 				: cn(
 						itemClass,
 						// Each option reads as a button: ghost when idle, a lighter secondary fill when selected.

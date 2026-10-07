@@ -4,7 +4,7 @@
 	"version": "1.0.1",
 	"type": "module",
 	"exports": {
-		"./logo": "./logo-transparent-bg.png",
+		"./logo/*": "./logo/*",
 		"./page-bg": "./assets/art_ui_textures_textures_fe_bkg_cxp1.png",
 		"./screens/*": "./screens/*",
 		"./ranks/*": "./ranks/*",

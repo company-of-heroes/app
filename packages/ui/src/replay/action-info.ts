@@ -1089,11 +1089,6 @@ export const ACTION_INFO: Record<string, Record<number, ActionInfo>> = {
 		1914: { name: 'Flakvierling 38 20mm AA', help: 'Construct a Flakvierling 38 20mm.' }
 	},
 	sbps: {
-		2: {
-			name: 'Airborne',
-			help: 'Well trained Paratroopers can destroy Enemy positions with Satchel Charges, and can be equipped with M18 Recoilless Rifles for addition protection against all Vehicle types.',
-			extra: 'Good vs. Buildings'
-		},
 		10: {
 			name: 'Engineers',
 			help: 'Call in Engineers to construct and Repair Structures. Engineers can be equipped with Minesweepers, Flamethrowers, Wire Cutters and Demolition Charges.',
@@ -1204,6 +1199,12 @@ export const ACTION_INFO: Record<string, Record<number, ActionInfo>> = {
 			help: 'British Infantry are dogged, well-trained soldiers with a variety of versatile upgrades that enable them to tackle a variety of combat tasks.',
 			extra: 'Good vs. Infantry, Light Vehicles. Constructs Defenses'
 		},
+		130: {
+			name: 'Armor Command Truck',
+			help: 'The Armor Command Truck coordinates and deploys Heavy Armor on the battlefield.',
+			extra:
+				'Deploys the Cromwell Tank, Cromwell Command Tank, Staghound Armoured Car, Kangaroo Carrier, and Sherman Firefly'
+		},
 		133: {
 			name: 'Bren Carrier',
 			help: 'The ubiquitous Bren Carrier can transport a section of Infantry or an officer. Can be outfitted with a Vickers MMG for added  fire support.',
@@ -1228,6 +1229,11 @@ export const ACTION_INFO: Record<string, Record<number, ActionInfo>> = {
 			name: 'Sherman Firefly',
 			help: 'A very powerful 17 Pounder Anti Tank Gun added to a relatively standard Sherman creates the Firefly. British and Commonwealth forces can finally engage and kill heavy enemy tanks at very long ranges.',
 			extra: 'Excellent vs. Tanks'
+		},
+		152: {
+			name: 'Field Support Truck',
+			help: 'The Field Support Truck coordinates and constructs Stuart Light Tanks, Sappers, and Captains.',
+			extra: 'Deploys Sappers, Captains, and Stuart Light Tanks'
 		},
 		153: {
 			name: 'Staghound Armoured Car',

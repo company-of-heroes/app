@@ -62,25 +62,10 @@ export class Boot {
 	#settingsLoaded = false;
 	#startPromise: Promise<boolean> | null = null;
 
-	/** True once the splashscreen logo intro animation has finished. */
-	splashIntroComplete = $state(false);
-
-	/** Incremented to restart the splash intro (e.g. after retry). */
-	splashSession = $state(0);
-
 	/** Route to open after the splash, when a reload started on another page. */
 	returnTo: string | null = null;
 
-	resetSplashIntro(): void {
-		this.splashIntroComplete = false;
-		this.splashSession += 1;
-	}
-
-	markSplashIntroComplete(): void {
-		this.splashIntroComplete = true;
-	}
-
-	/** Called by the splashscreen once boot is ready and the intro animation finished. */
+	/** Called by the splashscreen once boot is ready. */
 	async dismissSplash(): Promise<void> {
 		if (this.phase !== 'ready') {
 			return;
@@ -109,7 +94,7 @@ export class Boot {
 				return '/';
 			}
 
-			// /splashscreen dismisses itself after the intro animation finishes.
+			// /splashscreen dismisses itself once boot is ready.
 			return null;
 		}
 
@@ -188,7 +173,6 @@ export class Boot {
 		this.#onboarded = true;
 		this.needsOnboarding = false;
 		this.signInMessage = null;
-		this.resetSplashIntro();
 
 		await goto('/splashscreen');
 	}
@@ -209,7 +193,6 @@ export class Boot {
 		this.serverUnavailable = false;
 		this.phase = 'idle';
 		this.#startPromise = null;
-		this.resetSplashIntro();
 
 		const next = await this.advance('/splashscreen');
 		if (next) {

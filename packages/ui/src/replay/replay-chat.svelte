@@ -4,9 +4,10 @@
 	import { watch } from 'runed';
 	import ArrowBendDownLeftIcon from 'phosphor-svelte/lib/ArrowBendDownLeftIcon';
 	import ArrowBendUpRightIcon from 'phosphor-svelte/lib/ArrowBendUpRightIcon';
+	import TranslateIcon from 'phosphor-svelte/lib/TranslateIcon';
 	import { tryUseHost } from '../host/host.context';
 	import { Button } from '../ui/button';
-	import { controlBase, controlDisabled, mePlayerText } from '../variants';
+	import { controlBase, controlDisabled } from '../variants';
 	import type { ReplayMessage } from './types';
 
 	type Props = {
@@ -36,12 +37,8 @@
 			return 'text-secondary-400';
 		}
 
-		if (host?.auth.isSelfAlias(message.sender)) {
-			return mePlayerText;
-		}
-
 		if (message.recipient === 0) {
-			return 'text-primary';
+			return 'text-primary-200';
 		}
 
 		if (message.recipient === 3 || message.recipient === 4) {
@@ -122,6 +119,7 @@
 			<p class="text-secondary-400 px-4 py-3 text-sm">{t('No messages')}</p>
 		{/if}
 		{#each messages as message, i (message.playerID + '-' + i)}
+			{@const translation = translated?.get(messageKey(message, i))}
 			<div class={cn(messageRow, messageTone(message))}>
 				<span
 					class="text-secondary-500 col-start-2 row-start-1 text-xs tabular-nums sm:col-start-1"
@@ -131,6 +129,12 @@
 				<span
 					class="col-start-1 row-start-1 flex min-w-0 items-center gap-1.5 font-semibold whitespace-nowrap sm:col-start-2"
 				>
+					{#if host?.auth.isSelfAlias(message.sender)}
+						<span class="bg-primary size-2 shrink-0 rounded-full" aria-hidden="true"></span>
+					{/if}
+					{#if message.recipient === 0}
+						<span class="text-primary shrink-0">[{t('All')}]</span>
+					{/if}
 					{#if message.recipient === 3}
 						<ArrowBendDownLeftIcon class="size-3.5 shrink-0" />
 					{:else if message.recipient === 4}
@@ -141,7 +145,15 @@
 				<span
 					class="text-secondary-200 col-span-2 min-w-0 wrap-break-word sm:col-span-1 sm:col-start-3 sm:row-start-1"
 				>
-					{translated?.get(messageKey(message, i)) ?? message.content}
+					{#if translation && translation !== message.content}
+						<span class="flex items-baseline gap-1.5">
+							<TranslateIcon class="text-primary size-3.5 shrink-0 self-center" />
+							{translation}
+						</span>
+						<span class="text-secondary-500 mt-0.5 block text-xs italic">{message.content}</span>
+					{:else}
+						{message.content}
+					{/if}
 				</span>
 			</div>
 		{/each}

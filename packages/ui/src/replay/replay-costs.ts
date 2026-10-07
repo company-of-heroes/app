@@ -82,13 +82,18 @@ export function blueprintRef(action: ReplayAction): BlueprintRef | null {
 	return ref(action.command?.type, action.objectID);
 }
 
+/** Cost of a blueprint, or null when unknown. */
+export function blueprintCost(target: BlueprintRef): ActionCost | null {
+	return ACTION_COSTS[target.list]?.[target.objectID] ?? null;
+}
+
 /**
  * Cost of an action. A cancel returns the cost of the order it removed with `refunded: true`
  * (CoH1 refunds cancelled queue items and building sites in full).
  */
 export function actionCost(action: ReplayAction): (ActionCost & { refunded?: boolean }) | null {
 	const target = blueprintRef(action);
-	const cost = target ? ACTION_COSTS[target.list]?.[target.objectID] : undefined;
+	const cost = target ? blueprintCost(target) : null;
 	if (!cost) {
 		return null;
 	}

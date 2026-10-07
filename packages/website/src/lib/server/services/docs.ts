@@ -4,7 +4,7 @@ import {
 	type BuildingPage,
 	type CommanderPage,
 	type DocKind,
-	type DocRef,
+	type DocWeaponRow,
 	type DocsOverview,
 	type GameDocs,
 	type UnitPage,
@@ -66,7 +66,7 @@ export class DocsService extends Service {
 		return this.data().map((docs) => docs.overview());
 	}
 
-	weapons(): Task<DocRef[]> {
+	weapons(): Task<DocWeaponRow[]> {
 		return this.data().map((docs) => docs.weaponList());
 	}
 

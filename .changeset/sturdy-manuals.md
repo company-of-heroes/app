@@ -7,4 +7,4 @@
 '@company-of-heroes/i18n': patch
 ---
 
-feat; add unit, building, commander and weapon documentation with staff tips
+feat; add a wiki with unit, building, commander and weapon pages and staff tips

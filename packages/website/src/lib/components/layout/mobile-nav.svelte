@@ -19,6 +19,7 @@
 	} from '$lib/i18n';
 	import { interactive } from '$lib/utils/variants';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
+	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
 	import ListIcon from 'phosphor-svelte/lib/ListIcon';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
@@ -31,12 +32,11 @@
 	const uploadHref = $derived(href(uploadReplayPath(!!page.data.user)));
 
 	const navLinks = $derived([
-		{ href: '/players', label: t('Players') },
 		{ href: '/leaderboards', label: t('Leaderboards') },
-		{ href: '/stats', label: t('Stats') },
+		{ href: '/players', label: t('Players') },
 		{ href: '/replays', label: t('Replays') },
-		{ href: '/docs', label: t('Docs') },
-		{ href: '/#donate', label: t('Donations') }
+		{ href: '/stats', label: t('Stats') },
+		{ href: '/wiki', label: t('Wiki') }
 	]);
 
 	afterNavigate(() => {
@@ -70,8 +70,8 @@
 			return current.startsWith('/replays');
 		}
 
-		if (path === '/docs') {
-			return current.startsWith('/docs');
+		if (path === '/wiki') {
+			return current.startsWith('/wiki');
 		}
 
 		return false;
@@ -146,8 +146,9 @@
 					</a>
 				{/each}
 				<DiscordMenu
-					class="border-secondary-800 hover:text-secondary-400 w-full border-b px-4 py-3 text-left text-sm font-medium text-white transition-colors"
+					class="border-secondary-800 hover:text-secondary-400 flex w-full items-center gap-2 border-b px-4 py-3 text-left text-sm font-medium text-white transition-colors"
 				>
+					<DiscordLogoIcon class="size-4" weight="fill" />
 					Discord
 				</DiscordMenu>
 				<div class="border-secondary-800 flex flex-col gap-2 border-b px-4 py-3">

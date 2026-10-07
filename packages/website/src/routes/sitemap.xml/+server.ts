@@ -12,8 +12,8 @@ const PAGES: { path: string; changefreq: string }[] = [
 	{ path: '/leaderboards', changefreq: 'hourly' },
 	{ path: '/stats', changefreq: 'daily' },
 	{ path: '/replays', changefreq: 'hourly' },
-	{ path: '/docs', changefreq: 'weekly' },
-	{ path: '/docs/weapons', changefreq: 'weekly' },
+	{ path: '/wiki', changefreq: 'weekly' },
+	{ path: '/wiki/weapons', changefreq: 'weekly' },
 	{ path: '/privacy', changefreq: 'monthly' }
 ];
 

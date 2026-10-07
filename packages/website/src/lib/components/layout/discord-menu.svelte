@@ -10,10 +10,11 @@
 
 	type Props = {
 		class?: string;
+		label?: string;
 		children: Snippet;
 	};
 
-	let { class: className, children }: Props = $props();
+	let { class: className, label, children }: Props = $props();
 	const { t } = useI18n();
 	let open = $state(false);
 
@@ -36,6 +37,8 @@
 		type="button"
 		class={cn(interactive, className)}
 		aria-haspopup="dialog"
+		aria-label={label}
+		title={label}
 		onclick={() => (open = true)}
 	>
 		{@render children()}

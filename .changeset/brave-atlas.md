@@ -6,4 +6,4 @@
 '@company-of-heroes/jobs-worker': patch
 ---
 
-feat; community statistics on the homepage and a new statistics page: maps, faction win rates, matchups, doctrines, most built units, openings and upgrades from replays (stored matches and uploaded replays), per mode (ranked, Basic Match, Skirmish) and preset or custom date range
+feat; community statistics on the homepage and a new statistics page: maps, faction win rates, matchups, doctrines, most built units, openings and upgrades from replays (stored matches and uploaded replays), per mode (ranked, Basic Match, Skirmish), preset or custom date range, and per map (click a map to filter)
