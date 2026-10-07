@@ -1,5 +1,9 @@
 # @company-of-heroes/api
 
+## 0.5.4
+
+- feat; report wrong info on a wiki page, admins and moderators get a notification and review reports under Management
+
 ## 0.5.3
 
 - feat; show VAC and game bans prominently on player profiles
