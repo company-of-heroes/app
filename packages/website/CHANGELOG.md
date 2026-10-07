@@ -1,5 +1,9 @@
 # @company-of-heroes/website
 
+## 1.13.1
+
+- feat; report wrong info on a wiki page, admins and moderators get a notification and review reports under Management
+
 ## 1.13.0
 
 - enhance; new CoH Global Community logo in the app, on the website, as favicon and as the app icon
