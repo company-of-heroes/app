@@ -1,5 +1,21 @@
 # @company-of-heroes/website
 
+## 1.13.0
+
+- enhance; new CoH Global Community logo in the app, on the website, as favicon and as the app icon
+- feat; show VAC and game bans prominently on player profiles
+- feat; community statistics on the homepage and a new statistics page: maps, faction win rates, matchups, doctrines, most built units, openings and upgrades from replays (stored matches and uploaded replays), per mode (ranked, Basic Match, Skirmish), preset or custom date range, and per map (click a map to filter)
+- enhance; profile links show the full url in a popover before opening
+- enhance; replay chat marks your own messages with a dot and all-chat with an [all] prefix, and shows the original under translated messages
+- fix; British Field Support and Armor Command Trucks show as themselves in replay timelines and statistics instead of US Airborne
+- fix; detect skirmishes against AI from the replay and label them Skirmish instead of Basic Match
+- fix; show repeated clicks on the same ability once on the replay timeline
+- fix; performance per-mode table no longer counts ranked games and skirmishes as lost Basic Matches
+- feat; replay timeline and statistics popovers show game stats: unit health, weapons and veterancy bonuses, upgrade effects (bonus health, accuracy, …), the weapon a package adds with its damage, range and accuracy, and what a doctrine unlock gives
+- feat; add a wiki with unit, building, commander and weapon pages and staff tips
+- enhance; the navbar shows Discord as an icon button and no longer links to donations
+- fix; in replays where two players share a name, each keeps their own doctrine and actions instead of swapping them
+
 ## 1.12.0
 
 - feat; the desktop app opens on a login screen (steam, email and password, register a personal account or create an anonymous one) instead of silently creating an account; the warnings.log and game folder are now optional and only the features that need them turn off

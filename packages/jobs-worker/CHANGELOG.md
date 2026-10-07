@@ -1,5 +1,9 @@
 # @company-of-heroes/jobs-worker
 
+## 0.2.1
+
+- feat; community statistics on the homepage and a new statistics page: maps, faction win rates, matchups, doctrines, most built units, openings and upgrades from replays (stored matches and uploaded replays), per mode (ranked, Basic Match, Skirmish), preset or custom date range, and per map (click a map to filter)
+
 ## 0.2.0
 
 - feat; run the website's scheduled jobs (live lobby cleanup, match results, ratings harvest, account merge)
