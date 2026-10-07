@@ -14,6 +14,9 @@
 	import TimelineRowIcon from './replay-timeline-row-icon.svelte';
 	import ActionCostChips from './action-cost-chips.svelte';
 	import BlueprintStats from './blueprint-stats.svelte';
+	import { loadReplayStats, type ReplayStats } from '@company-of-heroes/game-data/replay';
+	import ArrowUpRightIcon from 'phosphor-svelte/lib/ArrowUpRightIcon';
+	import { docsPath } from '../docs/format';
 	import { actionIconKey } from './action-icons';
 	import { actionCost, blueprintRef, type ActionCost, type BlueprintRef } from './replay-costs';
 	import { loadActionInfo, lookupActionInfo, type ActionInfo } from './replay-action-info';
@@ -257,6 +260,22 @@
 	const shownInfo = $derived<ActionInfo | null>(
 		shown ? lookupActionInfo(infoTable, shown.item.ref) : null
 	);
+	let replayStats = $state<ReplayStats>();
+	/** Wiki page of the pinned unit or doctrine pick, on hosts that have the wiki. */
+	const pinnedWiki = $derived.by(() => {
+		const ref = pinned?.item.ref;
+		if (!ref || !host?.api.docs || !replayStats) {
+			return null;
+		}
+
+		const slug =
+			ref.list === 'sbps'
+				? replayStats.sbps[ref.objectID]?.slug
+				: ref.list === 'upgrade'
+					? replayStats.commanders[ref.objectID]
+					: undefined;
+		return slug ? docsPath({ kind: ref.list === 'sbps' ? 'unit' : 'commander', slug }) : null;
+	});
 	/** A drag that ends on an icon must not pin it. */
 	let suppressClick = false;
 
@@ -274,6 +293,7 @@
 
 		pinned = pinned?.anchor === target ? null : { ...entry, anchor: target };
 		void loadActionInfo().then((table) => (infoTable = table));
+		void loadReplayStats().then((table) => (replayStats = table));
 	}
 
 	function escapeHtml(value: string): string {
@@ -761,7 +781,20 @@
 						{@render iconBox({ ...item, veterancy: 0 }, shown.row, 'shrink-0')}
 						<div class="min-w-0 flex-1">
 							<p class="flex items-center gap-1.5 leading-tight font-semibold text-white">
-								<span class="truncate">{shownInfo?.name ?? item.name}</span>
+								{#if pinned && pinnedWiki}
+									<a
+										href={host?.href(pinnedWiki)}
+										class={cn(
+											interactive,
+											'hover:text-primary inline-flex min-w-0 items-center gap-1 hover:underline'
+										)}
+									>
+										<span class="truncate">{shownInfo?.name ?? item.name}</span>
+										<ArrowUpRightIcon class="text-secondary-400 size-3.5 shrink-0" weight="bold" />
+									</a>
+								{:else}
+									<span class="truncate">{shownInfo?.name ?? item.name}</span>
+								{/if}
 								{#if pinned && shownInfo && (shownInfo.help || shownInfo.extra)}
 									<button
 										type="button"

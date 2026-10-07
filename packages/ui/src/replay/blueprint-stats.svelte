@@ -13,8 +13,9 @@
 	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
 	import TimerIcon from 'phosphor-svelte/lib/TimerIcon';
 	import UsersThreeIcon from 'phosphor-svelte/lib/UsersThreeIcon';
-	import { popoverSection } from '../variants';
-	import { formatNumber, uniqueEffects } from '../docs/format';
+	import { interactive, popoverSection } from '../variants';
+	import { tryUseHost } from '../host/host.context';
+	import { docsPath, formatNumber, uniqueEffects } from '../docs/format';
 	import EffectRows from './effect-rows.svelte';
 	import RangeBars from './range-bars.svelte';
 	import StatChip from './stat-chip.svelte';
@@ -29,6 +30,7 @@
 
 	let { list, id, class: className }: Props = $props();
 	const { t } = useI18n();
+	const host = tryUseHost();
 
 	let stats = $state<ReplayStats>();
 	$effect(() => {
@@ -39,8 +41,11 @@
 	const upgrade = $derived(list === 'upgrade' ? stats?.upgrade[id] : undefined);
 	const weapons = $derived(
 		(unit?.weapons ?? upgrade?.weapons ?? [])
-			.map((slug) => stats?.weapons[slug])
-			.filter((weapon): weapon is ReplayWeapon => weapon !== undefined)
+			.map((slug) => {
+				const weapon = stats?.weapons[slug];
+				return weapon && { ...weapon, slug };
+			})
+			.filter((weapon): weapon is ReplayWeapon & { slug: string } => weapon !== undefined)
 	);
 
 	const between = (range: { min: number | null; max: number | null } | undefined, unit = '') =>
@@ -100,10 +105,21 @@
 				{/if}
 			</div>
 		{/if}
-		{#each weapons as weapon (weapon.name)}
+		{#each weapons as weapon (weapon.slug)}
+			{@const path = host?.api.docs ? docsPath({ kind: 'weapon', slug: weapon.slug }) : null}
 			<div class={popoverSection}>
 				<p class="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-white">
-					<span class="truncate">{weapon.name}</span>
+					{#if path}
+						<!-- Hosts with the wiki link each weapon to its page. -->
+						<a
+							href={host?.href(path)}
+							class={cn(interactive, 'hover:text-primary truncate hover:underline')}
+						>
+							{weapon.name}
+						</a>
+					{:else}
+						<span class="truncate">{weapon.name}</span>
+					{/if}
 				</p>
 				<div class="mt-1.5 flex flex-wrap gap-1.5">
 					<StatChip

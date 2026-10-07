@@ -3,7 +3,10 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { useHost } from '../host/host.context';
-	import { popoverSection, tooltipPanel } from '../variants';
+	import { interactive, popoverSection, tooltipPanel } from '../variants';
+	import { docsPath } from '../docs/format';
+	import { loadReplayStats, type ReplayStats } from '@company-of-heroes/game-data/replay';
+	import ArrowUpRightIcon from 'phosphor-svelte/lib/ArrowUpRightIcon';
 	import { getRaceLabel } from '../format/player-format';
 	import { blueprintCost } from '../replay/replay-costs';
 	import { actionIconKey } from '../replay/action-icons';
@@ -23,6 +26,28 @@
 	const host = useHost();
 
 	const TYPE_LABELS = { unit: 'Unit', upgrade: 'Upgrade', doctrine: 'Doctrine' } as const;
+
+	let stats = $state<ReplayStats>();
+	$effect(() => {
+		if (popover.shown && !stats) {
+			void loadReplayStats().then((table) => (stats = table));
+		}
+	});
+
+	/** Wiki page of the unit or doctrine, on hosts that have the wiki. */
+	function wikiPath(entry: InfoEntry): string | null {
+		if (!host.api.docs || !stats) {
+			return null;
+		}
+
+		const slug =
+			entry.kind === 'doctrine'
+				? stats.commanders[entry.doctrine]
+				: entry.kind === 'unit'
+					? stats.sbps[entry.id]?.slug
+					: undefined;
+		return slug ? docsPath({ kind: entry.kind === 'doctrine' ? 'commander' : 'unit', slug }) : null;
+	}
 
 	let infoTable = $state<Awaited<ReturnType<typeof loadActionInfo>>>();
 	$effect(() => {
@@ -91,6 +116,7 @@
 		>
 			{#if popover.shown}
 				{@const entry = popover.shown.entry}
+				{@const path = wikiPath(entry)}
 				{@const info =
 					entry.kind === 'doctrine'
 						? null
@@ -117,7 +143,21 @@
 						{@render iconImage(headerIcon(entry), 'size-10')}
 						<div class="min-w-0 flex-1">
 							<p class="truncate leading-tight font-semibold text-white">
-								{info?.name ?? entry.name}
+								{#if path}
+									<!-- Hosts with the wiki link the unit or doctrine to its page. -->
+									<a
+										href={host.href(path)}
+										class={cn(
+											interactive,
+											'hover:text-primary inline-flex items-center gap-1 hover:underline'
+										)}
+									>
+										{info?.name ?? entry.name}
+										<ArrowUpRightIcon class="text-secondary-400 size-3.5 shrink-0" weight="bold" />
+									</a>
+								{:else}
+									{info?.name ?? entry.name}
+								{/if}
 							</p>
 							<p class="text-secondary-400 mt-1 text-xs">
 								{t(TYPE_LABELS[entry.kind])}
