@@ -25,6 +25,7 @@
 	import { createDocsPopover } from './docs-popover.context';
 	import DocsRefGrid from './docs-ref-grid.svelte';
 	import DocsRefRow from './docs-ref-row.svelte';
+	import DocsReportButton from './docs-report-button.svelte';
 	import { docsPath } from './format';
 
 	type Props = {
@@ -67,7 +68,10 @@
 </script>
 
 <div class="border-secondary-800 border-b px-4 py-6">
-	<h1 class="font-heading text-3xl font-bold text-white">{t('Wiki')}</h1>
+	<div class="flex items-start justify-between gap-3">
+		<h1 class="font-heading text-3xl font-bold text-white">{t('Wiki')}</h1>
+		<DocsReportButton page={t('Wiki')} class="shrink-0" />
+	</div>
 	<p class="text-secondary-400 mt-2 max-w-3xl text-sm leading-relaxed">
 		{t(
 			'Every unit, building, doctrine and weapon with its stats from the game files, plus tips from staff on when to use it.'

@@ -72,7 +72,7 @@ Player pages also show whether the player's Steam account has VAC or game bans o
 
 Staff can attach public badges (for example Premium or Streamer) to Relic/Steam player identities. We store those assignments (Steam ID, Relic profile ID, and an alias snapshot) so the badges can be shown next to in-game names in the desktop app and on the public website.
 
-The documentation pages on the website (units, buildings, commanders and weapons) show game data read from the Company of Heroes game files. Staff can add a public tip to each page; we store the tip text with the staff account that last edited it. Visitors' use of these pages is not stored.
+The documentation pages on the website (units, buildings, commanders and weapons) show game data read from the Company of Heroes game files. Staff can add a public tip to each page; we store the tip text with the staff account that last edited it. Signed-in users can report wrong information on a page: we store the report text, the page it was sent from, and your account, and notify admins and moderators so they can fix it. Reports are only visible to staff. Visitors' use of these pages is not stored.
 
 The **Streamer** badge is also granted automatically. While you are live on a connected Twitch or YouTube channel **and** Company of Heroes is running, the desktop app counts that time and sends it to our servers with your account, together with your Twitch login and YouTube channel ID. After 12 hours in total, every Steam ID on your account gets the public Streamer badge. We store only the total time, when it was last reported, and those channel identifiers; we do not store stream video, titles, or viewer data for this.
 

@@ -23,7 +23,8 @@ const ADMIN_PAGES: Record<string, string> = {
 	flagged: 'Flagged',
 	screenshots: 'Screenshots',
 	denylist: 'Denylist',
-	'hidden-matches': 'Hidden matches'
+	'hidden-matches': 'Hidden matches',
+	'wiki-reports': 'Wiki reports'
 };
 
 const SECTIONS: Record<string, string> = {

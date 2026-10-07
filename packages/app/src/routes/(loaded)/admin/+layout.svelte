@@ -3,6 +3,7 @@
 	import { scheduleGoto } from '$core/runtime/schedule-goto';
 	import { watch } from 'runed';
 	import BellIcon from 'phosphor-svelte/lib/BellIcon';
+	import BookOpenTextIcon from 'phosphor-svelte/lib/BookOpenTextIcon';
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlashIcon';
 	import FlagIcon from 'phosphor-svelte/lib/FlagIcon';
 	import ImageIcon from 'phosphor-svelte/lib/ImageIcon';
@@ -96,6 +97,10 @@
 					<Nav.Link href="/admin/hidden-matches" class="gap-2 py-2 text-sm font-semibold">
 						<EyeSlashIcon size={20} weight="duotone" />
 						{t('Hidden matches')}
+					</Nav.Link>
+					<Nav.Link href="/admin/wiki-reports" class="gap-2 py-2 text-sm font-semibold">
+						<BookOpenTextIcon size={20} weight="duotone" />
+						{t('Wiki reports')}
 					</Nav.Link>
 				</div>
 			</Nav.Root>

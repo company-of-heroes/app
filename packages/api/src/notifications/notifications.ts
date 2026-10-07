@@ -14,6 +14,8 @@ export type NotificationRecord = RecordModel & {
 	comment?: string;
 	replay?: string;
 	replayComment?: string;
+	/** External page the notification is about (e.g. a reported wiki page). */
+	url?: string;
 };
 
 export type NotificationReadRecord = RecordModel & {

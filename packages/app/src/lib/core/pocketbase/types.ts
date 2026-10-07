@@ -19,6 +19,7 @@ export const Collections = {
 	AntiCheatModuleHits: 'anti_cheat_module_hits',
 	AntiCheatReports: 'anti_cheat_reports',
 	Attachments: 'attachments',
+	DocsReports: 'docs_reports',
 	HiddenMatchKeywords: 'hidden_match_keywords',
 	HiddenMatches: 'hidden_matches',
 	JobState: 'job_state',
@@ -219,6 +220,24 @@ export type AntiCheatReportsRecord = {
 	updated: IsoAutoDateString;
 };
 
+export const DocsReportsStatusOptions = {
+	open: 'open',
+	resolved: 'resolved',
+	dismissed: 'dismissed'
+} as const;
+export type DocsReportsStatusOptions =
+	(typeof DocsReportsStatusOptions)[keyof typeof DocsReportsStatusOptions];
+export type DocsReportsRecord = {
+	created: IsoAutoDateString;
+	description: string;
+	id: string;
+	page?: string;
+	reporter: RecordIdString;
+	status: DocsReportsStatusOptions;
+	updated: IsoAutoDateString;
+	url: string;
+};
+
 export type AttachmentsRecord = {
 	created: IsoAutoDateString;
 	file: FileNameString;
@@ -400,6 +419,7 @@ export type NotificationsRecord = {
 	targetAll?: boolean;
 	title: string;
 	updated: IsoAutoDateString;
+	url?: string;
 };
 
 export type PlayerLabelAssignmentsRecord = {
@@ -718,6 +738,8 @@ export type AntiCheatReportsResponse<Texpand = unknown> = Required<AntiCheatRepo
 	BaseSystemFields<Texpand>;
 export type AttachmentsResponse<Texpand = unknown> = Required<AttachmentsRecord> &
 	BaseSystemFields<Texpand>;
+export type DocsReportsResponse<Texpand = unknown> = Required<DocsReportsRecord> &
+	BaseSystemFields<Texpand>;
 export type HiddenMatchKeywordsResponse<Texpand = unknown> = Required<HiddenMatchKeywordsRecord> &
 	BaseSystemFields<Texpand>;
 export type HiddenMatchesResponse<Texpand = unknown> = Required<HiddenMatchesRecord> &
@@ -829,6 +851,7 @@ export type CollectionRecords = {
 	anti_cheat_module_hits: AntiCheatModuleHitsRecord;
 	anti_cheat_reports: AntiCheatReportsRecord;
 	attachments: AttachmentsRecord;
+	docs_reports: DocsReportsRecord;
 	hidden_match_keywords: HiddenMatchKeywordsRecord;
 	hidden_matches: HiddenMatchesRecord;
 	job_state: JobStateRecord;
@@ -879,6 +902,7 @@ export type CollectionResponses = {
 	anti_cheat_module_hits: AntiCheatModuleHitsResponse;
 	anti_cheat_reports: AntiCheatReportsResponse;
 	attachments: AttachmentsResponse;
+	docs_reports: DocsReportsResponse;
 	hidden_match_keywords: HiddenMatchKeywordsResponse;
 	hidden_matches: HiddenMatchesResponse;
 	job_state: JobStateResponse;

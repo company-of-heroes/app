@@ -1,4 +1,4 @@
-import { errAsync, okAsync } from 'neverthrow';
+import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import {
 	loadGameDocs,
 	type BuildingPage,
@@ -11,11 +11,13 @@ import {
 	type WeaponPage
 } from '@company-of-heroes/game-data';
 import { cached, uncache } from '../cache';
-import { badRequest, notFound } from '../errors';
+import { badRequest, notFound, rateLimited } from '../errors';
 import { ensure, fromAsync, fromPb, pbMaybe, type Task } from '../result';
 import { Service } from './service';
 
 export const DOCS_NOTE_MAX = 5000;
+export const DOCS_REPORT_MAX = 2000;
+const DOCS_REPORTS_PER_HOUR = 5;
 
 export type DocsNote = { body: string; updated: string };
 
@@ -138,5 +140,100 @@ export class DocsService extends Service {
 				).map((saved) => ({ body: saved.body, updated: saved.updated }));
 			})
 			.andThen((note) => uncache(noteKey(kind, slug)).map(() => note));
+	}
+
+	/**
+	 * A signed-in user reports wrong info on a wiki page (`url` is absolute, checked by the
+	 * caller). Stored in `docs_reports`; every admin and moderator gets a notification.
+	 */
+	report(input: {
+		url: string;
+		page: string;
+		description: string;
+		reporterId: string;
+	}): Task<void> {
+		const description = input.description.trim();
+		const page = input.page.trim().slice(0, 200) || 'Wiki';
+		const since = new Date(Date.now() - 60 * 60 * 1000).toISOString().replace('T', ' ');
+		return ensure(description.length > 0, badRequest('Describe what is wrong.'))
+			.andThen(() =>
+				ensure(description.length <= DOCS_REPORT_MAX, badRequest('The report is too long.'))
+			)
+			.asyncAndThen(() =>
+				fromPb(
+					this.pb.collection('docs_reports').getList(1, 1, {
+						filter: this.pb.filter('reporter = {:id} && created >= {:since}', {
+							id: input.reporterId,
+							since
+						}),
+						fields: 'id'
+					}),
+					'Could not check your reports'
+				)
+			)
+			.andThen((recent) =>
+				recent.totalItems < DOCS_REPORTS_PER_HOUR
+					? okAsync(undefined)
+					: errAsync(rateLimited('You sent a lot of reports. Try again later.'))
+			)
+			.andThen(() =>
+				fromPb(
+					this.pb.collection('docs_reports').create({
+						reporter: input.reporterId,
+						page,
+						url: input.url,
+						description,
+						status: 'open'
+					}),
+					'Could not send the report'
+				)
+			)
+			.andThen(() => this.notifyStaff({ ...input, page, description }));
+	}
+
+	private notifyStaff(input: {
+		url: string;
+		page: string;
+		description: string;
+		reporterId: string;
+	}): Task<void> {
+		return ResultAsync.combine([
+			fromPb(
+				this.pb.collection('users').getFullList<{ id: string }>({
+					filter: 'role = "admin" || role = "moderator"',
+					fields: 'id'
+				}),
+				'Could not load staff'
+			),
+			fromPb(
+				this.pb
+					.collection('users')
+					.getOne<{ name: string }>(input.reporterId, { fields: 'name' })
+					.catch(() => null)
+			)
+		]).andThen(([staff, reporter]) => {
+			// Every admin and moderator, also when staff report a page themselves.
+			const recipients = staff.map((user) => user.id);
+			if (recipients.length === 0) {
+				return okAsync(undefined);
+			}
+
+			const name = reporter?.name?.trim() || 'Someone';
+			const quote = input.description
+				.split('\n')
+				.map((line) => `> ${line}`)
+				.join('\n');
+			return fromPb(
+				this.pb.collection('notifications').create({
+					title: `Wiki report: ${input.page}`.slice(0, 200),
+					body: `**${name}** reported an issue on [${input.page}](${input.url}):\n\n${quote}`,
+					targetAll: false,
+					recipients,
+					url: input.url,
+					createdBy: input.reporterId
+				}),
+				'Could not notify staff'
+			).map(() => undefined);
+		});
 	}
 }

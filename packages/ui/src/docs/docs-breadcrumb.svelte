@@ -7,6 +7,7 @@
 	import ArrowLeftIcon from 'phosphor-svelte/lib/ArrowLeftIcon';
 	import { getRaceLabel } from '../format/player-format';
 	import { useHost } from '../host/host.context';
+	import DocsReportButton from './docs-report-button.svelte';
 
 	type Props = {
 		/** Adds the faction's overview as a step. */
@@ -62,4 +63,5 @@
 			<li class="min-w-0 truncate text-white" aria-current="page">{current}</li>
 		</ol>
 	</nav>
+	<DocsReportButton page={current} class="ml-auto shrink-0" />
 </div>

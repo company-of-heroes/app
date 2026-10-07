@@ -252,6 +252,11 @@ export type HostApi = {
 	docs?: {
 		/** Staff only; an empty body removes the tip. Rejects with a user-facing message. */
 		saveNote: (kind: DocKind, slug: string, body: string) => Promise<DocsNote | null>;
+		/**
+		 * Signed-in users report wrong info on the current wiki page; staff get notified.
+		 * Rejects with a user-facing message. Hosts without it hide the report button.
+		 */
+		reportIssue?: (page: string, description: string) => Promise<void>;
 	};
 	/** Optional: machine-translate chat text. Hosts without it hide the translate controls. */
 	translate?: (text: string, to: string) => Promise<string>;

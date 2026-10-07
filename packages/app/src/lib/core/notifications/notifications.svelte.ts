@@ -108,7 +108,7 @@ export class NotificationsService {
 		modal.create({
 			component: NotificationDetail,
 			title: notification.title,
-			props: { body: notification.body },
+			props: { body: notification.body, url: notification.url },
 			size: 'md'
 		});
 		modal.open();
