@@ -1,3 +1,16 @@
+### v0.70.0
+
+- enhance; new CoH Global Community logo in the app, on the website, as favicon and as the app icon
+- feat; show VAC and game bans prominently on player profiles
+- enhance; profile links show the full url in a popover before opening
+- enhance; replay chat marks your own messages with a dot and all-chat with an [all] prefix, and shows the original under translated messages
+- fix; British Field Support and Armor Command Trucks show as themselves in replay timelines and statistics instead of US Airborne
+- fix; detect skirmishes against AI from the replay and label them Skirmish instead of Basic Match
+- fix; only show the "Signed in as" banner after an admin uses "Login as"
+- fix; show repeated clicks on the same ability once on the replay timeline
+- feat; replay timeline and statistics popovers show game stats: unit health, weapons and veterancy bonuses, upgrade effects (bonus health, accuracy, …), the weapon a package adds with its damage, range and accuracy, and what a doctrine unlock gives
+- fix; in replays where two players share a name, each keeps their own doctrine and actions instead of swapping them
+
 ### v0.69.0
 
 - feat; the desktop app opens on a login screen (steam, email and password, register a personal account or create an anonymous one) instead of silently creating an account; the warnings.log and game folder are now optional and only the features that need them turn off

@@ -1,5 +1,10 @@
 # @company-of-heroes/shared-assets
 
+## 1.1.0
+
+- enhance; new CoH Global Community logo in the app, on the website, as favicon and as the app icon
+- feat; add a wiki with unit, building, commander and weapon pages and staff tips
+
 ## 1.0.1
 
 - enhance; show player rank and level in community and member match lists

@@ -1,5 +1,14 @@
 # @company-of-heroes/i18n
 
+## 0.1.13
+
+- feat; show VAC and game bans prominently on player profiles
+- feat; community statistics on the homepage and a new statistics page: maps, faction win rates, matchups, doctrines, most built units, openings and upgrades from replays (stored matches and uploaded replays), per mode (ranked, Basic Match, Skirmish), preset or custom date range, and per map (click a map to filter)
+- enhance; profile links show the full url in a popover before opening
+- feat; replay timeline and statistics popovers show game stats: unit health, weapons and veterancy bonuses, upgrade effects (bonus health, accuracy, …), the weapon a package adds with its damage, range and accuracy, and what a doctrine unlock gives
+- feat; add a wiki with unit, building, commander and weapon pages and staff tips
+- enhance; the navbar shows Discord as an icon button and no longer links to donations
+
 ## 0.1.12
 
 - feat; the desktop app opens on a login screen (steam, email and password, register a personal account or create an anonymous one) instead of silently creating an account; the warnings.log and game folder are now optional and only the features that need them turn off
