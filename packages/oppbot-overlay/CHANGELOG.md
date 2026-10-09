@@ -1,5 +1,9 @@
 # @company-of-heroes/oppbot-overlay
 
+## 3.2.5
+
+- fix; oppbot overlay no longer disappears for a few seconds (or longer) when the server responds slowly mid-match
+
 ## 3.2.4
 
 - enhance; build the default overlay into the api gateway instead of PocketBase

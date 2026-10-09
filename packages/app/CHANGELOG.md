@@ -1,5 +1,15 @@
 # @company-of-heroes/app
 
+## 0.71.0
+
+- feat; tournaments with a banner, logo and map pool (including custom maps), single elimination, double elimination and round robin brackets, sign-up, seeding by ELO, plus a champion medal (picked by staff) on the winner's player profile, a replays tab with every game once the tournament is finished, and tournament games: deadlines per round with warnings, "Start tournament game" on the app dashboard, games hidden until the tournament ends, automatic results with a celebration popup, a popup when a tournament you play in starts, an Updates tab with staff posts and automatic updates (rule changes, disqualifications, deadlines, start, finish, cancel) that notify every participant in the app and on Windows, personal notices (signed up, starts soon, next match ready, staff result, knocked out, final place), a step-by-step guide for participants, opponent Steam links, "Report a problem" for matches, problem reports that staff resolve or dismiss with a note for the player, rules acceptance at sign-up and after rule changes, registration that closes automatically, proposing and accepting match times with a reminder, a stream link, featured match and LIVE markers, statistics and a hall of fame for finished tournaments, a notification bell on the website, community tournament hosts (players request the host role, staff approve it, hosts create and run their own tournaments), overdue notices for staff, and running or open tournaments on the website home page and app dashboard
+- enhance; rename "My replays" to "Replay Manager" and "Member replays" to "Shared Replays"
+- enhance; inputs, selects, buttons and toggles share one h-8 height, background and border; file upload fields use a dark dashed drop zone; page tabs are flush with a gold underline on the active tab
+- enhance; redesign comments: compact rows with inline voting and actions, plus a comment box with quick replies
+- enhance; every badge uses one shared style: a solid grey badge with a coloured status dot, readable on images too
+- fix; wiki doctrine trees follow the real unlock order (armor company) and no longer list units or abilities a tier only changes or replaces (double infantry at efforts)
+- enhance; every hover hint now uses the styled tooltip instead of the plain browser tooltip
+
 ## 0.70.1
 
 - feat; report wrong info on a wiki page, admins and moderators get a notification and review reports under Management
