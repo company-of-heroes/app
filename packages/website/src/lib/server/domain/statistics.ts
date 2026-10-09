@@ -114,6 +114,22 @@ const isAxis = (raceId: number) => raceId === 1 || raceId === 3;
 const isFaction = (raceId: number | null): raceId is number =>
 	raceId !== null && raceId >= 0 && raceId <= 3;
 
+/** Doctrine (commander tree replay id) → the race that can pick it. */
+const DOCTRINE_RACE: Record<number, number> = {
+	2: 0,
+	9: 0,
+	17: 0,
+	186: 1,
+	194: 1,
+	265: 1,
+	316: 2,
+	323: 2,
+	330: 2,
+	295: 3,
+	302: 3,
+	309: 3
+};
+
 /** A lobby titled Skirmish (detected from the replay) is one, whatever Relic reported. */
 function modeOf(row: StatisticsRow): StatisticsMode | undefined {
 	return row.lobbyTitle === 'Skirmish' ? 'skirmish' : MODE_OF_MATCHTYPE[row.matchtype_id ?? -1];
@@ -153,7 +169,8 @@ export function tallyReplay(
 
 		const raceId = player.race;
 		tally.players[raceId] = (tally.players[raceId] ?? 0) + 1;
-		if (player.doctrine !== null) {
+		// The parser sometimes gives a player another faction's doctrine; that pick cannot be real.
+		if (player.doctrine !== null && DOCTRINE_RACE[player.doctrine] === raceId) {
 			const doctrine = (tally.doctrines[`${raceId}:${player.doctrine}`] ??= {
 				picks: 0,
 				decided: 0,

@@ -17,27 +17,38 @@ export class ElevenlabsProvider extends TTSProvider {
 
 	customVoices: TTSVoice[] = $state([]);
 
+	private initialized = false;
+
 	init(): Promise<void> | void {
+		// The base class calls init() every time this provider becomes active; one watcher is enough
+		if (this.initialized) {
+			return;
+		}
+
+		this.initialized = true;
 		$effect.root(() => {
 			watch(
-				[() => tts.settings.enabled, () => app.settings.elevenlabsApiKey],
-				([enabled, apiKey], [prevEnabled, prevApiKey]) => {
-					if (!apiKey) {
-						app.toast.error(
-							t(
-								'Disabled TTS automatically, Elevenlabs API key is required when Elevenlabs provider is enabled.'
-							)
-						);
-						tts.settings.enabled = false;
+				[() => this.isActive, () => tts.settings.enabled, () => app.settings.elevenlabsApiKey],
+				([isActive, enabled, apiKey], [, prevEnabled, prevApiKey]) => {
+					// Another provider (StreamElements) is selected: the API key is irrelevant
+					if (!isActive) {
 						return;
 					}
 
 					if (!isString(apiKey) || apiKey.trim() === '') {
-						tts.settings.enabled = false;
+						if (enabled) {
+							app.toast.error(
+								t(
+									'Disabled TTS automatically, Elevenlabs API key is required when Elevenlabs provider is enabled.'
+								)
+							);
+							tts.settings.enabled = false;
+						}
+
 						return;
 					}
 
-					if (apiKey && !enabled && prevEnabled === false && isEmpty(prevApiKey)) {
+					if (!enabled && prevEnabled === false && isEmpty(prevApiKey)) {
 						tts.settings.enabled = true;
 					}
 
