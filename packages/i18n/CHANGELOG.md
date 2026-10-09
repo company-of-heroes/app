@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.1.14
+
+- feat; report wrong info on a wiki page, admins and moderators get a notification and review reports under Management
+
 ## 0.1.13
 
 - feat; show VAC and game bans prominently on player profiles
