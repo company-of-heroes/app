@@ -10,35 +10,29 @@
 	import { formatCount, minutes, percent } from './format';
 	import { mapColumns } from './layout';
 	import type { StatisticsMap } from './types';
+	import { useStatistics } from './context';
 
 	type Props = {
-		maps: StatisticsMap[];
-		/** All matches of the period, for each map's share. */
-		matchCount: number;
 		limit?: number;
 		/** Rows shown until "Show all" is pressed; the rest stays hidden behind the button. */
 		collapsed?: number;
 		compact?: boolean;
-		/** The map the rest of the page is filtered on; its row is highlighted. */
-		selected?: string | null;
 		/** Makes each row a link, e.g. to filter the page on that map. */
 		mapHref?: (map: string) => string;
 		class?: string;
 	};
 
-	let {
-		maps,
-		matchCount,
-		limit,
-		collapsed,
-		compact = false,
-		selected = null,
-		mapHref,
-		class: className
-	}: Props = $props();
+	let { limit, collapsed, compact = false, mapHref, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
+	const context = useStatistics();
+	const maps = $derived(context.statistics.maps);
+	const selected = $derived(context.selected);
+	// Each map's share: of every match, or of the maps listed when filtered on one.
+	const matchCount = $derived(
+		selected ? maps.reduce((sum, row) => sum + row.played, 0) : context.statistics.matchCount
+	);
 	let expanded = $state(false);
 	const canCollapse = $derived(collapsed !== undefined && maps.length > collapsed);
 	// A selected map further down keeps the list open, so its row stays visible.

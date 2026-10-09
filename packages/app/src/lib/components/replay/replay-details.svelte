@@ -20,7 +20,7 @@
 	import { account } from '$core/account';
 	import { resource } from 'runed';
 	import { useI18n } from '$lib/i18n';
-	import { StaffDebug } from '@company-of-heroes/ui/staff-debug';
+	import { StaffSection } from '@company-of-heroes/ui/staff-section';
 
 	type LobbyWithUser = LobbiesResponse<
 		unknown,
@@ -313,7 +313,7 @@
 
 		{#if isStaff}
 			<div class="px-6">
-				<StaffDebug>
+				<StaffSection>
 					<div class={detailMetaGrid}>
 						<List.Title>{t('Replay ID')}</List.Title>
 						<List.Value class="tabular-nums">{page.params.replayId}</List.Value>
@@ -349,7 +349,7 @@
 							<List.Value>{lobbyOwner ?? '—'}</List.Value>
 						{/if}
 					</div>
-				</StaffDebug>
+				</StaffSection>
 			</div>
 		{/if}
 	</div>

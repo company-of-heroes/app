@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Gold hexagon with oak</title>
+	<defs>
+		<radialGradient id="m038-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#fff1bf"/>
+			<stop offset="0.5" stop-color="#d6a640"/>
+			<stop offset="1" stop-color="#86601a"/>
+		</radialGradient>
+		<linearGradient id="m038-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#fff1bf"/>
+			<stop offset="1" stop-color="#86601a"/>
+		</linearGradient>
+		<linearGradient id="m038-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m038-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m038-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m038-ribbon"><polygon points="12,0 52,0 42,46 22,46"/></clipPath>
+		<filter id="m038-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m038-ribbon)">
+			<rect x="12" y="0" width="7.62" height="48" fill="#e6dfcc"/><rect x="19.62" y="0" width="3.81" height="48" fill="#b8924a"/><rect x="23.43" y="0" width="17.14" height="48" fill="#c8642a"/><rect x="40.57" y="0" width="3.81" height="48" fill="#b8924a"/><rect x="44.38" y="0" width="7.62" height="48" fill="#e6dfcc"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m038-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m038-fold)"/>
+		</g>
+		<circle cx="32" cy="47" r="3.4" fill="url(#m038-metal)" stroke="#4f3a0c" stroke-width="0.6"/><circle cx="32" cy="53" r="2.6" fill="none" stroke="url(#m038-rim)" stroke-width="1.6"/>
+		<g transform="translate(32 84)" filter="url(#m038-shadow)">
+			<path d="M0,-26 L22.52,-13 L22.52,13 L0,26 L-22.52,13 L-22.52,-13 Z" fill="url(#m038-metal)" stroke="#4f3a0c" stroke-width="1"/><path d="M0,-26 L22.52,-13 L22.52,13 L0,26 L-22.52,13 L-22.52,-13 Z" transform="scale(0.82)" fill="none" stroke="#86601a" stroke-width="0.9" opacity="0.8"/>
+			<g transform="scale(1.15)" fill="#4f3a0c" color="#4f3a0c"><path d="M0,10 L0,-2"  fill="none" stroke="currentColor" stroke-width="1"/><path transform="rotate(-38 0 0)" d="M0,-1 Q-3.5,-3 -2.5,-5 Q-4.5,-6 -3,-8 Q-4,-10 -1.5,-10.5 Q0,-13 1.5,-10.5 Q4,-10 3,-8 Q4.5,-6 2.5,-5 Q3.5,-3 0,-1 Z"/><path transform="rotate(0 0 0)" d="M0,-1 Q-3.5,-3 -2.5,-5 Q-4.5,-6 -3,-8 Q-4,-10 -1.5,-10.5 Q0,-13 1.5,-10.5 Q4,-10 3,-8 Q4.5,-6 2.5,-5 Q3.5,-3 0,-1 Z"/><path transform="rotate(38 0 0)" d="M0,-1 Q-3.5,-3 -2.5,-5 Q-4.5,-6 -3,-8 Q-4,-10 -1.5,-10.5 Q0,-13 1.5,-10.5 Q4,-10 3,-8 Q4.5,-6 2.5,-5 Q3.5,-3 0,-1 Z"/><ellipse cx="-3" cy="4" rx="1.8" ry="2.2"/><ellipse cx="3" cy="4" rx="1.8" ry="2.2"/></g>
+		</g>
+	</g>
+</svg>

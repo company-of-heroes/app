@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Bronze red enamel octagon with swords</title>
+	<defs>
+		<radialGradient id="m088-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="0.5" stop-color="#b4733a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</radialGradient>
+		<linearGradient id="m088-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</linearGradient>
+		<linearGradient id="m088-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m088-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m088-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m088-ribbon"><polygon points="12,0 52,0 52,40 32,47 12,40"/></clipPath>
+		<filter id="m088-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m088-ribbon)">
+			<rect x="12" y="0" width="8.89" height="48" fill="#f4f1e8"/><rect x="20.89" y="0" width="8.89" height="48" fill="#b8924a"/><rect x="29.78" y="0" width="4.44" height="48" fill="#e0b23a"/><rect x="34.22" y="0" width="8.89" height="48" fill="#b8924a"/><rect x="43.11" y="0" width="8.89" height="48" fill="#f4f1e8"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m088-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m088-fold)"/>
+		</g>
+		<rect x="20" y="44" width="24" height="6" rx="1.5" fill="url(#m088-rim)" stroke="#3f230b" stroke-width="0.8"/><circle cx="32" cy="53" r="3" fill="none" stroke="url(#m088-rim)" stroke-width="1.8"/>
+		<g transform="translate(32 84)" filter="url(#m088-shadow)">
+			<path d="M9.57,-23.1 L23.1,-9.57 L23.1,9.57 L9.57,23.1 L-9.57,23.1 L-23.1,9.57 L-23.1,-9.57 L-9.57,-23.1 Z" fill="url(#m088-metal)" stroke="#3f230b" stroke-width="1"/><path d="M9.57,-23.1 L23.1,-9.57 L23.1,9.57 L9.57,23.1 L-9.57,23.1 L-23.1,9.57 L-23.1,-9.57 L-9.57,-23.1 Z" transform="scale(0.72)" fill="#a3202f" stroke="#6b3d18" stroke-width="1"/><path d="M9.57,-23.1 L23.1,-9.57 L23.1,9.57 L9.57,23.1 L-9.57,23.1 L-23.1,9.57 L-23.1,-9.57 L-9.57,-23.1 Z" transform="scale(0.72)" fill="url(#m088-gloss)"/>
+			<g transform="scale(1.15)" fill="#f6c79a" color="#f6c79a"><g transform="rotate(45)"><path d="M-1.1,-11 L0,-12.8 L1.1,-11 L1.1,5 L-1.1,5 Z"/><rect x="-4" y="5" width="8" height="1.6" rx="0.6"/><rect x="-0.8" y="6.6" width="1.6" height="4"/><circle cx="0" cy="11.4" r="1.2"/></g><g transform="rotate(-45)"><path d="M-1.1,-11 L0,-12.8 L1.1,-11 L1.1,5 L-1.1,5 Z"/><rect x="-4" y="5" width="8" height="1.6" rx="0.6"/><rect x="-0.8" y="6.6" width="1.6" height="4"/><circle cx="0" cy="11.4" r="1.2"/></g></g>
+		</g>
+	</g>
+</svg>

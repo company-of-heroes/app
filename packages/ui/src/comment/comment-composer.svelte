@@ -22,11 +22,13 @@
 	import CodeIcon from 'phosphor-svelte/lib/CodeIcon';
 	import HighlighterIcon from 'phosphor-svelte/lib/HighlighterIcon';
 	import LinkIcon from 'phosphor-svelte/lib/LinkIcon';
+	import PaperPlaneRightIcon from 'phosphor-svelte/lib/PaperPlaneRightIcon';
 	import QuotesIcon from 'phosphor-svelte/lib/QuotesIcon';
 	import TextBIcon from 'phosphor-svelte/lib/TextBIcon';
 	import TextItalicIcon from 'phosphor-svelte/lib/TextItalicIcon';
 	import TextStrikethroughIcon from 'phosphor-svelte/lib/TextStrikethroughIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
+	import { tooltip } from '../attachments';
 
 	type Props = {
 		value?: string;
@@ -45,6 +47,10 @@
 		identity?: Snippet;
 		avatarUrl?: string;
 		showSubmit?: boolean;
+		/** Idle as a one-line prompt; the toolbar slides open on focus or once there is text. */
+		collapsible?: boolean;
+		/** Quick starters shown while the composer is empty; picking one fills the draft. */
+		suggestions?: string[];
 		onpost?: () => void;
 		oncancel?: () => void;
 	};
@@ -66,6 +72,8 @@
 		identity,
 		avatarUrl,
 		showSubmit = true,
+		collapsible = false,
+		suggestions = [],
 		onpost,
 		oncancel
 	}: Props = $props();
@@ -78,7 +86,16 @@
 	let mentionSuppressedAt = $state<number | null>(null);
 	/** Bumped on textarea scroll/resize so Floating UI re-reads the caret rect. */
 	let mentionAnchorTick = $state(0);
+	let focused = $state(false);
 	const canPost = $derived(value.trim().length > 0 && !posting);
+	const active = $derived(!collapsible || focused || value.length > 0);
+	const remaining = $derived(COMMENT_MAX_LENGTH - value.length);
+	const showSuggestions = $derived(suggestions.length > 0 && !value.trim() && !posting);
+	const submitShortcut = $derived(
+		typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
+			? '⌘ Enter'
+			: 'Ctrl Enter'
+	);
 	const formatBtn = 'text-secondary-400 hover:text-white size-7';
 	const mention = $derived(mentionQueryAt(value, cursor));
 	const mentionOpen = $derived(!!mention && mention.start !== mentionSuppressedAt);
@@ -191,6 +208,7 @@
 
 	$effect(() => {
 		value;
+		active;
 		const el = composerEl;
 		if (el) {
 			resize(el);
@@ -280,6 +298,20 @@
 		await applyFormat(
 			insertCommentMention(value, query.start, cursor, user.name, user.id, user.steamIds?.[0])
 		);
+	}
+
+	function pickSuggestion(text: string) {
+		const next = `${text} `;
+		void applyFormat({ text: next, selectStart: next.length, selectEnd: next.length });
+	}
+
+	function onFocusOut(event: FocusEvent) {
+		const root = event.currentTarget as HTMLElement;
+		if (event.relatedTarget instanceof Node && root.contains(event.relatedTarget)) {
+			return;
+		}
+
+		focused = false;
 	}
 
 	function startMention() {
@@ -381,9 +413,17 @@
 					controlBase,
 					'focus-within:border-secondary-600 flex h-auto w-full flex-col overflow-hidden p-0 focus:outline-none'
 				)
-			: 'border-secondary-800 bg-secondary-800/30 flex flex-col border-y',
+			: cn(
+					'border-secondary-800 bg-secondary-800/30 flex flex-col border-t transition-shadow duration-200',
+					'focus-within:from-primary/[0.07] focus-within:bg-linear-to-b focus-within:to-transparent',
+					'focus-within:shadow-[inset_2px_0_0_var(--color-primary)]'
+				),
 		className
 	)}
+	onfocusin={() => {
+		focused = true;
+	}}
+	onfocusout={onFocusOut}
 	onsubmit={showSubmit
 		? (event: SubmitEvent) => {
 				event.preventDefault();
@@ -391,7 +431,7 @@
 			}
 		: undefined}
 >
-	<div class="relative px-4 pt-3">
+	<div class={cn('relative', name && !identity ? 'flex gap-3.5 px-4 pt-3.5 pb-3' : 'px-4 pt-3')}>
 		<Dropdown.Root
 			open={mentionOpen}
 			side="top"
@@ -441,157 +481,209 @@
 		</Dropdown.Root>
 		{#if identity}
 			{@render identity()}
+			{@render field()}
 		{:else if name}
-			<div class="flex items-center gap-2">
-				{#if avatarUrl}
-					<img src={avatarUrl} alt="" class="size-8 shrink-0 rounded-full object-cover" />
-				{:else}
-					<span
-						class="bg-secondary-800 text-secondary-400 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+			{#if avatarUrl}
+				<img src={avatarUrl} alt="" class="mt-0.5 size-8 shrink-0 rounded-full object-cover" />
+			{:else}
+				<span
+					class="bg-secondary-800 text-secondary-400 mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+				>
+					{name.slice(0, 1).toUpperCase()}
+				</span>
+			{/if}
+			<div class="min-w-0 flex-1">
+				<span class={cn(mePlayerText, 'block truncate')}>{name}</span>
+				{@render field()}
+			</div>
+		{:else}
+			{@render field()}
+		{/if}
+	</div>
+	<div
+		class={cn(
+			'grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none',
+			active ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+		)}
+		inert={!active}
+	>
+		<div class="overflow-hidden">
+			<div class="border-secondary-800 flex items-center gap-2 border-t px-2 py-1.5">
+				<div
+					role="toolbar"
+					aria-label={t('Formatting')}
+					tabindex="-1"
+					class="flex min-w-0 flex-1 flex-wrap items-center"
+					onmousedown={(event) => event.preventDefault()}
+				>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class={formatBtn}
+						aria-label={t('Bold')}
+						{@attach tooltip(t('Bold'))}
+						onclick={() => wrap('**', '**', 'bold')}
 					>
-						{name.slice(0, 1).toUpperCase()}
+						<TextBIcon size={16} />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class={formatBtn}
+						aria-label={t('Italic')}
+						{@attach tooltip(t('Italic'))}
+						onclick={() => wrap('*', '*', 'italic')}
+					>
+						<TextItalicIcon size={16} />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class={formatBtn}
+						aria-label={t('Strikethrough')}
+						{@attach tooltip(t('Strikethrough'))}
+						onclick={() => wrap('~~', '~~', 'text')}
+					>
+						<TextStrikethroughIcon size={16} />
+					</Button>
+					<span class="bg-secondary-800 mx-0.5 h-4 w-px"></span>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class={formatBtn}
+						aria-label={t('Code')}
+						{@attach tooltip(t('Code'))}
+						onclick={formatCode}
+					>
+						<CodeIcon size={16} />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class={formatBtn}
+						aria-label={t('Link')}
+						{@attach tooltip(t('Link'))}
+						onclick={formatLink}
+					>
+						<LinkIcon size={16} />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class={formatBtn}
+						aria-label={t('Highlight')}
+						{@attach tooltip(t('Highlight'))}
+						onclick={() => wrap('==', '==', 'text')}
+					>
+						<HighlighterIcon size={16} />
+					</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class={formatBtn}
+						aria-label={t('Quote')}
+						{@attach tooltip(t('Quote'))}
+						onclick={formatQuote}
+					>
+						<QuotesIcon size={16} />
+					</Button>
+					<span class="bg-secondary-800 mx-0.5 h-4 w-px"></span>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class={formatBtn}
+						aria-label={t('Mention')}
+						{@attach tooltip(t('Mention'))}
+						onclick={startMention}
+					>
+						<AtIcon size={16} />
+					</Button>
+				</div>
+				{#if remaining <= 200}
+					<span
+						class={cn(
+							'shrink-0 text-xs tabular-nums',
+							remaining <= 20 ? 'text-destructive' : 'text-secondary-500'
+						)}
+						aria-live="polite"
+					>
+						{remaining}
 					</span>
 				{/if}
-				<span class={cn(mePlayerText, 'font-semibold')}>{name}</span>
+				{#if showSubmit && focused}
+					<span class="text-secondary-500 hidden shrink-0 text-xs whitespace-nowrap sm:inline">
+						{submitShortcut}
+					</span>
+				{/if}
+				{#if oncancel}
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						class="text-secondary-400 shrink-0 hover:text-white"
+						aria-label={t('Cancel')}
+						onclick={oncancel}
+					>
+						<XIcon size={16} />
+					</Button>
+				{/if}
+				{#if showSubmit}
+					<Button type="submit" size="sm" class="shrink-0" disabled={!canPost} loading={posting}>
+						{#if !submitLabel}
+							<PaperPlaneRightIcon size={14} weight="fill" />
+						{/if}
+						{submitLabel ?? t('Post')}
+					</Button>
+				{/if}
 			</div>
-		{/if}
-		<Textarea
-			flush
-			{id}
-			{@attach bindComposer}
-			bind:value
-			{rows}
-			{autofocus}
-			maxlength={COMMENT_MAX_LENGTH}
-			placeholder={placeholderText}
-			aria-label={placeholderText}
-			onkeydown={onComposerKeydown}
-			oninput={(event: Event) => {
-				syncCursor(event);
-				grow(event);
-			}}
-			onclick={syncCursor}
-			onkeyup={syncCursor}
-			onselect={syncCursor}
-			onscroll={refreshMentionAnchor}
-			class={cn('min-h-14 resize-none text-sm', name && 'mt-1 min-h-18')}
-		/>
-	</div>
-	<div class="border-secondary-800 flex items-center gap-2 border-t px-2 py-1.5">
-		<div
-			role="toolbar"
-			aria-label={t('Formatting')}
-			tabindex="-1"
-			class="flex min-w-0 flex-1 flex-wrap items-center"
-			onmousedown={(event) => event.preventDefault()}
-		>
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={formatBtn}
-				aria-label={t('Bold')}
-				title={t('Bold')}
-				onclick={() => wrap('**', '**', 'bold')}
-			>
-				<TextBIcon size={16} />
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={formatBtn}
-				aria-label={t('Italic')}
-				title={t('Italic')}
-				onclick={() => wrap('*', '*', 'italic')}
-			>
-				<TextItalicIcon size={16} />
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={formatBtn}
-				aria-label={t('Strikethrough')}
-				title={t('Strikethrough')}
-				onclick={() => wrap('~~', '~~', 'text')}
-			>
-				<TextStrikethroughIcon size={16} />
-			</Button>
-			<span class="bg-secondary-800 mx-0.5 h-4 w-px"></span>
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={formatBtn}
-				aria-label={t('Code')}
-				title={t('Code')}
-				onclick={formatCode}
-			>
-				<CodeIcon size={16} />
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={formatBtn}
-				aria-label={t('Link')}
-				title={t('Link')}
-				onclick={formatLink}
-			>
-				<LinkIcon size={16} />
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={formatBtn}
-				aria-label={t('Highlight')}
-				title={t('Highlight')}
-				onclick={() => wrap('==', '==', 'text')}
-			>
-				<HighlighterIcon size={16} />
-			</Button>
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={formatBtn}
-				aria-label={t('Quote')}
-				title={t('Quote')}
-				onclick={formatQuote}
-			>
-				<QuotesIcon size={16} />
-			</Button>
-			<span class="bg-secondary-800 mx-0.5 h-4 w-px"></span>
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class={formatBtn}
-				aria-label={t('Mention')}
-				title={t('Mention')}
-				onclick={startMention}
-			>
-				<AtIcon size={16} />
-			</Button>
 		</div>
-		{#if oncancel}
-			<Button
-				type="button"
-				variant="ghost"
-				size="icon-sm"
-				class="text-secondary-400 shrink-0 hover:text-white"
-				aria-label={t('Cancel')}
-				onclick={oncancel}
-			>
-				<XIcon size={16} />
-			</Button>
-		{/if}
-		{#if showSubmit}
-			<Button type="submit" size="sm" class="shrink-0" disabled={!canPost} loading={posting}>
-				{submitLabel ?? t('Send')}
-			</Button>
-		{/if}
 	</div>
 </svelte:element>
+
+{#snippet field()}
+	<Textarea
+		flush
+		{id}
+		{@attach bindComposer}
+		bind:value
+		rows={active ? rows : 1}
+		{autofocus}
+		maxlength={COMMENT_MAX_LENGTH}
+		placeholder={placeholderText}
+		aria-label={placeholderText}
+		onkeydown={onComposerKeydown}
+		oninput={(event: Event) => {
+			syncCursor(event);
+			grow(event);
+		}}
+		onclick={syncCursor}
+		onkeyup={syncCursor}
+		onselect={syncCursor}
+		onscroll={refreshMentionAnchor}
+		class={cn('resize-none text-sm', active ? 'min-h-14' : 'min-h-6', name && 'mt-1')}
+	/>
+	{#if showSuggestions}
+		<div role="group" aria-label={t('Quick replies')} class="mt-2 flex flex-wrap gap-1.5">
+			{#each suggestions as suggestion (suggestion)}
+				<Button
+					type="button"
+					variant="secondary"
+					size="sm"
+					class="hover:border-primary/50 hover:bg-primary/5 hover:text-primary text-secondary-300 h-7 px-2.5 text-xs"
+					onmousedown={(event: MouseEvent) => event.preventDefault()}
+					onclick={() => pickSuggestion(suggestion)}
+				>
+					{suggestion}
+				</Button>
+			{/each}
+		</div>
+	{/if}
+{/snippet}

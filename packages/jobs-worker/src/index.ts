@@ -13,6 +13,12 @@ const JOBS: { name: string; every: number; offset: number; budgetMs?: number }[]
 	// Self-limiting: only lobbies whose stored ranked flag or title is stale; idle afterwards.
 	{ name: 'lobby-reprocess', every: 5, offset: 4 },
 	{ name: 'rewards-evaluate', every: 1, offset: 0 },
+	// Runs right after result-fill has stored the minute's finished lobbies.
+	{ name: 'tournament-sync', every: 1, offset: 0 },
+	// Staff hear about tournament matches past their deadline.
+	{ name: 'tournament-deadlines', every: 5, offset: 2 },
+	// Rebuilds the stored statistics snapshots (all preset periods + homepage totals).
+	{ name: 'statistics-snapshot', every: 10, offset: 6 },
 	// Self-limiting: stored replays without a statistics summary; idle once caught up.
 	{ name: 'replay-stats', every: 1, offset: 0, budgetMs: 50_000 }
 ];

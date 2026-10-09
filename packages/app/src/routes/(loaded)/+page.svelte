@@ -3,6 +3,8 @@
 	import WidgetLiveLobbies from '$lib/components/widgets/widget-live-lobbies.svelte';
 	import WidgetLiveStreams from '$lib/components/widgets/widget-live-streams.svelte';
 	import WidgetMatchHistory from '$lib/components/widgets/widget-match-history.svelte';
+	import WidgetTournamentMatch from '$lib/components/widgets/widget-tournament-match.svelte';
+	import WidgetTournaments from '$lib/components/widgets/widget-tournaments.svelte';
 	import GameLogNotice from '$lib/components/widgets/game-log-notice.svelte';
 	import { useI18n } from '$lib/i18n';
 
@@ -17,6 +19,8 @@
 		)}
 	/>
 	<WidgetDashboardHero />
+	<WidgetTournamentMatch />
+	<WidgetTournaments />
 	<WidgetLiveLobbies />
 	<WidgetLiveStreams />
 	<WidgetMatchHistory />

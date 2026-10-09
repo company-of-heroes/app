@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
+	import { Root as ReplayDataRoot, type ReplayData } from '@company-of-heroes/ui/replay';
 	import { createReplay } from '.';
 
 	type Props = {
@@ -7,9 +8,13 @@
 	} & HTMLAttributes<HTMLDivElement>;
 
 	const { file, children, ...restProps }: Props = $props();
-	createReplay(() => file);
+	const replay = createReplay(() => file);
+	/** Parser output is structurally the shared replay shape the ui pieces read. */
+	const replayData = replay as unknown as ReplayData;
 </script>
 
 <div {...restProps}>
-	{@render children?.()}
+	<ReplayDataRoot replay={replayData}>
+		{@render children?.()}
+	</ReplayDataRoot>
 </div>

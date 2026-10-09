@@ -6,20 +6,22 @@
 	import { getRaceLabel } from '../format/player-format';
 	import { doctrineBannerFile } from '../replay/replay-stats';
 	import { formatCount, percent, winRateClass } from './format';
-	import type { StatisticsDoctrine, StatisticsReplayPlayers } from './types';
+	import type { StatisticsDoctrine } from './types';
+	import { useStatistics } from './context';
 	import { InfoPopover } from './info-popover.svelte';
 	import StatisticsInfoPopover from './statistics-info-popover.svelte';
 
 	type Props = {
-		doctrines: StatisticsDoctrine[];
-		replayPlayers: StatisticsReplayPlayers[];
 		class?: string;
 	};
 
-	let { doctrines, replayPlayers, class: className }: Props = $props();
+	let { class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
+	const context = useStatistics();
+	const doctrines = $derived(context.statistics.doctrines);
+	const replayPlayers = $derived(context.statistics.replayPlayers);
 	const RACES = [0, 2, 1, 3];
 	const popover = new InfoPopover();
 

@@ -21,8 +21,10 @@ import ReplayUploader from './replay-uploader.svelte';
 import ReplayDetail from './replay-detail.svelte';
 import ReplayEditForm from './replay-edit-form.svelte';
 import ReplayRenameForm from './replay-rename-form.svelte';
+import ReplayRoot from './replay-root.svelte';
 
 export {
+	ReplayRoot as Root,
 	ReplayChat as Chat,
 	ReplayActions as Actions,
 	ReplayTimeline as Timeline,
@@ -49,6 +51,12 @@ export {
 };
 
 export type * from './types';
+export {
+	createReplayData,
+	useReplayData,
+	useOptionalReplayData,
+	type ReplayDataContext
+} from './context';
 export type { ReplaySectionTab } from './replay-section-tabs.svelte';
 export type {
 	ReplaySteamLinkPlayer,

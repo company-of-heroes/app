@@ -9,6 +9,7 @@
 		DetailHeader,
 		Overview,
 		ReplayRenameForm,
+		Root as ReplayRoot,
 		Tabs,
 		TabsSkeleton,
 		formatReplayDurationLabel,
@@ -38,6 +39,7 @@
 		useReplayLibrary
 	} from '$lib/library/replay-library.svelte';
 	import type { ReplayEntry } from '$lib/library/types';
+	import { escapeHtml, tooltip } from '@company-of-heroes/ui/attachments';
 
 	type Props = {
 		entry: ReplayEntry;
@@ -157,7 +159,9 @@
 			<List.Title>{t('Victory points')}</List.Title>
 			<List.Value>{summary?.vpGame ? summary.vpCount : t('Annihilation')}</List.Value>
 			<List.Title>{t('File')}</List.Title>
-			<List.Value class="truncate" title={entry.path}>{entry.fileName}</List.Value>
+			<List.Value class="truncate" {@attach tooltip(escapeHtml(entry.path))}
+				>{entry.fileName}</List.Value
+			>
 		</div>
 	{/snippet}
 	{#snippet actions()}
@@ -183,20 +187,24 @@
 
 {#if parsed.current}
 	{@const replay = parsed.current}
-	<Tabs bind:value={tab}>
-		{#snippet overview()}
-			<!-- Same order as the website: players, then the timeline. -->
-			<Overview {match} {replay} showRanks={false} />
-			<Actions {replay} />
-		{/snippet}
-		{#snippet chat()}
-			{#if replay.messages.length > 0}
-				<Chat messages={replay.messages} playerCount={replay.playerCount} />
-			{:else}
-				<p class="text-secondary-400 px-4 py-3 text-sm">{t('No chat messages in this replay.')}</p>
-			{/if}
-		{/snippet}
-	</Tabs>
+	<ReplayRoot {replay}>
+		<Tabs bind:value={tab}>
+			{#snippet overview()}
+				<!-- Same order as the website: players, then the timeline. -->
+				<Overview {match} showRanks={false} />
+				<Actions />
+			{/snippet}
+			{#snippet chat()}
+				{#if replay.messages.length > 0}
+					<Chat />
+				{:else}
+					<p class="text-secondary-400 px-4 py-3 text-sm">
+						{t('No chat messages in this replay.')}
+					</p>
+				{/if}
+			{/snippet}
+		</Tabs>
+	</ReplayRoot>
 {:else if parsed.error}
 	<p class="text-destructive px-4 py-3 text-sm">{t('Could not parse this replay.')}</p>
 {:else}

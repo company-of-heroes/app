@@ -5,6 +5,7 @@
 	import type { Match } from '$core/game/lobby';
 	import {
 		Overview,
+		Root as ReplayRoot,
 		type CommunityMatchDetail,
 		type CommunityPlayer,
 		type ReplayData
@@ -37,6 +38,7 @@
 	} from './dashboard-utils';
 	import { formatMatchupGap, getMatchupStats } from './lobby-scout';
 	import { useI18n } from '$lib/i18n';
+	import { escapeHtml, tooltip } from '$lib/attachments';
 
 	type Props = {
 		lobby: Match;
@@ -298,7 +300,7 @@
 			class="tabular-nums"
 			style:color={getEloColor(value)}
 			style:text-shadow={getEloTextShadow(value)}
-			title={alias ?? undefined}
+			{@attach tooltip(escapeHtml(alias ?? ''))}
 		>
 			{value}{#if alias}
 				<span class="text-secondary-400 font-normal"> · {alias}</span>
@@ -322,7 +324,7 @@
 	{#if lobbyPlayer}
 		{@const smurf = args.profileId != null && smurfs ? smurfs[args.profileId] : undefined}
 		<PlayerUi.Root player={lobbyPlayer} race={lobbyPlayer.race}>
-			<PlayerUi.Labels steamId={lobbyPlayer.steamId} class="shrink-0" />
+			<PlayerUi.Labels class="shrink-0" />
 			{#if smurf?.status === 'shared'}
 				{@const shared = toPlayerSmurf(smurf)}
 				{#if shared}
@@ -401,13 +403,22 @@
 	</div>
 
 	<div class="border-secondary-800 border-b">
-		<Overview
-			match={overviewMatch}
-			replay={overviewReplay}
-			{livePlayers}
-			showRanks={!lobby.isReplay}
-			{isHighlightedName}
-			{nameExtra}
-		/>
+		{#snippet overview()}
+			<Overview
+				match={overviewMatch}
+				{livePlayers}
+				showRanks={!lobby.isReplay}
+				{isHighlightedName}
+				{nameExtra}
+			/>
+		{/snippet}
+		<!-- Watching a replay adds its CPM and doctrines to the overview. -->
+		{#if overviewReplay}
+			<ReplayRoot replay={overviewReplay}>
+				{@render overview()}
+			</ReplayRoot>
+		{:else}
+			{@render overview()}
+		{/if}
 	</div>
 </div>

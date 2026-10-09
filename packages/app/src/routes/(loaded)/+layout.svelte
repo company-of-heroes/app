@@ -16,6 +16,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { scheduleGoto } from '$core/runtime/schedule-goto';
 	import { Modal } from '$lib/components/ui/modal';
+	import { TournamentWatcher } from '@company-of-heroes/ui/tournament';
 	import { Toaster } from '$lib/components/ui/toasts';
 	import { Button, ButtonBack } from '$lib/components/ui/button';
 	import { Alert } from '$lib/components/ui/alert';
@@ -24,6 +25,7 @@
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
 	import UsersIcon from 'phosphor-svelte/lib/UsersIcon';
 	import BroadcastIcon from 'phosphor-svelte/lib/BroadcastIcon';
+	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import logo64 from '@assets/logo/logo-64.webp';
 	import logo128 from '@assets/logo/logo-128.webp';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
@@ -34,7 +36,7 @@
 	import ReplaysIcons from 'phosphor-svelte/lib/ClockCounterClockwiseIcon';
 	import CommandIcon from 'phosphor-svelte/lib/CommandIcon';
 	import BriefcaseIcon from 'phosphor-svelte/lib/BriefcaseIcon';
-	import NotificationBell from '$lib/components/notifications/notification-bell.svelte';
+	import { NotificationBell } from '@company-of-heroes/ui/notifications';
 	import HeaderSteamPlayers from '$lib/components/layout/header-steam-players.svelte';
 	import AccountMenu from '$lib/components/account/account-menu.svelte';
 	import { provideAppHost } from '$lib/host';
@@ -44,6 +46,7 @@
 	import '@fontsource/nunito-sans/800.css';
 
 	import '../../app.css';
+	import { tooltip } from '$lib/attachments';
 
 	let { children } = $props();
 	const { t } = useI18n();
@@ -139,7 +142,10 @@
 					alt={t('Fknoobscoh - CoH app')}
 					class="-my-3 size-14"
 				/>
-				<span class="font-medium">{t('Global Community')}</span>
+				<div class="min-w-0">
+					<p class="truncate font-medium">{t('Global Community')}</p>
+					<p class="text-primary truncate text-xs font-medium">{t('App')}</p>
+				</div>
 			</div>
 			<Nav.Root class="grow">
 				<Label class="text-secondary-300 px-4 font-semibold">{t('Menu')}</Label>
@@ -163,6 +169,10 @@
 					<UsersIcon size={28} weight="duotone" />
 					{t('Players')}
 				</Nav.Link>
+				<Nav.Link href="/tournaments">
+					<TrophyIcon size={28} weight="duotone" />
+					{t('Tournaments')}
+				</Nav.Link>
 				<Nav.Link href="/streaming">
 					<BroadcastIcon size={28} weight="duotone" />
 					{t('Streaming')}
@@ -182,7 +192,7 @@
 					<div class="mt-3 mb-4 flex items-center gap-2 px-4">
 						<AccountMenu active={page.url.pathname === '/account'} />
 						{#if app.account.isAuthenticated}
-							<NotificationBell />
+							<NotificationBell side="right" align="center" sideOffset={18} />
 						{/if}
 					</div>
 					<div class="flex flex-col gap-2 px-4 py-4">
@@ -274,7 +284,7 @@
 								href={backHref}
 								useHistory={hasClientHistory}
 								aria-label={t('Go back to previous page')}
-								title={t('Go back')}
+								{@attach tooltip(t('Go back'))}
 							/>
 						{/if}
 						<Breadcrumb />
@@ -289,4 +299,6 @@
 
 <Dialog />
 <Modal />
+<!-- Tournament result popups (with confetti) and deadline warnings. -->
+<TournamentWatcher enabled={app.account.isAuthenticated} />
 <Toaster />

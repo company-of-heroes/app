@@ -143,6 +143,45 @@ export class HiddenMatchesService extends Service {
 			.andThen(() => this.refresh(filter));
 	}
 
+	/** Hides a tournament game until `unhideTournament` (the tournament ends or is cancelled). */
+	hideForTournament(sessionId: number, tournamentId: string, userId: string): Task<void> {
+		const hiddenMatches = this.pb.collection('hidden_matches');
+		const filter = this.sessionFilter(sessionId);
+		return fromPb(
+			hiddenMatches.getList<{ id: string }>(1, 1, { filter, skipTotal: true }),
+			'Could not load hidden matches'
+		)
+			.andThen((existing) =>
+				existing.items[0]
+					? okAsync(undefined)
+					: fromPb(
+							hiddenMatches.create({ sessionId, tournament: tournamentId, hiddenBy: userId }),
+							'Could not hide the tournament game'
+						).map(() => undefined)
+			)
+			.andThen(() => this.refresh(filter));
+	}
+
+	/** Shows every game a tournament hid again; staff-hidden matches stay hidden. */
+	unhideTournament(tournamentId: string): Task<void> {
+		const hiddenMatches = this.pb.collection('hidden_matches');
+		return fromPb(
+			hiddenMatches.getFullList<{ id: string; sessionId: number }>({
+				filter: this.pb.filter('tournament = {:tournamentId}', { tournamentId }),
+				fields: 'id,sessionId'
+			}),
+			'Could not load hidden matches'
+		).andThen((rows) =>
+			rows.length === 0
+				? okAsync(undefined)
+				: sequence(rows, (row) =>
+						fromPb(hiddenMatches.delete(row.id), 'Could not unhide the tournament game')
+					).andThen(() =>
+						this.refresh(rows.map((row) => this.sessionFilter(Number(row.sessionId))).join(' || '))
+					)
+		);
+	}
+
 	addKeyword(rawWord: unknown, staffId: string): Task<RecordModel> {
 		const word = normalizeKeyword(rawWord);
 		return ensure(word, badRequest('Word is required.'))

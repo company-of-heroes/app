@@ -141,7 +141,7 @@
 		<div class="min-w-0">
 			<p class="font-medium text-white">{t('Share your replay')}</p>
 			<p class="text-secondary-400 mt-0.5 text-sm">
-				{t('Upload a .rec file to Member replays so others can watch your games.')}
+				{t('Upload a .rec file to Shared Replays so others can watch your games.')}
 			</p>
 		</div>
 		<div class="flex flex-wrap items-center gap-3">
@@ -190,7 +190,7 @@
 				sort={query.sort}
 				sortDir={query.sortDir}
 				{onSort}
-				emptyMessage={t('No member replays found.')}
+				emptyMessage={t('No shared replays found.')}
 				mapLabel={t('Title')}
 			/>
 		{/if}

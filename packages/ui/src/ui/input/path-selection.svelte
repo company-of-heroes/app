@@ -3,6 +3,7 @@
 	import FolderOpenIcon from 'phosphor-svelte/lib/FolderOpenIcon';
 	import { Button } from '../button';
 	import { controlBase } from '../../variants';
+	import { escapeHtml, tooltip } from '../../attachments';
 
 	export type PathSelectionProps = {
 		value?: string;
@@ -43,7 +44,7 @@
 			'flex min-w-0 items-center truncate px-4 select-text',
 			value ? 'text-secondary-400' : 'text-secondary-600'
 		)}
-		title={value}
+		{@attach tooltip(escapeHtml(value ?? ''))}
 	>
 		{value || placeholder}
 	</div>

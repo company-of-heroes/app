@@ -4,6 +4,7 @@
 	import { usePlayer } from '.';
 	import { cn, getFactionFlagFromRace, getRacePrefix } from '$lib/utils';
 	import { factionIcon } from '$lib/components/ui/variants';
+	import { tooltip } from '$lib/attachments';
 
 	type Props = HTMLImgAttributes;
 
@@ -15,6 +16,6 @@
 	{...restProps}
 	src={getFactionFlagFromRace(player.race)}
 	alt={getRacePrefix(player.race)}
-	title={upperCase(getRacePrefix(player.race))}
+	{@attach tooltip(upperCase(getRacePrefix(player.race)))}
 	class={cn(factionIcon, 'hover:ring-secondary-700 transition-all', restProps.class)}
 />

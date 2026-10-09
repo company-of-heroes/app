@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Silver green enamel oval medal with star</title>
+	<defs>
+		<radialGradient id="m051-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#ffffff"/>
+			<stop offset="0.5" stop-color="#bfc5cc"/>
+			<stop offset="1" stop-color="#6b737c"/>
+		</radialGradient>
+		<linearGradient id="m051-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#ffffff"/>
+			<stop offset="1" stop-color="#6b737c"/>
+		</linearGradient>
+		<linearGradient id="m051-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m051-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m051-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m051-ribbon"><polygon points="12,0 52,0 52,44 12,44"/></clipPath>
+		<filter id="m051-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m051-ribbon)">
+			<rect x="12" y="0" width="13.33" height="48" fill="#8f2232"/><rect x="25.33" y="0" width="13.33" height="48" fill="#c23b3b"/><rect x="38.67" y="0" width="13.33" height="48" fill="#8f2232"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m051-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m051-fold)"/>
+		</g>
+		<circle cx="32" cy="45" r="3.4" fill="url(#m051-metal)" stroke="#3d434a" stroke-width="0.6"/><circle cx="32" cy="51" r="2.6" fill="none" stroke="url(#m051-rim)" stroke-width="1.6"/>
+		<g transform="translate(32 84)" filter="url(#m051-shadow)">
+			<path d="M-20,0 A20,26 0 1 0 20,0 A20,26 0 1 0 -20,0 Z" fill="url(#m051-metal)" stroke="#3d434a" stroke-width="1"/><path d="M-20,0 A20,26 0 1 0 20,0 A20,26 0 1 0 -20,0 Z" transform="scale(0.72)" fill="#2f6b3a" stroke="#6b737c" stroke-width="1"/><path d="M-20,0 A20,26 0 1 0 20,0 A20,26 0 1 0 -20,0 Z" transform="scale(0.72)" fill="url(#m051-gloss)"/>
+			<g transform="scale(1.15)" fill="#ffffff" color="#ffffff"><path d="M0,-9.5 L2.23,-3.07 L9.04,-2.94 L3.61,1.17 L5.58,7.69 L0,3.8 L-5.58,7.69 L-3.61,1.17 L-9.04,-2.94 L-2.23,-3.07 Z"/></g>
+		</g>
+	</g>
+</svg>

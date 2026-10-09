@@ -5,6 +5,7 @@
 	import { Avatar } from 'bits-ui';
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Dropdown from '@company-of-heroes/ui/dropdown';
+	import { NotificationBell } from '@company-of-heroes/ui/notifications';
 	import { dropdownItemIcon } from '@company-of-heroes/ui/variants';
 	import { authDisplayName } from '$lib/auth/user';
 	import { cn } from '$lib/utils/cn';
@@ -48,6 +49,9 @@
 
 {#if isLoggedIn && user}
 	<div class="flex h-full items-stretch">
+		<div class="border-secondary-800 flex h-full items-center border-r px-3">
+			<NotificationBell align="end" sideOffset={14} />
+		</div>
 		<Dropdown.Root
 			align="end"
 			alignOffset={-1}

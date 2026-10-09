@@ -11,7 +11,8 @@ const NESTED_FALLBACK: Record<string, string> = {
 	replays: 'Replay',
 	history: 'Match',
 	players: 'Player',
-	live: 'Live lobby'
+	live: 'Live lobby',
+	tournaments: 'Tournament'
 };
 
 const ADMIN_PAGES: Record<string, string> = {
@@ -34,6 +35,7 @@ const SECTIONS: Record<string, string> = {
 	leaderboards: 'Leaderboards',
 	players: 'Players',
 	streaming: 'Streaming',
+	tournaments: 'Tournaments',
 	settings: 'Settings',
 	account: 'Account',
 	admin: 'Management'

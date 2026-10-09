@@ -15,8 +15,8 @@
 	<meta
 		name="description"
 		content={fromMatchId
-			? t('Publish this match to Member replays. It will leave Community matches.')
-			: t('Upload a Company of Heroes .rec file to share it in Member replays.')}
+			? t('Publish this match to Shared Replays. It will leave Community matches.')
+			: t('Upload a Company of Heroes .rec file to share it in Shared Replays.')}
 	/>
 </svelte:head>
 

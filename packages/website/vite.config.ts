@@ -36,6 +36,8 @@ export default defineConfig({
 			'@svelte-i18n/core',
 			'@company-of-heroes/i18n',
 			'@company-of-heroes/game-data',
+			// A dependency of @company-of-heroes/ui; Svelte libraries' plain deps are externalized otherwise.
+			'@company-of-heroes/api',
 			'@fknoobs/replay-parser'
 		]
 	},

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Bronze oval medal with wreath</title>
+	<defs>
+		<radialGradient id="m012-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="0.5" stop-color="#b4733a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</radialGradient>
+		<linearGradient id="m012-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</linearGradient>
+		<linearGradient id="m012-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m012-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m012-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m012-ribbon"><polygon points="12,0 52,0 52,44 12,44"/></clipPath>
+		<filter id="m012-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m012-ribbon)">
+			<rect x="12" y="0" width="6.4" height="48" fill="#f4f1e8"/><rect x="18.4" y="0" width="6.4" height="48" fill="#c23b3b"/><rect x="24.8" y="0" width="14.4" height="48" fill="#f4f1e8"/><rect x="39.2" y="0" width="6.4" height="48" fill="#c23b3b"/><rect x="45.6" y="0" width="6.4" height="48" fill="#f4f1e8"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m012-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m012-fold)"/>
+		</g>
+		<ellipse cx="32" cy="48" rx="6" ry="4.5" fill="none" stroke="url(#m012-rim)" stroke-width="2"/>
+		<g transform="translate(32 84)" filter="url(#m012-shadow)">
+			<path d="M-20,0 A20,26 0 1 0 20,0 A20,26 0 1 0 -20,0 Z" fill="url(#m012-metal)" stroke="#3f230b" stroke-width="1"/><path d="M-20,0 A20,26 0 1 0 20,0 A20,26 0 1 0 -20,0 Z" transform="scale(0.82)" fill="none" stroke="#6b3d18" stroke-width="0.9" opacity="0.8"/>
+			<g transform="scale(1.15)" fill="#3f230b" color="#3f230b"><ellipse cx="-1.65" cy="9.36" rx="1.2" ry="2.8" transform="rotate(100 -1.65 9.36)"/><ellipse cx="-6.36" cy="7.06" rx="1.2" ry="2.8" transform="rotate(132 -6.36 7.06)"/><ellipse cx="-9.13" cy="2.62" rx="1.2" ry="2.8" transform="rotate(164 -9.13 2.62)"/><ellipse cx="-9.13" cy="-2.62" rx="1.2" ry="2.8" transform="rotate(196 -9.13 -2.62)"/><ellipse cx="-6.36" cy="-7.06" rx="1.2" ry="2.8" transform="rotate(228 -6.36 -7.06)"/><path d="M-1,9.5 A9.5,9.5 0 0 1 -9.3,-2" fill="none" stroke="currentColor" stroke-width="0.8"/><ellipse cx="1.65" cy="9.36" rx="1.2" ry="2.8" transform="rotate(80 1.65 9.36)"/><ellipse cx="6.36" cy="7.06" rx="1.2" ry="2.8" transform="rotate(48 6.36 7.06)"/><ellipse cx="9.13" cy="2.62" rx="1.2" ry="2.8" transform="rotate(16 9.13 2.62)"/><ellipse cx="9.13" cy="-2.62" rx="1.2" ry="2.8" transform="rotate(-16 9.13 -2.62)"/><ellipse cx="6.36" cy="-7.06" rx="1.2" ry="2.8" transform="rotate(-48 6.36 -7.06)"/><path d="M1,9.5 A9.5,9.5 0 0 0 9.3,-2" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M0,-4.2 L1,-1.38 L3.99,-1.3 L1.62,0.53 L2.47,3.4 L0,1.7 L-2.47,3.4 L-1.62,0.53 L-3.99,-1.3 L-1,-1.38 Z"/></g>
+		</g>
+	</g>
+</svg>

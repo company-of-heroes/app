@@ -23,7 +23,7 @@
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import * as List from '../ui/list';
-	import { StaffDebug } from '../ui/staff-debug';
+	import { StaffSection } from '../ui/staff-section';
 	import { detailMetaGrid, interactive } from '../variants';
 	import MemberReplayDetailHeader from './member-replay-detail-header.svelte';
 	import { loadReplayActionsAsync, parseReplayAsync } from './parse/parse-replay-async';
@@ -32,10 +32,12 @@
 	import ReplayChat from './replay-chat.svelte';
 	import ReplayDetailHeader from './replay-detail-header.svelte';
 	import ReplayOverview from './replay-overview.svelte';
+	import ReplayRoot from './replay-root.svelte';
 	import ReplayTabs from './replay-tabs.svelte';
 	import ReplayTabsSkeleton from './replay-tabs-skeleton.svelte';
 	import type { CommunityMatchDetail, ReplayAction, ReplayData, ReplayMessage } from './types';
 	import { formatReplayDurationLabel, isProGameplayMatch, matchDurationSeconds } from './utils';
+	import { tooltip } from '../attachments';
 
 	type ParsedReplay = ReplayData & {
 		messages: ReplayMessage[];
@@ -380,7 +382,7 @@
 
 {#snippet staffDebug()}
 	{#if isStaff}
-		<StaffDebug>
+		<StaffSection>
 			<div class={detailMetaGrid}>
 				<List.Title>{t('Match ID')}</List.Title>
 				<List.Value class="tabular-nums">{match.id}</List.Value>
@@ -391,7 +393,7 @@
 				<List.Title>{t('Owner')}</List.Title>
 				<List.Value>{match.owner || '—'}</List.Value>
 			</div>
-		</StaffDebug>
+		</StaffSection>
 	{/if}
 {/snippet}
 
@@ -452,15 +454,17 @@
 				<List.Title>{t('Status')}</List.Title>
 				<List.Value class="flex items-center">
 					{#if statusPending}
-						<span title={t('Result pending')}><HourglassIcon class="text-primary" /></span>
+						<span {@attach tooltip(t('Result pending'))}
+							><HourglassIcon class="text-primary" /></span
+						>
 					{:else}
-						<span title={t('Result saved')}><ChecksIcon class="text-green-400" /></span>
+						<span {@attach tooltip(t('Result saved'))}><ChecksIcon class="text-green-400" /></span>
 					{/if}
 				</List.Value>
 				<List.Title>{t('Title')}</List.Title>
 				<List.Value>
 					{#if isRanked}
-						<span class="flex items-center" title={t('Ranked match')}>
+						<span class="flex items-center" {@attach tooltip(t('Ranked match'))}>
 							<RankingIcon class="text-primary-100" weight="duotone" />
 						</span>
 					{:else}
@@ -546,20 +550,21 @@
 {:else if errorMessage}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{errorMessage}</p>
 	{@render comments()}
-{:else if replay && replayData}
-	{@const parsedReplay = replay}
-	<ReplayTabs bind:value={tab} showScreenshots={!!screenshots} {screenshots}>
-		{#snippet overview()}
-			<ReplayOverview {match} replay={replayData} {livePlayers} {nameExtra} />
-			{#if actionsPending || (!actionsLoaded && parseId != null)}
-				<p class="text-secondary-400 px-4 py-6 text-sm">{t('Loading…')}</p>
-			{:else}
-				<ReplayActions replay={replayData} />
-			{/if}
-			{@render comments()}
-		{/snippet}
-		{#snippet chat()}
-			<ReplayChat messages={parsedReplay.messages} playerCount={parsedReplay.playerCount} />
-		{/snippet}
-	</ReplayTabs>
+{:else if replayData}
+	<ReplayRoot replay={replayData}>
+		<ReplayTabs bind:value={tab} showScreenshots={!!screenshots} {screenshots}>
+			{#snippet overview()}
+				<ReplayOverview {match} {livePlayers} {nameExtra} />
+				{#if actionsPending || (!actionsLoaded && parseId != null)}
+					<p class="text-secondary-400 px-4 py-6 text-sm">{t('Loading…')}</p>
+				{:else}
+					<ReplayActions />
+				{/if}
+				{@render comments()}
+			{/snippet}
+			{#snippet chat()}
+				<ReplayChat />
+			{/snippet}
+		</ReplayTabs>
+	</ReplayRoot>
 {/if}

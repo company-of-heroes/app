@@ -48,15 +48,25 @@ Changing `name` in `wrangler.toml` creates a **new** Worker script; it does not 
 
 Until domains are moved, the old Worker keeps serving production traffic.
 
-## CI (optional)
+## CI
 
-A typical workflow would:
+[`.github/workflows/deploy-cloudflare.yml`](../../.github/workflows/deploy-cloudflare.yml) deploys on every push to `master`, only what changed:
 
-1. Trigger on push to `master` when `packages/website/**` or `packages/shared-assets/**` changes
-2. Run `pnpm install` and `pnpm website:build`
-3. Run `pnpm --filter @company-of-heroes/website deploy`
+| Target | Deploys when these change |
+| --- | --- |
+| `coh1stats-website` | `packages/website`, `ui`, `api`, `i18n`, `game-data`, `shared-assets`, app map images, `POLICY.md`, `pnpm-lock.yaml` |
+| `coh1stats-api-gateway` | `packages/api-gateway` (incl. the built `overlay-default/`) |
+| `coh1stats-jobs-worker` | `packages/jobs-worker` |
+| `fknoobs-smurf-worker` | `packages/smurf-worker` |
 
-Store `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets.
+The website deploys first; the workers follow (they bind to it). Run the workflow manually (**Actions → Deploy Cloudflare → Run workflow**) to deploy one target or all of them.
+
+Repository secrets:
+
+- `CLOUDFLARE_API_TOKEN`: **Edit Cloudflare Workers** template, plus **Workers R2 Storage: Edit** (account) and **Workers KV Storage: Edit** (account), zone `coh1stats.com` for the gateway routes
+- `CLOUDFLARE_ACCOUNT_ID`
+
+Worker secrets (`wrangler secret put`) stay in Cloudflare; a deploy does not touch them.
 
 ## Preview locally
 

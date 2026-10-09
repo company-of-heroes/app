@@ -10,6 +10,7 @@
 	import HourglassIcon from 'phosphor-svelte/lib/HourglassIcon';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
 	import DetailHeader from './replay-detail-header.svelte';
+	import { tooltip } from '../attachments';
 
 	type Props = {
 		title: string;
@@ -97,11 +98,11 @@
 			<List.Title>{t('Status')}</List.Title>
 			<List.Value class="flex items-center">
 				{#if statusPending}
-					<span title={t('Result pending')}>
+					<span {@attach tooltip(t('Result pending'))}>
 						<HourglassIcon class="text-primary" />
 					</span>
 				{:else}
-					<span title={t('Result saved')}>
+					<span {@attach tooltip(t('Result saved'))}>
 						<ChecksIcon class="text-green-400" />
 					</span>
 				{/if}
@@ -109,7 +110,7 @@
 			<List.Title>{t('Title')}</List.Title>
 			<List.Value>
 				{#if isRanked}
-					<span class="flex items-center" title={t('Ranked match')}>
+					<span class="flex items-center" {@attach tooltip(t('Ranked match'))}>
 						<RankingIcon class="text-primary-100" weight="duotone" />
 					</span>
 				{:else}

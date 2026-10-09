@@ -306,7 +306,7 @@
 								loading={pendingSessionId === match.id}
 								onclick={() => toggleHidden(match.id, isManuallyHidden)}
 								aria-label={isManuallyHidden ? t('Show match') : t('Hide match')}
-								title={isManuallyHidden ? t('Show match') : t('Hide match')}
+								{@attach tooltip(isManuallyHidden ? t('Show match') : t('Hide match'))}
 							>
 								{#if isManuallyHidden}
 									<EyeIcon class="size-4" />

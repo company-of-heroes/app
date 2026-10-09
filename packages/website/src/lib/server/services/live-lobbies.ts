@@ -35,6 +35,8 @@ export type LiveRow = {
 	isReplay: boolean;
 	lobby: string;
 	matchType: number;
+	/** A hidden match (tournament game): left out of every public list. */
+	isHidden: boolean;
 	createdAt: string;
 	updatedAt: string;
 };
@@ -178,8 +180,15 @@ export class LiveLobbiesService extends Service {
 				? this.durableLobby(userId, input)
 				: okAsync(input.lobby ?? previous?.lobby ?? '')
 			)
-				.andThen((lobbyId) => {
+				.andThen((lobbyId) =>
+					(input.sessionId > 0
+						? this.services.hiddenMatches.isSessionHidden(input.sessionId)
+						: okAsync(false)
+					).map((isHidden) => ({ lobbyId, isHidden }))
+				)
+				.andThen(({ lobbyId, isHidden }) => {
 					const data = {
+						isHidden,
 						user: userId,
 						sessionId: input.sessionId,
 						isRanked: input.isRanked,
@@ -260,7 +269,7 @@ export class LiveLobbiesService extends Service {
 		return cached('live:list', 10, () =>
 			fromPb(
 				this.live.getList<LiveRow>(1, LIST_LIMIT, {
-					filter: this.pb.filter('updatedAt > {:since} && isReplay != true', {
+					filter: this.pb.filter('updatedAt > {:since} && isReplay != true && isHidden != true', {
 						since: pbDate(Date.now() - LIVE_STALE_MS)
 					}),
 					sort: '-updatedAt',
@@ -287,7 +296,7 @@ export class LiveLobbiesService extends Service {
 	get(id: string): Task<LiveLobbyRecord> {
 		return pbMaybe(this.live.getOne<LiveRow>(id))
 			.andThen((row) =>
-				row && isFresh(row)
+				row && isFresh(row) && !row.isHidden
 					? this.hostNames([row.user]).map((hosts) => toPublic(row, hosts))
 					: okAsync(null)
 			)

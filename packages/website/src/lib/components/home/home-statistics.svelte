@@ -77,11 +77,11 @@
 			</div>
 		{:else}
 			{#snippet maps()}
-				<Statistics.Maps maps={stats.maps} matchCount={stats.matchCount} limit={5} />
+				<Statistics.Maps limit={5} />
 			{/snippet}
 			{#snippet side()}
-				<Statistics.Factions factions={stats.factions} compact />
-				<Statistics.Facts statistics={stats} limit={4} />
+				<Statistics.Factions compact />
+				<Statistics.Facts limit={4} />
 			{/snippet}
 			<Statistics.KeyNumbers headline={statistics.headline} class="border-secondary-800 border-b" />
 			{@render modeBar(false)}
@@ -90,7 +90,9 @@
 					{t('No matches in this period yet.')}
 				</p>
 			{:else}
-				{@render grid(maps, side)}
+				<Statistics.Root statistics={stats}>
+					{@render grid(maps, side)}
+				</Statistics.Root>
 			{/if}
 		{/if}
 	</section>

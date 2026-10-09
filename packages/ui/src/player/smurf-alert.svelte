@@ -48,7 +48,7 @@
 			interactive,
 			'text-destructive inline-flex shrink-0 items-center gap-0.5 text-[10px] font-bold tracking-wide uppercase hover:underline'
 		)}
-		title={t('Smurf · {name}', { name: smurf.lenderAlias })}
+		aria-label={t('Smurf · {name}', { name: smurf.lenderAlias })}
 	>
 		<BinocularsIcon class="shrink-0" size={12} weight="bold" />
 		{t('Smurf')}

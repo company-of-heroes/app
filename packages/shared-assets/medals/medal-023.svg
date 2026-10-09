@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Gold blue enamel star with star</title>
+	<defs>
+		<radialGradient id="m023-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#fff1bf"/>
+			<stop offset="0.5" stop-color="#d6a640"/>
+			<stop offset="1" stop-color="#86601a"/>
+		</radialGradient>
+		<linearGradient id="m023-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#fff1bf"/>
+			<stop offset="1" stop-color="#86601a"/>
+		</linearGradient>
+		<linearGradient id="m023-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m023-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m023-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m023-ribbon"><polygon points="12,0 52,0 52,40 32,47 12,40"/></clipPath>
+		<filter id="m023-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m023-ribbon)">
+			<rect x="12" y="0" width="3.64" height="48" fill="#6b2d5c"/><rect x="15.64" y="0" width="5.45" height="48" fill="#e0b23a"/><rect x="21.09" y="0" width="5.45" height="48" fill="#2f5a34"/><rect x="26.55" y="0" width="10.91" height="48" fill="#b8924a"/><rect x="37.45" y="0" width="5.45" height="48" fill="#2f5a34"/><rect x="42.91" y="0" width="5.45" height="48" fill="#e0b23a"/><rect x="48.36" y="0" width="3.64" height="48" fill="#6b2d5c"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m023-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m023-fold)"/>
+		</g>
+		<circle cx="32" cy="47" r="3.4" fill="url(#m023-metal)" stroke="#4f3a0c" stroke-width="0.6"/><circle cx="32" cy="53" r="2.6" fill="none" stroke="url(#m023-rim)" stroke-width="1.6"/>
+		<g transform="translate(32 84)" filter="url(#m023-shadow)">
+			<path d="M0,-28 L7.05,-9.71 L26.63,-8.65 L11.41,3.71 L16.46,22.65 L0,12 L-16.46,22.65 L-11.41,3.71 L-26.63,-8.65 L-7.05,-9.71 Z" fill="url(#m023-metal)" stroke="#4f3a0c" stroke-width="1"/><path d="M0,-28 L7.05,-9.71 L26.63,-8.65 L11.41,3.71 L16.46,22.65 L0,12 L-16.46,22.65 L-11.41,3.71 L-26.63,-8.65 L-7.05,-9.71 Z" transform="scale(0.8)" fill="#1f4f9a" stroke="#86601a" stroke-width="1"/><path d="M0,-28 L7.05,-9.71 L26.63,-8.65 L11.41,3.71 L16.46,22.65 L0,12 L-16.46,22.65 L-11.41,3.71 L-26.63,-8.65 L-7.05,-9.71 Z" transform="scale(0.8)" fill="url(#m023-gloss)"/><circle r="11" fill="url(#m023-metal)" stroke="#4f3a0c" stroke-width="0.8"/><circle r="9.2" fill="none" stroke="#86601a" stroke-width="0.6"/>
+			<g transform="scale(0.78)" fill="#4f3a0c" color="#4f3a0c"><path d="M0,-9.5 L2.23,-3.07 L9.04,-2.94 L3.61,1.17 L5.58,7.69 L0,3.8 L-5.58,7.69 L-3.61,1.17 L-9.04,-2.94 L-2.23,-3.07 Z"/></g>
+		</g>
+	</g>
+</svg>

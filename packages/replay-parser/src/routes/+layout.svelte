@@ -31,6 +31,7 @@
 	import '../../../app/src/lib/fonts/TT Mussels/style.css';
 	import '@fontsource/nunito-sans/800.css';
 	import '../app.css';
+	import { tooltip } from '@company-of-heroes/ui/attachments';
 
 	let { children, data }: LayoutProps = $props();
 
@@ -117,7 +118,10 @@
 		>
 			<a href="/" class={cn(interactive, 'flex min-w-0 items-center gap-2.5 ps-2.5 pe-3')}>
 				<img src={logo} alt="" class="size-6 shrink-0 rounded-full" />
-				<p class="truncate text-sm font-medium text-white">{t('Company of Heroes')}</p>
+				<div class="flex min-w-0 flex-col leading-tight">
+					<p class="truncate text-sm font-medium text-white">{t('Company of Heroes')}</p>
+					<p class="text-primary truncate text-xs font-medium">{t('Replay Manager')}</p>
+				</div>
 			</a>
 			<div data-tauri-drag-region class="grow"></div>
 			<div class="flex shrink-0 items-center gap-1 pe-2">
@@ -136,7 +140,7 @@
 					variant="ghost"
 					size="icon-sm"
 					class={headerAction}
-					title={t('Refresh')}
+					{@attach tooltip(t('Refresh'))}
 					aria-label={t('Refresh')}
 					loading={library.scanning}
 					onclick={() => void library.scan()}
@@ -147,7 +151,7 @@
 					variant="ghost"
 					size="icon-sm"
 					class={headerAction}
-					title={t('Settings')}
+					{@attach tooltip(t('Settings'))}
 					aria-label={t('Settings')}
 					onclick={openSettings}
 				>

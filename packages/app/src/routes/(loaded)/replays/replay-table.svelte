@@ -275,7 +275,7 @@
 		try {
 			await app.database.replays.publish(row.id);
 			list.patch(row.id, { visibility: 'member' } as Partial<ReplaysExpanded>);
-			app.toast.success(t('Replay published to Member replays.'));
+			app.toast.success(t('Replay published to Shared Replays.'));
 		} catch (error) {
 			app.toast.error(
 				t('Failed to publish replay: {message}', {
@@ -362,9 +362,9 @@
 			row.visibility === 'member' && 'pointer-events-none cursor-not-allowed opacity-50'
 		)}
 		disabled={row.visibility === 'member'}
-		aria-label={row.visibility === 'member' ? t('Published') : t('Publish to Member replays')}
+		aria-label={row.visibility === 'member' ? t('Published') : t('Publish to Shared Replays')}
 		{@attach tooltip(
-			row.visibility === 'member' ? t('Already published') : t('Publish to Member replays')
+			row.visibility === 'member' ? t('Already published') : t('Publish to Shared Replays')
 		)}
 		onclick={() => void publishReplay(row)}
 	>

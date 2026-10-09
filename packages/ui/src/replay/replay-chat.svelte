@@ -9,14 +9,16 @@
 	import { Button } from '../ui/button';
 	import { controlBase, controlDisabled } from '../variants';
 	import type { ReplayMessage } from './types';
+	import { useReplayData } from './context';
 
 	type Props = {
-		messages: ReplayMessage[];
-		playerCount: number;
 		class?: string;
 	};
 
-	let { messages, playerCount, class: className }: Props = $props();
+	let { class: className }: Props = $props();
+	const context = useReplayData();
+	const messages = $derived(context.replay.messages);
+	const playerCount = $derived(context.replay.playerCount);
 	const { t } = useI18n();
 	const host = tryUseHost();
 	const translate = host?.api.translate;
@@ -92,7 +94,7 @@
 				aria-label={t('Target language')}
 				bind:value={targetLanguage}
 				disabled={translating}
-				class={cn(controlBase, 'h-9 w-16 shrink-0 px-2 text-center text-sm', controlDisabled)}
+				class={cn(controlBase, 'h-8 w-16 shrink-0 px-2 text-center text-sm', controlDisabled)}
 			/>
 			<Button
 				size="sm"

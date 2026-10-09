@@ -11,6 +11,8 @@
 		vote?: CommentVoteValue;
 		disabled?: boolean;
 		compact?: boolean;
+		/** `horizontal` sits inline in a comment's action row. */
+		orientation?: 'vertical' | 'horizontal';
 		href?: string;
 		onvote?: (value: 1 | -1) => void;
 		class?: string;
@@ -23,6 +25,7 @@
 		vote = 0,
 		disabled = false,
 		compact = false,
+		orientation = 'vertical',
 		href,
 		onvote,
 		class: className
@@ -31,7 +34,8 @@
 	const upActive = $derived(vote === 1);
 	const downActive = $derived(vote === -1);
 	const scoreClass = $derived(scoreClassName(score));
-	const iconSize = $derived(compact ? 16 : 18);
+	const horizontal = $derived(orientation === 'horizontal');
+	const iconSize = $derived(compact || horizontal ? 16 : 18);
 
 	function voteUp() {
 		onvote?.(1);
@@ -42,13 +46,16 @@
 	}
 </script>
 
-<div class={cn('flex w-9 shrink-0 flex-col items-center gap-2', className)}>
+<div
+	class={cn('flex shrink-0 items-center', horizontal ? 'gap-0.5' : 'w-9 flex-col gap-2', className)}
+>
 	<Button
 		type={href ? undefined : 'button'}
 		{href}
 		variant="ghost"
 		size="icon-sm"
 		class={cn(
+			horizontal && 'size-7',
 			upActive
 				? 'bg-success/20 text-success hover:bg-success/30 hover:text-success'
 				: 'text-secondary-300 hover:bg-success/15 hover:text-green-400'
@@ -60,7 +67,13 @@
 	>
 		<CaretUpIcon size={iconSize} weight="fill" />
 	</Button>
-	<span class={cn('text-center text-sm leading-none font-bold tabular-nums', scoreClass)}>
+	<span
+		class={cn(
+			'text-center text-sm leading-none font-bold tabular-nums',
+			horizontal && 'min-w-5',
+			scoreClass
+		)}
+	>
 		{score}
 	</span>
 	<Button
@@ -69,6 +82,7 @@
 		variant="ghost"
 		size="icon-sm"
 		class={cn(
+			horizontal && 'size-7',
 			downActive
 				? 'bg-destructive/20 hover:bg-destructive/30 text-red-400 hover:text-red-300'
 				: 'text-secondary-300 hover:bg-destructive/15 hover:text-red-400'

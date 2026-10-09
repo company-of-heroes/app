@@ -7,6 +7,7 @@
 	import { useI18n } from '$lib/i18n';
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
+	import { tooltip } from '@company-of-heroes/ui/attachments';
 
 	type Props = {
 		class?: string;
@@ -38,7 +39,7 @@
 		class={cn(interactive, className)}
 		aria-haspopup="dialog"
 		aria-label={label}
-		title={label}
+		{@attach tooltip(label)}
 		onclick={() => (open = true)}
 	>
 		{@render children()}

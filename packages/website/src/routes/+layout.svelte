@@ -5,7 +5,9 @@
 	import Footer from '$lib/components/layout/footer.svelte';
 	import I18nBoot from '$lib/components/i18n/i18n-boot.svelte';
 	import { provideWebsiteHost } from '$lib/host';
+	import { Modal } from '@company-of-heroes/ui/modal';
 	import { Toaster } from '@company-of-heroes/ui/toasts';
+	import { TournamentWatcher } from '@company-of-heroes/ui/tournament';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
 	import { loadLatestDownload } from '$lib/site/download.svelte';
 	import { pageShell } from '$lib/utils/variants';
@@ -73,5 +75,10 @@
 			<Footer />
 		</div>
 		<Toaster />
+		<Modal />
+		{#if !building}
+			<!-- Tournament result popups (with confetti) and deadline warnings. -->
+			<TournamentWatcher enabled={!!page.data.user} />
+		{/if}
 	</div>
 </I18nBoot>

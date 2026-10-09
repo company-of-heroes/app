@@ -16,6 +16,8 @@ export type NotificationRecord = RecordModel & {
 	replayComment?: string;
 	/** External page the notification is about (e.g. a reported wiki page). */
 	url?: string;
+	/** Tournament the notice is about; `url` then points at its page (maybe `?tab=`). */
+	tournament?: string;
 };
 
 export type NotificationReadRecord = RecordModel & {

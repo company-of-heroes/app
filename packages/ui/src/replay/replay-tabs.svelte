@@ -25,7 +25,7 @@
 </script>
 
 <Tabs.Root bind:value>
-	<Tabs.List class="border-secondary-800 w-full overflow-x-auto border-t border-b px-4 py-2.5">
+	<Tabs.List class="border-secondary-800 w-full border-t border-b px-4">
 		<Tabs.Trigger value="overview">{t('Overview')}</Tabs.Trigger>
 		{#if showChat}
 			<Tabs.Trigger value="chat">{t('Chat')}</Tabs.Trigger>

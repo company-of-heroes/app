@@ -3,11 +3,12 @@
 	import { resource, watch } from 'runed';
 	import { cn } from '../cn';
 	import { useHost, type CommentTarget } from '../host/host.context';
+	import PlayerLabels from '../player/player-labels.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
-	import { footerAction, interactive, markdownProse, mePlayerText } from '../variants';
+	import { interactive, markdownProse, mePlayerText } from '../variants';
 	import CommentComposer from './comment-composer.svelte';
 	import CommentDeleteDialog from './comment-delete-dialog.svelte';
 	import CommentDeletedNote from './comment-deleted-note.svelte';
@@ -17,6 +18,7 @@
 	import { compareCommentsByScore, nextCommentScore, nextCommentVote } from './vote';
 	import ArrowBendUpLeftIcon from 'phosphor-svelte/lib/ArrowBendUpLeftIcon';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
+	import ChatsCircleIcon from 'phosphor-svelte/lib/ChatsCircleIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
 
@@ -72,6 +74,13 @@
 	const myName = $derived(user?.name || t('Player'));
 	const liveCount = $derived(items.filter((item) => !item.deleted).length);
 	const staff = $derived(user?.isStaff ?? false);
+	const commentAction = 'h-7 gap-1.5 px-2 text-xs';
+	const quickReplies = $derived([
+		t('GG'),
+		t('Well played'),
+		t('Great micro'),
+		t('What a comeback')
+	]);
 	const people = $derived.by(() => {
 		const me = user?.id;
 		const seen: Record<string, true> = {};
@@ -380,6 +389,21 @@
 		}
 	);
 
+	/** Briefly tints a comment the user just posted so they see where it landed. */
+	function flash(id: string) {
+		activeHighlightId = id;
+		window.setTimeout(() => {
+			document
+				.getElementById(`comment-${id}`)
+				?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		}, 50);
+		window.setTimeout(() => {
+			if (activeHighlightId === id) {
+				activeHighlightId = null;
+			}
+		}, 2000);
+	}
+
 	async function submit() {
 		const text = draft.trim();
 		if (!text || posting || !user) {
@@ -391,6 +415,7 @@
 			const created = await host.api.comments.create(target, text);
 			draft = '';
 			comments.mutate([...(comments.current ?? []), created]);
+			flash(created.id);
 		} catch {
 			host.notify.error(t('Failed to post comment.'));
 		} finally {
@@ -412,6 +437,7 @@
 			replyTo = null;
 			threadCollapsed[threadRootId(parent)] = false;
 			comments.mutate([...(comments.current ?? []), created]);
+			flash(created.id);
 		} catch {
 			host.notify.error(t('Failed to post comment.'));
 		} finally {
@@ -529,7 +555,13 @@
 		{#if comments.loading && items.length === 0}
 			<p class="text-secondary-400 px-4 py-4 text-sm">{t('Loading...')}</p>
 		{:else if items.length === 0}
-			<p class="text-secondary-400 px-4 py-4 text-sm">{t('No comments yet.')}</p>
+			<div class="flex items-center gap-3.5 px-4 py-4">
+				<ChatsCircleIcon size={32} weight="duotone" class="text-secondary-600 shrink-0" />
+				<div class="min-w-0">
+					<p class="font-semibold text-white">{t('No comments yet.')}</p>
+					<p class="text-secondary-400 text-sm">{t('Start the conversation about this match.')}</p>
+				</div>
+			</div>
 		{:else}
 			{#each tree as node (node.id)}
 				<div class="border-secondary-800 border-b last:border-b-0">
@@ -544,6 +576,9 @@
 			bind:value={draft}
 			{posting}
 			{people}
+			collapsible
+			suggestions={quickReplies}
+			placeholder={t('What did you think of this match?')}
 			name={myName}
 			avatarUrl={userAvatar}
 			excludeUserId={user.id}
@@ -573,7 +608,7 @@
 
 {#snippet replyComposer()}
 	<CommentComposer
-		class="border-t-0 bg-transparent"
+		class="bg-transparent"
 		bind:value={replyDraft}
 		posting={replyPosting}
 		{people}
@@ -614,14 +649,34 @@
 
 {#snippet thread(nodes: CommentNode[], depth: number)}
 	{#if nodes.length > 0}
-		<div class={cn(depth <= 4 && 'border-secondary-800 ml-4 border-l')}>
-			{#each nodes as node (node.id)}
-				<div class="border-secondary-800 border-b last:border-b-0">
-					{@render commentBlock(node, depth)}
-				</div>
-			{/each}
+		<div class="border-secondary-800 border-t">
+			<div class={cn(depth <= 4 && 'border-secondary-800 ml-8 border-l')}>
+				{#each nodes as node (node.id)}
+					<div class="border-secondary-800 border-b last:border-b-0">
+						{@render commentBlock(node, depth)}
+					</div>
+				{/each}
+			</div>
 		</div>
 	{/if}
+{/snippet}
+
+{#snippet repliesToggle(replies: RepliesToggle)}
+	<Button
+		type="button"
+		variant="ghost"
+		size="sm"
+		class={cn(commentAction, 'text-primary hover:text-primary hover:bg-primary/10 font-semibold')}
+		onclick={replies.ontoggle}
+		aria-expanded={replies.open}
+		aria-label={replies.open ? t('Hide replies') : t('Show replies')}
+	>
+		<CaretDownIcon
+			size={14}
+			class={cn('shrink-0 transition-transform', !replies.open && '-rotate-90')}
+		/>
+		{replies.count === 1 ? t('1 reply') : t('{count} replies', { count: replies.count })}
+	</Button>
 {/snippet}
 
 {#snippet placeholderRow(id: string, nested: boolean, replies?: RepliesToggle)}
@@ -629,37 +684,18 @@
 		id={`comment-${id}`}
 		class={cn(
 			'scroll-mt-24 opacity-50 transition-opacity hover:opacity-100',
-			!nested && 'bg-secondary-800/30'
+			!nested && 'bg-secondary-800/30',
+			nested ? 'px-3 py-2.5' : 'px-4 py-3.5'
 		)}
 	>
-		<div class={cn(nested ? 'px-3 pt-2.5 pb-1.5' : 'px-4 pt-3.5 pb-2')}>
-			{#if staff}
-				<Badge variant="warning">{t('Deleted comment')}</Badge>
-			{:else}
-				<p class="text-secondary-500 text-sm italic">{t('Comment has been deleted')}</p>
-			{/if}
-		</div>
+		{#if staff}
+			<Badge variant="warning">{t('Deleted comment')}</Badge>
+		{:else}
+			<p class="text-secondary-500 text-sm italic">{t('Comment has been deleted')}</p>
+		{/if}
 		{#if replies}
-			<div
-				class={cn('border-secondary-800 flex items-stretch border-t', replies.open && 'border-b')}
-			>
-				<Button
-					type="button"
-					variant="ghost"
-					class={cn(
-						'hover:bg-primary/10 h-auto min-h-8 min-w-0 flex-1 justify-start rounded-none border-0 px-3 text-xs',
-						replies.open ? 'text-primary hover:text-primary' : 'text-secondary-400 hover:text-white'
-					)}
-					onclick={replies.ontoggle}
-					aria-expanded={replies.open}
-					aria-label={replies.open ? t('Hide replies') : t('Show replies')}
-				>
-					<CaretDownIcon
-						size={14}
-						class={cn('shrink-0 transition-transform', !replies.open && '-rotate-90')}
-					/>
-					{replies.count === 1 ? t('1 reply') : t('{count} replies', { count: replies.count })}
-				</Button>
+			<div class="mt-1.5 -ml-2 flex">
+				{@render repliesToggle(replies)}
 			</div>
 		{/if}
 	</div>
@@ -680,17 +716,13 @@
 			deleted && 'opacity-50 transition-opacity hover:opacity-100'
 		)}
 	>
-		<div class={cn('flex gap-3.5', nested ? 'px-3 pt-2.5 pb-1.5' : 'px-4 pt-3.5 pb-2')}>
-			{#if !deleted}
-				<CommentVote
-					score={comment.likeCount ?? 0}
-					vote={comment.vote ?? 0}
-					compact={nested}
-					disabled={!!votingId}
-					href={user ? undefined : loginHref}
-					onvote={user ? (value) => void setVote(comment, value) : undefined}
-				/>
-			{/if}
+		<div
+			class={cn(
+				'flex gap-3.5',
+				nested ? 'px-3 pt-2.5' : 'px-4 pt-3.5',
+				editing ? 'pb-3' : 'pb-1.5'
+			)}
+		>
 			{#if avatar}
 				<img
 					src={avatar}
@@ -708,7 +740,7 @@
 				</span>
 			{/if}
 			<div class="min-w-0 flex-1">
-				<div class="flex min-w-0 flex-wrap items-center gap-2">
+				<div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
 					<PlayerStreamerIcon steamId={comment.user.steamIds?.[0]} />
 					{#if href}
 						{@const steamId = comment.user.steamIds?.[0]}
@@ -741,6 +773,9 @@
 							{comment.user.name}
 						</span>
 					{/if}
+					{#if comment.user.steamIds?.[0]}
+						<PlayerLabels labels={host.api.labels.forSteamId(comment.user.steamIds[0])} size="sm" />
+					{/if}
 					<time
 						class="text-secondary-500 text-xs whitespace-nowrap tabular-nums"
 						datetime={comment.created}
@@ -753,25 +788,87 @@
 				</div>
 				{#if !editing}
 					{#if deleted && !staff}
-						<p class="text-secondary-500 mt-1.5 text-sm italic">
+						<p class="text-secondary-500 mt-1 text-sm italic">
 							{t('Comment has been deleted')}
 						</p>
 					{:else}
-						<div class={cn(markdownProse, 'mt-1.5')}>
+						<div class={cn(markdownProse, 'mt-1')}>
 							{@html renderMarkdown(displayText(comment))}
+						</div>
+					{/if}
+					{#if deleted && staff}
+						{@const note = staffDeletedNote(comment)}
+						{#if note}
+							<div class="mt-2">
+								<CommentDeletedNote reason={note} label={t('Moderator note')} />
+							</div>
+						{/if}
+					{/if}
+					{#if !deleted || replies}
+						<div class="mt-1 -ml-2 flex flex-wrap items-center gap-0.5">
+							{#if !deleted}
+								<CommentVote
+									score={comment.likeCount ?? 0}
+									vote={comment.vote ?? 0}
+									orientation="horizontal"
+									disabled={!!votingId}
+									href={user ? undefined : loginHref}
+									onvote={user ? (value) => void setVote(comment, value) : undefined}
+								/>
+								<Button
+									type={user ? 'button' : undefined}
+									href={user ? undefined : loginHref}
+									variant="ghost"
+									size="sm"
+									class={cn(
+										commentAction,
+										replyTo === comment.id
+											? 'text-primary hover:text-primary'
+											: 'text-secondary-400 hover:text-white'
+									)}
+									onclick={user ? () => toggleReply(comment.id) : undefined}
+									aria-pressed={replyTo === comment.id}
+								>
+									<ArrowBendUpLeftIcon size={14} />
+									{t('Reply')}
+								</Button>
+								{#if canManage(comment)}
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										class={cn(commentAction, 'text-secondary-400 hover:text-white')}
+										onclick={() => startEdit(comment)}
+										aria-label={t('Edit comment')}
+									>
+										<PencilSimpleIcon size={14} />
+										{t('Edit')}
+									</Button>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										class={cn(
+											commentAction,
+											'text-secondary-400 hover:bg-destructive/10 hover:text-red-400'
+										)}
+										onclick={() => requestDelete(comment)}
+										disabled={deletingId === comment.id}
+										aria-label={t('Delete comment')}
+									>
+										<TrashIcon size={14} />
+										{t('Delete')}
+									</Button>
+								{/if}
+							{/if}
+							{#if replies}
+								{@render repliesToggle(replies)}
+							{/if}
 						</div>
 					{/if}
 				{/if}
 			</div>
 		</div>
-		{#if deleted && staff}
-			{@const note = staffDeletedNote(comment)}
-			{#if note}
-				<div class={cn(nested ? 'px-3 pb-1.5' : 'px-4 pb-2')}>
-					<CommentDeletedNote reason={note} label={t('Moderator note')} />
-				</div>
-			{/if}
-		{/if}
 		{#if editing}
 			<CommentComposer
 				bind:value={editDraft}
@@ -781,112 +878,11 @@
 				autofocus
 				placeholder={t('Edit comment')}
 				submitLabel={t('Save comment')}
-				name={myName}
-				avatarUrl={userAvatar}
 				excludeUserId={user?.id ?? ''}
 				{searchMentions}
 				onpost={() => void saveEdit()}
 				oncancel={cancelEdit}
 			/>
-		{:else if deleted}
-			{#if replies}
-				<div
-					class={cn('border-secondary-800 flex items-stretch border-t', replies.open && 'border-b')}
-				>
-					<Button
-						type="button"
-						variant="ghost"
-						class={cn(
-							'hover:bg-primary/10 h-auto min-h-8 min-w-0 flex-1 justify-start rounded-none border-0 px-3 text-xs',
-							replies.open
-								? 'text-primary hover:text-primary'
-								: 'text-secondary-400 hover:text-white'
-						)}
-						onclick={replies.ontoggle}
-						aria-expanded={replies.open}
-						aria-label={replies.open ? t('Hide replies') : t('Show replies')}
-					>
-						<CaretDownIcon
-							size={14}
-							class={cn('shrink-0 transition-transform', !replies.open && '-rotate-90')}
-						/>
-						{replies.count === 1 ? t('1 reply') : t('{count} replies', { count: replies.count })}
-					</Button>
-				</div>
-			{/if}
-		{:else}
-			<div
-				class={cn(
-					'border-secondary-800 flex items-stretch border-t',
-					(replyTo === comment.id || replies?.open) && 'border-b'
-				)}
-			>
-				<Button
-					type={user ? 'button' : undefined}
-					href={user ? undefined : loginHref}
-					variant="ghost"
-					class={cn(
-						footerAction,
-						replyTo === comment.id
-							? 'text-primary hover:text-primary'
-							: 'text-secondary-400 hover:text-white'
-					)}
-					onclick={user ? () => toggleReply(comment.id) : undefined}
-					aria-pressed={replyTo === comment.id}
-					aria-label={t('Reply')}
-				>
-					<ArrowBendUpLeftIcon size={16} />
-					{t('Reply')}
-				</Button>
-				{#if canManage(comment)}
-					<Button
-						type="button"
-						variant="ghost"
-						class={cn(footerAction, 'text-secondary-400 hover:text-white')}
-						onclick={() => startEdit(comment)}
-						aria-label={t('Edit comment')}
-					>
-						<PencilSimpleIcon size={16} />
-						{t('Edit')}
-					</Button>
-					<Button
-						type="button"
-						variant="ghost"
-						class={cn(
-							footerAction,
-							'text-secondary-400 hover:text-destructive',
-							!replies && 'border-r-0'
-						)}
-						onclick={() => requestDelete(comment)}
-						disabled={deletingId === comment.id}
-						aria-label={t('Delete comment')}
-					>
-						<TrashIcon size={16} />
-						{t('Delete')}
-					</Button>
-				{/if}
-				{#if replies}
-					<Button
-						type="button"
-						variant="ghost"
-						class={cn(
-							'hover:bg-primary/10 h-auto min-h-8 min-w-0 flex-1 justify-start rounded-none border-0 px-3 text-xs',
-							replies.open
-								? 'text-primary hover:text-primary'
-								: 'text-secondary-400 hover:text-white'
-						)}
-						onclick={replies.ontoggle}
-						aria-expanded={replies.open}
-						aria-label={replies.open ? t('Hide replies') : t('Show replies')}
-					>
-						<CaretDownIcon
-							size={14}
-							class={cn('shrink-0 transition-transform', !replies.open && '-rotate-90')}
-						/>
-						{replies.count === 1 ? t('1 reply') : t('{count} replies', { count: replies.count })}
-					</Button>
-				{/if}
-			</div>
 		{/if}
 	</div>
 {/snippet}

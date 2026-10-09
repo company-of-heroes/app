@@ -5,7 +5,7 @@
 	import CaretLeftIcon from 'phosphor-svelte/lib/CaretLeftIcon';
 	import CaretRightIcon from 'phosphor-svelte/lib/CaretRightIcon';
 	import { tryUseHost } from '../../host/host.context';
-	import { dropdownPanel, interactive } from '../../variants';
+	import { calendarDay, calendarHeadCell, calendarNavButton, dropdownPanel } from '../../variants';
 
 	type Props = {
 		open: boolean;
@@ -42,11 +42,6 @@
 			onChange(range.start.toString(), range.end.toString());
 		}
 	}
-
-	const navButton = cn(
-		interactive,
-		'text-secondary-300 hover:bg-secondary-800 flex size-8 items-center justify-center rounded-md hover:text-white'
-	);
 </script>
 
 <Popover.Root bind:open {onOpenChange}>
@@ -68,11 +63,11 @@
 			>
 				{#snippet children({ months, weekdays })}
 					<RangeCalendar.Header class="flex items-center justify-between gap-2">
-						<RangeCalendar.PrevButton class={navButton}>
+						<RangeCalendar.PrevButton class={calendarNavButton}>
 							<CaretLeftIcon size={16} />
 						</RangeCalendar.PrevButton>
 						<RangeCalendar.Heading class="text-sm font-medium text-white" />
-						<RangeCalendar.NextButton class={navButton}>
+						<RangeCalendar.NextButton class={calendarNavButton}>
 							<CaretRightIcon size={16} />
 						</RangeCalendar.NextButton>
 					</RangeCalendar.Header>
@@ -82,9 +77,7 @@
 								<RangeCalendar.GridHead>
 									<RangeCalendar.GridRow class="flex">
 										{#each weekdays as day (day)}
-											<RangeCalendar.HeadCell
-												class="text-secondary-500 w-9 pb-1 text-center text-xs font-normal"
-											>
+											<RangeCalendar.HeadCell class={calendarHeadCell}>
 												{day.slice(0, 2)}
 											</RangeCalendar.HeadCell>
 										{/each}
@@ -97,12 +90,7 @@
 												<RangeCalendar.Cell {date} month={month.value} class="p-0">
 													<RangeCalendar.Day
 														class={cn(
-															interactive,
-															'text-secondary-200 flex size-9 items-center justify-center rounded-md text-sm tabular-nums',
-															'hover:bg-secondary-800 hover:text-white',
-															'data-outside-month:pointer-events-none data-outside-month:opacity-0',
-															'data-disabled:text-secondary-700 data-unavailable:text-secondary-700',
-															'data-today:font-bold data-today:text-white',
+															calendarDay,
 															'data-highlighted:bg-primary/10 data-highlighted:rounded-none',
 															'data-selected:bg-primary/15 data-selected:rounded-none data-selected:text-white',
 															'data-selection-start:bg-primary data-selection-start:rounded-l-md data-selection-start:text-gray-950',

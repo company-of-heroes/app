@@ -76,6 +76,8 @@ export {
 	type RelicLeaderboardProfile
 } from './leaderboards';
 
+export * from './tournaments';
+
 export { TwitchApi, type LiveStream } from './twitch';
 export {
 	StreamingApi,

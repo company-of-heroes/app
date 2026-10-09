@@ -34,10 +34,10 @@
 		type VeterancyStep
 	} from './replay-timeline';
 	import { raceFromReplayFaction, timelineActionsByPlayer } from './replay-stats';
-	import { isCancelAction, type ReplayAction, type ReplayData, type ReplayPlayer } from './types';
+	import { isCancelAction, type ReplayAction, type ReplayPlayer } from './types';
+	import { useReplayData } from './context';
 
 	type Props = {
-		replay: ReplayData;
 		playerId: number | null;
 	};
 
@@ -61,7 +61,9 @@
 		veterancy: number;
 	};
 
-	let { replay, playerId }: Props = $props();
+	let { playerId }: Props = $props();
+	const context = useReplayData();
+	const replay = $derived(context.replay);
 	const host = tryUseHost();
 	const { t } = useI18n();
 

@@ -215,7 +215,7 @@
 								onclick={() => void host.api.replays.download(replay).catch(() => {})}
 								size="icon-sm"
 								variant="secondary"
-								title={t('Download replay')}
+								{@attach tooltip(t('Download replay'))}
 								aria-label={t('Download replay')}
 							>
 								<DownloadSimpleIcon class="size-4" />

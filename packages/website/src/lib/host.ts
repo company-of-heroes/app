@@ -1,3 +1,4 @@
+import { dev } from '$app/environment';
 import { afterNavigate, goto, invalidateAll, replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
@@ -6,6 +7,14 @@ import { authDisplayName, isStaffUser, loginRedirectHref, meSteamIds } from '$li
 import { toast } from '@company-of-heroes/ui/toasts';
 import { currentLocale, href, unlocalizedPath } from '$lib/i18n';
 import { rememberReplaysListHref, rememberedReplaysListHref } from '$lib/replays';
+import { RELEASE_PAGE_URL, SITE_URL } from '$lib/site/urls';
+import { modal } from '@company-of-heroes/ui/modal';
+import { NotificationDetail, type HostNotification } from '@company-of-heroes/ui/notifications';
+import {
+	listNotifications,
+	markNotificationRead,
+	unreadNotifications
+} from '$lib/remote/notifications.remote';
 import {
 	hasCountedReplayDownload,
 	markReplayDownload,
@@ -13,13 +22,47 @@ import {
 } from '$lib/replays/downloads';
 import { getHiddenMatch, hideMatch, unhideMatch } from '$lib/remote/hidden-matches.remote';
 import { reportDocsIssue, saveDocsNote } from '$lib/remote/docs.remote';
+import {
+	createTournament,
+	createTournamentMap,
+	disqualifyTournamentPlayer,
+	markTournamentGamesSeen,
+	createTournamentPost,
+	updateTournamentPost,
+	deleteTournamentPost,
+	reportTournamentMatch,
+	myTournaments,
+	acceptTournamentRules,
+	listTournamentReports,
+	updateTournamentReport,
+	proposeTournamentTimes,
+	acceptTournamentTime,
+	declineTournamentTimes,
+	setTournamentMatchTime,
+	featureTournamentMatch,
+	tournamentStats,
+	tournamentHallOfFame,
+	setTournamentMatchDeadline,
+	setTournamentRoundDeadlines,
+	fetchTournament,
+	joinTournament,
+	listTournamentMaps,
+	listTournaments,
+	listTournamentsWonBy,
+	seedTournament,
+	setTournamentMatchResult,
+	setTournamentSeeds,
+	startTournament,
+	updateTournament,
+	withdrawFromTournament
+} from '$lib/remote/tournaments.remote';
 import { getCompanionUser } from '$lib/remote/companion-user.remote';
 import {
 	getProfileCustomization,
 	saveProfileCustomization
 } from '$lib/remote/profile-customization.remote';
 import { pickOwnedSteamId } from '@company-of-heroes/api';
-import { getPlayerElo, getPlayerPreview } from '$lib/remote/player-preview.remote';
+import { getPlayerElo, getPlayerPreview, getPlayerStats } from '$lib/remote/player-preview.remote';
 import {
 	attachMatchReplay,
 	previewMemberReplayRatings,
@@ -45,6 +88,7 @@ import {
 } from '$lib/remote/match-social.remote';
 import { getFactionFlagByLeaderboardId } from '$lib/utils/media/ranks';
 import { getActionIcon } from '$lib/utils/media/action-icons';
+import { getMedals } from '$lib/utils/media/medals';
 import {
 	flagImageUrl,
 	getRankImageByLeaderboardId,
@@ -53,6 +97,65 @@ import {
 	resolveFactionFlag,
 	resolveMapSrc
 } from '$lib/utils/resolvers';
+
+/** Remote functions reject with `{ status, body: { message } }`; shared components show `Error.message`. */
+async function withMessage<T>(promise: PromiseLike<T>): Promise<T> {
+	try {
+		return await promise;
+	} catch (error) {
+		const message = (error as { body?: { message?: unknown } })?.body?.message;
+		throw typeof message === 'string' && message ? new Error(message) : error;
+	}
+}
+
+/** A notification `url` on this site (or coh1stats.com) as a localized internal path. */
+function internalPath(url: string | undefined): string | null {
+	if (!url) {
+		return null;
+	}
+
+	try {
+		const target = new URL(url);
+		if (target.origin !== page.url.origin && target.origin !== SITE_URL) {
+			return null;
+		}
+
+		return href(`${unlocalizedPath(target.pathname)}${target.search}${target.hash}`);
+	} catch {
+		return null;
+	}
+}
+
+function withComment(path: string, commentId: string | undefined): string {
+	return commentId ? `${path}?comment=${encodeURIComponent(commentId)}` : path;
+}
+
+/** Bell: go to the page the notification is about, else show its body. */
+function openNotification(notification: HostNotification) {
+	const internal = internalPath(notification.url);
+	if (internal) {
+		void goto(internal);
+		return;
+	}
+
+	if (notification.lobby) {
+		void goto(withComment(href(`/replays/${notification.lobby}`), notification.comment));
+		return;
+	}
+
+	if (notification.replay) {
+		void goto(withComment(href(`/replays/${notification.replay}`), notification.replayComment));
+		return;
+	}
+
+	modal.create({
+		component: NotificationDetail,
+		title: notification.title,
+		props: { body: notification.body, url: notification.url },
+		size: 'md'
+	});
+	modal.open();
+}
 
 /** Website wiring for shared `@company-of-heroes/ui` components. Call once in the root layout. */
 export function provideWebsiteHost(): HostContext {
@@ -77,7 +180,16 @@ export function provideWebsiteHost(): HostContext {
 			publishReplay: (lobbyId) => href(`/replays/upload?fromMatch=${lobbyId}`),
 			replayList: () => href(rememberedReplaysListHref()),
 			shareReplay: (id) => `${page.url.origin}${href(`/replays/${id}`)}`,
-			editReplay: (id) => href(`/replays/${id}/edit`)
+			editReplay: (id) => href(`/replays/${id}/edit`),
+			tournaments: () => href('/tournaments'),
+			tournament: (slug) => href(`/tournaments/${slug}`),
+			tournamentNew: () => href('/tournaments/new'),
+			tournamentEdit: (slug) => href(`/tournaments/${slug}/edit`),
+			downloadApp: () => RELEASE_PAGE_URL,
+			tournamentHallOfFame: () => href('/tournaments/hall-of-fame'),
+			tournamentSimulator: dev
+				? (slug) => href(slug ? `/tournaments/simulate?slug=${slug}` : '/tournaments/simulate')
+				: undefined
 		},
 		url: {
 			param: (name) => page.url.searchParams.get(name),
@@ -103,6 +215,7 @@ export function provideWebsiteHost(): HostContext {
 			rankImageByLeaderboard: getRankImageByLeaderboardId,
 			doctrineBanner: (file) => `/doctrines/${file}`,
 			actionIcon: getActionIcon,
+			medals: getMedals,
 			userAvatar: (user) => user.avatarUrl
 		},
 		auth: {
@@ -123,6 +236,7 @@ export function provideWebsiteHost(): HostContext {
 			isSelf: (steamId) => meSteamIds(page.data.user).includes(steamId),
 			isSelfAlias: () => false
 		},
+		openNotification,
 		notify: {
 			success: (message) => toast.success(message),
 			error: (message) => toast.error(message),
@@ -132,7 +246,8 @@ export function provideWebsiteHost(): HostContext {
 			players: {
 				getPreview: (id) => getPlayerPreview(id),
 				search: (q) => searchPlayersForUpload({ q }),
-				getElo: (steamId) => getPlayerElo(steamId)
+				getElo: (steamId) => getPlayerElo(steamId),
+				getStats: (id) => getPlayerStats(id)
 			},
 			social: {
 				getMyVote: ({ kind, id }) =>
@@ -239,8 +354,59 @@ export function provideWebsiteHost(): HostContext {
 			rewards: {
 				forPlayer: (steamId) => getPlayerRewards(steamId)
 			},
+			tournaments: {
+				list: (scope) => withMessage(listTournaments({ scope })),
+				get: (id) => withMessage(fetchTournament(id)),
+				wonBy: (steamId) => withMessage(listTournamentsWonBy(steamId)),
+				create: (input, images = {}) => withMessage(createTournament({ input, images })),
+				update: (id, input, images = {}) => withMessage(updateTournament({ id, input, images })),
+				listMaps: () => withMessage(listTournamentMaps()),
+				createMap: (name, icon) => withMessage(createTournamentMap({ name, icon })),
+				register: (id, steamId, acceptRules) =>
+					withMessage(joinTournament({ id, steamId, acceptRules })),
+				acceptRules: (id) => withMessage(acceptTournamentRules(id)),
+				withdraw: (id) => withMessage(withdrawFromTournament(id)),
+				seed: (id) => withMessage(seedTournament(id)),
+				setSeeds: (id, order) => withMessage(setTournamentSeeds({ id, order })),
+				start: (id) => withMessage(startTournament(id)),
+				setMatchResult: (id, matchId, result) =>
+					withMessage(setTournamentMatchResult({ id, matchId, result })),
+				disqualify: (id, participantId) =>
+					withMessage(disqualifyTournamentPlayer({ id, participantId })),
+				setRoundDeadlines: (id, rounds) => withMessage(setTournamentRoundDeadlines({ id, rounds })),
+				setMatchDeadline: (id, matchId, deadline) =>
+					withMessage(setTournamentMatchDeadline({ id, matchId, deadline })),
+				mine: () => withMessage(myTournaments()),
+				markSeen: (seen) => withMessage(markTournamentGamesSeen(seen)),
+				createPost: (id, input) => withMessage(createTournamentPost({ id, ...input })),
+				updatePost: (id, postId, input) =>
+					withMessage(updateTournamentPost({ id, postId, ...input })),
+				deletePost: (id, postId) => withMessage(deleteTournamentPost({ id, postId })),
+				report: (id, matchId, report) =>
+					withMessage(reportTournamentMatch({ id, matchId, ...report })),
+				reports: (id) => withMessage(listTournamentReports(id)),
+				updateReport: (id, reportId, update) =>
+					withMessage(updateTournamentReport({ id, reportId, ...update })),
+				proposeTimes: (id, matchId, times) =>
+					withMessage(proposeTournamentTimes({ id, matchId, times })),
+				acceptTime: (id, matchId, proposalId, time) =>
+					withMessage(acceptTournamentTime({ id, matchId, proposalId, time })),
+				declineTimes: (id, matchId, proposalId) =>
+					withMessage(declineTournamentTimes({ id, matchId, proposalId })),
+				setMatchTime: (id, matchId, scheduledAt) =>
+					withMessage(setTournamentMatchTime({ id, matchId, scheduledAt })),
+				feature: (id, matchId) => withMessage(featureTournamentMatch({ id, matchId })),
+				stats: (idOrSlug) => withMessage(tournamentStats(idOrSlug)),
+				hallOfFame: () => withMessage(tournamentHallOfFame())
+			},
 			staff: {
 				getCompanionUser: (steamId) => getCompanionUser(steamId)
+			},
+			// No realtime on the website: the bell polls `unreadCount`.
+			notifications: {
+				list: () => withMessage(listNotifications()),
+				unreadCount: () => withMessage(unreadNotifications()),
+				markRead: (id) => withMessage(markNotificationRead(id))
 			}
 		}
 	});

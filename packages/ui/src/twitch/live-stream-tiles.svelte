@@ -6,6 +6,7 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import type { LiveStream } from './types';
+	import { escapeHtml, tooltip } from '../attachments';
 
 	type Props = {
 		items: LiveStream[];
@@ -64,12 +65,12 @@
 					'rounded-none text-left',
 					'hover:bg-secondary-950/80 transition-colors'
 				)}
-				title={compact ? stream.title : undefined}
+				{@attach tooltip(compact ? escapeHtml(stream.title) : undefined)}
 			>
 				<div class="bg-secondary-900 relative aspect-video overflow-hidden">
 					<img src={stream.thumbnailUrl} alt={stream.title} class="size-full object-cover" />
 					{#if !compact}
-						<Badge variant="success" class="absolute top-2 left-2 rounded-none">{t('Live')}</Badge>
+						<Badge variant="success" pulse class="absolute top-2 left-2">{t('Live')}</Badge>
 					{/if}
 					<span
 						class={cn(

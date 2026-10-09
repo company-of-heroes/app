@@ -4,13 +4,17 @@
 		labelsForSteamId,
 		preloadPlayerLabels
 	} from '$core/pocketbase/player-label-cache.svelte';
+	import { useOptionalPlayer } from './context';
 
 	type Props = {
+		/** Defaults to the `Player.Root` player; pass it outside a Root. */
 		steamId?: string | null;
 		class?: string;
 	};
 
-	let { steamId, class: className }: Props = $props();
+	let { steamId: steamIdProp, class: className }: Props = $props();
+	const rootPlayer = useOptionalPlayer();
+	const steamId = $derived(steamIdProp ?? rootPlayer()?.player.steamId ?? null);
 	const labels = $derived(labelsForSteamId(steamId));
 
 	$effect(() => {

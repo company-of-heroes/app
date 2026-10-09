@@ -12,6 +12,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Form from '$lib/components/ui/form';
 	import { useI18n } from '$lib/i18n';
+	import { tooltip } from '$lib/attachments';
 
 	const overlay = twitchOverlays.overlays[0];
 	const { t } = useI18n();
@@ -151,7 +152,7 @@
 			class="w-fit shrink-0"
 			onclick={copyToClipboard}
 			disabled={!overlayUrl}
-			title={t('Copy Overlay URL')}
+			{@attach tooltip(t('Copy Overlay URL'))}
 		>
 			{#if copied}
 				<CheckIcon size={16} />

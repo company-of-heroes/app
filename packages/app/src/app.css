@@ -20,10 +20,14 @@
 
 [data-dropdown-menu-content],
 [data-context-menu-content],
-[data-popover-content],
-[data-select-content] {
+[data-popover-content] {
 	background-color: var(--color-gray-950);
 	box-shadow: none;
+}
+
+/* Selects match their trigger (`controlBase` bg-secondary-950). */
+[data-select-content] {
+	background-color: var(--color-secondary-950);
 }
 
 html {

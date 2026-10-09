@@ -23,6 +23,7 @@
 		type ReplaySteamLinkPlayer
 	} from './replay-player-steam-links.svelte';
 	import { raceFromReplayFaction } from './replay-stats';
+	import ReplayRoot from './replay-root.svelte';
 	import ReplayTabs from './replay-tabs.svelte';
 	import type {
 		CommunityMatchDetail,
@@ -32,6 +33,7 @@
 		ReplayMessage
 	} from './types';
 	import { formatDurationSeconds, formatMatchDate } from './utils';
+	import { tooltip } from '../attachments';
 
 	type ParsedReplay = {
 		players: ReplayRosterPlayer[];
@@ -387,7 +389,7 @@
 					durationInSeconds: parsed.duration || 0,
 					players: parsed.players
 				});
-				host.notify.success(t('Replay published to Member replays.'));
+				host.notify.success(t('Replay published to Shared Replays.'));
 				await host.url.goto(host.routes.memberReplay(published.id));
 				return;
 			}
@@ -418,7 +420,7 @@
 				players: parsed.players,
 				messages: parsed.messages ?? []
 			});
-			host.notify.success(t('Replay uploaded to Member replays.'));
+			host.notify.success(t('Replay uploaded to Shared Replays.'));
 			await host.url.goto(host.routes.memberReplay(uploaded.id));
 		} catch (error) {
 			submitError =
@@ -503,9 +505,9 @@
 	<div class="px-4 py-3">
 		<p class="text-secondary-400 text-sm">
 			{#if fromMatchId}
-				{t('Publish this match to Member replays. It will leave Community matches.')}
+				{t('Publish this match to Shared Replays. It will leave Community matches.')}
 			{:else}
-				{t('Upload a Company of Heroes .rec file to share it in Member replays.')}
+				{t('Upload a Company of Heroes .rec file to share it in Shared Replays.')}
 			{/if}
 		</p>
 	</div>
@@ -533,7 +535,6 @@
 
 {#if previewMatch && replayData && parsed && !composeLoading}
 	{@const match = previewMatch}
-	{@const parsedReplay = parsed}
 	<ReplayDetailHeader
 		mapName={mapLabel}
 		map={match.map}
@@ -547,7 +548,7 @@
 				<List.Title>{t('Title')}</List.Title>
 				<List.Value>
 					{#if isRanked}
-						<span class="flex items-center" title={t('Ranked match')}>
+						<span class="flex items-center" {@attach tooltip(t('Ranked match'))}>
 							<RankingIcon class="text-primary-100" weight="duotone" />
 						</span>
 					{:else}
@@ -636,23 +637,21 @@
 		<p class="text-destructive border-secondary-800 border-b px-4 py-3 text-sm">{formError}</p>
 	{/if}
 
-	<ReplayTabs bind:value={tab}>
-		{#snippet overview()}
-			<ReplayOverview
-				{match}
-				replay={replayData}
-				livePlayers={ratingPreview.current?.livePlayers ?? []}
-			/>
-			{#if actionsPending || (!actionsLoaded && parseId != null)}
-				<p class="text-secondary-400 px-4 py-6 text-sm">{t('Loading…')}</p>
-			{:else}
-				<ReplayActions replay={replayData} />
-			{/if}
-		{/snippet}
-		{#snippet chat()}
-			{#if tab === 'chat'}
-				<ReplayChat messages={parsedReplay.messages} playerCount={parsedReplay.playerCount} />
-			{/if}
-		{/snippet}
-	</ReplayTabs>
+	<ReplayRoot replay={replayData}>
+		<ReplayTabs bind:value={tab}>
+			{#snippet overview()}
+				<ReplayOverview {match} livePlayers={ratingPreview.current?.livePlayers ?? []} />
+				{#if actionsPending || (!actionsLoaded && parseId != null)}
+					<p class="text-secondary-400 px-4 py-6 text-sm">{t('Loading…')}</p>
+				{:else}
+					<ReplayActions />
+				{/if}
+			{/snippet}
+			{#snippet chat()}
+				{#if tab === 'chat'}
+					<ReplayChat />
+				{/if}
+			{/snippet}
+		</ReplayTabs>
+	</ReplayRoot>
 {/if}

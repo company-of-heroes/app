@@ -8,6 +8,7 @@
 	import CopySimpleIcon from 'phosphor-svelte/lib/CopySimpleIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 	import { useI18n } from '$lib/i18n';
+	import { tooltip } from '@company-of-heroes/ui/attachments';
 
 	const { t } = useI18n();
 	const appWindow = getCurrentWindow();
@@ -34,7 +35,7 @@
 	<button
 		type="button"
 		class={cn(control, 'hover:bg-secondary-800/60')}
-		title={t('Minimize')}
+		{@attach tooltip(t('Minimize'))}
 		aria-label={t('Minimize')}
 		onclick={() => void appWindow.minimize()}
 	>
@@ -43,7 +44,7 @@
 	<button
 		type="button"
 		class={cn(control, 'hover:bg-secondary-800/60')}
-		title={maximized ? t('Restore') : t('Maximize')}
+		{@attach tooltip(maximized ? t('Restore') : t('Maximize'))}
 		aria-label={maximized ? t('Restore') : t('Maximize')}
 		onclick={() => void appWindow.toggleMaximize()}
 	>
@@ -56,7 +57,7 @@
 	<button
 		type="button"
 		class={cn(control, 'hover:bg-red-600')}
-		title={t('Close')}
+		{@attach tooltip(t('Close'))}
 		aria-label={t('Close')}
 		onclick={() => void appWindow.close()}
 	>

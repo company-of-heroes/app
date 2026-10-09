@@ -22,6 +22,7 @@
 	import { app } from '$core/app/context';
 	import { api, unwrapApi } from '$core/api';
 	import { useI18n } from '$lib/i18n';
+	import { tooltip } from '$lib/attachments';
 
 	type ConditionRow = {
 		key: number;
@@ -438,7 +439,7 @@
 					bind:value={row.threshold}
 					placeholder={thresholdLabel(row)}
 					aria-label={thresholdLabel(row)}
-					title={thresholdLabel(row)}
+					{@attach tooltip(thresholdLabel(row))}
 				/>
 			{/if}
 			{#if supports(row, 'raceId')}
@@ -543,7 +544,7 @@
 			class="w-24 flex-none"
 			bind:value={sort}
 			aria-label={t('Sort order')}
-			title={t('Sort order')}
+			{@attach tooltip(t('Sort order'))}
 		/>
 		<Button
 			type="button"

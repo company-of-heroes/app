@@ -27,6 +27,7 @@
 		"core:menu:default",
 		"cors-fetch:default",
 		"shell:allow-open",
+		"notification:default",
 		"opener:allow-reveal-item-in-dir",
 		{
 			"identifier": "opener:allow-open-path",
@@ -61,6 +62,21 @@
 					"url": "https://studio.youtube.com/*"
 				},
 				{
+					"url": "https://*.twitch.tv/*"
+				},
+				{
+					"url": "https://youtube.com/*"
+				},
+				{
+					"url": "https://*.youtube.com/*"
+				},
+				{
+					"url": "https://youtu.be/*"
+				},
+				{
+					"url": "https://kick.com/*"
+				},
+				{
 					"url": "https://api.steampowered.com"
 				},
 				{
@@ -71,6 +87,12 @@
 				},
 				{
 					"url": "https://discord.gg/Cc69hbDnPD"
+				},
+				{
+					"url": "https://steamcommunity.com/profiles/*"
+				},
+				{
+					"url": "steam://friends/add/*"
 				},
 				{
 					"url": "https://coh1stats.com/*"

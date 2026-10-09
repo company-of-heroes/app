@@ -4,7 +4,7 @@
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
 	import * as List from '../ui/list';
-	import { StaffDebug } from '../ui/staff-debug';
+	import { StaffSection } from '../ui/staff-section';
 	import { detailMetaGrid } from '../variants';
 
 	type Props = {
@@ -38,7 +38,7 @@
 </script>
 
 {#if isStaff}
-	<StaffDebug>
+	<StaffSection>
 		{#if companion.loading}
 			<p class="text-secondary-400 text-sm">{t('Loading...')}</p>
 		{:else if companion.error}
@@ -63,5 +63,5 @@
 				<List.Value>{date(companion.current.updated)}</List.Value>
 			</div>
 		{/if}
-	</StaffDebug>
+	</StaffSection>
 {/if}

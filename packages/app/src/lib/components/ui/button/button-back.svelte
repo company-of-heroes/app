@@ -45,7 +45,7 @@
 	class={cn(
 		interactive,
 		iconOnly
-			? 'border-secondary-600 bg-secondary-800 hover:border-secondary-500 hover:bg-secondary-700 inline-flex size-9 shrink-0 items-center justify-center rounded-md border transition-colors'
+			? 'border-secondary-700 bg-secondary-950 hover:border-secondary-600 hover:bg-secondary-800 inline-flex size-8 shrink-0 items-center justify-center rounded-md border transition-colors'
 			: 'mb-6 inline-flex items-center gap-2 text-xl transition-transform hover:-translate-x-0.5',
 		className
 	)}

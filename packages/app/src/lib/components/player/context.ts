@@ -19,3 +19,8 @@ export const createPlayer = (
 	}
 ) => context.set(player);
 export const usePlayer = () => context.get()();
+/** The `Player.Root` player as a getter, or `null` outside a Root. */
+export const useOptionalPlayer = () => {
+	const player = context.getOr(null);
+	return () => player?.() ?? null;
+};

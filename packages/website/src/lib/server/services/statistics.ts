@@ -1,11 +1,12 @@
 import { okAsync, ResultAsync } from 'neverthrow';
-import type {
-	ReplaySummary,
-	StatisticsByMode,
-	StatisticsRange
+import {
+	STATISTICS_PERIODS,
+	type ReplaySummary,
+	type StatisticsByMode,
+	type StatisticsRange
 } from '@company-of-heroes/ui/statistics/types';
 import { cached } from '../cache';
-import { all, chunk, fromPb, sequence, type Task } from '../result';
+import { all, chunk, fromPb, pbMaybe, sequence, type Task } from '../result';
 import {
 	buildStatistics,
 	summarizeStatistics,
@@ -49,6 +50,14 @@ type ViewUpload = Omit<UploadRow, 'ai' | 'names' | 'races'> & {
 	names: (string | null)[] | null;
 	races: (number | null)[] | null;
 };
+
+/** How long a snapshot read is reused (the job rewrites them every few minutes). */
+const SNAPSHOT_SECONDS = 60;
+
+type Totals = { totalMatches: number; matchesToday: number };
+
+/** This isolate's copy of each snapshot. */
+const snapshotMemo = new Map<string, { at: number; value: unknown }>();
 
 /** This isolate's copy of the statistics data: a Cache API hit still parses megabytes of JSON. */
 let memo: { at: number; data: StatisticsData } | null = null;
@@ -211,28 +220,100 @@ export class StatisticsService extends Service {
 			});
 	}
 
+	/** Builds the statistics data from the views: every match and replay summary (seconds). */
+	private buildData(): Task<StatisticsData> {
+		return ResultAsync.combine([this.rows(), this.replays(), this.uploads()]).andThen(
+			([{ rows, linked }, replays, uploads]) => {
+				const { kept, ...data } = buildStatistics(rows, replays, uploads, linked);
+				return this.tallyUploadReplays(data, kept);
+			}
+		);
+	}
+
 	/** Every finished match (lobbies and uploads) plus replay picks per day: the input of every range. */
 	private data(): Task<StatisticsData> {
 		if (memo && Date.now() - memo.at < CACHE_SECONDS * 1000) {
 			return okAsync(memo.data);
 		}
 
-		return cached('statistics:data:v6', CACHE_SECONDS, () =>
-			ResultAsync.combine([this.rows(), this.replays(), this.uploads()]).andThen(
-				([{ rows, linked }, replays, uploads]) => {
-					const { kept, ...data } = buildStatistics(rows, replays, uploads, linked);
-					return this.tallyUploadReplays(data, kept);
-				}
-			)
-		).map((data) => {
+		return cached('statistics:data:v6', CACHE_SECONDS, () => this.buildData()).map((data) => {
 			memo = { at: Date.now(), data };
 			return data;
 		});
 	}
 
 	/**
+	 * A ready-made result from `statistics_snapshots` (written by `refreshSnapshots`), or `null`
+	 * when there is none yet. Kept in this isolate and the data center's cache for a minute.
+	 */
+	private snapshot<T>(key: string): Task<T | null> {
+		const hit = snapshotMemo.get(key);
+		if (hit && Date.now() - hit.at < SNAPSHOT_SECONDS * 1000) {
+			return okAsync(hit.value as T);
+		}
+
+		return cached(`statistics:snapshot:${key}`, SNAPSHOT_SECONDS, () =>
+			pbMaybe(
+				this.pb
+					.collection('statistics_snapshots')
+					.getFirstListItem<{ data: T }>(this.pb.filter('key = {:key}', { key }), {
+						fields: 'data'
+					})
+			).map((record) => record?.data ?? null)
+		)
+			.map((value) => {
+				if (value !== null) {
+					snapshotMemo.set(key, { at: Date.now(), value });
+				}
+
+				return value;
+			})
+			.orElse((error) => {
+				console.error(`[statistics] snapshot ${key} unavailable`, error);
+				return okAsync(null);
+			});
+	}
+
+	private saveSnapshot(key: string, data: unknown): Task<void> {
+		const snapshots = this.pb.collection('statistics_snapshots');
+		return pbMaybe(
+			snapshots.getFirstListItem<{ id: string }>(this.pb.filter('key = {:key}', { key }), {
+				fields: 'id'
+			})
+		)
+			.andThen((existing) =>
+				fromPb(
+					existing ? snapshots.update(existing.id, { data }) : snapshots.create({ key, data }),
+					'Could not save statistics'
+				)
+			)
+			.map(() => undefined);
+	}
+
+	/**
+	 * Scheduled: rebuilds the statistics and stores every preset period and the headline
+	 * totals as snapshots, so no visitor waits for a rebuild.
+	 */
+	refreshSnapshots(): Task<{ processed: number; more: boolean }> {
+		return ResultAsync.combine([this.buildData(), this.countTotals()]).andThen(([data, totals]) => {
+			memo = { at: Date.now(), data };
+			const entries: [string, unknown][] = [
+				...STATISTICS_PERIODS.map((period): [string, unknown] => [
+					`period:${period}`,
+					summarizeStatistics(data, periodDays(period))
+				]),
+				['totals', totals]
+			];
+			return sequence(entries, ([key, value]) => this.saveSnapshot(key, value)).map(() => ({
+				processed: entries.length,
+				more: false
+			}));
+		});
+	}
+
+	/**
 	 * Statistics of every mode in a preset period or a custom range of days, optionally on one
-	 * map (see `summarizeStatistics`).
+	 * map (see `summarizeStatistics`). Presets without a map come from the snapshots.
 	 */
 	get(range: StatisticsRange, map: string | null = null): Task<StatisticsByMode> {
 		const summarize = (days: DayRange) =>
@@ -241,8 +322,16 @@ export class StatisticsService extends Service {
 			return summarize({ from: range.from, to: range.to });
 		}
 
-		return cached(`statistics:period:v7:${range.period}:${map ?? ''}`, CACHE_SECONDS, () =>
-			summarize(periodDays(range.period))
+		const live = () =>
+			cached(`statistics:period:v7:${range.period}:${map ?? ''}`, CACHE_SECONDS, () =>
+				summarize(periodDays(range.period))
+			);
+		if (map) {
+			return live();
+		}
+
+		return this.snapshot<StatisticsByMode>(`period:${range.period}`).andThen((stats) =>
+			stats ? okAsync(stats) : live()
 		);
 	}
 
@@ -253,16 +342,22 @@ export class StatisticsService extends Service {
 		).map(({ totalItems }) => totalItems);
 	}
 
-	/** Finished matches stored in total and since midnight (UTC). */
-	totals(): Task<{ totalMatches: number; matchesToday: number }> {
-		return cached('statistics:totals:v2', HEADLINE_CACHE_SECONDS, () => {
-			const midnight = `${new Date().toISOString().slice(0, 10)} 00:00:00.000Z`;
-			return ResultAsync.combine([
-				this.countLobbies(FINISHED_LOBBIES),
-				this.countLobbies(
-					this.pb.filter(`${FINISHED_LOBBIES} && createdAt >= {:midnight}`, { midnight })
-				)
-			]).map(([totalMatches, matchesToday]) => ({ totalMatches, matchesToday }));
-		});
+	private countTotals(): Task<Totals> {
+		const midnight = `${new Date().toISOString().slice(0, 10)} 00:00:00.000Z`;
+		return ResultAsync.combine([
+			this.countLobbies(FINISHED_LOBBIES),
+			this.countLobbies(
+				this.pb.filter(`${FINISHED_LOBBIES} && createdAt >= {:midnight}`, { midnight })
+			)
+		]).map(([totalMatches, matchesToday]) => ({ totalMatches, matchesToday }));
+	}
+
+	/** Finished matches stored in total and since midnight (UTC), from the snapshot when there is one. */
+	totals(): Task<Totals> {
+		return this.snapshot<Totals>('totals').andThen((totals) =>
+			totals
+				? okAsync(totals)
+				: cached('statistics:totals:v2', HEADLINE_CACHE_SECONDS, () => this.countTotals())
+		);
 	}
 }

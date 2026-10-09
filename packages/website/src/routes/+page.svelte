@@ -5,6 +5,7 @@
 	import HomeLiveLobbies from '$lib/components/home/home-live-lobbies.svelte';
 	import HomeRecentMatches from '$lib/components/home/home-recent-matches.svelte';
 	import HomeMemberUploads from '$lib/components/home/home-member-uploads.svelte';
+	import HomeTournaments from '$lib/components/home/home-tournaments.svelte';
 	import HomeLiveStreams from '$lib/components/home/home-live-streams.svelte';
 	import DonationSection from '$lib/components/home/donation-section.svelte';
 	import TopReplays from '$lib/components/replay/top-replays.svelte';
@@ -68,6 +69,9 @@
 		<HomeStatistics statistics={null} />
 	{/await}
 	<HomePlayerSearch />
+	{#await data.tournaments then tournaments}
+		<HomeTournaments {...tournaments} />
+	{/await}
 	{#await data.topReplays}
 		<TopReplays matches={[]} loading />
 	{:then topReplays}

@@ -5,18 +5,19 @@
 	import { useHost } from '../host/host.context';
 	import { getRaceLabel } from '../format/player-format';
 	import { formatCount, percent, winRateClass } from './format';
-	import type { StatisticsFaction } from './types';
+	import { useStatistics } from './context';
 
 	type Props = {
-		factions: StatisticsFaction[];
 		compact?: boolean;
 		class?: string;
 	};
 
-	let { factions, compact = false, class: className }: Props = $props();
+	let { compact = false, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
+	const context = useStatistics();
+	const factions = $derived(context.statistics.factions);
 	const picks = $derived(factions.reduce((total, row) => total + row.picks, 0));
 </script>
 

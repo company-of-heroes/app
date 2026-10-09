@@ -29,7 +29,7 @@ Match existing patterns in this repo:
 
 1. **Svelte 5 runes** — `$props()`, `$derived`, `{#snippet}` / `{@render}` (see `svelte-patterns.mdc`)
 2. **bits-ui** for interactive primitives — Dialog, Popover, Tabs, Select, etc.; style with `cn()` and project tokens
-3. **runed** for shared state — `Context` + `createX` / `useX` for component trees; `watch` for side effects in `.svelte.ts` modules. `createX` only at init (never `$effect` / after `await`; see `set-context-init.mdc`)
+3. **runed** for shared state — `Context` + `createX` / `useX` for component trees; `watch` for side effects in `.svelte.ts` modules. `createX` only at init (never `$effect` / after `await`; see `set-context-init.mdc`). A family whose siblings share one data object gets an `X.Root` + context, not the same props on every child (see `compound-root-context.mdc`)
 4. **Types** — export `XxxProps` from `index.ts`; spread `...restProps` onto the root element
 5. **Barrel export** — `index.ts` re-exports public API; keep implementation files co-located
 

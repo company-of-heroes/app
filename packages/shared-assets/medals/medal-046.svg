@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Bronze cross with swords</title>
+	<defs>
+		<radialGradient id="m046-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="0.5" stop-color="#b4733a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</radialGradient>
+		<linearGradient id="m046-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</linearGradient>
+		<linearGradient id="m046-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m046-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m046-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m046-ribbon"><polygon points="12,0 52,0 52,46 32,38 12,46"/></clipPath>
+		<filter id="m046-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m046-ribbon)">
+			<rect x="12" y="0" width="5.52" height="48" fill="#c23b3b"/><rect x="17.52" y="0" width="4.14" height="48" fill="#24406b"/><rect x="21.66" y="0" width="4.14" height="48" fill="#b8924a"/><rect x="25.79" y="0" width="4.14" height="48" fill="#2f5a34"/><rect x="29.93" y="0" width="4.14" height="48" fill="#f4f1e8"/><rect x="34.07" y="0" width="4.14" height="48" fill="#2f5a34"/><rect x="38.21" y="0" width="4.14" height="48" fill="#b8924a"/><rect x="42.34" y="0" width="4.14" height="48" fill="#24406b"/><rect x="46.48" y="0" width="5.52" height="48" fill="#c23b3b"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m046-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m046-fold)"/>
+		</g>
+		<circle cx="32" cy="46" r="4" fill="none" stroke="url(#m046-rim)" stroke-width="2"/>
+		<g transform="translate(32 84)" filter="url(#m046-shadow)">
+			<path d="M-12,-26 L12,-26 L5,-5 L26,-12 L26,12 L5,5 L12,26 L-12,26 L-5,5 L-26,12 L-26,-12 L-5,-5 Z" fill="url(#m046-metal)" stroke="#3f230b" stroke-width="1"/><path d="M-12,-26 L12,-26 L5,-5 L26,-12 L26,12 L5,5 L12,26 L-12,26 L-5,5 L-26,12 L-26,-12 L-5,-5 Z" transform="scale(0.82)" fill="none" stroke="#6b3d18" stroke-width="0.9" opacity="0.8"/><circle r="11" fill="url(#m046-metal)" stroke="#3f230b" stroke-width="0.8"/><circle r="9.2" fill="none" stroke="#6b3d18" stroke-width="0.6"/>
+			<g transform="scale(0.78)" fill="#3f230b" color="#3f230b"><g transform="rotate(45)"><path d="M-1.1,-11 L0,-12.8 L1.1,-11 L1.1,5 L-1.1,5 Z"/><rect x="-4" y="5" width="8" height="1.6" rx="0.6"/><rect x="-0.8" y="6.6" width="1.6" height="4"/><circle cx="0" cy="11.4" r="1.2"/></g><g transform="rotate(-45)"><path d="M-1.1,-11 L0,-12.8 L1.1,-11 L1.1,5 L-1.1,5 Z"/><rect x="-4" y="5" width="8" height="1.6" rx="0.6"/><rect x="-0.8" y="6.6" width="1.6" height="4"/><circle cx="0" cy="11.4" r="1.2"/></g></g>
+		</g>
+	</g>
+</svg>

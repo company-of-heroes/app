@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Bronze navy enamel medal with tank</title>
+	<defs>
+		<radialGradient id="m040-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="0.5" stop-color="#b4733a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</radialGradient>
+		<linearGradient id="m040-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</linearGradient>
+		<linearGradient id="m040-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m040-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m040-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m040-ribbon"><polygon points="12,0 52,0 52,40 32,47 12,40"/></clipPath>
+		<filter id="m040-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m040-ribbon)">
+			<rect x="12" y="0" width="8" height="48" fill="#6b2d5c"/><rect x="20" y="0" width="2.67" height="48" fill="#b8924a"/><rect x="22.67" y="0" width="2.67" height="48" fill="#3f6fb0"/><rect x="25.33" y="0" width="2.67" height="48" fill="#1c1c1c"/><rect x="28" y="0" width="8" height="48" fill="#6b2d5c"/><rect x="36" y="0" width="2.67" height="48" fill="#1c1c1c"/><rect x="38.67" y="0" width="2.67" height="48" fill="#3f6fb0"/><rect x="41.33" y="0" width="2.67" height="48" fill="#b8924a"/><rect x="44" y="0" width="8" height="48" fill="#6b2d5c"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m040-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m040-fold)"/>
+		</g>
+		<circle cx="32" cy="50" r="4" fill="none" stroke="url(#m040-rim)" stroke-width="2"/>
+		<g transform="translate(32 84)" filter="url(#m040-shadow)">
+			<path d="M-24,0 A24,24 0 1 0 24,0 A24,24 0 1 0 -24,0 Z" fill="url(#m040-metal)" stroke="#3f230b" stroke-width="1"/><path d="M-24,0 A24,24 0 1 0 24,0 A24,24 0 1 0 -24,0 Z" transform="scale(0.72)" fill="#1b2a4a" stroke="#6b3d18" stroke-width="1"/><path d="M-24,0 A24,24 0 1 0 24,0 A24,24 0 1 0 -24,0 Z" transform="scale(0.72)" fill="url(#m040-gloss)"/>
+			<g transform="scale(1.15)" fill="#f6c79a" color="#f6c79a"><rect x="-11" y="2" width="22" height="6" rx="3"/><rect x="-9" y="-2.5" width="18" height="4" rx="1"/><rect x="-5" y="-7" width="9" height="4.5" rx="1.5"/><rect x="3" y="-5.6" width="10" height="1.6" rx="0.5"/></g>
+		</g>
+	</g>
+</svg>

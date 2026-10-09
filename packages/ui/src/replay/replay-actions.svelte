@@ -3,17 +3,14 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { useHost } from '../host/host.context';
 	import * as Tabs from '../ui/tabs';
-	import { factionIcon, sheetTabTrigger } from '../variants';
+	import { factionIcon } from '../variants';
 	import { raceFromReplayFaction, timelineActions } from './replay-stats';
 	import ReplayTimeline from './replay-timeline.svelte';
 	import ReplayResourceSpend from './replay-resource-spend.svelte';
-	import type { ReplayData } from './types';
+	import { useReplayData } from './context';
 
-	type Props = {
-		replay: ReplayData;
-	};
-
-	let { replay }: Props = $props();
+	const context = useReplayData();
+	const replay = $derived(context.replay);
 	const host = useHost();
 	const { t } = useI18n();
 
@@ -98,7 +95,7 @@
 					<span class="w-5 shrink-0" aria-hidden="true"></span>
 				{/if}
 				{#if player.id != null}
-					<Tabs.Trigger value={String(player.id)} class={sheetTabTrigger}>
+					<Tabs.Trigger value={String(player.id)} variant="sheet">
 						<img
 							src={host.resolve.factionFlagByRace(raceFromReplayFaction(player.faction))}
 							alt=""
@@ -114,7 +111,7 @@
 
 {@render playerTabs(timelinePlayer, (id) => (timelinePlayerId = id))}
 
-<ReplayTimeline {replay} playerId={timelinePlayer} />
+<ReplayTimeline playerId={timelinePlayer} />
 
 <section>
 	<div class="px-4 py-2.5">
@@ -151,4 +148,4 @@
 	</div>
 </section>
 
-<ReplayResourceSpend {replay} players={tabPlayers.map((entry) => entry.player)} />
+<ReplayResourceSpend players={tabPlayers.map((entry) => entry.player)} />

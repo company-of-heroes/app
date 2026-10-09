@@ -8,6 +8,7 @@
 	import { raceFromReplayFaction } from './replay-stats';
 	import ArrowSquareOutIcon from 'phosphor-svelte/lib/ArrowSquareOutIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
+	import { tooltip } from '../attachments';
 
 	export type ReplaySteamLinkPlayer = {
 		/** Stable row key (slot / index). */
@@ -248,7 +249,7 @@
 				size="icon-sm"
 				class="shrink-0"
 				aria-label={t('View profile')}
-				title={t('View profile')}
+				{@attach tooltip(t('View profile'))}
 				onpointerdown={stopSelect}
 				onmousedown={stopSelect}
 				onclick={stopSelect}

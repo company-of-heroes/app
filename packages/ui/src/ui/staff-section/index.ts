@@ -1,3 +1,3 @@
-import StaffDebug from './staff-debug.svelte';
+import StaffSection from './staff-section.svelte';
 
-export { StaffDebug };
+export { StaffSection };

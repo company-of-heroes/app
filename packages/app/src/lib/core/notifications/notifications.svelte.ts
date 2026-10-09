@@ -5,7 +5,8 @@ import { database } from '$core/app/database';
 import { account } from '$core/account';
 import { modal } from '$lib/components/ui/modal';
 import { toast } from '$lib/components/ui/toasts';
-import NotificationDetail from '$lib/components/notifications/notification-detail.svelte';
+import { NotificationDetail, type HostNotification } from '@company-of-heroes/ui/notifications';
+import { notifyOs } from './os-notification';
 
 export type NotificationItem = NotificationRecord & {
 	read: boolean;
@@ -23,6 +24,21 @@ export class NotificationsService {
 	#unsubscribeNotifications: (() => Promise<void>) | null = null;
 	#unsubscribeReads: (() => Promise<void>) | null = null;
 	#started = false;
+	#listeners = new Set<() => void>();
+
+	/** Called after realtime changes (new / deleted notification, read elsewhere). */
+	onChange(listener: () => void): () => void {
+		this.#listeners.add(listener);
+		return () => {
+			this.#listeners.delete(listener);
+		};
+	}
+
+	#emit(): void {
+		for (const listener of this.#listeners) {
+			listener();
+		}
+	}
 
 	async start(): Promise<void> {
 		if (this.#started || !account.isAuthenticated) {
@@ -31,6 +47,7 @@ export class NotificationsService {
 
 		this.#started = true;
 		await this.refresh();
+		this.#emit();
 		await this.#subscribe();
 	}
 
@@ -77,16 +94,24 @@ export class NotificationsService {
 		}
 	}
 
-	async open(notification: NotificationItem): Promise<void> {
+	async markRead(notificationId: string): Promise<void> {
 		const userId = account.userId;
 
-		if (!userId) {
+		if (!userId || this.#readIds.has(notificationId)) {
+			return;
+		}
+
+		await database.notifications.markAsRead(userId, notificationId);
+		this.#markLocalRead(notificationId);
+	}
+
+	async open(notification: HostNotification): Promise<void> {
+		if (!account.userId) {
 			return;
 		}
 
 		if (!notification.read) {
-			await database.notifications.markAsRead(userId, notification.id);
-			this.#markLocalRead(notification.id);
+			await this.markRead(notification.id);
 		}
 
 		const matchId = lobbyId(notification);
@@ -94,6 +119,12 @@ export class NotificationsService {
 			const targetComment = commentId(notification);
 			const path = resolve('/(loaded)/history/[id]', { id: matchId });
 			await goto(targetComment ? `${path}?comment=${encodeURIComponent(targetComment)}` : path);
+			return;
+		}
+
+		const tournament = tournamentPath(notification);
+		if (tournament) {
+			await goto(tournament);
 			return;
 		}
 
@@ -126,18 +157,23 @@ export class NotificationsService {
 
 		this.#unsubscribeNotifications = await database.notifications.subscribe((event) => {
 			if (event.action === 'create' && database.notifications.appliesToUser(event.record, userId)) {
-				void this.refresh();
+				void this.refresh().then(() => this.#emit());
 				toast.info(event.record.title);
+				// Tournament news matters while in-game too: also a Windows notification.
+				if (event.record.tournament) {
+					void notifyOs(event.record.title, event.record.body);
+				}
 			}
 
 			if (event.action === 'delete') {
-				void this.refresh();
+				void this.refresh().then(() => this.#emit());
 			}
 		});
 
 		this.#unsubscribeReads = await database.notifications.subscribeReads(userId, (event) => {
 			if (event.action === 'create') {
 				this.#markLocalRead(event.record.notification);
+				this.#emit();
 			}
 		});
 	}
@@ -173,19 +209,40 @@ function relationId(value: unknown): string {
 	return String(value);
 }
 
-function lobbyId(notification: NotificationItem): string {
+function lobbyId(notification: HostNotification): string {
 	return relationId(notification.lobby as unknown);
 }
 
-function commentId(notification: NotificationItem): string {
+function commentId(notification: HostNotification): string {
 	return relationId(notification.comment as unknown);
 }
 
-function replayId(notification: NotificationItem): string {
+/** The app's tournament page for a tournament notice, from its website `url`. */
+function tournamentPath(notification: HostNotification): string {
+	if (!relationId(notification.tournament as unknown) || !notification.url) {
+		return '';
+	}
+
+	try {
+		const url = new URL(notification.url);
+		const slug = /\/tournaments\/([^/]+)/.exec(url.pathname)?.[1];
+		if (!slug) {
+			return '';
+		}
+
+		const path = resolve('/(loaded)/tournaments/[slug]', { slug: decodeURIComponent(slug) });
+		const tab = url.searchParams.get('tab');
+		return tab ? `${path}?tab=${encodeURIComponent(tab)}` : path;
+	} catch {
+		return '';
+	}
+}
+
+function replayId(notification: HostNotification): string {
 	return relationId(notification.replay as unknown);
 }
 
-function replayCommentId(notification: NotificationItem): string {
+function replayCommentId(notification: HostNotification): string {
 	return relationId(notification.replayComment as unknown);
 }
 

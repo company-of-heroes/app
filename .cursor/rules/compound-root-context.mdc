@@ -1,0 +1,84 @@
+---
+description: Compound component families share data through a Root + runed Context, not the same props on every sibling
+globs: packages/**/*.{svelte,svelte.ts,ts}
+alwaysApply: false
+---
+
+# Compound families: Root + context, not prop drilling
+
+When two or more siblings of one family (`import * as X` → `<X.Maps />`, `<X.Facts />`, …) render parts of the **same data object**, the family gets an `X.Root` that puts that object in context once. Children read it with `useX()`. Do not pass the object (or slices of it) as props to every child.
+
+## How
+
+1. `context.ts` next to the components (see `packages/ui/src/statistics/context.ts`):
+
+```typescript
+import { Context } from 'runed';
+import type { CommunityStatistics } from './types';
+
+/** Read through getters, so children follow the Root's props. */
+export type StatisticsContext = {
+	readonly statistics: CommunityStatistics;
+	readonly selected: string | null;
+};
+
+const context = new Context<StatisticsContext>('<statistics />');
+export const createStatistics = (value: StatisticsContext) => context.set(value);
+export const useStatistics = () => context.get();
+```
+
+2. `{family}-root.svelte` takes the data + `children`, calls `createX` **once at init** with getters (see `set-context-init.mdc`) and renders the children. No wrapper element unless the family needs one (keeps flush-border layouts intact).
+
+```svelte
+<script lang="ts">
+	let { statistics, selected = null, children }: Props = $props();
+
+	createStatistics({
+		get statistics() {
+			return statistics;
+		},
+		get selected() {
+			return selected;
+		}
+	});
+</script>
+
+{@render children()}
+```
+
+   The Root often stays mounted while its props change (switching a mode tab). A `useX = () => context.get()()` that children call once at init reads a **snapshot**; getters (or `const x = useX()` read inside `$derived`) keep them in sync.
+3. Children call `useX()` once at init and read its fields in `$derived` / markup: `const context = useStatistics(); const maps = $derived(context.statistics.maps);`. Props are only for **per-placement options**: `limit`, `compact`, `kind`, `class`, callbacks, hrefs.
+4. Export `Root` and `createX` / `useX` from the family `index.ts`.
+5. Anything every child derives the same way (a filter, a selected item, a total) goes into the context too, not into each child.
+
+```svelte
+<!-- ❌ BAD — the same stats object spread over every sibling -->
+<Statistics.Maps maps={stats.maps} matchCount={stats.matchCount} {selected} />
+<Statistics.Factions factions={stats.factions} />
+<Statistics.Facts statistics={stats} filtered={!!selected} />
+<Statistics.Doctrines doctrines={stats.doctrines} replayPlayers={stats.replayPlayers} />
+
+<!-- ✅ GOOD — data once on Root, children only get display options -->
+<Statistics.Root statistics={stats} {selected}>
+	<Statistics.Maps collapsed={10} {mapHref} />
+	<Statistics.Factions />
+	<Statistics.Facts />
+	<Statistics.Doctrines />
+</Statistics.Root>
+```
+
+Same for a page component that is the only consumer of its children (e.g. `tournament-page.svelte`): call `createX` in the page and let the children `useX()` instead of passing `tournament`, `matches`, `participants` to each one.
+
+## Standalone use
+
+A child that is also used on its own is still wrapped in `X.Root` there. Do not add a "prop **or** context" fallback to new components — one way to feed the data.
+
+Existing exception: app `Player.*` pieces (`Player.Labels`, `Player.LikeCount`, …) take an optional `steamId` for use outside `Player.Root`; inside a Root, leave it out.
+
+## Do not
+
+- Pass the same object or its slices to 2+ siblings of a family
+- Re-derive the same value (selected map, totals, `filtered`) in the page and pass it to several children
+- Call `createX` in `$effect`, `watch` or after `await`
+- Declare `{#snippet}` blocks directly inside `<X.Root>` — they become Root props; declare them outside and render them inside
+- Pass a context value back down as a prop (`useReplay()` → `<Replay.Actions replay={…} />`)

@@ -14,6 +14,7 @@
 	import { interactive } from '$lib/utils/variants';
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
+	import { tooltip } from '@company-of-heroes/ui/attachments';
 
 	const { t } = useI18n();
 
@@ -22,6 +23,7 @@
 		{ href: '/players', label: t('Players') },
 		{ href: '/replays', label: t('Replays') },
 		{ href: '/stats', label: t('Stats') },
+		{ href: '/tournaments', label: t('Tournaments') },
 		{ href: '/wiki', label: t('Wiki') }
 	]);
 
@@ -62,6 +64,10 @@
 			return current.startsWith('/wiki');
 		}
 
+		if (path === '/tournaments') {
+			return current.startsWith('/tournaments');
+		}
+
 		return false;
 	}
 </script>
@@ -78,6 +84,7 @@
 		</span>
 		<div class="flex min-w-0 flex-col justify-center px-4">
 			<p class="truncate font-medium text-white">{t('Global Community')}</p>
+			<p class="text-primary truncate text-xs font-medium">{t('Website')}</p>
 		</div>
 	</a>
 
@@ -106,7 +113,14 @@
 			</DiscordMenu>
 		</div>
 		<div class="border-secondary-800 hidden h-full items-center border-r px-3 sm:flex">
-			<Button href={uploadHref} variant="primary" size="sm" class="px-3" title={t('Upload replay')}>
+			<Button
+				href={uploadHref}
+				variant="primary"
+				size="sm"
+				class="px-3"
+				aria-label={t('Upload replay')}
+				{@attach tooltip(t('Upload replay'))}
+			>
 				<UploadSimpleIcon class="size-4" />
 				<span class="hidden lg:inline">{t('Upload replay')}</span>
 			</Button>

@@ -30,7 +30,7 @@
 </script>
 
 <span class={cn('inline-flex min-w-0 items-center gap-1.5', className)}>
-	<PlayerLikeCount steamId={player.steamId} class="shrink-0" />
+	<PlayerLikeCount class="shrink-0" />
 	<PlayerStreamerIcon labels={labelsForSteamId(player.steamId)} steamId={player.steamId} />
 	{#if previewId}
 		<PlayerProfileLink
@@ -50,5 +50,5 @@
 			{player.profile?.alias ?? player.name ?? t('CPU')}
 		</a>
 	{/if}
-	<PlayerLabels steamId={player.steamId} class="shrink-0" />
+	<PlayerLabels class="shrink-0" />
 </span>

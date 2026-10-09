@@ -31,7 +31,7 @@
 		<Dialog.Content
 			class={cn(
 				'absolute',
-				'top-0 left-1/2 z-50 mx-auto -translate-x-1/2 overflow-hidden outline-hidden',
+				'top-0 left-1/2 z-50 mx-auto max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden outline-hidden',
 				surfaceModal,
 				modal.size === 'sm' && 'mt-12 max-h-[calc(100vh-4rem)] w-[320px]',
 				modal.size === 'md' && 'mt-12 max-h-[calc(100vh-4rem)] w-[480px]',

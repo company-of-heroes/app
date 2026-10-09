@@ -8,6 +8,7 @@
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import ArrowLeftIcon from 'phosphor-svelte/lib/ArrowLeftIcon';
 	import DownloadIcon from 'phosphor-svelte/lib/DownloadIcon';
+	import { tooltip } from '../attachments';
 
 	type Props = {
 		mapName: string;
@@ -132,7 +133,7 @@
 						{#if showDownload}
 							<span
 								class="text-secondary-400 inline-flex h-11 items-center gap-1.5 px-3 text-sm tabular-nums"
-								title={t('Downloads')}
+								{@attach tooltip(t('Downloads'))}
 							>
 								<DownloadIcon class="size-4" weight="duotone" />
 								{downloadCount}

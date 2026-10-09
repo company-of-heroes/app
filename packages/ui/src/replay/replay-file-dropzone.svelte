@@ -5,6 +5,7 @@
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import FileArrowUpIcon from 'phosphor-svelte/lib/FileArrowUpIcon';
 	import ChecksIcon from 'phosphor-svelte/lib/ChecksIcon';
+	import { escapeHtml, tooltip } from '../attachments';
 
 	type Props = {
 		fileName?: string | null;
@@ -110,7 +111,7 @@
 			<div class="flex max-w-md flex-col items-center gap-1.5 text-center">
 				<div class="flex max-w-full items-center gap-2">
 					<FileArrowUpIcon size={16} class="text-secondary-400 shrink-0" weight="duotone" />
-					<p class="truncate font-medium text-white" title={name}>{name}</p>
+					<p class="truncate font-medium text-white" {@attach tooltip(escapeHtml(name))}>{name}</p>
 				</div>
 				<p
 					id="{id}-hint"

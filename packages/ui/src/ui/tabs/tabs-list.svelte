@@ -11,7 +11,10 @@
 
 <Tabs.List
 	{...restProps}
-	class={cn('flex w-fit items-center justify-start gap-2 overflow-clip', className)}
+	class={cn(
+		'flex min-w-0 items-stretch justify-start gap-6 overflow-x-auto overflow-y-hidden',
+		className
+	)}
 >
 	{@render children?.()}
 </Tabs.List>

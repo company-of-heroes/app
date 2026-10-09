@@ -1,4 +1,4 @@
-import { err, ok, okAsync, ResultAsync } from 'neverthrow';
+import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby/types';
 import { notFound } from '../errors';
 import { pbMaybe, type Task } from '../result';
@@ -65,7 +65,8 @@ export class MatchesService extends Service {
 	}
 	/**
 	 * One community match: finished games with a replay, or games still in progress.
-	 * Hidden matches are visible to staff only.
+	 * Hidden matches (e.g. tournament games before the tournament ends) are visible to
+	 * staff and to the match's own players only.
 	 */
 	get(id: string, viewer: MatchViewer): Task<MatchDetail> {
 		return this.find(id)
@@ -73,11 +74,20 @@ export class MatchesService extends Service {
 				const hasReplay = !!record && (record.hasReplay || !!record.replay);
 				// Owners always see their own match (the desktop app lists every match you played).
 				const isOwner = !!record && !!viewer && viewer.id === record.user;
-				const visible =
-					!!record &&
-					(hasReplay || record.needsResult || isOwner) &&
-					(!record.isHidden || !!viewer?.isStaff);
-				return record && visible ? ok(record) : err(notFound('Match not found'));
+				const listed = !!record && (hasReplay || record.needsResult || isOwner);
+				if (!record || !listed) {
+					return errAsync(notFound('Match not found'));
+				}
+
+				if (!record.isHidden || viewer?.isStaff || isOwner) {
+					return okAsync(record);
+				}
+
+				return (
+					viewer ? this.services.lobbies.isParticipant(record, viewer.id) : okAsync(false)
+				).andThen((participant) =>
+					participant ? okAsync(record) : errAsync(notFound('Match not found'))
+				);
 			})
 			.andThen((record) => {
 				const row = toHistoryRow(record);

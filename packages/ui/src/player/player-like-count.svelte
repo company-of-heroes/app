@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { scoreClassName } from '../comment/vote';
+	import { tooltip } from '../attachments';
 
 	type Props = {
 		likeCount?: number | null;
@@ -22,7 +23,7 @@
 			scoreClassName(count ?? 0, 'text-secondary-400'),
 			className
 		)}
-		title="Player rating"
+		{@attach tooltip('Player rating')}
 	>
 		{label}
 	</span>

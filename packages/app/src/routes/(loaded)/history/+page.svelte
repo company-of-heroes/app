@@ -6,7 +6,7 @@
 	import { resolveTeamOutcome, toMatchView } from '$lib/components/match/match-view';
 	import { outcomeSurface } from '@company-of-heroes/ui/variants';
 	import { cn } from '$lib/utils';
-	import { tabTrigger } from '$lib/components/ui/variants';
+	import * as Tabs from '$lib/components/ui/tabs';
 	import { Pagination } from '$lib/components/ui/pagination';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
@@ -236,41 +236,15 @@
 {#if matches}
 	<div class="flex min-h-0 flex-1 flex-col">
 		<div class="border-secondary-800 border-b">
-			<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2.5">
-				<div class="flex items-center gap-2">
-					<button
-						type="button"
-						class={tabTrigger}
-						data-state={tab === 'user' ? 'active' : undefined}
-						onclick={() => setTab('user')}
-					>
-						{t('My matches')}
-					</button>
-					<button
-						type="button"
-						class={tabTrigger}
-						data-state={tab === 'community' ? 'active' : undefined}
-						onclick={() => setTab('community')}
-					>
-						{t('Community matches')}
-					</button>
-					<button
-						type="button"
-						class={tabTrigger}
-						data-state={tab === 'replays' ? 'active' : undefined}
-						onclick={() => setTab('replays')}
-					>
-						{t('My replays')}
-					</button>
-					<button
-						type="button"
-						class={tabTrigger}
-						data-state={tab === 'member' ? 'active' : undefined}
-						onclick={() => setTab('member')}
-					>
-						{t('Member replays')}
-					</button>
-				</div>
+			<div class="flex flex-wrap items-center justify-between gap-x-4 px-4">
+				<Tabs.Root value={tab} onValueChange={(next) => setTab(next as HistoryTab)} class="min-w-0">
+					<Tabs.List>
+						<Tabs.Trigger value="user">{t('My matches')}</Tabs.Trigger>
+						<Tabs.Trigger value="community">{t('Community matches')}</Tabs.Trigger>
+						<Tabs.Trigger value="replays">{t('Replay Manager')}</Tabs.Trigger>
+						<Tabs.Trigger value="member">{t('Shared Replays')}</Tabs.Trigger>
+					</Tabs.List>
+				</Tabs.Root>
 				{#if tab !== 'replays' && tab !== 'member' && matches.displayedResult}
 					<Pagination
 						class="ms-auto shrink-0"

@@ -10,6 +10,7 @@
 	import PlayerProfileHeader from './player-profile-header.svelte';
 	import PlayerStatsTable from './player-stats-table.svelte';
 	import PlayerPerformancePanel from '../player-performance/player-performance-panel.svelte';
+	import TournamentTrophies from '../tournament/tournament-trophies.svelte';
 
 	type Props = {
 		player: PlayerPageData;
@@ -46,8 +47,9 @@
 
 <div class="border-secondary-900 overflow-clip border-b">
 	<PlayerProfileHeader {player} {actions} />
+	<TournamentTrophies steamId={player.steamId} />
 	<Tabs.Root bind:value={tab} class="border-secondary-800 border-b">
-		<Tabs.List class="min-w-0 flex-wrap px-4 py-2.5">
+		<Tabs.List class="px-4">
 			<Tabs.Trigger value="stats">{t('Stats')}</Tabs.Trigger>
 			<Tabs.Trigger value="performance">{t('Performance')}</Tabs.Trigger>
 			<Tabs.Trigger value="match-history">{t('Match history')}</Tabs.Trigger>

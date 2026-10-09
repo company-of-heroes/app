@@ -358,7 +358,7 @@
 	{formatDate(row.created)}
 {/snippet}
 {#snippet cell_status({ row }: { row: ReportRow })}
-	<Badge variant={statusVariant(row.status)} class="px-2 py-0.5">
+	<Badge variant={statusVariant(row.status)}>
 		{statusLabel(row.status)}
 	</Badge>
 {/snippet}

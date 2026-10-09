@@ -2,11 +2,16 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { useHost } from '../host/host.context';
 	import { Button } from '../ui/button';
-	import ReplayFileDropzone from './replay-file-dropzone.svelte';
+	import FileDropzone from '../ui/input/file-dropzone.svelte';
+	import { cn } from '../cn';
 	import { parseReplayAsync } from './parse/parse-replay-async';
 	import type { CommunityMatchDetail } from './types';
+	import CheckCircleIcon from 'phosphor-svelte/lib/CheckCircleIcon';
 	import FilmReelIcon from 'phosphor-svelte/lib/FilmReelIcon';
 	import SignInIcon from 'phosphor-svelte/lib/SignInIcon';
+	import SpinnerIcon from 'phosphor-svelte/lib/SpinnerIcon';
+	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
+	import { escapeHtml, tooltip } from '../attachments';
 
 	type Props = {
 		match: CommunityMatchDetail;
@@ -53,38 +58,67 @@
 	}
 </script>
 
-{#if canAttach || !signedIn}
-	<section
-		class="border-secondary-800 from-secondary-950 to-secondary-900/80 flex flex-col gap-3 border-b bg-linear-to-r px-4 py-4"
-	>
-		<div class="flex items-start gap-3">
-			<FilmReelIcon class="text-primary mt-0.5 size-6 shrink-0" weight="duotone" />
-			<div class="min-w-0">
-				<p class="font-medium text-white">{t('Played this match? Upload the replay')}</p>
-				<p class="text-secondary-400 mt-0.5 text-sm">
-					{t(
-						'This match has no replay yet. Add your .rec file so everyone can watch and download it.'
-					)}
-				</p>
-			</div>
-		</div>
-		{#if canAttach}
-			<ReplayFileDropzone
+{#snippet intro()}
+	<FilmReelIcon class="text-secondary-500 size-5 shrink-0" weight="duotone" />
+	<div class="min-w-0 flex-1">
+		<p class="text-sm font-medium text-white">{t('Played this match? Upload the replay')}</p>
+		<p class="text-secondary-400 truncate text-xs">
+			{t('This match has no replay yet. Add your .rec file so everyone can watch and download it.')}
+		</p>
+	</div>
+{/snippet}
+
+{#if canAttach}
+	<section class="flex flex-col gap-2 px-4 py-3">
+		<div class="flex items-center gap-3">
+			{@render intro()}
+			<FileDropzone
 				id="replay-attach-{match.id}"
 				{fileName}
 				{busy}
+				dropLabel={t('Drop a .rec file here')}
+				accept=".rec,application/octet-stream"
+				acceptFile={(file) => file.name.toLowerCase().endsWith('.rec')}
 				onFileChange={(file) => void attach(file)}
-			/>
-			{#if error}
-				<p class="text-sm text-red-400">{error}</p>
-			{/if}
-		{:else}
-			<div>
-				<Button href={host.routes.login()} variant="primary" size="sm">
-					<SignInIcon class="size-4" />
-					{t('Log in to upload the replay')}
-				</Button>
-			</div>
+				class="w-auto max-w-48 shrink-0"
+				zoneClass={cn(
+					'border-secondary-700 bg-secondary-950 text-secondary-200 h-8 min-h-0 flex-row gap-2 px-3 py-0 text-sm font-normal',
+					'hover:border-secondary-600 hover:bg-secondary-800 hover:text-white',
+					'data-[dragging]:border-primary/60 data-[dragging]:bg-primary/10 data-[dragging]:text-primary data-[dragging]:border-dashed',
+					busy && 'opacity-100'
+				)}
+			>
+				{#snippet empty(dragging)}
+					<UploadSimpleIcon class="size-4 shrink-0" />
+					<span id="replay-attach-{match.id}-hint" class="hidden sm:inline">
+						{dragging ? t('Drop a .rec file here') : t('Choose .rec file')}
+					</span>
+				{/snippet}
+
+				{#snippet selected(name)}
+					{#if busy}
+						<SpinnerIcon class="text-primary size-4 shrink-0 animate-spin" />
+					{:else}
+						<CheckCircleIcon class="text-primary size-4 shrink-0" weight="fill" />
+					{/if}
+					<span
+						id="replay-attach-{match.id}-hint"
+						class="truncate"
+						{@attach tooltip(escapeHtml(name))}>{name}</span
+					>
+				{/snippet}
+			</FileDropzone>
+		</div>
+		{#if error}
+			<p class="text-sm text-red-400" role="alert">{error}</p>
 		{/if}
+	</section>
+{:else if !signedIn}
+	<section class="flex items-center gap-3 px-4 py-3">
+		{@render intro()}
+		<Button href={host.routes.login()} variant="secondary" size="sm" class="shrink-0">
+			<SignInIcon class="size-4" />
+			<span class="hidden sm:inline">{t('Log in to upload the replay')}</span>
+		</Button>
 	</section>
 {/if}

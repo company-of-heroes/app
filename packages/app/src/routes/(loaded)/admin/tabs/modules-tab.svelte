@@ -17,6 +17,7 @@
 	import dayjs from '$lib/dayjs';
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
 	import { useI18n } from '$lib/i18n';
+	import { escapeHtml, tooltip } from '$lib/attachments';
 
 	const { t } = useI18n();
 
@@ -356,7 +357,9 @@
 		<span class="block truncate leading-none">{row.module_name}</span>
 	{/snippet}
 	{#snippet cell_path({ row }: { row: HitRow })}
-		<span class="block truncate leading-none" title={row.module_path}>{row.module_path}</span>
+		<span class="block truncate leading-none" {@attach tooltip(escapeHtml(row.module_path))}
+			>{row.module_path}</span
+		>
 	{/snippet}
 	{#snippet cell_session({ row }: { row: HitRow })}
 		<span class="leading-none">{row.session_id ?? '—'}</span>

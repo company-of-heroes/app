@@ -4,11 +4,39 @@ import type { CommentVoteValue } from '../comment/vote';
 import type { LiveLobbyPlayer } from '../live-lobby/types';
 import type { ProfileLinkFields } from '../player/profile';
 import type { PlayerLabel } from '../format/types';
-import type { PlayerCustomization, PlayerEloMap, PlayerPreviewData } from '../player/types';
+import type {
+	LeaderboardStat,
+	PlayerCustomization,
+	PlayerEloMap,
+	PlayerPreviewData
+} from '../player/types';
 import type { CommunityMatchDetail, MatchResultPlayer } from '../replay/types';
 import type { PlayerRewards } from '../reward/types';
 import type { DocKind } from '@company-of-heroes/game-data/types';
 import type { DocsNote } from '../docs/types';
+import type { Medal } from '../tournament/medal';
+import type { HostNotification } from '../notifications/types';
+import type {
+	HallOfFame,
+	MyTournaments,
+	Tournament,
+	TournamentDetail,
+	TournamentImages,
+	TournamentInput,
+	TournamentMap,
+	TournamentMatch,
+	TournamentMatchResult,
+	TournamentPost,
+	TournamentPostInput,
+	TournamentReport,
+	TournamentReportRecord,
+	TournamentReportUpdate,
+	TournamentScheduleProposal,
+	TournamentScope,
+	TournamentSeen,
+	TournamentStats,
+	TournamentUpdate
+} from '../tournament/types';
 
 /**
  * Everything a shared component needs from the host (desktop app or website).
@@ -71,6 +99,16 @@ export type HostRoutes = {
 	shareReplay?: (id: string) => string;
 	/** Owner edit page of a member replay; hosts that edit in place omit it. */
 	editReplay?: (replayId: string) => string;
+	tournaments: () => string;
+	tournament: (slug: string) => string;
+	/** Staff create and edit pages. */
+	tournamentNew: () => string;
+	tournamentEdit: (slug: string) => string;
+	/** Where to get the desktop app; the app itself omits it. */
+	downloadApp?: () => string;
+	tournamentHallOfFame: () => string;
+	/** Dev-only tournament simulator (website in dev mode); hosts without it hide the links. */
+	tournamentSimulator?: (slug?: string) => string;
 };
 
 /** Parsed-replay roster entry as sent to rating previews / uploads. */
@@ -130,6 +168,8 @@ export type HostResolvers = {
 	doctrineBanner: (file: string) => string;
 	/** URL for a replay action icon key (see `actionIconKey`). */
 	actionIcon: (key: string) => string | undefined;
+	/** Champion medals from `shared-assets/medals`, in file order. Hosts without them return []. */
+	medals: () => Medal[];
 	/** Avatar for a comment author / mention; hosts may add a generated fallback. */
 	userAvatar: (user: { id: string; avatarUrl?: string }) => string | undefined;
 };
@@ -141,6 +181,10 @@ export type HostApi = {
 		search: (query: string) => Promise<PlayerSearchOption[]>;
 		/** Stored lobby ELO per ladder, keyed like `PlayerEloMap`. */
 		getElo: (steamId: string) => Promise<PlayerEloMap>;
+		/** Full ladder stats list + stored ELO (Steam id or profile id); null when not found. */
+		getStats: (
+			id: string
+		) => Promise<{ leaderboardStats: LeaderboardStat[]; elo: PlayerEloMap } | null>;
 	};
 	social: {
 		getMyVote: (target: LikeTarget) => Promise<CommentVoteValue>;
@@ -258,12 +302,115 @@ export type HostApi = {
 		 */
 		reportIssue?: (page: string, description: string) => Promise<void>;
 	};
+	/** Tournaments; every call rejects with a user-facing message. Staff-only calls are checked by the server. */
+	tournaments: {
+		list: (scope: TournamentScope) => Promise<Tournament[]>;
+		get: (idOrSlug: string) => Promise<TournamentDetail>;
+		/** Finished tournaments the player won, newest first. */
+		wonBy: (steamId: string) => Promise<Tournament[]>;
+		create: (input: TournamentInput, images?: TournamentImages) => Promise<Tournament>;
+		update: (id: string, input: TournamentUpdate, images?: TournamentImages) => Promise<Tournament>;
+		/** Staff-made maps; built-in maps are `BUILT_IN_MAPS`. */
+		listMaps: () => Promise<TournamentMap[]>;
+		/** Staff only. */
+		createMap: (name: string, icon: File | null) => Promise<TournamentMap>;
+		/** `acceptRules` is required when the tournament has rules. */
+		register: (id: string, steamId: string, acceptRules: boolean) => Promise<TournamentDetail>;
+		/** A participant accepts the current rules (again). */
+		acceptRules: (id: string) => Promise<TournamentDetail>;
+		withdraw: (id: string) => Promise<TournamentDetail>;
+		/** Closes registration and seeds by 1v1 ELO. */
+		seed: (id: string) => Promise<TournamentDetail>;
+		/** Participant ids, top seed first. */
+		setSeeds: (id: string, order: string[]) => Promise<TournamentDetail>;
+		start: (id: string) => Promise<TournamentDetail>;
+		setMatchResult: (
+			id: string,
+			matchId: string,
+			result: TournamentMatchResult
+		) => Promise<TournamentMatch[]>;
+		disqualify: (id: string, participantId: string) => Promise<TournamentDetail>;
+		/** Staff: last moment to play per round (`roundKey` → ISO date, null clears it). */
+		setRoundDeadlines: (
+			id: string,
+			rounds: Record<string, string | null>
+		) => Promise<TournamentDetail>;
+		/** Staff: a deadline for one match (null: its round's again). */
+		setMatchDeadline: (
+			id: string,
+			matchId: string,
+			deadline: string | null
+		) => Promise<TournamentDetail>;
+		/** The signed-in player's open matches and the popups they have not seen yet. */
+		mine: () => Promise<MyTournaments>;
+		/** The popups of these games, tournament starts and updates were shown. */
+		markSeen: (seen: TournamentSeen) => Promise<void>;
+		/** Staff: a post on the Updates tab; participants get a notification. */
+		createPost: (id: string, input: TournamentPostInput) => Promise<TournamentPost>;
+		updatePost: (id: string, postId: string, input: TournamentPostInput) => Promise<TournamentPost>;
+		deletePost: (id: string, postId: string) => Promise<void>;
+		/** A participant reports a problem with their match to staff. */
+		report: (id: string, matchId: string, report: TournamentReport) => Promise<void>;
+		/** Staff: every problem report of the tournament, newest first. */
+		reports: (id: string) => Promise<TournamentReportRecord[]>;
+		/** Staff: resolve or dismiss a report; the reporter hears the note. */
+		updateReport: (
+			id: string,
+			reportId: string,
+			update: TournamentReportUpdate
+		) => Promise<TournamentReportRecord>;
+		/** A player proposes 1–3 times for their match. */
+		proposeTimes: (
+			id: string,
+			matchId: string,
+			times: string[]
+		) => Promise<TournamentScheduleProposal>;
+		acceptTime: (
+			id: string,
+			matchId: string,
+			proposalId: string,
+			time: string
+		) => Promise<TournamentScheduleProposal>;
+		declineTimes: (
+			id: string,
+			matchId: string,
+			proposalId: string
+		) => Promise<TournamentScheduleProposal>;
+		/** Staff: set or clear the agreed time of a match. */
+		setMatchTime: (
+			id: string,
+			matchId: string,
+			scheduledAt: string | null
+		) => Promise<TournamentDetail>;
+		/** Staff: put a match in the spotlight (null clears it). */
+		feature: (id: string, matchId: string | null) => Promise<TournamentDetail>;
+		/** Numbers of a finished tournament. */
+		stats: (idOrSlug: string) => Promise<TournamentStats>;
+		hallOfFame: () => Promise<HallOfFame>;
+	};
+	/** The signed-in user's notifications (bell). */
+	notifications: {
+		/** Newest first. */
+		list: () => Promise<HostNotification[]>;
+		unreadCount: () => Promise<number>;
+		markRead: (id: string) => Promise<void>;
+		/**
+		 * Realtime hosts call `onChange` when a notification arrives or is read; the bell then
+		 * reloads. Hosts without it are polled by the bell. Returns the unsubscribe.
+		 */
+		subscribe?: (onChange: () => void) => () => void;
+	};
 	/** Optional: machine-translate chat text. Hosts without it hide the translate controls. */
 	translate?: (text: string, to: string) => Promise<string>;
 };
 
 export type HostContext = {
 	locale: () => string;
+	/**
+	 * Opens an outside link (Steam profile, `steam://` add friend) in the browser or Steam.
+	 * Hosts without it let the link open itself.
+	 */
+	openExternal?: (url: string) => void;
 	/** Localize an internal path (website adds the locale prefix; the app returns it as is). */
 	href: (path: string) => string;
 	routes: HostRoutes;
@@ -282,6 +429,11 @@ export type HostContext = {
 		/** Replay files only carry in-game aliases; true when the alias is the viewer. */
 		isSelfAlias: (alias: string) => boolean;
 	};
+	/**
+	 * Opens a notification from the bell: the host routes it (match, replay, tournament, page)
+	 * or shows its body. Called after it was marked read.
+	 */
+	openNotification: (notification: HostNotification) => void;
 	notify: {
 		success: (message: string) => void;
 		error: (message: string) => void;

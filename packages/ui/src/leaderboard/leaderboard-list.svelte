@@ -25,6 +25,7 @@
 		getStoredEloForLeaderboard,
 		isEliteElo
 	} from '../format/player-format';
+	import { escapeHtml, tooltip } from '../attachments';
 
 	type Props = {
 		stats: LeaderboardStatRow[];
@@ -103,7 +104,7 @@
 										class="h-4 w-auto shrink-0 rounded-xs"
 										src={flagUrl}
 										alt={countryName ?? stat.profile.country ?? ''}
-										title={countryName ?? undefined}
+										{@attach tooltip(escapeHtml(countryName ?? ''))}
 									/>
 								{/if}
 								<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
@@ -175,7 +176,7 @@
 								class="h-4 w-auto shrink-0 rounded-xs"
 								src={flagUrl}
 								alt={countryName ?? stat.profile.country ?? ''}
-								title={countryName ?? undefined}
+								{@attach tooltip(escapeHtml(countryName ?? ''))}
 							/>
 						{/if}
 						<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />

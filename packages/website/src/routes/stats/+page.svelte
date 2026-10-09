@@ -246,72 +246,53 @@
 		{:else}
 			{#snippet maps()}
 				<!-- Keeps the last row's border when the column is shorter than its neighbour; -mb-px lays it over the next border when it does reach the bottom. -->
-				<Statistics.Maps
-					maps={stats.maps}
-					matchCount={selected
-						? stats.maps.reduce((sum, row) => sum + row.played, 0)
-						: stats.matchCount}
-					collapsed={10}
-					{selected}
-					{mapHref}
-					class="-mb-px"
-				/>
+				<Statistics.Maps collapsed={10} {mapHref} class="-mb-px" />
 			{/snippet}
 			{#snippet factions()}
-				<Statistics.Factions factions={stats.factions} />
+				<Statistics.Factions />
 			{/snippet}
 			{#snippet matchups()}
-				<Statistics.Matchups matchups={stats.matchups} />
+				<Statistics.Matchups />
 			{/snippet}
 			{#snippet facts()}
-				<Statistics.Facts statistics={stats} filtered={!!selected} />
+				<Statistics.Facts />
 			{/snippet}
-			<div
-				class="divide-secondary-800 grid divide-y lg:grid-cols-[minmax(0,1fr)_28rem] lg:divide-x lg:divide-y-0"
-			>
-				{@render panel(t('Maps'), maps)}
-				<div class="divide-secondary-800 divide-y">
-					{@render panel(t('Factions'), factions)}
-					{@render panel(t('Matchups'), matchups)}
-					{@render panel(t('Did you know?'), facts)}
+			<Statistics.Root statistics={stats} {selected}>
+				<div
+					class="divide-secondary-800 grid divide-y lg:grid-cols-[minmax(0,1fr)_28rem] lg:divide-x lg:divide-y-0"
+				>
+					{@render panel(t('Maps'), maps)}
+					<div class="divide-secondary-800 divide-y">
+						{@render panel(t('Factions'), factions)}
+						{@render panel(t('Matchups'), matchups)}
+						{@render panel(t('Did you know?'), facts)}
+					</div>
 				</div>
-			</div>
-			<div class="border-secondary-800 divide-secondary-800 divide-y border-t">
-				{#if stats.replayMatches === 0}
-					<p class="text-secondary-400 px-4 py-6 text-sm">
-						{t('No analysed replays in this period yet, so no doctrines or units to show.')}
-					</p>
-				{:else}
-					{#snippet doctrines()}
-						<Statistics.Doctrines doctrines={stats.doctrines} replayPlayers={stats.replayPlayers} />
-					{/snippet}
-					{#snippet units()}
-						<Statistics.Blueprints
-							kind="units"
-							rows={stats.units}
-							replayPlayers={stats.replayPlayers}
-						/>
-					{/snippet}
-					{#snippet openings()}
-						<Statistics.Blueprints
-							kind="openings"
-							rows={stats.openings}
-							replayPlayers={stats.replayPlayers}
-						/>
-					{/snippet}
-					{#snippet upgrades()}
-						<Statistics.Blueprints
-							kind="upgrades"
-							rows={stats.upgrades}
-							replayPlayers={stats.replayPlayers}
-						/>
-					{/snippet}
-					{@render panel(t('Doctrines'), doctrines, replayNote)}
-					{@render panel(t('Most built units'), units, t('Builders not counted'))}
-					{@render panel(t('Openings'), openings, t('First unit after the builders'))}
-					{@render panel(t('Popular upgrades'), upgrades)}
-				{/if}
-			</div>
+				<div class="border-secondary-800 divide-secondary-800 divide-y border-t">
+					{#if stats.replayMatches === 0}
+						<p class="text-secondary-400 px-4 py-6 text-sm">
+							{t('No analysed replays in this period yet, so no doctrines or units to show.')}
+						</p>
+					{:else}
+						{#snippet doctrines()}
+							<Statistics.Doctrines />
+						{/snippet}
+						{#snippet units()}
+							<Statistics.Blueprints kind="units" />
+						{/snippet}
+						{#snippet openings()}
+							<Statistics.Blueprints kind="openings" />
+						{/snippet}
+						{#snippet upgrades()}
+							<Statistics.Blueprints kind="upgrades" />
+						{/snippet}
+						{@render panel(t('Doctrines'), doctrines, replayNote)}
+						{@render panel(t('Most built units'), units, t('Builders not counted'))}
+						{@render panel(t('Openings'), openings, t('First unit after the builders'))}
+						{@render panel(t('Popular upgrades'), upgrades)}
+					{/if}
+				</div>
+			</Statistics.Root>
 		{/if}
 	</div>
 {/snippet}

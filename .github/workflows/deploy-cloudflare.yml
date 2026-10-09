@@ -1,0 +1,156 @@
+name: Deploy Cloudflare
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      target:
+        description: What to deploy
+        type: choice
+        default: all
+        options:
+          - all
+          - website
+          - api-gateway
+          - jobs-worker
+          - smurf-worker
+
+permissions:
+  contents: read
+
+# Never cancel a running deploy halfway; a newer push queues behind it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      website: ${{ steps.targets.outputs.website }}
+      workers: ${{ steps.targets.outputs.workers }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # The website bundles the shared packages, POLICY.md (/privacy) and images from
+      # shared-assets and the app's map folder, so those paths deploy it too.
+      - name: Detect changed packages
+        id: filter
+        if: github.event_name == 'push'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            website:
+              - 'packages/website/**'
+              - 'packages/ui/**'
+              - 'packages/api/**'
+              - 'packages/i18n/**'
+              - 'packages/game-data/**'
+              - 'packages/shared-assets/**'
+              - 'packages/app/src/lib/files/maps/**'
+              - 'POLICY.md'
+              - 'pnpm-lock.yaml'
+            api-gateway:
+              - 'packages/api-gateway/**'
+            jobs-worker:
+              - 'packages/jobs-worker/**'
+            smurf-worker:
+              - 'packages/smurf-worker/**'
+
+      - name: Resolve deploy targets
+        id: targets
+        env:
+          EVENT: ${{ github.event_name }}
+          TARGET: ${{ inputs.target }}
+          CHANGED: ${{ steps.filter.outputs.changes }}
+        run: |
+          set -euo pipefail
+          # CHANGED is the JSON list of matched filters, e.g. ["website","jobs-worker"].
+          wanted() {
+            if [ "$EVENT" = "workflow_dispatch" ]; then
+              [ "$TARGET" = "all" ] || [ "$TARGET" = "$1" ]
+            else
+              [[ "$CHANGED" == *"\"$1\""* ]]
+            fi
+          }
+          website=false
+          if wanted website; then
+            website=true
+          fi
+
+          workers=""
+          for worker in api-gateway jobs-worker smurf-worker; do
+            if wanted "$worker"; then
+              workers="${workers:+$workers,}\"$worker\""
+            fi
+          done
+          echo "website=$website" >> "$GITHUB_OUTPUT"
+          echo "workers=[$workers]" >> "$GITHUB_OUTPUT"
+
+  # api-gateway and jobs-worker bind to the website, so it deploys first.
+  website:
+    needs: changes
+    if: needs.changes.outputs.website == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build website
+        run: pnpm website:build
+
+      - name: Deploy website
+        working-directory: packages/website
+        run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  workers:
+    needs: [changes, website]
+    # Run after the website, also when it was skipped (but not when it failed).
+    if: >-
+      !cancelled() && needs.changes.result == 'success' && needs.website.result != 'failure' &&
+      needs.changes.outputs.workers != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        worker: ${{ fromJSON(needs.changes.outputs.workers) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter "@company-of-heroes/${{ matrix.worker }}"
+
+      - name: Deploy ${{ matrix.worker }}
+        working-directory: packages/${{ matrix.worker }}
+        run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

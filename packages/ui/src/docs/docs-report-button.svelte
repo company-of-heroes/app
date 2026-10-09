@@ -15,6 +15,7 @@
 	import { Button } from '../ui/button';
 	import { Textarea } from '../ui/input';
 	import { Label } from '../ui/label';
+	import { tooltip } from '../attachments';
 
 	type Props = {
 		/** Name of the page being reported, shown to staff. */
@@ -75,7 +76,7 @@
 			variant="ghost"
 			size="sm"
 			class={className}
-			title={t('Report wrong info on this page')}
+			{@attach tooltip(t('Report wrong info on this page'))}
 			onclick={() => onOpenChange(true)}
 		>
 			{@render label()}
@@ -86,7 +87,7 @@
 			size="sm"
 			class={className}
 			href={host.routes.login()}
-			title={t('Sign in to report an issue.')}
+			{@attach tooltip(t('Sign in to report an issue.'))}
 		>
 			{@render label()}
 		</Button>

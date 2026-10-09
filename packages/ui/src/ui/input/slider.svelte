@@ -40,7 +40,7 @@
 	<input
 		type="text"
 		{value}
-		class={cn(controlBase, 'h-11 w-14 min-w-14 flex-none px-1 text-center text-sm')}
+		class={cn(controlBase, 'h-8 w-14 min-w-14 flex-none px-1 text-center text-sm')}
 		oninput={(e) => {
 			const input = e.target as HTMLInputElement;
 			let v = parseFloat(input.value);

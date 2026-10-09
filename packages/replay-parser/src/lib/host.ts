@@ -51,6 +51,7 @@ export function provideLocalHost(): HostContext {
 			rankImageByLeaderboard: () => '',
 			doctrineBanner,
 			actionIcon,
+			medals: () => [],
 			userAvatar: () => undefined
 		},
 		auth: {
@@ -72,7 +73,8 @@ export function provideLocalHost(): HostContext {
 			players: {
 				getPreview: async () => null,
 				search: async () => [],
-				getElo: async () => ({})
+				getElo: async () => ({}),
+				getStats: async () => null
 			},
 			social: {
 				getMyVote: async () => 0,

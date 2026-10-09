@@ -65,6 +65,12 @@ export class RatingsService extends Service {
 			);
 	}
 
+	/** Stored ratings for several Steam accounts; accounts without a row are left out. */
+	many(steamIds: string[]): Task<PlayerRating[]> {
+		const valid = [...new Set(steamIds.filter(isValidSteamId))];
+		return valid.length ? this.rowsFor(valid).map((rows) => rows.map(toRating)) : okAsync([]);
+	}
+
 	/** Results of the player's latest games (not Skirmish), newest first. */
 	private recentResults(identity: string): Task<object[]> {
 		return fromPb(

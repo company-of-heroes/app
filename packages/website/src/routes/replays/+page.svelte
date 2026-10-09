@@ -50,7 +50,7 @@
 				label: t('Community matches'),
 				href: href(replaysHref(query, 'community'))
 			},
-			{ id: 'member', label: t('Member replays'), href: href(replaysHref(query, 'member')) }
+			{ id: 'member', label: t('Shared Replays'), href: href(replaysHref(query, 'member')) }
 		];
 		if (user) {
 			items.push({
@@ -65,7 +65,7 @@
 
 	const emptyMessage = $derived.by(() => {
 		if (tab === 'member') {
-			return t('No member replays found.');
+			return t('No shared replays found.');
 		}
 
 		if (tab === 'mine') {
@@ -174,7 +174,7 @@
 				<div class="min-w-0">
 					<p class="font-medium text-white">{t('Share your replay')}</p>
 					<p class="text-secondary-400 mt-0.5 text-sm">
-						{t('Upload a .rec file to Member replays so others can watch your games.')}
+						{t('Upload a .rec file to Shared Replays so others can watch your games.')}
 					</p>
 				</div>
 				<Button href={uploadHref} variant="primary">

@@ -2,6 +2,7 @@
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Form from '@company-of-heroes/ui/form';
 	import { Input } from '@company-of-heroes/ui/input';
+	import { fileInput } from '@company-of-heroes/ui/variants';
 	import { canRequestEmailChange, isPlaceholderEmail } from '@company-of-heroes/api';
 	import { href, useI18n } from '$lib/i18n';
 	import {
@@ -98,7 +99,7 @@
 			<input
 				type="file"
 				accept="image/png,image/jpeg,image/gif,image/webp,image/bmp"
-				class="text-secondary-400 file:bg-secondary-800 text-sm file:mr-3 file:rounded file:border-0 file:px-3 file:py-1.5 file:text-sm file:text-white"
+				class={fileInput}
 				{...updateProfile.fields.avatar.as('file')}
 			/>
 		{/snippet}

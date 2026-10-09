@@ -1,6 +1,9 @@
 {
 	"name": "@company-of-heroes/shared-assets",
 	"private": true,
+	"scripts": {
+		"medals": "node scripts/generate-medals.mjs"
+	},
 	"version": "1.1.0",
 	"type": "module",
 	"exports": {
@@ -9,6 +12,7 @@
 		"./screens/*": "./screens/*",
 		"./ranks/*": "./ranks/*",
 		"./factions/*": "./factions/*",
-		"./actions/*": "./actions/*"
+		"./actions/*": "./actions/*",
+		"./medals/*": "./medals/*"
 	}
 }

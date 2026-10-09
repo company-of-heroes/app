@@ -37,7 +37,7 @@
 	}: Props = $props();
 
 	const itemClass = $derived(
-		size === 'sm' ? 'h-6 px-2 text-xs font-semibold tracking-wide uppercase' : 'h-7 px-3 text-sm'
+		size === 'sm' ? 'h-6 px-2 text-xs font-semibold tracking-wide uppercase' : 'h-6.5 px-3 text-sm'
 	);
 
 	watch(
@@ -57,7 +57,7 @@
 	class={cn(
 		variant === 'tabs'
 			? 'inline-flex flex-wrap items-center gap-1.5'
-			: 'border-secondary-800 bg-secondary-950/60 inline-flex items-center gap-0.5 rounded-md border p-[2px]',
+			: 'border-secondary-700 bg-secondary-950 inline-flex items-center gap-0.5 rounded-md border p-[2px]',
 		className
 	)}
 >

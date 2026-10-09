@@ -396,12 +396,6 @@
 
 	const metaList = 'grid-cols-[7.5rem_minmax(0,1fr)] content-start gap-x-4';
 	const valueRow = 'inline-flex min-w-0 flex-nowrap items-center gap-2 whitespace-nowrap';
-	const recentMatchBase =
-		'min-w-6 px-1.5 py-0.5 text-center font-semibold transition-colors duration-150';
-	const recentMatchWin =
-		'border-success/15 bg-success/5 text-success/45 group-hover:border-success/50 group-hover:bg-success/25 group-hover:text-green-300 group-focus-visible:border-success/50 group-focus-visible:bg-success/25 group-focus-visible:text-green-300';
-	const recentMatchLoss =
-		'border-destructive/15 bg-destructive/5 text-destructive/45 group-hover:border-destructive/50 group-hover:bg-destructive/25 group-hover:text-red-300 group-focus-visible:border-destructive/50 group-focus-visible:bg-destructive/25 group-focus-visible:text-red-300';
 
 	const avatarBorder = $derived(
 		app.lobby && viewingLive ? 'border-green-500' : 'border-secondary-800'
@@ -768,13 +762,7 @@
 													: t('Loss')} — {recentMatchLabel(match)}"
 												{@attach tooltip(recentMatchTooltip(match))}
 											>
-												<Badge
-													variant={match.outcome === 1 ? 'success' : 'destructive'}
-													class={cn(
-														recentMatchBase,
-														match.outcome === 1 ? recentMatchWin : recentMatchLoss
-													)}
-												>
+												<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
 													{match.outcome === 1 ? t('W') : t('L')}
 												</Badge>
 											</a>
@@ -789,11 +777,11 @@
 
 			<div>
 				<Tabs.Root bind:value={activeTab}>
-					<div class="flex items-center justify-between px-4 py-2.5">
+					<div class="flex items-center justify-between px-4">
 						<Tabs.List
 							class={cn(
 								!panelExpanded &&
-									'[&_[data-state=active]]:border-transparent [&_[data-state=active]]:bg-transparent [&_[data-state=active]]:text-white'
+									'[&_[data-state=active]]:text-secondary-400 [&_[data-state=active]]:after:bg-transparent'
 							)}
 						>
 							<Tabs.Trigger value="stats" onclick={() => openTab('stats')}

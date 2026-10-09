@@ -239,8 +239,8 @@
 >
 	<div class={cn(adornedControl, 'min-w-0 flex-1')}>
 		<span class={cn(adornedLeading, 'max-w-36')}>
-			<Badge hex={labelHex(hex)} class="max-w-full truncate">
-				{previewName || t('Label')}
+			<Badge hex={labelHex(hex)} class="max-w-full">
+				<span class="truncate">{previewName || t('Label')}</span>
 			</Badge>
 		</span>
 		<input

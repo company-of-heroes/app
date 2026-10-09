@@ -5,8 +5,7 @@
 	import {
 		Overview,
 		type CommunityMatchDetail,
-		type CommunityPlayer,
-		type ReplayData
+		type CommunityPlayer
 	} from '@company-of-heroes/ui/replay';
 	import type { LiveLobbyPlayer } from '@company-of-heroes/ui/live-lobby';
 	import { useReplay } from '.';
@@ -120,8 +119,6 @@
 			};
 		});
 	});
-
-	const replayData = $derived(replay as unknown as ReplayData);
 </script>
 
 {#snippet nameExtra(args: { name: string; steamId: string | null; profileId: number | null })}
@@ -138,7 +135,7 @@
 	})}
 	{#if lobbyPlayer}
 		<PlayerUi.Root player={lobbyPlayer} race={lobbyPlayer.race}>
-			<PlayerUi.Labels steamId={lobbyPlayer.steamId} class="shrink-0" />
+			<PlayerUi.Labels class="shrink-0" />
 			{#if lobbyPlayer.steamId && cheaters.current?.has(lobbyPlayer.steamId)}
 				<PlayerUi.CheaterAlert compact />
 			{/if}
@@ -150,5 +147,5 @@
 	{...restProps}
 	class={cn(flush ? undefined : 'border-secondary-800 overflow-clip rounded-lg border', className)}
 >
-	<Overview match={overviewMatch} replay={replayData} {livePlayers} {nameExtra} />
+	<Overview match={overviewMatch} {livePlayers} {nameExtra} />
 </div>

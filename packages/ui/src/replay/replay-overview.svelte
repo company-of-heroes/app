@@ -15,9 +15,9 @@
 		CommunityMatchDetail,
 		CommunityPlayer,
 		MatchResultPlayer,
-		ReplayData,
 		ReplayPlayer
 	} from './types';
+	import { useOptionalReplayData } from './context';
 	import { findResultPlayer, isCpuPlayerName, isCpuReplayPlayer } from './utils';
 	import {
 		isCpuLiveLobbyPlayer,
@@ -37,6 +37,7 @@
 	import { communityPlayerHref } from './links';
 	import { doctrineBannerFile, playerCpm, raceFromReplayFaction } from './replay-stats';
 	import { useHost } from '../host/host.context';
+	import { escapeHtml, tooltip } from '../attachments';
 
 	type NameExtraArgs = {
 		name: string;
@@ -46,7 +47,6 @@
 
 	type Props = {
 		match: CommunityMatchDetail;
-		replay?: ReplayData | null;
 		livePlayers?: LiveLobbyPlayer[];
 		/** Hide rank badges / positions (e.g. local replays without ranked data). */
 		showRanks?: boolean;
@@ -60,13 +60,15 @@
 
 	let {
 		match,
-		replay = null,
 		livePlayers = [],
 		showRanks = true,
 		isHighlightedName = (name: string) => host.auth.isSelfAlias(name),
 		nameExtra
 	}: Props = $props();
 
+	// Inside `Replay.Root` the overview adds replay data (CPM, doctrines); a match without one renders without.
+	const replayData = useOptionalReplayData();
+	const replay = $derived(replayData?.replay ?? null);
 	const getRankImage = $derived(showRanks ? host.resolve.rankImageByRace : undefined);
 	const getCountryDisplayName = (country: string | null | undefined) =>
 		countryDisplayName(country, host.locale());
@@ -371,7 +373,7 @@
 						<img
 							src={flagUrl}
 							alt={countryName ?? country ?? ''}
-							title={countryName ?? undefined}
+							{@attach tooltip(escapeHtml(countryName ?? ''))}
 							class="h-4 w-auto shrink-0 rounded-xs"
 						/>
 					{/if}
@@ -487,7 +489,7 @@
 						<img
 							src={flagUrl}
 							alt={countryName ?? country ?? ''}
-							title={countryName ?? undefined}
+							{@attach tooltip(escapeHtml(countryName ?? ''))}
 							class="h-4 w-auto shrink-0 rounded-xs"
 						/>
 					{/if}

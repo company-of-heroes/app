@@ -168,7 +168,7 @@
 	})}
 	{#if lobbyPlayer}
 		<PlayerUi.Root player={lobbyPlayer} race={lobbyPlayer.race}>
-			<PlayerUi.Labels steamId={lobbyPlayer.steamId} class="shrink-0" />
+			<PlayerUi.Labels class="shrink-0" />
 			{#if lobbyPlayer.steamId && cheaters.has(lobbyPlayer.steamId)}
 				<PlayerUi.CheaterAlert compact />
 			{/if}

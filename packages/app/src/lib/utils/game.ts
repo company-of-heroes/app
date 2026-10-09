@@ -361,6 +361,12 @@ const mapModules = import.meta.glob<{ default: string }>('$lib/files/maps/*_map_
 	eager: true
 });
 
+/** Steam Workshop maps (`tools/extract_maps.py`); registered first so stock maps win on shared aliases. */
+const workshopMapModules = import.meta.glob<{ default: string }>(
+	'$lib/files/maps/workshop/*_map_base.webp',
+	{ eager: true }
+);
+
 const defaultMapModules = import.meta.glob<{ default: string }>(
 	'$lib/files/maps/mp_nobattlemap.png',
 	{ eager: true }
@@ -435,8 +441,11 @@ function initializeMapCache() {
 		return;
 	}
 
-	for (const [path, module] of Object.entries(mapModules)) {
-		const match = path.match(/\/maps\/(.+)_map_base\.png$/);
+	for (const [path, module] of [
+		...Object.entries(workshopMapModules),
+		...Object.entries(mapModules)
+	]) {
+		const match = path.match(/\/maps\/(?:workshop\/)?(.+)_map_base\.(png|webp)$/);
 		if (match) {
 			registerMapKey(match[1], module.default);
 		}

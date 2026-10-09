@@ -11,24 +11,25 @@
 	import { useHost } from '../host/host.context';
 	import { getRaceLabel, normalizeMapName } from '../format/player-format';
 	import { formatCount, minutes } from './format';
-	import type { CommunityStatistics } from './types';
+	import { useStatistics } from './context';
 
 	type Props = {
-		statistics: CommunityStatistics;
 		/** Show at most this many facts. */
 		limit?: number;
-		/** Filtered on one map: "most played map" would just name it, so it is left out. */
-		filtered?: boolean;
 		class?: string;
 	};
 
-	let { statistics, limit, filtered = false, class: className }: Props = $props();
+	let { limit, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
+	const context = useStatistics();
+
 	const facts = $derived.by(() => {
+		const { statistics, selected } = context;
 		const { longestMatch, mostActive, busiestHour, topDoctrine, topUnit } = statistics.facts;
-		const topMap = filtered ? undefined : statistics.maps[0];
+		// Filtered on one map: "most played map" would just name it, so it is left out.
+		const topMap = selected ? undefined : statistics.maps[0];
 		const list: {
 			key: string;
 			icon: typeof ClockIcon;

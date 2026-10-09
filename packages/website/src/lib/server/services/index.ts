@@ -6,6 +6,7 @@ import { createAdminPocketBase } from '../pb';
 import { AuthService } from './auth';
 import { CompatService } from './compat';
 import { DevSeedService } from './dev-seed';
+import { DevTournamentSimService } from './dev-tournament-sim';
 import { DocsService } from './docs';
 import { HiddenMatchesService } from './hidden-matches';
 import { LeaderboardService } from './leaderboard';
@@ -16,6 +17,7 @@ import { MatchHistoryService } from './match-history';
 import { MatchResultsService } from './match-results';
 import { MatchesService } from './matches';
 import { MemberReplaysService } from './member-replays';
+import { NotificationsService } from './notifications';
 import { OverlaysService, type OverlayBucket } from './overlays';
 import { PerformanceService } from './performance';
 import { PlayerInfoService } from './player-info';
@@ -33,6 +35,12 @@ import { SocialService } from './social';
 import { SocialCompatService } from './social-compat';
 import { StatisticsService } from './statistics';
 import { StreamingService } from './streaming';
+import { TournamentGamesService } from './tournament-games';
+import { TournamentNoticesService } from './tournament-notices';
+import { TournamentReportsService } from './tournament-reports';
+import { TournamentScheduleService } from './tournament-schedule';
+import { TournamentStatsService } from './tournament-stats';
+import { TournamentsService } from './tournaments';
 import { TwitchService } from './twitch';
 import { UsersService } from './users';
 import { YoutubeOauthService } from './youtube-oauth';
@@ -217,6 +225,38 @@ export class Services {
 
 	get streaming() {
 		return this.#get('streaming', StreamingService);
+	}
+
+	get tournamentGames() {
+		return this.#get('tournamentGames', TournamentGamesService);
+	}
+
+	get tournamentNotices() {
+		return this.#get('tournamentNotices', TournamentNoticesService);
+	}
+
+	get tournamentReports() {
+		return this.#get('tournamentReports', TournamentReportsService);
+	}
+
+	get tournamentSchedule() {
+		return this.#get('tournamentSchedule', TournamentScheduleService);
+	}
+
+	get tournamentStats() {
+		return this.#get('tournamentStats', TournamentStatsService);
+	}
+
+	get notifications() {
+		return this.#get('notifications', NotificationsService);
+	}
+
+	get devTournamentSim() {
+		return this.#get('devTournamentSim', DevTournamentSimService);
+	}
+
+	get tournaments() {
+		return this.#get('tournaments', TournamentsService);
 	}
 
 	get twitch() {

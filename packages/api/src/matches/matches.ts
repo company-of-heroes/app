@@ -564,7 +564,18 @@ export class MatchesApi {
 				})
 			),
 			'Failed to load match.'
-		).orElse(() => ok(null));
+		)
+			.orElse(() => ok(null))
+			.andThen((record) =>
+				// Hidden matches (tournament games) are not readable through PocketBase; the
+				// website still gives them to their own players.
+				record || !this.deps.pocketbase.authStore.isValid
+					? okAsync(record)
+					: fromPbPromise(
+							sendV1<MatchRecord>(this.deps, `/lobbies/by-session/${sessionId}`),
+							'Failed to load match.'
+						).orElse(() => ok(null))
+			);
 	}
 
 	exists(sessionId: number): ResultAsync<boolean, ApiError> {

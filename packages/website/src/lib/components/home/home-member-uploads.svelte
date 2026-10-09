@@ -61,7 +61,7 @@
 			sort="createdAt"
 			sortDir="desc"
 			{onSort}
-			emptyMessage={error ? t('Could not load member uploads.') : t('No member replays found.')}
+			emptyMessage={error ? t('Could not load member uploads.') : t('No shared replays found.')}
 			mapLabel={t('Title')}
 		/>
 	{/if}

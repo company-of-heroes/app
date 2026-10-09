@@ -36,6 +36,7 @@
 		{ href: '/players', label: t('Players') },
 		{ href: '/replays', label: t('Replays') },
 		{ href: '/stats', label: t('Stats') },
+		{ href: '/tournaments', label: t('Tournaments') },
 		{ href: '/wiki', label: t('Wiki') }
 	]);
 
@@ -72,6 +73,10 @@
 
 		if (path === '/wiki') {
 			return current.startsWith('/wiki');
+		}
+
+		if (path === '/tournaments') {
+			return current.startsWith('/tournaments');
 		}
 
 		return false;

@@ -1,0 +1,1602 @@
+[
+	{
+		"id": "m001",
+		"file": "medal-001.svg",
+		"title": "Gold diamond with swords",
+		"metal": "gold",
+		"shape": "diamond",
+		"enamel": null,
+		"emblem": "swords",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#c8642a", "#f4f1e8", "#24406b", "#f4f1e8", "#c8642a"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m002",
+		"file": "medal-002.svg",
+		"title": "Gold shield with helmet",
+		"metal": "gold",
+		"shape": "shield",
+		"enamel": null,
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": [
+				"#6b2d5c",
+				"#f4f1e8",
+				"#56622e",
+				"#1c1c1c",
+				"#2f5a34",
+				"#1c1c1c",
+				"#56622e",
+				"#f4f1e8",
+				"#6b2d5c"
+			]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m003",
+		"file": "medal-003.svg",
+		"title": "Gold cross with shell",
+		"metal": "gold",
+		"shape": "cross",
+		"enamel": null,
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": [
+				"#56622e",
+				"#6b2d5c",
+				"#8f2232",
+				"#c8642a",
+				"#3f6fb0",
+				"#c8642a",
+				"#8f2232",
+				"#6b2d5c",
+				"#56622e"
+			]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m004",
+		"file": "medal-004.svg",
+		"title": "Bronze Maltese cross with torch",
+		"metal": "bronze",
+		"shape": "maltese",
+		"enamel": null,
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": [
+				"#56622e",
+				"#c23b3b",
+				"#1c1c1c",
+				"#f4f1e8",
+				"#8f2232",
+				"#f4f1e8",
+				"#1c1c1c",
+				"#c23b3b",
+				"#56622e"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m005",
+		"file": "medal-005.svg",
+		"title": "Bronze red enamel shield with parachute",
+		"metal": "bronze",
+		"shape": "shield",
+		"enamel": "red",
+		"emblem": "parachute",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": [
+				"#e0b23a",
+				"#2f5a34",
+				"#c23b3b",
+				"#56622e",
+				"#e6dfcc",
+				"#56622e",
+				"#c23b3b",
+				"#2f5a34",
+				"#e0b23a"
+			]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m006",
+		"file": "medal-006.svg",
+		"title": "Silver star with star",
+		"metal": "silver",
+		"shape": "star",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": [
+				"#56622e",
+				"#6b2d5c",
+				"#3f6fb0",
+				"#8f2232",
+				"#2f5a34",
+				"#8f2232",
+				"#3f6fb0",
+				"#6b2d5c",
+				"#56622e"
+			]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m007",
+		"file": "medal-007.svg",
+		"title": "Silver medal with wreath",
+		"metal": "silver",
+		"shape": "disc",
+		"enamel": null,
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#56622e", "#e6dfcc", "#56622e"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m008",
+		"file": "medal-008.svg",
+		"title": "Bronze shield with numeral",
+		"metal": "bronze",
+		"shape": "shield",
+		"enamel": null,
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#2f5a34", "#1c1c1c", "#6b2d5c", "#1c1c1c", "#2f5a34"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m009",
+		"file": "medal-009.svg",
+		"title": "Gold green enamel octagon with torch",
+		"metal": "gold",
+		"shape": "octagon",
+		"enamel": "green",
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#1c1c1c", "#c23b3b", "#c8642a", "#f4f1e8", "#c8642a", "#c23b3b", "#1c1c1c"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m010",
+		"file": "medal-010.svg",
+		"title": "Bronze green enamel hexagon with torch",
+		"metal": "bronze",
+		"shape": "hexagon",
+		"enamel": "green",
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#c23b3b", "#b8924a", "#c23b3b", "#b8924a", "#c23b3b"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m011",
+		"file": "medal-011.svg",
+		"title": "Bronze octagon with chevrons",
+		"metal": "bronze",
+		"shape": "octagon",
+		"enamel": null,
+		"emblem": "chevrons",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#6b2d5c", "#b8924a", "#2f5a34", "#e6dfcc", "#2f5a34", "#b8924a", "#6b2d5c"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m012",
+		"file": "medal-012.svg",
+		"title": "Bronze oval medal with wreath",
+		"metal": "bronze",
+		"shape": "oval",
+		"enamel": null,
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#f4f1e8", "#c23b3b", "#f4f1e8", "#c23b3b", "#f4f1e8"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m013",
+		"file": "medal-013.svg",
+		"title": "Bronze green enamel hexagon with parachute",
+		"metal": "bronze",
+		"shape": "hexagon",
+		"enamel": "green",
+		"emblem": "parachute",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": [
+				"#24406b",
+				"#e6dfcc",
+				"#56622e",
+				"#24406b",
+				"#c23b3b",
+				"#24406b",
+				"#56622e",
+				"#e6dfcc",
+				"#24406b"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m014",
+		"file": "medal-014.svg",
+		"title": "Gold red enamel hexagon with shell",
+		"metal": "gold",
+		"shape": "hexagon",
+		"enamel": "red",
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#56622e", "#e6dfcc", "#3f6fb0", "#e6dfcc", "#56622e"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m015",
+		"file": "medal-015.svg",
+		"title": "Bronze star with chevrons",
+		"metal": "bronze",
+		"shape": "star",
+		"enamel": null,
+		"emblem": "chevrons",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#1c1c1c", "#24406b", "#1c1c1c"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m016",
+		"file": "medal-016.svg",
+		"title": "Bronze red enamel shield with star",
+		"metal": "bronze",
+		"shape": "shield",
+		"enamel": "red",
+		"emblem": "star",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": [
+				"#56622e",
+				"#e0b23a",
+				"#8f2232",
+				"#c23b3b",
+				"#24406b",
+				"#c23b3b",
+				"#8f2232",
+				"#e0b23a",
+				"#56622e"
+			]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m017",
+		"file": "medal-017.svg",
+		"title": "Silver hexagon with star",
+		"metal": "silver",
+		"shape": "hexagon",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#1c1c1c", "#c8642a", "#1c1c1c"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m018",
+		"file": "medal-018.svg",
+		"title": "Bronze blue enamel octagon with torch",
+		"metal": "bronze",
+		"shape": "octagon",
+		"enamel": "blue",
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#b8924a", "#6b2d5c", "#56622e", "#6b2d5c", "#b8924a"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m019",
+		"file": "medal-019.svg",
+		"title": "Silver red enamel cross with shell",
+		"metal": "silver",
+		"shape": "cross",
+		"enamel": "red",
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#2f5a34", "#b8924a", "#56622e", "#b8924a", "#2f5a34"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m020",
+		"file": "medal-020.svg",
+		"title": "Silver blue enamel diamond with parachute",
+		"metal": "silver",
+		"shape": "diamond",
+		"enamel": "blue",
+		"emblem": "parachute",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#c8642a", "#3f6fb0", "#c23b3b", "#3f6fb0", "#c8642a"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m021",
+		"file": "medal-021.svg",
+		"title": "Bronze medal with wreath",
+		"metal": "bronze",
+		"shape": "disc",
+		"enamel": null,
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": [
+				"#c23b3b",
+				"#56622e",
+				"#2f5a34",
+				"#3f6fb0",
+				"#2f5a34",
+				"#3f6fb0",
+				"#2f5a34",
+				"#56622e",
+				"#c23b3b"
+			]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m022",
+		"file": "medal-022.svg",
+		"title": "Bronze red enamel hexagon with helmet",
+		"metal": "bronze",
+		"shape": "hexagon",
+		"enamel": "red",
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#24406b", "#f4f1e8", "#6b2d5c", "#f4f1e8", "#24406b"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m023",
+		"file": "medal-023.svg",
+		"title": "Gold blue enamel star with star",
+		"metal": "gold",
+		"shape": "star",
+		"enamel": "blue",
+		"emblem": "star",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#6b2d5c", "#e0b23a", "#2f5a34", "#b8924a", "#2f5a34", "#e0b23a", "#6b2d5c"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m024",
+		"file": "medal-024.svg",
+		"title": "Silver blue enamel hexagon with torch",
+		"metal": "silver",
+		"shape": "hexagon",
+		"enamel": "blue",
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#8f2232", "#c8642a", "#b8924a", "#24406b", "#b8924a", "#c8642a", "#8f2232"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m025",
+		"file": "medal-025.svg",
+		"title": "Silver blue enamel cross with tank",
+		"metal": "silver",
+		"shape": "cross",
+		"enamel": "blue",
+		"emblem": "tank",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#56622e", "#24406b", "#56622e"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m026",
+		"file": "medal-026.svg",
+		"title": "Bronze Maltese cross with shell",
+		"metal": "bronze",
+		"shape": "maltese",
+		"enamel": null,
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#b8924a", "#1c1c1c", "#56622e", "#6b2d5c", "#56622e", "#1c1c1c", "#b8924a"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m027",
+		"file": "medal-027.svg",
+		"title": "Silver oval medal with wreath",
+		"metal": "silver",
+		"shape": "oval",
+		"enamel": null,
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#3f6fb0", "#b8924a", "#e0b23a", "#b8924a", "#3f6fb0"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m028",
+		"file": "medal-028.svg",
+		"title": "Silver navy enamel diamond with shell",
+		"metal": "silver",
+		"shape": "diamond",
+		"enamel": "navy",
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#24406b", "#c23b3b", "#e0b23a", "#c23b3b", "#24406b"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m029",
+		"file": "medal-029.svg",
+		"title": "Silver red enamel cross with numeral",
+		"metal": "silver",
+		"shape": "cross",
+		"enamel": "red",
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#3f6fb0", "#b8924a", "#c8642a", "#e0b23a", "#c8642a", "#b8924a", "#3f6fb0"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m030",
+		"file": "medal-030.svg",
+		"title": "Silver sunburst with wreath",
+		"metal": "silver",
+		"shape": "burst",
+		"enamel": null,
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#e6dfcc", "#6b2d5c", "#56622e", "#6b2d5c", "#e6dfcc"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m031",
+		"file": "medal-031.svg",
+		"title": "Silver medal with numeral",
+		"metal": "silver",
+		"shape": "disc",
+		"enamel": null,
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#1c1c1c", "#24406b", "#1c1c1c", "#e6dfcc", "#1c1c1c", "#24406b", "#1c1c1c"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m032",
+		"file": "medal-032.svg",
+		"title": "Bronze white enamel diamond with star",
+		"metal": "bronze",
+		"shape": "diamond",
+		"enamel": "white",
+		"emblem": "star",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#6b2d5c", "#b8924a", "#c8642a", "#f4f1e8", "#c8642a", "#b8924a", "#6b2d5c"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m033",
+		"file": "medal-033.svg",
+		"title": "Silver Maltese cross with wreath",
+		"metal": "silver",
+		"shape": "maltese",
+		"enamel": null,
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#c8642a", "#e6dfcc", "#c8642a", "#24406b", "#c8642a", "#e6dfcc", "#c8642a"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m034",
+		"file": "medal-034.svg",
+		"title": "Silver star with torch",
+		"metal": "silver",
+		"shape": "star",
+		"enamel": null,
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#8f2232", "#b8924a", "#1c1c1c", "#b8924a", "#8f2232"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m035",
+		"file": "medal-035.svg",
+		"title": "Silver blue enamel star with torch",
+		"metal": "silver",
+		"shape": "star",
+		"enamel": "blue",
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#6b2d5c", "#8f2232", "#2f5a34", "#8f2232", "#2f5a34", "#8f2232", "#6b2d5c"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m036",
+		"file": "medal-036.svg",
+		"title": "Silver white enamel octagon with tank",
+		"metal": "silver",
+		"shape": "octagon",
+		"enamel": "white",
+		"emblem": "tank",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#e6dfcc", "#3f6fb0", "#e6dfcc", "#3f6fb0", "#e6dfcc"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m037",
+		"file": "medal-037.svg",
+		"title": "Gold green enamel Maltese cross with numeral",
+		"metal": "gold",
+		"shape": "maltese",
+		"enamel": "green",
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#3f6fb0", "#2f5a34", "#8f2232", "#2f5a34", "#8f2232", "#2f5a34", "#3f6fb0"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m038",
+		"file": "medal-038.svg",
+		"title": "Gold hexagon with oak",
+		"metal": "gold",
+		"shape": "hexagon",
+		"enamel": null,
+		"emblem": "oak",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#e6dfcc", "#b8924a", "#c8642a", "#b8924a", "#e6dfcc"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m039",
+		"file": "medal-039.svg",
+		"title": "Bronze sunburst with shell",
+		"metal": "bronze",
+		"shape": "burst",
+		"enamel": null,
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#c23b3b", "#1c1c1c", "#c23b3b", "#2f5a34", "#c23b3b", "#1c1c1c", "#c23b3b"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m040",
+		"file": "medal-040.svg",
+		"title": "Bronze navy enamel medal with tank",
+		"metal": "bronze",
+		"shape": "disc",
+		"enamel": "navy",
+		"emblem": "tank",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": [
+				"#6b2d5c",
+				"#b8924a",
+				"#3f6fb0",
+				"#1c1c1c",
+				"#6b2d5c",
+				"#1c1c1c",
+				"#3f6fb0",
+				"#b8924a",
+				"#6b2d5c"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m041",
+		"file": "medal-041.svg",
+		"title": "Bronze red enamel shield with helmet",
+		"metal": "bronze",
+		"shape": "shield",
+		"enamel": "red",
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#b8924a", "#3f6fb0", "#1c1c1c", "#2f5a34", "#1c1c1c", "#3f6fb0", "#b8924a"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m042",
+		"file": "medal-042.svg",
+		"title": "Silver oval medal with crosshair",
+		"metal": "silver",
+		"shape": "oval",
+		"enamel": null,
+		"emblem": "crosshair",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#c23b3b", "#24406b", "#c23b3b"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m043",
+		"file": "medal-043.svg",
+		"title": "Bronze sunburst with swords",
+		"metal": "bronze",
+		"shape": "burst",
+		"enamel": null,
+		"emblem": "swords",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#8f2232", "#f4f1e8", "#b8924a", "#f4f1e8", "#8f2232"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m044",
+		"file": "medal-044.svg",
+		"title": "Silver diamond with parachute",
+		"metal": "silver",
+		"shape": "diamond",
+		"enamel": null,
+		"emblem": "parachute",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#f4f1e8", "#c23b3b", "#56622e", "#e6dfcc", "#56622e", "#c23b3b", "#f4f1e8"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m045",
+		"file": "medal-045.svg",
+		"title": "Gold sunburst with swords",
+		"metal": "gold",
+		"shape": "burst",
+		"enamel": null,
+		"emblem": "swords",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#e0b23a", "#1c1c1c", "#e6dfcc", "#1c1c1c", "#e0b23a"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m046",
+		"file": "medal-046.svg",
+		"title": "Bronze cross with swords",
+		"metal": "bronze",
+		"shape": "cross",
+		"enamel": null,
+		"emblem": "swords",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": [
+				"#c23b3b",
+				"#24406b",
+				"#b8924a",
+				"#2f5a34",
+				"#f4f1e8",
+				"#2f5a34",
+				"#b8924a",
+				"#24406b",
+				"#c23b3b"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m047",
+		"file": "medal-047.svg",
+		"title": "Gold green enamel oval medal with numeral",
+		"metal": "gold",
+		"shape": "oval",
+		"enamel": "green",
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#e6dfcc", "#c8642a", "#2f5a34", "#c8642a", "#e6dfcc"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m048",
+		"file": "medal-048.svg",
+		"title": "Bronze oval medal with numeral",
+		"metal": "bronze",
+		"shape": "oval",
+		"enamel": null,
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#1c1c1c", "#b8924a", "#3f6fb0", "#b8924a", "#1c1c1c"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m049",
+		"file": "medal-049.svg",
+		"title": "Gold white enamel octagon with shell",
+		"metal": "gold",
+		"shape": "octagon",
+		"enamel": "white",
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": [
+				"#1c1c1c",
+				"#2f5a34",
+				"#e6dfcc",
+				"#1c1c1c",
+				"#3f6fb0",
+				"#1c1c1c",
+				"#e6dfcc",
+				"#2f5a34",
+				"#1c1c1c"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m050",
+		"file": "medal-050.svg",
+		"title": "Gold blue enamel star with shell",
+		"metal": "gold",
+		"shape": "star",
+		"enamel": "blue",
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#e6dfcc", "#3f6fb0", "#24406b", "#1c1c1c", "#24406b", "#3f6fb0", "#e6dfcc"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m051",
+		"file": "medal-051.svg",
+		"title": "Silver green enamel oval medal with star",
+		"metal": "silver",
+		"shape": "oval",
+		"enamel": "green",
+		"emblem": "star",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#8f2232", "#c23b3b", "#8f2232"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m052",
+		"file": "medal-052.svg",
+		"title": "Bronze navy enamel medal with star",
+		"metal": "bronze",
+		"shape": "disc",
+		"enamel": "navy",
+		"emblem": "star",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#2f5a34", "#e0b23a", "#f4f1e8", "#e0b23a", "#2f5a34"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m053",
+		"file": "medal-053.svg",
+		"title": "Silver medal with crosshair",
+		"metal": "silver",
+		"shape": "disc",
+		"enamel": null,
+		"emblem": "crosshair",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#c23b3b", "#2f5a34", "#3f6fb0", "#c23b3b", "#3f6fb0", "#2f5a34", "#c23b3b"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m054",
+		"file": "medal-054.svg",
+		"title": "Silver red enamel shield with torch",
+		"metal": "silver",
+		"shape": "shield",
+		"enamel": "red",
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#e0b23a", "#c8642a", "#56622e", "#c8642a", "#e0b23a"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m055",
+		"file": "medal-055.svg",
+		"title": "Silver green enamel diamond with tank",
+		"metal": "silver",
+		"shape": "diamond",
+		"enamel": "green",
+		"emblem": "tank",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": [
+				"#6b2d5c",
+				"#b8924a",
+				"#56622e",
+				"#8f2232",
+				"#6b2d5c",
+				"#8f2232",
+				"#56622e",
+				"#b8924a",
+				"#6b2d5c"
+			]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m056",
+		"file": "medal-056.svg",
+		"title": "Gold cross with star",
+		"metal": "gold",
+		"shape": "cross",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#e0b23a", "#e6dfcc", "#c23b3b", "#2f5a34", "#c23b3b", "#e6dfcc", "#e0b23a"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m057",
+		"file": "medal-057.svg",
+		"title": "Bronze navy enamel oval medal with torch",
+		"metal": "bronze",
+		"shape": "oval",
+		"enamel": "navy",
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#6b2d5c", "#56622e", "#2f5a34", "#e0b23a", "#2f5a34", "#56622e", "#6b2d5c"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m058",
+		"file": "medal-058.svg",
+		"title": "Bronze red enamel shield with numeral",
+		"metal": "bronze",
+		"shape": "shield",
+		"enamel": "red",
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#1c1c1c", "#e6dfcc", "#6b2d5c", "#e6dfcc", "#6b2d5c", "#e6dfcc", "#1c1c1c"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m059",
+		"file": "medal-059.svg",
+		"title": "Bronze diamond with helmet",
+		"metal": "bronze",
+		"shape": "diamond",
+		"enamel": null,
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#6b2d5c", "#c8642a", "#3f6fb0", "#c8642a", "#6b2d5c"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m060",
+		"file": "medal-060.svg",
+		"title": "Silver sunburst with crosshair",
+		"metal": "silver",
+		"shape": "burst",
+		"enamel": null,
+		"emblem": "crosshair",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#6b2d5c", "#24406b", "#6b2d5c", "#24406b", "#6b2d5c"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m061",
+		"file": "medal-061.svg",
+		"title": "Bronze red enamel diamond with shell",
+		"metal": "bronze",
+		"shape": "diamond",
+		"enamel": "red",
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": [
+				"#f4f1e8",
+				"#8f2232",
+				"#e0b23a",
+				"#b8924a",
+				"#c8642a",
+				"#b8924a",
+				"#e0b23a",
+				"#8f2232",
+				"#f4f1e8"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m062",
+		"file": "medal-062.svg",
+		"title": "Gold white enamel star with wreath",
+		"metal": "gold",
+		"shape": "star",
+		"enamel": "white",
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": [
+				"#c8642a",
+				"#24406b",
+				"#6b2d5c",
+				"#f4f1e8",
+				"#c23b3b",
+				"#f4f1e8",
+				"#6b2d5c",
+				"#24406b",
+				"#c8642a"
+			]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m063",
+		"file": "medal-063.svg",
+		"title": "Bronze white enamel medal with helmet",
+		"metal": "bronze",
+		"shape": "disc",
+		"enamel": "white",
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": [
+				"#e6dfcc",
+				"#8f2232",
+				"#24406b",
+				"#e6dfcc",
+				"#24406b",
+				"#e6dfcc",
+				"#24406b",
+				"#8f2232",
+				"#e6dfcc"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m064",
+		"file": "medal-064.svg",
+		"title": "Silver navy enamel Maltese cross with star",
+		"metal": "silver",
+		"shape": "maltese",
+		"enamel": "navy",
+		"emblem": "star",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#b8924a", "#e6dfcc", "#b8924a"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m065",
+		"file": "medal-065.svg",
+		"title": "Gold medal with wreath",
+		"metal": "gold",
+		"shape": "disc",
+		"enamel": null,
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#56622e", "#c23b3b", "#f4f1e8", "#c8642a", "#f4f1e8", "#c23b3b", "#56622e"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m066",
+		"file": "medal-066.svg",
+		"title": "Gold cross with chevrons",
+		"metal": "gold",
+		"shape": "cross",
+		"enamel": null,
+		"emblem": "chevrons",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#56622e", "#c8642a", "#56622e", "#c8642a", "#56622e", "#c8642a", "#56622e"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m067",
+		"file": "medal-067.svg",
+		"title": "Silver octagon with chevrons",
+		"metal": "silver",
+		"shape": "octagon",
+		"enamel": null,
+		"emblem": "chevrons",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#1c1c1c", "#2f5a34", "#1c1c1c", "#2f5a34", "#1c1c1c"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m068",
+		"file": "medal-068.svg",
+		"title": "Silver white enamel sunburst with shell",
+		"metal": "silver",
+		"shape": "burst",
+		"enamel": "white",
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#6b2d5c", "#2f5a34", "#f4f1e8", "#c23b3b", "#f4f1e8", "#2f5a34", "#6b2d5c"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m069",
+		"file": "medal-069.svg",
+		"title": "Bronze cross with shell",
+		"metal": "bronze",
+		"shape": "cross",
+		"enamel": null,
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#e6dfcc", "#2f5a34", "#e6dfcc", "#f4f1e8", "#e6dfcc", "#2f5a34", "#e6dfcc"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m070",
+		"file": "medal-070.svg",
+		"title": "Bronze octagon with star",
+		"metal": "bronze",
+		"shape": "octagon",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#b8924a", "#6b2d5c", "#b8924a"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m071",
+		"file": "medal-071.svg",
+		"title": "Bronze red enamel octagon with torch",
+		"metal": "bronze",
+		"shape": "octagon",
+		"enamel": "red",
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#24406b", "#e0b23a", "#2f5a34", "#e0b23a", "#24406b"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m072",
+		"file": "medal-072.svg",
+		"title": "Gold sunburst with torch",
+		"metal": "gold",
+		"shape": "burst",
+		"enamel": null,
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#24406b", "#c23b3b", "#b8924a", "#2f5a34", "#b8924a", "#c23b3b", "#24406b"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m073",
+		"file": "medal-073.svg",
+		"title": "Silver green enamel star with helmet",
+		"metal": "silver",
+		"shape": "star",
+		"enamel": "green",
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#24406b", "#8f2232", "#24406b", "#8f2232", "#24406b"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m074",
+		"file": "medal-074.svg",
+		"title": "Silver white enamel diamond with numeral",
+		"metal": "silver",
+		"shape": "diamond",
+		"enamel": "white",
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#e0b23a", "#24406b", "#6b2d5c", "#24406b", "#e0b23a"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m075",
+		"file": "medal-075.svg",
+		"title": "Bronze navy enamel sunburst with helmet",
+		"metal": "bronze",
+		"shape": "burst",
+		"enamel": "navy",
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#1c1c1c", "#c23b3b", "#2f5a34", "#e6dfcc", "#2f5a34", "#c23b3b", "#1c1c1c"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m076",
+		"file": "medal-076.svg",
+		"title": "Gold shield with oak",
+		"metal": "gold",
+		"shape": "shield",
+		"enamel": null,
+		"emblem": "oak",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#e0b23a", "#c8642a", "#e6dfcc", "#e0b23a", "#e6dfcc", "#c8642a", "#e0b23a"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m077",
+		"file": "medal-077.svg",
+		"title": "Bronze star with star",
+		"metal": "bronze",
+		"shape": "star",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#8f2232", "#3f6fb0", "#e0b23a", "#3f6fb0", "#8f2232"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m078",
+		"file": "medal-078.svg",
+		"title": "Bronze medal with star",
+		"metal": "bronze",
+		"shape": "disc",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": [
+				"#e6dfcc",
+				"#8f2232",
+				"#24406b",
+				"#6b2d5c",
+				"#e0b23a",
+				"#6b2d5c",
+				"#24406b",
+				"#8f2232",
+				"#e6dfcc"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m079",
+		"file": "medal-079.svg",
+		"title": "Bronze medal with parachute",
+		"metal": "bronze",
+		"shape": "disc",
+		"enamel": null,
+		"emblem": "parachute",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#c23b3b", "#f4f1e8", "#56622e", "#2f5a34", "#56622e", "#f4f1e8", "#c23b3b"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m080",
+		"file": "medal-080.svg",
+		"title": "Gold shield with shell",
+		"metal": "gold",
+		"shape": "shield",
+		"enamel": null,
+		"emblem": "shell",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#e0b23a", "#f4f1e8", "#c23b3b", "#f4f1e8", "#e0b23a"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m081",
+		"file": "medal-081.svg",
+		"title": "Gold Maltese cross with tank",
+		"metal": "gold",
+		"shape": "maltese",
+		"enamel": null,
+		"emblem": "tank",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#3f6fb0", "#8f2232", "#e6dfcc", "#1c1c1c", "#e6dfcc", "#8f2232", "#3f6fb0"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m082",
+		"file": "medal-082.svg",
+		"title": "Silver Maltese cross with helmet",
+		"metal": "silver",
+		"shape": "maltese",
+		"enamel": null,
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": [
+				"#24406b",
+				"#56622e",
+				"#c23b3b",
+				"#56622e",
+				"#b8924a",
+				"#56622e",
+				"#c23b3b",
+				"#56622e",
+				"#24406b"
+			]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m083",
+		"file": "medal-083.svg",
+		"title": "Bronze green enamel star with tank",
+		"metal": "bronze",
+		"shape": "star",
+		"enamel": "green",
+		"emblem": "tank",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#3f6fb0", "#e6dfcc", "#56622e", "#3f6fb0", "#56622e", "#e6dfcc", "#3f6fb0"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m084",
+		"file": "medal-084.svg",
+		"title": "Silver red enamel Maltese cross with wreath",
+		"metal": "silver",
+		"shape": "maltese",
+		"enamel": "red",
+		"emblem": "wreath",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#c8642a", "#6b2d5c", "#24406b", "#e6dfcc", "#24406b", "#6b2d5c", "#c8642a"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m085",
+		"file": "medal-085.svg",
+		"title": "Bronze oval medal with torch",
+		"metal": "bronze",
+		"shape": "oval",
+		"enamel": null,
+		"emblem": "torch",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#b8924a", "#c23b3b", "#b8924a"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m086",
+		"file": "medal-086.svg",
+		"title": "Gold blue enamel cross with oak",
+		"metal": "gold",
+		"shape": "cross",
+		"enamel": "blue",
+		"emblem": "oak",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": [
+				"#f4f1e8",
+				"#2f5a34",
+				"#f4f1e8",
+				"#c23b3b",
+				"#2f5a34",
+				"#c23b3b",
+				"#f4f1e8",
+				"#2f5a34",
+				"#f4f1e8"
+			]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m087",
+		"file": "medal-087.svg",
+		"title": "Silver octagon with helmet",
+		"metal": "silver",
+		"shape": "octagon",
+		"enamel": null,
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": [
+				"#1c1c1c",
+				"#c23b3b",
+				"#e6dfcc",
+				"#e0b23a",
+				"#24406b",
+				"#e0b23a",
+				"#e6dfcc",
+				"#c23b3b",
+				"#1c1c1c"
+			]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m088",
+		"file": "medal-088.svg",
+		"title": "Bronze red enamel octagon with swords",
+		"metal": "bronze",
+		"shape": "octagon",
+		"enamel": "red",
+		"emblem": "swords",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#f4f1e8", "#b8924a", "#e0b23a", "#b8924a", "#f4f1e8"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m089",
+		"file": "medal-089.svg",
+		"title": "Gold shield with star",
+		"metal": "gold",
+		"shape": "shield",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#1c1c1c", "#56622e", "#f4f1e8", "#56622e", "#1c1c1c"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m090",
+		"file": "medal-090.svg",
+		"title": "Silver Maltese cross with star",
+		"metal": "silver",
+		"shape": "maltese",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#c23b3b", "#56622e", "#b8924a", "#24406b", "#b8924a", "#56622e", "#c23b3b"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m091",
+		"file": "medal-091.svg",
+		"title": "Silver sunburst with star",
+		"metal": "silver",
+		"shape": "burst",
+		"enamel": null,
+		"emblem": "star",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#e6dfcc", "#24406b", "#e0b23a", "#24406b", "#e6dfcc"]
+		},
+		"suspension": "ring"
+	},
+	{
+		"id": "m092",
+		"file": "medal-092.svg",
+		"title": "Silver blue enamel sunburst with numeral",
+		"metal": "silver",
+		"shape": "burst",
+		"enamel": "blue",
+		"emblem": "numeral",
+		"ribbon": {
+			"shape": "swallow",
+			"stripes": ["#c8642a", "#6b2d5c", "#e0b23a", "#56622e", "#e0b23a", "#6b2d5c", "#c8642a"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m093",
+		"file": "medal-093.svg",
+		"title": "Silver oval medal with helmet",
+		"metal": "silver",
+		"shape": "oval",
+		"enamel": null,
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#24406b", "#e0b23a", "#3f6fb0", "#2f5a34", "#3f6fb0", "#e0b23a", "#24406b"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m094",
+		"file": "medal-094.svg",
+		"title": "Gold cross with parachute",
+		"metal": "gold",
+		"shape": "cross",
+		"enamel": null,
+		"emblem": "parachute",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": [
+				"#e6dfcc",
+				"#56622e",
+				"#e0b23a",
+				"#56622e",
+				"#8f2232",
+				"#56622e",
+				"#e0b23a",
+				"#56622e",
+				"#e6dfcc"
+			]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m095",
+		"file": "medal-095.svg",
+		"title": "Bronze navy enamel shield with helmet",
+		"metal": "bronze",
+		"shape": "shield",
+		"enamel": "navy",
+		"emblem": "helmet",
+		"ribbon": {
+			"shape": "tapered",
+			"stripes": ["#56622e", "#3f6fb0", "#2f5a34", "#3f6fb0", "#56622e"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m096",
+		"file": "medal-096.svg",
+		"title": "Gold blue enamel star with swords",
+		"metal": "gold",
+		"shape": "star",
+		"enamel": "blue",
+		"emblem": "swords",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#3f6fb0", "#c8642a", "#1c1c1c", "#e6dfcc", "#1c1c1c", "#c8642a", "#3f6fb0"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m097",
+		"file": "medal-097.svg",
+		"title": "Silver red enamel oval medal with crosshair",
+		"metal": "silver",
+		"shape": "oval",
+		"enamel": "red",
+		"emblem": "crosshair",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#c23b3b", "#e0b23a", "#3f6fb0", "#c23b3b", "#3f6fb0", "#e0b23a", "#c23b3b"]
+		},
+		"suspension": "ball"
+	},
+	{
+		"id": "m098",
+		"file": "medal-098.svg",
+		"title": "Bronze green enamel hexagon with crosshair",
+		"metal": "bronze",
+		"shape": "hexagon",
+		"enamel": "green",
+		"emblem": "crosshair",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#56622e", "#8f2232", "#24406b", "#8f2232", "#56622e"]
+		},
+		"suspension": "bar"
+	},
+	{
+		"id": "m099",
+		"file": "medal-099.svg",
+		"title": "Bronze white enamel cross with parachute",
+		"metal": "bronze",
+		"shape": "cross",
+		"enamel": "white",
+		"emblem": "parachute",
+		"ribbon": {
+			"shape": "straight",
+			"stripes": ["#b8924a", "#e6dfcc", "#c8642a", "#2f5a34", "#c8642a", "#e6dfcc", "#b8924a"]
+		},
+		"suspension": "loop"
+	},
+	{
+		"id": "m100",
+		"file": "medal-100.svg",
+		"title": "Gold diamond with crosshair",
+		"metal": "gold",
+		"shape": "diamond",
+		"enamel": null,
+		"emblem": "crosshair",
+		"ribbon": {
+			"shape": "vcut",
+			"stripes": ["#6b2d5c", "#3f6fb0", "#e6dfcc", "#24406b", "#e6dfcc", "#3f6fb0", "#6b2d5c"]
+		},
+		"suspension": "ring"
+	}
+]

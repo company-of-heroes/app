@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Bronze oval medal with torch</title>
+	<defs>
+		<radialGradient id="m085-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="0.5" stop-color="#b4733a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</radialGradient>
+		<linearGradient id="m085-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#f6c79a"/>
+			<stop offset="1" stop-color="#6b3d18"/>
+		</linearGradient>
+		<linearGradient id="m085-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m085-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m085-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m085-ribbon"><polygon points="12,0 52,0 42,46 22,46"/></clipPath>
+		<filter id="m085-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m085-ribbon)">
+			<rect x="12" y="0" width="11.43" height="48" fill="#b8924a"/><rect x="23.43" y="0" width="17.14" height="48" fill="#c23b3b"/><rect x="40.57" y="0" width="11.43" height="48" fill="#b8924a"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m085-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m085-fold)"/>
+		</g>
+		<circle cx="32" cy="50" r="4" fill="none" stroke="url(#m085-rim)" stroke-width="2"/>
+		<g transform="translate(32 84)" filter="url(#m085-shadow)">
+			<path d="M-20,0 A20,26 0 1 0 20,0 A20,26 0 1 0 -20,0 Z" fill="url(#m085-metal)" stroke="#3f230b" stroke-width="1"/><path d="M-20,0 A20,26 0 1 0 20,0 A20,26 0 1 0 -20,0 Z" transform="scale(0.82)" fill="none" stroke="#6b3d18" stroke-width="0.9" opacity="0.8"/>
+			<g transform="scale(1.15)" fill="#3f230b" color="#3f230b"><path d="M0,-12 Q4,-8 2.5,-5 Q4,-6 3.5,-3 L-3.5,-3 Q-4,-7 -1,-8 Q-2,-10 0,-12 Z"/><path d="M-3.5,-2 L3.5,-2 L1.5,11 L-1.5,11 Z"/></g>
+		</g>
+	</g>
+</svg>

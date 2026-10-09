@@ -1,8 +1,9 @@
-import PocketBase from 'pocketbase';
+import PocketBase, { ClientResponseError } from 'pocketbase';
 import { liveLobbyToLobbyData } from './lobby-transform';
 import type { LiveLobbyRecord, LobbyData, Player } from './types';
 
 const USER_ID_PATTERN = /^[a-z0-9]{15}$/;
+const POLL_MS = 2500;
 
 export function getUserIdFromPath(): string | null {
 	const fromPath = window.location.pathname.match(/^\/overlay\/([a-z0-9]{15})/);
@@ -64,6 +65,8 @@ export function connectLobby(
 	}
 
 	const pb = new PocketBase(pocketBaseUrl());
+	// Polls share a request key: a slow response would otherwise be aborted by the next poll.
+	pb.autoCancellation(false);
 	let active = true;
 	let steamIds: string[] | undefined;
 	let currentRecord: LiveLobbyRecord | null = null;
@@ -151,20 +154,24 @@ export function connectLobby(
 				.collection('lobbies_live')
 				.getFirstListItem<LiveLobbyRecord>(`user="${userId}"`);
 			applyRecord(await withStoredElo(record));
-		} catch {
-			if (currentRecord) {
+		} catch (error) {
+			// Only a missing row means the game ended; a slow or failed request keeps the last lobby.
+			if (currentRecord && error instanceof ClientResponseError && error.status === 404) {
 				applyRecord(null);
 			}
+		}
+
+		if (active) {
+			pollTimer = window.setTimeout(() => void poll(), POLL_MS);
 		}
 	};
 
 	void poll();
-	pollTimer = window.setInterval(() => void poll(), 2500);
 
 	return () => {
 		active = false;
 		if (pollTimer != null) {
-			window.clearInterval(pollTimer);
+			window.clearTimeout(pollTimer);
 		}
 	};
 }

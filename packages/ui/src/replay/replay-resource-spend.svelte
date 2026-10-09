@@ -11,21 +11,23 @@
 		factionIcon,
 		flushHeader,
 		flushHeaderTitle,
-		sheetTabTrigger,
 		tableHeadRow
 	} from '../variants';
 	import { playerSpend, RESOURCE_COLOURS, type SpentResource } from './replay-costs';
 	import { raceFromReplayFaction } from './replay-stats';
 	import { formatTimelineClock } from './replay-timeline';
-	import type { ReplayData, ReplayPlayer } from './types';
+	import type { ReplayPlayer } from './types';
+	import { useReplayData } from './context';
+	import { tooltip } from '../attachments';
 
 	type Props = {
-		replay: ReplayData;
 		/** Players in display order (team-grouped, like the timeline tabs). */
 		players: ReplayPlayer[];
 	};
 
-	let { replay, players }: Props = $props();
+	let { players }: Props = $props();
+	const context = useReplayData();
+	const replay = $derived(context.replay);
 	const host = useHost();
 	const { t } = useI18n();
 
@@ -133,7 +135,7 @@
 			class="bg-secondary-950/60 w-full items-end gap-0.5 overflow-x-auto overflow-y-hidden px-3 pt-2 shadow-[inset_0_-1px_0_rgba(255,255,255,0.1)]"
 		>
 			{#each RESOURCES as item (item.value)}
-				<Tabs.Trigger value={item.value} class={sheetTabTrigger}>
+				<Tabs.Trigger value={item.value} variant="sheet">
 					{#if resourceIcon(item.value)}
 						<img src={resourceIcon(item.value)} alt="" class="size-4 shrink-0" />
 					{/if}
@@ -167,7 +169,7 @@
 							{/if}
 						</th>
 					{/each}
-					<th class="px-4 py-2 text-right" title={t('Command points')}>{t('CP')}</th>
+					<th class="px-4 py-2 text-right" {@attach tooltip(t('Command points'))}>{t('CP')}</th>
 				</tr>
 			</thead>
 			<tbody>

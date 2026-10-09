@@ -97,7 +97,7 @@
 			{/if}
 		</div>
 	{:else if hasHeader || hasBody}
-		<div class={cn('px-4', hasBody ? 'py-3' : 'py-4')}>
+		<div class={cn('px-4', hasBody ? 'pt-3 pb-4' : 'py-4')}>
 			{#if hasHeader}
 				{#if label || hint}
 					<div class="flex w-full items-start gap-2">

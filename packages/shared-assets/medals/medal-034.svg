@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 116" width="64" height="116">
+	<title>Silver star with torch</title>
+	<defs>
+		<radialGradient id="m034-metal" cx="35%" cy="28%" r="80%">
+			<stop offset="0" stop-color="#ffffff"/>
+			<stop offset="0.5" stop-color="#bfc5cc"/>
+			<stop offset="1" stop-color="#6b737c"/>
+		</radialGradient>
+		<linearGradient id="m034-rim" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#ffffff"/>
+			<stop offset="1" stop-color="#6b737c"/>
+		</linearGradient>
+		<linearGradient id="m034-gloss" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+			<stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="m034-fold" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" stop-color="#000" stop-opacity="0.35"/>
+			<stop offset="0.2" stop-color="#000" stop-opacity="0"/>
+			<stop offset="0.8" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="m034-weave" width="1.6" height="1.6" patternUnits="userSpaceOnUse">
+			<rect width="0.6" height="1.6" fill="#000" opacity="0.12"/>
+		</pattern>
+		<clipPath id="m034-ribbon"><polygon points="12,0 52,0 52,44 12,44"/></clipPath>
+		<filter id="m034-shadow" x="-30%" y="-30%" width="160%" height="160%">
+			<feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000" flood-opacity="0.55"/>
+		</filter>
+	</defs>
+	<g>
+		<g clip-path="url(#m034-ribbon)">
+			<rect x="12" y="0" width="2.5" height="48" fill="#8f2232"/><rect x="14.5" y="0" width="10" height="48" fill="#b8924a"/><rect x="24.5" y="0" width="15" height="48" fill="#1c1c1c"/><rect x="39.5" y="0" width="10" height="48" fill="#b8924a"/><rect x="49.5" y="0" width="2.5" height="48" fill="#8f2232"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m034-weave)"/>
+			<rect x="12" y="0" width="40" height="48" fill="url(#m034-fold)"/>
+		</g>
+		<rect x="20" y="42" width="24" height="6" rx="1.5" fill="url(#m034-rim)" stroke="#3d434a" stroke-width="0.8"/><circle cx="32" cy="51" r="3" fill="none" stroke="url(#m034-rim)" stroke-width="1.8"/>
+		<g transform="translate(32 84)" filter="url(#m034-shadow)">
+			<path d="M0,-28 L7.05,-9.71 L26.63,-8.65 L11.41,3.71 L16.46,22.65 L0,12 L-16.46,22.65 L-11.41,3.71 L-26.63,-8.65 L-7.05,-9.71 Z" fill="url(#m034-metal)" stroke="#3d434a" stroke-width="1"/><path d="M0,-28 L7.05,-9.71 L26.63,-8.65 L11.41,3.71 L16.46,22.65 L0,12 L-16.46,22.65 L-11.41,3.71 L-26.63,-8.65 L-7.05,-9.71 Z" transform="scale(0.82)" fill="none" stroke="#6b737c" stroke-width="0.9" opacity="0.8"/><circle r="11" fill="url(#m034-metal)" stroke="#3d434a" stroke-width="0.8"/><circle r="9.2" fill="none" stroke="#6b737c" stroke-width="0.6"/>
+			<g transform="scale(0.78)" fill="#3d434a" color="#3d434a"><path d="M0,-12 Q4,-8 2.5,-5 Q4,-6 3.5,-3 L-3.5,-3 Q-4,-7 -1,-8 Q-2,-10 0,-12 Z"/><path d="M-3.5,-2 L3.5,-2 L1.5,11 L-1.5,11 Z"/></g>
+		</g>
+	</g>
+</svg>

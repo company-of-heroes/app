@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { interactive, tabTrigger } from '@company-of-heroes/ui/variants';
+	import * as Tabs from '../ui/tabs';
 
 	export type ReplaySectionTab = {
 		id: string;
@@ -21,32 +21,30 @@
 
 <div
 	class={cn(
-		'border-secondary-800 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-4 py-2.5',
+		'border-secondary-800 flex flex-wrap items-center justify-between gap-x-4 border-b px-4',
 		className
 	)}
 >
-	<div class="flex flex-wrap items-center gap-2">
-		{#each tabs as tab (tab.id)}
-			{#if tab.href && !onSelect}
-				<a
-					href={tab.href}
-					class={cn(tabTrigger, interactive)}
-					data-state={active === tab.id ? 'active' : undefined}
-				>
-					{tab.label}
-				</a>
-			{:else}
-				<button
-					type="button"
-					class={tabTrigger}
-					data-state={active === tab.id ? 'active' : undefined}
-					onclick={() => onSelect?.(tab.id)}
-				>
-					{tab.label}
-				</button>
-			{/if}
-		{/each}
-	</div>
+	<Tabs.Root
+		value={active}
+		onValueChange={(id) => onSelect?.(id)}
+		activationMode="manual"
+		class="min-w-0"
+	>
+		<Tabs.List>
+			{#each tabs as tab (tab.id)}
+				{#if tab.href && !onSelect}
+					<Tabs.Trigger value={tab.id}>
+						{#snippet child({ props })}
+							<a href={tab.href} {...props}>{tab.label}</a>
+						{/snippet}
+					</Tabs.Trigger>
+				{:else}
+					<Tabs.Trigger value={tab.id}>{tab.label}</Tabs.Trigger>
+				{/if}
+			{/each}
+		</Tabs.List>
+	</Tabs.Root>
 	{#if trailing}
 		{@render trailing()}
 	{/if}

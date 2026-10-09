@@ -25,13 +25,13 @@
 	{rel}
 	class={cn(
 		'inline-flex items-center gap-2 transition-colors duration-150',
-		'cursor-pointer rounded-md px-6 font-medium',
+		'cursor-pointer rounded-md px-4 font-medium',
 		'disabled:cursor-not-allowed disabled:opacity-60',
 		variant !== 'ghost' && variant !== 'link' && 'border border-transparent',
 		size === 'sm' && 'h-8 px-3 text-sm',
-		size === 'md' && 'h-9 px-6 text-base',
+		size === 'md' && 'h-8 px-4 text-base',
 		size === 'lg' && 'h-14 px-8 text-lg',
-		size === 'icon' && 'size-11 justify-center p-0',
+		size === 'icon' && 'size-8 justify-center p-0',
 		size === 'icon-sm' && 'size-8 justify-center p-0 text-sm',
 		variant === 'primary' &&
 			'bg-primary text-secondary-950 hover:bg-primary/90 border-0 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.4)]',

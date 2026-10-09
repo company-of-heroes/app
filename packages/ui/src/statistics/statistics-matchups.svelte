@@ -5,17 +5,18 @@
 	import { useHost } from '../host/host.context';
 	import { getRaceLabel } from '../format/player-format';
 	import { formatCount, percent, winRateClass } from './format';
-	import type { StatisticsMatchup } from './types';
+	import { useStatistics } from './context';
 
 	type Props = {
-		matchups: StatisticsMatchup[];
 		class?: string;
 	};
 
-	let { matchups, class: className }: Props = $props();
+	let { class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
+	const context = useStatistics();
+	const matchups = $derived(context.statistics.matchups);
 	const ALLIES = [0, 2];
 	const AXIS = [1, 3];
 

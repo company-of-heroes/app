@@ -63,7 +63,7 @@
 {/if}
 <div class="border-secondary-900 overflow-clip border-b">
 	<Tabs.Root bind:value={currentTab}>
-		<Tabs.List class="px-4 py-2">
+		<Tabs.List class="px-4">
 			<Tabs.Trigger value="twitch">{t('Twitch')}</Tabs.Trigger>
 			<Tabs.Trigger value="youtube">{t('YouTube')}</Tabs.Trigger>
 			<Tabs.Trigger value="tts" disabled={!chatEnabled}>{t('TTS')}</Tabs.Trigger>

@@ -6,22 +6,24 @@
 	import { getRaceLabel } from '../format/player-format';
 	import { actionIconKey } from '../replay/action-icons';
 	import { percent } from './format';
-	import type { StatisticsBlueprint, StatisticsReplayPlayers } from './types';
+	import type { StatisticsBlueprint } from './types';
+	import { useStatistics } from './context';
 	import { InfoPopover } from './info-popover.svelte';
 	import StatisticsInfoPopover from './statistics-info-popover.svelte';
 
 	type Props = {
 		/** Units (per game + share of players), upgrades (share of players) or openings (share of games). */
 		kind: 'units' | 'upgrades' | 'openings';
-		rows: StatisticsBlueprint[];
-		replayPlayers: StatisticsReplayPlayers[];
 		class?: string;
 	};
 
-	let { kind, rows, replayPlayers, class: className }: Props = $props();
+	let { kind, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
+	const context = useStatistics();
+	const rows = $derived(context.statistics[kind]);
+	const replayPlayers = $derived(context.statistics.replayPlayers);
 	const RACES = [0, 2, 1, 3];
 	const popover = new InfoPopover();
 

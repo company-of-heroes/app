@@ -5,6 +5,8 @@ import WidgetMatchHistory from './widget-match-history.svelte';
 import WidgetDashboardHero from './widget-dashboard-hero.svelte';
 import WidgetLiveLobbies from './widget-live-lobbies.svelte';
 import WidgetLiveStreams from './widget-live-streams.svelte';
+import WidgetTournamentMatch from './widget-tournament-match.svelte';
+import WidgetTournaments from './widget-tournaments.svelte';
 import CurrentGameView from './current-game-view.svelte';
 
 export {
@@ -15,5 +17,7 @@ export {
 	WidgetDashboardHero,
 	WidgetLiveLobbies,
 	WidgetLiveStreams,
+	WidgetTournamentMatch,
+	WidgetTournaments,
 	CurrentGameView
 };

@@ -32,13 +32,13 @@
 		...restProps
 	}: CompareInputProps = $props();
 
-	/** Match Selection trigger heights; sm uses h-9 so it aligns with controlBase beside filters. */
+	/** Same h-8 as every other control; lg stays tall for hero search. */
 	const controlSize = $derived(
 		size === 'sm'
-			? 'h-9 min-h-9 text-sm'
+			? 'h-8 min-h-8 text-sm'
 			: size === 'lg'
 				? 'h-14 min-h-14 text-lg'
-				: 'h-11 min-h-11 text-base'
+				: 'h-8 min-h-8 text-base'
 	);
 	const adornedText = $derived(size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-lg' : 'text-base');
 	const adornedSidePad = $derived(size === 'sm' ? 'px-2' : 'px-3');
@@ -79,7 +79,7 @@
 		role="radiogroup"
 		aria-label={operatorLabel}
 		tabindex="-1"
-		class="border-secondary-800 flex h-full shrink-0 items-stretch border-r"
+		class="border-secondary-700 flex h-full shrink-0 items-stretch border-r"
 		onkeydown={onOperatorKeydown}
 	>
 		{#each operators as option (option.value)}

@@ -40,15 +40,15 @@
 		leading != null || trailing != null || showPasswordToggle || type === 'number'
 	);
 	const controlSize = $derived(
-		size === 'sm' ? 'h-8 text-sm' : size === 'lg' ? 'h-14 text-lg' : 'h-9 text-base'
+		size === 'sm' ? 'h-8 text-sm' : size === 'lg' ? 'h-14 text-lg' : 'h-8 text-base'
 	);
-	const controlPad = $derived(size === 'sm' ? 'px-3' : size === 'lg' ? 'px-5' : 'px-4');
+	const controlPad = $derived(size === 'sm' ? 'px-3' : size === 'lg' ? 'px-5' : 'px-3');
 	const adornedText = $derived(size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-lg' : 'text-base');
 	const adornedSidePad = $derived(size === 'sm' ? 'px-2' : 'px-3');
 	const numberEndPad = $derived(size === 'sm' ? 'pe-14' : 'pe-17');
-	const passwordEndPad = $derived(size === 'sm' ? 'pe-9' : 'pe-11');
+	const passwordEndPad = $derived(size === 'lg' ? 'pe-11' : 'pe-9');
 	const passwordTogglePos = $derived(
-		size === 'sm' ? 'top-1/2 right-0.5 -translate-y-1/2' : 'top-1/2 right-1.5 -translate-y-1/2'
+		size === 'lg' ? 'top-1/2 right-1.5 -translate-y-1/2' : 'top-1/2 right-0 -translate-y-1/2'
 	);
 	const flushText = $derived(size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-lg' : 'text-base');
 

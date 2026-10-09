@@ -1,4 +1,4 @@
-import PocketBase from 'pocketbase';
+import PocketBase, { ClientResponseError } from 'pocketbase';
 import { env } from '$env/dynamic/private';
 import { API_URL } from '$lib/site/urls';
 
@@ -110,6 +110,23 @@ export function createAdminPocketBase(fetchFn: Fetch): PocketBase {
 		}
 
 		return data;
+	};
+	// A PocketBase restart re-saves the superuser, which revokes the cached session. Retry
+	// once with a fresh login so that request does not fail with "Only superusers…".
+	const send = pb.send.bind(pb);
+	pb.send = async <T>(path: string, options: Parameters<PocketBase['send']>[1]) => {
+		const cached = superuser?.token;
+		try {
+			return await send<T>(path, options);
+		} catch (error) {
+			const revoked =
+				error instanceof ClientResponseError && (error.status === 401 || error.status === 403);
+			if (!revoked || !cached || env.PB_SUPERUSER_TOKEN) {
+				throw error;
+			}
+
+			return send<T>(path, options);
+		}
 	};
 	return pb;
 }

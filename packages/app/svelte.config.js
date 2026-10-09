@@ -28,7 +28,9 @@ const config = {
 				'/replays/[replayId]',
 				'/history/[id]',
 				'/live/[id]',
-				'/leaderboards/profile/[profileId]'
+				'/leaderboards/profile/[profileId]',
+				'/tournaments/[slug]',
+				'/tournaments/[slug]/edit'
 			]
 		}
 	},

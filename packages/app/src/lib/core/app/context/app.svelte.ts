@@ -28,6 +28,7 @@ import { database } from '$core/app/database';
 import { LOBBIES_LIVE_HEARTBEAT_MS } from '$core/app/database/lobbies-live';
 import { SocketManager, SocketState } from '$core/app/socket.svelte';
 import { notifications as notificationsService } from '$core/notifications/notifications.svelte';
+import { tournamentGames as tournamentGamesService } from '$core/tournaments/tournament-games.svelte';
 import { startTray } from '$core/app/tray.svelte';
 import { LOBBY_4V4, RANKED_2V2 } from '$lib/dev';
 import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
@@ -104,6 +105,8 @@ export class AppContext extends Emittery<AppEvents> {
 
 	/** In-app notification inbox. */
 	notifications = notificationsService;
+	/** "Start tournament game": claims the next lobby with the opponent. */
+	tournamentGames = tournamentGamesService;
 
 	/** PocketBase client. */
 	pocketbase: TypedPocketBase = pocketbase;
@@ -134,6 +137,8 @@ export class AppContext extends Emittery<AppEvents> {
 	#durableLobbyEmittedKey: string | null = null;
 	#liveUpsertInFlight = false;
 	#liveUpsertPending: Match | null = null;
+	/** A tournament game is being claimed: the lobby is published live only after that (hidden). */
+	#tournamentClaimPending = false;
 	/** True once the game process has been seen running this session. */
 	#hadGameRunning = false;
 	/** Last published `game.lobby.joined` match key (once per match). */
@@ -535,8 +540,27 @@ export class AppContext extends Emittery<AppEvents> {
 		this.emit('lobby.started', match);
 		this.socket.publish('game.lobby.started', match);
 
-		this.#upsertLiveLobby(match);
-		this.#startLiveLobbyHeartbeat();
+		const tournamentClaim = this.tournamentGames.claimFor(match);
+		if (tournamentClaim) {
+			// Claim first: the server then publishes the lobby hidden (no spoilers).
+			const generation = this.#liveLobbyGeneration;
+			this.#tournamentClaimPending = true;
+			void tournamentClaim.finally(() => {
+				this.#tournamentClaimPending = false;
+				if (generation !== this.#liveLobbyGeneration) {
+					return;
+				}
+
+				const next = this.#liveUpsertPending ?? match;
+				this.#liveUpsertPending = null;
+				this.#upsertLiveLobby(next);
+				this.#startLiveLobbyHeartbeat();
+			});
+		} else {
+			this.#upsertLiveLobby(match);
+			this.#startLiveLobbyHeartbeat();
+		}
+
 		if (lobby.isReplay) {
 			void this.#attachReplayPlayerNames(lobby);
 		}
@@ -685,7 +709,7 @@ export class AppContext extends Emittery<AppEvents> {
 	#upsertLiveLobby(match: Match) {
 		// One request at a time, the newest match last: the burst at match start (per Steam
 		// slot, race change, profile enrichment) let the server create the durable lobby twice.
-		if (this.#liveUpsertInFlight) {
+		if (this.#liveUpsertInFlight || this.#tournamentClaimPending) {
 			this.#liveUpsertPending = match;
 			return;
 		}

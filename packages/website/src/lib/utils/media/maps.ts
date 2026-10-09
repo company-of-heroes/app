@@ -3,6 +3,12 @@ const mapModules = import.meta.glob<{ default: string }>(
 	{ eager: true }
 );
 
+/** Steam Workshop maps (`tools/extract_maps.py`); registered first so stock maps win on shared aliases. */
+const workshopMapModules = import.meta.glob<{ default: string }>(
+	'../../../../../app/src/lib/files/maps/workshop/*_map_base.webp',
+	{ eager: true }
+);
+
 const defaultMapModules = import.meta.glob<{ default: string }>(
 	'../../../../../app/src/lib/files/maps/mp_nobattlemap.png',
 	{ eager: true }
@@ -59,8 +65,11 @@ function getMapLookupCandidates(mapName: string): string[] {
 	return [...candidates];
 }
 
-for (const [path, module] of Object.entries(mapModules)) {
-	const match = path.match(/[/\\]maps[/\\](.+)_map_base\.png$/i);
+for (const [path, module] of [
+	...Object.entries(workshopMapModules),
+	...Object.entries(mapModules)
+]) {
+	const match = path.match(/[/\\]maps[/\\](?:workshop[/\\])?(.+)_map_base\.(png|webp)$/i);
 	if (match) {
 		registerMapKey(match[1], module.default);
 	}

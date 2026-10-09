@@ -9,26 +9,41 @@ export const factionIcon = cn(
 );
 
 export const controlBase =
-	'border-secondary-800 bg-secondary-800/30 placeholder:text-secondary-500 focus:border-secondary-600 h-9 rounded-md border text-base font-medium text-white focus:outline-none';
+	'border-secondary-700 bg-secondary-950 placeholder:text-secondary-500 focus:border-secondary-600 h-8 rounded-md border text-base font-medium text-white focus:outline-none';
 
-export const fileDropzone =
-	'border-secondary-800 bg-secondary-800/30 focus-visible:border-secondary-600 flex h-auto min-h-24 w-full flex-col items-center justify-center gap-1 rounded-md border px-4 py-4 text-center text-base font-medium text-white transition-colors focus-visible:outline-none';
+export const fileDropzone = cn(
+	'flex h-auto min-h-24 w-full flex-col items-center justify-center gap-1 rounded-md border border-dashed px-4 py-4',
+	'text-center text-base font-medium text-white transition-colors',
+	'border-secondary-700 bg-secondary-950',
+	'hover:border-secondary-500 hover:bg-secondary-900/60',
+	'focus-visible:border-secondary-500 focus-visible:outline-none'
+);
 
-export const fileDropzoneDragging = 'border-secondary-600 bg-secondary-800/50';
+export const fileDropzoneDragging = 'border-primary bg-primary/10';
+
+/** Native `<input type="file">` styled as a dark dashed field. */
+export const fileInput = cn(
+	'w-full cursor-pointer rounded-md border border-dashed p-1.5 text-sm transition-colors',
+	'border-secondary-700 bg-secondary-950 text-secondary-400',
+	'hover:border-secondary-500 hover:bg-secondary-900/60',
+	'focus-visible:border-secondary-500 focus-visible:outline-none',
+	'file:bg-secondary-800 file:mr-3 file:cursor-pointer file:rounded file:border-0 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white',
+	'hover:file:bg-secondary-700'
+);
 
 export const adornedControl =
-	'border-secondary-800 bg-secondary-800/30 focus-within:border-secondary-600 flex h-9 w-full items-stretch overflow-hidden rounded-md border focus-within:outline-none';
+	'border-secondary-700 bg-secondary-950 focus-within:border-secondary-600 flex h-8 w-full items-stretch overflow-hidden rounded-md border focus-within:outline-none';
 
 export const adornedInput =
 	'placeholder:text-secondary-500 min-w-0 flex-1 border-0 bg-transparent px-3 py-0 text-base font-medium text-white focus:outline-none focus:ring-0';
 
 export const adornedLeading =
-	'text-secondary-500 border-secondary-800 flex shrink-0 items-center border-r px-3';
+	'text-secondary-500 border-secondary-700 flex shrink-0 items-center border-r px-3';
 
 export const adornedTrailing =
-	'text-secondary-500 border-secondary-800 flex shrink-0 items-center border-l px-3';
+	'text-secondary-500 border-secondary-700 flex shrink-0 items-center border-l px-3';
 
-export const adornedActions = 'border-secondary-800 flex shrink-0 items-center border-l px-1.5';
+export const adornedActions = 'border-secondary-700 flex shrink-0 items-center border-l px-1.5';
 
 export const adornedControlDisabled =
 	'has-[:disabled]:cursor-not-allowed has-[:disabled]:border-secondary-800 has-[:disabled]:bg-secondary-800/30 has-[:disabled]:text-secondary-500';
@@ -102,6 +117,22 @@ export const menuItem = dropdownItem;
 
 export const interactive = 'cursor-pointer disabled:cursor-not-allowed';
 
+export const calendarNavButton = cn(
+	interactive,
+	'text-secondary-300 hover:bg-secondary-800 flex size-8 items-center justify-center rounded-md hover:text-white'
+);
+
+export const calendarHeadCell = 'text-secondary-500 w-9 pb-1 text-center text-xs font-normal';
+
+export const calendarDay = cn(
+	interactive,
+	'text-secondary-200 flex size-9 items-center justify-center rounded-md text-sm tabular-nums',
+	'hover:bg-secondary-800 hover:text-white',
+	'data-outside-month:pointer-events-none data-outside-month:opacity-0',
+	'data-disabled:text-secondary-700 data-unavailable:text-secondary-700',
+	'data-today:font-bold data-today:text-white'
+);
+
 export const tableHeadText =
 	'font-sans text-xs font-semibold tracking-wide text-secondary-300 uppercase';
 
@@ -110,10 +141,23 @@ export const tableHeadRow = `bg-secondary-950/90 border-secondary-800 border-b $
 export const tableSortHeader = `${interactive} ${tableHeadText} flex w-full min-w-0 items-center bg-transparent p-0 select-none`;
 
 export const tabTrigger =
-	`${interactive} text-white rounded-md border border-transparent px-4 py-1.5 font-bold transition-colors duration-150 ` +
+	`${interactive} text-white h-8 rounded-md border border-transparent px-4 font-bold transition-colors duration-150 ` +
 	'not-disabled:hover:bg-secondary-950/50 ' +
 	'not-disabled:data-[state=active]:border-primary/20 not-disabled:data-[state=active]:bg-primary/5 not-disabled:data-[state=active]:text-primary ' +
 	'disabled:text-secondary-500';
+
+/**
+ * Flush page tab (`Tabs.Trigger` default): muted bold label with a primary bar along the bottom
+ * of the strip when active. Put the strip's own line (`border-b`) on the list or panel.
+ */
+export const lineTabTrigger = cn(
+	interactive,
+	'text-secondary-400 relative inline-flex h-11 shrink-0 items-center gap-2 font-bold whitespace-nowrap transition-colors duration-150',
+	'not-disabled:hover:text-white focus-visible:text-white focus-visible:outline-none',
+	'after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-t-full after:bg-transparent after:transition-colors after:duration-150',
+	'not-disabled:data-[state=active]:after:bg-primary not-disabled:data-[state=active]:text-white',
+	'disabled:text-secondary-600'
+);
 
 /** Warm block for what a row unlocks or researches (a building's upgrades, a doctrine tier's unlocks). */
 export const accentBlock = cn(
@@ -129,7 +173,7 @@ export const accentBlockLabel = cn(
 
 /** Bold page tab (stats mode, wiki factions); the selected one (`data-state="on"`) gets the dark secondary fill. */
 export const pageTab = cn(
-	'inline-flex shrink-0 items-center gap-2 rounded-md border border-transparent px-4 py-1.5 font-bold whitespace-nowrap text-white transition-colors duration-150',
+	'inline-flex h-8 shrink-0 items-center gap-2 rounded-md border border-transparent px-4 font-bold whitespace-nowrap text-white transition-colors duration-150',
 	'disabled:text-secondary-500 cursor-pointer disabled:cursor-not-allowed',
 	'not-disabled:hover:bg-secondary-950/50',
 	'data-[state=on]:border-secondary-700 data-[state=on]:bg-secondary-800 data-[state=on]:not-disabled:hover:bg-secondary-800'

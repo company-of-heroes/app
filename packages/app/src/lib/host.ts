@@ -1,4 +1,5 @@
 import { goto, invalidateAll, replaceState } from '$app/navigation';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { page } from '$app/state';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
@@ -24,6 +25,7 @@ import {
 } from '$lib/utils/game';
 import { flagImageUrl } from '$lib/utils/leaderboard-resolvers';
 import { getActionIcon } from '$lib/utils/action-icons';
+import { getMedals } from '$lib/utils/medals';
 import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 import { isStreamerLive } from '$core/pocketbase/live-streamers-cache.svelte';
 
@@ -37,6 +39,8 @@ const doctrineBanners = import.meta.glob<string>('$lib/files/ct_branchbanner_*.p
 export function provideAppHost(): HostContext {
 	return provideHost({
 		locale: () => getI18n().getLocale(),
+		openExternal: (url) =>
+			void openUrl(url).catch(() => app.toast.error(t('Could not open the link.'))),
 		href: (path) => path,
 		routes: {
 			player: (id) => `/players/${id}`,
@@ -47,7 +51,12 @@ export function provideAppHost(): HostContext {
 			memberReplay: (id) => `/replays/${id}`,
 			publishReplay: (lobbyId) => `/replays/upload?fromMatch=${lobbyId}`,
 			replayList: () => '/history',
-			shareReplay: (id) => `${SITE_URL}/replays/${id}`
+			shareReplay: (id) => `${SITE_URL}/replays/${id}`,
+			tournaments: () => '/tournaments',
+			tournament: (slug) => `/tournaments/${slug}`,
+			tournamentNew: () => '/tournaments/new',
+			tournamentEdit: (slug) => `/tournaments/${slug}/edit`,
+			tournamentHallOfFame: () => '/tournaments/hall-of-fame'
 		},
 		url: {
 			param: (name) => page.url.searchParams.get(name),
@@ -75,6 +84,7 @@ export function provideAppHost(): HostContext {
 			doctrineBanner: (file) =>
 				Object.entries(doctrineBanners).find(([path]) => path.endsWith(`/${file}`))?.[1] ?? '',
 			actionIcon: getActionIcon,
+			medals: getMedals,
 			userAvatar: (user) => user.avatarUrl || userAvatarSrc({ id: user.id })
 		},
 		auth: {
@@ -96,6 +106,7 @@ export function provideAppHost(): HostContext {
 				account.user.steamIds.includes(steamId) ||
 				(profileId !== undefined && app.game.profile?.relic.profile_id === profileId)
 		},
+		openNotification: (notification) => void app.notifications.open(notification),
 		notify: {
 			success: (message) => app.toast.success(message),
 			error: (message) => app.toast.error(message),
@@ -114,6 +125,15 @@ export function provideAppHost(): HostContext {
 				},
 				getElo: async (steamId) =>
 					((await unwrapApi(api.ratings.getPlayerRating(steamId)))?.elo ?? {}) as PlayerEloMap,
+				getStats: async (id) => {
+					const result = await api.players.get(id);
+					return result.isOk()
+						? {
+								leaderboardStats: result.value.leaderboardStats,
+								elo: result.value.elo as PlayerEloMap
+							}
+						: null;
+				},
 				search: async (query) => {
 					const result = await api.players.search(query, { requireMatches: true });
 					if (result.isErr()) {
@@ -312,6 +332,48 @@ export function provideAppHost(): HostContext {
 			rewards: {
 				forPlayer: (steamId) => unwrapApi(api.rewards.forPlayer(steamId))
 			},
+			tournaments: {
+				list: (scope) => unwrapApi(api.tournaments.list(scope)),
+				get: (id) => unwrapApi(api.tournaments.get(id)),
+				wonBy: (steamId) => unwrapApi(api.tournaments.wonBy(steamId)),
+				create: (input, images) => unwrapApi(api.tournaments.create(input, images)),
+				update: (id, input, images) => unwrapApi(api.tournaments.update(id, input, images)),
+				listMaps: () => unwrapApi(api.tournaments.listMaps()),
+				createMap: (name, icon) => unwrapApi(api.tournaments.createMap(name, icon)),
+				register: (id, steamId, acceptRules) =>
+					unwrapApi(api.tournaments.register(id, steamId, acceptRules)),
+				acceptRules: (id) => unwrapApi(api.tournaments.acceptRules(id)),
+				withdraw: (id) => unwrapApi(api.tournaments.withdraw(id)),
+				seed: (id) => unwrapApi(api.tournaments.seed(id)),
+				setSeeds: (id, order) => unwrapApi(api.tournaments.setSeeds(id, order)),
+				start: (id) => unwrapApi(api.tournaments.start(id)),
+				setMatchResult: (id, matchId, result) =>
+					unwrapApi(api.tournaments.setMatchResult(id, matchId, result)),
+				disqualify: (id, participantId) => unwrapApi(api.tournaments.disqualify(id, participantId)),
+				setRoundDeadlines: (id, rounds) => unwrapApi(api.tournaments.setRoundDeadlines(id, rounds)),
+				setMatchDeadline: (id, matchId, deadline) =>
+					unwrapApi(api.tournaments.setMatchDeadline(id, matchId, deadline)),
+				mine: () => unwrapApi(api.tournaments.mine()),
+				markSeen: (seen) => unwrapApi(api.tournaments.markSeen(seen)),
+				createPost: (id, input) => unwrapApi(api.tournaments.createPost(id, input)),
+				updatePost: (id, postId, input) => unwrapApi(api.tournaments.updatePost(id, postId, input)),
+				deletePost: (id, postId) => unwrapApi(api.tournaments.deletePost(id, postId)),
+				report: (id, matchId, report) => unwrapApi(api.tournaments.report(id, matchId, report)),
+				reports: (id) => unwrapApi(api.tournaments.reports(id)),
+				updateReport: (id, reportId, update) =>
+					unwrapApi(api.tournaments.updateReport(id, reportId, update)),
+				proposeTimes: (id, matchId, times) =>
+					unwrapApi(api.tournaments.proposeTimes(id, matchId, times)),
+				acceptTime: (id, matchId, proposalId, time) =>
+					unwrapApi(api.tournaments.acceptTime(id, matchId, proposalId, time)),
+				declineTimes: (id, matchId, proposalId) =>
+					unwrapApi(api.tournaments.declineTimes(id, matchId, proposalId)),
+				setMatchTime: (id, matchId, scheduledAt) =>
+					unwrapApi(api.tournaments.setMatchTime(id, matchId, scheduledAt)),
+				feature: (id, matchId) => unwrapApi(api.tournaments.feature(id, matchId)),
+				stats: (idOrSlug) => unwrapApi(api.tournaments.stats(idOrSlug)),
+				hallOfFame: () => unwrapApi(api.tournaments.hallOfFame())
+			},
 			staff: {
 				getCompanionUser: async (steamId) => {
 					const user = await findCompanionUserBySteamId(steamId);
@@ -329,6 +391,28 @@ export function provideAppHost(): HostContext {
 						appVersion: readMetaVersion(user.meta)
 					};
 				}
+			},
+			// Backed by the realtime inbox service (toasts + Windows notifications live there).
+			notifications: {
+				list: async () => {
+					await app.notifications.refresh();
+					return app.notifications.items.map((item) => ({
+						id: item.id,
+						title: item.title,
+						body: item.body,
+						created: String(item.created),
+						read: item.read,
+						lobby: item.lobby || undefined,
+						comment: item.comment || undefined,
+						replay: item.replay || undefined,
+						replayComment: item.replayComment || undefined,
+						url: item.url || undefined,
+						tournament: item.tournament || undefined
+					}));
+				},
+				unreadCount: async () => app.notifications.unreadCount,
+				markRead: (id) => app.notifications.markRead(id),
+				subscribe: (onChange) => app.notifications.onChange(onChange)
 			}
 		}
 	});

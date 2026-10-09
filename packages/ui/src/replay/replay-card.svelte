@@ -26,6 +26,7 @@
 	import DownloadIcon from 'phosphor-svelte/lib/DownloadIcon';
 	import DownloadSimpleIcon from 'phosphor-svelte/lib/DownloadSimpleIcon';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
+	import { tooltip } from '../attachments';
 
 	type Props = {
 		match: CommunityMatch;
@@ -167,16 +168,16 @@
 					'inline-flex items-center gap-1',
 					scoreClassName(match.likeCount ?? 0, 'text-secondary-400')
 				)}
-				title={t('Likes')}
+				{@attach tooltip(t('Likes'))}
 			>
 				<CaretUpIcon size={14} weight="fill" />
 				{match.likeCount ?? 0}
 			</span>
-			<span class="inline-flex items-center gap-1" title={t('Comments')}>
+			<span class="inline-flex items-center gap-1" {@attach tooltip(t('Comments'))}>
 				<ChatCircleIcon size={14} weight="duotone" />
 				{match.commentCount ?? 0}
 			</span>
-			<span class="inline-flex items-center gap-1" title={t('Downloads')}>
+			<span class="inline-flex items-center gap-1" {@attach tooltip(t('Downloads'))}>
 				<DownloadIcon size={14} weight="duotone" />
 				{downloadCount}
 			</span>
@@ -189,7 +190,7 @@
 			variant="ghost"
 			size="icon-sm"
 			class="text-secondary-400 hover:text-primary"
-			title={t('Download replay')}
+			{@attach tooltip(t('Download replay'))}
 			aria-label={t('Download replay')}
 		>
 			<DownloadSimpleIcon class="size-4" />

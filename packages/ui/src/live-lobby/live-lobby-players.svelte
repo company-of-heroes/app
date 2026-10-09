@@ -18,6 +18,7 @@
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
 	import { playerRowKey, teamPlayers, type LiveLobbyPlayer } from './types';
+	import { escapeHtml, tooltip } from '../attachments';
 
 	type Props = {
 		players: LiveLobbyPlayer[];
@@ -63,7 +64,7 @@
 				<PlayerProfileLink
 					{href}
 					playerId={previewId}
-					title={label}
+					aria-label={label}
 					class={cn(interactive, 'shrink-0 rounded-full')}
 				>
 					<img
@@ -73,7 +74,12 @@
 					/>
 				</PlayerProfileLink>
 			{:else}
-				<a {href} title={label} class={cn(interactive, 'shrink-0 rounded-full')}>
+				<a
+					{href}
+					aria-label={label}
+					class={cn(interactive, 'shrink-0 rounded-full')}
+					{@attach tooltip(escapeHtml(label))}
+				>
 					<img
 						src={host.resolve.factionFlagByRace(player.race)}
 						alt=""
@@ -85,7 +91,7 @@
 			<img
 				src={host.resolve.factionFlagByRace(player.race)}
 				alt=""
-				title={label}
+				{@attach tooltip(escapeHtml(label))}
 				class={cn(factionIcon, 'opacity-70', isMe && 'ring-primary')}
 			/>
 		{/if}

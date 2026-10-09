@@ -25,7 +25,8 @@
 		"./reputation": "./src/reputation/index.ts",
 		"./rewards": "./src/rewards/index.ts",
 		"./player-performance": "./src/player-performance/index.ts",
-		"./companion": "./src/companion/index.ts"
+		"./companion": "./src/companion/index.ts",
+		"./tournaments": "./src/tournaments/index.ts"
 	},
 	"dependencies": {
 		"@company-of-heroes/ui": "workspace:*",

@@ -1,3 +1,3 @@
-import { tooltip } from './tooltip.svelte';
+import { escapeHtml, tooltip } from './tooltip.svelte';
 
-export { tooltip };
+export { escapeHtml, tooltip };
