@@ -15,6 +15,7 @@
 	import { doctrineBannerFile } from '../replay/replay-stats';
 	import StatChip from '../replay/stat-chip.svelte';
 	import DocsCost from './docs-cost.svelte';
+	import DocsEntryList from './docs-entry-list.svelte';
 	import DocsHeader from './docs-header.svelte';
 	import DocsIcon from './docs-icon.svelte';
 	import DocsLayout from './docs-layout.svelte';
@@ -33,13 +34,17 @@
 
 	const commander = $derived(page.commander);
 
-	/** An ability's own page: the one weapon it fires, else the one unit it calls in. */
+	/** An ability's own page: the one weapon it fires, else the one unit or building it calls in. */
 	function abilityLink(ability: DocAbility): string | null {
 		if (ability.weapons?.length === 1) {
 			return `/wiki/weapons/${ability.weapons[0]}`;
 		}
 
-		return ability.spawns?.length === 1 ? `/wiki/units/${ability.spawns[0]}` : null;
+		if (ability.spawns?.length === 1) {
+			return `/wiki/units/${ability.spawns[0]}`;
+		}
+
+		return ability.buildings?.length === 1 ? `/wiki/buildings/${ability.buildings[0]}` : null;
 	}
 	const banner = $derived.by(() => {
 		const file =
@@ -64,6 +69,12 @@
 		{#key commander.slug}
 			<DocsNote kind="commander" slug={commander.slug} note={page.note} />
 		{/key}
+		{#if page.onPick.length}
+			<!-- Panzer Elite: picking the doctrine alone gives vehicles new abilities. -->
+			<DocsSection title={t('When picked')}>
+				<DocsEntryList entries={page.onPick} faction={commander.faction} />
+			</DocsSection>
+		{/if}
 		<DocsSection title={t('Doctrine tree')} note={t('Command points')}>
 			<!-- Like the in-game tree: two branches side by side, unlocked top to bottom. A line links
 			the tier icons; each tier lists what it unlocks in a box under its description. -->
@@ -114,7 +125,7 @@
 											class="mt-2 text-sm leading-snug"
 										/>
 									{/if}
-									{#if tier.abilities.length || tier.units.length}
+									{#if tier.abilities.length || tier.units.length || tier.buildings.length || tier.weapons.length}
 										<!-- What the tier unlocks, in the same warm block as a building's upgrades. -->
 										<div class={cn(accentBlock, 'mt-3')}>
 											<p class={accentBlockLabel}>
@@ -158,9 +169,9 @@
 														</div>
 													</li>
 												{/each}
-												{#each tier.units as unit (unit.slug)}
+												{#each [...tier.units, ...tier.buildings, ...tier.weapons] as ref (`${ref.kind}:${ref.slug}`)}
 													<li class="border-secondary-800 border-t">
-														<DocsRefRow ref={unit} compact accent />
+														<DocsRefRow {ref} compact accent />
 													</li>
 												{/each}
 											</ul>

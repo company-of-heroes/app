@@ -8,8 +8,10 @@
 	type Props = {
 		label: string;
 		values: Partial<Record<keyof DocByRange, number | null>>;
-		/** Upper distance of the short / medium / long bands. */
+		/** Upper distance of the short / medium / long (/ distant) bands. */
 		bands?: Partial<Record<keyof DocByRange, number | null>>;
+		/** Unit after the band distances (`m` for area damage around the impact). */
+		unit?: string;
 		/** Values are 0–1 chances: show a percentage with a coloured bar. Off: the plain number. */
 		chance?: boolean;
 		/** `sm` for popovers, `md` for full pages (the wiki). */
@@ -17,11 +19,29 @@
 		class?: string;
 	};
 
-	let { label, values, bands, chance = true, size = 'sm', class: className }: Props = $props();
+	let {
+		label,
+		values,
+		bands,
+		unit = '',
+		chance = true,
+		size = 'sm',
+		class: className
+	}: Props = $props();
 	const { t } = useI18n();
 
-	const RANGES = ['short', 'medium', 'long'] as const;
-	const RANGE_LABELS = { short: 'Short', medium: 'Medium', long: 'Long' } as const;
+	const RANGE_LABELS = {
+		short: 'Short',
+		medium: 'Medium',
+		long: 'Long',
+		distant: 'Distant'
+	} as const;
+	// The distant band (past long range, up to max range) only where the weapon has one.
+	const ranges = $derived(
+		values.distant !== undefined && values.distant !== null
+			? (['short', 'medium', 'long', 'distant'] as const)
+			: (['short', 'medium', 'long'] as const)
+	);
 </script>
 
 <div class={className}>
@@ -33,10 +53,10 @@
 	>
 		{label}
 	</p>
-	<div class="mt-1.5 grid grid-cols-3 gap-2">
-		{#each RANGES as range, index (range)}
+	<div class={cn('mt-1.5 grid gap-2', ranges.length === 4 ? 'grid-cols-4' : 'grid-cols-3')}>
+		{#each ranges as range, index (range)}
 			{@const value = values[range] ?? 0}
-			{@const from = index === 0 ? 0 : bands?.[RANGES[index - 1]]}
+			{@const from = index === 0 ? 0 : bands?.[ranges[index - 1]]}
 			{@const to = bands?.[range]}
 			<div>
 				<p
@@ -72,7 +92,7 @@
 							class={cn(
 								'tabular-nums',
 								size === 'md' ? 'text-secondary-300' : 'text-secondary-500'
-							)}>{formatNumber(from ?? 0)}–{formatNumber(to)}</span
+							)}>{formatNumber(from ?? 0)}–{formatNumber(to)}{unit}</span
 						>
 					{/if}
 				</p>

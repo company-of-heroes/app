@@ -36,10 +36,19 @@
 				: `${formatNumber(min)}–${formatNumber(max)}${unit}`;
 	const has = (values: DocWeapon['accuracy']) =>
 		Boolean(values && RANGES.some((range) => values[range]));
+	const seconds = (value: number | null | undefined) => (value ? `${formatNumber(value)}s` : null);
 
 	const bands = $derived(weapon.range);
-	const multiplier = (value: number | undefined) =>
-		value === undefined ? '—' : `×${formatNumber(value, 3)}`;
+	// Times that change with distance (an SMG cools down faster up close), as multipliers per band.
+	const timings = $derived(
+		[
+			{ label: t('Cooldown multiplier'), values: weapon.cooldown?.multipliers },
+			{ label: t('Aim time multiplier'), values: weapon.aim?.multipliers },
+			{ label: t('Reload multiplier'), values: weapon.reload?.multipliers }
+		].filter((timing) => timing.values)
+	);
+	// No modifier in the game files means the weapon is unchanged against that target.
+	const multiplier = (value: number | undefined) => `×${formatNumber(value ?? 1, 3)}`;
 	const targets = $derived(
 		Object.entries(weapon.targets ?? {}).sort(([a], [b]) => a.localeCompare(b))
 	);
@@ -68,19 +77,25 @@
 		<StatChip
 			icon={ArrowsClockwiseIcon}
 			name={weapon.reload?.frequency
-				? `${t('Reload')} · ${t('Reload frequency')} ${formatNumber(weapon.reload.frequency)}`
+				? `${t('Reload')} · ${t('Reload frequency')} ${between(weapon.reload.frequency, weapon.reload.frequencyMax ?? weapon.reload.frequency)}`
 				: t('Reload')}
 			value={between(weapon.reload?.min, weapon.reload?.max, 's')}
 		/>
+		<StatChip icon={CrosshairIcon} name={t('Ready aim time')} value={seconds(weapon.aim?.ready)} />
 		<StatChip
 			icon={CrosshairIcon}
 			name={t('Aim time')}
-			value={weapon.aim ? `${formatNumber(weapon.aim)}s` : null}
+			value={between(weapon.aim?.min, weapon.aim?.max, 's')}
 		/>
 		<StatChip
 			icon={LightningIcon}
 			name={t('Burst')}
-			value={weapon.burst ? `${formatNumber(weapon.burst)}s` : null}
+			value={between(weapon.burst?.min, weapon.burst?.max, 's')}
+		/>
+		<StatChip
+			icon={LightningIcon}
+			name={t('Rate of fire')}
+			value={between(weapon.rateOfFire?.min, weapon.rateOfFire?.max, '/s')}
 		/>
 		<StatChip
 			icon={CircleDashedIcon}
@@ -112,7 +127,14 @@
 			<RangeBars label={t('Penetration')} values={weapon.penetration!} {bands} size="md" />
 		{/if}
 		{#if has(weapon.areaDamage)}
-			<RangeBars label={t('Area damage')} values={weapon.areaDamage!} {bands} size="md" />
+			<!-- Area damage falls off with the distance from the impact, not with the firing range. -->
+			<RangeBars
+				label={t('Area damage')}
+				values={weapon.areaDamage!}
+				bands={weapon.areaDistance}
+				unit="m"
+				size="md"
+			/>
 		{/if}
 		{#if has(weapon.suppression)}
 			<RangeBars
@@ -123,6 +145,9 @@
 				size="md"
 			/>
 		{/if}
+		{#each timings as timing (timing.label)}
+			<RangeBars label={timing.label} values={timing.values!} {bands} chance={false} size="md" />
+		{/each}
 	</div>
 </div>
 
@@ -156,6 +181,7 @@
 					<th class={cn(cell, 'font-semibold')}>{t('Damage')}</th>
 					<th class={cn(cell, 'font-semibold')}>{t('Accuracy')}</th>
 					<th class={cn(cell, 'font-semibold')}>{t('Penetration')}</th>
+					<th class={cn(cell, 'font-semibold')}>{t('Rear penetration')}</th>
 					<th class={cn(cell, 'font-semibold')}>{t('Suppression')}</th>
 				</tr>
 			</thead>
@@ -165,18 +191,27 @@
 						<th scope="row" class="px-4 py-2.5 text-left font-medium text-white">
 							{targetTypeLabel(type)}
 						</th>
-						<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.damage))}>
-							{multiplier(multipliers.damage)}
-						</td>
-						<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.accuracy))}>
-							{multiplier(multipliers.accuracy)}
-						</td>
-						<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.penetration))}>
-							{multiplier(multipliers.penetration)}
-						</td>
-						<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.suppression))}>
-							{multiplier(multipliers.suppression)}
-						</td>
+						{#if multipliers.disabled}
+							<td colspan="5" class={cn(cell, 'text-secondary-400 font-semibold')}>
+								{t('Cannot target')}
+							</td>
+						{:else}
+							<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.damage))}>
+								{multiplier(multipliers.damage)}
+							</td>
+							<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.accuracy))}>
+								{multiplier(multipliers.accuracy)}
+							</td>
+							<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.penetration))}>
+								{multiplier(multipliers.penetration)}
+							</td>
+							<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.rearPenetration))}>
+								{multiplier(multipliers.rearPenetration)}
+							</td>
+							<td class={cn(cell, 'font-semibold', effectivenessTone(multipliers.suppression))}>
+								{multiplier(multipliers.suppression)}
+							</td>
+						{/if}
 					</tr>
 				{/each}
 			</tbody>

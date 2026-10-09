@@ -26,6 +26,7 @@ const EFFECT_LABELS: Record<string, string> = {
 	received_suppression_squad_modifier: 'Received suppression',
 	received_penetration_modifier: 'Received penetration',
 	received_experience_squad_modifier: 'Experience gain',
+	experience: 'Veterancy experience',
 	accuracy_weapon_modifier: 'Weapon accuracy',
 	damage_weapon_modifier: 'Weapon damage',
 	cooldown_weapon_modifier: 'Weapon cooldown',

@@ -115,10 +115,16 @@
 		<!-- The doctrines side by side, with their in-game banners. -->
 		<section class="border-secondary-800 border-b">
 			{@render panelHeader(t('Doctrines'))}
-			<div class="bg-secondary-800 grid gap-px sm:grid-cols-3">
-				{#each commanders as commander (commander.slug)}
-					<DocsDoctrineRow {commander} note={t('Doctrine')} large />
-				{/each}
+			<!-- Each cell draws its own right and bottom line (no grey gap fill), so a search that
+			leaves one or two doctrines does not show empty grey cells. -->
+			<div class="-mb-px overflow-hidden">
+				<div class="-mr-px grid sm:grid-cols-3">
+					{#each commanders as commander (commander.slug)}
+						<div class="border-secondary-800 min-w-0 border-r border-b">
+							<DocsDoctrineRow {commander} note={t('Doctrine')} large />
+						</div>
+					{/each}
+				</div>
 			</div>
 		</section>
 	{/if}

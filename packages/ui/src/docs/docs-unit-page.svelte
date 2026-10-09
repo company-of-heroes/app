@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { DocRef } from '@company-of-heroes/game-data/types';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
@@ -8,10 +9,14 @@
 		interactive,
 		tableHeadText
 	} from '@company-of-heroes/ui/variants';
+	import ArrowsLeftRightIcon from 'phosphor-svelte/lib/ArrowsLeftRightIcon';
 	import EyeIcon from 'phosphor-svelte/lib/EyeIcon';
 	import GaugeIcon from 'phosphor-svelte/lib/GaugeIcon';
+	import HammerIcon from 'phosphor-svelte/lib/HammerIcon';
 	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
 	import FactoryIcon from 'phosphor-svelte/lib/FactoryIcon';
+	import LockIcon from 'phosphor-svelte/lib/LockIcon';
+	import MedalIcon from 'phosphor-svelte/lib/MedalIcon';
 	import ParachuteIcon from 'phosphor-svelte/lib/ParachuteIcon';
 	import ShieldIcon from 'phosphor-svelte/lib/ShieldIcon';
 	import UserPlusIcon from 'phosphor-svelte/lib/UserPlusIcon';
@@ -19,6 +24,7 @@
 	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
 	import { useHost } from '../host/host.context';
 	import VeterancyRanks from '../replay/veterancy-ranks.svelte';
+	import { Badge } from '../ui/badge';
 	import DocsCost from './docs-cost.svelte';
 	import DocsCoverTable from './docs-cover-table.svelte';
 	import DocsEntryList from './docs-entry-list.svelte';
@@ -63,6 +69,13 @@
 		RATING_STEPS[Math.min(Math.max(Math.ceil(value / 2), 1), RATING_STEPS.length) - 1];
 	const ratings = $derived(RATINGS.filter((rating) => unit.ratings?.[rating.key]));
 	const hasReinforce = $derived(Boolean(unit.reinforce && Object.keys(unit.reinforce).length));
+	const obtained = $derived(
+		page.producedBy.length ||
+			page.calledInBy.length ||
+			page.builtBy.length ||
+			page.emplacement ||
+			page.replaces.length
+	);
 	const link = cn(interactive, 'font-medium text-white hover:underline');
 	const panelHeader = cn(flushHeader, 'flex items-baseline justify-between gap-3');
 </script>
@@ -87,6 +100,24 @@
 	</li>
 {/snippet}
 
+<!-- Linked names with their icons (producers, builders, an emplacement, units a reward replaces). -->
+{#snippet refLinks(refs: DocRef[])}
+	{#each refs as ref (ref.slug)}
+		{@const path = docsPath(ref)}
+		{#if path}
+			<a href={host.href(path)} class={cn(link, 'inline-flex items-center gap-2')}>
+				<DocsIcon icon={ref.icon} name={ref.name} class="size-6" />
+				{ref.name}
+			</a>
+		{:else}
+			<span class="inline-flex items-center gap-2 font-medium text-white">
+				<DocsIcon icon={ref.icon} name={ref.name} class="size-6" />
+				{ref.name}
+			</span>
+		{/if}
+	{/each}
+{/snippet}
+
 <DocsHeader
 	name={unit.name}
 	icon={unit.icon}
@@ -96,7 +127,11 @@
 	extra={unit.extra}
 	cost={unit.cost}
 	pop={unit.pop}
-/>
+>
+	{#if unit.reward}
+		<Badge variant="warning" class="mt-3">{t('Medal reward')}</Badge>
+	{/if}
+</DocsHeader>
 
 <DocsLayout>
 	{#snippet main()}
@@ -118,7 +153,7 @@
 								<track.icon class="size-3.5" weight="fill" />
 								{t(track.label)}
 							</p>
-							<DocsEntryList entries={page.vetUpgrades[track.key]} />
+							<DocsEntryList entries={page.vetUpgrades[track.key]} faction={unit.faction} />
 						</div>
 					{/each}
 				</div>
@@ -133,21 +168,30 @@
 				</div>
 			</DocsSection>
 		{/if}
+		{#if page.loadedWeapons.length}
+			<DocsSection title={t('Weapons when loaded')} note={t('Mounted while infantry is inside')}>
+				<div class="divide-secondary-800 divide-y">
+					{#each page.loadedWeapons as weapon (weapon.slug)}
+						<DocsWeaponBlock {weapon} />
+					{/each}
+				</div>
+			</DocsSection>
+		{/if}
 
 		{#if page.abilities.length}
 			<DocsSection title={t('Abilities')}>
-				<DocsEntryList entries={page.abilities} />
+				<DocsEntryList entries={page.abilities} faction={unit.faction} />
 			</DocsSection>
 		{/if}
 
 		{#if page.upgrades.length}
 			<DocsSection title={t('Upgrades')}>
-				<DocsEntryList entries={page.upgrades} />
+				<DocsEntryList entries={page.upgrades} faction={unit.faction} />
 			</DocsSection>
 		{/if}
 		{#if page.research.length}
 			<DocsSection title={t('Research')}>
-				<DocsEntryList entries={page.research} />
+				<DocsEntryList entries={page.research} faction={unit.faction} />
 			</DocsSection>
 		{/if}
 	{/snippet}
@@ -168,23 +212,41 @@
 					{@render fact(t('Reinforce'), reinforce, UserPlusIcon)}
 				{/if}
 				{#if page.producedBy.length}
-					{#snippet builtAt()}
-						{#each page.producedBy as producer (producer.slug)}
-							{@const path = docsPath(producer)}
-							{#if path}
-								<a href={host.href(path)} class={cn(link, 'inline-flex items-center gap-2')}>
-									<DocsIcon icon={producer.icon} name={producer.name} class="size-6" />
-									{producer.name}
-								</a>
-							{:else}
-								<span class="inline-flex items-center gap-2 font-medium text-white">
-									<DocsIcon icon={producer.icon} name={producer.name} class="size-6" />
-									{producer.name}
-								</span>
-							{/if}
+					{#snippet builtAt()}{@render refLinks(page.producedBy)}{/snippet}
+					{@render fact(t('Built at'), builtAt, FactoryIcon)}
+				{/if}
+				{#if page.builtBy.length}
+					{#snippet builtBy()}{@render refLinks(page.builtBy)}{/snippet}
+					{@render fact(t('Built by'), builtBy, HammerIcon)}
+				{/if}
+				{#if page.emplacement}
+					{#snippet emplacement()}{@render refLinks([page.emplacement!])}{/snippet}
+					{@render fact(t('Emplacement'), emplacement, FactoryIcon)}
+				{/if}
+				{#if page.requires.length || page.requiresBuildings.length}
+					{#snippet requires()}
+						{@render refLinks(page.requires)}
+						<!-- Each group is "one of these buildings". -->
+						{#each page.requiresBuildings as group, index (index)}
+							<span class="inline-flex flex-wrap items-center justify-end gap-x-2">
+								{#each group as building, position (building.slug)}
+									{#if position > 0}
+										<span class="text-secondary-500 text-xs">{t('or')}</span>
+									{/if}
+									{@render refLinks([building])}
+								{/each}
+							</span>
 						{/each}
 					{/snippet}
-					{@render fact(t('Built at'), builtAt, FactoryIcon)}
+					{@render fact(t('Requires'), requires, LockIcon)}
+				{/if}
+				{#if page.replaces.length}
+					{#snippet replaces()}{@render refLinks(page.replaces)}{/snippet}
+					{@render fact(t('Replaces'), replaces, MedalIcon, 'text-amber-300')}
+				{/if}
+				{#if page.replacedBy.length}
+					{#snippet replacedBy()}{@render refLinks(page.replacedBy)}{/snippet}
+					{@render fact(t('Medal reward variant'), replacedBy, ArrowsLeftRightIcon)}
 				{/if}
 				{#each page.calledInBy as callIn (`${callIn.commander.slug}:${callIn.tier.slug}`)}
 					{#snippet calledIn()}
@@ -207,7 +269,7 @@
 					{/snippet}
 					{@render fact(t('Call-in'), calledIn, ParachuteIcon)}
 				{/each}
-				{#if page.calledInBy.length === 0 && page.producedBy.length === 0}
+				{#if !obtained}
 					<li class="text-secondary-400 px-4 py-2 text-sm">
 						{t(
 							'Not built at a building: a starting unit, an emplacement crew or unlocked another way.'

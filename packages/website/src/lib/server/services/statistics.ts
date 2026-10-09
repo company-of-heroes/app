@@ -236,7 +236,7 @@ export class StatisticsService extends Service {
 			return okAsync(memo.data);
 		}
 
-		return cached('statistics:data:v6', CACHE_SECONDS, () => this.buildData()).map((data) => {
+		return cached('statistics:data:v7', CACHE_SECONDS, () => this.buildData()).map((data) => {
 			memo = { at: Date.now(), data };
 			return data;
 		});
@@ -323,7 +323,7 @@ export class StatisticsService extends Service {
 		}
 
 		const live = () =>
-			cached(`statistics:period:v7:${range.period}:${map ?? ''}`, CACHE_SECONDS, () =>
+			cached(`statistics:period:v8:${range.period}:${map ?? ''}`, CACHE_SECONDS, () =>
 				summarize(periodDays(range.period))
 			);
 		if (map) {

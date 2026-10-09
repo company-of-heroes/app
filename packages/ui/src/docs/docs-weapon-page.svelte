@@ -51,6 +51,19 @@
 					<div class={accentBlock}>
 						<DocsRefRow ref={entry.upgrade} note={t('Upgrade')} compact accent />
 					</div>
+					{#if entry.units.length}
+						<DocsRefGrid refs={entry.units} class="sm:grid-cols-1 xl:grid-cols-1" />
+					{/if}
+				{/each}
+			</DocsSection>
+		{/if}
+		{#if page.firedBy.length}
+			<!-- Ability weapons (grenades, satchels, off-map strikes): the ability, then who has it. -->
+			<DocsSection title={t('Fired by ability')}>
+				{#each page.firedBy as entry (entry.ability.slug)}
+					<div class={accentBlock}>
+						<DocsRefRow ref={entry.ability} note={t('Ability')} compact accent />
+					</div>
 					<DocsRefGrid refs={entry.units} class="sm:grid-cols-1 xl:grid-cols-1" />
 				{/each}
 			</DocsSection>

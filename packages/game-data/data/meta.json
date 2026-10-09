@@ -2,11 +2,11 @@
 	"generatedAt": "2026-10-09",
 	"gameBuild": "2026-01-22",
 	"counts": {
-		"units": 105,
-		"buildings": 58,
+		"units": 100,
+		"buildings": 54,
 		"commanders": 12,
-		"upgrades": 192,
-		"abilities": 193,
-		"weapons": 178
+		"upgrades": 183,
+		"abilities": 188,
+		"weapons": 199
 	}
 }

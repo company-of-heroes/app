@@ -3,7 +3,8 @@
 		DocAbility,
 		DocRef,
 		DocUpgrade,
-		DocUpgradeEntry
+		DocUpgradeEntry,
+		Faction
 	} from '@company-of-heroes/game-data/types';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
@@ -26,9 +27,11 @@
 			| (DocUpgradeEntry & { researchedAt: DocRef[] })
 			| (DocAbility & { requiredRefs: DocRef[] })
 		)[];
+		/** The page's faction; upgrades several factions share show it in their popover. */
+		faction?: Faction;
 	};
 
-	let { entries }: Props = $props();
+	let { entries, faction }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 	const popover = useDocsPopover();
@@ -49,7 +52,7 @@
 			slug: upgrade.slug,
 			id: upgrade.id,
 			name: upgrade.name,
-			faction: upgrade.factions[0]
+			faction: faction && upgrade.factions.includes(faction) ? faction : upgrade.factions[0]
 		});
 		return popover && entry ? popover.hoverTrigger(entry) : {};
 	}
@@ -110,7 +113,7 @@ when two lists sit side by side. -->
 					</p>
 				{/if}
 				{#if 'requiredRefs' in entry && entry.requiredRefs.length}
-					<!-- Abilities that need research first (Throw Grenade → Mk2 Grenades). -->
+					<!-- Research needed first (Throw Grenade → Mk2 Grenades, Level 2 → Level 1 Production). -->
 					<p class="text-secondary-400 mt-0.5 flex flex-wrap items-center gap-x-2 text-sm">
 						{t('Requires')}
 						{#each entry.requiredRefs as upgrade (upgrade.slug)}
@@ -118,6 +121,35 @@ when two lists sit side by side. -->
 								<DocsIcon icon={upgrade.icon} name={upgrade.name} class="size-5" />
 								{upgrade.name}
 							</span>
+						{/each}
+					</p>
+				{/if}
+				{#if 'excludedRefs' in entry && entry.excludedRefs.length}
+					<!-- Upgrades that rule each other out (the bunker upgrades). -->
+					<p class="text-secondary-400 mt-0.5 flex flex-wrap items-center gap-x-2 text-sm">
+						{t('Not with')}
+						{#each entry.excludedRefs as upgrade (upgrade.slug)}
+							<span class="inline-flex items-center gap-1.5 font-medium text-white">
+								<DocsIcon icon={upgrade.icon} name={upgrade.name} class="size-5" />
+								{upgrade.name}
+							</span>
+						{/each}
+					</p>
+				{/if}
+				{#if 'appliesToRefs' in entry && entry.appliesToRefs.length}
+					<p class="text-secondary-400 mt-0.5 flex flex-wrap items-center gap-x-2 text-sm">
+						{t('Applies to')}
+						{#each entry.appliesToRefs as unit (unit.slug)}
+							<a
+								href={host.href(`/wiki/units/${unit.slug}`)}
+								class={cn(
+									interactive,
+									'inline-flex items-center gap-1.5 font-medium text-white hover:underline'
+								)}
+							>
+								<DocsIcon icon={unit.icon} name={unit.name} class="size-5" />
+								{unit.name}
+							</a>
 						{/each}
 					</p>
 				{/if}

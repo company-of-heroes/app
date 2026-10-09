@@ -13,7 +13,22 @@ export type DocCost = {
 	seconds?: number;
 };
 
-export type DocByRange = { short: number | null; medium: number | null; long: number | null };
+export type DocByRange = {
+	short: number | null;
+	medium: number | null;
+	long: number | null;
+	/** From long range up to max range; only on weapons whose distant band reaches past long. */
+	distant?: number | null;
+};
+
+/** What has to be done first: upgrades (all of them), `or` groups of upgrades, buildings (one of each group). */
+export type DocRequirements = {
+	requires?: string[];
+	requiresAny?: string[][];
+	requiresBuildings?: string[][];
+	/** Upgrades that must not be done (bunker upgrades exclude each other). */
+	excludes?: string[];
+};
 
 /** One modifier effect, e.g. `received_accuracy_modifier` ×0.8 on the squad. */
 export type DocModifier = {
@@ -71,7 +86,18 @@ export type DocUnit = {
 	producedBy?: string[];
 	/** Doctrine call-in ability, when no building produces it; `cost` is then that call-in's cost. */
 	callIn?: string;
-};
+	/** Weapons beyond the models' own, from upgrades the squad always has (Tank Busters' Panzerschrecks). */
+	weapons?: string[];
+	/** Weapons a vehicle mounts while infantry is loaded (the M3's .50 cal). */
+	loadedWeapons?: string[];
+	/** Squads that construct it (the 88mm Flak by Pioneers). */
+	builtBy?: string[];
+	/** British emplacement whose gun this crew is; `cost` is then the emplacement's. */
+	emplacement?: string;
+	/** Needs a medal reward; it then replaces the units in `replaces` (Hellcat → M10). */
+	reward?: boolean;
+	replaces?: string[];
+} & DocRequirements;
 
 export type DocBuilding = {
 	slug: string;
@@ -88,7 +114,13 @@ export type DocBuilding = {
 	research?: string[];
 	abilities?: string[];
 	weapons?: string[];
-};
+	/** British emplacements: the gun squad that spawns once built. */
+	crew?: string[];
+	/** Squads that construct it; HQs and gliders have none. */
+	builtBy?: string[];
+	/** Glider call-in ability that lands it; `cost` is then that call-in's cost. */
+	callIn?: string;
+} & DocRequirements;
 
 export type DocCommander = {
 	slug: string;
@@ -115,12 +147,13 @@ export type DocUpgrade = {
 	extra?: string;
 	icon?: string;
 	cost?: DocCost;
-	requires?: string[];
-	unlocks?: { units?: string[]; abilities?: string[]; upgrades?: string[] };
+	unlocks?: { units?: string[]; abilities?: string[]; upgrades?: string[]; buildings?: string[] };
 	effects?: DocModifier[];
-	/** Weapons of the slot items it adds (weapon packages). */
+	/** Weapons it adds: through slot items (weapon packages) or directly (the Sherman 76mm). */
 	weapons?: string[];
-};
+	/** Squads it changes (the BAR research → Riflemen, Kampfkraft veterancy → infantry). */
+	appliesTo?: string[];
+} & DocRequirements;
 
 export type DocAbility = {
 	slug: string;
@@ -135,18 +168,29 @@ export type DocAbility = {
 	recharge?: number;
 	range?: number;
 	duration?: number;
-	requires?: string[];
 	spawns?: string[];
+	/** Buildings it lands (Commando gliders). */
+	buildings?: string[];
 	weapons?: string[];
 	effects?: DocModifier[];
-};
+	/** Needs a medal reward upgrade: a skin variant of another call-in (Voss Tiger). */
+	reward?: boolean;
+} & DocRequirements;
 
 export type DocWeaponTarget = {
 	damage?: number;
 	accuracy?: number;
+	movingAccuracy?: number;
 	penetration?: number;
+	/** Penetration multiplier against the target's rear armour. */
+	rearPenetration?: number;
 	suppression?: number;
+	/** The weapon cannot fire at this target type at all. */
+	disabled?: boolean;
 };
+
+/** A time span with its per-range multipliers (only when one differs from 1). */
+export type DocTiming = { min?: number | null; max?: number | null; multipliers?: DocByRange };
 
 /** A weapon's multipliers against a target in one cover type. */
 export type DocCoverMultipliers = {
@@ -175,17 +219,21 @@ export type DocWeapon = {
 	penetration?: DocByRange;
 	suppression?: DocByRange;
 	range?: Partial<DocByRange> & { min: number | null; max: number | null };
-	cooldown?: { min: number | null; max: number | null };
-	reload?: { min: number | null; max: number | null; frequency: number | null };
-	aim?: number;
-	burst?: number;
-	rateOfFire?: number;
+	cooldown?: DocTiming;
+	/** `frequency`: shots between reloads, raw from the game files (its exact meaning is unverified). */
+	reload?: DocTiming & { frequency?: number | null; frequencyMax?: number | null };
+	/** Fire aim time; `ready`: aiming before the first shot. */
+	aim?: DocTiming & { ready?: number };
+	burst?: { min: number | null; max: number | null };
+	rateOfFire?: { min: number | null; max: number | null };
 	movingAccuracy?: number;
 	canFireMoving?: boolean;
 	setup?: number;
 	teardown?: number;
 	areaRadius?: number;
 	areaDamage?: DocByRange;
+	/** Distance from the impact where each area damage band ends. */
+	areaDistance?: DocByRange;
 	/** Multipliers against target types that differ from 1. */
 	targets?: Record<string, DocWeaponTarget>;
 	/** Multipliers against a target in each cover type (`tp_heavy`, `tp_light`, …); only types that differ from 1. */
@@ -210,6 +258,8 @@ export type DocRef = {
 	icon?: string;
 	faction?: Faction;
 	cost?: DocCost;
+	/** Units unlocked by a medal reward (Hellcat); shown with a badge. */
+	reward?: boolean;
 };
 
 /** A weapon in the weapons table: its ref with the numbers the table shows. */
@@ -225,6 +275,10 @@ export type CommanderTier = {
 	abilities: DocAbility[];
 	/** Units called in by those abilities or the upgrade itself. */
 	units: DocRef[];
+	/** Buildings it unlocks or lands (mines, emplacements, gliders). */
+	buildings: DocRef[];
+	/** Weapons the tier itself adds (APCR rounds, the Rangers' bazookas). */
+	weapons: DocRef[];
 };
 
 export type UnitCallIn = { commander: DocRef; tier: DocRef; ability?: DocRef };
@@ -235,6 +289,11 @@ export type DocUpgradeEntry = DocUpgrade & {
 	weapon?: string;
 	/** Every weapon it adds, also through the abilities it unlocks. */
 	weaponRefs: DocRef[];
+	/** Upgrades to do first (Level 2 Production → Level 1), and ones it cannot be combined with. */
+	requiredRefs: DocRef[];
+	excludedRefs: DocRef[];
+	/** Units it changes (the BAR research → Riflemen). */
+	appliesToRefs: DocRef[];
 };
 
 export type UnitPage = {
@@ -247,8 +306,18 @@ export type UnitPage = {
 	research: (DocUpgradeEntry & { researchedAt: DocRef[] })[];
 	/** Panzer Elite veterancy, bought per rank on one of two tracks, in rank order. */
 	vetUpgrades: { offensive: DocUpgradeEntry[]; defensive: DocUpgradeEntry[] };
+	/** Weapons mounted while loaded. */
+	loadedWeapons: DocWeapon[];
 	producedBy: DocRef[];
 	calledInBy: UnitCallIn[];
+	builtBy: DocRef[];
+	emplacement?: DocRef;
+	/** Upgrades that must be done first, and buildings (one of each group). */
+	requires: DocRef[];
+	requiresBuildings: DocRef[][];
+	/** Medal reward swaps: the units it replaces, or the reward units that replace it. */
+	replaces: DocRef[];
+	replacedBy: DocRef[];
 };
 
 export type BuildingPage = {
@@ -257,10 +326,18 @@ export type BuildingPage = {
 	research: DocUpgradeEntry[];
 	abilities: DocAbility[];
 	weapons: DocWeapon[];
+	builtBy: DocRef[];
+	crew: DocRef[];
+	requires: DocRef[];
+	requiresBuildings: DocRef[][];
+	/** Doctrine tiers that unlock it, or the glider call-in that lands it. */
+	unlockedBy: UnitCallIn[];
 };
 
 export type CommanderPage = {
 	commander: DocCommander;
+	/** Abilities picking the doctrine gives at once (Panzer Elite vehicle abilities). */
+	onPick: DocAbility[];
 	branches: CommanderTier[][];
 };
 
@@ -269,6 +346,8 @@ export type WeaponPage = {
 	usedBy: DocRef[];
 	/** Upgrades that add this weapon, with the units (or the building) that get it. */
 	upgradeFor: { upgrade: DocRef; units: DocRef[] }[];
+	/** Abilities that fire it, with the units and buildings that have the ability. */
+	firedBy: { ability: DocRef; units: DocRef[] }[];
 };
 
 export type FactionOverview = {

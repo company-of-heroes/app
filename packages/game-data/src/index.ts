@@ -7,6 +7,7 @@ import type {
 	DocCommander,
 	DocMeta,
 	DocRef,
+	DocRequirements,
 	DocWeaponRow,
 	DocsOverview,
 	DocUnit,
@@ -32,9 +33,10 @@ function defined<T>(value: T | undefined): value is T {
 	return value !== undefined;
 }
 
-/** Lookups and reverse links over the generated documentation data. */
-/** Joke units in the game files (the Eselschreck at every HQ); not real units, so not documented. */
-const isJokeUnit = (slug: string) => slug.endsWith('-eselschreck-squad');
+/** First item of each name (variants share one: two Supply Yards, two "Set Up" abilities). */
+function firstOfName<T extends { name: string }>(item: T, index: number, all: T[]): boolean {
+	return all.findIndex((other) => other.name === item.name) === index;
+}
 
 /**
  * Items the game never shows in a build menu have no icon of their own (doctrine gliders, the
@@ -52,17 +54,17 @@ const ICON_FALLBACKS: Record<string, string> = {
 const withIcon = <T extends { icon?: string }>(item: T): T =>
 	item.icon && ICON_FALLBACKS[item.icon] ? { ...item, icon: ICON_FALLBACKS[item.icon] } : item;
 
-/** Blueprints in the game files that no player can build: Panzer Elite has no bunker. */
-const UNBUILDABLE_BUILDINGS = new Set(['pe-axis-bunker']);
-
 /** Panzer Elite veterancy bought per rank (`vet-infantry-offensive-2`): its track and rank. */
 function vetTrack(slug: string): { track: 'offensive' | 'defensive'; rank: number } | null {
 	const match = /^vet-.*-(offensive|defensive)-(\d+)$/.exec(slug);
 	return match ? { track: match[1] as 'offensive' | 'defensive', rank: Number(match[2]) } : null;
 }
 
+/** Lookups and reverse links over the generated documentation data. */
 export class GameDocs {
 	readonly units: Map<string, DocUnit>;
+	/** Units in lists; leaves out medal-reward skins of a call-in (Voss Tiger), which keep their page for replays. */
+	readonly listedUnits: DocUnit[];
 	readonly buildings: Map<string, DocBuilding>;
 	readonly commanders: Map<string, DocCommander>;
 	readonly upgrades: Map<string, DocUpgrade>;
@@ -82,27 +84,37 @@ export class GameDocs {
 		}
 	) {
 		this.meta = meta;
-		this.units = bySlug(data.units.filter((unit) => !isJokeUnit(unit.slug)).map(withIcon));
-		this.buildings = bySlug(
-			data.buildings.filter((building) => !UNBUILDABLE_BUILDINGS.has(building.slug)).map(withIcon)
-		);
+		this.units = bySlug(data.units.map(withIcon));
+		this.buildings = bySlug(data.buildings.map(withIcon));
 		this.commanders = bySlug(data.commanders);
 		this.upgrades = bySlug(data.upgrades);
 		this.abilities = bySlug(data.abilities);
+		this.listedUnits = [...this.units.values()].filter(
+			(unit) => !(unit.callIn && this.abilities.get(unit.callIn)?.reward)
+		);
 		// Weapons have no icon of their own in the game files: use the upgrade that adds the weapon,
 		// else the first unit or building that carries it.
 		const carrierIcon = (slug: string) =>
 			[...this.upgrades.values()].find((upgrade) => this.addedWeapons(upgrade).includes(slug))
 				?.icon ??
-			[...this.units.values()].find((unit) =>
-				unit.models?.some((model) => model.weapons?.includes(slug))
-			)?.icon ??
+			[...this.units.values()].find((unit) => this.unitWeapons(unit).includes(slug))?.icon ??
 			[...this.buildings.values()].find((building) => building.weapons?.includes(slug))?.icon;
 		this.weapons = bySlug(
 			data.weapons.map((weapon) =>
 				weapon.icon ? weapon : { ...weapon, icon: carrierIcon(weapon.slug) }
 			)
 		);
+	}
+
+	/** Every weapon a unit carries: its models', built-in upgrades' and those mounted while loaded. */
+	unitWeapons(unit: DocUnit): string[] {
+		return [
+			...new Set([
+				...(unit.models ?? []).flatMap((model) => model.weapons ?? []),
+				...(unit.weapons ?? []),
+				...(unit.loadedWeapons ?? [])
+			])
+		];
 	}
 
 	unitRef(slug: string): DocRef | undefined {
@@ -115,7 +127,8 @@ export class GameDocs {
 				name: unit.name,
 				icon: unit.icon,
 				faction: unit.faction,
-				cost: unit.cost
+				cost: unit.cost,
+				reward: unit.reward
 			}
 		);
 	}
@@ -169,16 +182,38 @@ export class GameDocs {
 		};
 	}
 
-	upgradeRef(upgrade: DocUpgrade): DocRef {
+	/** `faction`: the page's faction, for upgrades several factions share (the Wehrmacht phases). */
+	upgradeRef(upgrade: DocUpgrade, faction?: Faction): DocRef {
 		return {
 			kind: 'upgrade',
 			slug: upgrade.slug,
 			id: upgrade.id,
-			faction: upgrade.factions[0],
+			faction: faction && upgrade.factions.includes(faction) ? faction : upgrade.factions[0],
 			weapon: this.mainWeapon(upgrade),
 			name: upgrade.name,
 			icon: upgrade.icon,
 			cost: upgrade.cost
+		};
+	}
+
+	/** Upgrades and buildings an item needs first, as refs. */
+	requirementRefs(
+		item: DocRequirements,
+		faction?: Faction
+	): { requires: DocRef[]; requiresBuildings: DocRef[][] } {
+		return {
+			requires: (item.requires ?? [])
+				.map((slug) => this.upgrades.get(slug))
+				.filter(defined)
+				.map((upgrade) => this.upgradeRef(upgrade, faction)),
+			requiresBuildings: (item.requiresBuildings ?? [])
+				.map((group) =>
+					group
+						.map((slug) => this.producerRef(slug))
+						.filter(defined)
+						.filter(firstOfName)
+				)
+				.filter((group) => group.length)
 		};
 	}
 
@@ -212,15 +247,51 @@ export class GameDocs {
 		return only?.weapons?.length === 1 ? only.weapons[0] : undefined;
 	}
 
-	/** An upgrade for a page list, with links to the weapons it adds. */
-	upgradeEntry(upgrade: DocUpgrade): DocUpgradeEntry {
+	/** An upgrade for a page list, with links to the weapons it adds and what it needs or changes. */
+	upgradeEntry(upgrade: DocUpgrade, faction?: Faction): DocUpgradeEntry {
+		const upgradeRefs = (slugs: string[] = []) =>
+			slugs
+				.map((slug) => this.upgrades.get(slug))
+				.filter(defined)
+				.map((item) => this.upgradeRef(item, faction));
 		return {
 			...upgrade,
 			weapon: this.mainWeapon(upgrade),
 			weaponRefs: this.addedWeapons(upgrade)
 				.map((slug) => this.weaponRef(slug))
+				.filter(defined),
+			requiredRefs: upgradeRefs(upgrade.requires),
+			excludedRefs: upgradeRefs(upgrade.excludes),
+			appliesToRefs: (upgrade.appliesTo ?? [])
+				.filter((slug) => this.listedUnits.some((unit) => unit.slug === slug))
+				.map((slug) => this.unitRef(slug))
 				.filter(defined)
 		};
+	}
+
+	/** Research in the order it can be bought: an upgrade after the ones it needs (phase 2, 3, 4). */
+	researchOrder(slugs: string[]): DocUpgrade[] {
+		const upgrades = slugs.map((slug) => this.upgrades.get(slug)).filter(defined);
+		const inList = new Set(upgrades.map((upgrade) => upgrade.slug));
+		const depth = new Map<string, number>();
+		const depthOf = (upgrade: DocUpgrade, seen = new Set<string>()): number => {
+			const known = depth.get(upgrade.slug);
+			if (known !== undefined) {
+				return known;
+			}
+
+			seen.add(upgrade.slug);
+			const before = (upgrade.requires ?? [])
+				.filter((slug) => inList.has(slug) && !seen.has(slug))
+				.map((slug) => depthOf(this.upgrades.get(slug)!, seen));
+			const value = before.length ? Math.max(...before) + 1 : 0;
+			depth.set(upgrade.slug, value);
+			return value;
+		};
+		return upgrades
+			.map((upgrade, index) => ({ upgrade, index, depth: depthOf(upgrade) }))
+			.sort((a, b) => a.depth - b.depth || a.index - b.index)
+			.map((entry) => entry.upgrade);
 	}
 
 	/** Commander and branch position of a tier upgrade. */
@@ -245,23 +316,55 @@ export class GameDocs {
 			return undefined;
 		}
 
-		const abilities = [
-			...(upgrade.unlocks?.abilities ?? []).map((slug) => this.abilities.get(slug)).filter(defined),
-			...[...this.abilities.values()].filter((ability) => ability.requires?.includes(upgradeSlug))
-		].filter((ability, index, all) => all.indexOf(ability) === index);
+		// A medal-reward skin of a call-in (the Voss Tiger) is the same tier ability twice.
+		const abilities = (upgrade.unlocks?.abilities ?? [])
+			.map((slug) => this.abilities.get(slug))
+			.filter(defined)
+			.filter((ability) => !ability.reward);
 		const unitSlugs = new Set([
 			...(upgrade.unlocks?.units ?? []),
 			...abilities.flatMap((ability) => ability.spawns ?? [])
 		]);
+		const buildingSlugs = new Set([
+			...(upgrade.unlocks?.buildings ?? []),
+			...abilities.flatMap((ability) => ability.buildings ?? [])
+		]);
 		return {
 			upgrade,
 			abilities,
-			units: [...unitSlugs].map((slug) => this.unitRef(slug)).filter(defined)
+			units: [...unitSlugs].map((slug) => this.unitRef(slug)).filter(defined),
+			buildings: [...buildingSlugs]
+				.map((slug) => this.buildingRef(slug))
+				.filter(defined)
+				.filter(firstOfName),
+			weapons: (upgrade.weapons ?? []).map((slug) => this.weaponRef(slug)).filter(defined)
 		};
 	}
 
+	/** Doctrine tiers that unlock an item: `match` returns the call-in ability (or the tier) or false. */
+	private unlockedBy(match: (tier: CommanderTier) => DocRef | false): UnitCallIn[] {
+		const out: UnitCallIn[] = [];
+		for (const commander of this.commanders.values()) {
+			for (const tierSlug of (commander.branches ?? []).flat()) {
+				const tier = this.commanderTier(tierSlug);
+				const found = tier ? match(tier) : false;
+				if (!tier || !found) {
+					continue;
+				}
+
+				out.push({
+					commander: this.commanderRef(commander.slug)!,
+					tier: this.upgradeRef(tier.upgrade, commander.faction),
+					ability: found.kind === 'ability' ? found : undefined
+				});
+			}
+		}
+
+		return out;
+	}
+
 	overview(): DocsOverview {
-		const units = [...this.units.values()];
+		const units = this.listedUnits;
 		const buildings = [...this.buildings.values()];
 		const commanders = [...this.commanders.values()];
 		return {
@@ -276,9 +379,10 @@ export class GameDocs {
 				const trucks = ownUnits.filter((unit) =>
 					ownUnits.some((other) => other.producedBy?.includes(unit.slug))
 				);
+				// Buildings that produce units or research something (the Supply Yard, Kampfkraft Centre).
 				const producers = [
 					...own
-						.filter((building) => building.produces?.length)
+						.filter((building) => building.produces?.length || building.research?.length)
 						.map((building) => ({
 							ref: this.buildingRef(building.slug)!,
 							produces: building.produces ?? [],
@@ -308,17 +412,20 @@ export class GameDocs {
 							...producer.ref,
 							tier: order.find((entry) => entry.slug === producer.ref.slug)?.tier,
 							produces: producer.produces.map((slug) => this.unitRef(slug)).filter(defined),
-							research: producer.research
-								.map((slug) => this.upgrades.get(slug))
-								.filter(defined)
-								.map((upgrade) => this.upgradeRef(upgrade))
+							research: this.researchOrder(producer.research).map((upgrade) =>
+								this.upgradeRef(upgrade, faction)
+							)
 						})),
 					structures: own
-						.filter((building) => !building.produces?.length)
+						.filter((building) => !producerSlugs.has(building.slug))
 						.filter(firstByName)
 						.map((building) => this.buildingRef(building.slug)!),
+					// Emplacement crews are their emplacement (listed under structures).
 					otherUnits: ownUnits
-						.filter((unit) => !produced.has(unit.slug) && !producerSlugs.has(unit.slug))
+						.filter(
+							(unit) =>
+								!produced.has(unit.slug) && !producerSlugs.has(unit.slug) && !unit.emplacement
+						)
 						.map((unit) => this.unitRef(unit.slug)!),
 					commanders: commanders
 						.filter((commander) => commander.faction === faction)
@@ -334,46 +441,38 @@ export class GameDocs {
 			return undefined;
 		}
 
-		const weaponSlugs = new Set((unit.models ?? []).flatMap((model) => model.weapons ?? []));
-		const calledInBy: UnitCallIn[] = [];
-		for (const commander of this.commanders.values()) {
-			for (const tierSlug of (commander.branches ?? []).flat()) {
-				const tier = this.commanderTier(tierSlug);
-				if (!tier?.units.some((ref) => ref.slug === slug)) {
-					continue;
-				}
-
-				const ability = tier.abilities.find((item) => item.spawns?.includes(slug));
-				calledInBy.push({
-					commander: this.commanderRef(commander.slug)!,
-					tier: this.upgradeRef(tier.upgrade),
-					ability: ability && this.abilityRef(ability)
-				});
+		const weaponSlugs = [
+			...(unit.models ?? []).flatMap((model) => model.weapons ?? []),
+			...(unit.weapons ?? [])
+		];
+		const calledInBy = this.unlockedBy((tier) => {
+			if (!tier.units.some((ref) => ref.slug === slug)) {
+				return false;
 			}
-		}
 
+			const ability = tier.abilities.find((item) => item.spawns?.includes(slug));
+			return ability ? this.abilityRef(ability) : this.upgradeRef(tier.upgrade);
+		});
 		const upgrades = (unit.upgrades ?? [])
 			.map((item) => this.upgrades.get(item))
 			.filter(defined)
-			.map((upgrade) => this.upgradeEntry(upgrade));
-		// Building research that applies to this unit: it names the unit, or unlocks one of its abilities.
+			.map((upgrade) => this.upgradeEntry(upgrade, unit.faction));
+		// Building research that changes this unit (the BAR research → riflemen), or unlocks one of its abilities.
 		const research = [...this.upgrades.values()]
 			.filter(
 				(upgrade) =>
-					upgrade.unlocks?.units?.includes(slug) ||
-					upgrade.unlocks?.abilities?.some((ability) => unit.abilities?.includes(ability))
+					!unit.upgrades?.includes(upgrade.slug) &&
+					(upgrade.appliesTo?.includes(slug) ||
+						upgrade.unlocks?.abilities?.some((ability) => unit.abilities?.includes(ability)))
 			)
 			.map((upgrade) => ({
-				...this.upgradeEntry(upgrade),
+				...this.upgradeEntry(upgrade, unit.faction),
 				researchedAt: [...this.buildings.values()]
 					.filter((building) => building.research?.includes(upgrade.slug))
 					.map((building) => this.buildingRef(building.slug))
 					.filter(defined)
 					// Building variants share a name (two Supply Yards); list each name once.
-					.filter(
-						(building, index, all) =>
-							all.findIndex((other) => other.name === building.name) === index
-					)
+					.filter(firstOfName)
 			}))
 			.filter((upgrade) => upgrade.researchedAt.length);
 		const vetUpgrades = (track: 'offensive' | 'defensive') =>
@@ -383,17 +482,29 @@ export class GameDocs {
 
 		return {
 			unit,
-			weapons: [...weaponSlugs].map((item) => this.weapons.get(item)).filter(defined),
-			// Abilities with the research they need (Throw Grenade → Mk2 Grenades).
+			weapons: [...new Set(weaponSlugs)].map((item) => this.weapons.get(item)).filter(defined),
+			loadedWeapons: (unit.loadedWeapons ?? [])
+				.map((item) => this.weapons.get(item))
+				.filter(defined),
+			// Abilities with the research they need (Throw Grenade → Mk2 Grenades); variants with the
+			// same name and requirements (the trucks' Set Up) once, an improved version stays.
 			abilities: (unit.abilities ?? [])
 				.map((item) => this.abilities.get(item))
 				.filter(defined)
+				.filter(
+					(ability, index, all) =>
+						all.findIndex(
+							(other) =>
+								other.name === ability.name &&
+								(other.requires ?? []).join() === (ability.requires ?? []).join()
+						) === index
+				)
 				.map((ability) => ({
 					...ability,
 					requiredRefs: (ability.requires ?? [])
 						.map((slug) => this.upgrades.get(slug))
 						.filter(defined)
-						.map((upgrade) => this.upgradeRef(upgrade))
+						.map((upgrade) => this.upgradeRef(upgrade, unit.faction))
 				})),
 			upgrades: upgrades.filter((upgrade) => !vetTrack(upgrade.slug)),
 			research,
@@ -402,7 +513,19 @@ export class GameDocs {
 				defensive: vetUpgrades('defensive')
 			},
 			producedBy: (unit.producedBy ?? []).map((item) => this.producerRef(item)).filter(defined),
-			calledInBy
+			calledInBy,
+			builtBy: (unit.builtBy ?? [])
+				.map((item) => this.unitRef(item))
+				.filter(defined)
+				.filter(firstOfName),
+			emplacement: unit.emplacement ? this.buildingRef(unit.emplacement) : undefined,
+			...this.requirementRefs(unit, unit.faction),
+			replaces: (unit.replaces ?? []).map((item) => this.unitRef(item)).filter(defined),
+			// Also the call-in skins left out of lists (the Tiger's Voss variant has its own page).
+			replacedBy: [...this.units.values()]
+				.filter((other) => other.replaces?.includes(slug))
+				.map((other) => this.unitRef(other.slug))
+				.filter(defined)
 		};
 	}
 
@@ -412,15 +535,32 @@ export class GameDocs {
 			return undefined;
 		}
 
+		const callIn = building.callIn ? this.abilities.get(building.callIn) : undefined;
 		return {
 			building,
 			produces: (building.produces ?? []).map((item) => this.unitRef(item)).filter(defined),
-			research: (building.research ?? [])
-				.map((item) => this.upgrades.get(item))
+			research: this.researchOrder(building.research ?? []).map((upgrade) =>
+				this.upgradeEntry(upgrade, building.faction)
+			),
+			abilities: (building.abilities ?? [])
+				.map((item) => this.abilities.get(item))
 				.filter(defined)
-				.map((upgrade) => this.upgradeEntry(upgrade)),
-			abilities: (building.abilities ?? []).map((item) => this.abilities.get(item)).filter(defined),
-			weapons: (building.weapons ?? []).map((item) => this.weapons.get(item)).filter(defined)
+				.filter(firstOfName),
+			weapons: (building.weapons ?? []).map((item) => this.weapons.get(item)).filter(defined),
+			builtBy: (building.builtBy ?? [])
+				.map((item) => this.unitRef(item))
+				.filter(defined)
+				.filter(firstOfName),
+			crew: (building.crew ?? []).map((item) => this.unitRef(item)).filter(defined),
+			...this.requirementRefs(building, building.faction),
+			unlockedBy: this.unlockedBy((tier) => {
+				if (!tier.buildings.some((ref) => ref.slug === slug)) {
+					return false;
+				}
+
+				const ability = callIn && tier.abilities.find((item) => item.slug === callIn.slug);
+				return ability ? this.abilityRef(ability) : this.upgradeRef(tier.upgrade);
+			})
 		};
 	}
 
@@ -430,12 +570,47 @@ export class GameDocs {
 			return undefined;
 		}
 
+		const branches = (commander.branches ?? []).map((tiers) =>
+			tiers.map((tier) => this.commanderTier(tier)).filter(defined)
+		);
+		const inTiers = new Set(branches.flat().flatMap((tier) => tier.abilities.map((a) => a.slug)));
+		const tierSlugs = new Set((commander.branches ?? []).flat());
 		return {
 			commander,
-			branches: (commander.branches ?? []).map((tiers) =>
-				tiers.map((tier) => this.commanderTier(tier)).filter(defined)
-			)
+			// Abilities that need only the doctrine pick (and no tier).
+			onPick: commander.unlock
+				? [...this.abilities.values()]
+						.filter(
+							(ability) =>
+								ability.requires?.includes(commander.unlock!) &&
+								!ability.requires.some((required) => tierSlugs.has(required)) &&
+								!inTiers.has(ability.slug) &&
+								!ability.reward
+						)
+						.filter(firstOfName)
+				: [],
+			branches
 		};
+	}
+
+	/** Units and buildings that have an ability, plus doctrine tiers that unlock it. */
+	private abilityHolders(abilitySlug: string): DocRef[] {
+		return [
+			...this.listedUnits
+				.filter((unit) => unit.abilities?.includes(abilitySlug))
+				.map((unit) => this.unitRef(unit.slug)),
+			...[...this.buildings.values()]
+				.filter((building) => building.abilities?.includes(abilitySlug))
+				.map((building) => this.buildingRef(building.slug)),
+			...[...this.commanders.values()].flatMap((commander) =>
+				(commander.branches ?? [])
+					.flat()
+					.filter((tier) => this.upgrades.get(tier)?.unlocks?.abilities?.includes(abilitySlug))
+					.map(() => this.commanderRef(commander.slug))
+			)
+		]
+			.filter(defined)
+			.filter((ref, index, all) => all.findIndex((other) => other.slug === ref.slug) === index);
 	}
 
 	weaponPage(slug: string): WeaponPage | undefined {
@@ -445,50 +620,77 @@ export class GameDocs {
 		}
 
 		const usedBy = [
-			...[...this.units.values()]
-				.filter((unit) => unit.models?.some((model) => model.weapons?.includes(slug)))
+			...this.listedUnits
+				.filter((unit) => this.unitWeapons(unit).includes(slug))
 				.map((unit) => this.unitRef(unit.slug)),
 			...[...this.buildings.values()]
 				.filter((building) => building.weapons?.includes(slug))
 				.map((building) => this.buildingRef(building.slug))
 		].filter(defined);
-		// Upgrade weapons: which units can buy the upgrade, or which building researches it.
+		// Upgrade weapons: which units can buy the upgrade or get it from research, or which building
+		// researches it. Upgrades nothing carries yet (a doctrine tier) are listed on their own.
 		const upgradeFor = [...this.upgrades.values()]
 			.filter((upgrade) => this.addedWeapons(upgrade).includes(slug))
-			.map((upgrade) => ({
-				upgrade: this.upgradeRef(upgrade),
-				units: [
-					...[...this.units.values()]
-						// The unit buys it, or building research names the unit (the BAR research → riflemen).
+			.map((upgrade) => {
+				const units = [
+					...this.listedUnits
 						.filter(
 							(unit) =>
-								unit.upgrades?.includes(upgrade.slug) || upgrade.unlocks?.units?.includes(unit.slug)
+								unit.upgrades?.includes(upgrade.slug) ||
+								upgrade.appliesTo?.includes(unit.slug) ||
+								upgrade.unlocks?.units?.includes(unit.slug)
 						)
 						.map((unit) => this.unitRef(unit.slug)),
 					...[...this.buildings.values()]
 						.filter((building) => building.research?.includes(upgrade.slug))
 						.map((building) => this.buildingRef(building.slug))
-				].filter(defined)
+				].filter(defined);
+				return { upgrade: this.upgradeRef(upgrade, units[0]?.faction), units };
+			});
+		const firedBy = [...this.abilities.values()]
+			.filter((ability) => ability.weapons?.includes(slug) && !ability.reward)
+			.map((ability) => ({
+				ability: this.abilityRef(ability),
+				units: this.abilityHolders(ability.slug)
 			}))
-			.filter((entry) => entry.units.length);
-		return { weapon, usedBy, upgradeFor };
+			.filter((entry) => entry.units.length)
+			.filter(
+				(entry, index, all) =>
+					all.findIndex((other) => other.ability.name === entry.ability.name) === index
+			);
+		return { weapon, usedBy, upgradeFor, firedBy };
 	}
 
-	/** Weapons that a listed unit or building carries, or an upgrade adds, sorted by name. */
+	/** Weapons that a listed unit or building carries, an upgrade adds or an ability fires, sorted by name. */
 	weaponList(): DocWeaponRow[] {
+		const abilityWeapons = (slugs: string[] = []) =>
+			slugs.flatMap((slug) => this.abilities.get(slug)?.weapons ?? []);
 		const carriers = [
-			...[...this.units.values()].map((unit) => [
-				...(unit.models ?? []).flatMap((model) => model.weapons ?? []),
+			...this.listedUnits.map((unit) => [
+				...this.unitWeapons(unit),
+				...abilityWeapons(unit.abilities),
 				// Weapons the unit can get from its own upgrades or from building research count too.
 				...(unit.upgrades ?? []).flatMap((slug) => {
 					const upgrade = this.upgrades.get(slug);
 					return upgrade ? this.addedWeapons(upgrade) : [];
 				}),
 				...[...this.upgrades.values()]
-					.filter((upgrade) => upgrade.unlocks?.units?.includes(unit.slug))
+					.filter(
+						(upgrade) =>
+							upgrade.unlocks?.units?.includes(unit.slug) || upgrade.appliesTo?.includes(unit.slug)
+					)
 					.flatMap((upgrade) => this.addedWeapons(upgrade))
 			]),
-			...[...this.buildings.values()].map((building) => building.weapons ?? [])
+			...[...this.buildings.values()].map((building) => [
+				...(building.weapons ?? []),
+				...abilityWeapons(building.abilities)
+			]),
+			// Doctrine abilities (off-map strikes) count once per commander.
+			...[...this.commanders.values()].map((commander) =>
+				(commander.branches ?? [])
+					.flat()
+					.flatMap((tier) => abilityWeapons(this.upgrades.get(tier)?.unlocks?.abilities))
+			)
 		];
 		const usedBy = new Map<string, number>();
 		for (const weapons of carriers) {
@@ -521,7 +723,7 @@ export class GameDocs {
 	/** Every page path, for the sitemap. */
 	paths(): string[] {
 		return [
-			...[...this.units.keys()].map((slug) => `/wiki/units/${slug}`),
+			...this.listedUnits.map((unit) => `/wiki/units/${unit.slug}`),
 			...[...this.buildings.keys()].map((slug) => `/wiki/buildings/${slug}`),
 			...[...this.commanders.keys()].map((slug) => `/wiki/commanders/${slug}`),
 			...this.weaponList().map((ref) => `/wiki/weapons/${ref.slug}`)
@@ -544,12 +746,12 @@ export function loadGameDocs(): Promise<GameDocs> {
 	]).then(
 		([meta, units, buildings, commanders, upgrades, abilities, weapons]) =>
 			new GameDocs(meta.default as DocMeta, {
-				// Generated JSON; the inferred types of units and weapons are too varied for a direct cast.
+				// Generated JSON; the inferred types are too varied for a direct cast.
 				units: units.default as unknown as DocUnit[],
-				buildings: buildings.default as DocBuilding[],
+				buildings: buildings.default as unknown as DocBuilding[],
 				commanders: commanders.default as DocCommander[],
-				upgrades: upgrades.default as DocUpgrade[],
-				abilities: abilities.default as DocAbility[],
+				upgrades: upgrades.default as unknown as DocUpgrade[],
+				abilities: abilities.default as unknown as DocAbility[],
 				weapons: weapons.default as unknown as DocWeapon[]
 			})
 	);
