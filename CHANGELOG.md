@@ -1,3 +1,17 @@
+### v0.72.0
+
+- fix; wiki shows the guns of HMG and mortar teams, Tank Busters, Assault Grenadiers, the Crocodile, Calliope, Hetzer and halftracks, and links research weapons (BAR, 76mm, APCR, Ranger bazookas) to their units
+- enhance; wiki weapon target table shows ×1 instead of a dash where a weapon has no modifier against an armour type
+- fix; wiki reinforce costs of team weapons, emplacement and glider prices, Panzer Elite tech tiers, duplicate doctrine abilities and weapon names are corrected
+- fix; wiki no longer lists what multiplayer never offers: the Eselschreck, Canadian Infantry, British Supply Yard and tank traps, the Panzer Elite bunker, singleplayer abilities and another faction's doctrine abilities
+- feat; wiki shows who builds what, building and research prerequisites, the emplacements, mines and gliders doctrines unlock, abilities a doctrine pick grants, and medal reward units with a badge
+- fix; wiki no longer lists the Wehrmacht Light Field Howitzer, which is not available in multiplayer
+- fix; text-to-speech no longer shows ElevenLabs API key errors or turns itself off while StreamElements is the selected provider
+- enhance; wiki weapon stats show the distant band, aim, burst and reload ranges, per-range timing multipliers, rear penetration, targets a weapon cannot hit and area damage by distance from the impact
+- fix; wiki upgrade popovers show the faction of the page instead of US Forces for upgrades several factions share (Wehrmacht phases)
+- fix; wiki no longer lists the Tiger twice under Wehrmacht call-ins and the Blitzkrieg doctrine (the Voss Tiger medal reward is the same tank)
+- fix; wiki and stats popovers no longer count the gun as a squad member of team weapons (Pak 38, 57mm, 17 Pounder, 88mm Flak, Bofors, howitzers, Nebelwerfer now show 3 crew)
+
 ### v0.71.0
 
 - feat; tournaments with a banner, logo and map pool (including custom maps), single elimination, double elimination and round robin brackets, sign-up, seeding by ELO, plus a champion medal (picked by staff) on the winner's player profile, a replays tab with every game once the tournament is finished, and tournament games: deadlines per round with warnings, "Start tournament game" on the app dashboard, games hidden until the tournament ends, automatic results with a celebration popup, a popup when a tournament you play in starts, an Updates tab with staff posts and automatic updates (rule changes, disqualifications, deadlines, start, finish, cancel) that notify every participant in the app and on Windows, personal notices (signed up, starts soon, next match ready, staff result, knocked out, final place), a step-by-step guide for participants, opponent Steam links, "Report a problem" for matches, problem reports that staff resolve or dismiss with a note for the player, rules acceptance at sign-up and after rule changes, registration that closes automatically, proposing and accepting match times with a reminder, a stream link, featured match and LIVE markers, statistics and a hall of fame for finished tournaments, a notification bell on the website, community tournament hosts (players request the host role, staff approve it, hosts create and run their own tournaments), overdue notices for staff, and running or open tournaments on the website home page and app dashboard
