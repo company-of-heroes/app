@@ -1,15 +1,12 @@
-import { handle, parseBody, requireStaff } from '$lib/server/http';
+import { handle, parseBody } from '$lib/server/http';
+import { requireManager } from '$lib/server/tournament-access';
 import { matchTimeBody } from '$lib/server/tournament-params';
 
-/** Staff set or clear the agreed time of a match. */
+/** Staff or the host set or clear the agreed time of a match. */
 export const PUT = handle((event) =>
-	requireStaff(event).asyncAndThen(() =>
+	requireManager(event).andThen(({ id }) =>
 		parseBody(matchTimeBody, event.request).andThen(({ scheduledAt }) =>
-			event.locals.services.tournaments
-				.idOf(event.params.id!, true)
-				.andThen((id) =>
-					event.locals.services.tournamentSchedule.setTime(id, event.params.matchId!, scheduledAt)
-				)
+			event.locals.services.tournamentSchedule.setTime(id, event.params.matchId!, scheduledAt)
 		)
 	)
 );

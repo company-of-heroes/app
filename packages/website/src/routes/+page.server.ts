@@ -60,8 +60,8 @@ export const load: PageServerLoad = ({ locals }) => {
 		streams: locals.services.twitch.listStreams().unwrapOr([]),
 		// Public lists only (no staff drafts), so the home page looks the same for everyone.
 		tournaments: ResultAsync.combine([
-			locals.services.tournaments.list('active', false),
-			locals.services.tournaments.list('upcoming', false)
+			locals.services.tournaments.list('active', null),
+			locals.services.tournaments.list('upcoming', null)
 		]).match(
 			([active, upcoming]) => ({ active, upcoming }),
 			() => ({ active: [], upcoming: [] })

@@ -2,7 +2,7 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { err, ok, ResultAsync, type Result } from 'neverthrow';
 import type { z } from 'zod';
-import { isStaffUser, type AuthUserPublic } from '$lib/auth/user';
+import { canHostTournaments, isStaffUser, type AuthUserPublic } from '$lib/auth/user';
 import { badRequest, forbidden, unauthorized, type AppError } from './errors';
 import type { Task } from './result';
 import { parse } from './validate';
@@ -69,6 +69,15 @@ export function requireUser(event: RequestEvent): Result<AuthUserPublic, AppErro
 export function requireStaff(event: RequestEvent): Result<AuthUserPublic, AppError> {
 	return requireUser(event).andThen((user) =>
 		isStaffUser(user) ? ok(user) : err(forbidden('Only staff can do that.'))
+	);
+}
+
+/** Staff and community hosts: may create tournaments (a host runs only their own). */
+export function requireHost(event: RequestEvent): Result<AuthUserPublic, AppError> {
+	return requireUser(event).andThen((user) =>
+		canHostTournaments(user)
+			? ok(user)
+			: err(forbidden('Only staff and tournament hosts can do that.'))
 	);
 }
 

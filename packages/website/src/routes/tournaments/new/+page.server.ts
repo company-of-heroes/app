@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { isStaffUser, loginRedirectHref } from '$lib/auth/user';
+import { canHostTournaments, loginRedirectHref } from '$lib/auth/user';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;
@@ -9,8 +9,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		redirect(303, loginRedirectHref(url.pathname, locals.locale));
 	}
 
-	if (!isStaffUser(locals.user)) {
-		error(403, locals.t('Only staff can do that.'));
+	if (!canHostTournaments(locals.user)) {
+		error(403, locals.t('Only staff and tournament hosts can do that.'));
 	}
 
 	return {};

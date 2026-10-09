@@ -50,7 +50,7 @@
 	let editing = $state<TournamentPost | null>(null);
 	let busy = $state(false);
 
-	const staff = $derived(Boolean(host.auth.user?.isStaff));
+	const staff = $derived(context.canManage);
 	const canPost = $derived(staff && tournament.status !== 'draft');
 
 	const ICONS: Record<TournamentPostKind, typeof MegaphoneIcon> = {

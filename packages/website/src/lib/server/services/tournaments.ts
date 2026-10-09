@@ -28,7 +28,7 @@ import {
 	type TournamentStatus,
 	type TournamentUpdate
 } from '@company-of-heroes/api';
-import { meSteamIds, type AuthUserPublic } from '$lib/auth/user';
+import { canManageTournament, isStaffUser, meSteamIds, type AuthUserPublic } from '$lib/auth/user';
 import {
 	buildBracket,
 	champion,
@@ -42,9 +42,21 @@ import {
 } from '../domain/tournament-bracket';
 import { workshopMap } from '@company-of-heroes/game-data/maps';
 import { mapDisplayName } from '../domain/map-name';
-import { badRequest, conflict, notFound, type AppError } from '../errors';
+import { badRequest, conflict, forbidden, notFound, type AppError } from '../errors';
 import { chunk, ensure, fromPb, inParallel, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
+
+/** Paths next to `/tournaments/[slug]`: a tournament with this slug could not be opened. */
+const RESERVED_SLUGS = [
+	'new',
+	'maps',
+	'me',
+	'won',
+	'hall-of-fame',
+	'host-requests',
+	'hosts',
+	'simulate'
+];
 
 /** Started tournament games checked per sync run. */
 const SYNC_BATCH = 100;
@@ -92,10 +104,15 @@ type TournamentRecord = {
 	streamUrl: string;
 	featuredMatch: string;
 	autoClosedAt: string;
+	/** The staff member or community host who created it. */
+	createdBy: string;
 	collectionName: string;
 	created: string;
 	expand?: { winner?: { alias?: string } };
 };
+
+/** `true` for internal calls and checked staff actions; otherwise the viewer (or nobody). */
+type Access = true | false | AuthUserPublic | null;
 
 export type ParticipantRecord = Omit<
 	TournamentParticipant,
@@ -509,13 +526,19 @@ export class TournamentsService extends Service {
 			.map((record) => this.toMap(record));
 	}
 
-	list(scope: TournamentScope, staff: boolean): Task<Tournament[]> {
+	/** Drafts are listed for staff, and for a host only their own. */
+	list(scope: TournamentScope, viewer: AuthUserPublic | null): Task<Tournament[]> {
+		const staff = isStaffUser(viewer);
 		const statuses: Record<TournamentScope, TournamentStatus[]> = {
 			active: ['in_progress'],
 			upcoming: staff ? ['draft', ...OPEN] : OPEN,
 			past: ['completed', 'cancelled']
 		};
-		const filter = statuses[scope].map((status) => `status = "${status}"`).join(' || ');
+		const shown = statuses[scope].map((status) => `status = "${status}"`).join(' || ');
+		const filter =
+			scope === 'upcoming' && !staff && viewer?.role === 'host'
+				? `${shown} || ${this.pb.filter('(status = "draft" && createdBy = {:me})', { me: viewer.id })}`
+				: shown;
 		return fromPb(
 			this.tournaments.getList<TournamentRecord>(1, 50, {
 				filter,
@@ -600,19 +623,37 @@ export class TournamentsService extends Service {
 		});
 	}
 
-	/** The id of a tournament given by id or slug (staff also see drafts). */
-	idOf(idOrSlug: string, staff: boolean): Task<string> {
-		return this.record(idOrSlug, staff).map((record) => record.id);
+	/** The id of a tournament given by id or slug (drafts only for whoever may run it). */
+	idOf(idOrSlug: string, viewer: Access): Task<string> {
+		return this.record(idOrSlug, viewer).map((record) => record.id);
 	}
 
-	private record(idOrSlug: string, staff: boolean): Task<TournamentRecord> {
+	/**
+	 * The id of a tournament the user may run: staff run every tournament, a host the ones they
+	 * created. Routes call this before any staff action.
+	 */
+	managed(idOrSlug: string, user: AuthUserPublic): Task<string> {
+		return this.record(idOrSlug, true).andThen((record) =>
+			canManageTournament(user, record)
+				? okAsync(record.id)
+				: record.status === 'draft'
+					? errAsync(notFound('Tournament not found.'))
+					: errAsync(forbidden('Only staff or the host of this tournament can do that.'))
+		);
+	}
+
+	/** `true`: drafts included (internal calls, checked actions); a viewer sees drafts they run. */
+	private record(idOrSlug: string, access: Access): Task<TournamentRecord> {
 		return pbMaybe(
 			this.tournaments.getFirstListItem<TournamentRecord>(
 				this.pb.filter('id = {:value} || slug = {:value}', { value: idOrSlug })
 			),
 			'Could not load the tournament'
 		).andThen((record) =>
-			record && (staff || record.status !== 'draft')
+			record &&
+			(record.status !== 'draft' ||
+				access === true ||
+				(typeof access === 'object' && canManageTournament(access, record)))
 				? okAsync(record)
 				: errAsync(notFound('Tournament not found.'))
 		);
@@ -638,19 +679,29 @@ export class TournamentsService extends Service {
 		).map((records) => records.map(toMatch));
 	}
 
-	get(idOrSlug: string, staff: boolean): Task<TournamentDetail> {
-		return this.record(idOrSlug, staff)
-			.andThen((record) => this.detail(record))
-			.andThen((detail) =>
-				staff
-					? this.services.tournamentReports
-							.openCount(detail.tournament.id)
-							.map((openReports) => ({ ...detail, openReports }))
-					: okAsync(detail)
-			);
+	get(idOrSlug: string, viewer: Access): Task<TournamentDetail> {
+		return this.record(idOrSlug, viewer).andThen((record) => this.detail(record));
 	}
 
+	/** The community host who created it (null when staff did, or the role was taken away). */
+	private hostOf(record: TournamentRecord): Task<TournamentDetail['host']> {
+		if (!record.createdBy) {
+			return okAsync(null);
+		}
+
+		return pbMaybe(
+			this.pb
+				.collection('users')
+				.getOne<{ id: string; name: string; role: string }>(record.createdBy, {
+					fields: 'id,name,role'
+				}),
+			'Could not load the host'
+		).map((user) => (user?.role === 'host' ? { id: user.id, name: user.name || 'Host' } : null));
+	}
+
+	/** `canManage` (and the open reports) follow the signed-in user of this request. */
 	private detail(record: TournamentRecord): Task<TournamentDetail> {
+		const canManage = canManageTournament(this.locals.user, record);
 		return ResultAsync.combine([
 			this.participantRecords(record.id).andThen((records) =>
 				this.withLiveRatings(record, records)
@@ -668,8 +719,10 @@ export class TournamentsService extends Service {
 				)
 			),
 			this.customMaps(poolRefs(record)),
-			this.services.tournamentNotices.list(record.id)
-		]).map(([participantRecords, { matches, replays, live }, custom, posts]) => {
+			this.services.tournamentNotices.list(record.id),
+			canManage ? this.services.tournamentReports.openCount(record.id) : okAsync(0),
+			this.hostOf(record)
+		]).map(([participantRecords, { matches, replays, live }, custom, posts, openReports, host]) => {
 			const participants = participantRecords
 				.map((participant) => toParticipant(participant, record))
 				.sort((a, b) => (a.seed ?? 9999) - (b.seed ?? 9999));
@@ -683,7 +736,9 @@ export class TournamentsService extends Service {
 				matches,
 				replays,
 				posts,
-				openReports: 0,
+				openReports,
+				canManage,
+				host,
 				standings:
 					record.format === 'round_robin'
 						? standings(
@@ -781,10 +836,13 @@ export class TournamentsService extends Service {
 	/** Staff: a deadline for one match only (null falls back to its round's). */
 	setMatchDeadline(id: string, matchId: string, deadline: string | null): Task<TournamentDetail> {
 		return this.record(id, true).andThen((record) =>
-			fromPb(
-				this.matches.update(matchId, { deadline: deadline ?? '', overdueNotifiedAt: '' }),
-				'Could not save the deadline'
-			)
+			this.ownMatch(record.id, matchId)
+				.andThen(() =>
+					fromPb(
+						this.matches.update(matchId, { deadline: deadline ?? '', overdueNotifiedAt: '' }),
+						'Could not save the deadline'
+					)
+				)
 				.andThen(() => this.detail(record))
 				.andThen((detail) => {
 					const match = detail.matches.find((m) => m.id === matchId);
@@ -792,6 +850,20 @@ export class TournamentsService extends Service {
 						? this.services.tournamentNotices.matchDeadline(record, match).map(() => detail)
 						: okAsync(detail);
 				})
+		);
+	}
+
+	/** The match must belong to this tournament (a host only runs their own). */
+	private ownMatch(tournamentId: string, matchId: string): Task<void> {
+		return pbMaybe(
+			this.matches.getOne<{ id: string; tournament: string }>(matchId, {
+				fields: 'id,tournament'
+			}),
+			'Could not load the match'
+		).andThen((match) =>
+			match?.tournament === tournamentId
+				? okAsync(undefined)
+				: errAsync(notFound('Match not found.'))
 		);
 	}
 
@@ -900,9 +972,8 @@ export class TournamentsService extends Service {
 	}
 
 	private uniqueSlug(name: string): Task<string> {
-		// `/tournaments/new` is the create page, `/api/v1/tournaments/maps` the map list,
-		// `/tournaments/hall-of-fame` the champions page.
-		const base = ['new', 'maps', 'hall-of-fame'].includes(slugify(name))
+		// Paths next to `/tournaments/[slug]` (pages and `/api/v1/tournaments/...`) are taken.
+		const base = RESERVED_SLUGS.includes(slugify(name))
 			? `${slugify(name)}-tournament`
 			: slugify(name);
 		return pbMaybe(
@@ -1520,10 +1591,23 @@ export class TournamentsService extends Service {
 	/** Staff: a disqualified player forfeits their open matches and every later one. */
 	disqualify(id: string, participantId: string): Task<TournamentDetail> {
 		return this.record(id, true).andThen((record) =>
-			fromPb(
-				this.participants.update(participantId, { status: 'disqualified' }),
-				'Could not disqualify the player'
+			pbMaybe(
+				this.participants.getOne<{ id: string; tournament: string }>(participantId, {
+					fields: 'id,tournament'
+				}),
+				'Could not load the player'
 			)
+				.andThen((participant) =>
+					participant?.tournament === record.id
+						? okAsync(participant)
+						: errAsync(notFound('Player not found.'))
+				)
+				.andThen(() =>
+					fromPb(
+						this.participants.update(participantId, { status: 'disqualified' }),
+						'Could not disqualify the player'
+					)
+				)
 				.andThen(() =>
 					record.status === 'in_progress'
 						? ResultAsync.combine([this.matchList(record.id), this.outPlayers(record.id)]).andThen(

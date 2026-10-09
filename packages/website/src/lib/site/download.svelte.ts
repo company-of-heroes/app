@@ -66,7 +66,9 @@ export async function loadLatestDownload(): Promise<void> {
 
 function pickInstaller(assets: ReleaseAsset[]): ReleaseAsset | undefined {
 	return (
-		pickAsset(assets, /setup\.exe$/i) ?? pickAsset(assets, /\.exe$/i) ?? pickAsset(assets, /\.msi$/i)
+		pickAsset(assets, /setup\.exe$/i) ??
+		pickAsset(assets, /\.exe$/i) ??
+		pickAsset(assets, /\.msi$/i)
 	);
 }
 

@@ -4,10 +4,15 @@ import type { ApiError } from '../errors';
 import { fromPbPromise } from '../pb';
 import type {
 	HallOfFame,
+	MyTournamentHostRequest,
 	MyTournaments,
 	Tournament,
 	TournamentArm,
 	TournamentDetail,
+	TournamentHost,
+	TournamentHostDecision,
+	TournamentHostRequest,
+	TournamentHostRequestInput,
 	TournamentImages,
 	TournamentInput,
 	TournamentMatch,
@@ -439,6 +444,65 @@ export class TournamentsApi {
 				body: { sessionId, steamIds }
 			}),
 			'Could not link the lobby to the tournament game.'
+		).map(() => undefined);
+	}
+
+	/** The signed-in user's latest request to become a host, or null. */
+	myHostRequest(): ResultAsync<MyTournamentHostRequest | null, ApiError> {
+		return fromPbPromise(
+			sendV1<MyTournamentHostRequest | null>(this.deps, '/tournaments/host-requests/me'),
+			'Could not load your request.'
+		);
+	}
+
+	requestHost(input: TournamentHostRequestInput): ResultAsync<MyTournamentHostRequest, ApiError> {
+		return fromPbPromise(
+			sendV1<MyTournamentHostRequest>(this.deps, '/tournaments/host-requests', {
+				method: 'POST',
+				body: input
+			}),
+			'Could not send your request.'
+		);
+	}
+
+	/** Staff: open requests first, then recently handled ones. */
+	hostRequests(): ResultAsync<TournamentHostRequest[], ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentHostRequest[]>(this.deps, '/tournaments/host-requests'),
+			'Could not load the host requests.'
+		);
+	}
+
+	/** Staff: approving gives the user the host role. */
+	decideHostRequest(
+		requestId: string,
+		decision: TournamentHostDecision
+	): ResultAsync<TournamentHostRequest, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentHostRequest>(
+				this.deps,
+				`/tournaments/host-requests/${encodeURIComponent(requestId)}`,
+				{ method: 'PATCH', body: decision }
+			),
+			'Could not save the decision.'
+		);
+	}
+
+	/** Staff: everyone with the host role. */
+	hosts(): ResultAsync<TournamentHost[], ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentHost[]>(this.deps, '/tournaments/hosts'),
+			'Could not load the hosts.'
+		);
+	}
+
+	/** Staff: takes the host role away; their tournaments stay and staff run them. */
+	revokeHost(userId: string): ResultAsync<void, ApiError> {
+		return fromPbPromise(
+			sendV1<unknown>(this.deps, `/tournaments/hosts/${encodeURIComponent(userId)}`, {
+				method: 'DELETE'
+			}),
+			'Could not remove the host role.'
 		).map(() => undefined);
 	}
 }

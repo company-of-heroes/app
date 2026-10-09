@@ -134,3 +134,13 @@ export const reportBody = z.object({
 	reason: z.enum(TOURNAMENT_REPORT_REASONS),
 	message: z.string().trim().max(2000).default('')
 });
+
+export const hostRequestBody = z.object({
+	message: z.string().max(2000),
+	discord: z.string().max(100).default('')
+});
+
+export const hostDecisionBody = z.object({
+	status: z.enum(['approved', 'declined']),
+	staffNote: z.string().max(2000).default('')
+});

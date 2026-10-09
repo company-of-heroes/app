@@ -1,16 +1,17 @@
-import { handle, parseBody, requireStaff } from '$lib/server/http';
+import { handle, parseBody } from '$lib/server/http';
+import { requireManager } from '$lib/server/tournament-access';
 import { seedOrderBody } from '$lib/server/tournament-params';
 
-/** Staff close registration and seed everyone by 1v1 ELO. */
+/** Staff or the host close registration and seed everyone by 1v1 ELO. */
 export const POST = handle((event) =>
-	requireStaff(event).asyncAndThen(() => event.locals.services.tournaments.seed(event.params.id!))
+	requireManager(event).andThen(({ id }) => event.locals.services.tournaments.seed(id))
 );
 
-/** Staff change the seeding: every participant id, top seed first. */
+/** Staff or the host change the seeding: every participant id, top seed first. */
 export const PUT = handle((event) =>
-	requireStaff(event).asyncAndThen(() =>
+	requireManager(event).andThen(({ id }) =>
 		parseBody(seedOrderBody, event.request).andThen(({ order }) =>
-			event.locals.services.tournaments.setSeeds(event.params.id!, order)
+			event.locals.services.tournaments.setSeeds(id, order)
 		)
 	)
 );

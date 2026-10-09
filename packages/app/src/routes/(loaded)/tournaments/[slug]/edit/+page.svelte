@@ -4,7 +4,6 @@
 	import { TournamentForm } from '@company-of-heroes/ui/tournament';
 	import { flushHeader, flushSectionTitle } from '@company-of-heroes/ui/variants';
 	import { api, unwrapApi } from '$core/api';
-	import { app } from '$core/app/context';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
 	import { useI18n } from '$lib/i18n';
 
@@ -18,9 +17,9 @@
 
 <SetCrumbs items={[{ label: t('Edit tournament') }]} />
 
-{#if !app.account.isStaff}
+{#if detail.current && !detail.current.canManage}
 	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-		{t('Only staff can do that.')}
+		{t('Only staff or the host of this tournament can do that.')}
 	</p>
 {:else if detail.current}
 	<div class={flushHeader}>

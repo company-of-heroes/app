@@ -662,32 +662,25 @@ export class TournamentGamesService extends Service {
 					return okAsync({ processed: 0, more: false });
 				}
 
-				return ResultAsync.combine([this.staffIds(), this.names(overdue.map((o) => o.match))])
-					.andThen(([staff, names]) =>
+				return this.names(overdue.map((o) => o.match))
+					.andThen((names) =>
 						inParallel(overdue, 3, ({ tournament, match }) =>
-							this.notifyStaff(staff, tournament, match, names).andThen(() =>
-								fromPb(
-									this.pb
-										.collection('tournament_matches')
-										.update(match.id, { overdueNotifiedAt: pbDate(new Date()) }),
-									'Could not save the match'
+							this.services.tournamentNotices
+								.managerIds(tournament.id)
+								.andThen((staff) => this.notifyStaff(staff, tournament, match, names))
+								.andThen(() =>
+									fromPb(
+										this.pb
+											.collection('tournament_matches')
+											.update(match.id, { overdueNotifiedAt: pbDate(new Date()) }),
+										'Could not save the match'
+									)
 								)
-							)
 						)
 					)
 					.map(() => ({ processed: overdue.length, more: false }));
 			});
 		});
-	}
-
-	private staffIds(): Task<string[]> {
-		return fromPb(
-			this.pb.collection('users').getFullList<{ id: string }>({
-				filter: 'role = "admin" || role = "moderator"',
-				fields: 'id'
-			}),
-			'Could not load staff'
-		).map((rows) => rows.map((row) => row.id));
 	}
 
 	private names(matches: TournamentMatch[]): Task<Map<string, string>> {

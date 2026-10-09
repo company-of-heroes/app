@@ -20,7 +20,7 @@ const AVATAR_UPLOAD = {
 	invalidTypeMessage: 'Avatar must be an image file.'
 };
 
-export type UserRole = 'admin' | 'moderator';
+export type UserRole = 'admin' | 'moderator' | 'host';
 
 export type AuthUser = RecordModel & {
 	email: string;

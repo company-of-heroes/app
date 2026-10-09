@@ -3,7 +3,13 @@ import { afterNavigate, goto, invalidateAll, replaceState } from '$app/navigatio
 import { page } from '$app/state';
 import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
 import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
-import { authDisplayName, isStaffUser, loginRedirectHref, meSteamIds } from '$lib/auth/user';
+import {
+	authDisplayName,
+	canHostTournaments,
+	isStaffUser,
+	loginRedirectHref,
+	meSteamIds
+} from '$lib/auth/user';
 import { toast } from '@company-of-heroes/ui/toasts';
 import { currentLocale, href, unlocalizedPath } from '$lib/i18n';
 import { rememberReplaysListHref, rememberedReplaysListHref } from '$lib/replays';
@@ -42,6 +48,12 @@ import {
 	featureTournamentMatch,
 	tournamentStats,
 	tournamentHallOfFame,
+	myTournamentHostRequest,
+	requestTournamentHost,
+	listTournamentHostRequests,
+	decideTournamentHostRequest,
+	listTournamentHosts,
+	revokeTournamentHost,
 	setTournamentMatchDeadline,
 	setTournamentRoundDeadlines,
 	fetchTournament,
@@ -230,7 +242,8 @@ export function provideWebsiteHost(): HostContext {
 					name: authDisplayName(user),
 					avatarUrl: user.avatarUrl,
 					steamIds: meSteamIds(user),
-					isStaff: isStaffUser(user)
+					isStaff: isStaffUser(user),
+					canHost: canHostTournaments(user)
 				};
 			},
 			isSelf: (steamId) => meSteamIds(page.data.user).includes(steamId),
@@ -397,7 +410,14 @@ export function provideWebsiteHost(): HostContext {
 					withMessage(setTournamentMatchTime({ id, matchId, scheduledAt })),
 				feature: (id, matchId) => withMessage(featureTournamentMatch({ id, matchId })),
 				stats: (idOrSlug) => withMessage(tournamentStats(idOrSlug)),
-				hallOfFame: () => withMessage(tournamentHallOfFame())
+				hallOfFame: () => withMessage(tournamentHallOfFame()),
+				myHostRequest: () => withMessage(myTournamentHostRequest()),
+				requestHost: (input) => withMessage(requestTournamentHost(input)),
+				hostRequests: () => withMessage(listTournamentHostRequests()),
+				decideHostRequest: (requestId, decision) =>
+					withMessage(decideTournamentHostRequest({ requestId, ...decision })),
+				hosts: () => withMessage(listTournamentHosts()),
+				revokeHost: (userId) => withMessage(revokeTournamentHost(userId))
 			},
 			staff: {
 				getCompanionUser: (steamId) => getCompanionUser(steamId)

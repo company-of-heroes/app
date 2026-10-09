@@ -393,7 +393,7 @@ export class TournamentNoticesService extends Service {
 	/** The job closed registration: staff check the seeding and start the tournament. */
 	registrationClosed(tournament: NoticeTournament, players: number): Task<void> {
 		return this.quiet(
-			this.staffIds().andThen((staff) =>
+			this.managerIds(tournament.id).andThen((staff) =>
 				this.toUsers(
 					staff,
 					tournament,
@@ -823,7 +823,7 @@ export class TournamentNoticesService extends Service {
 		const page = `${SITE_URL}/tournaments/${tournament.slug}`;
 		const message = report.message.trim();
 		return this.quiet(
-			this.staffIds().andThen((staff) =>
+			this.managerIds(tournament.id).andThen((staff) =>
 				staff.length === 0
 					? okAsync(undefined)
 					: fromPb(
@@ -863,13 +863,26 @@ export class TournamentNoticesService extends Service {
 		return this.quiet(this.toUsers([userId], tournament, title, body));
 	}
 
-	private staffIds(): Task<string[]> {
-		return fromPb(
-			this.pb.collection('users').getFullList<{ id: string }>({
-				filter: 'role = "admin" || role = "moderator"',
-				fields: 'id'
-			}),
-			'Could not load staff'
-		).map((rows) => rows.map((row) => row.id));
+	/** Everyone who runs the tournament: staff, and the community host who created it. */
+	managerIds(tournamentId: string): Task<string[]> {
+		return pbMaybe(
+			this.pb
+				.collection('tournaments')
+				.getOne<{ createdBy: string }>(tournamentId, { fields: 'createdBy' }),
+			'Could not load the tournament'
+		).andThen((record) =>
+			fromPb(
+				this.pb.collection('users').getFullList<{ id: string }>({
+					filter: record?.createdBy
+						? this.pb.filter(
+								'role = "admin" || role = "moderator" || (role = "host" && id = {:host})',
+								{ host: record.createdBy }
+							)
+						: 'role = "admin" || role = "moderator"',
+					fields: 'id'
+				}),
+				'Could not load staff'
+			).map((rows) => rows.map((row) => row.id))
+		);
 	}
 }

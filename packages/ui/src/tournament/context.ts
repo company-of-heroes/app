@@ -19,6 +19,8 @@ export type TournamentContext = {
 	readonly replays: TournamentReplay[];
 	/** Links to the games; off while they are hidden (the tournament is still running). */
 	readonly revealGames: boolean;
+	/** The viewer runs this tournament: staff, or the host who created it. */
+	readonly canManage: boolean;
 };
 
 const context = new Context<TournamentContext>('<tournament />');

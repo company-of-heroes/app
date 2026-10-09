@@ -156,7 +156,7 @@
 			<PlusIcon size={14} />
 			{t('Add maps')}
 		</Button>
-		{#if host.auth.user?.isStaff}
+		{#if host.auth.user?.canHost}
 			<Button type="button" variant="ghost" size="sm" {disabled} onclick={openCreate}>
 				{t('New custom map')}
 			</Button>

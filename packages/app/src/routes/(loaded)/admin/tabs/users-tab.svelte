@@ -51,6 +51,10 @@
 			return t('Moderator');
 		}
 
+		if (role === UsersRoleOptions.host) {
+			return t('Tournament host');
+		}
+
 		return '';
 	};
 

@@ -1,15 +1,12 @@
-import { handle, parseBody, requireStaff } from '$lib/server/http';
+import { handle, parseBody } from '$lib/server/http';
+import { requireManager } from '$lib/server/tournament-access';
 import { matchDeadlineBody } from '$lib/server/tournament-params';
 
-/** Staff give one match its own deadline (null: the round's again). */
+/** Staff or the host give one match its own deadline (null: the round's again). */
 export const PUT = handle((event) =>
-	requireStaff(event).asyncAndThen(() =>
+	requireManager(event).andThen(({ id }) =>
 		parseBody(matchDeadlineBody, event.request).andThen(({ deadline }) =>
-			event.locals.services.tournaments.setMatchDeadline(
-				event.params.id!,
-				event.params.matchId!,
-				deadline
-			)
+			event.locals.services.tournaments.setMatchDeadline(id, event.params.matchId!, deadline)
 		)
 	)
 );

@@ -1,7 +1,8 @@
 import { env } from '$env/dynamic/public';
 
 export const RELEASE_PAGE_URL = 'https://github.com/fknoobs/app/releases/latest';
-export const REPLAY_MANAGER_RELEASES_URL = 'https://github.com/fknoobs/app/releases?q=replay-parser';
+export const REPLAY_MANAGER_RELEASES_URL =
+	'https://github.com/fknoobs/app/releases?q=replay-parser';
 /** @deprecated Use `latestDownload.url` from `$lib/site/download.svelte` */
 export const DOWNLOAD_URL = RELEASE_PAGE_URL;
 export const DISCORD_URL = 'https://discord.gg/Cc69hbDnPD';

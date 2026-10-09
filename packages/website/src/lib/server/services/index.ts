@@ -37,6 +37,7 @@ import { StatisticsService } from './statistics';
 import { StreamingService } from './streaming';
 import { TournamentGamesService } from './tournament-games';
 import { TournamentNoticesService } from './tournament-notices';
+import { TournamentHostsService } from './tournament-hosts';
 import { TournamentReportsService } from './tournament-reports';
 import { TournamentScheduleService } from './tournament-schedule';
 import { TournamentStatsService } from './tournament-stats';
@@ -229,6 +230,10 @@ export class Services {
 
 	get tournamentGames() {
 		return this.#get('tournamentGames', TournamentGamesService);
+	}
+
+	get tournamentHosts() {
+		return this.#get('tournamentHosts', TournamentHostsService);
 	}
 
 	get tournamentNotices() {

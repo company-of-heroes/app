@@ -98,7 +98,8 @@ export function provideAppHost(): HostContext {
 					name: account.user.name || account.email,
 					avatarUrl: userAvatarSrc(account.user),
 					steamIds: account.user.steamIds,
-					isStaff: account.isStaff
+					isStaff: account.isStaff,
+					canHost: account.canHostTournaments
 				};
 			},
 			isSelfAlias: isMeReplayAlias,
@@ -372,7 +373,14 @@ export function provideAppHost(): HostContext {
 					unwrapApi(api.tournaments.setMatchTime(id, matchId, scheduledAt)),
 				feature: (id, matchId) => unwrapApi(api.tournaments.feature(id, matchId)),
 				stats: (idOrSlug) => unwrapApi(api.tournaments.stats(idOrSlug)),
-				hallOfFame: () => unwrapApi(api.tournaments.hallOfFame())
+				hallOfFame: () => unwrapApi(api.tournaments.hallOfFame()),
+				myHostRequest: () => unwrapApi(api.tournaments.myHostRequest()),
+				requestHost: (input) => unwrapApi(api.tournaments.requestHost(input)),
+				hostRequests: () => unwrapApi(api.tournaments.hostRequests()),
+				decideHostRequest: (requestId, decision) =>
+					unwrapApi(api.tournaments.decideHostRequest(requestId, decision)),
+				hosts: () => unwrapApi(api.tournaments.hosts()),
+				revokeHost: (userId) => unwrapApi(api.tournaments.revokeHost(userId))
 			},
 			staff: {
 				getCompanionUser: async (steamId) => {

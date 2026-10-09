@@ -55,6 +55,22 @@ export function isStaffUser(user: AuthUserPublic | null | undefined): boolean {
 	return user?.role === 'admin' || user?.role === 'moderator';
 }
 
+/** Staff, or a community host: may create tournaments (hosts only run their own). */
+export function canHostTournaments(user: AuthUserPublic | null | undefined): boolean {
+	return isStaffUser(user) || user?.role === 'host';
+}
+
+/** Staff run every tournament; a host only the ones they created. */
+export function canManageTournament(
+	user: AuthUserPublic | null | undefined,
+	tournament: { createdBy?: string }
+): boolean {
+	return (
+		isStaffUser(user) ||
+		(user?.role === 'host' && !!tournament.createdBy && tournament.createdBy === user.id)
+	);
+}
+
 export function loginRedirectHref(next: string, locale: AppLocale = DEFAULT_LOCALE) {
 	const path =
 		typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : '/';

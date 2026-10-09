@@ -692,7 +692,8 @@ export type UserReputationTotalsRecord = {
 
 export const UsersRoleOptions = {
 	admin: 'admin',
-	moderator: 'moderator'
+	moderator: 'moderator',
+	host: 'host'
 } as const;
 export type UsersRoleOptions = (typeof UsersRoleOptions)[keyof typeof UsersRoleOptions];
 export type UsersRecord<Tmeta = unknown, TsteamIds = unknown> = {

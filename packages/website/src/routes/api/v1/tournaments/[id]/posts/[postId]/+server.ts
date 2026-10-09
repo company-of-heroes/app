@@ -1,19 +1,18 @@
-import { handle, parseBody, requireStaff } from '$lib/server/http';
+import { handle, parseBody } from '$lib/server/http';
+import { requireManager } from '$lib/server/tournament-access';
 import { postBody } from '$lib/server/tournament-params';
 
-/** Staff edit an update (participants are not notified again). */
+/** Staff or the host edit an update (participants are not notified again). */
 export const PATCH = handle((event) =>
-	requireStaff(event).asyncAndThen(() =>
+	requireManager(event).andThen(({ id }) =>
 		parseBody(postBody, event.request).andThen((input) =>
-			event.locals.services.tournaments.updatePost(event.params.id!, event.params.postId!, input)
+			event.locals.services.tournaments.updatePost(id, event.params.postId!, input)
 		)
 	)
 );
 
 export const DELETE = handle((event) =>
-	requireStaff(event).asyncAndThen(() =>
-		event.locals.services.tournaments
-			.deletePost(event.params.id!, event.params.postId!)
-			.map(() => ({ ok: true }))
+	requireManager(event).andThen(({ id }) =>
+		event.locals.services.tournaments.deletePost(id, event.params.postId!).map(() => ({ ok: true }))
 	)
 );

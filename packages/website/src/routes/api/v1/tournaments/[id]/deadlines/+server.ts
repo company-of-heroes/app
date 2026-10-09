@@ -1,11 +1,12 @@
-import { handle, parseBody, requireStaff } from '$lib/server/http';
+import { handle, parseBody } from '$lib/server/http';
+import { requireManager } from '$lib/server/tournament-access';
 import { roundDeadlinesBody } from '$lib/server/tournament-params';
 
-/** Staff set the last moment to play each round. */
+/** Staff or the host set the last moment to play each round. */
 export const PUT = handle((event) =>
-	requireStaff(event).asyncAndThen(() =>
+	requireManager(event).andThen(({ id }) =>
 		parseBody(roundDeadlinesBody, event.request).andThen(({ rounds }) =>
-			event.locals.services.tournaments.setRoundDeadlines(event.params.id!, rounds)
+			event.locals.services.tournaments.setRoundDeadlines(id, rounds)
 		)
 	)
 );

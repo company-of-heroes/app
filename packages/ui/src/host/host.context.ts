@@ -18,9 +18,14 @@ import type { Medal } from '../tournament/medal';
 import type { HostNotification } from '../notifications/types';
 import type {
 	HallOfFame,
+	MyTournamentHostRequest,
 	MyTournaments,
 	Tournament,
 	TournamentDetail,
+	TournamentHost,
+	TournamentHostDecision,
+	TournamentHostRequest,
+	TournamentHostRequestInput,
 	TournamentImages,
 	TournamentInput,
 	TournamentMap,
@@ -48,6 +53,8 @@ export type HostUser = {
 	avatarUrl?: string;
 	steamIds: string[];
 	isStaff: boolean;
+	/** Staff or a community host: may create tournaments (hosts run only their own). */
+	canHost: boolean;
 };
 
 /** A comment thread lives on a saved lobby or a member replay. */
@@ -387,6 +394,19 @@ export type HostApi = {
 		/** Numbers of a finished tournament. */
 		stats: (idOrSlug: string) => Promise<TournamentStats>;
 		hallOfFame: () => Promise<HallOfFame>;
+		/** The signed-in user's latest request to host tournaments, or null. */
+		myHostRequest: () => Promise<MyTournamentHostRequest | null>;
+		requestHost: (input: TournamentHostRequestInput) => Promise<MyTournamentHostRequest>;
+		/** Staff: requests to host, open ones first. */
+		hostRequests: () => Promise<TournamentHostRequest[]>;
+		/** Staff: approving gives the user the host role. */
+		decideHostRequest: (
+			requestId: string,
+			decision: TournamentHostDecision
+		) => Promise<TournamentHostRequest>;
+		/** Staff: everyone with the host role. */
+		hosts: () => Promise<TournamentHost[]>;
+		revokeHost: (userId: string) => Promise<void>;
 	};
 	/** The signed-in user's notifications (bell). */
 	notifications: {

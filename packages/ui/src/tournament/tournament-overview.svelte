@@ -7,7 +7,11 @@
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import { untrack } from 'svelte';
 	import { useHost } from '../host/host.context';
+	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
+	import { StaffSection } from '../ui/staff-section';
+	import TournamentHostCta from './tournament-host-cta.svelte';
+	import TournamentHostRequestsDialog from './tournament-host-requests-dialog.svelte';
 	import TournamentList from './tournament-list.svelte';
 	import TournamentMyMatch from './tournament-my-match.svelte';
 	import type { MyTournamentMatch, Tournament } from './types';
@@ -23,6 +27,21 @@
 	const host = useHost();
 
 	let myMatches = $state.raw<MyTournamentMatch[]>([]);
+	// `?hostRequests=1` from a staff notification opens the host requests.
+	let hostRequestsOpen = $state(untrack(() => host.url.param('hostRequests') === '1'));
+	let pendingHosts = $state(0);
+
+	// Staff: the open requests for the button's count. Untracked: a remote command on the website.
+	$effect(() => {
+		if (host.auth.user?.isStaff) {
+			untrack(() => {
+				host.api.tournaments
+					.hostRequests()
+					.then((list) => (pendingHosts = list.filter((r) => r.status === 'pending').length))
+					.catch(() => {});
+			});
+		}
+	});
 
 	// The signed-in player's open matches (deadlines, played games, replays).
 	// Untracked: on the website `mine()` is a remote command whose own state would loop this effect.
@@ -62,7 +81,7 @@
 			</h1>
 			<p class="text-secondary-400 max-w-2xl text-sm">
 				{t(
-					'1v1 tournaments run by the community staff. Sign up, play your matches and follow the bracket.'
+					'1v1 tournaments run by staff and community hosts. Sign up, play your matches and follow the bracket.'
 				)}
 			</p>
 		</div>
@@ -71,7 +90,7 @@
 				<CrownIcon size={16} weight="fill" />
 				{t('Hall of fame')}
 			</Button>
-			{#if host.auth.user?.isStaff}
+			{#if host.auth.user?.canHost}
 				<Button href={host.routes.tournamentNew()}>
 					<PlusIcon size={16} />
 					{t('New tournament')}
@@ -80,6 +99,24 @@
 		</div>
 	</div>
 </header>
+
+{#if host.auth.user?.isStaff}
+	<StaffSection class="border-t-0 border-b" contentClass="flex flex-wrap items-center gap-2 py-2.5">
+		<Button variant="secondary" size="sm" onclick={() => (hostRequestsOpen = true)}>
+			{t('Host requests')}
+			{#if pendingHosts > 0}
+				<Badge variant="warning">{pendingHosts}</Badge>
+			{/if}
+		</Button>
+	</StaffSection>
+	<TournamentHostRequestsDialog
+		open={hostRequestsOpen}
+		onClose={() => (hostRequestsOpen = false)}
+		onCount={(count) => (pendingHosts = count)}
+	/>
+{:else}
+	<TournamentHostCta />
+{/if}
 
 {#snippet section(title: string, count: number, live = false)}
 	<div class={cn(flushHeader, 'flex items-center gap-2')}>

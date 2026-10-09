@@ -16,6 +16,7 @@
 	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
 	import TreeStructureIcon from 'phosphor-svelte/lib/TreeStructureIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
+	import UserCircleIcon from 'phosphor-svelte/lib/UserCircleIcon';
 	import UsersThreeIcon from 'phosphor-svelte/lib/UsersThreeIcon';
 	import { renderMarkdown } from '../comment/markdown';
 	import { formatDate, formatRelative } from '../format/date';
@@ -111,7 +112,8 @@
 	);
 
 	const tournament = $derived(current.tournament);
-	const staff = $derived(Boolean(host.auth.user?.isStaff));
+	// Staff, or the community host who created it (the server decides).
+	const staff = $derived(current.canManage);
 	// Tournament games stay hidden (spoilers) until the tournament ends.
 	const gamesPublic = $derived(
 		tournament.status === 'completed' || tournament.status === 'cancelled'
@@ -142,6 +144,9 @@
 		},
 		get revealGames() {
 			return gamesPublic;
+		},
+		get canManage() {
+			return current.canManage;
 		}
 	});
 
@@ -533,6 +538,12 @@
 				<div class="flex flex-wrap items-center gap-2">
 					<TournamentStatus status={tournament.status} />
 					<span class={cn(tableHeadText, 'text-primary')}>{t('Tournament')}</span>
+					{#if current.host}
+						<span class="text-secondary-300 flex items-center gap-1 text-xs">
+							<UserCircleIcon size={14} weight="fill" class="text-secondary-500" />
+							{t('Hosted by {name}', { name: current.host.name })}
+						</span>
+					{/if}
 				</div>
 				<h1
 					class="font-heading text-3xl leading-tight font-bold break-words text-white drop-shadow-md sm:text-4xl"
@@ -676,7 +687,11 @@
 </div>
 
 {#if staff && tournament.status !== 'completed' && tournament.status !== 'cancelled'}
-	<StaffSection class="border-t-0 border-b" contentClass="flex flex-wrap items-center gap-2 py-2.5">
+	<StaffSection
+		title={host.auth.user?.isStaff ? undefined : t('Host')}
+		class="border-t-0 border-b"
+		contentClass="flex flex-wrap items-center gap-2 py-2.5"
+	>
 		<Button variant="secondary" size="sm" href={host.routes.tournamentEdit(tournament.slug)}>
 			{t('Edit')}
 		</Button>

@@ -780,6 +780,11 @@ export class AccountService {
 		return role === UsersRoleOptions.admin || role === UsersRoleOptions.moderator;
 	}
 
+	/** Staff or a community host: may create tournaments (hosts run only their own). */
+	get canHostTournaments(): boolean {
+		return this.isStaff || this.#user?.role === UsersRoleOptions.host;
+	}
+
 	get isAdmin(): boolean {
 		return this.#user?.role === UsersRoleOptions.admin;
 	}

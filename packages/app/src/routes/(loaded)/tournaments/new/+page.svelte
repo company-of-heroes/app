@@ -10,13 +10,13 @@
 
 <SetCrumbs items={[{ label: t('New tournament') }]} />
 
-{#if app.account.isStaff}
+{#if app.account.canHostTournaments}
 	<div class={flushHeader}>
 		<h1 class={flushSectionTitle}>{t('New tournament')}</h1>
 	</div>
 	<TournamentForm />
 {:else}
 	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-		{t('Only staff can do that.')}
+		{t('Only staff and tournament hosts can do that.')}
 	</p>
 {/if}

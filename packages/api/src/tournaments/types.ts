@@ -291,6 +291,44 @@ export type TournamentReportUpdate = {
 	staffNote: string;
 };
 
+export type TournamentHostRequestStatus = 'pending' | 'approved' | 'declined';
+
+/** What a user sends to become a tournament host. */
+export type TournamentHostRequestInput = {
+	/** What they want to host: format, size, how often. */
+	message: string;
+	/** Optional Discord name, so staff can get in touch. */
+	discord: string;
+};
+
+/** The user's own (latest) request; staff's answer once it is handled. */
+export type MyTournamentHostRequest = TournamentHostRequestInput & {
+	id: string;
+	status: TournamentHostRequestStatus;
+	staffNote: string;
+	created: string;
+	handledAt: string | null;
+};
+
+/** A request in the staff list. */
+export type TournamentHostRequest = MyTournamentHostRequest & {
+	user: { id: string; name: string; role: string | null };
+	handledBy: { id: string; name: string } | null;
+};
+
+export type TournamentHostDecision = {
+	status: 'approved' | 'declined';
+	staffNote: string;
+};
+
+/** A user with the host role. */
+export type TournamentHost = {
+	id: string;
+	name: string;
+	/** Tournaments they created. */
+	tournaments: number;
+};
+
 /** What the result, start and update popups of the signed-in player have shown. */
 export type TournamentSeen = {
 	/** Processed games (lobby ids). */
@@ -341,8 +379,12 @@ export type TournamentDetail = {
 	replays: TournamentReplay[];
 	/** The Updates tab, pinned first, then newest first. */
 	posts: TournamentPost[];
-	/** Staff only: open problem reports; 0 for everyone else. */
+	/** For whoever runs it (staff, or its host): open problem reports; 0 for everyone else. */
 	openReports: number;
+	/** The viewer may run this tournament: staff, or the host who created it. */
+	canManage: boolean;
+	/** The community host who runs it; null for tournaments run by staff. */
+	host: { id: string; name: string } | null;
 };
 
 /** Faction totals of a finished tournament. */
