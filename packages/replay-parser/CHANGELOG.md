@@ -1,5 +1,9 @@
 # @company-of-heroes/replay-parser
 
+## 1.1.2
+
+- enhance; every hover hint now uses the styled tooltip instead of the plain browser tooltip
+
 ## 1.1.1
 
 - fix; replay manager release builds again after aligning the tauri crate versions with the app

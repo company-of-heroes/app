@@ -1,5 +1,9 @@
 # @company-of-heroes/game-data
 
+## 0.1.1
+
+- fix; wiki doctrine trees follow the real unlock order (armor company) and no longer list units or abilities a tier only changes or replaces (double infantry at efforts)
+
 ## 0.1.0
 
 - feat; replay timeline and statistics popovers show game stats: unit health, weapons and veterancy bonuses, upgrade effects (bonus health, accuracy, …), the weapon a package adds with its damage, range and accuracy, and what a doctrine unlock gives
