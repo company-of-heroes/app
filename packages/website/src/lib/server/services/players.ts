@@ -36,6 +36,8 @@ const MAX_RESULTS = 20;
 export const SEARCH_PAGE_SIZE = 20;
 /** Stored players fetched per query (prefix and contains) before ranking. */
 const CANDIDATES = 500;
+/** Shortest query that also searches inside names when few names start with it. */
+const CONTAINS_MIN_LENGTH = 3;
 /** Relic's "no match" result code for fuzzy search; then try the exact alias. */
 const RELIC_NOT_FOUND = 10;
 
@@ -130,11 +132,11 @@ function fromRelic({ members, stats }: RelicSearch): Found[] {
 }
 
 export class PlayersService extends Service {
-	private storedMatching(filter: string): Task<StoredPlayer[]> {
+	private storedMatching(filter: string, sort: string): Task<StoredPlayer[]> {
 		return fromPb(
 			this.pb.collection('player_ratings').getList<StoredPlayer>(1, CANDIDATES, {
 				filter,
-				sort: '-updated',
+				sort,
 				fields: 'steamId,profileId,alias,country,elo',
 				skipTotal: true
 			}),
@@ -144,16 +146,29 @@ export class PlayersService extends Service {
 
 	/**
 	 * Players we already store (from lobby results and Relic harvests). Names that start with
-	 * the query are fetched on their own, so a common query cannot push them past the cap.
+	 * the query come from an index range on `alias_lower`; only when that fills less than a
+	 * page (and the query has 3+ characters) is the slower "contains" scan added.
 	 */
 	private searchStored(query: string): Task<Found[]> {
-		return ResultAsync.combine([
-			this.storedMatching(this.pb.filter('alias ~ {:prefix}', { prefix: `${query}%` })),
-			this.storedMatching(this.pb.filter('alias ~ {:query}', { query }))
-		]).map(([prefix, contains]) => {
-			const unique = new Map([...prefix, ...contains].map((row) => [row.steamId, row]));
-			return [...unique.values()].map(fromStored);
-		});
+		const lower = query.toLowerCase();
+		return this.storedMatching(
+			this.pb.filter('alias_lower >= {:from} && alias_lower < {:to}', {
+				from: lower,
+				to: `${lower}\uffff`
+			}),
+			'alias_lower'
+		)
+			.andThen((prefix) =>
+				prefix.length < SEARCH_PAGE_SIZE && query.length >= CONTAINS_MIN_LENGTH
+					? this.storedMatching(this.pb.filter('alias ~ {:query}', { query }), '-updated').map(
+							(contains) => [...prefix, ...contains]
+						)
+					: okAsync(prefix)
+			)
+			.map((rows) => {
+				const unique = new Map(rows.map((row) => [row.steamId, row]));
+				return [...unique.values()].map(fromStored);
+			});
 	}
 
 	/** Relic name search; falls back to an exact alias lookup when the fuzzy search finds nothing. */
@@ -239,7 +254,7 @@ export class PlayersService extends Service {
 			.andThen(() => ensure(q.length <= 64, badRequest('q is too long')))
 			.andThen(() => ensure(Number.isInteger(page) && page >= 1, badRequest('page is invalid')))
 			.asyncAndThen(() =>
-				cached(`players:search:v3:${requireMatches ? 1 : 0}:${q.toLowerCase()}`, 60, () =>
+				cached(`players:search:v4:${requireMatches ? 1 : 0}:${q.toLowerCase()}`, 60, () =>
 					this.find(q, requireMatches)
 				)
 			)

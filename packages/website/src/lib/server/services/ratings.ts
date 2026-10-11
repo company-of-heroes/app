@@ -154,13 +154,22 @@ export class RatingsService extends Service {
 			return okAsync(toRating(row));
 		}
 
+		// `alias_lower` backs the prefix search in PlayersService.
+		const aliasLower = alias.toLowerCase();
 		return fromPb(
 			row
-				? ratings.update<StoredRating>(row.id, { profileId: update.profileId, alias, country, elo })
+				? ratings.update<StoredRating>(row.id, {
+						profileId: update.profileId,
+						alias,
+						alias_lower: aliasLower,
+						country,
+						elo
+					})
 				: ratings.create<StoredRating>({
 						steamId: update.steamId,
 						profileId: update.profileId,
 						alias,
+						alias_lower: aliasLower,
 						country,
 						elo
 					}),
