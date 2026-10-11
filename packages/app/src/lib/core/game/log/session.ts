@@ -50,6 +50,11 @@ export class LogSession extends Emittery<SessionEvents> {
 	lobby: Lobby | undefined;
 	sessionId: number | null = null;
 	localSteamId: string | undefined;
+	/**
+	 * True while the historical log is replayed. Nobody listens to those events, so no
+	 * profile lookups run; `enrichActiveLobby()` covers the match still running afterwards.
+	 */
+	catchingUp = false;
 
 	#deps: SessionDeps;
 	#pendingReplayPlayers = new Map<number, { index: number; race: number; team: number }>();
@@ -439,7 +444,7 @@ export class LogSession extends Emittery<SessionEvents> {
 		const profileIds = lobby.getPlayerIds().filter((id) => id > 0);
 		lobby.started = true;
 
-		if (!lobby.isReplay && profileIds.length > 0) {
+		if (!lobby.isReplay && profileIds.length > 0 && !this.catchingUp) {
 			await this.#enrichStartedLobby(lobby, profileIds);
 			return;
 		}
@@ -448,7 +453,7 @@ export class LogSession extends Emittery<SessionEvents> {
 	}
 
 	async #enrichLiveIfNeeded(lobby: Lobby): Promise<void> {
-		if (!lobby.started || lobby.isReplay || this.#didEnrichLiveHistory) {
+		if (!lobby.started || lobby.isReplay || this.#didEnrichLiveHistory || this.catchingUp) {
 			return;
 		}
 
@@ -458,6 +463,25 @@ export class LogSession extends Emittery<SessionEvents> {
 		}
 
 		await this.#enrichStartedLobby(lobby, profileIds);
+	}
+
+	/**
+	 * After the catch-up read: looks up the profiles of the match that is still running and
+	 * emits `lobby.started`. Returns false when there is nothing to look up.
+	 */
+	async enrichActiveLobby(): Promise<boolean> {
+		const lobby = this.lobby;
+		if (!lobby?.started || lobby.ended || lobby.isReplay || this.#didEnrichLiveHistory) {
+			return false;
+		}
+
+		const profileIds = lobby.getPlayerIds().filter((id) => id > 0);
+		if (profileIds.length === 0) {
+			return false;
+		}
+
+		await this.#enrichStartedLobby(lobby, profileIds);
+		return true;
 	}
 
 	async #enrichStartedLobby(lobby: Lobby, profileIds: number[]): Promise<void> {

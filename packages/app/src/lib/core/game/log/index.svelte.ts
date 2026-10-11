@@ -44,8 +44,9 @@ export class GameLogService extends Emittery<GameLogEvents> {
 		});
 
 		this.#tailer = new LogTailer({
-			intervalMs: 50,
+			intervalMs: 250,
 			onLines: async (lines) => {
+				this.session.catchingUp = !this.isReady;
 				for (const line of lines) {
 					const event = parseLogLine(line);
 
@@ -121,7 +122,7 @@ export class GameLogService extends Emittery<GameLogEvents> {
 
 		this.isReady = true;
 
-		void this.emitSerial('ready').then(() => {
+		void this.emitSerial('ready').then(async () => {
 			const lobby = this.session.lobby;
 
 			if (!lobby) {
@@ -136,6 +137,11 @@ export class GameLogService extends Emittery<GameLogEvents> {
 			}
 
 			if (lobby.started) {
+				// The catch-up skipped profile lookups; enriching emits `lobby.started` itself.
+				if (await this.session.enrichActiveLobby()) {
+					return;
+				}
+
 				void this.emitSerial('lobby.started', lobby);
 				return;
 			}
