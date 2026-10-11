@@ -10,6 +10,8 @@
 		small?: boolean;
 		flush?: boolean;
 		alt?: string;
+		/** `eager` for a hero image above the fold; lists keep the default `lazy`. */
+		loading?: 'lazy' | 'eager';
 		class?: string;
 	};
 
@@ -22,6 +24,7 @@
 		small = false,
 		flush = false,
 		alt: altText,
+		loading = 'lazy',
 		class: className
 	}: Props = $props();
 
@@ -39,7 +42,7 @@
 
 {#snippet mapLayers()}
 	<img
-		loading="lazy"
+		{loading}
 		decoding="async"
 		{src}
 		{alt}
@@ -47,7 +50,7 @@
 		class="absolute inset-0 z-5 size-full scale-180 object-cover opacity-30"
 	/>
 	<img
-		loading="lazy"
+		{loading}
 		decoding="async"
 		{src}
 		{alt}

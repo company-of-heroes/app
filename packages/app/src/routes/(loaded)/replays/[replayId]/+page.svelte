@@ -10,6 +10,7 @@
 	import { account } from '$core/account';
 	import { api } from '$core/api';
 	import { app } from '$core/app/context';
+	import { getFile } from '$core/pocketbase';
 	import type { ReplayDetail } from '$core/app/database/replays';
 	import * as Replay from '$lib/components/replay';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
@@ -19,10 +20,23 @@
 
 	const { t } = useI18n();
 
+	let recordProbe: { id: string; result: ReturnType<typeof api.replays.getById> } | null = null;
+
+	/** Your own replay record (metadata only, no file), asked for once per id. */
+	function probeRecord(id: string) {
+		if (recordProbe?.id !== id) {
+			recordProbe = { id, result: api.replays.getById(id) };
+		}
+
+		return recordProbe.result;
+	}
+
 	/** Published (member) replays and lobbies: the shared detail view, same as the website. */
 	const shared = resource(
 		() => page.params.replayId!,
 		async (id) => {
+			// Probe the private record in parallel; its .rec is only downloaded when `shared` misses.
+			void probeRecord(id);
 			const result = await api.replays.getAny(id);
 			if (result.isOk()) {
 				return result.value;
@@ -36,17 +50,30 @@
 		}
 	);
 
-	/**
-	 * Your own private replays only exist in the desktop app. Loaded next to `shared` instead of
-	 * after it; shown once `shared` has no replay for this id.
-	 */
-	const privateReplay = resource(
-		() => page.params.replayId!,
-		(id) => app.database.replays.getDetail(id)
-	);
-
 	const detail = $derived(shared.current);
 	const sharedMissing = $derived(shared.current === null || !!shared.error);
+
+	/** Your own private replays only exist in the desktop app; their bytes load once `shared` misses. */
+	const privateReplay = resource(
+		() => (sharedMissing ? page.params.replayId! : null),
+		async (id): Promise<ReplayDetail | null> => {
+			if (!id) {
+				return null;
+			}
+
+			const record = await probeRecord(id);
+			if (record.isOk()) {
+				const bytes = await getFile(record.value, String(record.value.file ?? ''));
+				return { bytes, record: record.value as unknown as ReplayDetail['record'] };
+			}
+
+			if (record.error.status !== 404) {
+				throw record.error;
+			}
+
+			return app.database.replays.getLobbyDetail(id);
+		}
+	);
 	const canEdit = $derived(
 		!!detail &&
 			detail.kind === 'member' &&

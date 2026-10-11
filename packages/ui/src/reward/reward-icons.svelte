@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { useHost } from '../host/host.context';
-	import { Skeleton } from '../ui/skeleton';
 	import RewardIcon from './reward-icon.svelte';
 	import type { PlayerRewards, RewardView } from './types';
 
@@ -56,13 +55,7 @@
 {/snippet}
 
 {#if fetched}
-	{#await fetched}
-		<div class={cn('mb-4 flex flex-wrap items-center gap-1.5', className)}>
-			{#each [0, 1, 2] as index (index)}
-				<Skeleton class="size-10 rounded-sm" />
-			{/each}
-		</div>
-	{:then list}
+	{#await fetched then list}
 		{@render icons(list)}
 	{/await}
 {:else}

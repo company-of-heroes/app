@@ -113,7 +113,6 @@
 				</div>
 				{#if stat.profile.avatarUrl}
 					<img
-						loading="lazy"
 						decoding="async"
 						src={host.resolve.avatarUrl(stat.profile.avatarUrl)}
 						alt=""
@@ -132,7 +131,6 @@
 				{/if}
 				<div class="flex items-center gap-2">
 					<img
-						loading="lazy"
 						decoding="async"
 						src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
 						alt=""
@@ -148,7 +146,6 @@
 				>
 					{#if flagUrl}
 						<img
-							loading="lazy"
 							decoding="async"
 							class={cn('w-auto shrink-0 rounded-xs', stat.rank === 1 ? 'h-5' : 'h-4')}
 							src={flagUrl}

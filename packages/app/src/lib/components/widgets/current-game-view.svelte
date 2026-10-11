@@ -341,7 +341,7 @@
 		class="border-secondary-800 grid grid-cols-1 border-b sm:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]"
 	>
 		<div class="border-secondary-800 aspect-square self-start sm:border-r">
-			<MapImage map={lobby.map} alt={mapLabel} flush />
+			<MapImage map={lobby.map} alt={mapLabel} flush loading="eager" />
 		</div>
 
 		<div class="min-w-0 px-6 py-4">

@@ -93,7 +93,7 @@
 				: 'sm:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]'
 		)}
 	>
-		<MapImage {map} alt={mapName} flush {resolveMapSrc} {resolveFallbackSrc} />
+		<MapImage {map} alt={mapName} flush loading="eager" {resolveMapSrc} {resolveFallbackSrc} />
 		{#if vote}
 			<div class="flex items-start justify-center px-6 sm:px-0 sm:py-4">
 				{@render vote()}

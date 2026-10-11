@@ -207,7 +207,7 @@
 	)}
 >
 	<div class="border-secondary-800 aspect-square self-start sm:border-r">
-		<MapImage map={mapKey} alt={mapLabel} flush />
+		<MapImage map={mapKey} alt={mapLabel} flush loading="eager" />
 	</div>
 
 	<div class="min-w-0">
