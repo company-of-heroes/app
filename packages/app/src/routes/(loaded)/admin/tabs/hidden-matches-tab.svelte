@@ -29,7 +29,7 @@
 	const { t } = useI18n();
 
 	/** Session ids per `lobbies` lookup; one OR filter per chunk. */
-	const MAP_CHUNK_SIZE = 200;
+	const MAP_CHUNK_SIZE = 100;
 
 	type Row = HiddenMatch & { map?: string };
 
