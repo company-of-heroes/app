@@ -11,7 +11,11 @@ import { account } from '$core/account';
 import { Feature } from '../feature.svelte';
 import { relic, relicLeaderboardFingerprint } from '$lib/relic';
 import { join } from '@tauri-apps/api/path';
-import { exists, readDir, readFile, stat, writeFile } from '@tauri-apps/plugin-fs';
+import { exists, readFile, writeFile } from '@tauri-apps/plugin-fs';
+import {
+	listReplayFiles,
+	type ReplayFileEntry
+} from '$core/app/features/replay-analyzer/replay-files';
 import { parseHeader, parseReplay } from '@fknoobs/replay-parser';
 import { Matches } from './matches.svelte';
 import type { AttachReplayResult } from '@company-of-heroes/api';
@@ -585,6 +589,7 @@ export class History extends Feature<HistorySettings> {
 
 		const needingResults = await app.database.matches.getPaginated(1, 100, {
 			filter: `needsResult=true && hasFailed!=true && user = "${account.userId}"`,
+			fields: ['id', 'sessionId', 'replay'],
 			expand: false
 		});
 
@@ -616,7 +621,8 @@ export class History extends Feature<HistorySettings> {
 
 				if (item.replay) {
 					try {
-						const bytes = await getFile(item, item.replay);
+						// The list only selects id/sessionId/replay; the file URL needs the collection.
+						const bytes = await getFile({ collectionName: 'lobbies', id: item.id }, item.replay);
 						const withSteamIds = embedSteamIdsInReplay(bytes, result.players);
 						update.replay = new File([withSteamIds], item.replay);
 					} catch (error) {
@@ -703,35 +709,19 @@ export class History extends Feature<HistorySettings> {
 			return null;
 		}
 
-		let names: string[] = [];
+		let recs: ReplayFileEntry[] = [];
 		try {
-			const entries = await readDir(playbackDir);
-			const recs: { name: string; mtime: number }[] = [];
-			for (const entry of entries) {
-				if (!entry.isFile || !entry.name.toLowerCase().endsWith('.rec')) {
-					continue;
-				}
-
-				const path = await join(playbackDir, entry.name);
-				let mtime = 0;
-				try {
-					const info = await stat(path);
-					mtime = info.mtime?.getTime() ?? info.birthtime?.getTime() ?? 0;
-				} catch {
-					mtime = 0;
-				}
-				recs.push({ name: entry.name, mtime });
-			}
-			recs.sort((a, b) => b.mtime - a.mtime);
-			names = recs.slice(0, REPLAY_NAME_SCAN_LIMIT).map((rec) => rec.name);
+			recs = (await listReplayFiles(playbackDir))
+				.sort((a, b) => b.modifiedMs - a.modifiedMs)
+				.slice(0, REPLAY_NAME_SCAN_LIMIT);
 		} catch (error) {
 			console.warn('[HISTORY]: could not list playback folder', error);
 			return null;
 		}
 
-		for (const name of names) {
+		for (const { name, path } of recs) {
 			try {
-				const bytes = new Uint8Array(await readFile(await join(playbackDir, name)));
+				const bytes = new Uint8Array(await readFile(path));
 				const parsed = parseHeader(bytes);
 				if (
 					replayHeaderMatchesLobby(lobby, {

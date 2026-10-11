@@ -2,6 +2,7 @@ use serde::Serialize;
 use std::fs;
 use std::io::{self};
 use std::path::Path;
+use std::time::UNIX_EPOCH;
 
 #[derive(Serialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -202,10 +203,73 @@ fn normalize_map_name(map_name: &str) -> String {
         .join(" ")
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReplayFileEntry {
+    name: String,
+    path: String,
+    modified_ms: u64,
+    size: u64,
+}
+
+/// Lists the `.rec` files in a folder with their size and mtime in one call,
+/// instead of a readDir plus a stat per file from the webview.
+#[tauri::command]
+pub async fn list_replay_files(dir: String) -> Result<Vec<ReplayFileEntry>, String> {
+    tokio::task::spawn_blocking(move || read_replay_dir(&dir))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+fn read_replay_dir(dir: &str) -> Result<Vec<ReplayFileEntry>, String> {
+    let mut entries = Vec::new();
+
+    for entry in fs::read_dir(dir).map_err(|e| e.to_string())? {
+        let Ok(entry) = entry else {
+            continue;
+        };
+
+        let name = entry.file_name().to_string_lossy().to_string();
+        if !name.to_lowercase().ends_with(".rec") {
+            continue;
+        }
+
+        let Ok(metadata) = entry.metadata() else {
+            continue;
+        };
+
+        if !metadata.is_file() {
+            continue;
+        }
+
+        let modified_ms = metadata
+            .modified()
+            .ok()
+            .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
+            .map(|duration| duration.as_millis() as u64)
+            .unwrap_or(0);
+
+        entries.push(ReplayFileEntry {
+            name,
+            path: entry.path().to_string_lossy().to_string(),
+            modified_ms,
+            size: metadata.len(),
+        });
+    }
+
+    Ok(entries)
+}
+
 #[tauri::command]
 pub async fn parse_replay(path: String) -> Result<ParsedReplay, String> {
-    let data = fs::read(&path).map_err(|e| e.to_string())?;
-    let file_name = Path::new(&path)
+    tokio::task::spawn_blocking(move || parse_replay_file(&path))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+fn parse_replay_file(path: &str) -> Result<ParsedReplay, String> {
+    let data = fs::read(path).map_err(|e| e.to_string())?;
+    let file_name = Path::new(path)
         .file_name()
         .unwrap_or_default()
         .to_string_lossy()

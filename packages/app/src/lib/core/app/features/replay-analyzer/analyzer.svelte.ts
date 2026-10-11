@@ -1,9 +1,10 @@
 import { app } from '$core/app/context';
-import { readDir, readFile, stat, type DirEntry, type FileInfo } from '@tauri-apps/plugin-fs';
+import { readFile } from '@tauri-apps/plugin-fs';
 import { Feature } from '../feature.svelte';
 import { dirname, join } from '@tauri-apps/api/path';
 import { orderBy } from 'lodash-es';
 import ReplayWorker from '$lib/workers/replay.worker?worker';
+import { listReplayFiles, type ReplayFileEntry } from './replay-files';
 
 export type ReplayAnalyzerSettings = {
 	didDoInitialScan: boolean;
@@ -132,18 +133,9 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 	}
 
 	private async getReplaysToProcess(playbackDir: string): Promise<string[]> {
-		let localFiles: (DirEntry & FileInfo)[] = [];
+		let localFiles: ReplayFileEntry[] = [];
 		try {
-			const files = await readDir(playbackDir);
-
-			localFiles = await Promise.all(
-				files.map(async (f) => {
-					const info = await stat(await join(playbackDir, f.name));
-					return { ...f, ...info };
-				})
-			);
-
-			localFiles = orderBy(localFiles, 'birthtime', 'desc');
+			localFiles = orderBy(await listReplayFiles(playbackDir), 'modifiedMs', 'desc');
 		} catch (e) {
 			console.warn(`ReplayAnalyzer: Could not read playback directory: ${playbackDir}`, e);
 			return [];
@@ -152,7 +144,6 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 		const replays = localFiles
 			.filter(
 				(f) =>
-					f.isFile &&
 					f.name.endsWith('.rec') &&
 					f.name !== 'temp.rec' &&
 					!f.name.startsWith('replay_') &&
@@ -162,10 +153,9 @@ export class ReplayAnalyzer extends Feature<ReplayAnalyzerSettings> {
 
 		const existingFilenames = await app.database.replays.getExistingFilenamesByUser();
 		const existingSet = new Set(existingFilenames);
+		const ignoredSet = new Set(this.settings.ignoredFiles);
 
-		const newReplays = replays
-			.filter((name) => !existingSet.has(name))
-			.filter((name) => !this.settings.ignoredFiles.includes(name));
+		const newReplays = replays.filter((name) => !existingSet.has(name) && !ignoredSet.has(name));
 
 		console.log(`Found ${newReplays.length} new replays to process.`);
 		return newReplays;

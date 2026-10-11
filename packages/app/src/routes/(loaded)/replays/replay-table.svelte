@@ -20,6 +20,7 @@
 	import type { ReplayList } from './replay-list.svelte';
 	import { app } from '$core/app/context';
 	import { resource } from 'runed';
+	import { listReplayFiles } from '$core/app/features/replay-analyzer/replay-files';
 	import { ReplayRenameForm } from '@company-of-heroes/ui/replay';
 	import ReplayDeleteModal from './replay-delete-modal.svelte';
 	import { useI18n } from '$lib/i18n';
@@ -34,15 +35,39 @@
 	let downloadingIds = $state<Record<string, boolean>>({});
 	let confirmedLocalIds = $state<Record<string, true>>({});
 
+	/** Row keys (`id:filename`) whose local presence was already checked. */
+	const checkedRows = new Set<string>();
+
+	async function listLocalReplayNames(): Promise<Set<string>> {
+		if (!app.cohPaths.warningsLog) {
+			return new Set();
+		}
+
+		try {
+			const files = await listReplayFiles(await app.paths.cohPlaybackDir());
+			return new Set(files.map((file) => file.name.toLowerCase()));
+		} catch {
+			return new Set();
+		}
+	}
+
+	// Only rows added since the last run (infinite scroll) are checked, against one folder listing.
 	const localPresence = resource(
 		() => list.replays.map((replay) => `${replay.id}:${replay.filename}`).join('|'),
-		async () => {
-			const entries = await Promise.all(
-				list.replays.map(
-					async (row) => [row.id, await app.database.replays.localExists(row.filename)] as const
-				)
-			);
-			return Object.fromEntries(entries) as Record<string, boolean>;
+		async (_key, _previousKey, { data }) => {
+			const fresh = list.replays.filter((row) => !checkedRows.has(`${row.id}:${row.filename}`));
+			if (fresh.length === 0) {
+				return data ?? {};
+			}
+
+			const localNames = await listLocalReplayNames();
+			const presence: Record<string, boolean> = { ...data };
+			for (const row of fresh) {
+				checkedRows.add(`${row.id}:${row.filename}`);
+				presence[row.id] = !!row.filename && localNames.has(row.filename.toLowerCase());
+			}
+
+			return presence;
 		}
 	);
 

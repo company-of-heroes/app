@@ -52,6 +52,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_oauth::init())
         .plugin(tauri_plugin_cors_fetch::init())
+        .manage(process_check::ProcessTable::new())
         .invoke_handler(tauri::generate_handler![
             global_shortcuts::reset_global_shortcuts,
             unzip::unzip_file,
@@ -62,6 +63,7 @@ pub fn run() {
             module_check::find_unknown_game_modules,
             capture::capture_game_window,
             replay_parser::parse_replay,
+            replay_parser::list_replay_files,
             input::send_keys,
             input::release_all_held_keys,
             input::shortcut_modifiers_match,
