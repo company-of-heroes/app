@@ -37,7 +37,9 @@
 	const { t } = useI18n();
 	const host = useHost();
 
-	const stats = $derived(host.api.tournaments.stats(tournament.slug));
+	// Keyed on the slug: a refreshed tournament object must not load the stats again.
+	const slug = $derived(tournament.slug);
+	const stats = $derived(host.api.tournaments.stats(slug));
 	const byId = $derived(new Map(participants.map((p) => [p.id, p])));
 	const matchById = $derived(new Map(matches.map((m) => [m.id, m])));
 

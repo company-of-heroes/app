@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { resource } from 'runed';
 	import { TournamentPage } from '@company-of-heroes/ui/tournament';
+	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import { api, unwrapApi } from '$core/api';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
 	import { useI18n } from '$lib/i18n';
@@ -26,7 +27,9 @@
 		{t('Tournament not found.')}
 	</p>
 {:else}
-	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-		{t('Loading...')}
-	</p>
+	<div class="border-secondary-800 space-y-2 border-b px-4 py-3">
+		<Skeleton class="h-6 w-64" />
+		<Skeleton class="h-4 w-40" />
+		<Skeleton class="h-32 w-full" />
+	</div>
 {/if}

@@ -1,7 +1,7 @@
 import { dev } from '$app/environment';
 import { afterNavigate, goto, invalidateAll, replaceState } from '$app/navigation';
 import { page } from '$app/state';
-import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
+import { provideHost, withFileThumb, type HostContext } from '@company-of-heroes/ui/host';
 import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
 import {
 	authDisplayName,
@@ -228,7 +228,7 @@ export function provideWebsiteHost(): HostContext {
 		},
 		resolve: {
 			flagImageUrl,
-			avatarUrl: resolveAvatarUrl,
+			avatarUrl: (url, options) => resolveAvatarUrl(withFileThumb(url, options?.thumb)),
 			mapSrc: resolveMapSrc,
 			mapFallbackSrc: () => resolveMapSrc(undefined),
 			factionFlagByRace: resolveFactionFlag,
@@ -238,7 +238,8 @@ export function provideWebsiteHost(): HostContext {
 			doctrineBanner: (file) => `/doctrines/${file}`,
 			actionIcon: getActionIcon,
 			medals: getMedals,
-			userAvatar: (user) => user.avatarUrl
+			userAvatar: (user, options) =>
+				user.avatarUrl ? withFileThumb(user.avatarUrl, options?.thumb) : undefined
 		},
 		auth: {
 			get user() {

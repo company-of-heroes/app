@@ -166,9 +166,15 @@ export type PublishFromMatch = {
 	players: ReplayRosterPlayer[];
 };
 
+export type AvatarOptions = {
+	/** PocketBase thumb size, e.g. `100x100`; ignored for other urls. */
+	thumb?: string;
+};
+
 export type HostResolvers = {
 	flagImageUrl: (country: string | null | undefined) => string | null;
-	avatarUrl: (url: string) => string;
+	/** `thumb` (e.g. `100x100`) asks PocketBase for a thumbnail when the url is a PocketBase file. */
+	avatarUrl: (url: string, options?: AvatarOptions) => string;
 	mapSrc: (map: string | undefined) => string | undefined;
 	/** Placeholder when a map image is missing. */
 	mapFallbackSrc: () => string | undefined;
@@ -185,7 +191,10 @@ export type HostResolvers = {
 	/** Champion medals from `shared-assets/medals`, in file order. Hosts without them return []. */
 	medals: () => Medal[];
 	/** Avatar for a comment author / mention; hosts may add a generated fallback. */
-	userAvatar: (user: { id: string; avatarUrl?: string }) => string | undefined;
+	userAvatar: (
+		user: { id: string; avatarUrl?: string },
+		options?: AvatarOptions
+	) => string | undefined;
 };
 
 export type HostApi = {

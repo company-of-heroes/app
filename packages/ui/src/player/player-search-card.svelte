@@ -67,7 +67,9 @@
 		<PlayerProfileLink {href} playerId={previewId} class={cn(interactive, 'shrink-0')}>
 			{#if player.avatarUrl}
 				<img
-					src={host.resolve.avatarUrl(player.avatarUrl)}
+					loading="lazy"
+					decoding="async"
+					src={host.resolve.avatarUrl(player.avatarUrl, { thumb: '100x100' })}
 					alt={player.alias}
 					class="size-16 rounded-xl border-3 border-gray-400 object-cover"
 				/>
@@ -85,7 +87,13 @@
 				)}
 			>
 				{#if flagSrc}
-					<img class="h-5 w-auto shrink-0 rounded-xs" src={flagSrc} alt={player.country ?? ''} />
+					<img
+						loading="lazy"
+						decoding="async"
+						class="h-5 w-auto shrink-0 rounded-xs"
+						src={flagSrc}
+						alt={player.country ?? ''}
+					/>
 				{/if}
 				<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 				<PlayerStreamerIcon {labels} steamId={player.steamId} size={18} />

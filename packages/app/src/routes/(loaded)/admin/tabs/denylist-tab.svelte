@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { watch } from 'runed';
 	import { confirmation } from '$lib/components/ui/modal';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
@@ -60,14 +61,21 @@
 	let isSaving = $state(false);
 	let deletingId = $state<string | null>(null);
 	let togglingId = $state<string | null>(null);
+	let denylistLoading = $state(false);
+	let hitsLoading = $state(false);
 	const canAdd = $derived(name.trim().length > 0 && !isSaving);
 
-	$effect(() => {
-		if (app.account.isStaff) {
-			void loadDenylist();
-			void loadHits();
+	const isStaff = $derived(app.account.isStaff);
+
+	watch(
+		() => isStaff,
+		(enabled) => {
+			if (enabled) {
+				void loadDenylist();
+				void loadHits();
+			}
 		}
-	});
+	);
 
 	const userLabel = (hit: HitRow) => {
 		const user = hit.expand?.user;
@@ -75,6 +83,7 @@
 	};
 
 	const loadDenylist = async () => {
+		denylistLoading = true;
 		try {
 			denylist = await pocketbase
 				.collection('anti_cheat_process_denylist')
@@ -85,10 +94,13 @@
 		} catch (error) {
 			console.error('[ADMIN]: denylist load failed:', error);
 			app.toast.error(t('Could not load denylist.'));
+		} finally {
+			denylistLoading = false;
 		}
 	};
 
 	const loadHits = async () => {
+		hitsLoading = true;
 		try {
 			const response = await pocketbase
 				.collection('anti_cheat_process_hits')
@@ -101,6 +113,8 @@
 		} catch (error) {
 			console.error('[ADMIN]: process hits load failed:', error);
 			app.toast.error(t('Could not load process hits.'));
+		} finally {
+			hitsLoading = false;
 		}
 	};
 
@@ -262,6 +276,7 @@
 	{/snippet}
 	<DataTable
 		data={denylist}
+		loading={denylistLoading && denylist.length === 0}
 		columns={denylistColumns}
 		rowKey={(entry) => entry.id}
 		empty={t('No denylist entries yet.')}
@@ -301,6 +316,7 @@
 	{/snippet}
 	<DataTable
 		data={hits}
+		loading={hitsLoading && hits.length === 0}
 		columns={hitColumns}
 		rowKey={(hit) => hit.id}
 		empty={t('No process hits yet.')}

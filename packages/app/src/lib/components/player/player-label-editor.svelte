@@ -3,7 +3,11 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Dropdown from '$lib/components/ui/dropdown';
 	import { app } from '$core/app/context';
-	import { setLabelsForSteamId } from '$core/pocketbase/player-label-cache.svelte';
+	import {
+		labelsForSteamId,
+		loadPlayerLabels,
+		setLabelsForSteamId
+	} from '$core/pocketbase/player-label-cache.svelte';
 	import {
 		assignPlayerLabel,
 		labelHex,
@@ -11,7 +15,6 @@
 		listAssignmentsForSteamIds,
 		listUserLabels,
 		unassignPlayerLabel,
-		type PlayerLabelAssignment,
 		type UserLabel
 	} from '$core/pocketbase/user-labels';
 	import { cn } from '$lib/utils';
@@ -31,7 +34,6 @@
 	const { t } = useI18n();
 
 	let labels = $state.raw<UserLabel[]>([]);
-	let assignments = $state.raw<PlayerLabelAssignment[]>([]);
 	let togglingId = $state<string | null>(null);
 
 	watch(
@@ -55,18 +57,13 @@
 		return String(value);
 	}
 
-	const assignmentFor = (labelId: string) =>
-		assignments.find((row) => recordId(row.label) === labelId);
+	/** The player's labels come from the header cache, which the profile already loaded. */
+	const assigned = $derived(new Set(labelsForSteamId(steamId).map((label) => label.id)));
 
 	async function load() {
 		try {
-			const [catalog, rows] = await Promise.all([
-				listUserLabels(),
-				listAssignmentsForSteamIds([steamId])
-			]);
+			const [catalog] = await Promise.all([listUserLabels(), loadPlayerLabels([steamId])]);
 			labels = catalog;
-			assignments = rows;
-			setLabelsForSteamId(steamId, labelsBySteamId(rows)[steamId] ?? []);
 		} catch (error) {
 			console.error('[PLAYER]: label editor load failed:', error);
 			app.toast.error(t('Could not load player labels.'));
@@ -76,7 +73,8 @@
 	const toggleLabel = async (label: UserLabel) => {
 		togglingId = label.id;
 		try {
-			const existing = assignmentFor(label.id);
+			const rows = await listAssignmentsForSteamIds([steamId]);
+			const existing = rows.find((row) => recordId(row.label) === label.id);
 			if (existing) {
 				await unassignPlayerLabel(existing.id);
 			} else {
@@ -88,7 +86,8 @@
 				});
 			}
 
-			await load();
+			const updated = await listAssignmentsForSteamIds([steamId]);
+			setLabelsForSteamId(steamId, labelsBySteamId(updated)[steamId] ?? []);
 		} catch (error) {
 			console.error('[PLAYER]: label toggle failed:', error);
 			app.toast.error(t('Could not update labels.'));
@@ -116,7 +115,7 @@
 					onclick={() => toggleLabel(label)}
 				>
 					<span class="flex h-4 w-4 shrink-0 items-center justify-center">
-						{#if assignmentFor(label.id)}
+						{#if assigned.has(label.id)}
 							<CheckIcon class="size-4" weight="bold" />
 						{/if}
 					</span>

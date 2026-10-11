@@ -59,6 +59,7 @@
 		{ id: 'player', header: t('Player'), width: 'w-18/24' },
 		{ id: 'actions', header: '', width: 'w-6/24', class: 'justify-end' }
 	];
+	let labelsLoading = $state(false);
 	let searchingPlayers = $state(false);
 	let searchedPlayers = $state(false);
 	const canSearchPlayers = $derived(playerSearch.query.trim().length > 0 && !searchingPlayers);
@@ -93,11 +94,14 @@
 	}
 
 	async function loadLabels() {
+		labelsLoading = true;
 		try {
 			labels = await listUserLabels();
 		} catch (error) {
 			console.error('[ADMIN]: user labels load failed:', error);
 			app.toast.error(t('Could not load labels.'));
+		} finally {
+			labelsLoading = false;
 		}
 	}
 
@@ -333,6 +337,7 @@
 	{/snippet}
 	<DataTable
 		data={labels}
+		loading={labelsLoading && labels.length === 0}
 		columns={labelColumns}
 		rowKey={(label) => label.id}
 		rowClass={(label) => (editingId === label.id ? 'bg-primary/10' : '')}

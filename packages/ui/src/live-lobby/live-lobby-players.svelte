@@ -68,6 +68,8 @@
 					class={cn(interactive, 'shrink-0 rounded-full')}
 				>
 					<img
+						loading="lazy"
+						decoding="async"
 						src={host.resolve.factionFlagByRace(player.race)}
 						alt=""
 						class={cn(factionIcon, isMe && 'ring-primary')}
@@ -81,6 +83,8 @@
 					{@attach tooltip(escapeHtml(label))}
 				>
 					<img
+						loading="lazy"
+						decoding="async"
 						src={host.resolve.factionFlagByRace(player.race)}
 						alt=""
 						class={cn(factionIcon, isMe && 'ring-primary')}
@@ -89,6 +93,8 @@
 			{/if}
 		{:else}
 			<img
+				loading="lazy"
+				decoding="async"
 				src={host.resolve.factionFlagByRace(player.race)}
 				alt=""
 				{@attach tooltip(escapeHtml(label))}

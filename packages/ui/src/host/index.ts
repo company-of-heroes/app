@@ -6,6 +6,7 @@ export {
 	type HostUser,
 	type HostRoutes,
 	type HostResolvers,
+	type AvatarOptions,
 	type HostApi,
 	type LikeTarget,
 	type PlayerSearchOption,
@@ -16,3 +17,4 @@ export {
 	type PublishFromMatch,
 	type ReplayRosterPlayer
 } from './host.context';
+export { withFileThumb } from './file-thumb';

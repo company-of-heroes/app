@@ -39,12 +39,21 @@
 
 {#snippet mapLayers()}
 	<img
+		loading="lazy"
+		decoding="async"
 		{src}
 		{alt}
 		onerror={handleImageError}
 		class="absolute inset-0 z-5 size-full scale-180 object-cover opacity-30"
 	/>
-	<img {src} {alt} onerror={handleImageError} class="relative z-10 size-full object-contain" />
+	<img
+		loading="lazy"
+		decoding="async"
+		{src}
+		{alt}
+		onerror={handleImageError}
+		class="relative z-10 size-full object-contain"
+	/>
 {/snippet}
 
 {#if src}

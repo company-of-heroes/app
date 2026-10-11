@@ -22,6 +22,7 @@
 	} from '$core/pocketbase/types';
 	import { ClientResponseError } from 'pocketbase';
 	import { resource } from 'runed';
+	import { mapLimit } from '@company-of-heroes/api';
 	import { relic } from '$lib/relic';
 	import { cn } from '$lib/utils';
 	import dayjs from '$lib/dayjs';
@@ -99,16 +100,15 @@
 		},
 		async (key) => {
 			const ids = key ? key.split(',') : [];
-			const entries = await Promise.all(
-				ids.map(async (id) => {
-					try {
-						const profile = await relic.getProfileBySteamId(id);
-						return profile?.alias ? ([id, profile.alias] as const) : null;
-					} catch {
-						return null;
-					}
-				})
-			);
+			// Relic has no batch lookup by steam id; cap the parallel getpersonalstat calls.
+			const entries = await mapLimit(ids, 4, async (id) => {
+				try {
+					const profile = await relic.getProfileBySteamId(id);
+					return profile?.alias ? ([id, profile.alias] as const) : null;
+				} catch {
+					return null;
+				}
+			});
 			return Object.fromEntries(entries.filter((entry) => entry !== null));
 		}
 	);

@@ -3,6 +3,7 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import { useHost } from '../host/host.context';
+	import { Skeleton } from '../ui/skeleton';
 	import { FORMAT_LABELS, parseTournamentDate } from './format';
 	import type { Tournament } from './types';
 
@@ -85,7 +86,15 @@
 	</svg>
 {/snippet}
 
-{#await won then tournaments}
+{#await won}
+	<div class="border-secondary-800 flex items-center gap-4 border-b px-4 py-4" aria-hidden="true">
+		<Skeleton class="h-20 w-12 shrink-0" />
+		<div class="flex flex-col gap-2">
+			<Skeleton class="h-5 w-40" />
+			<Skeleton class="h-4 w-24" />
+		</div>
+	</div>
+{:then tournaments}
 	{#if tournaments.length > 0}
 		{@const latest = ribbon(tournaments[0].id)}
 		<section

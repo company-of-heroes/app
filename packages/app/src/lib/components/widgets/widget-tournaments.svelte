@@ -1,22 +1,29 @@
 <script lang="ts">
 	import { resource } from 'runed';
 	import { featuredTournaments, TournamentList } from '@company-of-heroes/ui/tournament';
-	import { api, unwrapApi } from '$core/api';
+	import { cachedTournaments, loadTournaments } from '$lib/tournaments/tournament-lists';
 	import { Button } from '$lib/components/ui/button';
 	import { useI18n } from '$lib/i18n';
 	import WidgetPanel from './widget-panel.svelte';
 
 	const { t } = useI18n();
 
+	const cachedActive = cachedTournaments('active');
+	const cachedUpcoming = cachedTournaments('upcoming');
+
+	// Staff also get drafts in `upcoming`; those never have open registration.
 	const tournaments = resource(
 		() => true,
 		async () => {
 			const [active, upcoming] = await Promise.all([
-				unwrapApi(api.tournaments.list('active')),
-				unwrapApi(api.tournaments.list('upcoming'))
+				loadTournaments('active'),
+				loadTournaments('upcoming')
 			]);
-			// Staff also get drafts in `upcoming`; those never have open registration.
 			return featuredTournaments(active, upcoming);
+		},
+		{
+			initialValue:
+				cachedActive && cachedUpcoming ? featuredTournaments(cachedActive, cachedUpcoming) : []
 		}
 	);
 </script>

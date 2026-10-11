@@ -20,6 +20,7 @@
 	import type { ReplayList } from './replay-list.svelte';
 	import { app } from '$core/app/context';
 	import { resource } from 'runed';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { listReplayFiles } from '$core/app/features/replay-analyzer/replay-files';
 	import { ReplayRenameForm } from '@company-of-heroes/ui/replay';
 	import ReplayDeleteModal from './replay-delete-modal.svelte';
@@ -36,9 +37,10 @@
 	let confirmedLocalIds = $state<Record<string, true>>({});
 
 	/** Row keys (`id:filename`) whose local presence was already checked. */
-	const checkedRows = new Set<string>();
+	const checkedRows = new SvelteSet<string>();
 
-	async function listLocalReplayNames(): Promise<Set<string>> {
+	/** Lowercased names in the playback folder, or null when the folder could not be listed. */
+	async function listLocalReplayNames(): Promise<Set<string> | null> {
 		if (!app.cohPaths.warningsLog) {
 			return new Set();
 		}
@@ -47,7 +49,7 @@
 			const files = await listReplayFiles(await app.paths.cohPlaybackDir());
 			return new Set(files.map((file) => file.name.toLowerCase()));
 		} catch {
-			return new Set();
+			return null;
 		}
 	}
 
@@ -55,12 +57,24 @@
 	const localPresence = resource(
 		() => list.replays.map((replay) => `${replay.id}:${replay.filename}`).join('|'),
 		async (_key, _previousKey, { data }) => {
+			// A refetch or filter change empties the list first: check every row again, so files
+			// moved outside the app show up correctly.
+			if (list.replays.length === 0) {
+				checkedRows.clear();
+				return {};
+			}
+
 			const fresh = list.replays.filter((row) => !checkedRows.has(`${row.id}:${row.filename}`));
 			if (fresh.length === 0) {
 				return data ?? {};
 			}
 
 			const localNames = await listLocalReplayNames();
+			if (!localNames) {
+				// Listing failed: leave the rows unchecked instead of marking them missing.
+				return data ?? {};
+			}
+
 			const presence: Record<string, boolean> = { ...data };
 			for (const row of fresh) {
 				checkedRows.add(`${row.id}:${row.filename}`);

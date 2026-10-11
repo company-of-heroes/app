@@ -65,7 +65,9 @@
 	<span class="flex min-w-0 flex-1 items-center gap-3">
 		{#if option.meta?.avatarUrl}
 			<img
-				src={host.resolve.avatarUrl(option.meta.avatarUrl)}
+				loading="lazy"
+				decoding="async"
+				src={host.resolve.avatarUrl(option.meta.avatarUrl, { thumb: '100x100' })}
 				alt=""
 				class="ring-secondary-700 size-8 shrink-0 rounded-md object-cover ring-1"
 			/>
@@ -73,7 +75,13 @@
 			<span class="bg-secondary-800 ring-secondary-700 size-8 shrink-0 rounded-md ring-1"></span>
 		{/if}
 		{#if flagUrl}
-			<img class="h-4 w-auto shrink-0 rounded-xs" src={flagUrl} alt={option.meta?.country ?? ''} />
+			<img
+				loading="lazy"
+				decoding="async"
+				class="h-4 w-auto shrink-0 rounded-xs"
+				src={flagUrl}
+				alt={option.meta?.country ?? ''}
+			/>
 		{/if}
 		<span class="min-w-0 flex-1 truncate">{option.label}</span>
 		{#if option.label !== option.value}

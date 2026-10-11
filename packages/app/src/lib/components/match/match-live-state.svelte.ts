@@ -1,8 +1,45 @@
+import { mapLimit } from '@company-of-heroes/api';
 import { app } from '$core/app/context';
 import { resource } from 'runed';
 import { useMatch } from './context';
 
 export type MatchLiveCheck = 'live' | 'not_live' | 'unknown';
+
+type QueuedCheck = {
+	matchId: string;
+	sessionId: number;
+	resolve: (active: boolean) => void;
+	reject: (error: unknown) => void;
+};
+
+let queuedChecks: QueuedCheck[] = [];
+
+/**
+ * Collects the live checks of every pending match rendered in the same tick and runs
+ * them together, at most 4 at a time, instead of one burst of requests per row.
+ */
+function isActiveForMatch(matchId: string, sessionId: number): Promise<boolean> {
+	return new Promise((resolve, reject) => {
+		queuedChecks.push({ matchId, sessionId, resolve, reject });
+		if (queuedChecks.length === 1) {
+			queueMicrotask(flushChecks);
+		}
+	});
+}
+
+function flushChecks() {
+	const checks = queuedChecks;
+	queuedChecks = [];
+	void mapLimit(checks, 4, async (check) => {
+		try {
+			check.resolve(
+				await app.database.lobbiesLive.isActiveForMatch(check.matchId, check.sessionId)
+			);
+		} catch (error) {
+			check.reject(error);
+		}
+	});
+}
 
 /** Live vs pending for a saved match that still has `needsResult`. */
 export function createMatchLiveState() {
@@ -31,7 +68,7 @@ export function createMatchLiveState() {
 			}
 
 			try {
-				const active = await app.database.lobbiesLive.isActiveForMatch(id, Number(session));
+				const active = await isActiveForMatch(id, Number(session));
 				return active ? 'live' : 'not_live';
 			} catch (error) {
 				console.warn('[MATCH]: live lobby check failed:', error);

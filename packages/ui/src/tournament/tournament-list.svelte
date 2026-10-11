@@ -56,6 +56,7 @@
 						>
 							{#if tournament.bannerUrl}
 								<img
+									decoding="async"
 									src={tournament.bannerUrl}
 									alt=""
 									aria-hidden="true"
@@ -76,6 +77,8 @@
 							<div class="flex min-w-0 items-end gap-4">
 								{#if tournament.logoUrl}
 									<img
+										loading="lazy"
+										decoding="async"
 										src={tournament.logoUrl}
 										alt=""
 										class="border-secondary-700 size-16 shrink-0 rounded-md border bg-gray-950 object-cover shadow-lg shadow-black/50"

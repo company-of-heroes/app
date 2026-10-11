@@ -107,6 +107,8 @@
 
 	resetForm();
 
+	let rewardsLoading = $state(false);
+
 	watch(
 		() => app.account.isAdmin,
 		(isAdmin) => {
@@ -231,11 +233,14 @@
 	}
 
 	async function loadRewards() {
+		rewardsLoading = true;
 		try {
 			rewards = await unwrapApi(api.rewards.listAll());
 		} catch (error) {
 			console.error('[ADMIN]: rewards load failed:', error);
 			app.toast.error(t('Could not load rewards.'));
+		} finally {
+			rewardsLoading = false;
 		}
 	}
 
@@ -632,6 +637,7 @@
 	{/snippet}
 	<DataTable
 		data={rewards}
+		loading={rewardsLoading && rewards.length === 0}
 		{columns}
 		rowKey={(entry) => entry.id}
 		rowClass={(row) => (editingId === row.id ? 'bg-primary/10' : '')}

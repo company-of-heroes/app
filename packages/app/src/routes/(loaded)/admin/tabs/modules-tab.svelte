@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { watch } from 'runed';
 	import { confirmation } from '$lib/components/ui/modal';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
@@ -71,14 +72,21 @@
 	let deletingId = $state<string | null>(null);
 	let togglingId = $state<string | null>(null);
 	let allowingId = $state<string | null>(null);
+	let allowlistLoading = $state(false);
+	let hitsLoading = $state(false);
 	const canAdd = $derived(name.trim().length > 0 && !isSaving);
 
-	$effect(() => {
-		if (app.account.isStaff) {
-			void loadAllowlist();
-			void loadHits();
+	const isStaff = $derived(app.account.isStaff);
+
+	watch(
+		() => isStaff,
+		(enabled) => {
+			if (enabled) {
+				void loadAllowlist();
+				void loadHits();
+			}
 		}
-	});
+	);
 
 	const userLabel = (hit: HitRow) => {
 		const user = hit.expand?.user;
@@ -86,6 +94,7 @@
 	};
 
 	const loadAllowlist = async () => {
+		allowlistLoading = true;
 		try {
 			allowlist = await pocketbase
 				.collection('anti_cheat_module_allowlist')
@@ -96,10 +105,13 @@
 		} catch (error) {
 			console.error('[ADMIN]: module allowlist load failed:', error);
 			app.toast.error(t('Could not load module allowlist.'));
+		} finally {
+			allowlistLoading = false;
 		}
 	};
 
 	const loadHits = async () => {
+		hitsLoading = true;
 		try {
 			const response = await pocketbase
 				.collection('anti_cheat_module_hits')
@@ -112,6 +124,8 @@
 		} catch (error) {
 			console.error('[ADMIN]: module hits load failed:', error);
 			app.toast.error(t('Could not load module hits.'));
+		} finally {
+			hitsLoading = false;
 		}
 	};
 
@@ -326,6 +340,7 @@
 	{/snippet}
 	<DataTable
 		data={allowlist}
+		loading={allowlistLoading && allowlist.length === 0}
 		columns={allowlistColumns}
 		rowKey={(entry) => entry.id}
 		empty={t('No module allowlist entries yet.')}
@@ -382,6 +397,7 @@
 	{/snippet}
 	<DataTable
 		data={hits}
+		loading={hitsLoading && hits.length === 0}
 		columns={hitColumns}
 		rowKey={(hit) => hit.id}
 		empty={t('No module hits yet.')}

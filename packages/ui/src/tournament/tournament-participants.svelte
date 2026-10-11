@@ -183,6 +183,8 @@
 											>
 												{#if flagUrl}
 													<img
+														loading="lazy"
+														decoding="async"
 														class="h-4 w-auto shrink-0 rounded-xs"
 														src={flagUrl}
 														alt={countryName ?? participant.country}

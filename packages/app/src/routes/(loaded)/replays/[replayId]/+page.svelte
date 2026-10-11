@@ -36,13 +36,17 @@
 		}
 	);
 
-	/** Your own private replays only exist in the desktop app. */
+	/**
+	 * Your own private replays only exist in the desktop app. Loaded next to `shared` instead of
+	 * after it; shown once `shared` has no replay for this id.
+	 */
 	const privateReplay = resource(
-		() => (shared.current === null ? page.params.replayId! : null),
-		(id) => (id ? app.database.replays.getDetail(id) : Promise.resolve(null))
+		() => page.params.replayId!,
+		(id) => app.database.replays.getDetail(id)
 	);
 
 	const detail = $derived(shared.current);
+	const sharedMissing = $derived(shared.current === null || !!shared.error);
 	const canEdit = $derived(
 		!!detail &&
 			detail.kind === 'member' &&
@@ -107,7 +111,7 @@
 			{/snippet}
 		</SharedReplayDetail>
 	</div>
-{:else if privateReplay.current}
+{:else if sharedMissing && privateReplay.current}
 	{#key privateReplay.current.bytes}
 		<Replay.Root
 			file={privateReplay.current.bytes}
@@ -123,7 +127,7 @@
 			<Replay.Tabs flush />
 		</Replay.Root>
 	{/key}
-{:else if shared.error || privateReplay.error}
+{:else if sharedMissing && privateReplay.error}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{t('Failed to load replay.')}</p>
 {:else}
 	<ReplayPageSkeleton showNav={false} />

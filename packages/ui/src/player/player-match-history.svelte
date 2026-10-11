@@ -107,6 +107,8 @@
 	{#if (matchPlayer.ranklevel ?? 0) > 0}
 		<span class="flex items-center justify-center gap-2">
 			<img
+				loading="lazy"
+				decoding="async"
 				src={host.resolve.rankImageByRace(matchPlayer.race_id, matchPlayer.ranklevel ?? 0)}
 				alt={t('Rank {level}', { level: matchPlayer.ranklevel ?? 0 })}
 				class="size-6 shrink-0 object-contain"
@@ -127,7 +129,9 @@
 			<span class="border-secondary-800 size-8 shrink-0 overflow-hidden rounded-lg border">
 				{#if matchPlayer.avatarUrl}
 					<img
-						src={host.resolve.avatarUrl(matchPlayer.avatarUrl)}
+						loading="lazy"
+						decoding="async"
+						src={host.resolve.avatarUrl(matchPlayer.avatarUrl, { thumb: '100x100' })}
 						alt=""
 						class="size-full object-cover"
 					/>
@@ -281,6 +285,8 @@
 									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
 											<img
+												loading="lazy"
+												decoding="async"
 												src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
 												alt=""
 												class={factionIcon}
@@ -338,6 +344,8 @@
 								{@render eloValue(elo)}
 								{@render rankBadge(matchPlayer)}
 								<img
+									loading="lazy"
+									decoding="async"
 									src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
 									alt=""
 									class={factionIcon}

@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { watch } from 'runed';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
+	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form';
 	import { Input, Textarea } from '$lib/components/ui/input';
@@ -71,14 +73,25 @@
 	);
 	const canSearch = $derived(userQuery.trim().length >= 2 && !isSearching);
 
-	$effect(() => {
-		if (app.account.isStaff) {
-			void loadSent();
+	let sentLoading = $state(false);
+	const isStaff = $derived(app.account.isStaff);
+
+	watch(
+		() => isStaff,
+		(enabled) => {
+			if (enabled) {
+				void loadSent();
+			}
 		}
-	});
+	);
 
 	const loadSent = async () => {
-		sentNotifications = await app.database.notifications.listAll(50);
+		sentLoading = true;
+		try {
+			sentNotifications = await app.database.notifications.listAll(50);
+		} finally {
+			sentLoading = false;
+		}
 	};
 
 	const userLabel = (user: UsersResponse) => user.name || user.email || user.id;
@@ -306,7 +319,12 @@
 		</p>
 	</div>
 
-	{#if sentNotifications.length === 0}
+	{#if sentLoading && sentNotifications.length === 0}
+		<div class="space-y-2 px-4 py-6">
+			<Skeleton class="h-4 w-2/3" />
+			<Skeleton class="h-4 w-1/2" />
+		</div>
+	{:else if sentNotifications.length === 0}
 		<p class="text-secondary-400 px-4 py-6 text-sm">{t('No notifications sent yet.')}</p>
 	{:else}
 		{#snippet cell_recipients({ row }: { row: NotificationRecord })}

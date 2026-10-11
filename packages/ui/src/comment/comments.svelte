@@ -706,7 +706,7 @@
 	{@const editing = editingId === comment.id}
 	{@const href = authorHref(comment)}
 	{@const deleted = comment.deleted}
-	{@const avatar = host.resolve.userAvatar(comment.user)}
+	{@const avatar = host.resolve.userAvatar(comment.user, { thumb: '100x100' })}
 	<div
 		id={`comment-${comment.id}`}
 		class={cn(
@@ -725,6 +725,8 @@
 		>
 			{#if avatar}
 				<img
+					loading="lazy"
+					decoding="async"
 					src={avatar}
 					alt=""
 					class={cn(nested ? 'size-6' : 'size-8', 'mt-0.5 shrink-0 rounded-full object-cover')}

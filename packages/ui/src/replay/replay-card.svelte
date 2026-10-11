@@ -90,12 +90,20 @@
 			<li class="flex h-8 min-w-0 items-center gap-2 px-4 text-sm">
 				{#if ranked}
 					<img
+						loading="lazy"
+						decoding="async"
 						src={host.resolve.rankImageByRace(player.race ?? 0, player.stats?.rankLevel ?? 0)}
 						alt=""
 						class="size-5 shrink-0"
 					/>
 				{:else}
-					<img src={host.resolve.factionFlagByRace(player.race ?? 0)} alt="" class={factionIcon} />
+					<img
+						loading="lazy"
+						decoding="async"
+						src={host.resolve.factionFlagByRace(player.race ?? 0)}
+						alt=""
+						class={factionIcon}
+					/>
 				{/if}
 				<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 				<PlayerStreamerIcon steamId={player.steamId} />

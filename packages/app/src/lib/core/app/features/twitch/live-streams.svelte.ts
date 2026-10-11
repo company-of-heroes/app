@@ -13,6 +13,9 @@ const COH1_GAME_NAMES = [
 	'Company of Heroes: Definitive Edition'
 ];
 
+/** Items of the last stopped feed, so the next one (dashboard, /streaming) renders them at once. */
+let lastItems: LiveStream[] = [];
+
 export type LiveStream = {
 	id: string;
 	userName: string;
@@ -72,7 +75,7 @@ function fromCatalog(value: unknown): LiveStream[] {
  * Twitch tab works without connecting an account; falls back to the user token.
  */
 export class LiveStreamsFeed {
-	items = $state.raw<LiveStream[]>([]);
+	items = $state.raw<LiveStream[]>(lastItems);
 	isLoading = $state(false);
 
 	#gameIds: string[] | null = null;
@@ -89,9 +92,13 @@ export class LiveStreamsFeed {
 		}
 
 		this.#started = true;
+		if (this.items.length === 0) {
+			this.items = lastItems;
+		}
 
 		try {
-			await this.refresh();
+			// With items from the last feed, refresh them in the background instead of showing a loader.
+			await (this.items.length > 0 ? this.#loadItems() : this.refresh());
 		} catch (error) {
 			console.warn('[LIVE_STREAMS]: initial refresh failed:', error);
 		}
@@ -106,6 +113,7 @@ export class LiveStreamsFeed {
 
 		this.#started = false;
 		this.#clearPolling();
+		lastItems = this.items;
 		this.items = [];
 		this.isLoading = false;
 	}
@@ -200,12 +208,11 @@ export class LiveStreamsFeed {
 			return;
 		}
 
+		const results = await Promise.all(
+			gameIds.map((gameId) => client.streams.getStreams({ game: gameId, limit: 50 }))
+		);
 		const byId: Record<string, LiveStream> = {};
-		for (const gameId of gameIds) {
-			const result = await client.streams.getStreams({
-				game: gameId,
-				limit: 50
-			});
+		for (const result of results) {
 			for (const stream of result.data) {
 				if (!isAllowedGameName(stream.gameName)) {
 					continue;

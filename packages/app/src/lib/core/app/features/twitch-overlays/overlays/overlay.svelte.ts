@@ -563,7 +563,9 @@ export abstract class Overlay {
 		try {
 			const response = await siteApi<PublishResponse>('/overlays', {
 				method: 'POST',
-				body: formData
+				body: formData,
+				// The bundle upload can take longer than the default 15 s on a slow connection.
+				timeoutMs: 120_000
 			});
 
 			const contentHash = await this.getLocalContentHash();

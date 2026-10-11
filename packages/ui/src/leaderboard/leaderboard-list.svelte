@@ -1,4 +1,10 @@
+<script module lang="ts">
+	/** Rows rendered at first, and added each time the end of the list scrolls into view. */
+	export const LEADERBOARD_PAGE_SIZE = 100;
+</script>
+
 <script lang="ts">
+	import type { Attachment } from 'svelte/attachments';
 	import { countryDisplayName } from '../format/country';
 	import { useHost } from '../host/host.context';
 	import { useI18n } from '@company-of-heroes/i18n';
@@ -32,12 +38,21 @@
 		eloBySteamId: Record<string, PlayerEloMap>;
 		emptyMessage?: string;
 		naLabel?: string;
+		/** Rows rendered; grows by `LEADERBOARD_PAGE_SIZE` while scrolling. Bind it to load data for the rendered rows only. */
+		limit?: number;
 	};
 
 	const { t } = useI18n();
 	const host = useHost();
 
-	let { stats, eloBySteamId, emptyMessage = 'No players found.' }: Props = $props();
+	let {
+		stats,
+		eloBySteamId,
+		emptyMessage = 'No players found.',
+		limit = $bindable(LEADERBOARD_PAGE_SIZE)
+	}: Props = $props();
+
+	const visibleStats = $derived(stats.slice(0, limit));
 
 	const getSteamIdFromName = (name: string) => name.replace('/steam/', '');
 	const getCountryDisplayName = (country: string | null | undefined) =>
@@ -49,6 +64,20 @@
 			stat.leaderboard_id
 		);
 	}
+
+	/** Renders the next page of rows when the end of the list scrolls into view. */
+	const nearEnd: Attachment<HTMLElement> = (node) => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting && limit < stats.length) {
+					limit += LEADERBOARD_PAGE_SIZE;
+				}
+			},
+			{ rootMargin: '400px' }
+		);
+		observer.observe(node);
+		return () => observer.disconnect();
+	};
 </script>
 
 {#if stats.length === 0}
@@ -69,7 +98,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each stats as stat (stat.profile.profile_id)}
+				{#each visibleStats as stat (stat.profile.profile_id)}
 					{@const elo = eloForRow(stat)}
 					{@const countryName = getCountryDisplayName(stat.profile.country)}
 					{@const flagUrl = host.resolve.flagImageUrl(stat.profile.country)}
@@ -80,6 +109,8 @@
 						<td class="px-4 py-1.5">
 							<div class="flex items-center justify-center gap-2">
 								<img
+									loading="lazy"
+									decoding="async"
 									src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
 									alt=""
 									class="size-6 shrink-0 object-contain"
@@ -101,6 +132,8 @@
 							>
 								{#if flagUrl}
 									<img
+										loading="lazy"
+										decoding="async"
 										class="h-4 w-auto shrink-0 rounded-xs"
 										src={flagUrl}
 										alt={countryName ?? stat.profile.country ?? ''}
@@ -145,7 +178,7 @@
 	</div>
 
 	<div class="divide-secondary-800 divide-y md:hidden">
-		{#each stats as stat (stat.profile.profile_id)}
+		{#each visibleStats as stat (stat.profile.profile_id)}
 			{@const elo = eloForRow(stat)}
 			{@const countryName = getCountryDisplayName(stat.profile.country)}
 			{@const flagUrl = host.resolve.flagImageUrl(stat.profile.country)}
@@ -154,6 +187,8 @@
 					<span class="text-secondary-400 shrink-0 font-semibold tabular-nums">#{stat.rank}</span>
 					<div class="flex shrink-0 items-center gap-1.5">
 						<img
+							loading="lazy"
+							decoding="async"
 							src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
 							alt=""
 							class="size-6 shrink-0 object-contain"
@@ -173,6 +208,8 @@
 					>
 						{#if flagUrl}
 							<img
+								loading="lazy"
+								decoding="async"
 								class="h-4 w-auto shrink-0 rounded-xs"
 								src={flagUrl}
 								alt={countryName ?? stat.profile.country ?? ''}
@@ -225,4 +262,9 @@
 			</div>
 		{/each}
 	</div>
+	{#if limit < stats.length}
+		{#key limit}
+			<div {@attach nearEnd} aria-hidden="true"></div>
+		{/key}
+	{/if}
 {/if}

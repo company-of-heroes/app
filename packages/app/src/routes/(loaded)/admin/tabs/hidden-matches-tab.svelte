@@ -6,6 +6,7 @@
 	import * as Form from '$lib/components/ui/form';
 	import * as User from '$lib/components/user';
 	import { app } from '$core/app/context';
+	import { api } from '$core/api';
 	import { pocketbase } from '$core/pocketbase';
 	import { fetch } from '$core/http/fetch';
 	import {
@@ -17,13 +18,18 @@
 		type HiddenMatch,
 		type HiddenMatchKeyword
 	} from '$core/pocketbase/hidden-matches';
+	import { invalidateHiddenMatchFilters } from '$lib/player/hidden-matches-cache';
 	import { normalizeMapName } from '$lib/utils';
 	import dayjs from '$lib/dayjs';
 	import PlusIcon from 'phosphor-svelte/lib/Plus';
 	import { useI18n } from '$lib/i18n';
 	import { watch } from 'runed';
+	import { mapLimit } from '@company-of-heroes/api';
 
 	const { t } = useI18n();
+
+	/** Session ids per `lobbies` lookup; one OR filter per chunk. */
+	const MAP_CHUNK_SIZE = 200;
 
 	type Row = HiddenMatch & { map?: string };
 
@@ -67,41 +73,48 @@
 	let isLoading = $state(false);
 	let unhidingId = $state<number | null>(null);
 
+	const isStaff = $derived(app.account.isStaff);
+
 	watch(
-		() => app.account.isStaff,
-		(isStaff) => {
-			if (isStaff) {
+		() => isStaff,
+		(staff) => {
+			if (staff) {
 				void loadKeywords();
 				void loadRows();
 			}
 		}
 	);
 
-	async function loadMaps(sessionIds: number[]): Promise<Map<number, string>> {
+	async function loadMaps(sessionIds: number[]): Promise<Record<number, string>> {
 		const unique = [...new Set(sessionIds.filter((id) => id > 0))];
 		if (unique.length === 0) {
-			return new Map();
+			return {};
+		}
+
+		const chunks: number[][] = [];
+		for (let i = 0; i < unique.length; i += MAP_CHUNK_SIZE) {
+			chunks.push(unique.slice(i, i + MAP_CHUNK_SIZE));
 		}
 
 		try {
-			const response = await pocketbase
-				.collection('lobbies')
-				.getList(1, Math.min(200, unique.length), {
-					filter: unique.map((id) => `sessionId=${id}`).join(' || '),
+			const pages = await mapLimit(chunks, 4, (chunk) =>
+				pocketbase.collection('lobbies').getList(1, chunk.length, {
+					filter: chunk.map((id) => `sessionId=${id}`).join(' || '),
 					fields: 'id,sessionId,map',
 					fetch
-				});
-			const maps = new Map<number, string>();
-			for (const lobby of response.items) {
+				})
+			);
+			const maps: Record<number, string> = {};
+			for (const lobby of pages.flatMap((page) => page.items)) {
 				const sessionId = Number(lobby.sessionId);
-				if (sessionId > 0 && lobby.map && !maps.has(sessionId)) {
-					maps.set(sessionId, lobby.map);
+				if (sessionId > 0 && lobby.map && !maps[sessionId]) {
+					maps[sessionId] = lobby.map;
 				}
 			}
 			return maps;
 		} catch (error) {
 			console.warn('[ADMIN]: hidden match map lookup failed:', error);
-			return new Map();
+			return {};
 		}
 	}
 
@@ -114,6 +127,12 @@
 		}
 	}
 
+	/** Hidden matches and title words change what profiles and match lists show. */
+	function invalidateHiddenMatches() {
+		invalidateHiddenMatchFilters();
+		api.players.invalidate();
+	}
+
 	async function loadRows() {
 		isLoading = true;
 		try {
@@ -121,7 +140,7 @@
 			const maps = await loadMaps(hidden.map((row) => Number(row.sessionId)));
 			rows = hidden.map((row) => ({
 				...row,
-				map: maps.get(Number(row.sessionId))
+				map: maps[Number(row.sessionId)]
 			}));
 		} catch (error) {
 			console.error('[ADMIN]: hidden matches load failed:', error);
@@ -141,6 +160,7 @@
 		try {
 			await addHiddenKeyword(next);
 			word = '';
+			invalidateHiddenMatches();
 			app.toast.success(t('Word added.'));
 			await loadKeywords();
 		} catch (error) {
@@ -164,6 +184,7 @@
 		deletingWordId = entry.id;
 		try {
 			await deleteHiddenKeyword(entry.id);
+			invalidateHiddenMatches();
 			app.toast.success(t('Word removed.'));
 			await loadKeywords();
 		} catch (error) {
@@ -186,6 +207,7 @@
 		unhidingId = Number(row.sessionId);
 		try {
 			await unhideMatch(Number(row.sessionId));
+			invalidateHiddenMatches();
 			app.toast.success(t('Match is visible again.'));
 			await loadRows();
 		} catch (error) {
@@ -324,7 +346,8 @@
 		data={rows}
 		{columns}
 		rowKey={(row) => row.id}
-		empty={isLoading ? t('Loading…') : t('No hidden matches.')}
+		loading={isLoading && rows.length === 0}
+		empty={t('No hidden matches.')}
 		class="rounded-none border-0"
 		cells={{
 			session: cell_session,

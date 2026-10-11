@@ -1,31 +1,43 @@
 <script lang="ts">
 	import { resource } from 'runed';
+	import type { Tournament } from '@company-of-heroes/api';
 	import { TournamentOverview } from '@company-of-heroes/ui/tournament';
-	import { api, unwrapApi } from '$core/api';
+	import { Skeleton } from '@company-of-heroes/ui/skeleton';
+	import { cachedTournaments, loadTournaments } from '$lib/tournaments/tournament-lists';
 	import { useI18n } from '$lib/i18n';
 
 	const { t } = useI18n();
 
+	type Lists = [active: Tournament[], upcoming: Tournament[], past: Tournament[]];
+
+	const cachedActive = cachedTournaments('active');
+	const cachedUpcoming = cachedTournaments('upcoming');
+	const cachedPast = cachedTournaments('past');
+	/** Lists from the last visit (or the dashboard widget), shown while these refresh. */
+	const cached: Lists | undefined =
+		cachedActive && cachedUpcoming && cachedPast
+			? [cachedActive, cachedUpcoming, cachedPast]
+			: undefined;
+
 	const lists = resource(
 		() => true,
-		() =>
-			Promise.all([
-				unwrapApi(api.tournaments.list('active')),
-				unwrapApi(api.tournaments.list('upcoming')),
-				unwrapApi(api.tournaments.list('past'))
-			])
+		(): Promise<Lists> =>
+			Promise.all([loadTournaments('active'), loadTournaments('upcoming'), loadTournaments('past')])
 	);
+	const current = $derived(lists.current ?? cached);
 </script>
 
-{#if lists.current}
-	{@const [active, upcoming, past] = lists.current}
+{#if current}
+	{@const [active, upcoming, past] = current}
 	<TournamentOverview {active} {upcoming} {past} />
 {:else if lists.error}
 	<p class="text-destructive border-secondary-800 border-b px-4 py-3 text-sm">
 		{t('Could not load tournaments.')}
 	</p>
 {:else}
-	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-		{t('Loading...')}
-	</p>
+	<div class="border-secondary-800 space-y-2 border-b px-4 py-3">
+		<Skeleton class="h-5 w-48" />
+		<Skeleton class="h-16 w-full" />
+		<Skeleton class="h-16 w-full" />
+	</div>
 {/if}

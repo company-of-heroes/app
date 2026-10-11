@@ -2,7 +2,7 @@ import { goto, invalidateAll, replaceState } from '$app/navigation';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { page } from '$app/state';
 import { confirmation } from '@company-of-heroes/ui/modal';
-import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
+import { provideHost, withFileThumb, type HostContext } from '@company-of-heroes/ui/host';
 import { toPlayerPreviewData, type PlayerEloMap } from '@company-of-heroes/ui/player';
 import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
 import { buildProfileLinks, pickOwnedSteamId } from '@company-of-heroes/api';
@@ -73,7 +73,7 @@ export function provideAppHost(): HostContext {
 		},
 		resolve: {
 			flagImageUrl,
-			avatarUrl: (url) => url,
+			avatarUrl: (url, options) => withFileThumb(url, options?.thumb),
 			mapSrc: getMapImageFromName,
 			mapFallbackSrc: getDefaultMapImage,
 			factionFlagByRace: getFactionFlagFromRace,
@@ -85,7 +85,10 @@ export function provideAppHost(): HostContext {
 				Object.entries(doctrineBanners).find(([path]) => path.endsWith(`/${file}`))?.[1] ?? '',
 			actionIcon: getActionIcon,
 			medals: getMedals,
-			userAvatar: (user) => user.avatarUrl || userAvatarSrc({ id: user.id })
+			userAvatar: (user, options) =>
+				user.avatarUrl
+					? withFileThumb(user.avatarUrl, options?.thumb)
+					: userAvatarSrc({ id: user.id })
 		},
 		auth: {
 			get user() {

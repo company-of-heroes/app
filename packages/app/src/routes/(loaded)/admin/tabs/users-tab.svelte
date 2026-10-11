@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { watch } from 'runed';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { confirmation } from '$lib/components/ui/modal';
@@ -22,7 +23,6 @@
 	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
 	import type { SteamConflict, SteamConflictAccount } from '@company-of-heroes/api';
 	import { api } from '$core/api';
-	import { onMount } from 'svelte';
 
 	const { t } = useI18n();
 
@@ -128,9 +128,14 @@
 		conflicts = conflicts.filter((row) => row.id !== conflict.id);
 	};
 
-	onMount(() => {
-		void loadConflicts();
-	});
+	watch(
+		() => isAdmin,
+		(enabled) => {
+			if (enabled) {
+				void loadConflicts();
+			}
+		}
+	);
 
 	const searchUsers = async () => {
 		const query = userQuery.trim();

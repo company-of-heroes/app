@@ -72,6 +72,8 @@
 		})
 	);
 
+	let typesLoading = $state(false);
+
 	watch(
 		() => app.account.isAdmin,
 		(isAdmin) => {
@@ -122,11 +124,14 @@
 	}
 
 	async function loadTypes() {
+		typesLoading = true;
 		try {
 			types = await listReputationTypes();
 		} catch (error) {
 			console.error('[ADMIN]: reputation types load failed:', error);
 			app.toast.error(t('Could not load reputation types.'));
+		} finally {
+			typesLoading = false;
 		}
 	}
 
@@ -284,6 +289,7 @@
 	{/snippet}
 	<DataTable
 		data={types}
+		loading={typesLoading && types.length === 0}
 		{columns}
 		rowKey={(entry) => entry.id}
 		rowClass={(row) => (editingId === row.id ? 'bg-primary/10' : '')}

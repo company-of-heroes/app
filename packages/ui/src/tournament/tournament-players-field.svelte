@@ -60,13 +60,21 @@
 				<li class="flex items-center gap-2 px-3 py-1.5 text-sm">
 					{#if preview?.avatarUrl}
 						<img
-							src={host.resolve.avatarUrl(preview.avatarUrl)}
+							loading="lazy"
+							decoding="async"
+							src={host.resolve.avatarUrl(preview.avatarUrl, { thumb: '100x100' })}
 							alt=""
 							class="size-6 shrink-0 rounded object-cover"
 						/>
 					{/if}
 					{#if flagUrl}
-						<img src={flagUrl} alt="" class="h-3.5 w-auto shrink-0 rounded-xs" />
+						<img
+							loading="lazy"
+							decoding="async"
+							src={flagUrl}
+							alt=""
+							class="h-3.5 w-auto shrink-0 rounded-xs"
+						/>
 					{/if}
 					<span class="min-w-0 flex-1 truncate text-white">
 						{preview?.alias || id}
