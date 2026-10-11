@@ -16,7 +16,7 @@ export function tmpPath(path: string): string {
 
 export async function writeJsonAtomic(path: string, value: unknown): Promise<void> {
 	const tmp = tmpPath(path);
-	const content = JSON.stringify(value, null, '\t');
+	const content = JSON.stringify(value);
 
 	await writeTextFile(tmp, content);
 

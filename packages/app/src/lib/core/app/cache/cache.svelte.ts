@@ -1,4 +1,4 @@
-import { set, get, has, remove } from 'tauri-plugin-cache-api';
+import { set, get, remove } from 'tauri-plugin-cache-api';
 
 /**
  * Options for caching data.
@@ -31,6 +31,38 @@ function throwIfAborted(signal?: AbortSignal) {
 	}
 }
 
+/** Values fetched this session; a repeat query skips the plugin round-trip. */
+const memory = new Map<string, { value: unknown; expiresAt: number }>();
+const MEMORY_MAX = 200;
+
+/** `ttl` in seconds, like the plugin; without one the value never expires. */
+function remember(key: string, value: unknown, ttl?: number) {
+	memory.delete(key);
+	memory.set(key, { value, expiresAt: ttl === undefined ? Infinity : Date.now() + ttl * 1000 });
+	if (memory.size > MEMORY_MAX) {
+		memory.delete(memory.keys().next().value!);
+	}
+}
+
+function recall<T>(key: string): T | null {
+	const hit = memory.get(key);
+	if (!hit) {
+		return null;
+	}
+
+	if (hit.expiresAt <= Date.now()) {
+		memory.delete(key);
+		return null;
+	}
+
+	return hit.value as T;
+}
+
+function forget(key: string): Promise<void> {
+	memory.delete(key);
+	return remove(key);
+}
+
 export async function useQuery<T>(key: string, options: CacheOptions<T>): Promise<T> {
 	throwIfAborted(options.signal);
 
@@ -39,26 +71,24 @@ export async function useQuery<T>(key: string, options: CacheOptions<T>): Promis
 	}
 
 	if (options.invalidate) {
-		await remove(key);
+		await forget(key);
 	}
 
-	if (await has(key)) {
-		let cached = await get<T>(key);
+	let cached = recall<T>(key) ?? (await get<T>(key));
 
-		if (typeof cached === 'string') {
-			cached = tryDecodeBase64(cached);
-		}
+	if (typeof cached === 'string') {
+		cached = tryDecodeBase64(cached);
+	}
 
+	if (cached) {
 		options.invalidateFn?.(cached).then((isInvalid) => {
 			if (isInvalid) {
-				remove(key).catch((e) => console.warn(`Cache removal failed for key: ${key}`, e));
+				forget(key).catch((e) => console.warn(`Cache removal failed for key: ${key}`, e));
 			}
 		});
 
-		if (cached) {
-			throwIfAborted(options.signal);
-			return cached;
-		}
+		throwIfAborted(options.signal);
+		return cached;
 	}
 
 	const data = await options.queryFn();
@@ -66,6 +96,7 @@ export async function useQuery<T>(key: string, options: CacheOptions<T>): Promis
 
 	const ttl = options.ttl ?? (options.invalidateFn ? undefined : 300);
 
+	remember(key, data, ttl);
 	set(key, data, { ttl }).catch((e) => console.warn(`Cache write failed for key: ${key}`, e));
 
 	return data;
