@@ -281,7 +281,8 @@ export class MatchesApi {
 
 		return fromPbPromise(
 			sendV1<ListResult<MatchRecord>>(this.deps, `/match-history?${params.toString()}`, {
-				signal: options?.signal
+				signal: options?.signal,
+				timeoutMs: 30_000
 			}),
 			'Failed to load match history.'
 		).andThen((response) => {
@@ -310,7 +311,7 @@ export class MatchesApi {
 		}
 
 		return fromPbPromise(
-			sendV1(this.deps, `/history-players?${params.toString()}`),
+			sendV1(this.deps, `/history-players?${params.toString()}`, { timeoutMs: 30_000 }),
 			'Failed to search players.'
 		).map((data) => {
 			const parsed = aggregationPlayersSchema.safeParse(data);
@@ -491,7 +492,8 @@ export class MatchesApi {
 		return fromPbPromise(
 			sendV1<MatchRecord>(this.deps, `/lobbies/${encodeURIComponent(id)}`, {
 				method: 'PATCH',
-				body: data
+				body: data,
+				timeoutMs: 30_000
 			}),
 			'Failed to update match.'
 		);
@@ -647,7 +649,10 @@ export class MatchesApi {
 		const query = params.toString();
 		const path = `/match-filters/${type}${query ? `?${query}` : ''}`;
 
-		return fromPbPromise(sendV1(this.deps, path), 'Failed to load match filters.')
+		return fromPbPromise(
+			sendV1(this.deps, path, { timeoutMs: 30_000 }),
+			'Failed to load match filters.'
+		)
 			.map((data) => {
 				const parsed = matchFiltersSchema.safeParse(data);
 				const maps = parsed.success ? (parsed.data.maps ?? []) : [];

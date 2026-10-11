@@ -110,7 +110,9 @@ export class PlayerPerformanceApi {
 		}
 
 		return ResultAsync.fromPromise(
-			sendV1<PlayerPerformance>(this.deps, `/player-performance?${new URLSearchParams(query)}`),
+			sendV1<PlayerPerformance>(this.deps, `/player-performance?${new URLSearchParams(query)}`, {
+				timeoutMs: 30_000
+			}),
 			() => apiError(500, 'Failed to load player performance.')
 		).andThen((value) => {
 			const parsed = performanceSchema.safeParse(value);
