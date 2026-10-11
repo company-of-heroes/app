@@ -4,6 +4,7 @@ import type { RecordModel } from 'pocketbase';
 import { type ApiDeps, normalizeBaseUrl, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
+import { createTtlCache } from '../ttl-cache';
 import { escapePocketBaseString, fromPbPromise, requireAuth } from '../pb';
 import { STEAM_ID_REGEX } from '../ratings/ratings';
 import { cloneUploadFile, toUploadFile } from '../upload-file';
@@ -47,6 +48,8 @@ type CustomizationFields = {
 };
 
 const COLLECTION = 'player_customizations';
+
+const playerCache = createTtlCache<ResultAsync<PlayerPageData, ApiError>>({ ttlMs: 60_000 });
 
 const playerSearchResultSchema: z.ZodType<PlayerSearchResult> = z
 	.object({
@@ -141,7 +144,25 @@ export class PlayersApi {
 		});
 	}
 
-	get(id: string): ResultAsync<PlayerPageData, ApiError> {
+	/** Cached for 60 s and shared between concurrent callers; `fresh` reloads and replaces the entry. */
+	get(id: string, options: { fresh?: boolean } = {}): ResultAsync<PlayerPageData, ApiError> {
+		const key = `${v1Base(this.deps)}/players/${encodeURIComponent(id)}`;
+		if (options.fresh) {
+			playerCache.invalidate(key);
+		}
+
+		return playerCache.getOrLoad(key, () => this.#fetchPlayer(id));
+	}
+
+	/**
+	 * Drops cached player pages after a profile changed. A player is cached under whichever id
+	 * (Steam ID or profile id) the caller used, so this clears every entry; `id` is for call-site clarity.
+	 */
+	invalidate(_id?: string): void {
+		playerCache.invalidate();
+	}
+
+	#fetchPlayer(id: string): ResultAsync<PlayerPageData, ApiError> {
 		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/players/${encodeURIComponent(id)}`, {
 			fallback: 'Failed to load player stats. Please try again later.',
 			schema: playerPageSchema,
@@ -214,7 +235,10 @@ export class PlayersApi {
 					owned.filter((id) => id !== steamId),
 					fields,
 					background
-				).map(() => serializeCustomization(this.deps.pocketbase, primary, this.deps.baseUrl))
+				).map(() => {
+					this.invalidate(steamId);
+					return serializeCustomization(this.deps.pocketbase, primary, this.deps.baseUrl);
+				})
 			)
 		);
 	}

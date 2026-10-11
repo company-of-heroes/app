@@ -51,6 +51,7 @@ export class CompanionApi {
 				1,
 				1,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: `steamIds ~ "${escaped}"`
 				})
 			),

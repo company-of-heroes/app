@@ -14,6 +14,7 @@ import {
 	attachLiveLobbyStats,
 	type LiveLobbyRawPlayer
 } from '@company-of-heroes/ui/live-lobby/stats';
+import { mapLimit } from '../concurrency';
 import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fromPbPromise, pbOptions, requireAuth } from '../pb';
@@ -193,6 +194,7 @@ export class LiveLobbiesApi {
 				1,
 				LIST_LIMIT,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: lobbiesLivePublicFilter(),
 					sort: '-updatedAt',
 					expand: 'user'
@@ -218,6 +220,7 @@ export class LiveLobbiesApi {
 				page,
 				perPage,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: lobbiesLivePublicFilter(),
 					sort: '-updatedAt',
 					expand: 'user'
@@ -239,6 +242,7 @@ export class LiveLobbiesApi {
 				1,
 				1,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter,
 					fields: 'id'
 				})
@@ -334,21 +338,28 @@ export class LiveLobbiesApi {
 		const ratings = new Map<string, unknown>();
 		if (steamIds.length > 0) {
 			const BATCH_SIZE = 40;
+			const batches: string[][] = [];
 			for (let i = 0; i < steamIds.length; i += BATCH_SIZE) {
-				const batch = steamIds.slice(i, i + BATCH_SIZE);
+				batches.push(steamIds.slice(i, i + BATCH_SIZE));
+			}
+
+			const batchRows = await mapLimit(batches, 4, async (batch) => {
 				try {
 					const filter = batch.map((id) => `steamId="${id}"`).join('||');
-					const rows = await this.deps.pocketbase
+					return await this.deps.pocketbase
 						.collection('player_ratings')
 						.getFullList(pbOptions(this.deps, { filter, fields: 'steamId,elo' }));
-					for (const row of rows) {
-						const steamId = String(row.steamId ?? '');
-						if (steamId) {
-							ratings.set(steamId, row.elo);
-						}
-					}
 				} catch {
 					// Soft-fail ratings enrichment.
+					return [];
+				}
+			});
+			for (const rows of batchRows) {
+				for (const row of rows) {
+					const steamId = String(row.steamId ?? '');
+					if (steamId) {
+						ratings.set(steamId, row.elo);
+					}
 				}
 			}
 		}

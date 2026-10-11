@@ -34,6 +34,7 @@ export type NotificationCreateInput = {
 
 const USER_FILTER = (userId: string) => `(targetAll = true || recipients.id ?= "${userId}")`;
 const UNREAD_SCAN_LIMIT = 50;
+const READ_IDS_LIMIT = 200;
 
 export class NotificationsApi {
 	constructor(private deps: ApiDeps) {}
@@ -44,6 +45,7 @@ export class NotificationsApi {
 				1,
 				limit,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: USER_FILTER(userId),
 					sort: '-created'
 				})
@@ -58,6 +60,7 @@ export class NotificationsApi {
 				1,
 				limit,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					sort: '-created'
 				})
 			),
@@ -67,14 +70,18 @@ export class NotificationsApi {
 
 	getReadIds(userId: string): ResultAsync<Set<string>, ApiError> {
 		return fromPbPromise(
-			this.deps.pocketbase.collection('notification_reads').getFullList<NotificationReadRecord>(
+			this.deps.pocketbase.collection('notification_reads').getList<NotificationReadRecord>(
+				1,
+				READ_IDS_LIMIT,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: `user = "${userId}"`,
+					sort: '-readAt',
 					fields: 'notification'
 				})
 			),
 			'Failed to load notification reads.'
-		).map((reads) => new Set(reads.map((read) => String(read.notification))));
+		).map((reads) => new Set(reads.items.map((read) => String(read.notification))));
 	}
 
 	countUnread(userId: string): ResultAsync<number, ApiError> {
@@ -84,6 +91,7 @@ export class NotificationsApi {
 					1,
 					UNREAD_SCAN_LIMIT,
 					pbOptions(this.deps, {
+						skipTotal: true,
 						filter: USER_FILTER(userId),
 						sort: '-created',
 						fields: 'id'

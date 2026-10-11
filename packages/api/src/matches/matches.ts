@@ -167,12 +167,20 @@ export class MatchesApi {
 			fields?: string[];
 			sort?: string;
 			expand?: string | false;
+			skipTotal?: boolean;
 		} = {}
 	): ResultAsync<ListResult<MatchRecord>, ApiError> {
-		const { filter = '', fields = [], sort = '-createdAt', expand = DEFAULT_EXPAND } = options;
+		const {
+			filter = '',
+			fields = [],
+			sort = '-createdAt',
+			expand = DEFAULT_EXPAND,
+			skipTotal
+		} = options;
 		const requestOptions: Record<string, unknown> = {
 			filter,
 			sort,
+			skipTotal,
 			fetch: this.deps.fetch
 		};
 		if (fields.length > 0) {
@@ -334,14 +342,23 @@ export class MatchesApi {
 		});
 	}
 
-	getList(options: RecordFullListOptions): ResultAsync<MatchRecord[], ApiError> {
+	/** With `limit` only the first page is fetched (no total); without it every match is. */
+	getList(
+		options: RecordFullListOptions & { limit?: number }
+	): ResultAsync<MatchRecord[], ApiError> {
+		const { limit, ...listOptions } = options;
+		const requestOptions = pbOptions(this.deps, { ...listOptions, expand: DEFAULT_EXPAND });
+		if (limit !== undefined) {
+			return fromPbPromise(
+				this.deps.pocketbase
+					.collection('lobbies')
+					.getList<MatchRecord>(1, limit, { ...requestOptions, skipTotal: true }),
+				'Failed to load matches.'
+			).map((records) => records.items);
+		}
+
 		return fromPbPromise(
-			this.deps.pocketbase.collection('lobbies').getFullList<MatchRecord>(
-				pbOptions(this.deps, {
-					...options,
-					expand: DEFAULT_EXPAND
-				})
-			),
+			this.deps.pocketbase.collection('lobbies').getFullList<MatchRecord>(requestOptions),
 			'Failed to load matches.'
 		);
 	}
@@ -361,6 +378,7 @@ export class MatchesApi {
 				1,
 				1,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: `sessionId=${sessionId}`,
 					expand: DEFAULT_EXPAND
 				})
@@ -380,6 +398,7 @@ export class MatchesApi {
 				1,
 				Math.min(500, Math.max(unique.length * 5, unique.length)),
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: unique.map((id) => `sessionId=${id}`).join(' || '),
 					fields: 'id,sessionId,needsResult,hasReplay',
 					sort: '-createdAt'
@@ -418,6 +437,7 @@ export class MatchesApi {
 				1,
 				Math.min(500, unique.length * 5),
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: unique.map((id) => `sessionId=${id}`).join(' || '),
 					fields: 'sessionId,players',
 					sort: '-createdAt'
@@ -438,6 +458,7 @@ export class MatchesApi {
 				1,
 				unique.length,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: unique.map((id) => `id="${id}"`).join(' || '),
 					expand: DEFAULT_EXPAND
 				})

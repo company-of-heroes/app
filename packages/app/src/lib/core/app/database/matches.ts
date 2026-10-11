@@ -47,12 +47,14 @@ export class Matches {
 			filter = '',
 			fields = [],
 			sort = '-createdAt',
-			expand = 'user'
+			expand = 'user',
+			skipTotal
 		}: {
 			filter?: string;
 			fields?: (keyof LobbiesRecord)[];
 			sort?: string;
 			expand?: string | false;
+			skipTotal?: boolean;
 		} = {}
 	): Promise<ListResult<MatchExpanded>> {
 		const response = await unwrapApi(
@@ -60,7 +62,8 @@ export class Matches {
 				filter,
 				fields: fields.map(String),
 				sort,
-				expand
+				expand,
+				skipTotal
 			})
 		);
 
@@ -101,13 +104,8 @@ export class Matches {
 		return unwrapApi(api.matches.searchHistoryMaps(scope, q, userId, limit));
 	}
 
-	async getList(options: RecordFullListOptions): Promise<MatchExpanded[]> {
+	async getList(options: RecordFullListOptions & { limit?: number }): Promise<MatchExpanded[]> {
 		const response = await unwrapApi(api.matches.getList(options));
-		return response.map(exp) as unknown as unknown as MatchExpanded[];
-	}
-
-	async getAll(): Promise<MatchExpanded[]> {
-		const response = await unwrapApi(api.matches.getList({ batch: 1000 }));
 		return response.map(exp) as unknown as unknown as MatchExpanded[];
 	}
 

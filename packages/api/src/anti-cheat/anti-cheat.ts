@@ -1,5 +1,6 @@
 import { ClientResponseError, type RecordModel } from 'pocketbase';
 import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow';
+import { mapLimit } from '../concurrency';
 import type { ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { escapePocketBaseString, fromPbPromise, pbOptions } from '../pb';
@@ -8,6 +9,8 @@ import { isValidSteamId } from '../ratings/ratings';
 import { requireStaff } from '../staff';
 
 const CAPTURE_NAME_SEARCH_LIMIT = 25;
+const CHEATER_LOOKUP_CHUNK = 40;const CAPTURE_FIELDS =
+	'id,collectionId,collectionName,created,session_id,steam_id,map,captured_at,image,user,game_focused,hidden,hiddenAt,hiddenBy,expand';
 
 export type CaptureRecord = RecordModel & {
 	session_id?: number;
@@ -138,6 +141,7 @@ export class AntiCheatApi {
 			this.deps.pocketbase.collection('anti_cheat_captures').getFullList<CaptureRecord>(
 				pbOptions(this.deps, {
 					filter: `session_id = ${sessionId}`,
+					fields: CAPTURE_FIELDS,
 					sort: 'captured_at',
 					expand: 'user'
 				})
@@ -201,6 +205,7 @@ export class AntiCheatApi {
 			this.deps.pocketbase.collection('anti_cheat_captures').getFullList<CaptureRecord>(
 				pbOptions(this.deps, {
 					filter: `user = "${escapePocketBaseString(userId)}" && session_id = ${sessionId}`,
+					fields: CAPTURE_FIELDS,
 					sort: 'captured_at'
 				})
 			),
@@ -309,7 +314,9 @@ export class AntiCheatApi {
 		steamIds: string[];
 		labeledBy?: string;
 	}): ResultAsync<void, ApiError> {
-		return ResultAsync.fromSafePromise(this.createCheaterLabels(input));
+		return ResultAsync.fromSafePromise(this.createCheaterLabels(input)).map(() => {
+			new PlayersApi(this.deps).invalidate();
+		});
 	}
 
 	deleteCheaterLabelsForUser(userId: string): ResultAsync<void, ApiError> {
@@ -338,7 +345,9 @@ export class AntiCheatApi {
 					)
 				)
 			)
-			.map(() => undefined)
+			.map(() => {
+				new PlayersApi(this.deps).invalidate();
+			})
 			.orElse(() => ok(undefined));
 	}
 
@@ -413,31 +422,32 @@ export class AntiCheatApi {
 			} else {
 				nameQuery = query;
 				const escaped = escapePocketBaseString(query);
-				try {
-					const users = await this.deps.pocketbase
+				const [users, playersResult] = await Promise.all([
+					this.deps.pocketbase
 						.collection('users')
 						.getList<RecordModel & { steamIds?: Array<string | number> }>(
 							1,
 							CAPTURE_NAME_SEARCH_LIMIT,
 							pbOptions(this.deps, {
+								skipTotal: true,
 								filter: `name ~ "${escaped}" || email ~ "${escaped}"`,
 								fields: 'id,steamIds'
 							})
-						);
-					for (const user of users.items) {
-						userIds.add(user.id);
-						for (const id of user.steamIds ?? []) {
-							const value = String(id);
-							if (isValidSteamId(value)) {
-								steamIds.add(value);
-							}
+						)
+						// Soft-fail companion lookup; name relation filter may still match.
+						.catch(() => null),
+					new PlayersApi(this.deps).search(query)
+				]);
+				for (const user of users?.items ?? []) {
+					userIds.add(user.id);
+					for (const id of user.steamIds ?? []) {
+						const value = String(id);
+						if (isValidSteamId(value)) {
+							steamIds.add(value);
 						}
 					}
-				} catch {
-					// Soft-fail companion lookup; name relation filter may still match.
 				}
 
-				const playersResult = await new PlayersApi(this.deps).search(query);
 				if (playersResult.isOk()) {
 					for (const player of playersResult.value.slice(0, CAPTURE_NAME_SEARCH_LIMIT)) {
 						if (isValidSteamId(player.steamId)) {
@@ -628,40 +638,32 @@ export class AntiCheatApi {
 			}
 
 			try {
-				const related = await this.deps.pocketbase
-					.collection('anti_cheat_cheaters')
-					.getFullList<CheaterRecord>(
+				const wanted = new Set(leftover);
+				const chunks: string[][] = [];
+				for (let i = 0; i < leftover.length; i += CHEATER_LOOKUP_CHUNK) {
+					chunks.push(leftover.slice(i, i + CHEATER_LOOKUP_CHUNK));
+				}
+
+				const related = await mapLimit(chunks, 4, (chunk) =>
+					this.deps.pocketbase.collection('anti_cheat_cheaters').getFullList<CheaterRecord>(
 						pbOptions(this.deps, {
-							filter: leftover
+							filter: chunk
 								.map((id) => `user.steamIds ?= "${escapePocketBaseString(id)}"`)
 								.join(' || '),
-							fields: 'id,steam_id,user'
+							fields: 'id,expand.user.steamIds',
+							expand: 'user'
 						})
-					);
-				if (related.length === 0) {
-					return matched;
-				}
-
-				if (leftover.length === 1) {
-					matched.add(leftover[0]);
-					return matched;
-				}
-
-				await Promise.all(
-					leftover.map(async (id) => {
-						try {
-							await this.deps.pocketbase.collection('anti_cheat_cheaters').getFirstListItem(
-								`user.steamIds ?= "${escapePocketBaseString(id)}"`,
-								pbOptions(this.deps, {
-									fields: 'id'
-								})
-							);
-							matched.add(id);
-						} catch {
-							// not labeled
-						}
-					})
+					)
 				);
+				for (const row of related.flat()) {
+					const steamIds = (row.expand as { user?: { steamIds?: unknown } } | undefined)?.user
+						?.steamIds;
+					for (const id of Array.isArray(steamIds) ? steamIds : []) {
+						if (wanted.has(String(id))) {
+							matched.add(String(id));
+						}
+					}
+				}
 			} catch {
 				// Soft-fail relation lookup.
 			}

@@ -16,6 +16,8 @@ export type ApiDeps = {
 
 export const DEFAULT_SITE_URL = 'https://coh1stats.com';
 
+const V1_TIMEOUT_MS = 15_000;
+
 export function normalizeBaseUrl(baseUrl: string) {
 	return baseUrl.replace(/\/$/, '');
 }
@@ -73,6 +75,25 @@ function toFormData(body: Record<string, unknown>): FormData {
 }
 
 /**
+ * Browser fetch rejects with a `TypeError` on network failures and a `DOMException`
+ * (`AbortError` / `TimeoutError`) on abort; PocketBase reports both as a status 0
+ * `ClientResponseError`. A timeout counts as a network error, a caller abort as an abort.
+ */
+function toNetworkError(url: string, error: unknown, callerSignal?: AbortSignal): unknown {
+	if (error instanceof ClientResponseError) {
+		return error;
+	}
+
+	const name = (error as { name?: string } | null)?.name;
+	const isAbort = name === 'AbortError' && callerSignal?.aborted === true;
+	if (error instanceof TypeError || name === 'TimeoutError' || name === 'AbortError') {
+		return new ClientResponseError({ url, status: 0, response: {}, isAbort, originalError: error });
+	}
+
+	return error;
+}
+
+/**
  * Calls a website API route the way `pocketbase.send` calls PocketBase: JSON (or
  * multipart when the body holds files), the user's token, and a
  * `ClientResponseError` for error responses.
@@ -85,6 +106,7 @@ export async function sendV1<T>(
 		body?: Record<string, unknown> | FormData;
 		headers?: Record<string, string>;
 		signal?: AbortSignal;
+		timeoutMs?: number;
 	} = {}
 ): Promise<T> {
 	const url = v1Url(deps, path);
@@ -101,12 +123,19 @@ export async function sendV1<T>(
 		}
 	}
 
-	const response = await deps.fetch(url, {
-		method: options.method ?? 'GET',
-		headers,
-		body,
-		signal: options.signal
-	});
+	const timeout = AbortSignal.timeout(options.timeoutMs ?? V1_TIMEOUT_MS);
+	const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout;
+	let response: Response;
+	try {
+		response = await deps.fetch(url, {
+			method: options.method ?? 'GET',
+			headers,
+			body,
+			signal
+		});
+	} catch (error) {
+		throw toNetworkError(url, error, options.signal);
+	}
 
 	const data = response.status === 204 ? null : await response.json().catch(() => null);
 	if (!response.ok) {

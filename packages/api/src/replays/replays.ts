@@ -176,6 +176,36 @@ export type MemberReplayUploadInput = {
 	messages?: unknown;
 };
 
+/** Every replay field except the heavy `messages`, so list pages do not download chat logs. */
+const REPLAY_LIST_FIELDS = [
+	'id',
+	'collectionId',
+	'collectionName',
+	'expand',
+	'commentCount',
+	'createdAt',
+	'createdBy',
+	'description',
+	'downloadCount',
+	'durationInSeconds',
+	'file',
+	'filename',
+	'gameDate',
+	'isHighResources',
+	'isRandomStart',
+	'isRanked',
+	'isVpGame',
+	'likeCount',
+	'mapFilename',
+	'mapName',
+	'players',
+	'statsSnapshot',
+	'title',
+	'updatedAt',
+	'visibility',
+	'vpCount'
+].join(',');
+
 export type ReplayCatalogRecord = RecordModel & {
 	title?: string;
 	filename?: string;
@@ -910,17 +940,18 @@ export class ReplaysApi {
 	getPaginated(
 		page = 1,
 		perPage = 50,
-		options: { filter?: string; fields?: string[]; sort?: string } = {}
+		options: { filter?: string; fields?: string[]; sort?: string; skipTotal?: boolean } = {}
 	): ResultAsync<ListResult<ReplayCatalogRecord>, ApiError> {
-		const { filter = '', fields = [], sort = '-gameDate' } = options;
+		const { filter = '', fields = [], sort = '-gameDate', skipTotal } = options;
 		return fromPbPromise(
 			this.deps.pocketbase.collection('replays').getList<ReplayCatalogRecord>(
 				page,
 				perPage,
 				pbOptions(this.deps, {
 					filter,
-					fields: fields.length > 0 ? fields.join(',') : undefined,
+					fields: fields.length > 0 ? fields.join(',') : REPLAY_LIST_FIELDS,
 					sort,
+					skipTotal,
 					expand: 'createdBy'
 				})
 			),

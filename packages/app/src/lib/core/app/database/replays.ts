@@ -40,14 +40,21 @@ export class Replays {
 		{
 			filter = '',
 			fields = [],
-			sort = '-gameDate'
-		}: { filter?: string; fields?: (keyof ReplaysRecord)[]; sort?: string } = {}
+			sort = '-gameDate',
+			skipTotal
+		}: {
+			filter?: string;
+			fields?: (keyof ReplaysRecord)[];
+			sort?: string;
+			skipTotal?: boolean;
+		} = {}
 	): Promise<ListResult<ReplaysExpanded>> {
 		const response = await unwrapApi(
 			api.replays.getPaginated(page, perPage, {
 				filter,
 				fields: fields.map(String),
-				sort
+				sort,
+				skipTotal
 			})
 		);
 
@@ -55,17 +62,6 @@ export class Replays {
 			...response,
 			items: response.items.map(exp) as unknown as ReplaysExpanded[]
 		};
-	}
-
-	async getAll(): Promise<ReplaysExpanded[]> {
-		const response = await pocketbase
-			.collection('replays')
-			.getFullList<ReplaysResponse<FlatReplayMessage[], Player[]>>(1000, {
-				expand: 'createdBy',
-				fetch
-			});
-
-		return response.map(exp) as unknown as ReplaysExpanded[];
 	}
 
 	async getLobbyDetail(id: string): Promise<ReplayDetail> {
@@ -186,13 +182,22 @@ export class Replays {
 	}
 
 	async getByFilename(filename: string) {
-		const records = await pocketbase.collection('replays').getFullList<ReplaysRecord>(20000, {
-			filter: `filename="${filename}"`,
-			requestKey: null,
-			fetch
-		});
+		const escaped = filename.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+		try {
+			return await pocketbase
+				.collection('replays')
+				.getFirstListItem<ReplaysRecord>(`filename="${escaped}"`, {
+					fields: 'id,collectionId,collectionName,filename,file,title,mapFilename,mapName',
+					requestKey: null,
+					fetch
+				});
+		} catch (error) {
+			if ((error as { status?: number }).status === 404) {
+				return null;
+			}
 
-		return records.length > 0 ? records[0] : null;
+			throw error;
+		}
 	}
 
 	async getExistingFilenamesByUser(): Promise<string[]> {

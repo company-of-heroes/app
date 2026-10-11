@@ -6,6 +6,7 @@ import type { TransformedMatch } from '@company-of-heroes/ui/player/types';
 import { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
+import { mapLimit } from '../concurrency';
 import { pbOptions } from '../pb';
 
 export type PlayerEloSlot = {
@@ -531,11 +532,13 @@ export class RatingsApi {
 	}
 
 	private async ingestBatches(players: PlayerRatingSnapshot[]): Promise<PlayerRatingRecord[]> {
-		const records: PlayerRatingRecord[] = [];
 		const headers = resolveAuthHeaders(this.deps, { 'Content-Type': 'application/json' });
-
+		const batches: PlayerRatingSnapshot[][] = [];
 		for (let i = 0; i < players.length; i += INGEST_BATCH_SIZE) {
-			const batch = players.slice(i, i + INGEST_BATCH_SIZE);
+			batches.push(players.slice(i, i + INGEST_BATCH_SIZE));
+		}
+
+		const results = await mapLimit(batches, 4, async (batch) => {
 			try {
 				const response = await this.deps.fetch(`${v1Base(this.deps)}/player-ratings/ingest`, {
 					method: 'POST',
@@ -543,20 +546,19 @@ export class RatingsApi {
 					body: JSON.stringify({ players: batch })
 				});
 				if (!response.ok) {
-					continue;
+					return [];
 				}
 
 				const json = await response.json();
 				const parsed = ingestSchema.safeParse(json);
-				if (parsed.success && Array.isArray(parsed.data.players)) {
-					records.push(...parsed.data.players);
-				}
+				return parsed.success && Array.isArray(parsed.data.players) ? parsed.data.players : [];
 			} catch {
 				// Soft-fail ingest batches.
+				return [];
 			}
-		}
+		});
 
-		return records;
+		return results.flat();
 	}
 }
 

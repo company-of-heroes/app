@@ -2,6 +2,7 @@ import { ClientResponseError, type RecordModel } from 'pocketbase';
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { z } from 'zod';
 import { voteFromRecord, type CommentVoteValue } from '@company-of-heroes/ui/comment/vote';
+import { mapLimit } from '../concurrency';
 import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import {
@@ -81,6 +82,7 @@ export class MatchSocialApi {
 				1,
 				6,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter,
 					fields: 'id,name,avatar,collectionId,collectionName,steamIds',
 					sort: 'name'
@@ -142,6 +144,7 @@ export class MatchSocialApi {
 				1,
 				200,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: `lobby = "${escaped}"`,
 					sort: 'created',
 					expand: 'user'
@@ -168,6 +171,7 @@ export class MatchSocialApi {
 				1,
 				200,
 				pbOptions(this.deps, {
+					skipTotal: true,
 					filter: `replay = "${escaped}"`,
 					sort: 'created',
 					expand: 'user'
@@ -489,14 +493,20 @@ export class MatchSocialApi {
 		}
 
 		const size = 40;
+		const chunks: string[][] = [];
 		for (let i = 0; i < commentIds.length; i += size) {
-			const chunk = commentIds.slice(i, i + size);
-			const likes = await this.deps.pocketbase.collection(collection).getFullList(
+			chunks.push(commentIds.slice(i, i + size));
+		}
+
+		const chunkLikes = await mapLimit(chunks, 4, (chunk) =>
+			this.deps.pocketbase.collection(collection).getFullList(
 				pbOptions(this.deps, {
 					filter: `user = "${userId}" && (${chunk.map((id) => `comment = "${id}"`).join(' || ')})`,
 					fields: 'comment,value'
 				})
-			);
+			)
+		);
+		for (const likes of chunkLikes) {
 			for (const like of likes) {
 				votes.set(recordId(like.comment), voteFromRecord(like.value));
 			}

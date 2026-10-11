@@ -1,7 +1,9 @@
 import type { RecordModel } from 'pocketbase';
 import { okAsync, ResultAsync } from 'neverthrow';
+import { mapLimit } from '../concurrency';
 import type { ApiDeps } from '../deps';
 import type { ApiError } from '../errors';
+import { PlayersApi } from '../players/players';
 import { escapePocketBaseString, fromPbPromise, pbOptions } from '../pb';
 
 export type UserLabel = RecordModel & {
@@ -129,7 +131,10 @@ export class LabelsApi {
 				pbOptions(this.deps, { expand: 'label' })
 			),
 			'Failed to assign label.'
-		);
+		).map((assignment) => {
+			new PlayersApi(this.deps).invalidate(data.steamId);
+			return assignment;
+		});
 	}
 
 	unassign(assignmentId: string): ResultAsync<void, ApiError> {
@@ -138,25 +143,30 @@ export class LabelsApi {
 				.collection('player_label_assignments')
 				.delete(assignmentId, pbOptions(this.deps)),
 			'Failed to unassign label.'
-		).map(() => undefined);
+		).map(() => {
+			new PlayersApi(this.deps).invalidate();
+		});
 	}
 
 	private async loadAssignments(ids: string[]): Promise<PlayerLabelAssignment[]> {
-		const assignments: PlayerLabelAssignment[] = [];
 		const size = 40;
+		const chunks: string[][] = [];
 		for (let i = 0; i < ids.length; i += size) {
-			const chunk = ids.slice(i, i + size);
-			const rows = await this.deps.pocketbase
+			chunks.push(ids.slice(i, i + size));
+		}
+
+		const rows = await mapLimit(chunks, 4, (chunk) =>
+			this.deps.pocketbase
 				.collection('player_label_assignments')
 				.getFullList<PlayerLabelAssignment>(
 					pbOptions(this.deps, {
 						filter: chunk.map((id) => `steamId = "${escapePocketBaseString(id)}"`).join(' || '),
+						fields: 'id,steamId,profileId,alias,label,expand',
 						expand: 'label'
 					})
-				);
-			assignments.push(...rows);
-		}
+				)
+		);
 
-		return assignments;
+		return rows.flat();
 	}
 }

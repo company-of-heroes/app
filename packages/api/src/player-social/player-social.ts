@@ -1,8 +1,10 @@
 import { ClientResponseError } from 'pocketbase';
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { voteFromRecord, type CommentVoteValue } from '@company-of-heroes/ui/comment/vote';
+import { mapLimit } from '../concurrency';
 import { sendV1, type ApiDeps } from '../deps';
 import type { ApiError } from '../errors';
+import { PlayersApi } from '../players/players';
 import {
 	currentUserId,
 	escapePocketBaseString,
@@ -40,7 +42,13 @@ export class PlayerSocialApi {
 			return errAsync(auth.error);
 		}
 
-		return fromPbPromise(this.setVoteRecord(steamId, auth.value, value), 'Failed to update vote.');
+		return fromPbPromise(
+			this.setVoteRecord(steamId, auth.value, value),
+			'Failed to update vote.'
+		).map((result) => {
+			new PlayersApi(this.deps).invalidate(steamId);
+			return result;
+		});
 	}
 
 	private async findMyVote(steamId: string): Promise<CommentVoteValue> {
@@ -93,15 +101,21 @@ export class PlayerSocialApi {
 		}
 
 		const size = 40;
+		const chunks: string[][] = [];
 		for (let i = 0; i < steamIds.length; i += size) {
-			const chunk = steamIds.slice(i, i + size);
+			chunks.push(steamIds.slice(i, i + size));
+		}
+
+		const chunkRows = await mapLimit(chunks, 4, (chunk) => {
 			const filter = chunk.map((id) => `steamId = "${escapePocketBaseString(id)}"`).join(' || ');
-			const rows = await this.deps.pocketbase.collection('player_vote_scores').getFullList(
+			return this.deps.pocketbase.collection('player_vote_scores').getFullList(
 				pbOptions(this.deps, {
 					filter,
 					fields: 'steamId,likeCount'
 				})
 			);
+		});
+		for (const rows of chunkRows) {
 			for (const row of rows) {
 				const steamId = String(row.steamId || '').trim();
 				if (steamId) {
