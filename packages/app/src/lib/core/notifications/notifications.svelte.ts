@@ -8,6 +8,9 @@ import { toast } from '$lib/components/ui/toasts';
 import { NotificationDetail, type HostNotification } from '@company-of-heroes/ui/notifications';
 import { notifyOs } from './os-notification';
 
+/** How many notifications the inbox shows. */
+const LIST_LIMIT = 10;
+
 export type NotificationItem = NotificationRecord & {
 	read: boolean;
 };
@@ -78,7 +81,7 @@ export class NotificationsService {
 
 		try {
 			const [notifications, readIds, unreadCount] = await Promise.all([
-				database.notifications.listForUser(userId, 10),
+				database.notifications.listForUser(userId, LIST_LIMIT),
 				database.notifications.getReadIds(userId),
 				database.notifications.countUnread(userId)
 			]);
@@ -157,7 +160,8 @@ export class NotificationsService {
 
 		this.#unsubscribeNotifications = await database.notifications.subscribe((event) => {
 			if (event.action === 'create' && database.notifications.appliesToUser(event.record, userId)) {
-				void this.refresh().then(() => this.#emit());
+				this.#addLocal(event.record);
+				this.#emit();
 				toast.info(event.record.title);
 				// Tournament news matters while in-game too: also a Windows notification.
 				if (event.record.tournament) {
@@ -166,7 +170,7 @@ export class NotificationsService {
 			}
 
 			if (event.action === 'delete') {
-				void this.refresh().then(() => this.#emit());
+				this.#removeLocal(event.record, userId);
 			}
 		});
 
@@ -176,6 +180,40 @@ export class NotificationsService {
 				this.#emit();
 			}
 		});
+	}
+
+	/** A new notification goes on top of the inbox without reloading it. */
+	#addLocal(notification: NotificationRecord): void {
+		if (this.items.some((item) => item.id === notification.id)) {
+			return;
+		}
+
+		const read = this.#readIds.has(notification.id);
+		this.items = [{ ...notification, read }, ...this.items].slice(0, LIST_LIMIT);
+		if (!read) {
+			this.unreadCount += 1;
+		}
+	}
+
+	/** Drops a deleted notification; a full inbox reloads so it still shows the newest ones. */
+	#removeLocal(notification: NotificationRecord, userId: string): void {
+		const wasFull = this.items.length >= LIST_LIMIT;
+		const remaining = this.items.filter((item) => item.id !== notification.id);
+		if (remaining.length !== this.items.length && wasFull) {
+			void this.refresh().then(() => this.#emit());
+			return;
+		}
+
+		this.items = remaining;
+		if (
+			database.notifications.appliesToUser(notification, userId) &&
+			!this.#readIds.has(notification.id) &&
+			this.unreadCount > 0
+		) {
+			this.unreadCount -= 1;
+		}
+
+		this.#emit();
 	}
 
 	#markLocalRead(notificationId: string): void {
