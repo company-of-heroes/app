@@ -319,6 +319,11 @@ export class Boot {
 	 * before the UI renders; one that uses another feature waits for it.
 	 */
 	#registerFeatures(): Promise<unknown> {
+		// Real settings before the UI opens; registration (and its watchers) follows below.
+		for (const feature of app._features.values()) {
+			feature.primeSettings();
+		}
+
 		const started = new Map<FeatureKey, Promise<unknown>>();
 		const start = (key: FeatureKey): Promise<unknown> => {
 			const existing = started.get(key);

@@ -68,6 +68,7 @@ export abstract class Feature<
 	components: { component: Component<Props>; props?: Props }[] = $state([]);
 
 	#registered = false;
+	#primed = false;
 	#transitionQueue: Promise<void> = Promise.resolve();
 	#disposeWatchers: (() => void) | null = null;
 
@@ -86,7 +87,11 @@ export abstract class Feature<
 
 		this.#registered = true;
 
-		await this.#loadSettings();
+		if (this.#primed) {
+			settingsService.updateFeatureSlice(this.name, $state.snapshot(this.settings) as never);
+		} else {
+			await this.#loadSettings();
+		}
 
 		this.#disposeWatchers = $effect.root(() => {
 			// Persist slice changes into the central settings tree (`#loadSettings` wrote the first one).
@@ -121,18 +126,44 @@ export abstract class Feature<
 		return this;
 	}
 
+	/**
+	 * Fills `settings` from the central tree before `register()`, so settings UIs opened while
+	 * features still start never read the `{ enabled: false }` placeholder. Only for synchronous
+	 * defaults; a feature with async defaults keeps the placeholder until it registers.
+	 */
+	primeSettings(): void {
+		if (this.#registered || this.#primed) {
+			return;
+		}
+
+		try {
+			const defaults = this.defaultSettings?.() ?? ({} as Settings);
+			if (defaults instanceof Promise) {
+				return;
+			}
+
+			this.settings = this.#merge(defaults);
+			this.#primed = true;
+		} catch (error) {
+			console.error(`[FEATURE:${this.name}]: failed to read default settings:`, error);
+		}
+	}
+
 	async #loadSettings(): Promise<void> {
-		const slice = settingsService.getFeatureSlice(this.name);
 		const defaults = (await this.defaultSettings?.()) ?? ({} as Settings);
 
+		this.settings = this.#merge(defaults);
+		settingsService.updateFeatureSlice(this.name, $state.snapshot(this.settings) as never);
+	}
+
+	#merge(defaults: Settings): Settings & { enabled: boolean } {
+		const slice = settingsService.getFeatureSlice(this.name);
 		const merged = defaultsDeep(cloneDeep(slice ?? {}), cloneDeep(defaults)) as Settings & {
 			enabled: boolean;
 		};
 
 		merged.enabled = Boolean(merged.enabled ?? false);
-
-		this.settings = merged;
-		settingsService.updateFeatureSlice(this.name, $state.snapshot(this.settings) as never);
+		return merged;
 	}
 
 	async #reload(): Promise<void> {
@@ -189,6 +220,7 @@ export abstract class Feature<
 		this.#disposeWatchers = null;
 		await this.#transition(false);
 		this.#registered = false;
+		this.#primed = false;
 	}
 
 	/**
