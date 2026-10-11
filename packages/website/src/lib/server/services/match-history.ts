@@ -1,9 +1,9 @@
-import { err, errAsync, ok, okAsync, ResultAsync } from 'neverthrow';
-import type { ReplaysQuery } from '@company-of-heroes/api';
+import { err, errAsync, ok, okAsync, Result, ResultAsync } from 'neverthrow';
+import { mapLimit, type ReplaysQuery } from '@company-of-heroes/api';
 import { cached } from '../cache';
 import { mapDisplayName } from '../domain/map-name';
 import { badRequest, unauthorized } from '../errors';
-import { fromPb, type Task } from '../result';
+import { chunk, fromPb, type Task } from '../result';
 import { Service } from './service';
 import {
 	filterAstSchema,
@@ -110,6 +110,9 @@ function oneLobbyPerSession(records: LobbyListRecord[]): LobbyListRecord[] {
 	});
 }
 const PB_MAX_PER_PAGE = 500;
+/** Lobby ids per `lobby_player_index` query of the user's games, and queries in flight. */
+const USER_GAMES_CHUNK = 200;
+const USER_GAMES_CONCURRENCY = 4;
 
 type SortEntry = { id: string; createdAt: string; value: number };
 const signInError = () => unauthorized('Sign in to see your matches');
@@ -429,15 +432,26 @@ export class MatchHistoryService extends Service {
 		).map((records) => new Map(records.map((record) => [record.id, record])));
 	}
 
-	/** Filter for the user's games on `lobby_player_index`, where the root row is any player. */
-	private userGamesFilter(userId: string): Task<string> {
-		return this.steamIdsOf(userId).map((steamIds) => {
-			const played = steamIds.map((steamId) =>
-				this.pb.filter('lobby.lobby_player_index_via_lobby.steam_id ?= {:steamId}', { steamId })
+	/**
+	 * Filters for the user's games on `lobby_player_index`, where the root row is any player:
+	 * the lobby ids of games they uploaded or played in (both indexed), then `lobby` in chunks.
+	 */
+	private userGamesFilters(userId: string): Task<string[]> {
+		return this.steamIdsOf(userId)
+			.andThen((steamIds) =>
+				this.lobbyIdsOf(
+					[
+						this.pb.filter('lobby_user = {:userId}', { userId }),
+						...steamIds.map((steamId) => this.pb.filter('steam_id = {:steamId}', { steamId }))
+					].join(' || ')
+				)
+			)
+			.map((ids) =>
+				chunk(ids, USER_GAMES_CHUNK).map((slice) => {
+					const lobbies = slice.map((id) => this.pb.filter('lobby = {:id}', { id })).join(' || ');
+					return `(${lobbies}) && counts = true`;
+				})
 			);
-			const mine = [this.pb.filter('lobby_user = {:userId}', { userId }), ...played].join(' || ');
-			return `(${mine}) && counts = true`;
-		});
 	}
 
 	/** Every map name in scope: all finished games, or the user's. */
@@ -558,8 +572,32 @@ export class MatchHistoryService extends Service {
 		const search = needle
 			? this.pb.filter('(alias ~ {:q} || profile_id ~ {:q})', { q: needle })
 			: '';
-		return this.userGamesFilter(viewer.id)
-			.andThen((games) => this.distinctPlayers([games, search].filter(Boolean).join(' && '), limit))
+		return this.userGamesFilters(viewer.id)
+			.andThen((games) =>
+				ResultAsync.fromSafePromise(
+					mapLimit(games, USER_GAMES_CONCURRENCY, async (filter) =>
+						this.distinctPlayers([filter, search].filter(Boolean).join(' && '), limit)
+					)
+				).andThen((chunks) => Result.combine(chunks))
+			)
+			.map((chunks) => {
+				// Each chunk holds its own first `limit` players; keep the overall first `limit`.
+				const merged = new Map<number, string>();
+				for (const [profileId, alias] of chunks.flatMap((players) => [...players])) {
+					const current = merged.get(profileId);
+					if (current === undefined || alias < current) {
+						merged.set(profileId, alias);
+					}
+				}
+
+				return new Map(
+					[...merged]
+						.sort(([a, aliasA], [b, aliasB]) =>
+							aliasA < aliasB ? -1 : aliasA > aliasB ? 1 : a - b
+						)
+						.slice(0, limit)
+				);
+			})
 			.andThen((players) => {
 				if (players.size === 0) {
 					return okAsync<Player[]>([]);
@@ -586,20 +624,22 @@ export class MatchHistoryService extends Service {
 
 	/** Every player in the user's games, with the name they used last. */
 	private userPlayers(userId: string): Task<Player[]> {
-		return this.userGamesFilter(userId)
-			.andThen((filter) =>
+		return this.userGamesFilters(userId)
+			.andThen((filters) =>
 				fromPb(
-					// Newest game first, so each player keeps the name they used last.
-					this.index.getFullList<Player>({
-						filter,
-						sort: '-session_id',
-						fields: 'profile_id,alias',
-						batch: 1000
-					}),
+					mapLimit(filters, USER_GAMES_CONCURRENCY, (filter) =>
+						this.index.getFullList<Player & { session_id: number }>({
+							filter,
+							fields: 'profile_id,alias,session_id',
+							batch: 1000
+						})
+					),
 					'Could not load players'
 				)
 			)
-			.map((rows) => {
+			.map((chunks) => {
+				// Newest game first, so each player keeps the name they used last.
+				const rows = chunks.flat().sort((a, b) => b.session_id - a.session_id);
 				const players = new Map<number, string>();
 				for (const row of rows) {
 					if (!players.has(row.profile_id)) {
