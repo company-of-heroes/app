@@ -1,8 +1,8 @@
-// Seeds a local PocketBase with a realistic set of rewards (tiered faction wins, streaks,
-// ratings, community and replay rewards), each with a matching service ribbon from
-// `shared-assets/ribbons`. Local only: refuses any URL that is not localhost.
-// Skips rewards whose title or conditions already exist, so it is safe to run again.
-// Run: pnpm --filter @company-of-heroes/pocketbase seed:rewards
+// Seeds PocketBase with a realistic set of rewards (tiered faction wins, ranks, ratings,
+// streaks, community and replay rewards), each with a matching service ribbon from
+// `shared-assets/ribbons`. Skips rewards whose title or conditions already exist, so it is
+// safe to run again. Local by default; another URL needs `--url <url> --production`.
+// Run: pnpm --filter @company-of-heroes/pocketbase seed:rewards [--dry-run]
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +11,17 @@ import dotenv from 'dotenv';
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(DIR, '..', '.env'), quiet: true });
 
-const URL_BASE = (process.env.PB_PUBLIC_URL || 'http://127.0.0.1:8090').replace(/\/$/, '');
+const args = process.argv.slice(2);
+const flag = (name) => args.includes(`--${name}`);
+const option = (name) => {
+	const index = args.indexOf(`--${name}`);
+	return index >= 0 ? args[index + 1] : undefined;
+};
+const URL_BASE = (option('url') || process.env.PB_PUBLIC_URL || 'http://127.0.0.1:8090').replace(
+	/\/$/,
+	''
+);
+const DRY_RUN = flag('dry-run');
 const EMAIL = process.env.PB_ADMIN_EMAIL;
 const PASSWORD = process.env.PB_ADMIN_PASSWORD;
 const RIBBONS = JSON.parse(
@@ -100,13 +110,21 @@ const REWARDS = [
 		thresholds: [1300, 1500, 1700, 1950, 2200],
 		describe: (n) => `Reach a 1v1 rating of ${n}.`
 	}),
-	...tier({
-		raceId: GLOBAL,
-		name: 'Time in the Trenches',
-		metric: 'hours_played',
-		thresholds: [10, 50, 100, 250, 500],
-		describe: (n) => `Play Company of Heroes for ${n} hours.`
-	}),
+	...[
+		[US, 'Screaming Eagle'],
+		[WEHRMACHT, 'Steel Resolve'],
+		[BRITISH, "Lion's Pride"],
+		[PANZER_ELITE, 'Armoured Spearhead']
+	].flatMap(([raceId, name]) =>
+		tier({
+			raceId,
+			name,
+			metric: 'elo_reached',
+			filter: { raceId },
+			thresholds: [1300, 1500, 1700, 1950, 2200],
+			describe: (n) => `Reach a rating of ${n} as ${FACTION_NAMES[raceId]}.`
+		})
+	),
 
 	...[US, WEHRMACHT, BRITISH, PANZER_ELITE].flatMap((raceId) =>
 		tier({
@@ -132,6 +150,28 @@ const REWARDS = [
 		}))
 	),
 
+	one(GLOBAL, 'Fresh Recruit', 'Play your first match.', [
+		{ metric: 'matches_played', threshold: 1 }
+	]),
+	one(GLOBAL, 'First Blood', 'Win your first match.', [{ metric: 'wins', threshold: 1 }]),
+	one(GLOBAL, 'Time in the Trenches', 'Play Company of Heroes for 100 hours.', [
+		{ metric: 'hours_played', threshold: 100 }
+	]),
+	one(GLOBAL, 'Ranked Regular', 'Win 100 ranked matches.', [
+		{ metric: 'wins', threshold: 100, filter: { ranked: true } }
+	]),
+	one(GLOBAL, 'Pro Circuit', 'Win 50 matches in a Pro lobby.', [
+		{ metric: 'wins', threshold: 50, filter: { pro: true } }
+	]),
+	one(PANZER_ELITE, 'Three Abreast', 'Win 50 3v3 matches.', [
+		{ metric: 'wins', threshold: 50, filter: { matchtypeId: 3 } }
+	]),
+	one(US, 'Quick Draw', 'Win 25 matches as the US Forces in 15 minutes or less.', [
+		{ metric: 'wins', threshold: 25, filter: { raceId: US, maxMinutes: 15 } }
+	]),
+	one(BRITISH, 'Regimental Pride', 'Win 100 ranked matches as the British Commonwealth.', [
+		{ metric: 'wins', threshold: 100, filter: { raceId: BRITISH, ranked: true } }
+	]),
 	one(GLOBAL, 'Duelist', 'Win 50 ranked 1v1 matches.', [
 		{ metric: 'wins', threshold: 50, filter: { matchtypeId: 1, ranked: true } }
 	]),
@@ -211,6 +251,12 @@ const REWARDS = [
 	]),
 	one(BRITISH, 'Old Guard', 'Have an account for a year.', [
 		{ metric: 'account_age_days', threshold: 365 }
+	]),
+	one(GLOBAL, 'Town Crier', 'Place 250 comments.', [
+		{ metric: 'comments_created', threshold: 250 }
+	]),
+	one(GLOBAL, 'Community Pillar', 'Reach 500 reputation.', [
+		{ metric: 'reputation', threshold: 500 }
 	]),
 	one(GLOBAL, 'On Air', 'Stream Company of Heroes for 10 hours.', [
 		{ metric: 'hours_streamed', threshold: 10 }
@@ -328,8 +374,8 @@ async function request(pathname, options = {}, token) {
 
 async function main() {
 	const { hostname } = new URL(URL_BASE);
-	if (!['localhost', '127.0.0.1', '::1'].includes(hostname)) {
-		throw new Error(`Refusing to seed ${URL_BASE}: local PocketBase only.`);
+	if (!['localhost', '127.0.0.1', '::1'].includes(hostname) && !flag('production')) {
+		throw new Error(`Refusing to seed ${URL_BASE}: pass --production for a remote PocketBase.`);
 	}
 
 	if (!EMAIL || !PASSWORD) {
@@ -360,6 +406,18 @@ async function main() {
 			continue;
 		}
 
+		const ribbon = pickRibbon(reward.ribbon);
+		if (!ribbon) {
+			throw new Error(`No free ribbon left for "${reward.title}".`);
+		}
+
+		if (DRY_RUN) {
+			console.log(`${ribbon}  ${reward.title}`);
+			conditionSets.add(conditions);
+			created++;
+			continue;
+		}
+
 		await request(
 			'/api/collections/rewards/records',
 			{
@@ -368,7 +426,7 @@ async function main() {
 					title: reward.title,
 					description: reward.description,
 					conditions: reward.conditions,
-					ribbon: pickRibbon(reward.ribbon),
+					ribbon,
 					enabled: true,
 					secret: Boolean(reward.secret),
 					sort: sort++
@@ -380,7 +438,9 @@ async function main() {
 		created++;
 	}
 
-	console.log(`Created ${created} rewards, skipped ${skipped} that already exist.`);
+	console.log(
+		`${DRY_RUN ? 'Would create' : 'Created'} ${created} rewards on ${URL_BASE}, skipped ${skipped} that already exist (${existing.items.length + created} in total).`
+	);
 }
 
 main().catch((error) => {

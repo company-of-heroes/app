@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { base64 } from 'vite-plugin-base64';
@@ -101,6 +101,10 @@ export default defineConfig(({ mode }) => {
 		process.env.PUBLIC_SITE_URL = PRODUCTION_SITE_URL;
 	}
 
+	// `$env/static/public` only exists in SvelteKit's own bundle, not in `?worker` bundles.
+	// Inline the URLs as `import.meta.env.*` so modules shared with workers can read them.
+	const env = { ...loadEnv(mode, __dirname, 'PUBLIC_'), ...process.env };
+
 	const host = process.env.TAURI_DEV_HOST;
 	// scripts/tauri.mjs picks a free port and passes the same one to Tauri's devUrl.
 	const port = Number(process.env.APP_DEV_PORT) || 1420;
@@ -110,7 +114,9 @@ export default defineConfig(({ mode }) => {
 			// Do not pass the whole `process.env` object — Vite 8 rejects it (exposes
 			// host env like Path) and aborts the dev server.
 			'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
-			global: 'globalThis'
+			global: 'globalThis',
+			'import.meta.env.PUBLIC_PB_URL': JSON.stringify(env.PUBLIC_PB_URL ?? PRODUCTION_PB_URL),
+			'import.meta.env.PUBLIC_SITE_URL': JSON.stringify(env.PUBLIC_SITE_URL ?? PRODUCTION_SITE_URL)
 		},
 		assetsInclude: ['*.md'],
 		resolve: {
