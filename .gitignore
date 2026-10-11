@@ -37,3 +37,6 @@ scripts/golden/snapshots/
 # Generated from .cursor by scripts/sync-cursor-rules.mjs
 .claude/rules/cursor/
 .claude/skills/
+
+# Claude Code agent worktrees
+.claude/worktrees/
