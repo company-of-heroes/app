@@ -452,7 +452,17 @@ export class RelicClient {
 			this.requestCache.invalidate(key);
 		}
 
-		return this.requestCache.getOrLoad(key, () => this.fetchJson<T>(url)) as Promise<T>;
+		return this.requestCache.getOrLoad(key, () =>
+			this.fetchJson<T>(url).then((data) => {
+				// Relic reports errors as HTTP 200 with a non-zero `result.code`: return, but do not cache.
+				const code = (data as { result?: { code?: unknown } } | null)?.result?.code;
+				if (typeof code === 'number' && code !== 0) {
+					this.requestCache.invalidate(key);
+				}
+
+				return data;
+			})
+		) as Promise<T>;
 	}
 
 	private async fetchJson<T>(url: URL): Promise<T> {
