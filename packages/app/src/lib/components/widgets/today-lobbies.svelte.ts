@@ -12,6 +12,7 @@ import {
 } from './dashboard-utils';
 
 const LIMIT = 200;
+const REFETCH_MS = 3_000;
 
 /** What the dashboard reads: the match table, the today record and the steam id checks. */
 const FIELDS = [
@@ -95,25 +96,46 @@ class TodayLobbies {
 
 		let active = true;
 		let unsubscribe: UnsubscribeFunc | undefined;
+		let refetchTimer: ReturnType<typeof setTimeout> | null = null;
 		const filter = recentPlayedMatchesFilter(ids);
+		const load = () =>
+			app.database.matches
+				.getList({ filter, sort: '-createdAt', fields: FIELDS, limit: LIMIT })
+				.then((items) => {
+					if (active) {
+						this.items = items.filter(
+							(match) => isMatchFromLast24Hours(match) && matchIncludesSteamIds(match, ids)
+						);
+					}
+				})
+				.catch((error) => {
+					console.warn('[TODAY-LOBBIES]: list failed:', error);
+				});
+
+		// Refetch (at most every 3 s) after local lobby events, so an event the realtime
+		// connection missed (e.g. during a reconnect) still shows up.
+		const refetch = () => {
+			if (refetchTimer) {
+				return;
+			}
+
+			refetchTimer = setTimeout(() => {
+				refetchTimer = null;
+				if (active) {
+					void load();
+				}
+			}, REFETCH_MS);
+		};
+		const offLobbySaved = app.on('lobby.saved', refetch);
+		const offMatchResult = app.on('match.result', refetch);
+		const offLobbyDestroyed = app.on('lobby.destroyed', refetch);
+
 		this.loading = true;
-		app.database.matches
-			.getList({ filter, sort: '-createdAt', fields: FIELDS, limit: LIMIT })
-			.then((items) => {
-				if (active) {
-					this.items = items.filter(
-						(match) => isMatchFromLast24Hours(match) && matchIncludesSteamIds(match, ids)
-					);
-				}
-			})
-			.catch((error) => {
-				console.warn('[TODAY-LOBBIES]: list failed:', error);
-			})
-			.finally(() => {
-				if (active) {
-					this.loading = false;
-				}
-			});
+		void load().finally(() => {
+			if (active) {
+				this.loading = false;
+			}
+		});
 
 		app.pocketbase
 			.collection('lobbies')
@@ -150,6 +172,13 @@ class TodayLobbies {
 
 		return () => {
 			active = false;
+			if (refetchTimer) {
+				clearTimeout(refetchTimer);
+			}
+
+			offLobbySaved();
+			offMatchResult();
+			offLobbyDestroyed();
 			void unsubscribe?.();
 		};
 	}

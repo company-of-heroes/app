@@ -39,12 +39,16 @@ export class MatchHistoryView {
 		[...this.#matches].sort((a, b) => b.completiontime - a.completiontime)
 	);
 
-	// Non-staff see the matches as soon as they are in; the list filters once the hidden
-	// filters (cached for 5 minutes) arrive.
+	// Non-staff only see matches once the hidden filters (cached for 5 minutes) are in;
+	// nothing when they failed to load.
 	readonly #visible = $derived.by(() => {
-		const filters = this.#filters.current;
-		if (this.isStaff || !filters) {
+		if (this.isStaff) {
 			return this.#ordered;
+		}
+
+		const filters = this.#filters.current;
+		if (!filters || this.#filters.error) {
+			return [];
 		}
 
 		return filterHiddenMatches(this.#ordered, filters);
@@ -99,8 +103,11 @@ export class MatchHistoryView {
 		}
 	);
 
-	/** Avatars are in, so the list renders once instead of filling in. */
-	readonly ready = $derived(this.#avatars.current?.key === this.#steamIdsKey);
+	/** Hidden filters and avatars are in, so the list renders once instead of filling in. */
+	readonly ready = $derived(
+		(this.isStaff || this.#filters.current != null || Boolean(this.#filters.error)) &&
+			this.#avatars.current?.key === this.#steamIdsKey
+	);
 
 	/** Visible matches with avatars, labels, likes and saved lobbies; apart from the filtering above. */
 	readonly #rows = $derived.by(() => {

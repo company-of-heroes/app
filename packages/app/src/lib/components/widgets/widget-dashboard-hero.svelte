@@ -250,20 +250,25 @@
 		)
 	);
 
-	// Only loads once the panel is open; `MatchHistory` filters hidden matches itself.
+	// Always loaded (public matches only): its ratings fill the ELO of the always-visible facts.
 	const recentMatches = resource(
-		() => [panelExpanded ? profileId : null, statsGeneration] as const,
-		async ([id]) => {
-			if (!id) {
+		() => [profileId, statsGeneration] as const,
+		async ([id]) => (id ? relic.getRecentMatchHistoryForProfile(id) : []),
+		{ initialValue: [] }
+	);
+
+	// The rank enrichment (personal stat batches) only runs while the panel is open.
+	const rankedRecentMatches = resource(
+		() => (panelExpanded ? recentMatches.current : null),
+		async (matches) => {
+			const id = profileId;
+			if (!matches || !id) {
 				return [];
 			}
 
-			const matches = await relic.getRecentMatchHistoryForProfile(id, { includeHidden: true });
 			const { enrichMatchHistoryRankLevels } = await import('$lib/player/match-history-ranks');
-			const ownerStats = profile?.relic.leaderboardStats;
-			return enrichMatchHistoryRankLevels(matches, id, ownerStats);
-		},
-		{ initialValue: [] }
+			return enrichMatchHistoryRankLevels(matches, id, profile?.relic.leaderboardStats);
+		}
 	);
 
 	const todayRecord = $derived(
@@ -726,7 +731,7 @@
 								/>
 							</Tabs.Content>
 							<Tabs.Content value="recent-games">
-								{#if recentMatches.loading}
+								{#if recentMatches.loading || rankedRecentMatches.loading || !rankedRecentMatches.current}
 									<div class="divide-secondary-800 border-secondary-800 divide-y border-t">
 										{#each Array(5) as _, index (index)}
 											<div class="px-4 py-3">
@@ -735,7 +740,7 @@
 										{/each}
 									</div>
 								{:else}
-									<MatchHistory matches={recentMatches.current ?? []} showSessionId />
+									<MatchHistory matches={rankedRecentMatches.current ?? []} showSessionId />
 								{/if}
 							</Tabs.Content>
 						</div>
