@@ -2,6 +2,7 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
+	import DotsSixVerticalIcon from 'phosphor-svelte/lib/DotsSixVerticalIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
@@ -13,15 +14,18 @@
 	import type { TournamentMatch, TournamentParticipant, TournamentSlot } from './types';
 	import { useTournament } from './context';
 	import { tooltip } from '../attachments';
+	import TournamentDragItem, { type DragItem } from './tournament-drag-item.svelte';
 
 	type Props = {
 		match: TournamentMatch;
 		/** Staff: opens the result dialog. */
 		onEdit?: (match: TournamentMatch) => void;
+		/** Staff, inside a drag provider: players in unplayed matches can be dragged onto each other. */
+		swappable?: boolean;
 		class?: string;
 	};
 
-	let { match, onEdit, class: className }: Props = $props();
+	let { match, onEdit, swappable = false, class: className }: Props = $props();
 	const context = useTournament();
 	const participants = $derived(context.participantsById);
 	const revealGames = $derived(context.revealGames);
@@ -39,20 +43,58 @@
 	);
 	const showGames = $derived(revealGames || mine || !!host.auth.user?.isStaff);
 	const deadline = $derived(deadlineState(match));
+	/** Unplayed (the server checks the same): players here can still change places. */
+	const open = $derived(
+		match.status !== 'completed' &&
+			match.games.length === 0 &&
+			!match.playing &&
+			match.bracket !== 'round_robin'
+	);
 </script>
 
 {#snippet slot(id: string | null, side: TournamentSlot)}
 	{@const player = id ? participants.get(id) : undefined}
+	{#if swappable}
+		<TournamentDragItem
+			id="{match.id}:{side}"
+			label={player?.alias ?? ''}
+			disabled={!open || !player}
+		>
+			{#snippet children(item)}
+				{@render row(id, side, open && player ? item : null)}
+			{/snippet}
+		</TournamentDragItem>
+	{:else}
+		{@render row(id, side, null)}
+	{/if}
+{/snippet}
+
+{#snippet row(id: string | null, side: TournamentSlot, item: DragItem | null)}
+	{@const player = id ? participants.get(id) : undefined}
 	{@const won = !!match.winner && match.winner === id}
 	{@const lost = !!match.winner && !!id && match.winner !== id}
 	<div
+		{@attach (node) => item?.attach(node)}
 		class={cn(
-			'flex h-8 items-center gap-2 px-2 text-sm',
+			'flex h-8 items-center gap-2 px-2 text-sm transition-colors',
 			side === 'B' && 'border-secondary-800 border-t',
 			lost && 'text-secondary-500',
-			won && 'font-semibold text-white'
+			won && 'font-semibold text-white',
+			item?.source && 'opacity-50',
+			item?.target && 'bg-primary/15 ring-primary/60 ring-1 ring-inset'
 		)}
 	>
+		{#if item}
+			<button
+				type="button"
+				{@attach item.handle}
+				class="text-secondary-500 hover:text-secondary-200 -ml-1 shrink-0 cursor-grab touch-none active:cursor-grabbing"
+				aria-label={t('Drag to swap with another player')}
+				{@attach tooltip(t('Drag to swap with another player'))}
+			>
+				<DotsSixVerticalIcon size={14} />
+			</button>
+		{/if}
 		<span class="text-secondary-500 w-5 shrink-0 text-right text-xs tabular-nums">
 			{player?.seed ?? ''}
 		</span>

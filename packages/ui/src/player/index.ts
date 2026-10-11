@@ -3,6 +3,9 @@ import PlayerLikeCount from './player-like-count.svelte';
 import PlayerLinks from './player-links.svelte';
 import SmurfAlert from './smurf-alert.svelte';
 import SteamBanAlert from './steam-ban-alert.svelte';
+import PlayerFact from './player-fact.svelte';
+import PlayerFacts from './player-facts.svelte';
+import PlayerHero from './player-hero.svelte';
 import PlayerProfileHeader from './player-profile-header.svelte';
 import PlayerProfile from './player-profile.svelte';
 import ProfileCustomizationForm from './profile-customization-form.svelte';
@@ -12,6 +15,7 @@ import PlayerMatchHistory from './player-match-history.svelte';
 import PlayerMatchHistorySkeleton from './player-match-history-skeleton.svelte';
 import PlayerProfileSkeleton from './player-profile-skeleton.svelte';
 import PlayerSearchCard from './player-search-card.svelte';
+import PlayerSearchResults from './player-search-results.svelte';
 import PlayerPreviewCard from './player-preview-card.svelte';
 import PlayerProfileLink from './player-profile-link.svelte';
 import PlayerStreamerIcon from './player-streamer-icon.svelte';
@@ -25,6 +29,9 @@ export {
 	PlayerLinks,
 	SmurfAlert,
 	SteamBanAlert,
+	PlayerFact,
+	PlayerFacts,
+	PlayerHero,
 	PlayerProfileHeader,
 	PlayerProfile,
 	ProfileCustomizationForm,
@@ -34,6 +41,7 @@ export {
 	PlayerMatchHistorySkeleton,
 	PlayerProfileSkeleton,
 	PlayerSearchCard,
+	PlayerSearchResults,
 	PlayerPreviewCard,
 	PlayerProfileLink,
 	PlayerStreamerIcon,
@@ -59,6 +67,7 @@ export type {
 	PerformanceRecentMatch,
 	PlayerLabel,
 	PlayerSearchResult,
+	PlayerSearchPage,
 	PlayerPreviewData,
 	PlayerFactionPreview,
 	PlayerCustomization,

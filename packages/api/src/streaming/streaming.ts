@@ -15,6 +15,8 @@ export type StreamingProgress = {
 
 export type StreamingReport = {
 	deltaMs: number;
+	/** The Steam account playing; time and the badge count per Steam account. */
+	steamId: string;
 	twitchLogin?: string | null;
 	youtubeChannelId?: string | null;
 };
@@ -29,14 +31,18 @@ export type YoutubeTokenBundle = {
 export class StreamingApi {
 	constructor(private deps: ApiDeps) {}
 
-	getProgress(): ResultAsync<StreamingProgress, ApiError> {
+	/** Progress of one of the user's Steam accounts. */
+	getProgress(steamId: string): ResultAsync<StreamingProgress, ApiError> {
 		const auth = requireAuth(this.deps);
 		if (auth.isErr()) {
 			return errAsync(auth.error);
 		}
 
 		return fromPbPromise(
-			sendV1<StreamingProgress>(this.deps, '/streaming/progress'),
+			sendV1<StreamingProgress>(
+				this.deps,
+				`/streaming/progress?steamId=${encodeURIComponent(steamId)}`
+			),
 			'Failed to load streaming progress.'
 		);
 	}

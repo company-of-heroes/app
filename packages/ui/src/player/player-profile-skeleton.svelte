@@ -7,39 +7,34 @@
 </script>
 
 <div class="border-secondary-800 overflow-clip border-b" aria-busy="true">
-	<div class="border-secondary-800 grid grid-cols-1 border-b sm:grid-cols-[12.5rem_minmax(0,1fr)]">
-		<Skeleton class="aspect-square self-start rounded-none" />
-		<div class="min-w-0 px-6 py-4">
-			<div class="mb-3 flex items-center gap-2.5">
-				<Skeleton class="h-5 w-7 shrink-0 rounded-xs" />
-				<Skeleton class="h-9 max-w-52 flex-1" />
-				<Skeleton class="h-4 w-16 shrink-0" />
-			</div>
-			<div class="grid grid-cols-[7.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-2">
-				<Skeleton class="h-4 w-16" />
-				<Skeleton class="h-4 w-36" />
-				<Skeleton class="h-4 w-14" />
-				<Skeleton class="h-4 w-28" />
-				<Skeleton class="h-4 w-16" />
-				<div class="flex items-center gap-2">
-					<Skeleton class="h-4 w-8" />
-					<Skeleton class="h-4 w-8" />
-					<Skeleton class="h-5 w-12 rounded-full" />
-				</div>
-				<Skeleton class="h-4 w-16" />
-				<div class="flex gap-1 overflow-hidden">
-					{#each Array(10) as _, index (index)}
-						<Skeleton class="h-6 min-w-6 shrink-0 rounded-md" />
-					{/each}
-				</div>
-				<Skeleton class="h-4 w-20" />
-				<div class="flex items-center gap-2">
-					<Skeleton class="size-10 shrink-0 rounded" />
-					<Skeleton class="h-4 w-32" />
-					<Skeleton class="h-4 w-8" />
-					<Skeleton class="h-4 w-8" />
+	<div class="border-secondary-800 border-b">
+		<div class="flex flex-col gap-5 px-4 pt-6 pb-6 lg:flex-row lg:items-end lg:justify-between">
+			<div class="flex min-w-0 items-end gap-4 sm:gap-5">
+				<Skeleton class="size-20 shrink-0 rounded-md sm:size-28" />
+				<div class="flex min-w-0 flex-col gap-2">
+					<div class="flex items-center gap-2">
+						<Skeleton class="h-4 w-6 rounded-xs" />
+						<Skeleton class="h-5 w-14 rounded-md" />
+					</div>
+					<Skeleton class="h-9 w-56 max-w-full" />
 				</div>
 			</div>
+			<div class="flex items-center gap-2">
+				<Skeleton class="h-8 w-28 rounded-md" />
+				<Skeleton class="h-8 w-32 rounded-md" />
+			</div>
+		</div>
+	</div>
+	<div class="overflow-hidden">
+		<div class="-mr-px flex flex-wrap">
+			{#each Array(4) as _, index (index)}
+				<div
+					class="border-secondary-800 flex min-w-40 flex-1 basis-44 flex-col gap-2 border-r border-b px-4 py-3"
+				>
+					<Skeleton class="h-3 w-16" />
+					<Skeleton class="h-6 w-24" />
+				</div>
+			{/each}
 		</div>
 	</div>
 	<div class="border-secondary-800 border-b">

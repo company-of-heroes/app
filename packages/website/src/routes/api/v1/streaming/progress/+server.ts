@@ -1,7 +1,16 @@
 import { z } from 'zod';
-import { handle, parseBody, requireUser } from '$lib/server/http';
+import { handle, parseBody, parseQuery, requireUser } from '$lib/server/http';
+
+const steamId = z
+	.string()
+	.trim()
+	.regex(/^\d{17}$/)
+	.nullish();
+
+const progressQuery = z.object({ steamId });
 
 const reportBody = z.object({
+	steamId,
 	deltaMs: z
 		.number()
 		.int()
@@ -11,9 +20,13 @@ const reportBody = z.object({
 	youtubeChannelId: z.string().trim().max(64).nullish()
 });
 
-/** The signed-in user's lifetime streaming time toward the Streamer label. */
+/** Lifetime streaming time of one of the signed-in user's Steam accounts toward the Streamer label. */
 export const GET = handle((event) =>
-	requireUser(event).asyncAndThen((user) => event.locals.services.streaming.progress(user.id))
+	requireUser(event).asyncAndThen((user) =>
+		parseQuery(progressQuery, event.url).asyncAndThen((query) =>
+			event.locals.services.streaming.progress(user.id, query.steamId)
+		)
+	)
 );
 
 /** Desktop: adds time streamed live with Company of Heroes running. */

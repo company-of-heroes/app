@@ -25,6 +25,7 @@ type StoredRating = {
 	steamId: string;
 	profileId: number;
 	alias: string;
+	country?: string;
 	elo: unknown;
 	harvestedAt: string;
 };
@@ -34,6 +35,7 @@ export type PlayerRating = {
 	steamId: string;
 	profileId: number;
 	alias: string;
+	country: string | null;
 	elo: EloMap;
 	harvestedAt: string | null;
 };
@@ -43,6 +45,7 @@ const toRating = (row: StoredRating): PlayerRating => ({
 	steamId: row.steamId,
 	profileId: row.profileId,
 	alias: row.alias,
+	country: row.country || null,
 	elo: toEloMap(row.elo),
 	harvestedAt: row.harvestedAt || null
 });
@@ -139,10 +142,12 @@ export class RatingsService extends Service {
 			return okAsync(null);
 		}
 
+		const country = update.country || row?.country || '';
 		const elo = mergeElo(toEloMap(row?.elo), update.slots);
 		if (
 			row &&
 			row.alias === alias &&
+			(row.country ?? '') === country &&
 			row.profileId === update.profileId &&
 			sameJson(toEloMap(row.elo), elo)
 		) {
@@ -151,11 +156,12 @@ export class RatingsService extends Service {
 
 		return fromPb(
 			row
-				? ratings.update<StoredRating>(row.id, { profileId: update.profileId, alias, elo })
+				? ratings.update<StoredRating>(row.id, { profileId: update.profileId, alias, country, elo })
 				: ratings.create<StoredRating>({
 						steamId: update.steamId,
 						profileId: update.profileId,
 						alias,
+						country,
 						elo
 					}),
 			'Could not save rating'

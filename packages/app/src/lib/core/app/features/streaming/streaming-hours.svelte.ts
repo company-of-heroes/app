@@ -1,6 +1,6 @@
 import { error } from '@tauri-apps/plugin-log';
 import { watch } from 'runed';
-import type { StreamingProgress } from '@company-of-heroes/api';
+import { pickOwnedSteamId, type StreamingProgress } from '@company-of-heroes/api';
 import { Feature } from '$features/feature.svelte';
 import { twitch } from '$features/twitch';
 import { youtube } from '$features/youtube';
@@ -11,8 +11,8 @@ import { t } from '$lib/i18n';
 
 export type StreamingHoursSettings = {
 	enabled: boolean;
-	/** Streamed time not yet accepted by the server (survives restarts). */
-	pendingMs: number;
+	/** Streamed time per Steam id not yet accepted by the server (survives restarts). */
+	pendingBySteamId: Record<string, number>;
 };
 
 const TICK_MS = 30_000;
@@ -24,17 +24,31 @@ const MAX_PENDING_MS = 60 * 60 * 1000;
 
 /**
  * Counts time live on Twitch or YouTube while Company of Heroes runs (once, even
- * when live on both) and reports it; at 12 hours the website grants the Streamer label.
+ * when live on both) and reports it for the Steam account in game; at 12 hours the
+ * website grants that Steam account the Streamer label.
  */
 export class StreamingHours extends Feature<StreamingHoursSettings> {
 	name = 'streaming-hours';
 
 	progress: StreamingProgress | null = $state(null);
 
-	isCounting = $derived.by(() => (twitch.isLive || youtube.isLive) && app.game.isRunning);
+	/** The Steam account in game, else the first one on the account (progress is per Steam id). */
+	steamId = $derived.by(() =>
+		app.account.isAuthenticated
+			? pickOwnedSteamId(app.account.user.steamIds, [app.game.steamId])
+			: null
+	);
+
+	isCounting = $derived.by(
+		() => (twitch.isLive || youtube.isLive) && app.game.isRunning && Boolean(app.game.steamId)
+	);
 
 	/** Server total plus what is still waiting to be sent. */
-	streamedMs = $derived.by(() => (this.progress?.streamedMs ?? 0) + this.settings.pendingMs);
+	streamedMs = $derived.by(
+		() =>
+			(this.progress?.streamedMs ?? 0) +
+			(this.steamId ? (this.settings.pendingBySteamId[this.steamId] ?? 0) : 0)
+	);
 
 	#tickTimer: ReturnType<typeof setInterval> | null = null;
 	#flushTimer: ReturnType<typeof setInterval> | null = null;
@@ -49,11 +63,11 @@ export class StreamingHours extends Feature<StreamingHoursSettings> {
 
 		this.#disposeWatchers = $effect.root(() => {
 			watch(
-				() => (app.account.isAuthenticated ? app.account.userId : ''),
-				(userId) => {
+				() => this.steamId,
+				(steamId) => {
 					this.progress = null;
-					if (userId) {
-						void this.#loadProgress();
+					if (steamId) {
+						void this.#loadProgress(steamId);
 					}
 				}
 			);
@@ -85,61 +99,88 @@ export class StreamingHours extends Feature<StreamingHoursSettings> {
 		const now = Date.now();
 		const elapsed = Math.min(Math.max(0, now - this.#lastTick), MAX_TICK_MS);
 		this.#lastTick = now;
-		if (!this.isCounting) {
+		const steamId = app.game.steamId;
+		if (!this.isCounting || !steamId) {
 			return;
 		}
 
-		this.settings.pendingMs = Math.min(this.settings.pendingMs + elapsed, MAX_PENDING_MS);
+		const pending = this.settings.pendingBySteamId;
+		pending[steamId] = Math.min((pending[steamId] ?? 0) + elapsed, MAX_PENDING_MS);
 	}
 
-	async #loadProgress() {
-		const result = await api.streaming.getProgress();
-		if (result.isOk()) {
+	async #loadProgress(steamId: string) {
+		const result = await api.streaming.getProgress(steamId);
+		if (result.isOk() && this.steamId === steamId) {
 			this.progress = result.value;
-			// The server (re)labels the account while answering; show that right away.
+			// The server (re)labels the Steam id while answering; show that right away.
 			if (result.value.badgeGranted) {
-				refreshPlayerLabels(app.account.user.steamIds);
+				refreshPlayerLabels([steamId]);
 			}
 		}
 	}
 
-	/** Sends pending time; the server may credit less than asked (it caps each report). */
+	/** Sends pending time per Steam id; the server may credit less than asked (it caps each report). */
 	async flush(): Promise<void> {
-		const pending = this.settings.pendingMs;
-		if (this.#flushing || pending <= 0 || !app.account.isAuthenticated) {
+		if (this.#flushing || !app.account.isAuthenticated) {
 			return;
 		}
 
 		this.#flushing = true;
 		try {
-			const result = await api.streaming.report({
-				deltaMs: pending,
-				twitchLogin: twitch.token?.userName ?? null,
-				youtubeChannelId: youtube.channel?.id ?? null
-			});
-			if (result.isErr()) {
-				void error(`[STREAMING]: report failed: ${result.error.message}`);
-				return;
-			}
-
-			const { creditedMs, ...progress } = result.value;
-			const justGranted =
-				progress.badgeGranted && this.progress !== null && !this.progress.badgeGranted;
-			this.progress = progress;
-			this.settings.pendingMs = Math.max(0, this.settings.pendingMs - creditedMs);
-			if (justGranted) {
-				refreshPlayerLabels(app.account.user.steamIds);
-				app.toast.success(
-					t('You streamed 12 hours of Company of Heroes — you now have the Streamer badge!')
-				);
+			for (const [steamId, pending] of Object.entries(this.settings.pendingBySteamId)) {
+				if (pending > 0) {
+					await this.#report(steamId, pending);
+				}
 			}
 		} finally {
 			this.#flushing = false;
 		}
 	}
 
+	async #report(steamId: string, pending: number) {
+		const owned = app.account.user.steamIds?.map(String).includes(steamId);
+		if (!owned) {
+			// Unlinked from the account: the time no longer counts anywhere.
+			delete this.settings.pendingBySteamId[steamId];
+			return;
+		}
+
+		const result = await api.streaming.report({
+			steamId,
+			deltaMs: pending,
+			twitchLogin: twitch.token?.userName ?? null,
+			youtubeChannelId: youtube.channel?.id ?? null
+		});
+		if (result.isErr()) {
+			void error(`[STREAMING]: report failed: ${result.error.message}`);
+			return;
+		}
+
+		const { creditedMs, ...progress } = result.value;
+		const left = Math.max(0, (this.settings.pendingBySteamId[steamId] ?? 0) - creditedMs);
+		if (left > 0) {
+			this.settings.pendingBySteamId[steamId] = left;
+		} else {
+			delete this.settings.pendingBySteamId[steamId];
+		}
+
+		if (steamId !== this.steamId) {
+			return;
+		}
+
+		const justGranted =
+			progress.badgeGranted && this.progress !== null && !this.progress.badgeGranted;
+		this.progress = progress;
+		if (justGranted) {
+			refreshPlayerLabels([steamId]);
+			app.toast.success(
+				t('You streamed 12 hours of Company of Heroes — you now have the Streamer badge!')
+			);
+		}
+	}
+
 	defaultSettings(): StreamingHoursSettings {
-		return { enabled: true, pendingMs: 0 };
+		return { enabled: true, pendingBySteamId: {} };
 	}
 }
 

@@ -7,10 +7,12 @@
 
 	type Props = {
 		status: TournamentStatus;
+		/** Soft-deleted (only staff and the host see it): an extra badge. */
+		deleted?: boolean;
 		class?: string;
 	};
 
-	let { status, class: className }: Props = $props();
+	let { status, deleted = false, class: className }: Props = $props();
 	const { t } = useI18n();
 
 	const VARIANTS: Record<TournamentStatus, SemanticVariant | 'primary'> = {
@@ -26,3 +28,6 @@
 <Badge variant={VARIANTS[status]} pulse={status === 'in_progress'} class={className}>
 	{t(STATUS_LABELS[status])}
 </Badge>
+{#if deleted}
+	<Badge variant="destructive" class={className}>{t('Deleted')}</Badge>
+{/if}

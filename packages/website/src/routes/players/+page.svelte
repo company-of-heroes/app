@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CardForm from '$lib/components/player/card-form.svelte';
-	import { PlayerSearchCard } from '@company-of-heroes/ui/player';
+	import { PlayerSearchResults } from '@company-of-heroes/ui/player';
 	import { Alert } from '@company-of-heroes/ui/alert';
 	import { SITE_URL } from '$lib/site/urls';
 	import { href, useI18n } from '$lib/i18n';
@@ -8,7 +8,6 @@
 
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
-	const results = $derived(data.results);
 </script>
 
 <svelte:head>
@@ -27,21 +26,8 @@
 	<div class="border-secondary-800 border-b px-4 py-3">
 		<Alert variant="destructive">{t(data.error)}</Alert>
 	</div>
-{/if}
-
-{#if data.query && !data.error}
-	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-		{results.length === 1
-			? t('{count} player found', { count: results.length })
-			: t('{count} players found', { count: results.length })}
-	</p>
-	{#if results.length === 0}
-		<p class="text-secondary-400 px-4 py-3 text-sm">{t('Player not found')}</p>
-	{:else}
-		<div>
-			{#each results as player (player.profileId)}
-				<PlayerSearchCard {player} />
-			{/each}
-		</div>
-	{/if}
+{:else if data.query}
+	{#key data.query}
+		<PlayerSearchResults query={data.query} initial={data.page} />
+	{/key}
 {/if}

@@ -7,7 +7,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { resource } from 'runed';
 	import { account } from '$core/account';
 	import { app } from '$core/app/context';
@@ -237,11 +237,11 @@
 			return;
 		}
 
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			t('Flag {name} as suspicious for this match? Staff will review the screenshots.', {
 				name: group.alias
 			}),
-			{ okLabel: t('Flag player'), cancelLabel: t('Cancel'), kind: 'warning' }
+			{ confirm: t('Flag player'), cancel: t('Cancel') }
 		);
 		if (!confirmed) {
 			return;

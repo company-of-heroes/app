@@ -77,6 +77,7 @@
 		searchPlaceholder = 'Search...',
 		noResultsLabel = 'No results found.',
 		searchingLabel = 'Searching...',
+		disabled = false,
 		class: className
 	}: Props = $props();
 
@@ -347,6 +348,7 @@
 {#if !hideTrigger}
 	<button
 		type="button"
+		{disabled}
 		onclick={() => (open = true)}
 		class={cn(
 			interactive,
@@ -355,7 +357,7 @@
 			variant === 'secondary' &&
 				cn(
 					buttonSize,
-					'border-secondary-700 bg-secondary-950 hover:border-secondary-600 hover:bg-secondary-800 w-full min-w-0 rounded-md border text-white'
+					'border-secondary-700 bg-secondary-950 hover:border-secondary-600 hover:bg-secondary-800 w-full min-w-0 rounded-md border text-white disabled:opacity-50'
 				),
 			className
 		)}

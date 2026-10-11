@@ -326,13 +326,14 @@ export class RewardsService extends Service {
 
 	private hoursStreamed(owner: Owner): Task<number> {
 		return fromPb(
-			this.pb.collection('streaming_progress').getList<{ streamedMs: number }>(1, 1, {
+			this.pb.collection('streaming_progress').getFullList<{ streamedMs: number }>({
 				filter: this.pb.filter('user = {:userId}', { userId: owner.id }),
-				fields: 'streamedMs',
-				skipTotal: true
+				fields: 'streamedMs'
 			}),
 			'Could not load streaming progress'
-		).map((page) => Math.floor((Number(page.items[0]?.streamedMs) || 0) / 3_600_000));
+		).map((rows) =>
+			Math.floor(rows.reduce((sum, row) => sum + (Number(row.streamedMs) || 0), 0) / 3_600_000)
+		);
 	}
 
 	/** Matches with at least one fair play capture. */

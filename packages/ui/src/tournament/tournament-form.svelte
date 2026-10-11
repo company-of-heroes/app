@@ -17,6 +17,7 @@
 	import TournamentImageField from './tournament-image-field.svelte';
 	import TournamentMapPoolField from './tournament-map-pool-field.svelte';
 	import TournamentMedalField from './tournament-medal-field.svelte';
+	import TournamentPlayersField from './tournament-players-field.svelte';
 	import type { Tournament, TournamentFormat, TournamentInput } from './types';
 
 	type Props = {
@@ -39,11 +40,15 @@
 	let format = $state<string>(initial?.format ?? 'single_elim');
 	let bestOf = $state(String(initial?.bestOf ?? 3));
 	let finalsBestOf = $state(String(initial?.finalsBestOf ?? ''));
+	let semisBestOf = $state(String(initial?.semisBestOf ?? ''));
+	let quartersBestOf = $state(String(initial?.quartersBestOf ?? ''));
 	let grandFinalReset = $state(initial?.grandFinalReset ?? true);
 	let registrationClosesAt = $state(toLocalInput(initial?.registrationClosesAt ?? null));
 	let startsAt = $state(toLocalInput(initial?.startsAt ?? null));
 	let maxParticipants = $state<number | undefined>(initial?.maxParticipants ?? undefined);
 	let mapPool = $state<string[]>(initial?.mapPool.map((map) => map.ref) ?? []);
+	/** New tournament only: Steam ids signed up right after it is created. */
+	let players = $state<string[]>([]);
 	let medal = $state<string | null>(initial?.medal ?? null);
 	let streamUrl = $state(initial?.streamUrl ?? '');
 	let banner = $state<File | null>(null);
@@ -72,6 +77,8 @@
 			format: format as TournamentFormat,
 			bestOf: Number(bestOf),
 			finalsBestOf: finalsBestOf ? Number(finalsBestOf) : null,
+			semisBestOf: format === 'single_elim' && semisBestOf ? Number(semisBestOf) : null,
+			quartersBestOf: format === 'single_elim' && quartersBestOf ? Number(quartersBestOf) : null,
 			grandFinalReset,
 			registrationClosesAt: fromLocalInput(registrationClosesAt),
 			startsAt: fromLocalInput(startsAt),
@@ -82,7 +89,29 @@
 		};
 	}
 
-	async function save() {
+	/** Back to draft: only while registration is open and nobody signed up (the server checks too). */
+	const canUnpublish = $derived(
+		tournament?.status === 'registration' && tournament.participantCount === 0
+	);
+
+	/** Signs up the listed players one by one; returns the ones that failed, with the reason. */
+	async function addPlayers(id: string): Promise<string[]> {
+		const failed: string[] = [];
+		for (const steamId of players) {
+			try {
+				await host.api.tournaments.addParticipant(id, steamId);
+			} catch (error) {
+				failed.push(
+					`${steamId} (${error instanceof Error ? t(error.message) : t('Something went wrong.')})`
+				);
+			}
+		}
+
+		return failed;
+	}
+
+	/** `status`: also publish (open registration) or take it back to draft. */
+	async function save(status?: 'draft' | 'registration') {
 		if (saving || !name.trim()) {
 			return;
 		}
@@ -92,7 +121,7 @@
 		try {
 			const data = input();
 			const images = { banner, logo, clearBanner, clearLogo };
-			const saved = tournament
+			let saved = tournament
 				? await host.api.tournaments.update(
 						tournament.id,
 						tournament.status === 'completed'
@@ -106,11 +135,35 @@
 										medal: data.medal,
 										streamUrl: data.streamUrl
 									}
-								: data,
+								: { ...data, ...(status ? { status } : {}) },
 						images
 					)
 				: await host.api.tournaments.create(data, images);
-			host.notify.success(tournament ? t('Tournament saved.') : t('Tournament created.'));
+			// A new tournament is always a draft first. Open registration before adding players,
+			// so they get the "you are signed up" notice.
+			if (!tournament && status === 'registration') {
+				saved = await host.api.tournaments.update(saved.id, { status });
+			}
+
+			if (!tournament && players.length) {
+				const failed = await addPlayers(saved.id);
+				if (failed.length) {
+					host.notify.error(
+						t('Could not add {count} players: {players}', {
+							count: failed.length,
+							players: failed.join(', ')
+						})
+					);
+				}
+			}
+
+			host.notify.success(
+				status === 'registration'
+					? t('Registration is open.')
+					: status === 'draft' || !tournament
+						? t('Saved as draft.')
+						: t('Tournament saved.')
+			);
 			await host.url.goto(host.routes.tournament(saved.slug));
 		} catch (error) {
 			saveError = error instanceof Error ? t(error.message) : t('Could not save the tournament.');
@@ -132,59 +185,178 @@
 
 	<Form.Group
 		label={t('Format')}
-		description={started ? t('The format cannot change after the tournament started.') : undefined}
+		description={started
+			? t('The format cannot change after the tournament started.')
+			: format === 'double_elim'
+				? t(
+						'Length of the grand final. With a reset, the winners-bracket player must be beaten twice.'
+					)
+				: undefined}
+		wide
 	>
-		<div class="flex flex-col gap-3 sm:flex-row">
-			<Select
-				items={formatItems}
-				type="single"
-				bind:value={format}
-				disabled={started}
-				aria-label={t('Format')}
-			/>
-			<Select
-				items={bestOfItems}
-				type="single"
-				bind:value={bestOf}
-				disabled={started}
-				aria-label={t('Match length')}
-			/>
+		<div class="grid max-w-3xl gap-3 sm:grid-cols-3">
+			<div class="flex min-w-0 flex-col gap-1">
+				<span class="text-secondary-400 text-xs">{t('Bracket')}</span>
+				<Select
+					items={formatItems}
+					type="single"
+					bind:value={format}
+					disabled={started}
+					aria-label={t('Format')}
+				/>
+			</div>
+			<div class="flex min-w-0 flex-col gap-1">
+				<span class="text-secondary-400 text-xs">{t('Match length')}</span>
+				<Select
+					items={bestOfItems}
+					type="single"
+					bind:value={bestOf}
+					disabled={started}
+					aria-label={t('Match length')}
+				/>
+			</div>
+			{#if format === 'single_elim'}
+				<div class="flex min-w-0 flex-col gap-1">
+					<span class="text-secondary-400 text-xs">{t('Quarterfinals')}</span>
+					<Select
+						items={finalsItems}
+						type="single"
+						bind:value={quartersBestOf}
+						disabled={started}
+						aria-label={t('Quarterfinals')}
+					/>
+				</div>
+				<div class="flex min-w-0 flex-col gap-1">
+					<span class="text-secondary-400 text-xs">{t('Semifinals')}</span>
+					<Select
+						items={finalsItems}
+						type="single"
+						bind:value={semisBestOf}
+						disabled={started}
+						aria-label={t('Semifinals')}
+					/>
+				</div>
+			{/if}
+			{#if format !== 'round_robin'}
+				<div class="flex min-w-0 flex-col gap-1">
+					<span class="text-secondary-400 text-xs">{t('Final')}</span>
+					<Select
+						items={finalsItems}
+						type="single"
+						bind:value={finalsBestOf}
+						disabled={started}
+						aria-label={t('Final')}
+					/>
+				</div>
+			{/if}
+		</div>
+		{#if format === 'double_elim'}
+			<Checkbox bind:checked={grandFinalReset} disabled={started} label={t('Grand final reset')} />
+		{/if}
+	</Form.Group>
+
+	<Form.Group label={t('Schedule')} description={t('Times are in your local time zone.')} wide>
+		<div class="grid max-w-3xl gap-3 sm:grid-cols-3">
+			<div class="flex min-w-0 flex-col gap-1">
+				<span class="text-secondary-400 text-xs">{t('Registration closes')}</span>
+				<DatePicker
+					time
+					bind:value={registrationClosesAt}
+					disabled={started}
+					aria-label={t('Registration closes')}
+					calendarLabel={t('Open calendar')}
+				/>
+			</div>
+			<div class="flex min-w-0 flex-col gap-1">
+				<span class="text-secondary-400 text-xs">{t('Starts')}</span>
+				<DatePicker
+					time
+					bind:value={startsAt}
+					disabled={started}
+					aria-label={t('Starts')}
+					calendarLabel={t('Open calendar')}
+				/>
+			</div>
+			<div class="flex min-w-0 flex-col gap-1">
+				<label for="tournament-max" class="text-secondary-400 text-xs">{t('Maximum players')}</label
+				>
+				<Input
+					id="tournament-max"
+					type="number"
+					min={2}
+					max={256}
+					placeholder={t('No limit')}
+					bind:value={maxParticipants}
+					disabled={started}
+				/>
+			</div>
 		</div>
 	</Form.Group>
 
+	{#if !tournament}
+		<Form.Group
+			label={t('Players')}
+			description={t(
+				'Optional. Search players by name or Steam ID; they are added when the tournament is created.'
+			)}
+		>
+			<TournamentPlayersField
+				bind:value={players}
+				max={maxParticipants ? Number(maxParticipants) : null}
+				disabled={saving}
+			/>
+		</Form.Group>
+	{/if}
+
 	<Form.Group
-		label={t('Logo')}
-		description={t(
-			'Square image shown in lists and next to the name. JPEG, PNG or WebP, max 2 MB.'
-		)}
+		label={t('Stream link')}
+		inputId="tournament-stream"
+		description={t('Optional. Where the tournament is cast, e.g. a Twitch or YouTube channel.')}
 	>
-		<TournamentImageField
-			id="tournament-logo"
-			shape="square"
-			currentUrl={tournament?.logoUrl ?? null}
-			maxBytes={TOURNAMENT_LOGO_MAX_BYTES}
-			tooBigMessage="The logo must be 2 MB or smaller."
-			bind:file={logo}
-			bind:clear={clearLogo}
-			disabled={saving}
+		<Input
+			id="tournament-stream"
+			type="url"
+			placeholder="https://"
+			pattern="https://.*"
+			maxlength={500}
+			bind:value={streamUrl}
+			disabled={saving || tournament?.status === 'completed'}
 		/>
 	</Form.Group>
 
 	<Form.Group
-		label={t('Banner')}
-		description={t('Wide image above the tournament, about 4:1. JPEG, PNG or WebP, max 5 MB.')}
+		label={t('Images')}
+		description={t('Logo is square, max 2 MB. Banner is about 4:1, max 5 MB. JPEG, PNG or WebP.')}
 		wide
 	>
-		<TournamentImageField
-			id="tournament-banner"
-			shape="wide"
-			currentUrl={tournament?.bannerUrl ?? null}
-			maxBytes={TOURNAMENT_BANNER_MAX_BYTES}
-			tooBigMessage="The banner must be 5 MB or smaller."
-			bind:file={banner}
-			bind:clear={clearBanner}
-			disabled={saving}
-		/>
+		<div class="flex flex-wrap items-start gap-3">
+			<div class="flex flex-col gap-1">
+				<span class="text-secondary-400 text-xs">{t('Logo')}</span>
+				<TournamentImageField
+					id="tournament-logo"
+					shape="square"
+					currentUrl={tournament?.logoUrl ?? null}
+					maxBytes={TOURNAMENT_LOGO_MAX_BYTES}
+					tooBigMessage="The logo must be 2 MB or smaller."
+					bind:file={logo}
+					bind:clear={clearLogo}
+					disabled={saving}
+				/>
+			</div>
+			<div class="flex min-w-0 flex-1 flex-col gap-1">
+				<span class="text-secondary-400 text-xs">{t('Banner')}</span>
+				<TournamentImageField
+					id="tournament-banner"
+					shape="wide"
+					currentUrl={tournament?.bannerUrl ?? null}
+					maxBytes={TOURNAMENT_BANNER_MAX_BYTES}
+					tooBigMessage="The banner must be 5 MB or smaller."
+					bind:file={banner}
+					bind:clear={clearBanner}
+					disabled={saving}
+				/>
+			</div>
+		</div>
 	</Form.Group>
 
 	<Form.Group
@@ -214,90 +386,6 @@
 		/>
 	</Form.Group>
 
-	{#if format !== 'round_robin'}
-		<Form.Group
-			label={t('Final')}
-			description={format === 'double_elim'
-				? t(
-						'Length of the grand final. With a reset, the winners-bracket player must be beaten twice.'
-					)
-				: t('Length of the final.')}
-		>
-			<div class="flex flex-col gap-3">
-				<Select
-					items={finalsItems}
-					type="single"
-					bind:value={finalsBestOf}
-					disabled={started}
-					aria-label={t('Final')}
-				/>
-				{#if format === 'double_elim'}
-					<Checkbox
-						bind:checked={grandFinalReset}
-						disabled={started}
-						label={t('Grand final reset')}
-					/>
-				{/if}
-			</div>
-		</Form.Group>
-	{/if}
-
-	<Form.Group label={t('Schedule')} description={t('Times are in your local time zone.')}>
-		<div class="flex flex-col gap-3 sm:flex-row">
-			<div class="flex min-w-0 flex-1 flex-col gap-1">
-				<span class="text-secondary-400 text-xs">{t('Registration closes')}</span>
-				<DatePicker
-					time
-					bind:value={registrationClosesAt}
-					disabled={started}
-					aria-label={t('Registration closes')}
-					calendarLabel={t('Open calendar')}
-				/>
-			</div>
-			<div class="flex min-w-0 flex-1 flex-col gap-1">
-				<span class="text-secondary-400 text-xs">{t('Starts')}</span>
-				<DatePicker
-					time
-					bind:value={startsAt}
-					disabled={started}
-					aria-label={t('Starts')}
-					calendarLabel={t('Open calendar')}
-				/>
-			</div>
-		</div>
-	</Form.Group>
-
-	<Form.Group
-		label={t('Maximum players')}
-		inputId="tournament-max"
-		description={t('Leave empty for no limit.')}
-	>
-		<Input
-			id="tournament-max"
-			type="number"
-			min={2}
-			max={256}
-			bind:value={maxParticipants}
-			disabled={started}
-		/>
-	</Form.Group>
-
-	<Form.Group
-		label={t('Stream link')}
-		inputId="tournament-stream"
-		description={t('Optional. Where the tournament is cast, e.g. a Twitch or YouTube channel.')}
-	>
-		<Input
-			id="tournament-stream"
-			type="url"
-			placeholder="https://"
-			pattern="https://.*"
-			maxlength={500}
-			bind:value={streamUrl}
-			disabled={saving || tournament?.status === 'completed'}
-		/>
-	</Form.Group>
-
 	<Form.Group
 		label={t('Map pool')}
 		description={t('Maps that are played in this tournament.')}
@@ -313,9 +401,38 @@
 	<Form.Group>
 		{#snippet footer()}
 			<div class="flex flex-wrap items-center gap-3">
-				<Button type="submit" loading={saving} disabled={saving || !name.trim()}>
-					{tournament ? t('Save tournament') : t('Create tournament')}
-				</Button>
+				{#if !tournament || tournament.status === 'draft'}
+					<Button
+						type="button"
+						loading={saving}
+						disabled={saving || !name.trim()}
+						onclick={() => save('registration')}
+					>
+						{tournament ? t('Save and open registration') : t('Create and open registration')}
+					</Button>
+					<Button type="submit" variant="secondary" disabled={saving || !name.trim()}>
+						{t('Save as draft')}
+					</Button>
+				{:else}
+					<Button type="submit" loading={saving} disabled={saving || !name.trim()}>
+						{t('Save tournament')}
+					</Button>
+					{#if tournament.status === 'registration'}
+						<Button
+							type="button"
+							variant="secondary"
+							disabled={saving || !name.trim() || !canUnpublish}
+							onclick={() => save('draft')}
+						>
+							{t('Save as draft')}
+						</Button>
+						{#if !canUnpublish}
+							<p class="text-secondary-400 text-xs">
+								{t('Players already signed up, so it cannot go back to draft.')}
+							</p>
+						{/if}
+					{/if}
+				{/if}
 				{#if saveError}
 					<p class="text-destructive text-sm">{saveError}</p>
 				{/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { LoginForm, RegisterForm } from '@company-of-heroes/ui/auth';
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { Button } from '$lib/components/ui/button';
 	import { account } from '$core/account';
 	import { useI18n } from '$lib/i18n';
@@ -66,11 +66,11 @@
 
 	/** An anonymous account only lives on this device: say so before creating one. */
 	async function continueAnonymously() {
-		const ok = await confirm(
+		const ok = await confirmation.ask(
 			t(
 				'An anonymous account gets a generated email address and password that only this app knows.\n\n• You cannot log in on coh1stats.com or on another computer.\n• You cannot reset the password: if the app data and its backups are lost, the account and its match history are lost too.\n• You can still set your own email and password later on the Account page.\n\nContinue anonymously?'
 			),
-			{ okLabel: t('Continue anonymously'), cancelLabel: t('Cancel'), kind: 'warning' }
+			{ confirm: t('Continue anonymously'), cancel: t('Cancel') }
 		);
 		if (ok) {
 			onAnonymous?.();

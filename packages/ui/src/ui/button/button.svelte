@@ -37,7 +37,8 @@
 			'bg-primary text-secondary-950 hover:bg-primary/90 border-0 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.4)]',
 		variant === 'secondary' &&
 			'border-secondary-700 bg-secondary-950 hover:border-secondary-600 hover:bg-secondary-800 text-white',
-		variant === 'destructive' && 'bg-destructive border-destructive text-destructive-foreground',
+		variant === 'destructive' &&
+			'hover:bg-destructive/15 active:bg-destructive/25 border-0 text-red-400 hover:text-red-300',
 		variant === 'success' && 'bg-success border-success text-success-foreground',
 		variant === 'warning' && 'bg-warning border-warning text-warning-foreground',
 		variant === 'ghost' && 'hover:bg-secondary-950 active:bg-secondary-900 border-0',

@@ -322,6 +322,7 @@ export class TournamentGamesService extends Service {
 				filter: this.pb.filter(
 					'user = {:user} && status = "registered" && ' +
 						'(tournament.status = "in_progress" || tournament.status = "completed") && ' +
+						'tournament.deletedAt = "" && ' +
 						'tournament.updated > {:since}',
 					// Finished long ago: nothing left to show.
 					{ user: user.id, since: pbDate(new Date(Date.now() - 30 * 86_400_000)) }

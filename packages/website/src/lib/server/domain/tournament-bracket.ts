@@ -3,6 +3,7 @@ import type {
 	TournamentFormat,
 	TournamentMatch,
 	TournamentSlot,
+	TournamentSlotRef,
 	TournamentStanding
 } from '@company-of-heroes/api';
 
@@ -27,7 +28,14 @@ export type MatchSpec = {
 	loserNext: { key: string; slot: TournamentSlot } | null;
 };
 
-export type BracketOptions = { bestOf: number; finalsBestOf: number | null; reset: boolean };
+export type BracketOptions = {
+	bestOf: number;
+	finalsBestOf: number | null;
+	/** Single elimination only (double elimination has no rounds by these names). */
+	semisBestOf?: number | null;
+	quartersBestOf?: number | null;
+	reset: boolean;
+};
 
 const key = (bracket: TournamentBracket, round: number, position: number) =>
 	`${bracket}-${round}-${position}`;
@@ -74,6 +82,20 @@ function spec(
 	};
 }
 
+/** Length of a winners round; with `final` (single elimination) the last three have their own. */
+function roundBestOf(options: BracketOptions, final: boolean, fromEnd: number): number {
+	const own = !final
+		? null
+		: fromEnd === 0
+			? options.finalsBestOf
+			: fromEnd === 1
+				? options.semisBestOf
+				: fromEnd === 2
+					? options.quartersBestOf
+					: null;
+	return own ?? options.bestOf;
+}
+
 /** Winners bracket (= single elimination): round 1 is seeded, winners move on to round + 1. */
 function winnersBracket(seeded: string[], options: BracketOptions, final: boolean): MatchSpec[][] {
 	const size = bracketSize(seeded.length);
@@ -82,8 +104,7 @@ function winnersBracket(seeded: string[], options: BracketOptions, final: boolea
 	const result: MatchSpec[][] = [];
 	for (let round = 1; round <= rounds; round++) {
 		const count = size / 2 ** round;
-		const bestOf =
-			final && round === rounds ? (options.finalsBestOf ?? options.bestOf) : options.bestOf;
+		const bestOf = roundBestOf(options, final, rounds - round);
 		result.push(Array.from({ length: count }, (_, i) => spec('winners', round, i, bestOf)));
 	}
 
@@ -610,4 +631,38 @@ export function placements(
 		id === winner ? Number.POSITIVE_INFINITY : (knockedOut.get(id) ?? -1)
 	);
 	return new Map(participants.map((id, i) => [id, 1 + stages.filter((s) => s > stages[i]).length]));
+}
+
+/** A player's place in the bracket: a match and its slot. */
+export type SlotRef = TournamentSlotRef;
+
+/** Shared with the page, which swaps right away (before the server answers). */
+export { swapSlots as swapPlayers } from '@company-of-heroes/api';
+
+/**
+ * Why a slot cannot take part in a swap (an English message), or null. Only unplayed matches:
+ * not decided, no games, no tournament game started (`busy`), and a player in that slot.
+ */
+export function swapBlocker(
+	match: TournamentMatch | undefined,
+	slot: TournamentSlot,
+	busy: Set<string>
+): string | null {
+	if (!match) {
+		return 'Match not found.';
+	}
+
+	if (match.bracket === 'round_robin') {
+		return 'Players cannot be swapped in a round robin.';
+	}
+
+	if (match.status === 'completed' || match.games.length > 0) {
+		return 'Only players in unplayed matches can be swapped.';
+	}
+
+	if (busy.has(match.id)) {
+		return 'A tournament game of this match was started.';
+	}
+
+	return playerIn(match, slot) ? null : 'There is no player in that place yet.';
 }

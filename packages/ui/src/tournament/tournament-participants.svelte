@@ -5,20 +5,26 @@
 	import ArrowDownIcon from 'phosphor-svelte/lib/ArrowDownIcon';
 	import ArrowUpIcon from 'phosphor-svelte/lib/ArrowUpIcon';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
+	import DotsSixVerticalIcon from 'phosphor-svelte/lib/DotsSixVerticalIcon';
+	import UserMinusIcon from 'phosphor-svelte/lib/UserMinusIcon';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { countryDisplayName } from '../format/country';
 	import { getEloColor, getEloTextShadow, isEliteElo } from '../format/player-format';
 	import { useHost } from '../host/host.context';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
+	import TournamentDragItem, { type DragItem } from './tournament-drag-item.svelte';
+	import TournamentDragProvider from './tournament-drag-provider.svelte';
 	import TournamentParticipantStats from './tournament-participant-stats.svelte';
 	import type { TournamentParticipant } from './types';
 	import { useTournament } from './context';
 	import { escapeHtml, tooltip } from '../attachments';
 
 	type Props = {
-		/** Staff, before the start: move players up and down; `onReorder` gets the new order. */
+		/** Staff, before the start: drag or move players up and down; `onReorder` gets the new order. */
 		onReorder?: (order: TournamentParticipant[]) => void;
+		/** Staff, before the start: take a player out. */
+		onRemove?: (participant: TournamentParticipant) => void;
 		/** Staff, while running: disqualify a player. */
 		onDisqualify?: (participant: TournamentParticipant) => void;
 		showPlacement?: boolean;
@@ -30,6 +36,7 @@
 
 	let {
 		onReorder,
+		onRemove,
 		onDisqualify,
 		showPlacement = false,
 		showRules = false,
@@ -58,7 +65,8 @@
 					: 'text-secondary-400';
 
 	const expanded = new SvelteSet<string>();
-	const columns = $derived(onReorder || onDisqualify ? 5 : 4);
+	const actions = $derived(!!(onReorder || onDisqualify));
+	const columns = $derived(actions ? 5 : 4);
 
 	function toggle(id: string) {
 		if (expanded.has(id)) {
@@ -78,10 +86,23 @@
 	}
 
 	function move(index: number, by: -1 | 1) {
+		moveTo(index, index + by);
+	}
+
+	function moveTo(from: number, to: number) {
 		const order = [...participants];
-		const [row] = order.splice(index, 1);
-		order.splice(index + by, 0, row);
+		const [row] = order.splice(from, 1);
+		order.splice(to, 0, row);
 		onReorder?.(order);
+	}
+
+	/** A dragged player takes the place of the one it was dropped on. */
+	function drop(source: string, target: string) {
+		const from = participants.findIndex((p) => p.id === source);
+		const to = participants.findIndex((p) => p.id === target);
+		if (from >= 0 && to >= 0 && !busy) {
+			moveTo(from, to);
+		}
 	}
 </script>
 
@@ -90,158 +111,202 @@
 		{t('Nobody signed up yet.')}
 	</p>
 {:else}
-	<div class="border-secondary-800 overflow-x-auto border-b">
-		<table class="w-full table-fixed border-collapse text-sm">
-			<thead>
-				<tr class="{tableHeadRow} text-center">
-					<th class="w-16 px-4 py-2">{numberLabel}</th>
-					<th class="px-4 py-2 text-left">{t('Player')}</th>
-					<th class="w-36 px-4 py-2 whitespace-nowrap">{t('Highest ELO')}</th>
-					{#if onReorder || onDisqualify}
-						<th class="w-36 px-4 py-2"><span class="sr-only">{t('Actions')}</span></th>
-					{/if}
-					<th class="w-44 px-2 py-2"><span class="sr-only">{t('Stats')}</span></th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each rows as participant, index (participant.id)}
-					{@const number = showPlacement ? participant.placement : participant.seed}
-					{@const isYou = participant.user === host.auth.user?.id}
-					{@const out = participant.status !== 'registered'}
-					{@const flagUrl = host.resolve.flagImageUrl(participant.country)}
-					{@const countryName = countryDisplayName(participant.country, host.locale())}
-					{@const open = expanded.has(participant.id)}
-					<tr
-						onclick={(event) => onRowClick(event, participant.id)}
-						class={cn(
-							'border-secondary-800/70 hover:bg-secondary-950/50 h-11 cursor-pointer border-t text-white',
-							open && 'bg-secondary-950/50',
-							isYou &&
-								'bg-primary/5 hover:bg-primary/10 shadow-[inset_2px_0_0_var(--color-primary)]'
-						)}
-					>
-						<td
-							class={cn(
-								'px-4 py-1.5 text-center font-semibold tabular-nums',
-								showPlacement ? placementClass(number) : 'text-secondary-400'
-							)}
+	<TournamentDragProvider onDrop={drop}>
+		<div class="border-secondary-800 overflow-x-auto border-b">
+			<table class="w-full table-fixed border-collapse text-sm">
+				<thead>
+					<tr class="{tableHeadRow} text-center">
+						<th class="w-16 px-4 py-2">{numberLabel}</th>
+						<th class="px-4 py-2 text-left">{t('Player')}</th>
+						<th class="w-36 px-4 py-2 whitespace-nowrap">{t('Highest ELO')}</th>
+						{#if actions}
+							<th class="w-36 px-4 py-2"><span class="sr-only">{t('Actions')}</span></th>
+						{/if}
+						<th class={cn('px-2 py-2', onRemove ? 'w-52' : 'w-44')}>
+							<span class="sr-only">{t('Stats')}</span>
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each rows as participant, index (participant.id)}
+						{@const number = showPlacement ? participant.placement : participant.seed}
+						{@const isYou = participant.user === host.auth.user?.id}
+						{@const out = participant.status !== 'registered'}
+						{@const flagUrl = host.resolve.flagImageUrl(participant.country)}
+						{@const countryName = countryDisplayName(participant.country, host.locale())}
+						{@const open = expanded.has(participant.id)}
+						<TournamentDragItem
+							id={participant.id}
+							label={participant.alias}
+							disabled={!onReorder || busy}
 						>
-							{number ?? index + 1}
-						</td>
-						<td class="px-4 py-1.5">
-							<div class="flex min-w-0 items-center gap-2">
-								<span
+							{#snippet children(item: DragItem)}
+								<tr
+									{@attach item.attach}
+									onclick={(event) => onRowClick(event, participant.id)}
 									class={cn(
-										'flex min-w-0 items-center gap-2 font-medium',
-										out && 'text-secondary-500 line-through'
+										'border-secondary-800/70 hover:bg-secondary-950/50 h-11 cursor-pointer border-t text-white transition-colors',
+										open && 'bg-secondary-950/50',
+										isYou &&
+											'bg-primary/5 hover:bg-primary/10 shadow-[inset_2px_0_0_var(--color-primary)]',
+										item.source && 'opacity-50',
+										item.target && 'bg-primary/15 ring-primary/60 ring-1 ring-inset'
 									)}
 								>
-									{#if flagUrl}
-										<img
-											class="h-4 w-auto shrink-0 rounded-xs"
-											src={flagUrl}
-											alt={countryName ?? participant.country}
-											{@attach tooltip(escapeHtml(countryName ?? ''))}
-										/>
+									<td
+										class={cn(
+											'px-4 py-1.5 text-center font-semibold tabular-nums',
+											showPlacement ? placementClass(number) : 'text-secondary-400'
+										)}
+									>
+										<span class="inline-flex items-center gap-1">
+											{#if onReorder}
+												<button
+													type="button"
+													{@attach item.handle}
+													class="text-secondary-500 hover:text-secondary-200 cursor-grab touch-none active:cursor-grabbing"
+													aria-label={t('Drag to change the seeding')}
+												>
+													<DotsSixVerticalIcon size={14} />
+												</button>
+											{/if}
+											{number ?? index + 1}
+										</span>
+									</td>
+									<td class="px-4 py-1.5">
+										<div class="flex min-w-0 items-center gap-2">
+											<span
+												class={cn(
+													'flex min-w-0 items-center gap-2 font-medium',
+													out && 'text-secondary-500 line-through'
+												)}
+											>
+												{#if flagUrl}
+													<img
+														class="h-4 w-auto shrink-0 rounded-xs"
+														src={flagUrl}
+														alt={countryName ?? participant.country}
+														{@attach tooltip(escapeHtml(countryName ?? ''))}
+													/>
+												{/if}
+												<span class="truncate">{participant.alias}</span>
+											</span>
+											{#if isYou}
+												<Badge class="shrink-0">
+													{t('You')}
+												</Badge>
+											{/if}
+											{#if participant.status === 'disqualified'}
+												<Badge variant="destructive" class="shrink-0">
+													{t('Disqualified')}
+												</Badge>
+											{/if}
+											{#if showRules && !participant.rulesAccepted && !out}
+												<Badge variant="warning" class="shrink-0">
+													{t('Rules not accepted')}
+												</Badge>
+											{/if}
+										</div>
+									</td>
+									<td
+										class={cn(
+											'px-4 py-1.5 text-center tabular-nums',
+											participant.highestRating == null && 'text-secondary-500 text-xs font-normal',
+											isEliteElo(participant.highestRating) && 'font-bold tracking-wide'
+										)}
+										style:color={participant.highestRating != null
+											? getEloColor(participant.highestRating)
+											: undefined}
+										style:text-shadow={getEloTextShadow(participant.highestRating)}
+									>
+										{participant.highestRating ?? t('N/A')}
+									</td>
+									{#if actions}
+										<td class="px-4">
+											<div class="flex justify-end gap-1">
+												{#if onReorder}
+													<Button
+														variant="ghost"
+														size="icon-sm"
+														aria-label={t('Move up')}
+														disabled={busy || index === 0}
+														onclick={() => move(index, -1)}
+													>
+														<ArrowUpIcon size={14} />
+													</Button>
+													<Button
+														variant="ghost"
+														size="icon-sm"
+														aria-label={t('Move down')}
+														disabled={busy || index === rows.length - 1}
+														onclick={() => move(index, 1)}
+													>
+														<ArrowDownIcon size={14} />
+													</Button>
+												{/if}
+												{#if onDisqualify && participant.status === 'registered'}
+													<Button
+														variant="destructive"
+														size="sm"
+														onclick={() => onDisqualify?.(participant)}
+													>
+														{t('Disqualify')}
+													</Button>
+												{/if}
+											</div>
+										</td>
 									{/if}
-									<span class="truncate">{participant.alias}</span>
-								</span>
-								{#if isYou}
-									<Badge class="shrink-0">
-										{t('You')}
-									</Badge>
+									<td class="px-2 py-1.5">
+										<div class="flex items-center justify-end gap-1">
+											<Button
+												variant="secondary"
+												size="sm"
+												class="whitespace-nowrap"
+												href={host.routes.player(participant.profileId)}
+											>
+												{t('View profile')}
+											</Button>
+											{#if onRemove && participant.status === 'registered'}
+												<Button
+													variant="ghost"
+													size="icon-sm"
+													disabled={busy}
+													aria-label={t('Remove')}
+													{@attach tooltip(t('Remove'))}
+													onclick={() => onRemove?.(participant)}
+												>
+													<UserMinusIcon size={16} />
+												</Button>
+											{/if}
+											<Button
+												variant="ghost"
+												size="icon-sm"
+												aria-expanded={open}
+												aria-label={open ? t('Hide stats') : t('Show stats')}
+												onclick={() => toggle(participant.id)}
+											>
+												<CaretDownIcon
+													size={14}
+													class={cn('transition-transform', open && 'rotate-180')}
+												/>
+											</Button>
+										</div>
+									</td>
+								</tr>
+								{#if open}
+									<tr class="border-secondary-800 border-t">
+										<td colspan={columns} class="bg-secondary-950/30 p-0">
+											<TournamentParticipantStats
+												playerId={participant.steamId || String(participant.profileId)}
+											/>
+										</td>
+									</tr>
 								{/if}
-								{#if participant.status === 'disqualified'}
-									<Badge variant="destructive" class="shrink-0">
-										{t('Disqualified')}
-									</Badge>
-								{/if}
-								{#if showRules && !participant.rulesAccepted && !out}
-									<Badge variant="warning" class="shrink-0">
-										{t('Rules not accepted')}
-									</Badge>
-								{/if}
-							</div>
-						</td>
-						<td
-							class={cn(
-								'px-4 py-1.5 text-center tabular-nums',
-								participant.highestRating == null && 'text-secondary-500 text-xs font-normal',
-								isEliteElo(participant.highestRating) && 'font-bold tracking-wide'
-							)}
-							style:color={participant.highestRating != null
-								? getEloColor(participant.highestRating)
-								: undefined}
-							style:text-shadow={getEloTextShadow(participant.highestRating)}
-						>
-							{participant.highestRating ?? t('N/A')}
-						</td>
-						{#if onReorder || onDisqualify}
-							<td class="px-4">
-								<div class="flex justify-end gap-1">
-									{#if onReorder}
-										<Button
-											variant="ghost"
-											size="icon-sm"
-											aria-label={t('Move up')}
-											disabled={busy || index === 0}
-											onclick={() => move(index, -1)}
-										>
-											<ArrowUpIcon size={14} />
-										</Button>
-										<Button
-											variant="ghost"
-											size="icon-sm"
-											aria-label={t('Move down')}
-											disabled={busy || index === rows.length - 1}
-											onclick={() => move(index, 1)}
-										>
-											<ArrowDownIcon size={14} />
-										</Button>
-									{/if}
-									{#if onDisqualify && participant.status === 'registered'}
-										<Button variant="ghost" size="sm" onclick={() => onDisqualify?.(participant)}>
-											{t('Disqualify')}
-										</Button>
-									{/if}
-								</div>
-							</td>
-						{/if}
-						<td class="px-2 py-1.5">
-							<div class="flex items-center justify-end gap-1">
-								<Button
-									variant="secondary"
-									size="sm"
-									href={host.routes.player(participant.profileId)}
-								>
-									{t('View profile')}
-								</Button>
-								<Button
-									variant="ghost"
-									size="icon-sm"
-									aria-expanded={open}
-									aria-label={open ? t('Hide stats') : t('Show stats')}
-									onclick={() => toggle(participant.id)}
-								>
-									<CaretDownIcon
-										size={14}
-										class={cn('transition-transform', open && 'rotate-180')}
-									/>
-								</Button>
-							</div>
-						</td>
-					</tr>
-					{#if open}
-						<tr class="border-secondary-800 border-t">
-							<td colspan={columns} class="bg-secondary-950/30 p-0">
-								<TournamentParticipantStats
-									playerId={participant.steamId || String(participant.profileId)}
-								/>
-							</td>
-						</tr>
-					{/if}
-				{/each}
-			</tbody>
-		</table>
-	</div>
+							{/snippet}
+						</TournamentDragItem>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</TournamentDragProvider>
 {/if}

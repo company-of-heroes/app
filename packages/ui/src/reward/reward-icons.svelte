@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { cn } from '@company-of-heroes/ui/cn';
 	import { useHost } from '../host/host.context';
 	import RewardIcon from './reward-icon.svelte';
 	import type { PlayerRewards, RewardView } from './types';
@@ -8,9 +9,10 @@
 		steamId: string;
 		/** Preloaded by the host so the row does not pop in after render; fetched otherwise. */
 		rewards?: PlayerRewards | null;
+		class?: string;
 	};
 
-	let { steamId, rewards: preloaded }: Props = $props();
+	let { steamId, rewards: preloaded, class: className }: Props = $props();
 	const host = useHost();
 
 	/** Unlocked first (newest first); the owner also sees locked ones, closest first. Secret locked ones stay hidden. */
@@ -44,7 +46,7 @@
 
 {#snippet icons(list: RewardView[])}
 	{#if list.length > 0}
-		<div class="mb-4 flex flex-wrap items-center gap-1.5">
+		<div class={cn('mb-4 flex flex-wrap items-center gap-1.5', className)}>
 			{#each list as reward (reward.id)}
 				<RewardIcon {reward} />
 			{/each}

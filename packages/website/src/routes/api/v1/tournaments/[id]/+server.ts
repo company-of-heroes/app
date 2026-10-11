@@ -16,3 +16,10 @@ export const PATCH = handle((event) =>
 		)
 	)
 );
+
+/** Staff or the host soft-delete it: hidden from the public, they can still restore it. */
+export const DELETE = handle((event) =>
+	requireManager(event).andThen(({ id, user }) =>
+		event.locals.services.tournaments.remove(id, user.id)
+	)
+);

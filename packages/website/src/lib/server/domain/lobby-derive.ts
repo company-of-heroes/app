@@ -56,6 +56,7 @@ type ResultPlayer = {
 	steamId?: string;
 	name?: string;
 	alias?: string;
+	country?: string;
 	outcome?: number;
 	race_id?: number;
 	oldrating?: number;
@@ -106,6 +107,8 @@ export type RatingUpdate = {
 	steamId: string;
 	profileId: number;
 	alias: string;
+	/** Relic country code; empty when the result has none. */
+	country: string;
 	slots: EloSlotUpdate[];
 };
 
@@ -501,6 +504,7 @@ export function ratingUpdates(result: MatchResult | null, now: number): RatingUp
 			steamId,
 			profileId,
 			alias: typeof player.alias === 'string' ? player.alias.trim() : '',
+			country: typeof player.country === 'string' ? player.country.trim() : '',
 			slots: [{ matchtypeId, raceId, rating, matchId, at }]
 		});
 	}

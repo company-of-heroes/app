@@ -9,9 +9,11 @@
 		target: LikeTarget;
 		likeCount?: number;
 		onCountChange?: (count: number) => void;
+		orientation?: 'vertical' | 'horizontal';
+		class?: string;
 	};
 
-	let { target, likeCount = 0, onCountChange }: Props = $props();
+	let { target, likeCount = 0, onCountChange, orientation, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
@@ -78,4 +80,6 @@
 	disabled={voting}
 	href={signedIn ? undefined : host.routes.login()}
 	onvote={signedIn ? (value) => void setVote(value) : undefined}
+	{orientation}
+	class={className}
 />

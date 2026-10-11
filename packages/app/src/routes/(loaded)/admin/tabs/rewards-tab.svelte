@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { watch } from 'runed';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
@@ -363,12 +363,12 @@
 	}
 
 	async function remove(reward: RewardRecord) {
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			t(
 				'Delete {title}? Everyone who unlocked it loses it. Disable the reward instead to keep existing unlocks.',
 				{ title: reward.title }
 			),
-			{ okLabel: t('Delete'), cancelLabel: t('Cancel'), kind: 'warning' }
+			{ confirm: t('Delete'), cancel: t('Cancel'), danger: true }
 		);
 		if (!confirmed) {
 			return;
@@ -621,7 +621,7 @@
 			<Button
 				type="button"
 				size="sm"
-				variant="ghost"
+				variant="destructive"
 				loading={deletingId === row.id}
 				onclick={() => remove(row)}
 				aria-label={t('Delete')}

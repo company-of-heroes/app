@@ -139,7 +139,10 @@
 	}
 
 	async function remove(post: TournamentPost) {
-		const ok = await host.notify.confirm(t('Delete this update?'), { confirm: t('Delete') });
+		const ok = await host.notify.confirm(t('Delete this update?'), {
+			confirm: t('Delete'),
+			danger: true
+		});
 		if (ok) {
 			await run(async () => {
 				await host.api.tournaments.deletePost(tournament.id, post.id);
@@ -268,7 +271,7 @@
 						</Button>
 						<Button
 							size="icon-sm"
-							variant="ghost"
+							variant="destructive"
 							disabled={busy}
 							onclick={() => remove(post)}
 							aria-label={t('Delete')}

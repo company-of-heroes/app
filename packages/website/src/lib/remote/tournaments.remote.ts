@@ -5,6 +5,7 @@ import { canHostTournaments, isStaffUser } from '$lib/auth/user';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import {
 	acceptTimeBody,
+	addParticipantBody,
 	featureBody,
 	hostDecisionBody,
 	hostRequestBody,
@@ -19,6 +20,7 @@ import {
 	scheduleBody,
 	seedOrderBody,
 	seenBody,
+	swapBody,
 	tournamentInput,
 	tournamentScope,
 	tournamentUpdate
@@ -141,6 +143,31 @@ export const setTournamentSeeds = command(seedOrderBody.extend({ id }), async ({
 	return unwrapAsync(m.services.tournaments.setSeeds(m.id, order));
 });
 
+export const deleteTournament = command(id, async (tournamentId) => {
+	const m = await manager(tournamentId);
+	return unwrapAsync(m.services.tournaments.remove(m.id, m.user.id));
+});
+
+export const restoreTournament = command(id, async (tournamentId) => {
+	const m = await manager(tournamentId);
+	return unwrapAsync(m.services.tournaments.restore(m.id));
+});
+
+export const swapTournamentPlayers = command(swapBody.extend({ id }), async ({ id, a, b }) => {
+	const m = await manager(id);
+	return unwrapAsync(m.services.tournaments.swap(m.id, a, b));
+});
+
+export const generateTournamentBracket = command(id, async (tournamentId) => {
+	const m = await manager(tournamentId);
+	return unwrapAsync(m.services.tournaments.generateBracket(m.id));
+});
+
+export const discardTournamentBracket = command(id, async (tournamentId) => {
+	const m = await manager(tournamentId);
+	return unwrapAsync(m.services.tournaments.discardBracket(m.id));
+});
+
 export const startTournament = command(id, async (tournamentId) => {
 	const m = await manager(tournamentId);
 	return unwrapAsync(m.services.tournaments.start(m.id));
@@ -151,6 +178,22 @@ export const setTournamentMatchResult = command(
 	async ({ id, matchId, result }) => {
 		const m = await manager(id);
 		return unwrapAsync(m.services.tournaments.setMatchResult(m.id, matchId, result));
+	}
+);
+
+export const addTournamentPlayer = command(
+	addParticipantBody.extend({ id }),
+	async ({ id, steamId }) => {
+		const m = await manager(id);
+		return unwrapAsync(m.services.tournaments.addParticipant(m.id, steamId));
+	}
+);
+
+export const removeTournamentPlayer = command(
+	z.object({ id, participantId: id }),
+	async ({ id, participantId }) => {
+		const m = await manager(id);
+		return unwrapAsync(m.services.tournaments.removeParticipant(m.id, participantId));
 	}
 );
 

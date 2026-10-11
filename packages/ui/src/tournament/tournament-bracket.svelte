@@ -2,20 +2,24 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { flushHeader, flushHeaderTitle } from '@company-of-heroes/ui/variants';
 	import { roundLabel } from './format';
+	import TournamentDragProvider from './tournament-drag-provider.svelte';
 	import TournamentMatchCard from './tournament-match-card.svelte';
 	import type {
 		TournamentBracket,
 		TournamentFormat,
 		TournamentMatch,
-		TournamentParticipant
+		TournamentSlot,
+		TournamentSlotRef
 	} from './types';
 	import { useTournament } from './context';
 
 	type Props = {
 		onEdit?: (match: TournamentMatch) => void;
+		/** Staff: a player was dragged onto another one; they change places. */
+		onSwap?: (a: TournamentSlotRef, b: TournamentSlotRef) => void;
 	};
 
-	let { onEdit }: Props = $props();
+	let { onEdit, onSwap }: Props = $props();
 	const context = useTournament();
 	const format = $derived(context.tournament.format);
 	const matches = $derived(context.matches);
@@ -51,30 +55,46 @@
 		];
 		return all.filter((section) => section.rounds.length > 0);
 	});
+
+	/** Drag item ids are `matchId:slot`. */
+	function slotRef(id: string): TournamentSlotRef {
+		const [match, slot] = id.split(':');
+		return { match, slot: slot as TournamentSlot };
+	}
 </script>
 
-{#each sections as section (section.bracket)}
-	{#if section.title}
-		<div class={flushHeader}>
-			<p class={flushHeaderTitle}>{section.title}</p>
-		</div>
-	{/if}
-	<div class="border-secondary-800 overflow-x-auto border-b">
-		<div class="divide-secondary-800 flex w-max min-w-full divide-x">
-			{#each section.rounds as round (round[0].id)}
-				<div class="flex w-64 shrink-0 flex-col last:min-w-64 last:flex-1">
-					<p
-						class="border-secondary-800 text-secondary-400 border-b px-4 py-2 text-xs font-semibold tracking-wide uppercase"
-					>
-						{roundLabel(t, format, round[0], section.rounds.length)}
-					</p>
-					<div class="flex flex-1 flex-col justify-around gap-3 px-4 py-4">
-						{#each round as match (match.id)}
-							<TournamentMatchCard {match} {onEdit} />
-						{/each}
+{#snippet bracket()}
+	{#each sections as section (section.bracket)}
+		{#if section.title}
+			<div class={flushHeader}>
+				<p class={flushHeaderTitle}>{section.title}</p>
+			</div>
+		{/if}
+		<div class="border-secondary-800 overflow-x-auto border-b">
+			<div class="divide-secondary-800 flex w-max min-w-full divide-x">
+				{#each section.rounds as round (round[0].id)}
+					<div class="flex w-64 shrink-0 flex-col last:min-w-64 last:flex-1">
+						<p
+							class="border-secondary-800 text-secondary-400 border-b px-4 py-2 text-xs font-semibold tracking-wide uppercase"
+						>
+							{roundLabel(t, format, round[0], section.rounds.length)}
+						</p>
+						<div class="flex flex-1 flex-col justify-around gap-3 px-4 py-4">
+							{#each round as match (match.id)}
+								<TournamentMatchCard {match} {onEdit} swappable={!!onSwap} />
+							{/each}
+						</div>
 					</div>
-				</div>
-			{/each}
+				{/each}
+			</div>
 		</div>
-	</div>
-{/each}
+	{/each}
+{/snippet}
+
+{#if onSwap}
+	<TournamentDragProvider onDrop={(source, target) => onSwap(slotRef(source), slotRef(target))}>
+		{@render bracket()}
+	</TournamentDragProvider>
+{:else}
+	{@render bracket()}
+{/if}

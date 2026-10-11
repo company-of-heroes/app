@@ -89,7 +89,11 @@
 								{/if}
 								<div class="flex min-w-0 flex-col gap-1.5">
 									<div class="flex min-w-0 items-center gap-2">
-										<TournamentStatus status={tournament.status} class="shrink-0" />
+										<TournamentStatus
+											status={tournament.status}
+											deleted={!!tournament.deletedAt}
+											class="shrink-0"
+										/>
 										{#if tournament.status === 'in_progress' && tournament.liveCount > 0}
 											<Badge variant="destructive" pulse class="shrink-0">
 												{t('{count} live', { count: tournament.liveCount })}

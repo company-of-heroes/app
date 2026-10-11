@@ -7,7 +7,7 @@ import {
 	type HistoryMatch,
 	type RelicMatchHistory
 } from '../domain/relic-matches';
-import { chunk, fromPb, sequence, type Task } from '../result';
+import { all, chunk, fromPb, sequence, type Task } from '../result';
 import { Service } from './service';
 
 const HOUR = 60 * 60 * 1000;
@@ -24,9 +24,18 @@ const ON_DEMAND_SKIP_MS = HOUR;
 /** Ranked ladders 4-19; one per 5-minute run, top players only. */
 const LADDERS = 16;
 const LADDER_TOP = 12;
+/** Rows per `backfillCountries` run; Relic takes 10 profiles per call, the proxy 100 urls. */
+const COUNTRY_BATCH = 1000;
+const COUNTRY_PER_CALL = 10;
 
 type Candidate = { id: string; profileId: number; harvestedAt: string; elo: unknown };
 
+type RelicPersonalStat = {
+	statGroups?: { members?: { profile_id?: number; country?: string }[] }[];
+};
+
+const personalStatUrl = (profileIds: number[]) =>
+	`${RELIC_BASE}/community/leaderboard/getpersonalstat?title=coh1&profile_ids=${encodeURIComponent(JSON.stringify(profileIds))}`;
 const historyUrl = (profileId: number) =>
 	`${RELIC_BASE}/community/leaderboard/getrecentmatchhistorybyprofileid?title=coh1&profile_id=${encodeURIComponent(String(profileId))}`;
 
@@ -178,5 +187,47 @@ export class RatingHarvestService extends Service {
 				)
 			)
 			.map(({ processed }) => ({ processed, more: false }));
+	}
+
+	/**
+	 * One-time (run by hand until done): `country` for rows stored before the field existed.
+	 * Walks ids after `after`; feed back the returned cursor. Rows Relic has no country for stay empty.
+	 */
+	backfillCountries(after = ''): Task<{ processed: number; more: boolean; after: string }> {
+		const ratings = this.pb.collection('player_ratings');
+		return fromPb(
+			ratings.getList<{ id: string; profileId: number }>(1, COUNTRY_BATCH, {
+				filter: this.pb.filter("country = '' && id > {:after}", { after }),
+				sort: 'id',
+				fields: 'id,profileId'
+			}),
+			'Could not load ratings'
+		).andThen((rows) => {
+			const batches = chunk([...new Set(rows.items.map((row) => row.profileId))], COUNTRY_PER_CALL);
+			return this.relic
+				.getMany<RelicPersonalStat>(batches.map(personalStatUrl))
+				.andThen((results) => {
+					const countries = new Map(
+						results
+							.flatMap((result) => (result.ok ? (result.body.statGroups ?? []) : []))
+							.flatMap((group) => group.members ?? [])
+							.filter((member) => member.country)
+							.map((member) => [Number(member.profile_id), String(member.country)])
+					);
+					const found = rows.items.filter((row) => countries.has(row.profileId));
+					return all(
+						found.map((row) =>
+							fromPb(
+								ratings.update(row.id, { country: countries.get(row.profileId) }),
+								'Could not update rating'
+							)
+						)
+					).map(() => ({
+						processed: found.length,
+						more: rows.totalItems > rows.items.length,
+						after: rows.items.at(-1)?.id ?? after
+					}));
+				});
+		});
 	}
 }

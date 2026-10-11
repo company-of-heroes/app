@@ -12,11 +12,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 
 	if (!query) {
-		return { query: '', results: [], error: null };
+		return { query: '', page: null, error: null };
 	}
 
-	return locals.services.players.search(query, false).match(
-		(results) => ({ query, results, error: null }),
-		(cause) => ({ query, results: [], error: cause.message || 'Failed to search for player' })
+	return locals.services.players.searchPage(query, false).match(
+		(page) => ({ query, page, error: null }),
+		(cause) => ({ query, page: null, error: cause.message || 'Failed to search for player' })
 	);
 };

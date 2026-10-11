@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
@@ -256,9 +256,9 @@
 			return;
 		}
 
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			t('Mark this player as a cheater? They will get a cheater label, not a ban.'),
-			{ okLabel: t('Mark as cheater'), cancelLabel: t('Cancel'), kind: 'warning' }
+			{ confirm: t('Mark as cheater'), cancel: t('Cancel'), danger: true }
 		);
 		if (!confirmed) {
 			return;
@@ -296,10 +296,10 @@
 			return;
 		}
 
-		const confirmed = await confirm(t('Remove the cheater label from this player?'), {
-			okLabel: t('Remove cheater label'),
-			cancelLabel: t('Cancel'),
-			kind: 'warning'
+		const confirmed = await confirmation.ask(t('Remove the cheater label from this player?'), {
+			confirm: t('Remove cheater label'),
+			cancel: t('Cancel'),
+			danger: true
 		});
 		if (!confirmed) {
 			return;
@@ -442,7 +442,7 @@
 						<Button
 							type="button"
 							size="sm"
-							variant="secondary"
+							variant="destructive"
 							loading={updatingId === row.id}
 							onclick={() => void removeCheater(row)}
 						>

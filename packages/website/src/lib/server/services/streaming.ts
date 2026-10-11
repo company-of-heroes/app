@@ -1,9 +1,10 @@
-import { ok, okAsync } from 'neverthrow';
+import { errAsync, ok, okAsync } from 'neverthrow';
 import { cached } from '../cache';
 import { RELIC_BASE } from '../clients/relic';
 import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
 import { steamIdsOf, type UserRow } from '../domain/users';
-import { fromPb, sequence, type Task } from '../result';
+import { badRequest, forbidden } from '../errors';
+import { fromPb, type Task } from '../result';
 import { Service } from './service';
 
 export const STREAMER_THRESHOLD_MS = 12 * 60 * 60 * 1000;
@@ -20,6 +21,8 @@ const LIVE_CACHE_SECONDS = 30;
 type ProgressRow = {
 	id: string;
 	user: string;
+	/** Empty on rows from before progress was per Steam account. */
+	steamId: string;
 	streamedMs: number;
 	lastReportAt: string;
 	twitchLogin: string;
@@ -35,6 +38,8 @@ export type StreamingProgress = {
 
 export type StreamingReport = {
 	deltaMs: number;
+	/** The Steam account playing; optional only for old desktop versions. */
+	steamId?: string | null;
 	twitchLogin?: string | null;
 	youtubeChannelId?: string | null;
 };
@@ -49,50 +54,85 @@ function toProgress(
 	};
 }
 /**
- * Lifetime CoH streaming time per account. The desktop reports small deltas while
- * it is live (Twitch or YouTube) with the game running; at 12 hours every Steam id
- * on the account gets the Streamer label.
+ * Lifetime CoH streaming time per Steam account. The desktop reports small deltas while
+ * it is live (Twitch or YouTube) with the game running; at 12 hours that Steam id gets
+ * the Streamer label. Other Steam ids on the same account earn it separately.
  */
 export class StreamingService extends Service {
 	private get rows() {
 		return this.pb.collection('streaming_progress');
 	}
 
-	private find(userId: string): Task<ProgressRow | null> {
+	/**
+	 * The Steam id the time counts for: the one asked for (it must be on the account), or
+	 * the only one when an old desktop sends none. Null when that is ambiguous.
+	 */
+	private steamIdFor(userId: string, requested?: string | null): Task<string | null> {
 		return fromPb(
-			this.rows.getList<ProgressRow>(1, 1, {
-				filter: this.pb.filter('user = {:userId}', { userId }),
+			this.pb.collection('users').getOne<UserRow>(userId, { fields: 'steamIds' }),
+			'User not found'
+		).andThen((user) => {
+			const steamIds = steamIdsOf(user);
+			if (requested) {
+				return steamIds.includes(requested)
+					? okAsync(requested)
+					: errAsync(forbidden('That Steam account is not linked to your account.'));
+			}
+
+			return okAsync(steamIds.length === 1 ? steamIds[0] : null);
+		});
+	}
+
+	/** The Steam id's row, else the account's row from before per-Steam progress (claimed on report). */
+	private find(userId: string, steamId: string): Task<ProgressRow | null> {
+		return fromPb(
+			this.rows.getList<ProgressRow>(1, 2, {
+				filter: this.pb.filter("user = {:userId} && (steamId = {:steamId} || steamId = '')", {
+					userId,
+					steamId
+				}),
 				skipTotal: true
 			}),
 			'Could not load streaming progress'
-		).map((found) => found.items[0] ?? null);
+		).map(
+			(found) =>
+				found.items.find((row) => row.steamId === steamId) ??
+				found.items.find((row) => !row.steamId) ??
+				null
+		);
 	}
 
 	/**
-	 * Steam ids of accounts streaming right now: the desktop reports about every minute
-	 * while live with the game running, so a recent report means live.
+	 * Steam ids streaming right now: the desktop reports about every minute while live
+	 * with the game running, so a recent report means live.
 	 */
 	liveSteamIds(): Task<string[]> {
 		return cached('streaming:live', LIVE_CACHE_SECONDS, () =>
 			fromPb(
-				this.rows.getFullList<{ expand?: { user?: UserRow } }>({
-					filter: this.pb.filter('lastReportAt >= {:since}', {
+				this.rows.getFullList<{ steamId: string }>({
+					filter: this.pb.filter("lastReportAt >= {:since} && steamId != ''", {
 						since: new Date(Date.now() - LIVE_WINDOW_MS)
 					}),
-					expand: 'user',
-					fields: 'expand.user.steamIds'
+					fields: 'steamId'
 				}),
 				'Could not load live streamers'
-			).map((rows) => [
-				...new Set(rows.flatMap((row) => (row.expand?.user ? steamIdsOf(row.expand.user) : [])))
-			])
+			).map((rows) => [...new Set(rows.map((row) => row.steamId))])
 		);
 	}
 
-	progress(userId: string): Task<StreamingProgress> {
-		return this.find(userId).andThen((row) =>
-			(row?.badgeGranted ? this.healLabel(userId) : okAsync(false)).map(() => toProgress(row))
-		);
+	progress(userId: string, requestedSteamId?: string | null): Task<StreamingProgress> {
+		return this.steamIdFor(userId, requestedSteamId).andThen((steamId) => {
+			if (!steamId) {
+				return okAsync(toProgress(null));
+			}
+
+			return this.find(userId, steamId).andThen((row) =>
+				(row?.badgeGranted && row.steamId === steamId
+					? this.healLabel(steamId)
+					: okAsync(false)
+				).map(() => toProgress(row))
+			);
+		});
 	}
 
 	private streamerLabelId(): Task<string> {
@@ -133,93 +173,86 @@ export class StreamingService extends Service {
 		);
 	}
 
-	/** Steam ids of the account that already carry the label. */
-	private assigned(labelId: string, steamIds: string[]): Task<{ steamId: string }[]> {
+	private hasLabel(labelId: string, steamId: string): Task<boolean> {
 		return fromPb(
-			this.pb.collection('player_label_assignments').getFullList<{ steamId: string }>({
-				filter: [
-					this.pb.filter('label = {:labelId}', { labelId }),
-					`(${steamIds.map((steamId) => this.pb.filter('steamId = {:steamId}', { steamId })).join(' || ')})`
-				].join(' && '),
-				fields: 'steamId'
+			this.pb.collection('player_label_assignments').getList(1, 1, {
+				filter: this.pb.filter('label = {:labelId} && steamId = {:steamId}', {
+					labelId,
+					steamId
+				}),
+				fields: 'id',
+				skipTotal: true
 			}),
 			'Could not load labels'
+		).map((found) => found.items.length > 0);
+	}
+
+	/** Labels the Steam id; returns false while Relic does not know it yet. */
+	grantStreamerLabel(steamId: string): Task<boolean> {
+		return this.streamerLabelId().andThen((labelId) =>
+			this.hasLabel(labelId, steamId).andThen((labelled) => {
+				if (labelled) {
+					return okAsync(true);
+				}
+
+				return this.relicProfiles([steamId]).andThen(([profile]) => {
+					if (!profile?.profile_id) {
+						return okAsync(false);
+					}
+
+					return fromPb(
+						this.pb.collection('player_label_assignments').create({
+							steamId,
+							profileId: profile.profile_id,
+							alias: profile.alias || undefined,
+							label: labelId
+						}),
+						'Could not assign the Streamer label'
+					).map(() => true);
+				});
+			})
 		);
 	}
 
-	/** Labels the Steam ids Relic knows; returns how many were labelled. */
-	private assign(labelId: string, missing: string[]): Task<number> {
-		return this.relicProfiles(missing).andThen((profiles) => {
-			const known = missing
-				.map((steamId, i) => ({ steamId, profile: profiles[i] }))
-				.filter(({ profile }) => profile?.profile_id);
-			return sequence(known, ({ steamId, profile }) =>
-				fromPb(
-					this.pb.collection('player_label_assignments').create({
-						steamId,
-						profileId: profile!.profile_id,
-						alias: profile!.alias || undefined,
-						label: labelId
-					}),
-					'Could not assign the Streamer label'
-				)
-			).map((created) => created.length);
-		});
-	}
-
-	/** Labels every Steam id on the account; returns false while none could be labelled yet. */
-	grantStreamerLabel(userId: string): Task<boolean> {
-		return fromPb(
-			this.pb.collection('users').getOne<UserRow>(userId, { fields: 'steamIds' }),
-			'User not found'
-		).andThen((user) => {
-			const steamIds = steamIdsOf(user);
-			if (steamIds.length === 0) {
-				return okAsync(false);
-			}
-
-			return this.streamerLabelId().andThen((labelId) =>
-				this.assigned(labelId, steamIds).andThen((assigned) => {
-					const missing = steamIds.filter((id) => !assigned.some((row) => row.steamId === id));
-					if (missing.length === 0) {
-						return okAsync(true);
-					}
-
-					return this.assign(labelId, missing).map(
-						(labelled) => assigned.length > 0 || labelled > 0
-					);
-				})
-			);
-		});
-	}
-
 	/**
-	 * Re-labels an account that already earned the badge: Steam ids linked later, or ones
-	 * Relic did not know yet, still get the label. A failure is logged, never surfaced.
+	 * Re-labels a Steam id that already earned the badge (Relic may not have known it yet,
+	 * or staff removed the label by accident). A failure is logged, never surfaced.
 	 */
-	private healLabel(userId: string): Task<boolean> {
-		return this.grantStreamerLabel(userId).orElse((error) => {
-			console.warn('[streaming] grant label', userId, error);
+	private healLabel(steamId: string): Task<boolean> {
+		return this.grantStreamerLabel(steamId).orElse((error) => {
+			console.warn('[streaming] grant label', steamId, error);
 			return ok(false);
 		});
 	}
 
 	/** Grants the label once the threshold is crossed; a failure is retried on the next report. */
-	private badgeFor(userId: string, existing: ProgressRow | null, streamedMs: number) {
+	private badgeFor(steamId: string, existing: ProgressRow | null, streamedMs: number) {
 		if (existing?.badgeGranted) {
-			return this.healLabel(userId).map(() => ({ granted: true, changed: false }));
+			return this.healLabel(steamId).map(() => ({ granted: true, changed: false }));
 		}
 
 		if (streamedMs < STREAMER_THRESHOLD_MS) {
 			return okAsync({ granted: false, changed: false });
 		}
 
-		return this.healLabel(userId).map((granted) => ({ granted, changed: true }));
+		return this.healLabel(steamId).map((granted) => ({ granted, changed: true }));
 	}
 
 	report(userId: string, input: StreamingReport): Task<StreamingProgress & { creditedMs: number }> {
+		return this.steamIdFor(userId, input.steamId).andThen((steamId) =>
+			steamId
+				? this.reportFor(userId, steamId, input)
+				: errAsync(badRequest('Update the app to keep earning the Streamer badge.'))
+		);
+	}
+
+	private reportFor(
+		userId: string,
+		steamId: string,
+		input: StreamingReport
+	): Task<StreamingProgress & { creditedMs: number }> {
 		const now = Date.now();
-		return this.find(userId).andThen((existing) => {
+		return this.find(userId, steamId).andThen((existing) => {
 			const lastReportAt = existing?.lastReportAt ? Date.parse(existing.lastReportAt) : NaN;
 			const sinceLast = Number.isFinite(lastReportAt)
 				? Math.max(0, now - lastReportAt + REPORT_SLACK_MS)
@@ -227,6 +260,7 @@ export class StreamingService extends Service {
 			const delta = Math.floor(Math.min(Math.max(0, input.deltaMs), MAX_REPORT_MS, sinceLast));
 			const streamedMs = Number(existing?.streamedMs ?? 0) + delta;
 			const body: Record<string, unknown> = {
+				steamId,
 				streamedMs,
 				lastReportAt: new Date(now).toISOString()
 			};
@@ -238,7 +272,7 @@ export class StreamingService extends Service {
 				body.youtubeChannelId = input.youtubeChannelId;
 			}
 
-			return this.badgeFor(userId, existing, streamedMs)
+			return this.badgeFor(steamId, existing, streamedMs)
 				.andThen((badge) => {
 					if (badge.changed) {
 						body.badgeGranted = badge.granted;

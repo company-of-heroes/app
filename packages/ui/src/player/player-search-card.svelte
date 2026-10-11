@@ -16,8 +16,9 @@
 
 	type Props = {
 		player: PlayerSearchResult & {
+			/** Left out: the host's cached labels for the Steam id. */
 			labels?: PlayerLabel[];
-			/** When present the card can expand into the ladder stats table. */
+			/** Left out: fetched when the stats are first opened. */
 			leaderboardStats?: LeaderboardStat[];
 		};
 	};
@@ -29,12 +30,32 @@
 	let statsExpanded = $state(false);
 	const href = $derived(host.routes.player(player.profileId || player.steamId));
 	const flagSrc = $derived(host.resolve.flagImageUrl(player.country));
-	const statsCount = $derived(player.leaderboardStats?.length ?? 0);
-	const elo = resource(
-		() => (statsExpanded && player.steamId ? player.steamId : null),
-		(steamId) =>
-			steamId ? host.api.players.getElo(steamId).catch(() => ({})) : Promise.resolve({})
+	const labels = $derived(
+		player.labels ?? (player.steamId ? host.api.labels.forSteamId(player.steamId) : [])
 	);
+	const statsId = $derived(player.profileId ? String(player.profileId) : player.steamId);
+	const stats = resource(
+		() => (statsExpanded ? statsId : null),
+		async (id) => {
+			if (!id) {
+				return null;
+			}
+
+			if (player.leaderboardStats) {
+				const elo = player.steamId
+					? await host.api.players.getElo(player.steamId).catch(() => ({}))
+					: {};
+				return { leaderboardStats: player.leaderboardStats, elo };
+			}
+
+			return host.api.players.getStats(id).catch(() => null);
+		}
+	);
+	const statsCount = $derived(
+		player.leaderboardStats?.length ?? stats.current?.leaderboardStats.length ?? null
+	);
+	/** Unknown until opened; a card that turned out to have none keeps its open panel. */
+	const showStats = $derived(statsCount !== 0 || statsExpanded);
 	const previewId = $derived(
 		playerPreviewId({ steamId: player.steamId, profileId: player.profileId }) ??
 			String(player.profileId)
@@ -42,7 +63,7 @@
 </script>
 
 <div class="border-secondary-800 overflow-clip border-b">
-	<div class={cn('flex gap-4 p-4', statsCount > 0 && 'border-secondary-800 border-b')}>
+	<div class={cn('flex gap-4 p-4', showStats && 'border-secondary-800 border-b')}>
 		<PlayerProfileLink {href} playerId={previewId} class={cn(interactive, 'shrink-0')}>
 			{#if player.avatarUrl}
 				<img
@@ -67,9 +88,9 @@
 					<img class="h-5 w-auto shrink-0 rounded-xs" src={flagSrc} alt={player.country ?? ''} />
 				{/if}
 				<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
-				<PlayerStreamerIcon labels={player.labels} steamId={player.steamId} size={18} />
+				<PlayerStreamerIcon {labels} steamId={player.steamId} size={18} />
 				<span class="font-heading truncate text-xl font-bold text-white">{player.alias}</span>
-				<PlayerLabels labels={player.labels} class="shrink-0" />
+				<PlayerLabels {labels} class="shrink-0" />
 			</PlayerProfileLink>
 			<List.Root class="gap-x-4">
 				<List.Title>{t('Steam ID:')}</List.Title>
@@ -79,7 +100,7 @@
 			</List.Root>
 		</div>
 	</div>
-	{#if statsCount > 0}
+	{#if showStats}
 		<button
 			type="button"
 			class={cn(
@@ -89,12 +110,20 @@
 			aria-expanded={statsExpanded}
 			onclick={() => (statsExpanded = !statsExpanded)}
 		>
-			<span>{t('Stats ({count})', { count: statsCount })}</span>
+			<span>
+				{statsCount === null ? t('Stats') : t('Stats ({count})', { count: statsCount })}
+			</span>
 			<CaretDownIcon class={cn('size-4 transition-transform', statsExpanded && 'rotate-180')} />
 		</button>
 		{#if statsExpanded}
 			<div class="border-secondary-800 border-t">
-				<PlayerStatsTable stats={player.leaderboardStats ?? []} elo={elo.current ?? {}} />
+				{#if stats.loading && !stats.current}
+					<p class="text-secondary-400 px-4 py-3 text-sm">{t('Loading…')}</p>
+				{:else if stats.current?.leaderboardStats.length}
+					<PlayerStatsTable stats={stats.current.leaderboardStats} elo={stats.current.elo} />
+				{:else}
+					<p class="text-secondary-400 px-4 py-3 text-sm">{t('No stats found.')}</p>
+				{/if}
 			</div>
 		{/if}
 	{/if}

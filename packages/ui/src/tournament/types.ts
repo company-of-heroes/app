@@ -44,6 +44,7 @@ export type {
 	TournamentResultPlayer,
 	TournamentScope,
 	TournamentSlot,
+	TournamentSlotRef,
 	TournamentStanding,
 	TournamentStart,
 	TournamentStatus,

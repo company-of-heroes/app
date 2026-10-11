@@ -63,7 +63,7 @@
 	}
 </script>
 
-<div class={cn('relative', shape === 'square' ? 'w-32' : 'w-full')}>
+<div class={cn('relative', shape === 'square' ? 'w-28' : 'w-full max-w-md')}>
 	<FileDropzone
 		{id}
 		{disabled}
@@ -73,7 +73,7 @@
 		zoneClass={cn(
 			'relative overflow-hidden p-0 border-dashed',
 			shown && 'border-solid',
-			shape === 'square' ? 'aspect-square min-h-0' : 'aspect-[4/1] min-h-28'
+			shape === 'square' ? 'aspect-square min-h-0' : 'aspect-[4/1] min-h-0'
 		)}
 		onFileChange={(next) => {
 			file = next;
@@ -85,7 +85,7 @@
 		{#snippet empty(dragging)}
 			<div class="flex flex-col items-center gap-1 px-3">
 				<ImageSquareIcon
-					size={shape === 'square' ? 24 : 28}
+					size={24}
 					class={cn(
 						'text-secondary-500 group-hover:text-secondary-300 transition-colors',
 						dragging && 'text-secondary-200'

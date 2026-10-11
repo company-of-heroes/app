@@ -47,7 +47,7 @@
 						'Your purple Streamer badge shows next to your name in lobbies, leaderboards, comments and replays.'
 					)
 				: t(
-						'Stream {hours} hours of Company of Heroes to earn a purple Streamer badge. It shows next to your name in lobbies, leaderboards, comments and replays, so viewers and other players know you go live.',
+						'Stream {hours} hours of Company of Heroes on this Steam account to earn it a purple Streamer badge. Each Steam account earns its own. It shows next to your name in lobbies, leaderboards, comments and replays, so viewers and other players know you go live.',
 						{ hours: STREAMER_HOURS }
 					)}
 			valueLabel={t('{current} / {total} min', {

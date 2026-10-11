@@ -264,9 +264,15 @@ export function normalizeSlot(
 	return { matchtypeId, raceId, rating, matchId, at };
 }
 
-/** One update per Steam id (latest alias and profile win; all slots kept for `mergeElo`). */
+/** One update per Steam id (latest alias, country and profile win; all slots kept for `mergeElo`). */
 export function mergeRatingUpdates<
-	T extends { steamId: string; profileId: number; alias: string; slots: EloSlotUpdate[] }
+	T extends {
+		steamId: string;
+		profileId: number;
+		alias: string;
+		country?: string;
+		slots: EloSlotUpdate[];
+	}
 >(updates: T[]): T[] {
 	const bySteam = new Map<string, T>();
 	for (const update of updates) {
@@ -277,6 +283,7 @@ export function mergeRatingUpdates<
 				? {
 						...update,
 						alias: update.alias || current.alias,
+						country: update.country || current.country,
 						slots: [...current.slots, ...update.slots]
 					}
 				: update

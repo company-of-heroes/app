@@ -7,7 +7,7 @@
 	import AccountSignIn from './account-sign-in.svelte';
 	import { app } from '$core/app/context';
 	import { goto } from '$app/navigation';
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { cn } from '$lib/utils';
 	import { useI18n } from '$lib/i18n';
 
@@ -38,11 +38,11 @@
 	async function signOut() {
 		if (
 			app.account.isPlaceholderEmail &&
-			!(await confirm(
+			!(await confirmation.ask(
 				t(
 					'This account still uses a generated email address. Without a real email you cannot sign in to it again, and its match history stays with it.\n\nContinue anyway?'
 				),
-				{ okLabel: t('Continue'), cancelLabel: t('Cancel'), kind: 'warning' }
+				{ confirm: t('Continue'), cancel: t('Cancel') }
 			))
 		) {
 			return;

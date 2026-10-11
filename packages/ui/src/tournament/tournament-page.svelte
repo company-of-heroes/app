@@ -13,6 +13,7 @@
 	import CalendarBlankIcon from 'phosphor-svelte/lib/CalendarBlankIcon';
 	import CheckCircleIcon from 'phosphor-svelte/lib/CheckCircleIcon';
 	import ClockIcon from 'phosphor-svelte/lib/ClockIcon';
+	import SteamLogoIcon from 'phosphor-svelte/lib/SteamLogo';
 	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
 	import TreeStructureIcon from 'phosphor-svelte/lib/TreeStructureIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
@@ -20,10 +21,12 @@
 	import UsersThreeIcon from 'phosphor-svelte/lib/UsersThreeIcon';
 	import { renderMarkdown } from '../comment/markdown';
 	import { formatDate, formatRelative } from '../format/date';
-	import { useHost } from '../host/host.context';
+	import { swapSlots } from '@company-of-heroes/api/tournaments';
+	import { useHost, type PlayerSearchOption } from '../host/host.context';
 	import { getCachedPlayerPreview } from '../player/player-preview-cache';
 	import type { PlayerPreviewData } from '../player/types';
 	import { Button } from '../ui/button';
+	import { Popover } from '../ui/popover';
 	import { Badge } from '../ui/badge';
 	import { Checkbox, Select } from '../ui/input';
 	import { StaffSection } from '../ui/staff-section';
@@ -37,6 +40,7 @@
 	import TournamentMatchDialog from './tournament-match-dialog.svelte';
 	import TournamentMyMatch from './tournament-my-match.svelte';
 	import TournamentParticipants from './tournament-participants.svelte';
+	import TournamentPlayerSearch from './tournament-player-search.svelte';
 	import TournamentPosts from './tournament-posts.svelte';
 	import TournamentReplays from './tournament-replays.svelte';
 	import TournamentReportsDialog from './tournament-reports-dialog.svelte';
@@ -50,6 +54,7 @@
 		TournamentMatch,
 		TournamentMatchResult,
 		TournamentParticipant,
+		TournamentSlotRef,
 		TournamentUpdate
 	} from './types';
 	import { escapeHtml, tooltip } from '../attachments';
@@ -187,6 +192,34 @@
 	);
 	const canEditResults = $derived(staff && tournament.status === 'in_progress');
 	const canSeed = $derived(staff && isOpen(tournament));
+	/** A bracket generated during seeding (only staff and the host get its matches). */
+	const draftBracket = $derived(tournament.status === 'seeding' && current.matches.length > 0);
+	/** Staff and the host drag players onto each other in the running or generated bracket. */
+	const canSwap = $derived(
+		staff &&
+			(tournament.status === 'in_progress' || draftBracket) &&
+			tournament.format !== 'round_robin'
+	);
+	/** Rounds with a different length, e.g. "Semifinals: best of 5 · Final: best of 5". */
+	const roundLengths = $derived.by(() => {
+		const own = (count: number | null) => (count && count !== tournament.bestOf ? count : null);
+		const single = tournament.format === 'single_elim';
+		const quarters = single ? own(tournament.quartersBestOf) : null;
+		const semis = single ? own(tournament.semisBestOf) : null;
+		const final = tournament.format !== 'round_robin' ? own(tournament.finalsBestOf) : null;
+		return [
+			quarters && t('Quarterfinals: best of {count}', { count: quarters }),
+			semis && t('Semifinals: best of {count}', { count: semis }),
+			final && t('Final: best of {count}', { count: final })
+		]
+			.filter(Boolean)
+			.join(' · ');
+	});
+	/** Not finished yet: the staff block shows the run controls. */
+	const running = $derived(tournament.status !== 'completed' && tournament.status !== 'cancelled');
+	const canAddPlayers = $derived(
+		staff && (tournament.status === 'draft' || isOpen(tournament)) && !isFull(tournament)
+	);
 	const showReplays = $derived(hasReplays(current));
 	const showStats = $derived(hasStats(current));
 	const newestPost = $derived(
@@ -360,18 +393,37 @@
 	async function cancel() {
 		const ok = await host.notify.confirm(t('Cancel this tournament? This cannot be undone.'), {
 			confirm: t('Cancel tournament'),
-			cancel: t('Keep it')
+			cancel: t('Keep it'),
+			danger: true
 		});
 		if (ok) {
 			await setStatus('cancelled', t('Tournament cancelled.'));
 		}
 	}
 
-	async function start() {
+	async function remove() {
 		const ok = await host.notify.confirm(
 			t(
-				'Start the tournament? The bracket is built from the current seeding and players can no longer sign up.'
+				'Delete this tournament? Only staff and the host can still see it, and you can restore it.'
 			),
+			{ confirm: t('Delete tournament'), cancel: t('Keep it'), danger: true }
+		);
+		if (ok) {
+			await act(() => host.api.tournaments.remove(tournament.id), t('Tournament deleted.'));
+		}
+	}
+
+	async function restore() {
+		await act(() => host.api.tournaments.restore(tournament.id), t('Tournament restored.'));
+	}
+
+	async function start() {
+		const ok = await host.notify.confirm(
+			draftBracket
+				? t('Start the tournament with the generated bracket? Players can no longer sign up.')
+				: t(
+						'Start the tournament? The bracket is built from the current seeding and players can no longer sign up.'
+					),
 			{ confirm: t('Start tournament') }
 		);
 		if (ok) {
@@ -380,15 +432,74 @@
 		}
 	}
 
+	async function addPlayer(player: PlayerSearchOption) {
+		if (!(await dropsBracket())) {
+			return;
+		}
+
+		await act(async () => {
+			const next = await host.api.tournaments.addParticipant(tournament.id, player.value);
+			tab = 'players';
+			return next;
+		}, t('Player added.'));
+	}
+
+	/** Shows the change right away; puts the old state back when the server says no. */
+	async function optimistic(next: TournamentDetail, run: () => Promise<TournamentDetail>) {
+		if (busy) {
+			return;
+		}
+
+		const before = current;
+		current = next;
+		await act(async () => {
+			try {
+				return await run();
+			} catch (error) {
+				current = before;
+				throw error;
+			}
+		});
+	}
+
+	async function swapPlayers(a: TournamentSlotRef, b: TournamentSlotRef) {
+		const changed = new Map(swapSlots(current.matches, a, b).map((match) => [match.id, match]));
+		if (changed.size === 0) {
+			return;
+		}
+
+		await optimistic(
+			{ ...current, matches: current.matches.map((match) => changed.get(match.id) ?? match) },
+			() => host.api.tournaments.swapPlayers(tournament.id, a, b)
+		);
+	}
+
 	async function disqualify(participant: TournamentParticipant) {
 		const ok = await host.notify.confirm(
 			t('Disqualify {name}? They lose all their open and later matches.', {
 				name: participant.alias
 			}),
-			{ confirm: t('Disqualify') }
+			{ confirm: t('Disqualify'), danger: true }
 		);
 		if (ok) {
 			await act(() => host.api.tournaments.disqualify(tournament.id, participant.id));
+		}
+	}
+
+	async function removePlayer(participant: TournamentParticipant) {
+		const ok = await host.notify.confirm(
+			draftBracket
+				? t('Remove {name} from the tournament? The generated bracket will be discarded.', {
+						name: participant.alias
+					})
+				: t('Remove {name} from the tournament?', { name: participant.alias }),
+			{ confirm: t('Remove'), cancel: t('Keep it'), danger: true }
+		);
+		if (ok) {
+			await act(
+				() => host.api.tournaments.removeParticipant(tournament.id, participant.id),
+				t('Player removed.')
+			);
 		}
 	}
 
@@ -449,12 +560,52 @@
 		);
 	}
 
+	/** Changing the players or the seeding throws a generated bracket away: ask first. */
+	async function dropsBracket(): Promise<boolean> {
+		if (!draftBracket) {
+			return true;
+		}
+
+		return host.notify.confirm(
+			t('The generated bracket will be discarded. You can generate it again afterwards.'),
+			{ confirm: t('Continue'), cancel: t('Keep it'), danger: true }
+		);
+	}
+
+	async function generateBracket() {
+		if (
+			draftBracket &&
+			!(await host.notify.confirm(
+				t('Generate the bracket again from the current seeding? Your swaps are lost.'),
+				{ confirm: t('Generate again'), cancel: t('Keep it'), danger: true }
+			))
+		) {
+			return;
+		}
+
+		await act(() => host.api.tournaments.generateBracket(tournament.id), t('Bracket generated.'));
+		tab = 'bracket';
+	}
+
+	async function discardBracket() {
+		await act(() => host.api.tournaments.discardBracket(tournament.id), t('Bracket discarded.'));
+		tab = 'players';
+	}
+
 	function reorder(order: TournamentParticipant[]) {
-		return act(() =>
-			host.api.tournaments.setSeeds(
-				tournament.id,
-				order.map((p) => p.id)
-			)
+		const seeds = new Map(order.map((p, index) => [p.id, index + 1]));
+		return optimistic(
+			{
+				...current,
+				participants: current.participants
+					.map((p) => (seeds.has(p.id) ? { ...p, seed: seeds.get(p.id)! } : p))
+					.sort((a, b) => (a.seed ?? 9999) - (b.seed ?? 9999))
+			},
+			() =>
+				host.api.tournaments.setSeeds(
+					tournament.id,
+					order.map((p) => p.id)
+				)
 		);
 	}
 </script>
@@ -475,7 +626,7 @@
 		</span>
 		<span class="font-heading truncate text-base font-bold text-white tabular-nums">{value}</span>
 		{#if sub}
-			<span class="text-secondary-400 truncate text-xs">{sub}</span>
+			<span class="text-secondary-400 text-xs text-pretty">{sub}</span>
 		{/if}
 		{@render children?.()}
 	</div>
@@ -536,7 +687,7 @@
 			{/if}
 			<div class="flex min-w-0 flex-col gap-2">
 				<div class="flex flex-wrap items-center gap-2">
-					<TournamentStatus status={tournament.status} />
+					<TournamentStatus status={tournament.status} deleted={!!tournament.deletedAt} />
 					<span class={cn(tableHeadText, 'text-primary')}>{t('Tournament')}</span>
 					{#if current.host}
 						<span class="text-secondary-300 flex items-center gap-1 text-xs">
@@ -562,16 +713,16 @@
 					{t('{name} won the tournament.', { name: champion.alias })}
 				</p>
 			</div>
-		{:else if isOpen(tournament)}
+		{:else if isOpen(tournament) && !tournament.deletedAt}
 			<div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:min-w-72">
 				{#if me}
-					<div class="flex flex-wrap items-center gap-3">
+					<div class="flex flex-wrap items-center justify-end gap-3">
 						<span class="text-success flex items-center gap-1.5 font-semibold">
 							<CheckCircleIcon size={20} weight="fill" />
 							{t('You are signed up.')}
 						</span>
 						<Button
-							variant="secondary"
+							variant="destructive"
 							disabled={busy}
 							onclick={() =>
 								act(() => host.api.tournaments.withdraw(tournament.id), t('You withdrew.'))}
@@ -584,9 +735,37 @@
 				{:else if isFull(tournament)}
 					<p class="text-secondary-300 text-sm">{t('This tournament is full.')}</p>
 				{:else if !host.auth.user}
-					<Button href={host.routes.login()} class="w-full justify-center">
-						{t('Sign in to join')}
-					</Button>
+					<Popover side="bottom" align="end" contentClass="w-80 max-w-[calc(100vw-2rem)] p-0">
+						{#snippet trigger({ props })}
+							<Button {...props} class="w-full justify-center">
+								<SwordIcon size={18} weight="fill" />
+								{t('Join tournament')}
+							</Button>
+						{/snippet}
+						<div class="border-secondary-800 border-b px-4 py-3">
+							<p class="font-semibold text-white">{t('Sign in to join')}</p>
+							<p class="text-secondary-400 mt-1 text-sm">
+								{t(
+									'Join with your existing account, or sign in with Steam: we find or create the account for your Steam ID and bring you back here.'
+								)}
+							</p>
+						</div>
+						<div class="flex flex-col gap-2 px-4 py-3">
+							{#if host.routes.steamLogin}
+								<Button
+									href={host.routes.steamLogin()}
+									data-sveltekit-reload
+									class="justify-center"
+								>
+									<SteamLogoIcon size={18} weight="fill" />
+									{t('Participate with Steam')}
+								</Button>
+							{/if}
+							<Button variant="secondary" href={host.routes.login()} class="justify-center">
+								{t('Participate with an existing account')}
+							</Button>
+						</div>
+					</Popover>
 				{:else if steamIds.length === 0}
 					<p class="text-secondary-300 text-sm">{t('Link a Steam account to join.')}</p>
 				{:else}
@@ -679,75 +858,133 @@
 			t('Match length'),
 			SwordIcon,
 			t('Best of {count}', { count: tournament.bestOf }),
-			tournament.finalsBestOf && tournament.format !== 'round_robin'
-				? t('Final: best of {count}', { count: tournament.finalsBestOf })
-				: null
+			roundLengths || null
 		)}
 	</div>
 </div>
 
-{#if staff && tournament.status !== 'completed' && tournament.status !== 'cancelled'}
+{#if staff}
 	<StaffSection
 		title={host.auth.user?.isStaff ? undefined : t('Host')}
 		class="border-t-0 border-b"
 		contentClass="flex flex-wrap items-center gap-2 py-2.5"
 	>
-		<Button variant="secondary" size="sm" href={host.routes.tournamentEdit(tournament.slug)}>
-			{t('Edit')}
-		</Button>
-		{#if tournament.status === 'draft'}
-			<Button
-				size="sm"
-				disabled={busy}
-				onclick={() => setStatus('registration', t('Registration is open.'))}
-			>
-				{t('Open registration')}
+		{#if tournament.deletedAt}
+			<p class="text-secondary-300 text-sm">
+				{t('This tournament is deleted. Only staff and the host can see it.')}
+			</p>
+			<Button size="sm" disabled={busy} onclick={restore} class="sm:ml-auto">
+				{t('Restore')}
 			</Button>
-		{/if}
-		{#if isOpen(tournament)}
-			<Button
-				variant="secondary"
-				size="sm"
-				disabled={busy}
-				onclick={() => {
-					tab = 'players';
-					return act(() => host.api.tournaments.seed(tournament.id), t('Players seeded by ELO.'));
-				}}
-			>
-				{tournament.status === 'seeding'
-					? t('Seed again by ELO')
-					: t('Close registration and seed')}
-			</Button>
-		{/if}
-		{#if tournament.status === 'seeding'}
-			<Button
-				variant="secondary"
-				size="sm"
-				disabled={busy}
-				onclick={() => setStatus('registration', t('Registration is open.'))}
-			>
-				{t('Reopen registration')}
-			</Button>
-			<Button size="sm" disabled={busy || tournament.participantCount < 2} onclick={start}>
-				{t('Start tournament')}
-			</Button>
-		{/if}
-		{#if tournament.status === 'in_progress' && current.matches.length}
-			<Button variant="secondary" size="sm" disabled={busy} onclick={() => (deadlinesOpen = true)}>
-				{t('Deadlines')}
-			</Button>
-		{/if}
-		{#if tournament.status !== 'draft'}
-			<Button variant="secondary" size="sm" onclick={() => (reportsOpen = true)}>
-				{t('Reports')}
-				{#if current.openReports > 0}
-					<Badge variant="warning">{current.openReports}</Badge>
+		{:else}
+			{#if running}
+				<Button variant="secondary" size="sm" href={host.routes.tournamentEdit(tournament.slug)}>
+					{t('Edit')}
+				</Button>
+				{#if tournament.status === 'draft'}
+					<Button
+						size="sm"
+						disabled={busy}
+						onclick={() => setStatus('registration', t('Registration is open.'))}
+					>
+						{t('Open registration')}
+					</Button>
 				{/if}
-			</Button>
+				{#if isOpen(tournament)}
+					<Button
+						variant="secondary"
+						size="sm"
+						disabled={busy}
+						onclick={async () => {
+							if (!(await dropsBracket())) {
+								return;
+							}
+
+							tab = 'players';
+							await act(
+								() => host.api.tournaments.seed(tournament.id),
+								t('Players seeded by ELO.')
+							);
+						}}
+					>
+						{tournament.status === 'seeding'
+							? t('Seed again by ELO')
+							: t('Close registration and seed')}
+					</Button>
+				{/if}
+				{#if tournament.status === 'seeding'}
+					<Button
+						variant="secondary"
+						size="sm"
+						disabled={busy}
+						onclick={async () => {
+							if (await dropsBracket()) {
+								await setStatus('registration', t('Registration is open.'));
+							}
+						}}
+					>
+						{t('Reopen registration')}
+					</Button>
+					{#if tournament.format !== 'round_robin'}
+						<Button
+							variant="secondary"
+							size="sm"
+							disabled={busy || tournament.participantCount < 2}
+							onclick={generateBracket}
+						>
+							{draftBracket ? t('Generate again') : t('Generate bracket')}
+						</Button>
+						{#if draftBracket}
+							<Button variant="destructive" size="sm" disabled={busy} onclick={discardBracket}>
+								{t('Discard bracket')}
+							</Button>
+						{/if}
+					{/if}
+					<Button size="sm" disabled={busy || tournament.participantCount < 2} onclick={start}>
+						{t('Start tournament')}
+					</Button>
+				{/if}
+				{#if tournament.status === 'in_progress' && current.matches.length}
+					<Button
+						variant="secondary"
+						size="sm"
+						disabled={busy}
+						onclick={() => (deadlinesOpen = true)}
+					>
+						{t('Deadlines')}
+					</Button>
+				{/if}
+				{#if tournament.status !== 'draft'}
+					<Button variant="secondary" size="sm" onclick={() => (reportsOpen = true)}>
+						{t('Reports')}
+						{#if current.openReports > 0}
+							<Badge variant="warning">{current.openReports}</Badge>
+						{/if}
+					</Button>
+				{/if}
+				{#if canAddPlayers}
+					<TournamentPlayerSearch
+						exclude={current.participants.map((participant) => participant.steamId)}
+						disabled={busy}
+						onPick={addPlayer}
+					/>
+				{/if}
+				<Button variant="destructive" size="sm" disabled={busy} onclick={cancel} class="sm:ml-auto">
+					{t('Cancel tournament')}
+				</Button>
+			{/if}
+			{#if tournament.status !== 'in_progress'}
+				<Button
+					variant="destructive"
+					size="sm"
+					disabled={busy}
+					onclick={remove}
+					class={cn(!running && 'sm:ml-auto')}
+				>
+					{t('Delete tournament')}
+				</Button>
+			{/if}
 		{/if}
-		<Button variant="ghost" size="sm" disabled={busy} onclick={cancel} class="sm:ml-auto">
-			{t('Cancel tournament')}
-		</Button>
 	</StaffSection>
 {/if}
 
@@ -785,10 +1022,20 @@
 	</Tabs.List>
 	{#if current.matches.length}
 		<Tabs.Content value="bracket">
+			{#if draftBracket}
+				<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
+					{t(
+						'Generated bracket: only staff and the host see it. Drag players to swap them; players see the bracket once the tournament starts.'
+					)}
+				</p>
+			{/if}
 			{#if tournament.format === 'round_robin'}
 				<TournamentRoundRobin onEdit={canEditResults ? (match) => (editing = match) : undefined} />
 			{:else}
-				<TournamentBracket onEdit={canEditResults ? (match) => (editing = match) : undefined} />
+				<TournamentBracket
+					onEdit={canEditResults ? (match) => (editing = match) : undefined}
+					onSwap={canSwap ? swapPlayers : undefined}
+				/>
 			{/if}
 		</Tabs.Content>
 	{/if}
@@ -808,14 +1055,21 @@
 	<Tabs.Content value="players">
 		{#if canSeed && tournament.status === 'seeding'}
 			<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-				{t(
-					'Move players up or down to change the seeding. Seed 1 and 2 can only meet in the final.'
-				)}
+				{draftBracket
+					? t(
+							'A bracket was generated: swap players in the bracket, or discard it to change the seeding.'
+						)
+					: t(
+							'Drag players or use the arrows to change the seeding. Seed 1 and 2 can only meet in the final.'
+						)}
 			</p>
 		{/if}
 		<TournamentParticipants
 			showPlacement={tournament.status === 'completed'}
-			onReorder={canSeed && tournament.status === 'seeding' ? reorder : undefined}
+			onReorder={canSeed && tournament.status === 'seeding' && !draftBracket ? reorder : undefined}
+			onRemove={staff && (tournament.status === 'draft' || isOpen(tournament))
+				? removePlayer
+				: undefined}
 			onDisqualify={staff && tournament.status === 'in_progress' ? disqualify : undefined}
 			showRules={staff && !!tournament.rules.trim()}
 			{busy}

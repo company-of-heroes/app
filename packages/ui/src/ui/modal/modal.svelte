@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
+	import type { Component } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
 		flushHeader,
@@ -10,6 +11,7 @@
 	} from '../../variants';
 	import { modal } from './modal.svelte.js';
 	import CloseIcon from 'phosphor-svelte/lib/XIcon';
+	import ConfirmModal from './confirm-modal.svelte';
 </script>
 
 <Dialog.Root
@@ -76,8 +78,14 @@
 					modal.size === 'full' ? 'max-h-[calc(100vh-7rem)]' : 'max-h-[calc(100vh-12rem)]'
 				)}
 			>
-				<svelte:component this={modal.component} {...modal.props} />
+				{#if modal.component}
+					{@const Content = modal.component as Component<Record<string, unknown>>}
+					<Content {...modal.props} />
+				{/if}
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>
+
+<!-- Every host mounts <Modal />, so `confirmation.ask()` works wherever modals do. -->
+<ConfirmModal />

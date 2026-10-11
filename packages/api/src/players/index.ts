@@ -4,6 +4,7 @@ export {
 	type PlayerPageData,
 	type PlayerProfileLink,
 	type PlayerSearchOptions,
+	type PlayerSearchPage,
 	type PlayerSearchResult,
 	type UpdatePlayerCustomizationInput
 } from './players';

@@ -89,6 +89,7 @@
 		"@company-of-heroes/api": "workspace:*",
 		"@company-of-heroes/game-data": "workspace:*",
 		"@company-of-heroes/i18n": "workspace:*",
+		"@dnd-kit/svelte": "^0.5.0",
 		"@fknoobs/replay-parser": "github:fknoobs/replay-analyzer",
 		"@internationalized/date": "^3.12.0",
 		"@tiptap/core": "^3.31.0",

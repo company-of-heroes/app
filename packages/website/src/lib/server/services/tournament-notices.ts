@@ -422,6 +422,20 @@ export class TournamentNoticesService extends Service {
 		);
 	}
 
+	/** Staff moved players in the bracket: everyone in the changed matches hears about it. */
+	swapped(tournament: NoticeTournament, participantIds: string[]): Task<void> {
+		return this.quiet(
+			this.participantsById(participantIds).andThen((participants) =>
+				this.toUsers(
+					participants.map((participant) => participant.user),
+					tournament,
+					`Your match in ${tournament.name} changed`,
+					`Staff changed the bracket of **${tournament.name}**. Check the bracket for your current opponent.`
+				)
+			)
+		);
+	}
+
 	/** Public post for everyone, plus a personal notice for the player. */
 	disqualified(tournament: NoticeTournament, participantId: string): Task<void> {
 		return this.quiet(
@@ -435,6 +449,18 @@ export class TournamentNoticesService extends Service {
 								'Contact staff if you think this is a mistake.'
 						).andThen(() => this.auto(tournament, 'disqualified', { alias: participant.alias }))
 					: okAsync(undefined)
+			)
+		);
+	}
+
+	/** Staff took a player out before the start: only that player hears it. */
+	removed(tournament: NoticeTournament, participant: { user: string; alias: string }): Task<void> {
+		return this.quiet(
+			this.toUsers(
+				[participant.user],
+				tournament,
+				`You were removed from ${tournament.name}`,
+				`Staff removed you from **${tournament.name}**. Contact staff if you think this is a mistake.`
 			)
 		);
 	}
@@ -518,7 +544,7 @@ export class TournamentNoticesService extends Service {
 				startsAt: string;
 			}>(1, JOB_BATCH, {
 				filter: this.pb.filter(
-					'(status = "registration" || status = "seeding") && reminderSentAt = "" && ' +
+					'(status = "registration" || status = "seeding") && deletedAt = "" && reminderSentAt = "" && ' +
 						'startsAt != "" && startsAt > {:now} && startsAt <= {:soon}',
 					{ now: pbDate(now), soon: pbDate(new Date(now.getTime() + REMINDER_MS)) }
 				),
@@ -797,6 +823,7 @@ export class TournamentNoticesService extends Service {
 			}>({
 				filter: this.pb.filter(
 					'user = {:user} && status != "withdrawn" && tournament.status != "draft" && ' +
+						'tournament.deletedAt = "" && ' +
 						'tournament.updated > {:since}',
 					{ user: user.id, since: pbDate(new Date(Date.now() - 30 * 86_400_000)) }
 				),

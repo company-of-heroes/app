@@ -38,10 +38,14 @@ import {
 	reopenMatch,
 	resolveMatch,
 	settleStart,
-	standings
+	standings,
+	swapBlocker,
+	swapPlayers,
+	type SlotRef
 } from '../domain/tournament-bracket';
 import { workshopMap } from '@company-of-heroes/game-data/maps';
 import { mapDisplayName } from '../domain/map-name';
+import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
 import { badRequest, conflict, forbidden, notFound, type AppError } from '../errors';
 import { chunk, ensure, fromPb, inParallel, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
@@ -89,6 +93,8 @@ type TournamentRecord = {
 	format: TournamentFormat;
 	bestOf: number;
 	finalsBestOf: number;
+	semisBestOf: number;
+	quartersBestOf: number;
 	grandFinalReset: boolean;
 	status: TournamentStatus;
 	registrationClosesAt: string;
@@ -104,6 +110,8 @@ type TournamentRecord = {
 	streamUrl: string;
 	featuredMatch: string;
 	autoClosedAt: string;
+	deletedAt: string;
+	deletedBy: string;
 	/** The staff member or community host who created it. */
 	createdBy: string;
 	collectionName: string;
@@ -178,6 +186,10 @@ const OPEN: TournamentStatus[] = ['registration', 'seeding'];
 
 const orNull = (value: string | null | undefined) => value || null;
 
+/** Drafts and soft-deleted tournaments: only staff and the host see them. */
+const isHidden = (record: { status: TournamentStatus; deletedAt?: string }) =>
+	record.status === 'draft' || Boolean(record.deletedAt);
+
 const slotOrNull = (value: string): TournamentSlot | null =>
 	value === 'A' || value === 'B' ? value : null;
 
@@ -237,6 +249,8 @@ function toTournament(
 		format: record.format,
 		bestOf: record.bestOf || 1,
 		finalsBestOf: record.finalsBestOf || null,
+		semisBestOf: record.semisBestOf || null,
+		quartersBestOf: record.quartersBestOf || null,
 		grandFinalReset: Boolean(record.grandFinalReset),
 		status: record.status,
 		registrationClosesAt: orNull(record.registrationClosesAt),
@@ -252,6 +266,7 @@ function toTournament(
 		liveCount: 0,
 		...resolved,
 		participantCount,
+		deletedAt: orNull(record.deletedAt),
 		created: record.created
 	};
 }
@@ -526,19 +541,23 @@ export class TournamentsService extends Service {
 			.map((record) => this.toMap(record));
 	}
 
-	/** Drafts are listed for staff, and for a host only their own. */
+	/** Drafts and deleted tournaments are listed for staff, and for a host only their own. */
 	list(scope: TournamentScope, viewer: AuthUserPublic | null): Task<Tournament[]> {
 		const staff = isStaffUser(viewer);
 		const statuses: Record<TournamentScope, TournamentStatus[]> = {
 			active: ['in_progress'],
-			upcoming: staff ? ['draft', ...OPEN] : OPEN,
+			upcoming: OPEN,
 			past: ['completed', 'cancelled']
 		};
-		const shown = statuses[scope].map((status) => `status = "${status}"`).join(' || ');
-		const filter =
-			scope === 'upcoming' && !staff && viewer?.role === 'host'
-				? `${shown} || ${this.pb.filter('(status = "draft" && createdBy = {:me})', { me: viewer.id })}`
-				: shown;
+		const either = (list: TournamentStatus[]) =>
+			list.map((status) => `status = "${status}"`).join(' || ');
+		const managed = scope === 'upcoming' ? ['draft' as const, ...statuses[scope]] : statuses[scope];
+		const visible = `(${either(statuses[scope])}) && deletedAt = ""`;
+		const filter = staff
+			? either(managed)
+			: viewer?.role === 'host'
+				? `(${visible}) || ((${either(managed)}) && ${this.pb.filter('createdBy = {:me}', { me: viewer.id })})`
+				: visible;
 		return fromPb(
 			this.tournaments.getList<TournamentRecord>(1, 50, {
 				filter,
@@ -586,7 +605,10 @@ export class TournamentsService extends Service {
 	wonBy(steamId: string): Task<Tournament[]> {
 		return fromPb(
 			this.tournaments.getList<TournamentRecord>(1, 50, {
-				filter: this.pb.filter('status = "completed" && winner.steamId = {:steamId}', { steamId }),
+				filter: this.pb.filter(
+					'status = "completed" && deletedAt = "" && winner.steamId = {:steamId}',
+					{ steamId }
+				),
 				sort: '-startsAt,-created',
 				skipTotal: true
 			}),
@@ -636,13 +658,16 @@ export class TournamentsService extends Service {
 		return this.record(idOrSlug, true).andThen((record) =>
 			canManageTournament(user, record)
 				? okAsync(record.id)
-				: record.status === 'draft'
+				: isHidden(record)
 					? errAsync(notFound('Tournament not found.'))
 					: errAsync(forbidden('Only staff or the host of this tournament can do that.'))
 		);
 	}
 
-	/** `true`: drafts included (internal calls, checked actions); a viewer sees drafts they run. */
+	/**
+	 * `true`: drafts and deleted tournaments included (internal calls, checked actions); a viewer
+	 * sees the hidden ones they run.
+	 */
 	private record(idOrSlug: string, access: Access): Task<TournamentRecord> {
 		return pbMaybe(
 			this.tournaments.getFirstListItem<TournamentRecord>(
@@ -651,7 +676,7 @@ export class TournamentsService extends Service {
 			'Could not load the tournament'
 		).andThen((record) =>
 			record &&
-			(record.status !== 'draft' ||
+			(!isHidden(record) ||
 				access === true ||
 				(typeof access === 'object' && canManageTournament(access, record)))
 				? okAsync(record)
@@ -733,7 +758,8 @@ export class TournamentsService extends Service {
 					liveCount: live
 				},
 				participants: registered,
-				matches,
+				// A bracket generated during seeding is a draft: only staff and the host see it.
+				matches: record.status === 'seeding' && !canManage ? [] : matches,
 				replays,
 				posts,
 				openReports,
@@ -782,7 +808,7 @@ export class TournamentsService extends Service {
 	finished(): Task<{ tournament: Tournament; finishedAt: string }[]> {
 		return fromPb(
 			this.tournaments.getFullList<TournamentRecord & { updated: string; completedAt: string }>({
-				filter: 'status = "completed"',
+				filter: 'status = "completed" && deletedAt = ""',
 				sort: '-updated'
 			}),
 			'Could not load tournaments'
@@ -997,6 +1023,8 @@ export class TournamentsService extends Service {
 						...files,
 						name: input.name.trim(),
 						finalsBestOf: input.finalsBestOf ?? 0,
+						semisBestOf: input.semisBestOf ?? 0,
+						quartersBestOf: input.quartersBestOf ?? 0,
 						maxParticipants: input.maxParticipants ?? 0,
 						registrationClosesAt: input.registrationClosesAt ?? '',
 						startsAt: input.startsAt ?? '',
@@ -1010,6 +1038,39 @@ export class TournamentsService extends Service {
 				)
 			)
 			.andThen((record) => this.withCounts([record]).map(([tournament]) => tournament));
+	}
+
+	/**
+	 * Soft delete: hidden from the public (lists, hall of fame, trophies, popups, jobs); staff and
+	 * the host still open it and can restore it. A running tournament is cancelled first.
+	 */
+	remove(id: string, userId: string): Task<TournamentDetail> {
+		return this.record(id, true).andThen((record) =>
+			ensure(
+				record.status !== 'in_progress',
+				badRequest('Cancel the tournament before you delete it.')
+			)
+				.andThen(() => ensure(!record.deletedAt, badRequest('The tournament is already deleted.')))
+				.asyncAndThen(() =>
+					fromPb(
+						this.tournaments.update<TournamentRecord>(record.id, {
+							deletedAt: pbDate(new Date()),
+							deletedBy: userId
+						}),
+						'Could not delete the tournament'
+					)
+				)
+				.andThen((updated) => this.detail(updated))
+		);
+	}
+
+	restore(id: string): Task<TournamentDetail> {
+		return this.record(id, true).andThen((record) =>
+			fromPb(
+				this.tournaments.update<TournamentRecord>(record.id, { deletedAt: '', deletedBy: '' }),
+				'Could not restore the tournament'
+			).andThen((updated) => this.detail(updated))
+		);
 	}
 
 	/** Settings can change until the bracket exists; after that only the texts and cancelling. */
@@ -1026,6 +1087,8 @@ export class TournamentsService extends Service {
 					input.format !== undefined ||
 					input.bestOf !== undefined ||
 					input.finalsBestOf !== undefined ||
+					input.semisBestOf !== undefined ||
+					input.quartersBestOf !== undefined ||
 					input.grandFinalReset !== undefined;
 				return ensure(
 					!started || !structural,
@@ -1044,6 +1107,7 @@ export class TournamentsService extends Service {
 						)
 					)
 					.asyncAndThen(() => this.validate(input))
+					.andThen(() => this.canUnpublish(record, input))
 					.map(() => record);
 			})
 			.andThen((record) => {
@@ -1052,7 +1116,12 @@ export class TournamentsService extends Service {
 					data.name = input.name.trim();
 				}
 
-				for (const field of ['finalsBestOf', 'maxParticipants'] as const) {
+				for (const field of [
+					'finalsBestOf',
+					'semisBestOf',
+					'quartersBestOf',
+					'maxParticipants'
+				] as const) {
 					if (field in input) {
 						data[field] = input[field] ?? 0;
 					}
@@ -1107,7 +1176,14 @@ export class TournamentsService extends Service {
 				return fromPb(
 					this.tournaments.update<TournamentRecord>(record.id, data),
 					'Could not save the tournament'
-				).andThen((updated) => this.announceChanges(record, updated).map(() => updated));
+				)
+					.andThen((updated) =>
+						// Leaving seeding (registration reopened, cancelled): a generated bracket goes.
+						record.status === 'seeding' && updated.status !== 'seeding'
+							? this.clearMatches(record.id).map(() => updated)
+							: okAsync(updated)
+					)
+					.andThen((updated) => this.announceChanges(record, updated).map(() => updated));
 			})
 			.andThen((record) =>
 				record.status === 'cancelled'
@@ -1115,6 +1191,28 @@ export class TournamentsService extends Service {
 					: okAsync(record)
 			)
 			.andThen((record) => this.withCounts([record]).map(([tournament]) => tournament));
+	}
+
+	/**
+	 * Back to draft only while registration is open and nobody signed up: a draft disappears
+	 * for everyone who is not staff or the host.
+	 */
+	private canUnpublish(record: TournamentRecord, input: TournamentUpdate): Task<void> {
+		if (input.status !== 'draft' || record.status === 'draft') {
+			return okAsync(undefined);
+		}
+
+		return ensure(
+			record.status === 'registration',
+			badRequest('Only a tournament with open registration can go back to draft.')
+		)
+			.asyncAndThen(() => this.participantRecords(record.id))
+			.andThen((participants) =>
+				ensure(
+					!participants.some((p) => p.status === 'registered'),
+					badRequest('Players already signed up, so it cannot go back to draft.')
+				)
+			);
 	}
 
 	/** Updates for the participants: cancelled, new rules, a new start time. */
@@ -1254,6 +1352,100 @@ export class TournamentsService extends Service {
 		);
 	}
 
+	/**
+	 * Staff or the host sign a player up by Steam id, also after registration closed. The player
+	 * gets an account if they have none yet; while seeding they go to the bottom of the seeding.
+	 */
+	addParticipant(id: string, steamId: string): Task<TournamentDetail> {
+		return this.record(id, true).andThen((record) =>
+			ensure(
+				['draft', ...OPEN].includes(record.status),
+				badRequest('The tournament already started.')
+			)
+				.asyncAndThen(() => this.participantRecords(record.id))
+				.andThen((existing) => {
+					const registered = existing.filter((p) => p.status === 'registered');
+					if (existing.some((p) => p.steamId === steamId && p.status !== 'withdrawn')) {
+						return errAsync(conflict('This player is already signed up.'));
+					}
+
+					if (record.maxParticipants && registered.length >= record.maxParticipants) {
+						return errAsync(conflict('This tournament is full.'));
+					}
+
+					// Profile first: no account is made for a Steam id without a CoH profile.
+					return this.profileOf(steamId)
+						.andThen((profile) =>
+							this.services.auth.userForSteam(steamId).map((userId) => ({ profile, userId }))
+						)
+						.andThen(({ profile, userId }) => {
+							const previous = existing.find((p) => p.user === userId);
+							if (previous && previous.status !== 'withdrawn') {
+								return errAsync(conflict('This player is already signed up.'));
+							}
+
+							const data = {
+								tournament: record.id,
+								user: userId,
+								steamId,
+								profileId: profile.profile_id,
+								alias: profile.alias,
+								country: profile.country ?? '',
+								status: 'registered',
+								seed:
+									record.status === 'seeding'
+										? Math.max(0, ...registered.map((p) => p.seed)) + 1
+										: 0,
+								rating: 0
+							};
+							return (
+								previous
+									? fromPb(this.participants.update(previous.id, data), 'Could not add the player')
+									: fromPb(this.participants.create(data), 'Could not add the player')
+							)
+								.andThen(() => this.dropBracket(record))
+								.map(() => userId);
+						});
+				})
+				.andThen((userId) =>
+					record.status === 'draft'
+						? okAsync(undefined)
+						: this.services.tournamentNotices.registered(
+								{ ...record, startsAt: orNull(record.startsAt) },
+								userId
+							)
+				)
+				.andThen(() => this.detail(record))
+		);
+	}
+
+	/** Profile id, alias and country of a Steam account: ours when we saw a game, else Relic's. */
+	private profileOf(
+		steamId: string
+	): Task<{ profile_id: number; alias: string; country: string | null }> {
+		const name = `/steam/${steamId}`;
+		return pbMaybe(
+			this.pb.collection('players').getFirstListItem<{
+				profile_id: number;
+				alias: string;
+			}>(this.pb.filter('steam_id = {:steamId}', { steamId }), { fields: 'profile_id,alias' }),
+			'Could not load the player'
+		).andThen((player) =>
+			player?.profile_id
+				? okAsync({ ...player, country: null })
+				: this.relic
+						.get<RelicPersonalStat>(
+							`/community/leaderboard/getpersonalstat?title=coh1&profile_names=${encodeURIComponent(JSON.stringify([name]))}`
+						)
+						.map((data) => profileFromPersonalStat(data, (member) => member.name === name))
+						.andThen((profile) =>
+							profile?.profile_id
+								? okAsync(profile)
+								: errAsync(badRequest('This Steam account has no Company of Heroes profile.'))
+						)
+		);
+	}
+
 	/** A participant accepts the current rules (again, after they changed). */
 	acceptRules(id: string, user: AuthUserPublic): Task<TournamentDetail> {
 		return this.record(id, false).andThen((record) =>
@@ -1304,6 +1496,45 @@ export class TournamentsService extends Service {
 		);
 	}
 
+	/**
+	 * Staff or the host take a player out before the start (no trace, like withdrawing).
+	 * Once the tournament runs they disqualify instead.
+	 */
+	removeParticipant(id: string, participantId: string): Task<TournamentDetail> {
+		return this.record(id, true).andThen((record) =>
+			ensure(
+				['draft', ...OPEN].includes(record.status),
+				badRequest('The tournament already started. Disqualify the player instead.')
+			)
+				.asyncAndThen(() =>
+					pbMaybe(
+						this.participants.getOne<{
+							id: string;
+							tournament: string;
+							user: string;
+							alias: string;
+						}>(participantId, { fields: 'id,tournament,user,alias' }),
+						'Could not load the player'
+					)
+				)
+				.andThen((participant) =>
+					participant?.tournament === record.id
+						? okAsync(participant)
+						: errAsync(notFound('Player not found.'))
+				)
+				.andThen((participant) =>
+					fromPb(this.participants.delete(participant.id), 'Could not remove the player')
+						.andThen(() => this.dropBracket(record))
+						.andThen(() =>
+							record.status === 'draft'
+								? okAsync(undefined)
+								: this.services.tournamentNotices.removed(record, participant)
+						)
+				)
+				.andThen(() => this.detail(record))
+		);
+	}
+
 	withdraw(id: string, userId: string): Task<TournamentDetail> {
 		return this.record(id, false).andThen((record) =>
 			ensure(OPEN.includes(record.status), badRequest('The tournament already started.'))
@@ -1314,6 +1545,7 @@ export class TournamentsService extends Service {
 						? fromPb(this.participants.delete(mine.id), 'Could not withdraw')
 						: errAsync(notFound('You are not signed up.'));
 				})
+				.andThen(() => this.dropBracket(record))
 				.andThen(() => this.detail(record))
 		);
 	}
@@ -1322,7 +1554,8 @@ export class TournamentsService extends Service {
 	seed(id: string): Task<TournamentDetail> {
 		return this.record(id, true).andThen((record) =>
 			ensure(OPEN.includes(record.status), badRequest('The tournament already started.'))
-				.asyncAndThen(() => this.participantRecords(record.id))
+				.asyncAndThen(() => this.dropBracket(record))
+				.andThen(() => this.participantRecords(record.id))
 				.andThen((existing) => {
 					const registered = existing.filter((p) => p.status === 'registered');
 					return inParallel(registered, 5, (participant) =>
@@ -1369,7 +1602,7 @@ export class TournamentsService extends Service {
 		return fromPb(
 			this.tournaments.getList<TournamentRecord>(1, 50, {
 				filter: this.pb.filter(
-					'status = "registration" && registrationClosesAt != "" && ' +
+					'status = "registration" && deletedAt = "" && registrationClosesAt != "" && ' +
 						'registrationClosesAt <= {:now} && autoClosedAt = ""',
 					{ now: pbDate(new Date()) }
 				),
@@ -1404,7 +1637,8 @@ export class TournamentsService extends Service {
 	setSeeds(id: string, order: string[]): Task<TournamentDetail> {
 		return this.record(id, true).andThen((record) =>
 			ensure(OPEN.includes(record.status), badRequest('The tournament already started.'))
-				.asyncAndThen(() => this.participantRecords(record.id))
+				.asyncAndThen(() => this.dropBracket(record))
+				.andThen(() => this.participantRecords(record.id))
 				.andThen((existing) => {
 					const registered = new Set(
 						existing.filter((p) => p.status === 'registered').map((p) => p.id)
@@ -1446,8 +1680,11 @@ export class TournamentsService extends Service {
 						.sort((a, b) => (a.seed || 9999) - (b.seed || 9999))
 						.map((p) => p.id);
 					return ensure(seeded.length >= 2, badRequest('A tournament needs at least 2 players.'))
-						.asyncAndThen(() => this.clearMatches(record.id))
-						.andThen(() => this.createBracket(record, seeded))
+						.asyncAndThen(() => this.matchList(record.id))
+						.andThen((matches) =>
+							// A bracket generated during seeding is used as it is; its matches open now.
+							matches.length ? this.openMatches(matches) : this.createBracket(record, seeded)
+						)
 						.map(() => seeded.length);
 				})
 				.andThen((players) =>
@@ -1468,6 +1705,49 @@ export class TournamentsService extends Service {
 		);
 	}
 
+	/**
+	 * Staff or the host build the bracket during seeding without starting: they can look at it
+	 * and swap players. Only they see it; it goes when the players or the seeding change.
+	 */
+	generateBracket(id: string): Task<TournamentDetail> {
+		return this.record(id, true).andThen((record) =>
+			ensure(record.status === 'seeding', badRequest('Seed the players first.'))
+				.asyncAndThen(() => this.participantRecords(record.id))
+				.andThen((existing) => {
+					const seeded = existing
+						.filter((p) => p.status === 'registered')
+						.sort((a, b) => (a.seed || 9999) - (b.seed || 9999))
+						.map((p) => p.id);
+					return ensure(seeded.length >= 2, badRequest('A tournament needs at least 2 players.'))
+						.asyncAndThen(() => this.clearMatches(record.id))
+						.andThen(() => this.createBracket(record, seeded));
+				})
+				.andThen(() => this.detail(record))
+		);
+	}
+
+	discardBracket(id: string): Task<TournamentDetail> {
+		return this.record(id, true).andThen((record) =>
+			ensure(record.status === 'seeding', badRequest('The tournament already started.'))
+				.asyncAndThen(() => this.clearMatches(record.id))
+				.andThen(() => this.detail(record))
+		);
+	}
+
+	/** A generated bracket no longer fits once the players or the seeding change. */
+	private dropBracket(record: TournamentRecord): Task<void> {
+		return record.status === 'seeding' ? this.clearMatches(record.id) : okAsync(undefined);
+	}
+
+	/** At the start: matches of a generated bracket count as ready from now (deadlines, notices). */
+	private openMatches(matches: TournamentMatch[]): Task<void> {
+		const now = pbDate(new Date());
+		const ready = matches
+			.filter((match) => match.status === 'ready')
+			.map((match) => ({ ...match, readyAt: now }));
+		return this.saveMatches(ready).map(() => undefined);
+	}
+
 	private clearMatches(tournamentId: string): Task<void> {
 		return this.matchList(tournamentId)
 			.andThen((matches) =>
@@ -1483,6 +1763,8 @@ export class TournamentsService extends Service {
 		const specs = buildBracket(record.format, seeded, {
 			bestOf: record.bestOf || 1,
 			finalsBestOf: record.finalsBestOf || null,
+			semisBestOf: record.semisBestOf || null,
+			quartersBestOf: record.quartersBestOf || null,
 			reset: Boolean(record.grandFinalReset)
 		});
 		return inParallel(specs, 5, (spec) =>
@@ -1586,6 +1868,92 @@ export class TournamentsService extends Service {
 						.andThen(() => this.finishIfDone(record, merge(afterScore, resolved)));
 				})
 		);
+	}
+
+	/**
+	 * Staff or the host swap two players in the bracket (unplayed matches only). Open time
+	 * proposals and agreed times of those matches go; the players in them get a notice.
+	 */
+	swap(id: string, a: SlotRef, b: SlotRef): Task<TournamentDetail> {
+		return this.record(id, true).andThen((record) =>
+			ensure(
+				record.status === 'in_progress' || record.status === 'seeding',
+				badRequest('The tournament is not running.')
+			)
+				.asyncAndThen(() =>
+					ResultAsync.combine([this.matchList(record.id), this.startedGames(record.id)])
+				)
+				.andThen(([matches, busy]) => {
+					const byId = new Map(matches.map((match) => [match.id, match]));
+					const blocker =
+						swapBlocker(byId.get(a.match), a.slot, busy) ??
+						swapBlocker(byId.get(b.match), b.slot, busy);
+					if (blocker) {
+						return errAsync(badRequest(blocker));
+					}
+
+					const changed = swapPlayers(matches, a, b);
+					return inParallel(changed, 5, (match) =>
+						fromPb(
+							this.matches.update(match.id, { ...matchFields(match), scheduledAt: '' }),
+							'Could not save the match'
+						)
+					)
+						.andThen(() => this.supersedeProposals(changed.map((match) => match.id)))
+						.andThen(() =>
+							// During seeding the bracket is not public yet: nobody to tell.
+							record.status !== 'in_progress'
+								? okAsync(undefined)
+								: this.services.tournamentNotices.swapped(
+										record,
+										changed
+											.flatMap((match) => [match.playerA, match.playerB])
+											.filter((player): player is string => Boolean(player))
+									)
+						);
+				})
+				.andThen(() => this.detail(record))
+		);
+	}
+
+	/** Matches with a tournament game started (armed and not expired, or being played). */
+	private startedGames(tournamentId: string): Task<Set<string>> {
+		return fromPb(
+			this.pb.collection('tournament_claims').getFullList<{ match: string }>({
+				filter: this.pb.filter(
+					'tournament = {:tournamentId} && (status = "playing" || (status = "armed" && armedAt > {:armed}))',
+					{ tournamentId, armed: pbDate(new Date(Date.now() - CLAIM_ARMED_MS)) }
+				),
+				fields: 'match'
+			}),
+			'Could not load the tournament games'
+		).map((rows) => new Set(rows.map((row) => row.match)));
+	}
+
+	/** Pending time proposals of these matches were made for other opponents. */
+	private supersedeProposals(matchIds: string[]): Task<void> {
+		if (matchIds.length === 0) {
+			return okAsync(undefined);
+		}
+
+		return fromPb(
+			this.pb.collection('tournament_schedules').getFullList<{ id: string }>({
+				filter: `status = "pending" && (${matchIds
+					.map((matchId) => this.pb.filter('match = {:matchId}', { matchId }))
+					.join(' || ')})`,
+				fields: 'id'
+			}),
+			'Could not load the time proposals'
+		)
+			.andThen((rows) =>
+				inParallel(rows, 5, (row) =>
+					fromPb(
+						this.pb.collection('tournament_schedules').update(row.id, { status: 'superseded' }),
+						'Could not update a time proposal'
+					)
+				)
+			)
+			.map(() => undefined);
 	}
 
 	/** Staff: a disqualified player forfeits their open matches and every later one. */

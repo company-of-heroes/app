@@ -60,7 +60,9 @@
 
 {#snippet social()}
 	{#if player}
-		<div class="border-secondary-800 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t px-3 py-2">
+		<div
+			class="border-secondary-800 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t px-3 py-2"
+		>
 			<span class="inline-flex items-center gap-1.5 text-xs">
 				<span class="text-secondary-500">{t('Likes')}</span>
 				<PlayerLikeCount likeCount={player.likeCount ?? 0} showZero />

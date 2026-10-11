@@ -774,7 +774,7 @@
 						</span>
 					{/if}
 					{#if comment.user.steamIds?.[0]}
-						<PlayerLabels labels={host.api.labels.forSteamId(comment.user.steamIds[0])} size="sm" />
+						<PlayerLabels labels={host.api.labels.forSteamId(comment.user.steamIds[0])} />
 					{/if}
 					<time
 						class="text-secondary-500 text-xs whitespace-nowrap tabular-nums"
@@ -846,12 +846,9 @@
 									</Button>
 									<Button
 										type="button"
-										variant="ghost"
+										variant="destructive"
 										size="sm"
-										class={cn(
-											commentAction,
-											'text-secondary-400 hover:bg-destructive/10 hover:text-red-400'
-										)}
+										class={commentAction}
 										onclick={() => requestDelete(comment)}
 										disabled={deletingId === comment.id}
 										aria-label={t('Delete comment')}

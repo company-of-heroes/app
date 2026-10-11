@@ -8,7 +8,8 @@ import type {
 	LeaderboardStat,
 	PlayerCustomization,
 	PlayerEloMap,
-	PlayerPreviewData
+	PlayerPreviewData,
+	PlayerSearchPage
 } from '../player/types';
 import type { CommunityMatchDetail, MatchResultPlayer } from '../replay/types';
 import type { PlayerRewards } from '../reward/types';
@@ -39,6 +40,7 @@ import type {
 	TournamentScheduleProposal,
 	TournamentScope,
 	TournamentSeen,
+	TournamentSlotRef,
 	TournamentStats,
 	TournamentUpdate
 } from '../tournament/types';
@@ -96,6 +98,11 @@ export type HostRoutes = {
 	accountProfile: (steamId: string) => string;
 	/** Login page that returns to the current page afterwards. */
 	login: () => string;
+	/**
+	 * Steam sign-in that finds or creates the account for that Steam ID and returns to the
+	 * current page (a full page load). Left out where it does not exist (the desktop app).
+	 */
+	steamLogin?: () => string;
 	memberReplays: () => string;
 	memberReplay: (replayId: string) => string;
 	/** Upload page that publishes a saved match (lobby id) as a member replay. */
@@ -186,6 +193,8 @@ export type HostApi = {
 		getPreview: (id: string) => Promise<PlayerPreviewData | null>;
 		/** Players with community matches, for linking replay slots to Steam accounts. */
 		search: (query: string) => Promise<PlayerSearchOption[]>;
+		/** The players page: one page of players by name, most relevant first. */
+		searchPage: (query: string, page: number) => Promise<PlayerSearchPage>;
 		/** Stored lobby ELO per ladder, keyed like `PlayerEloMap`. */
 		getElo: (steamId: string) => Promise<PlayerEloMap>;
 		/** Full ladder stats list + stored ELO (Steam id or profile id); null when not found. */
@@ -331,11 +340,27 @@ export type HostApi = {
 		/** Participant ids, top seed first. */
 		setSeeds: (id: string, order: string[]) => Promise<TournamentDetail>;
 		start: (id: string) => Promise<TournamentDetail>;
+		/** Staff or the host: build the bracket during seeding without starting, or throw it away. */
+		generateBracket: (id: string) => Promise<TournamentDetail>;
+		discardBracket: (id: string) => Promise<TournamentDetail>;
+		/** Staff or the host: swap the players in two bracket places (unplayed matches only). */
+		swapPlayers: (
+			id: string,
+			a: TournamentSlotRef,
+			b: TournamentSlotRef
+		) => Promise<TournamentDetail>;
+		/** Staff or the host: soft delete (hidden from the public) and undo it. */
+		remove: (id: string) => Promise<TournamentDetail>;
+		restore: (id: string) => Promise<TournamentDetail>;
 		setMatchResult: (
 			id: string,
 			matchId: string,
 			result: TournamentMatchResult
 		) => Promise<TournamentMatch[]>;
+		/** Staff or the host add a player by Steam id (until the tournament starts). */
+		addParticipant: (id: string, steamId: string) => Promise<TournamentDetail>;
+		/** Staff or the host take a player out before the start (once running: disqualify). */
+		removeParticipant: (id: string, participantId: string) => Promise<TournamentDetail>;
 		disqualify: (id: string, participantId: string) => Promise<TournamentDetail>;
 		/** Staff: last moment to play per round (`roundKey` → ISO date, null clears it). */
 		setRoundDeadlines: (
@@ -457,7 +482,11 @@ export type HostContext = {
 	notify: {
 		success: (message: string) => void;
 		error: (message: string) => void;
-		confirm: (message: string, labels?: { confirm?: string; cancel?: string }) => Promise<boolean>;
+		/** `danger`: the action destroys or takes something away (red confirm button). */
+		confirm: (
+			message: string,
+			labels?: { confirm?: string; cancel?: string; danger?: boolean }
+		) => Promise<boolean>;
 	};
 	api: HostApi;
 };

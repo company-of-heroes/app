@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -173,12 +173,12 @@
 	};
 
 	const removeEntry = async (entry: AntiCheatModuleAllowlistResponse) => {
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			t('Remove {name} from the module allowlist?', { name: entry.name }),
 			{
-				okLabel: t('Delete'),
-				cancelLabel: t('Cancel'),
-				kind: 'warning'
+				confirm: t('Delete'),
+				cancel: t('Cancel'),
+				danger: true
 			}
 		);
 		if (!confirmed) {

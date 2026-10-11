@@ -28,6 +28,9 @@ export type Tournament = {
 	format: TournamentFormat;
 	bestOf: number;
 	finalsBestOf: number | null;
+	/** Single elimination: length of the semifinals / quarterfinals, null = same as `bestOf`. */
+	semisBestOf: number | null;
+	quartersBestOf: number | null;
 	grandFinalReset: boolean;
 	status: TournamentStatus;
 	registrationClosesAt: string | null;
@@ -54,6 +57,8 @@ export type Tournament = {
 	/** Matches being played right now (claimed games); 0 outside the active list and detail. */
 	liveCount: number;
 	participantCount: number;
+	/** Soft-deleted: hidden from the public, staff and the host still see it. */
+	deletedAt: string | null;
 	created: string;
 };
 
@@ -116,6 +121,9 @@ export type TournamentMatch = {
 	/** Time both players agreed on (or staff set), ISO, or null. */
 	scheduledAt: string | null;
 };
+
+/** A player's place in the bracket: a match and its slot. */
+export type TournamentSlotRef = { match: string; slot: TournamentSlot };
 
 /** A started tournament game ("Start tournament game" in the app). */
 export type TournamentClaim = {
@@ -473,6 +481,9 @@ export type TournamentInput = {
 	format: TournamentFormat;
 	bestOf: number;
 	finalsBestOf: number | null;
+	/** Single elimination only; null = same as `bestOf`. */
+	semisBestOf?: number | null;
+	quartersBestOf?: number | null;
 	grandFinalReset: boolean;
 	registrationClosesAt: string | null;
 	startsAt: string | null;

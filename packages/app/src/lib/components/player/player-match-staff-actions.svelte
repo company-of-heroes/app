@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { TransformedMatch } from '@company-of-heroes/ui/player';
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import BracketsCurlyIcon from 'phosphor-svelte/lib/BracketsCurly';
 	import ChecksIcon from 'phosphor-svelte/lib/ChecksIcon';
 	import EyeIcon from 'phosphor-svelte/lib/Eye';
@@ -46,14 +46,13 @@
 	}
 
 	async function toggle() {
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			manuallyHidden
 				? t('Show this match on public overviews again?')
 				: t('Hide this match from public overviews?'),
 			{
-				okLabel: manuallyHidden ? t('Show') : t('Hide'),
-				cancelLabel: t('Cancel'),
-				kind: 'warning'
+				confirm: manuallyHidden ? t('Show') : t('Hide'),
+				cancel: t('Cancel')
 			}
 		);
 		if (!confirmed) {

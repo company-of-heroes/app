@@ -139,6 +139,14 @@ export type PlayerSearchResult = {
 	matchCount?: number;
 };
 
+/** One page of the player search, most relevant first. */
+export type PlayerSearchPage = {
+	items: PlayerSearchResult[];
+	/** Every hit across all pages. */
+	total: number;
+	more: boolean;
+};
+
 /** Compact fields shown in profile link previews. */
 export type PlayerPreviewData = {
 	steamId: string;

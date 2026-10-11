@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -149,11 +149,14 @@
 	};
 
 	const removeProcess = async (entry: AntiCheatProcessDenylistResponse) => {
-		const confirmed = await confirm(t('Remove {name} from the denylist?', { name: entry.name }), {
-			okLabel: t('Delete'),
-			cancelLabel: t('Cancel'),
-			kind: 'warning'
-		});
+		const confirmed = await confirmation.ask(
+			t('Remove {name} from the denylist?', { name: entry.name }),
+			{
+				confirm: t('Delete'),
+				cancel: t('Cancel'),
+				danger: true
+			}
+		);
 		if (!confirmed) {
 			return;
 		}

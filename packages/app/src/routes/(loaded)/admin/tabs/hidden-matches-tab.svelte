@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -152,10 +152,10 @@
 	}
 
 	async function removeWord(entry: HiddenMatchKeyword) {
-		const confirmed = await confirm(t('Delete this word from the hide list?'), {
-			okLabel: t('Delete'),
-			cancelLabel: t('Cancel'),
-			kind: 'warning'
+		const confirmed = await confirmation.ask(t('Delete this word from the hide list?'), {
+			confirm: t('Delete'),
+			cancel: t('Cancel'),
+			danger: true
 		});
 		if (!confirmed) {
 			return;
@@ -175,10 +175,9 @@
 	}
 
 	async function showMatch(row: Row) {
-		const confirmed = await confirm(t('Show this match on public overviews again?'), {
-			okLabel: t('Show'),
-			cancelLabel: t('Cancel'),
-			kind: 'warning'
+		const confirmed = await confirmation.ask(t('Show this match on public overviews again?'), {
+			confirm: t('Show'),
+			cancel: t('Cancel')
 		});
 		if (!confirmed) {
 			return;

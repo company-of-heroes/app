@@ -108,7 +108,7 @@
 				'Remove the host role from {name}? Their tournaments stay on the site and staff run them.',
 				{ name: target.name }
 			),
-			{ confirm: t('Remove host role'), cancel: t('Cancel') }
+			{ confirm: t('Remove host role'), cancel: t('Cancel'), danger: true }
 		);
 		if (!sure) {
 			return;
@@ -184,7 +184,7 @@
 									</div>
 									<Button
 										size="sm"
-										variant="ghost"
+										variant="destructive"
 										disabled={saving !== null}
 										loading={saving === item.id}
 										onclick={() => revoke(item)}

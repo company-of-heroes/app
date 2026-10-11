@@ -25,6 +25,7 @@ import type {
 	TournamentScheduleProposal,
 	TournamentScope,
 	TournamentSeen,
+	TournamentSlotRef,
 	TournamentStats,
 	TournamentUpdate
 } from './types';
@@ -175,6 +176,48 @@ export class TournamentsApi {
 		);
 	}
 
+	/** Staff or the host soft-delete a tournament (a running one is cancelled first). */
+	remove(id: string): ResultAsync<TournamentDetail, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentDetail>(this.deps, path(id), { method: 'DELETE' }),
+			'Could not delete the tournament.'
+		);
+	}
+
+	restore(id: string): ResultAsync<TournamentDetail, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentDetail>(this.deps, path(id, '/restore'), { method: 'POST' }),
+			'Could not restore the tournament.'
+		);
+	}
+
+	/** Staff or the host swap the players in two bracket places (unplayed matches only). */
+	swapPlayers(
+		id: string,
+		a: TournamentSlotRef,
+		b: TournamentSlotRef
+	): ResultAsync<TournamentDetail, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentDetail>(this.deps, path(id, '/swap'), { method: 'POST', body: { a, b } }),
+			'Could not swap the players.'
+		);
+	}
+
+	/** Staff or the host build the bracket during seeding, without starting. */
+	generateBracket(id: string): ResultAsync<TournamentDetail, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentDetail>(this.deps, path(id, '/bracket'), { method: 'POST' }),
+			'Could not generate the bracket.'
+		);
+	}
+
+	discardBracket(id: string): ResultAsync<TournamentDetail, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentDetail>(this.deps, path(id, '/bracket'), { method: 'DELETE' }),
+			'Could not discard the bracket.'
+		);
+	}
+
 	start(id: string): ResultAsync<TournamentDetail, ApiError> {
 		return fromPbPromise(
 			sendV1<TournamentDetail>(this.deps, path(id, '/start'), { method: 'POST' }),
@@ -193,6 +236,29 @@ export class TournamentsApi {
 				body: result
 			}),
 			'Could not save the result.'
+		);
+	}
+
+	/** Staff or the host add a player by Steam id (until the tournament starts). */
+	addParticipant(id: string, steamId: string): ResultAsync<TournamentDetail, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentDetail>(this.deps, path(id, '/participants'), {
+				method: 'POST',
+				body: { steamId }
+			}),
+			'Could not add the player.'
+		);
+	}
+
+	/** Staff or the host take a player out before the start (once running: disqualify). */
+	removeParticipant(id: string, participantId: string): ResultAsync<TournamentDetail, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentDetail>(
+				this.deps,
+				path(id, `/participants/${encodeURIComponent(participantId)}/remove`),
+				{ method: 'POST' }
+			),
+			'Could not remove the player.'
 		);
 	}
 

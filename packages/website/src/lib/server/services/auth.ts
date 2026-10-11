@@ -208,8 +208,11 @@ export class AuthService extends Service {
 			.map((created) => created.id);
 	}
 
-	/** The account for a Steam id; a new one the first time. */
-	private userForSteam(steamId: string): Task<string> {
+	/**
+	 * The account for a Steam id; a new one the first time (also when staff add a player to a
+	 * tournament: their first Steam login lands in that account).
+	 */
+	userForSteam(steamId: string): Task<string> {
 		return fromPb(
 			this.pb.collection('users').getList<{ id: string }>(1, 1, {
 				filter: this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }),

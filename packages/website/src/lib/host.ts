@@ -14,7 +14,7 @@ import { toast } from '@company-of-heroes/ui/toasts';
 import { currentLocale, href, unlocalizedPath } from '$lib/i18n';
 import { rememberReplaysListHref, rememberedReplaysListHref } from '$lib/replays';
 import { RELEASE_PAGE_URL, SITE_URL } from '$lib/site/urls';
-import { modal } from '@company-of-heroes/ui/modal';
+import { confirmation, modal } from '@company-of-heroes/ui/modal';
 import { NotificationDetail, type HostNotification } from '@company-of-heroes/ui/notifications';
 import {
 	listNotifications,
@@ -31,7 +31,14 @@ import { reportDocsIssue, saveDocsNote } from '$lib/remote/docs.remote';
 import {
 	createTournament,
 	createTournamentMap,
+	addTournamentPlayer,
+	deleteTournament,
+	discardTournamentBracket,
+	generateTournamentBracket,
+	restoreTournament,
+	swapTournamentPlayers,
 	disqualifyTournamentPlayer,
+	removeTournamentPlayer,
 	markTournamentGamesSeen,
 	createTournamentPost,
 	updateTournamentPost,
@@ -75,6 +82,7 @@ import {
 } from '$lib/remote/profile-customization.remote';
 import { pickOwnedSteamId } from '@company-of-heroes/api';
 import { getPlayerElo, getPlayerPreview, getPlayerStats } from '$lib/remote/player-preview.remote';
+import { searchPlayers } from '$lib/remote/players.remote';
 import {
 	attachMatchReplay,
 	previewMemberReplayRatings,
@@ -187,6 +195,8 @@ export function provideWebsiteHost(): HostContext {
 			match: (lobbyId) => href(`/replays/${lobbyId}`),
 			accountProfile: (steamId) => href(`/account/profile?steamId=${steamId}`),
 			login: () => loginRedirectHref(`${page.url.pathname}${page.url.search}`, currentLocale()),
+			steamLogin: () =>
+				`/auth/steam/start?${new URLSearchParams({ redirect: `${page.url.pathname}${page.url.search}` })}`,
 			memberReplays: () => href('/replays?tab=member'),
 			memberReplay: (id) => href(`/replays/${id}`),
 			publishReplay: (lobbyId) => href(`/replays/upload?fromMatch=${lobbyId}`),
@@ -253,12 +263,13 @@ export function provideWebsiteHost(): HostContext {
 		notify: {
 			success: (message) => toast.success(message),
 			error: (message) => toast.error(message),
-			confirm: async (message) => window.confirm(message)
+			confirm: (message, labels) => confirmation.ask(message, labels)
 		},
 		api: {
 			players: {
 				getPreview: (id) => getPlayerPreview(id),
 				search: (q) => searchPlayersForUpload({ q }),
+				searchPage: (q, page) => searchPlayers({ q, page }),
 				getElo: (steamId) => getPlayerElo(steamId),
 				getStats: (id) => getPlayerStats(id)
 			},
@@ -382,8 +393,16 @@ export function provideWebsiteHost(): HostContext {
 				seed: (id) => withMessage(seedTournament(id)),
 				setSeeds: (id, order) => withMessage(setTournamentSeeds({ id, order })),
 				start: (id) => withMessage(startTournament(id)),
+				generateBracket: (id) => withMessage(generateTournamentBracket(id)),
+				discardBracket: (id) => withMessage(discardTournamentBracket(id)),
+				swapPlayers: (id, a, b) => withMessage(swapTournamentPlayers({ id, a, b })),
+				remove: (id) => withMessage(deleteTournament(id)),
+				restore: (id) => withMessage(restoreTournament(id)),
 				setMatchResult: (id, matchId, result) =>
 					withMessage(setTournamentMatchResult({ id, matchId, result })),
+				addParticipant: (id, steamId) => withMessage(addTournamentPlayer({ id, steamId })),
+				removeParticipant: (id, participantId) =>
+					withMessage(removeTournamentPlayer({ id, participantId })),
 				disqualify: (id, participantId) =>
 					withMessage(disqualifyTournamentPlayer({ id, participantId })),
 				setRoundDeadlines: (id, rounds) => withMessage(setTournamentRoundDeadlines({ id, rounds })),

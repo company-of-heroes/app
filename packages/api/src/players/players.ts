@@ -19,10 +19,17 @@ import type {
 	PlayerCustomization,
 	PlayerPageData,
 	PlayerProfileLink,
+	PlayerSearchPage,
 	PlayerSearchResult
 } from '@company-of-heroes/ui/player/types';
 
-export type { PlayerCustomization, PlayerPageData, PlayerProfileLink, PlayerSearchResult };
+export type {
+	PlayerCustomization,
+	PlayerPageData,
+	PlayerProfileLink,
+	PlayerSearchPage,
+	PlayerSearchResult
+};
 
 export type UpdatePlayerCustomizationInput = {
 	steamId: string;
@@ -56,6 +63,12 @@ const playerSearchResultSchema: z.ZodType<PlayerSearchResult> = z
 
 const playerSearchSchema = z.object({
 	items: z.array(playerSearchResultSchema).optional()
+});
+
+const playerSearchPageSchema = z.object({
+	items: z.array(playerSearchResultSchema),
+	total: z.number(),
+	more: z.boolean()
 });
 
 export type PlayerSearchOptions = {
@@ -112,6 +125,20 @@ export class PlayersApi {
 				}
 			}
 		}).map((data) => data.items ?? []);
+	}
+
+	/** One page of players by name, most relevant first (stored players, else Relic). */
+	searchPage(query: string, page = 1): ResultAsync<PlayerSearchPage, ApiError> {
+		const params = new URLSearchParams({ q: query.trim(), page: String(page) });
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/players/search?${params}`, {
+			fallback: 'Failed to search for player',
+			schema: playerSearchPageSchema,
+			onStatus: (status) => {
+				if (status === 400) {
+					return apiError(400, 'Enter a Steam ID64, Relic profile id, or player name.');
+				}
+			}
+		});
 	}
 
 	get(id: string): ResultAsync<PlayerPageData, ApiError> {

@@ -45,6 +45,9 @@ const JOBS: Record<
 	'result-fill': (services) => services.matchResults.fill(),
 	'ratings-harvest': (services) => services.ratingHarvest.harvestDue(),
 	'ladder-harvest': (services) => services.ratingHarvest.harvestLadder(),
+	// One-time (run by hand, pass the returned `after` back): country for rows stored before the field.
+	'country-backfill': (services, params) =>
+		services.ratingHarvest.backfillCountries(params.get('after') ?? ''),
 	'lobby-merge': (services) => services.lobbies.mergeDuplicates(),
 	'rewards-evaluate': (services) => services.rewards.evaluateDue(),
 	// Tournament matches: scores from the Relic results of started tournament games.

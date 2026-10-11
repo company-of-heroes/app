@@ -1,111 +1,62 @@
 <script lang="ts">
-	import { PlayerSearchCard, type PlayerSearchResult } from '@company-of-heroes/ui/player';
-	import type { Profile } from '$lib/components/ui/profile';
-	import {
-		labelsForSteamId,
-		preloadPlayerLabels
-	} from '$core/pocketbase/player-label-cache.svelte';
-	import {
-		likeCountForSteamId,
-		preloadPlayerLikeCounts
-	} from '$core/pocketbase/player-vote-cache.svelte';
+	import { PlayerSearchResults } from '@company-of-heroes/ui/player';
 	import type { Snapshot } from '@sveltejs/kit';
-	import * as Player from '$lib/components/player';
 	import { Button } from '$lib/components/ui/button';
 	import { Alert } from '$lib/components/ui/alert';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
 	import { relic } from '$lib/relic';
-	import { steam } from '$core/steam';
 	import { goto } from '$app/navigation';
 	import { isProfileId, isSteamId } from '$lib/utils';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
-	import {
-		mergeSteamProfiles,
-		PlayersSearch,
-		type PlayersSearchState
-	} from './players-search.svelte';
 	import { useI18n } from '$lib/i18n';
 
-	let playersSearch = $state(new PlayersSearch());
-	let loading = $state(false);
+	type SearchState = { input: string; query: string };
+
 	const { t } = useI18n();
-	const canSearch = $derived(playersSearch.query.trim().length > 0 && !loading);
+	let input = $state('');
+	/** The submitted name; the results below search for it. */
+	let query = $state('');
+	let resolving = $state(false);
+	let error = $state<string | null>(null);
+	const canSearch = $derived(input.trim().length > 0 && !resolving);
 
 	async function search(event: SubmitEvent) {
 		event.preventDefault();
-
-		const trimmed = playersSearch.query.trim();
+		const trimmed = input.trim();
 		if (!trimmed) {
 			return;
 		}
 
-		loading = true;
-		playersSearch.error = null;
-		playersSearch.resetResults();
+		error = null;
+		if (!isSteamId(trimmed) && !isProfileId(trimmed)) {
+			query = trimmed;
+			return;
+		}
 
+		resolving = true;
 		try {
-			if (isSteamId(trimmed) || isProfileId(trimmed)) {
-				const profile = await relic.resolveProfile(trimmed);
-
-				if (!profile) {
-					playersSearch.error = t('Player not found');
-					return;
-				}
-
-				await goto(`/players/${profile.profile_id}`);
+			const profile = await relic.resolveProfile(trimmed);
+			if (!profile) {
+				error = t('Player not found');
 				return;
 			}
 
-			const players = await relic.searchProfilesByName(trimmed);
-
-			if (players.length === 0) {
-				playersSearch.error = t('Player not found');
-				return;
-			}
-
-			const steamIds = players.map((profile) => profile.name.replace('/steam/', ''));
-			const steamProfiles = await steam.getUserProfiles(steamIds);
-			playersSearch.results = mergeSteamProfiles(players, steamProfiles);
-
-			if (playersSearch.results.length === 0) {
-				playersSearch.error = t('Player not found');
-			}
+			await goto(`/players/${profile.profile_id}`);
 		} catch {
-			playersSearch.error = t('Failed to search for player');
+			error = t('Failed to search for player');
 		} finally {
-			loading = false;
+			resolving = false;
 		}
 	}
 
-	export const snapshot: Snapshot<PlayersSearchState> = {
-		capture: () => playersSearch.capture(),
-		restore: (state) => playersSearch.restore(state)
+	export const snapshot: Snapshot<SearchState> = {
+		capture: () => ({ input, query }),
+		restore: (state) => {
+			input = state.input;
+			query = state.query;
+		}
 	};
-
-	$effect(() => {
-		const ids = playersSearch.results.map((player) => player.steam.steamid).filter(Boolean);
-		if (ids.length > 0) {
-			preloadPlayerLabels(ids);
-			preloadPlayerLikeCounts(ids);
-		}
-	});
-
-	/** Desktop search results carry Relic + Steam profiles; the shared card wants the flat shape. */
-	function toSearchCard(player: Profile) {
-		const steamId = player.steam.steamid;
-		return {
-			profileId: player.relic.profile_id,
-			alias: player.relic.alias,
-			country: player.relic.country ?? null,
-			level: player.relic.level,
-			steamId,
-			avatarUrl: player.steam.avatarfull,
-			likeCount: likeCountForSteamId(steamId) ?? undefined,
-			labels: labelsForSteamId(steamId),
-			leaderboardStats: player.relic.leaderboardStats ?? []
-		} satisfies PlayerSearchResult & Record<string, unknown>;
-	}
 </script>
 
 <Form.Root onsubmit={search}>
@@ -117,16 +68,17 @@
 		<Input
 			id="player-search"
 			type="text"
+			autocomplete="off"
 			placeholder={t('Steam ID, profile ID, or player name')}
-			bind:value={playersSearch.query}
-			disabled={loading}
+			bind:value={input}
+			disabled={resolving}
 			aria-label={t('Find a player')}
 		/>
 		<Button
 			type="submit"
 			variant="secondary"
 			class="w-fit shrink-0"
-			{loading}
+			loading={resolving}
 			disabled={!canSearch}
 		>
 			<MagnifyingGlassIcon size={16} />
@@ -135,21 +87,12 @@
 	</Form.Group>
 </Form.Root>
 
-{#if playersSearch.error}
+{#if error}
 	<div class="border-secondary-800 border-b px-4 py-3">
-		<Alert variant="destructive">{playersSearch.error}</Alert>
+		<Alert variant="destructive">{error}</Alert>
 	</div>
-{/if}
-
-{#if playersSearch.results.length > 0}
-	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-		{playersSearch.results.length === 1
-			? t('{count} player found', { count: playersSearch.results.length })
-			: t('{count} players found', { count: playersSearch.results.length })}
-	</p>
-	<div>
-		{#each playersSearch.results as player (player.relic.profile_id)}
-			<PlayerSearchCard player={toSearchCard(player)} />
-		{/each}
-	</div>
+{:else if query}
+	{#key query}
+		<PlayerSearchResults {query} />
+	{/key}
 {/if}

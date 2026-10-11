@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import PlayerLabels from '$lib/components/player/player-labels.svelte';
@@ -21,13 +21,9 @@
 	import { relic } from '$lib/relic';
 	import { steam } from '$core/steam';
 	import { cn, isProfileId, isSteamId } from '$lib/utils';
-	import {
-		adornedControl,
-		adornedInput,
-		adornedLeading,
-		footerAction
-	} from '$lib/components/ui/variants';
+	import { adornedControl, adornedInput, adornedLeading } from '$lib/components/ui/variants';
 	import * as Form from '$lib/components/ui/form';
+	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { Input } from '$lib/components/ui/input';
 	import { mergeSteamProfiles, PlayersSearch } from '../../players/players-search.svelte';
 	import ColorPicker from 'svelte-awesome-color-picker';
@@ -54,6 +50,15 @@
 	const canSave = $derived(previewName.length > 0 && !isSaving);
 
 	let playerSearch = $state(new PlayersSearch());
+
+	const labelColumns: ColumnDef<UserLabel>[] = [
+		{ id: 'label', header: t('Label'), width: 'w-18/24' },
+		{ id: 'actions', header: '', width: 'w-6/24', class: 'justify-end' }
+	];
+	const playerColumns: ColumnDef<(typeof playerSearch.results)[number]>[] = [
+		{ id: 'player', header: t('Player'), width: 'w-18/24' },
+		{ id: 'actions', header: '', width: 'w-6/24', class: 'justify-end' }
+	];
 	let searchingPlayers = $state(false);
 	let searchedPlayers = $state(false);
 	const canSearchPlayers = $derived(playerSearch.query.trim().length > 0 && !searchingPlayers);
@@ -141,9 +146,9 @@
 	};
 
 	const removeLabel = async (label: UserLabel) => {
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			t('Delete {name}? This removes it from every assigned player.', { name: label.name }),
-			{ okLabel: t('Delete'), cancelLabel: t('Cancel'), kind: 'warning' }
+			{ confirm: t('Delete'), cancel: t('Cancel'), danger: true }
 		);
 		if (!confirmed) {
 			return;
@@ -237,7 +242,7 @@
 	label={t('New label')}
 	description={t('Shown next to Relic player names. Search a player below to assign them.')}
 >
-	<div class={cn(adornedControl, 'min-w-0 flex-1')}>
+	<div class={cn(adornedControl, 'min-w-56 flex-1')}>
 		<span class={cn(adornedLeading, 'max-w-36')}>
 			<Badge hex={labelHex(hex)} class="max-w-full">
 				<span class="truncate">{previewName || t('Label')}</span>
@@ -275,65 +280,66 @@
 			components={{ input: ColorPickerTrigger }}
 		/>
 	</div>
-	<Button
-		type="button"
-		variant="secondary"
-		class="w-fit shrink-0"
-		disabled={!canSave}
-		loading={isSaving}
-		onclick={() => saveLabel()}
-	>
-		<PlusIcon size={16} />
-		{editingId ? t('Save label') : t('Add label')}
-	</Button>
-	{#if editingId}
-		<Button type="button" variant="secondary" class="w-fit shrink-0" onclick={resetForm}>
-			<XIcon size={16} />
-			{t('Cancel')}
+	<div class="flex shrink-0 items-center gap-3">
+		<Button
+			type="button"
+			variant="secondary"
+			class="w-fit shrink-0"
+			disabled={!canSave}
+			loading={isSaving}
+			onclick={() => saveLabel()}
+		>
+			{#if editingId}
+				<PencilSimpleIcon size={16} />
+				{t('Save label')}
+			{:else}
+				<PlusIcon size={16} />
+				{t('Add label')}
+			{/if}
 		</Button>
-	{/if}
+		{#if editingId}
+			<Button type="button" variant="secondary" class="w-fit shrink-0" onclick={resetForm}>
+				<XIcon size={16} />
+				{t('Cancel')}
+			</Button>
+		{/if}
+	</div>
 </Form.Group>
 
 <section>
 	<div class="border-secondary-800 border-b px-4 py-3">
 		<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">{t('Labels')}</p>
 	</div>
-	{#if labels.length === 0}
-		<p class="text-secondary-400 px-4 py-6 text-sm">{t('No labels yet.')}</p>
-	{:else}
-		<ul class="divide-secondary-800 border-secondary-800 divide-y border-b">
-			{#each labels as label (label.id)}
-				<li class={cn('flex min-h-11 items-stretch', editingId === label.id && 'bg-primary/10')}>
-					<div class="flex min-w-0 flex-1 items-center px-4">
-						<Badge hex={labelHex(label.color)}>{label.name}</Badge>
-					</div>
-					<div class="border-secondary-800 flex items-stretch border-l">
-						<Button
-							type="button"
-							variant="ghost"
-							class={cn(footerAction, 'text-secondary-400 hover:text-white')}
-							onclick={() => startEdit(label)}
-							aria-label={t('Edit')}
-						>
-							<PencilSimpleIcon size={16} />
-							{t('Edit')}
-						</Button>
-						<Button
-							type="button"
-							variant="ghost"
-							class={cn(footerAction, 'text-secondary-400 hover:text-white', 'border-r-0')}
-							loading={deletingId === label.id}
-							onclick={() => removeLabel(label)}
-							aria-label={t('Delete')}
-						>
-							<TrashIcon size={16} />
-							{t('Delete')}
-						</Button>
-					</div>
-				</li>
-			{/each}
-		</ul>
-	{/if}
+	{#snippet cell_label({ row }: { row: UserLabel })}
+		<Badge hex={labelHex(row.color)}>{row.name}</Badge>
+	{/snippet}
+	{#snippet cell_labelActions({ row }: { row: UserLabel })}
+		<div class="flex gap-2">
+			<Button type="button" size="sm" variant="secondary" onclick={() => startEdit(row)}>
+				<PencilSimpleIcon size={16} />
+				{t('Edit')}
+			</Button>
+			<Button
+				type="button"
+				size="sm"
+				variant="destructive"
+				loading={deletingId === row.id}
+				onclick={() => removeLabel(row)}
+				aria-label={t('Delete')}
+			>
+				<TrashIcon size={16} />
+			</Button>
+		</div>
+	{/snippet}
+	<DataTable
+		data={labels}
+		columns={labelColumns}
+		rowKey={(label) => label.id}
+		rowClass={(label) => (editingId === label.id ? 'bg-primary/10' : '')}
+		empty={t('No labels yet.')}
+		class="rounded-none border-0"
+		cells={{ label: cell_label, actions: cell_labelActions }}
+	/>
 </section>
 
 <Form.Group
@@ -375,35 +381,30 @@
 		<div class="border-secondary-800 border-b px-4 py-3">
 			<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">{t('Players')}</p>
 		</div>
-		{#if playerSearch.results.length === 0}
-			<p class="text-secondary-400 px-4 py-6 text-sm">{t('Player not found')}</p>
-		{:else}
-			<ul class="divide-secondary-800 divide-y">
-				{#each playerSearch.results as player (player.relic.profile_id)}
-					<li class="flex min-h-11 items-stretch">
-						<div class="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-4 py-2">
-							<span class="flex min-w-0 flex-wrap items-center gap-2">
-								<span class="truncate font-medium">{player.relic.alias}</span>
-								<PlayerLabels steamId={player.steam.steamid} class="shrink-0" />
-							</span>
-							<span class="text-secondary-400 text-xs">{player.steam.steamid}</span>
-						</div>
-						<div class="border-secondary-800 flex items-stretch border-l">
-							<PlayerLabelEditor
-								steamId={player.steam.steamid}
-								profileId={player.relic.profile_id}
-								alias={player.relic.alias}
-								class={cn(
-									footerAction,
-									'text-secondary-400 h-auto min-h-11 rounded-none px-3 hover:text-white',
-									'border-r-0'
-								)}
-							/>
-						</div>
-					</li>
-				{/each}
-			</ul>
-		{/if}
+		{#snippet cell_player({ row }: { row: (typeof playerSearch.results)[number] })}
+			<span class="flex min-w-0 flex-col gap-0.5">
+				<span class="flex min-w-0 flex-wrap items-center gap-2">
+					<span class="truncate font-medium">{row.relic.alias}</span>
+					<PlayerLabels steamId={row.steam.steamid} class="shrink-0" />
+				</span>
+				<span class="text-secondary-400 text-xs">{row.steam.steamid}</span>
+			</span>
+		{/snippet}
+		{#snippet cell_playerActions({ row }: { row: (typeof playerSearch.results)[number] })}
+			<PlayerLabelEditor
+				steamId={row.steam.steamid}
+				profileId={row.relic.profile_id}
+				alias={row.relic.alias}
+			/>
+		{/snippet}
+		<DataTable
+			data={playerSearch.results}
+			columns={playerColumns}
+			rowKey={(player) => String(player.relic.profile_id)}
+			empty={t('Player not found')}
+			class="rounded-none border-0"
+			cells={{ player: cell_player, actions: cell_playerActions }}
+		/>
 	</section>
 {/if}
 

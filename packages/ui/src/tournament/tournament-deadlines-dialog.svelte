@@ -131,7 +131,7 @@
 							<div class="w-60 max-w-full">
 								<DatePicker
 									time
-									bind:value={values[round.key]}
+									bind:value={() => values[round.key] ?? '', (value) => (values[round.key] = value)}
 									disabled={saving}
 									aria-label={round.label}
 									calendarLabel={t('Open calendar')}

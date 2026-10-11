@@ -11,7 +11,7 @@
 	import ChecksIcon from 'phosphor-svelte/lib/ChecksIcon';
 	import EyeIcon from 'phosphor-svelte/lib/Eye';
 	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlash';
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { app } from '$core/app/context';
 	import { tooltip } from '$lib/attachments';
 	import { resource } from 'runed';
@@ -172,14 +172,13 @@
 	}
 
 	async function toggleHidden(sessionId: number, currentlyHidden: boolean) {
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			currentlyHidden
 				? t('Show this match on public overviews again?')
 				: t('Hide this match from public overviews?'),
 			{
-				okLabel: currentlyHidden ? t('Show') : t('Hide'),
-				cancelLabel: t('Cancel'),
-				kind: 'warning'
+				confirm: currentlyHidden ? t('Show') : t('Hide'),
+				cancel: t('Cancel')
 			}
 		);
 		if (!confirmed) {

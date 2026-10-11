@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { confirmation } from '$lib/components/ui/modal';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Form from '$lib/components/ui/form';
@@ -87,7 +87,7 @@
 
 	const keepAccount = async (conflict: SteamConflict, keeper: SteamConflictAccount) => {
 		const others = conflictAccounts(conflict).filter((account) => account.id !== keeper.id);
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			t(
 				'Merge {count} account(s) into {name}? Their matches, replays and comments move over and the accounts are deleted.',
 				{
@@ -95,7 +95,7 @@
 					name: keeper.name || keeper.id
 				}
 			),
-			{ okLabel: t('Merge'), cancelLabel: t('Cancel'), kind: 'warning' }
+			{ confirm: t('Merge'), cancel: t('Cancel'), danger: true }
 		);
 		if (!confirmed) {
 			return;
@@ -163,11 +163,11 @@
 			return;
 		}
 
-		const confirmed = await confirm(
+		const confirmed = await confirmation.ask(
 			t('You will be signed in as {name}. You can return to your own account at any time.', {
 				name: userLabel(user)
 			}),
-			{ okLabel: t('Login as user'), cancelLabel: t('Cancel'), kind: 'warning' }
+			{ confirm: t('Login as user'), cancel: t('Cancel') }
 		);
 		if (!confirmed) {
 			return;

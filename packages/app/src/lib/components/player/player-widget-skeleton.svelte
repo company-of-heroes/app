@@ -13,32 +13,32 @@
 
 <div class={cn('border-secondary-900 overflow-clip border-b', className)}>
 	<div class="border-secondary-800 border-b">
-		<div class="flex items-center gap-3 px-4 py-3">
-			<Skeleton class="size-10 shrink-0 rounded-full" />
-			<div class="flex min-w-0 flex-1 items-center gap-2">
-				<Skeleton class="h-6 max-w-52 flex-1" />
-				<Skeleton class="h-5 w-16 shrink-0 rounded-md" />
-				<Skeleton class="ml-auto h-5 w-20 shrink-0 rounded-md" />
+		<div class="flex flex-col gap-5 px-4 pt-6 pb-6 lg:flex-row lg:items-end lg:justify-between">
+			<div class="flex min-w-0 items-end gap-4 sm:gap-5">
+				<Skeleton class="size-20 shrink-0 rounded-md sm:size-28" />
+				<div class="flex min-w-0 flex-col gap-2">
+					<div class="flex items-center gap-2">
+						<Skeleton class="h-4 w-6 rounded-xs" />
+						<Skeleton class="h-5 w-14 rounded-md" />
+					</div>
+					<Skeleton class="h-9 w-56 max-w-full" />
+				</div>
+			</div>
+			<div class="flex items-center gap-2">
+				<Skeleton class="h-8 w-28 rounded-md" />
+				<Skeleton class="h-8 w-32 rounded-md" />
 			</div>
 		</div>
-		<div class="border-secondary-800 grid grid-cols-6 border-t">
-			{#each Array(6) as _, index (index)}
+	</div>
+	<div class="overflow-hidden">
+		<div class="-mr-px flex flex-wrap">
+			{#each Array(8) as _, index (index)}
 				<div
-					class={cn(
-						'border-secondary-800 flex flex-col items-center gap-1.5 px-2 py-3',
-						index < 5 && 'border-r'
-					)}
+					class="border-secondary-800 flex min-w-40 flex-1 basis-44 flex-col gap-2 border-r border-b px-4 py-3"
 				>
-					<Skeleton class="h-3 w-10" />
-					<Skeleton class="h-5 w-12" />
+					<Skeleton class="h-3 w-16" />
+					<Skeleton class="h-6 w-24" />
 				</div>
-			{/each}
-		</div>
-		<div
-			class="border-secondary-800 divide-secondary-800 grid grid-cols-10 divide-x overflow-clip border-t"
-		>
-			{#each Array(10) as _, index (index)}
-				<Skeleton class="h-8 rounded-none" />
 			{/each}
 		</div>
 	</div>

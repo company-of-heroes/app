@@ -12,13 +12,17 @@
 	import dayjs from '$lib/dayjs';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
 	import PaperPlaneTiltIcon from 'phosphor-svelte/lib/PaperPlaneTiltIcon';
+	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
 	import UsersIcon from 'phosphor-svelte/lib/UsersIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
-	import { cn } from '$lib/utils';
-	import { footerAction, interactive } from '$lib/components/ui/variants';
 	import { useI18n } from '$lib/i18n';
 
 	const { t } = useI18n();
+
+	const userColumns: ColumnDef<UsersResponse>[] = [
+		{ id: 'user', header: t('User'), width: 'w-18/24' },
+		{ id: 'actions', header: '', width: 'w-6/24', class: 'justify-end' }
+	];
 
 	const sentColumns: ColumnDef<NotificationRecord>[] = [
 		{
@@ -235,33 +239,47 @@
 		</Button>
 	</Form.Group>
 
+	{#snippet cell_user({ row }: { row: UsersResponse })}
+		<User.Root user={row} class="flex min-w-0 flex-col">
+			<User.Name class="font-medium" />
+			{#if row.name && row.email}
+				<span class="text-secondary-400 text-xs">{row.email}</span>
+			{/if}
+		</User.Root>
+	{/snippet}
+	{#snippet cell_remove({ row }: { row: UsersResponse })}
+		<Button
+			type="button"
+			size="sm"
+			variant="destructive"
+			onclick={() => removeUser(row.id)}
+			aria-label={t('Remove {name}', { name: userLabel(row) })}
+		>
+			<XIcon size={16} />
+			{t('Remove')}
+		</Button>
+	{/snippet}
+	{#snippet cell_add({ row }: { row: UsersResponse })}
+		<Button
+			type="button"
+			size="sm"
+			variant="secondary"
+			disabled={selectedUsers.some((user) => user.id === row.id)}
+			onclick={() => addUser(row)}
+		>
+			<PlusIcon size={16} />
+			{t('Add')}
+		</Button>
+	{/snippet}
+
 	{#if selectedUsers.length > 0}
-		<ul class="divide-secondary-800 divide-y">
-			{#each selectedUsers as user (user.id)}
-				<li class="flex min-h-11 items-stretch">
-					<div class="flex min-w-0 flex-1 items-center px-4 py-2">
-						<User.Root {user} class="flex min-w-0 flex-col">
-							<User.Name class="font-medium" />
-							{#if user.name && user.email}
-								<span class="text-secondary-400 text-xs">{user.email}</span>
-							{/if}
-						</User.Root>
-					</div>
-					<div class="border-secondary-800 flex items-stretch border-l">
-						<Button
-							type="button"
-							variant="ghost"
-							class={cn(footerAction, 'text-secondary-400 hover:text-white', 'border-r-0')}
-							onclick={() => removeUser(user.id)}
-							aria-label={t('Remove {name}', { name: userLabel(user) })}
-						>
-							<XIcon size={16} />
-							{t('Remove')}
-						</Button>
-					</div>
-				</li>
-			{/each}
-		</ul>
+		<DataTable
+			data={selectedUsers}
+			columns={userColumns}
+			rowKey={(user) => user.id}
+			class="rounded-none border-0"
+			cells={{ user: cell_user, actions: cell_remove }}
+		/>
 	{/if}
 
 	{#if searched}
@@ -269,31 +287,14 @@
 			<div class="border-secondary-800 border-b px-4 py-3">
 				<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">{t('Users')}</p>
 			</div>
-			{#if searchResults.length === 0}
-				<p class="text-secondary-400 px-4 py-6 text-sm">{t('No users found.')}</p>
-			{:else}
-				<ul class="divide-secondary-800 divide-y">
-					{#each searchResults as user (user.id)}
-						<li>
-							<button
-								type="button"
-								class={cn(
-									interactive,
-									'hover:bg-secondary-950/50 flex min-h-11 w-full flex-col justify-center px-4 py-2 text-left transition-colors'
-								)}
-								onclick={() => addUser(user)}
-							>
-								<User.Root {user} class="flex min-w-0 flex-col">
-									<User.Name class="font-medium" />
-									{#if user.name && user.email}
-										<span class="text-secondary-400 text-xs">{user.email}</span>
-									{/if}
-								</User.Root>
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
+			<DataTable
+				data={searchResults}
+				columns={userColumns}
+				rowKey={(user) => user.id}
+				empty={t('No users found.')}
+				class="rounded-none border-0"
+				cells={{ user: cell_user, actions: cell_add }}
+			/>
 		</section>
 	{/if}
 {/if}

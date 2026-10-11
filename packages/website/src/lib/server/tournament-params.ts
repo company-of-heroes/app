@@ -21,6 +21,8 @@ export const tournamentInput = z.object({
 	format: z.enum(TOURNAMENT_FORMATS),
 	bestOf,
 	finalsBestOf: bestOf.nullable(),
+	semisBestOf: bestOf.nullable().optional(),
+	quartersBestOf: bestOf.nullable().optional(),
 	grandFinalReset: z.boolean(),
 	registrationClosesAt: date,
 	startsAt: date,
@@ -53,9 +55,17 @@ export const registrationBody = z.object({ steamId, acceptRules: z.boolean().def
 
 export const steamIdParam = z.object({ steamId });
 
+/** Staff or the host add a player by Steam id. */
+export const addParticipantBody = z.object({ steamId });
+
 export const seedOrderBody = z.object({ order: z.array(z.string().min(1).max(15)).max(256) });
 
 const slot = z.enum(['A', 'B']);
+
+const slotRef = z.object({ match: z.string().min(1).max(15), slot });
+
+/** Two bracket places whose players change places. */
+export const swapBody = z.object({ a: slotRef, b: slotRef });
 
 export const matchResultBody = z.union([
 	z.object({ winsA: z.number().int().min(0).max(4), winsB: z.number().int().min(0).max(4) }),

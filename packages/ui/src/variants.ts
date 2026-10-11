@@ -76,9 +76,6 @@ export const flushSectionTitle = 'text-secondary-200 text-sm font-bold tracking-
 
 export const flushHeaderDescription = 'text-secondary-400 mt-1 text-sm';
 
-export const footerAction =
-	'hover:bg-primary/10 h-auto min-h-9 shrink-0 rounded-none border-y-0 border-l-0 border-r border-secondary-800 px-3';
-
 export const labelText = 'font-medium text-secondary-400';
 
 export const surfacePanel = 'bg-secondary-950/90 border-secondary-800 rounded-md border';

@@ -1,7 +1,7 @@
 import { goto, invalidateAll, replaceState } from '$app/navigation';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { page } from '$app/state';
-import { confirm } from '@tauri-apps/plugin-dialog';
+import { confirmation } from '@company-of-heroes/ui/modal';
 import { provideHost, type HostContext } from '@company-of-heroes/ui/host';
 import { toPlayerPreviewData, type PlayerEloMap } from '@company-of-heroes/ui/player';
 import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
@@ -111,12 +111,7 @@ export function provideAppHost(): HostContext {
 		notify: {
 			success: (message) => app.toast.success(message),
 			error: (message) => app.toast.error(message),
-			confirm: (message, labels) =>
-				confirm(message, {
-					okLabel: labels?.confirm ?? t('OK'),
-					cancelLabel: labels?.cancel ?? t('Cancel'),
-					kind: 'warning'
-				})
+			confirm: (message, labels) => confirmation.ask(message, labels)
 		},
 		api: {
 			players: {
@@ -148,7 +143,8 @@ export function provideAppHost(): HostContext {
 						country: player.country ?? null,
 						profileId: player.profileId || null
 					}));
-				}
+				},
+				searchPage: (query, page) => unwrapApi(api.players.searchPage(query, page))
 			},
 			social: {
 				getMyVote: ({ kind, id }) => {
@@ -348,8 +344,16 @@ export function provideAppHost(): HostContext {
 				seed: (id) => unwrapApi(api.tournaments.seed(id)),
 				setSeeds: (id, order) => unwrapApi(api.tournaments.setSeeds(id, order)),
 				start: (id) => unwrapApi(api.tournaments.start(id)),
+				generateBracket: (id) => unwrapApi(api.tournaments.generateBracket(id)),
+				discardBracket: (id) => unwrapApi(api.tournaments.discardBracket(id)),
+				swapPlayers: (id, a, b) => unwrapApi(api.tournaments.swapPlayers(id, a, b)),
+				remove: (id) => unwrapApi(api.tournaments.remove(id)),
+				restore: (id) => unwrapApi(api.tournaments.restore(id)),
 				setMatchResult: (id, matchId, result) =>
 					unwrapApi(api.tournaments.setMatchResult(id, matchId, result)),
+				addParticipant: (id, steamId) => unwrapApi(api.tournaments.addParticipant(id, steamId)),
+				removeParticipant: (id, participantId) =>
+					unwrapApi(api.tournaments.removeParticipant(id, participantId)),
 				disqualify: (id, participantId) => unwrapApi(api.tournaments.disqualify(id, participantId)),
 				setRoundDeadlines: (id, rounds) => unwrapApi(api.tournaments.setRoundDeadlines(id, rounds)),
 				setMatchDeadline: (id, matchId, deadline) =>

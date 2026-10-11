@@ -25,19 +25,31 @@
 	import { exp } from '$core/pocketbase';
 	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/matches';
 	import { upperCase } from 'lodash-es';
+	import CalendarCheckIcon from 'phosphor-svelte/lib/CalendarCheckIcon';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
+	import ClockCounterClockwiseIcon from 'phosphor-svelte/lib/ClockCounterClockwiseIcon';
+	import FlagIcon from 'phosphor-svelte/lib/FlagIcon';
+	import FlameIcon from 'phosphor-svelte/lib/FlameIcon';
+	import MapTrifoldIcon from 'phosphor-svelte/lib/MapTrifoldIcon';
+	import MountainsIcon from 'phosphor-svelte/lib/MountainsIcon';
+	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
+	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
+	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
+	import UserIcon from 'phosphor-svelte/lib/UserIcon';
 	import UserSwitchIcon from 'phosphor-svelte/lib/UserSwitchIcon';
 	import * as Dropdown from '$lib/components/ui/dropdown';
 	import { dropdownItemIcon } from '@company-of-heroes/ui/variants';
 	import * as Player from '$lib/components/player';
 	import {
+		PlayerFact,
+		PlayerFacts,
+		PlayerHero,
 		PlayerLinks,
 		PlayerProfileLink,
 		playerPreviewId,
 		PlayerStreamerIcon
 	} from '@company-of-heroes/ui/player';
-	import * as List from '$lib/components/ui/list';
 	import { Badge, LiveBadge, PendingBadge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import {
@@ -134,15 +146,15 @@
 		}
 	});
 
-	const hasBackground = $derived(Boolean(customization.current?.backgroundUrl));
 	const bio = $derived.by(() => {
 		const value = customization.current?.bio?.trim();
 		return value ? value : null;
 	});
-	const streamingLinks = $derived((customization.current?.links ?? []).filter(isStreamingLink));
-	const otherLinks = $derived(
-		(customization.current?.links ?? []).filter((link) => !isStreamingLink(link))
-	);
+	/** Streaming links first, then the rest. */
+	const links = $derived.by(() => {
+		const all = customization.current?.links ?? [];
+		return [...all.filter(isStreamingLink), ...all.filter((link) => !isStreamingLink(link))];
+	});
 
 	const resolvedProfile = resource(
 		() => [viewingLive ? (app.game.profile ?? null) : null, steamId] as const,
@@ -394,8 +406,7 @@
 		offLobbyDestroyed();
 	});
 
-	const metaList = 'grid-cols-[7.5rem_minmax(0,1fr)] content-start gap-x-4';
-	const valueRow = 'inline-flex min-w-0 flex-nowrap items-center gap-2 whitespace-nowrap';
+	const heroButton = 'shrink-0 bg-gray-950/60 backdrop-blur-sm';
 
 	const avatarBorder = $derived(
 		app.lobby && viewingLive ? 'border-green-500' : 'border-secondary-800'
@@ -458,322 +469,271 @@
 {#if profile}
 	{#key profile.relic.profile_id}
 		<div class="border-secondary-900 overflow-clip border-b">
-			<div class="relative overflow-clip">
-				{#if hasBackground}
-					<img
-						src={customization.current!.backgroundUrl!}
-						alt=""
-						class="absolute inset-0 h-full w-full object-cover"
-					/>
-					<div
-						class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/75 to-black/60"
-					></div>
-				{/if}
-				<div
-					class={cn(
-						'border-secondary-800 relative z-10 grid grid-cols-1 border-b',
-						'sm:grid-cols-[minmax(200px,240px)_minmax(0,1fr)]'
-					)}
-				>
+			<PlayerHero backgroundUrl={customization.current?.backgroundUrl}>
+				{#snippet avatar()}
 					{#if profileHref && previewId}
 						<PlayerProfileLink
 							href={profileHref}
 							playerId={previewId}
-							class={cn(
-								interactive,
-								'aspect-square self-start overflow-clip border-b',
-								!hasBackground && 'sm:border-r sm:border-b-0',
-								hasBackground && 'border-2',
-								avatarBorder
-							)}
+							class={cn(interactive, 'block h-full w-full')}
 						>
 							<img
 								src={profile.steam.avatarfull}
 								alt={profile.relic.alias}
-								class="h-full w-full object-cover"
+								class={cn('h-full w-full rounded-md border-2 object-cover', avatarBorder)}
 							/>
 						</PlayerProfileLink>
+					{:else}
+						<img
+							src={profile.steam.avatarfull}
+							alt={profile.relic.alias}
+							class={cn('h-full w-full rounded-md border-2 object-cover', avatarBorder)}
+						/>
 					{/if}
-
-					<div class="min-w-0 px-5 py-4">
-						<div class="mb-2.5 flex flex-wrap items-center gap-1">
-							{#if profileHref}
-								<Button href={profileHref} variant="secondary" size="sm" class="shrink-0">
-									{t('View profile')}
+				{/snippet}
+				{#snippet kicker()}
+					{#if profile.relic.country}
+						<img
+							class="h-4 w-auto shrink-0 rounded-xs"
+							src="https://flagsapi.com/{upperCase(profile.relic.country)}/shiny/64.png"
+							alt={profile.relic.country}
+						/>
+					{/if}
+					<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
+					<PlayerStreamerIcon
+						labels={labelsForSteamId(profile.steam.steamid)}
+						steamId={profile.steam.steamid}
+						size={20}
+					/>
+					<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
+					{#if app.lobby && viewingLive}
+						<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
+							<LiveBadge label={t('In match')} />
+						</a>
+					{:else if !app.game.isRunning}
+						<Badge variant="default" class="shrink-0">{t('Not running')}</Badge>
+					{/if}
+				{/snippet}
+				{#snippet title()}
+					{#if profileHref && previewId}
+						<PlayerProfileLink
+							href={profileHref}
+							playerId={previewId}
+							class={cn(interactive, 'hover:text-primary min-w-0 truncate transition-colors')}
+						>
+							{profile.relic.alias}
+						</PlayerProfileLink>
+					{:else}
+						<span class="truncate">{profile.relic.alias}</span>
+					{/if}
+				{/snippet}
+				{#snippet actions()}
+					{#if profileHref}
+						<Button href={profileHref} variant="secondary" size="sm" class={heroButton}>
+							<UserIcon size={16} />
+							{t('View profile')}
+						</Button>
+					{/if}
+					<Button href={updateProfileHref} variant="secondary" size="sm" class={heroButton}>
+						<PencilSimpleIcon size={16} />
+						{t('Update profile')}
+					</Button>
+					{#if linkedSteamIds.length > 1}
+						<Dropdown.Root class="w-64">
+							{#snippet trigger({ props })}
+								<Button {...props} variant="secondary" size="sm" class={heroButton}>
+									<UserSwitchIcon size={16} weight="duotone" />
+									{t('Switch account')}
 								</Button>
-							{/if}
-							<Button href={updateProfileHref} variant="secondary" size="sm" class="shrink-0">
-								{t('Update profile')}
-							</Button>
-							{#if linkedSteamIds.length > 1}
-								<Dropdown.Root class="w-64">
-									{#snippet trigger({ props })}
-										<Button {...props} variant="secondary" size="sm" class="shrink-0">
-											<UserSwitchIcon size={16} weight="duotone" />
-											{t('Switch account')}
-										</Button>
-									{/snippet}
-									{#each linkedSteamIds as id (id)}
-										{@const account = linkedProfiles.current?.find((item) => item.steamid === id)}
-										<Dropdown.Item
-											class={dropdownItemIcon}
-											onSelect={() => (selectedSteamId = id === liveSteamId ? null : id)}
-										>
-											{#if account?.avatar}
-												<img src={account.avatar} alt="" class="size-6 shrink-0 rounded-xs" />
-											{/if}
-											<span class="min-w-0 flex-1 truncate">{account?.personaname ?? id}</span>
-											{#if id === liveSteamId}
-												<Badge variant="default" class="shrink-0">{t('In game')}</Badge>
-											{/if}
-											{#if id === steamId}
-												<CheckIcon size={16} class="text-primary shrink-0" />
-											{/if}
-										</Dropdown.Item>
-									{/each}
-								</Dropdown.Root>
-							{/if}
-						</div>
-						<div class="mb-3 flex flex-wrap items-center gap-2.5">
-							{#if profileHref && previewId}
-								<PlayerProfileLink
-									href={profileHref}
-									playerId={previewId}
-									class={cn(
-										interactive,
-										'hover:text-primary flex min-w-0 items-center gap-2.5 transition-colors'
-									)}
+							{/snippet}
+							{#each linkedSteamIds as id (id)}
+								{@const account = linkedProfiles.current?.find((item) => item.steamid === id)}
+								<Dropdown.Item
+									class={dropdownItemIcon}
+									onSelect={() => (selectedSteamId = id === liveSteamId ? null : id)}
 								>
-									{#if profile.relic.country}
-										<img
-											class="h-5 w-auto shrink-0 rounded-xs"
-											src="https://flagsapi.com/{upperCase(profile.relic.country)}/shiny/64.png"
-											alt={profile.relic.country}
-										/>
+									{#if account?.avatar}
+										<img src={account.avatar} alt="" class="size-6 shrink-0 rounded-xs" />
 									{/if}
-									<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
-									<PlayerStreamerIcon
-										labels={labelsForSteamId(profile.steam.steamid)}
-										steamId={profile.steam.steamid}
-										size={24}
-									/>
-									<span class="font-heading truncate text-3xl font-bold">{profile.relic.alias}</span
-									>
-								</PlayerProfileLink>
+									<span class="min-w-0 flex-1 truncate">{account?.personaname ?? id}</span>
+									{#if id === liveSteamId}
+										<Badge variant="default" class="shrink-0">{t('In game')}</Badge>
+									{/if}
+									{#if id === steamId}
+										<CheckIcon size={16} class="text-primary shrink-0" />
+									{/if}
+								</Dropdown.Item>
+							{/each}
+						</Dropdown.Root>
+					{/if}
+				{/snippet}
+				{#if links.length > 0}
+					<PlayerLinks {links} />
+				{/if}
+				{#if bio}
+					<p class="text-secondary-200 text-sm leading-relaxed whitespace-pre-wrap">{bio}</p>
+				{/if}
+			</PlayerHero>
+
+			<PlayerFacts>
+				<PlayerFact label={t('Ladder')} icon={RankingIcon}>
+					{#if featuredMode}
+						<img
+							src={getFactionFlagFromLeaderboardId(featuredMode.stat.leaderboard_id)}
+							alt={getRaceLabelFromLeaderboardId(featuredMode.stat.leaderboard_id)}
+							class={factionIcon}
+						/>
+						{#if featuredMode.rating == null}
+							<span class="text-secondary-500">{t('N/A')}</span>
+						{:else}
+							<span
+								class={cn(
+									'text-lg',
+									isEliteElo(featuredMode.rating) ? 'font-bold' : 'font-semibold'
+								)}
+								style:color={getEloColor(featuredMode.rating)}
+								style:text-shadow={getEloTextShadow(featuredMode.rating)}
+							>
+								{featuredMode.rating}
+							</span>
+						{/if}
+						{#if featuredMode.stat.ranklevel > 0}
+							<img
+								src={getRankImageByLeaderboardId(
+									featuredMode.stat.leaderboard_id,
+									featuredMode.stat.ranklevel
+								)}
+								alt={t('Rank {level}', { level: featuredMode.stat.ranklevel })}
+								class="h-6 w-auto shrink-0"
+							/>
+							<span class="text-secondary-200 text-sm">{featuredMode.stat.ranklevel}</span>
+						{/if}
+					{:else}
+						<span class="text-secondary-400 font-sans text-sm font-normal whitespace-normal">
+							{t('Play ranked to unlock your ladder spotlight.')}
+						</span>
+					{/if}
+					{#snippet sub()}
+						{#if featuredMode}
+							<span class="font-medium uppercase">{featuredMode.label}</span>
+							{#if featuredMode.stat.rank > 0}
+								<span class="text-secondary-600">·</span>
+								<span class="tabular-nums">
+									{t('#{rank} / {total}', {
+										rank: featuredMode.stat.rank,
+										total: featuredMode.stat.ranktotal
+									})}
+								</span>
 							{/if}
-							<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
-							{#if app.lobby && viewingLive}
-								<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
-									<LiveBadge label={t('In match')} />
+						{/if}
+					{/snippet}
+				</PlayerFact>
+
+				<PlayerFact label={t('Today')} icon={CalendarCheckIcon}>
+					<span class={statWins}>{t('{count}W', { count: todayRecord.wins })}</span>
+					<span class="text-secondary-600">·</span>
+					<span class={statLosses}>{t('{count}L', { count: todayRecord.losses })}</span>
+					{#if todayRecord.pending > 0}
+						<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
+					{/if}
+				</PlayerFact>
+
+				<PlayerFact label={t('Career')} icon={TrophyIcon}>
+					{#if tracked.matchCount > 0}
+						<span class={statWins}>{t('{count}W', { count: tracked.wins })}</span>
+						<span class="text-secondary-600">·</span>
+						<span class={statLosses}>{t('{count}L', { count: tracked.losses })}</span>
+						<LeaderboardStatPill
+							type="ratio"
+							wins={tracked.wins}
+							losses={tracked.losses}
+							streak={0}
+						/>
+					{:else}
+						<span class="text-secondary-400 font-sans text-sm font-normal whitespace-normal">
+							{t('Play with the companion running to build stats.')}
+						</span>
+					{/if}
+				</PlayerFact>
+
+				{#if featuredMode && featuredMode.stat.streak !== 0}
+					<PlayerFact label={t('Streak')} icon={FlameIcon}>
+						<LeaderboardStatPill
+							type="streak"
+							wins={featuredMode.stat.wins}
+							losses={featuredMode.stat.losses}
+							streak={featuredMode.stat.streak}
+						/>
+					</PlayerFact>
+				{/if}
+
+				{#if featuredMode && featuredMode.stat.highestranklevel > 0}
+					<PlayerFact
+						label={t('Peak')}
+						icon={MountainsIcon}
+						sub={featuredMode.stat.highestrank > 0
+							? t('#{rank}', { rank: featuredMode.stat.highestrank })
+							: null}
+					>
+						<img
+							src={getRankImageByLeaderboardId(
+								featuredMode.stat.leaderboard_id,
+								featuredMode.stat.highestranklevel
+							)}
+							alt={t('Rank {level}', { level: featuredMode.stat.highestranklevel })}
+							class="h-6 w-auto shrink-0"
+						/>
+						<span>{featuredMode.stat.highestranklevel}</span>
+					</PlayerFact>
+				{/if}
+
+				{#if bestMap}
+					<PlayerFact label={t('Best map')} icon={MapTrifoldIcon}>
+						<span class="truncate">{normalizeMapName(bestMap.map, false)}</span>
+						{#snippet sub()}
+							<span class={statWins}>{t('{count}W', { count: bestMap.wins })}</span>
+							<span class="text-secondary-600">·</span>
+							<span class={statLosses}>{t('{count}L', { count: bestMap.losses })}</span>
+							<span class="font-medium" style:color={getRatioColor(bestMap.wins, bestMap.losses)}>
+								{winratePercent(bestMap.wins, bestMap.losses)}
+							</span>
+						{/snippet}
+					</PlayerFact>
+				{/if}
+
+				{#if mainFaction}
+					<PlayerFact label={t('Main faction')} icon={FlagIcon}>
+						<img src={getFactionFlagFromRace(mainFaction.raceId)} alt="" class={factionIcon} />
+						<span class="truncate">{getRaceLabel(mainFaction.raceId)}</span>
+						{#snippet sub()}
+							<span class={statWins}>{t('{count}W', { count: mainFaction.wins })}</span>
+							<span class="text-secondary-600">·</span>
+							<span class={statLosses}>{t('{count}L', { count: mainFaction.losses })}</span>
+						{/snippet}
+					</PlayerFact>
+				{/if}
+
+				{#if formMatches.length > 0}
+					<PlayerFact label={t('Recent')} icon={ClockCounterClockwiseIcon}>
+						<span class="inline-flex min-w-0 items-center gap-1 overflow-x-auto">
+							{#each formMatches as match (match.id || match.sessionId)}
+								<a
+									href={resolve('/(loaded)/history/[id]', { id: match.id })}
+									class={cn(interactive, 'group inline-flex shrink-0')}
+									aria-label="{match.outcome === 1 ? t('Win') : t('Loss')} — {recentMatchLabel(
+										match
+									)}"
+									{@attach tooltip(recentMatchTooltip(match))}
+								>
+									<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
+										{match.outcome === 1 ? t('W') : t('L')}
+									</Badge>
 								</a>
-							{:else if !app.game.isRunning}
-								<Badge variant="default" class="shrink-0">{t('Not running')}</Badge>
-							{/if}
-						</div>
-
-						{#if streamingLinks.length > 0}
-							<PlayerLinks links={streamingLinks} class="mb-3" />
-						{/if}
-
-						{#if bio || otherLinks.length > 0}
-							<div class="my-4">
-								{#if bio}
-									<p class="text-secondary-400 mb-3 max-w-2xl text-sm whitespace-pre-wrap">{bio}</p>
-								{/if}
-								{#if otherLinks.length > 0}
-									<PlayerLinks links={otherLinks} class="mb-3" />
-								{/if}
-							</div>
-						{/if}
-
-						<div class="grid grid-cols-1 items-start gap-x-6 gap-y-1 sm:grid-cols-2">
-							<List.Root class={metaList}>
-								<List.Title>{t('Ladder:')}</List.Title>
-								<List.Value class={valueRow}>
-									{#if featuredMode}
-										<span class="text-secondary-400 text-xs font-medium uppercase">
-											{featuredMode.label}
-										</span>
-										<img
-											src={getFactionFlagFromLeaderboardId(featuredMode.stat.leaderboard_id)}
-											alt={getRaceLabelFromLeaderboardId(featuredMode.stat.leaderboard_id)}
-											class={factionIcon}
-										/>
-										{#if featuredMode.rating == null}
-											<span class="text-secondary-500">{t('N/A')}</span>
-										{:else}
-											<span
-												class={cn(
-													'font-heading text-lg tabular-nums',
-													isEliteElo(featuredMode.rating) ? 'font-bold' : 'font-semibold'
-												)}
-												style:color={getEloColor(featuredMode.rating)}
-												style:text-shadow={getEloTextShadow(featuredMode.rating)}
-											>
-												{featuredMode.rating}
-											</span>
-										{/if}
-										{#if featuredMode.stat.ranklevel > 0}
-											<img
-												src={getRankImageByLeaderboardId(
-													featuredMode.stat.leaderboard_id,
-													featuredMode.stat.ranklevel
-												)}
-												alt={t('Rank {level}', { level: featuredMode.stat.ranklevel })}
-												class="h-6 w-auto shrink-0"
-											/>
-											<span class="text-secondary-200 text-sm font-medium tabular-nums">
-												{featuredMode.stat.ranklevel}
-											</span>
-										{/if}
-										{#if featuredMode.stat.rank > 0}
-											<span class="text-secondary-500 text-xs tabular-nums">
-												{t('#{rank} / {total}', {
-													rank: featuredMode.stat.rank,
-													total: featuredMode.stat.ranktotal
-												})}
-											</span>
-										{/if}
-									{:else}
-										<span class="text-secondary-400 text-sm">
-											{t('Play ranked to unlock your ladder spotlight.')}
-										</span>
-									{/if}
-								</List.Value>
-
-								<List.Title>{t('Today:')}</List.Title>
-								<List.Value class={valueRow}>
-									{#if todayRecord.wins + todayRecord.losses > 0}
-										<span class={statWins}>{t('{count}W', { count: todayRecord.wins })}</span>
-										<span class="text-secondary-600">·</span>
-										<span class={statLosses}>{t('{count}L', { count: todayRecord.losses })}</span>
-										{#if todayRecord.pending > 0}
-											<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
-										{/if}
-									{:else if todayRecord.pending > 0}
-										<PendingBadge label={t('{count} pending', { count: todayRecord.pending })} />
-										<span class="text-secondary-400 text-sm">{t('Result pending')}</span>
-									{:else}
-										<span class={statWins}>{t('{count}W', { count: 0 })}</span>
-										<span class="text-secondary-600">·</span>
-										<span class={statLosses}>{t('{count}L', { count: 0 })}</span>
-									{/if}
-								</List.Value>
-
-								<List.Title>{t('Career:')}</List.Title>
-								<List.Value class={valueRow}>
-									{#if tracked.matchCount > 0}
-										<span class={statWins}>{t('{count}W', { count: tracked.wins })}</span>
-										<span class="text-secondary-600">·</span>
-										<span class={statLosses}>{t('{count}L', { count: tracked.losses })}</span>
-										<LeaderboardStatPill
-											type="ratio"
-											wins={tracked.wins}
-											losses={tracked.losses}
-											streak={0}
-										/>
-									{:else}
-										<span class="text-secondary-400 text-sm">
-											{t('Play with the companion running to build stats.')}
-										</span>
-									{/if}
-								</List.Value>
-							</List.Root>
-
-							<List.Root class={metaList}>
-								{#if featuredMode && featuredMode.stat.streak !== 0}
-									<List.Title>{t('Streak:')}</List.Title>
-									<List.Value class={valueRow}>
-										<LeaderboardStatPill
-											type="streak"
-											wins={featuredMode.stat.wins}
-											losses={featuredMode.stat.losses}
-											streak={featuredMode.stat.streak}
-										/>
-									</List.Value>
-								{/if}
-
-								{#if featuredMode && featuredMode.stat.highestranklevel > 0}
-									<List.Title>{t('Peak:')}</List.Title>
-									<List.Value class={valueRow}>
-										<img
-											src={getRankImageByLeaderboardId(
-												featuredMode.stat.leaderboard_id,
-												featuredMode.stat.highestranklevel
-											)}
-											alt={t('Rank {level}', { level: featuredMode.stat.highestranklevel })}
-											class="h-6 w-auto shrink-0"
-										/>
-										<span class="text-secondary-200 text-sm font-medium tabular-nums">
-											{featuredMode.stat.highestranklevel}
-										</span>
-										{#if featuredMode.stat.highestrank > 0}
-											<span class="text-secondary-500 text-xs tabular-nums">
-												{t('#{rank}', { rank: featuredMode.stat.highestrank })}
-											</span>
-										{/if}
-									</List.Value>
-								{/if}
-
-								{#if bestMap}
-									<List.Title>{t('Best map:')}</List.Title>
-									<List.Value class={valueRow}>
-										<span class="text-secondary-300 max-w-44 truncate">
-											{normalizeMapName(bestMap.map, false)}
-										</span>
-										<span class={statWins}>{t('{count}W', { count: bestMap.wins })}</span>
-										<span class="text-secondary-600">·</span>
-										<span class={statLosses}>{t('{count}L', { count: bestMap.losses })}</span>
-										<span
-											class="font-medium"
-											style:color={getRatioColor(bestMap.wins, bestMap.losses)}
-										>
-											{winratePercent(bestMap.wins, bestMap.losses)}
-										</span>
-									</List.Value>
-								{/if}
-
-								{#if mainFaction}
-									<List.Title>{t('Main faction:')}</List.Title>
-									<List.Value class={valueRow}>
-										<img
-											src={getFactionFlagFromRace(mainFaction.raceId)}
-											alt={getRaceLabel(mainFaction.raceId)}
-											class={factionIcon}
-										/>
-										<span class="text-secondary-300">{getRaceLabel(mainFaction.raceId)}</span>
-										<span class={statWins}>{t('{count}W', { count: mainFaction.wins })}</span>
-										<span class="text-secondary-600">·</span>
-										<span class={statLosses}>{t('{count}L', { count: mainFaction.losses })}</span>
-									</List.Value>
-								{/if}
-
-								{#if formMatches.length > 0}
-									<List.Title>{t('Recent:')}</List.Title>
-									<List.Value
-										class="inline-flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto"
-									>
-										{#each formMatches as match (match.id || match.sessionId)}
-											<a
-												href={resolve('/(loaded)/history/[id]', { id: match.id })}
-												class={cn(interactive, 'group inline-flex shrink-0')}
-												aria-label="{match.outcome === 1
-													? t('Win')
-													: t('Loss')} — {recentMatchLabel(match)}"
-												{@attach tooltip(recentMatchTooltip(match))}
-											>
-												<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
-													{match.outcome === 1 ? t('W') : t('L')}
-												</Badge>
-											</a>
-										{/each}
-									</List.Value>
-								{/if}
-							</List.Root>
-						</div>
-					</div>
-				</div>
-			</div>
+							{/each}
+						</span>
+					</PlayerFact>
+				{/if}
+			</PlayerFacts>
 
 			<div>
 				<Tabs.Root bind:value={activeTab}>
