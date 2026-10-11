@@ -1,5 +1,5 @@
 <script module lang="ts">
-	/** Rows rendered at first, and added each time the end of the list scrolls into view. */
+	/** Default rows rendered at first, and added each time the end of the list scrolls into view. */
 	export const LEADERBOARD_PAGE_SIZE = 100;
 </script>
 
@@ -38,7 +38,9 @@
 		eloBySteamId: Record<string, PlayerEloMap>;
 		emptyMessage?: string;
 		naLabel?: string;
-		/** Rows rendered; grows by `LEADERBOARD_PAGE_SIZE` while scrolling. Bind it to load data for the rendered rows only. */
+		/** Rows rendered at first and added per scroll step; `Infinity` renders every row (SSR). */
+		pageSize?: number;
+		/** Rows rendered; grows by `pageSize` while scrolling. Bind it to load data for the rendered rows only. */
 		limit?: number;
 	};
 
@@ -49,7 +51,8 @@
 		stats,
 		eloBySteamId,
 		emptyMessage = 'No players found.',
-		limit = $bindable(LEADERBOARD_PAGE_SIZE)
+		pageSize = LEADERBOARD_PAGE_SIZE,
+		limit = $bindable(pageSize)
 	}: Props = $props();
 
 	const visibleStats = $derived(stats.slice(0, limit));
@@ -70,7 +73,7 @@
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0]?.isIntersecting && limit < stats.length) {
-					limit += LEADERBOARD_PAGE_SIZE;
+					limit += pageSize;
 				}
 			},
 			{ rootMargin: '400px' }

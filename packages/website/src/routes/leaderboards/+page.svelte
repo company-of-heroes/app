@@ -148,6 +148,7 @@
 			<LeaderboardPodium stats={podiumStats} eloBySteamId={board.eloBySteamId} />
 		{/if}
 		<LeaderboardList
+			pageSize={Infinity}
 			stats={listStats}
 			eloBySteamId={board.eloBySteamId}
 			emptyMessage={t('No players found.')}
