@@ -1,4 +1,4 @@
-import { ClientResponseError } from 'pocketbase';
+import { ClientResponseError, getTokenPayload } from 'pocketbase';
 import { cancel, onInvalidUrl, onUrl, start } from '@fabianlars/tauri-plugin-oauth';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { fetch } from '$core/http/fetch';
@@ -22,6 +22,8 @@ export type AccountStatus = 'idle' | 'authenticating' | 'authenticated' | 'signe
 
 /** Well inside PocketBase's one-week session lifetime. */
 const SESSION_REFRESH_MS = 12 * 60 * 60 * 1000;
+/** A stored token with less time left than this is renewed at boot instead of reused. */
+const TOKEN_REUSE_MARGIN_MS = 5 * 60 * 1000;
 /** Loopback ports for the Steam login callback (the website allows exactly these). */
 const LOGIN_PORTS = [8001, 8002, 8003, 8004, 8005];
 /** How long the browser Steam login may take before the app stops listening. */
@@ -29,6 +31,12 @@ const STEAM_LOGIN_TIMEOUT_MS = 5 * 60 * 1000;
 
 function isAuthRejection(error: unknown): boolean {
 	return error instanceof ClientResponseError && [400, 401, 403, 404].includes(error.status);
+}
+
+/** Milliseconds until the token expires; 0 for a missing or malformed token. */
+function tokenTimeLeft(token: string): number {
+	const expiresAt = Number(getTokenPayload(token).exp);
+	return Number.isFinite(expiresAt) ? expiresAt * 1000 - Date.now() : 0;
 }
 
 function metaWithVersion(meta: Record<string, any> | null | undefined, version: string) {
@@ -79,7 +87,7 @@ export class AccountService {
 		this.lastError = null;
 
 		const outcome = await ensureAccountFlow($state.snapshot(settings.tree.account), {
-			authenticate: (credentials) => this.#authenticate(credentials),
+			authenticate: (credentials) => this.#resumeStoredAuth(credentials),
 			createAccount: (credentials) => this.#createAccount(credentials),
 			findBackupAccount: () => this.#findBackupAccount(),
 			generateCredentials: () => ({
@@ -151,19 +159,86 @@ export class AccountService {
 			await this.#storeSessionToken(auth.token);
 		} catch (error) {
 			console.warn('[ACCOUNT]: session refresh failed, signing in again:', error);
-			const result = await this.#authenticate($state.snapshot(settings.tree.account)).catch(
-				(loginError) => {
-					console.error('[ACCOUNT]: sign-in after refresh failed:', loginError);
-					return 'invalid' as const;
-				}
-			);
-			if (result !== 'ok') {
-				const expired = settings.tree.account.authMode === 'session';
-				this.status = expired ? 'signed-out' : 'error';
-				this.lastError = expired
-					? t('Your session has expired. Please sign in again.')
-					: t('Could not restore your account');
+			await this.#signInAgain();
+		}
+	}
+
+	/** Signs in with the stored credentials after the session was lost. */
+	async #signInAgain() {
+		const result = await this.#authenticate($state.snapshot(settings.tree.account)).catch(
+			(loginError) => {
+				console.error('[ACCOUNT]: sign-in after refresh failed:', loginError);
+				return 'invalid' as const;
 			}
+		);
+		if (result !== 'ok') {
+			const expired = settings.tree.account.authMode === 'session';
+			this.status = expired ? 'signed-out' : 'error';
+			this.lastError = expired
+				? t('Your session has expired. Please sign in again.')
+				: t('Could not restore your account');
+		}
+	}
+
+	/**
+	 * Boot sign-in. Reuses the session PocketBase kept from the last run while its token has
+	 * more than five minutes left (verified in the background), renews a token that is about to
+	 * expire, and only signs in with the password when neither works. Offline starts skip the
+	 * reuse so they still end on the server-unavailable screen.
+	 */
+	async #resumeStoredAuth(credentials: AccountSettings): Promise<AuthResult> {
+		const store = pocketbase.authStore;
+		const record = store.record as User | null;
+		const sameSession =
+			record?.id === credentials.userId &&
+			(credentials.authMode !== 'session' || store.token === credentials.token);
+		if (!sameSession || !navigator.onLine) {
+			return this.#authenticate(credentials);
+		}
+
+		const timeLeft = tokenTimeLeft(store.token);
+		if (timeLeft > TOKEN_REUSE_MARGIN_MS) {
+			this.#impersonating = false;
+			this.#user = record;
+			void this.#verifyStoredSession();
+			return 'ok';
+		}
+
+		// A Steam session's sign-in is this same refresh; a password login falls back to the password.
+		if (timeLeft > 0 && credentials.authMode !== 'session') {
+			try {
+				const auth = await pocketbase.collection('users').authRefresh<User>({ fetch });
+				this.#impersonating = false;
+				this.#user = auth.record;
+				await this.#syncLocalEmailFromUser();
+				return 'ok';
+			} catch (error) {
+				console.warn('[ACCOUNT]: token refresh failed, signing in with the password:', error);
+			}
+		}
+
+		return this.#authenticate(credentials);
+	}
+
+	/** Confirms a reused session: a fresh record and token, or a new sign-in when it was revoked. */
+	async #verifyStoredSession() {
+		try {
+			const auth = await pocketbase.collection('users').authRefresh<User>({ fetch });
+			if (this.isImpersonating) {
+				return;
+			}
+
+			this.#user = auth.record;
+			await this.#storeSessionToken(auth.token);
+			await this.#syncLocalEmailFromUser();
+		} catch (error) {
+			if (!isAuthRejection(error)) {
+				console.warn('[ACCOUNT]: could not verify the stored session:', error);
+				return;
+			}
+
+			console.warn('[ACCOUNT]: stored session was rejected, signing in again:', error);
+			await this.#signInAgain();
 		}
 	}
 

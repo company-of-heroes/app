@@ -89,12 +89,13 @@ export abstract class Feature<
 		await this.#loadSettings();
 
 		this.#disposeWatchers = $effect.root(() => {
-			// Persist slice changes into the central settings tree.
+			// Persist slice changes into the central settings tree (`#loadSettings` wrote the first one).
 			watch(
 				() => $state.snapshot(this.settings),
 				(snapshot) => {
 					settingsService.updateFeatureSlice(this.name, snapshot as never);
-				}
+				},
+				{ lazy: true }
 			);
 
 			// React to enable/disable toggles and preconditions.

@@ -1,6 +1,7 @@
 import { goto } from '$app/navigation';
 import { getVersion } from '@tauri-apps/api/app';
 import { app } from '$core/app/context';
+import type { FeatureKey } from '$core/app/context/app.svelte';
 import { settings } from '$core/config/settings.svelte';
 import { account } from '$core/account';
 import { hasCredentials } from '$core/account/recovery';
@@ -31,6 +32,15 @@ const PHASE_LABELS: Record<BootPhase, string> = {
 	game: 'Watching for Company of Heroes...',
 	ready: 'Ready',
 	error: 'Something went wrong'
+};
+
+/**
+ * Features whose `enable()` uses another feature; they start once those have registered.
+ * The others only use core state (account, game, cohPaths, app events) and start in parallel.
+ */
+const FEATURE_DEPENDENCIES: Partial<Record<FeatureKey, FeatureKey[]>> = {
+	// Hooks into `tts` speak events and reads `tts.provider`; listens to Twitch chat.
+	'text-to-speech-custom-characters': ['text-to-speech', 'twitch']
 };
 
 /**
@@ -273,27 +283,14 @@ export class Boot {
 				void settings.flush();
 			});
 
-			// Features (error-isolated; a broken feature never blocks boot). Path checks
-			// first: features that need warnings.log stay unavailable without it.
+			// Path checks first: features that need warnings.log stay unavailable without it.
 			this.phase = 'features';
 			await app.watchCohPaths();
 
-			for (const feature of app._features.values()) {
-				try {
-					await feature.register();
-				} catch (error) {
-					console.error(`[BOOT]: feature "${feature.name}" failed to start:`, error);
-				}
-			}
-
-			// Game watchers
-			this.phase = 'game';
-			app.wire();
-			await game.start();
-
+			// The UI opens now; features and the game watchers start behind it.
+			const features = this.#registerFeatures();
 			this.phase = 'ready';
-
-			void settings.backup.backupNow('boot');
+			void this.#startGame(features);
 
 			return true;
 		} catch (error) {
@@ -306,6 +303,51 @@ export class Boot {
 			this.#startPromise = null;
 			return false;
 		}
+	}
+
+	/**
+	 * Registers every feature (error-isolated; a broken feature is logged and never blocks
+	 * boot). Independent features start right away and in parallel, so their state exists
+	 * before the UI renders; one that uses another feature waits for it.
+	 */
+	#registerFeatures(): Promise<unknown> {
+		const started = new Map<FeatureKey, Promise<unknown>>();
+		const start = (key: FeatureKey): Promise<unknown> => {
+			const existing = started.get(key);
+			if (existing) {
+				return existing;
+			}
+
+			const feature = app._features.get(key)!;
+			const dependencies = (FEATURE_DEPENDENCIES[key] ?? []).filter((dependency) =>
+				app._features.has(dependency)
+			);
+			const registered: Promise<unknown> =
+				dependencies.length > 0
+					? Promise.allSettled(dependencies.map(start)).then<unknown>(() => feature.register())
+					: feature.register();
+			const promise = registered.catch((error) => {
+				console.error(`[BOOT]: feature "${key}" failed to start:`, error);
+			});
+			started.set(key, promise);
+			return promise;
+		};
+
+		return Promise.allSettled([...app._features.keys()].map(start));
+	}
+
+	/** Game watchers start after every feature, so features hear the first lobby events. */
+	async #startGame(features: Promise<unknown>): Promise<void> {
+		await features;
+
+		try {
+			app.wire();
+			await game.start();
+		} catch (error) {
+			console.error('[BOOT]: game watchers failed to start:', error);
+		}
+
+		void settings.backup.backupNow('boot');
 	}
 }
 
