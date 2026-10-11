@@ -1,4 +1,5 @@
-import { okAsync, ResultAsync } from 'neverthrow';
+import { okAsync, Result, ResultAsync } from 'neverthrow';
+import { mapLimit } from '@company-of-heroes/api';
 import {
 	STATISTICS_PERIODS,
 	type ReplaySummary,
@@ -6,7 +7,7 @@ import {
 	type StatisticsRange
 } from '@company-of-heroes/ui/statistics/types';
 import { cached } from '../cache';
-import { all, chunk, fromPb, pbMaybe, sequence, type Task } from '../result';
+import { fromPb, pbMaybe, sequence, type Task } from '../result';
 import {
 	buildStatistics,
 	summarizeStatistics,
@@ -26,8 +27,8 @@ const PER_PAGE = 1000;
 const DAY_MS = 86_400_000;
 const FINISHED_LOBBIES = 'needsResult = false && isHidden = false';
 
-/** Parallel requests while reading a view. */
-const CONCURRENCY = 6;
+/** Parallel requests per id range while reading a view (the snapshot job reads three at once). */
+const CONCURRENCY = 4;
 /** Characters of PocketBase record ids. */
 const ID_CHARS = [...'0123456789abcdefghijklmnopqrstuvwxyz'];
 
@@ -75,9 +76,11 @@ function periodDays(period: string): DayRange {
 export class StatisticsService extends Service {
 	/** Runs `load` for every prefix, a few at a time. */
 	private inBatches<T>(prefixes: string[], load: (prefix: string) => Task<T[]>): Task<T[]> {
-		return sequence(chunk(prefixes, CONCURRENCY), (batch) => all(batch.map(load))).map((lists) =>
-			lists.flat(2)
-		);
+		return ResultAsync.fromSafePromise(
+			mapLimit(prefixes, CONCURRENCY, async (prefix) => load(prefix))
+		)
+			.andThen((results) => Result.combine(results))
+			.map((lists) => lists.flat() as T[]);
 	}
 
 	/**

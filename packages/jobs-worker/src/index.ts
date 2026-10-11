@@ -6,7 +6,8 @@ type Env = { WEBSITE: Fetcher; SERVICE_TOKEN: string };
  */
 const JOBS: { name: string; every: number; offset: number; budgetMs?: number }[] = [
 	{ name: 'live-cleanup', every: 1, offset: 0 },
-	{ name: 'result-fill', every: 1, offset: 0 },
+	// Even minutes; replay-stats takes the odd ones, so the two never share a minute.
+	{ name: 'result-fill', every: 2, offset: 0 },
 	{ name: 'ladder-harvest', every: 5, offset: 2 },
 	{ name: 'ratings-harvest', every: 5, offset: 3 },
 	{ name: 'lobby-merge', every: 5, offset: 1 },
@@ -18,9 +19,9 @@ const JOBS: { name: string; every: number; offset: number; budgetMs?: number }[]
 	// Staff hear about tournament matches past their deadline.
 	{ name: 'tournament-deadlines', every: 5, offset: 2 },
 	// Rebuilds the stored statistics snapshots (all preset periods + homepage totals).
-	{ name: 'statistics-snapshot', every: 10, offset: 6 },
+	{ name: 'statistics-snapshot', every: 10, offset: 5 },
 	// Self-limiting: stored replays without a statistics summary; idle once caught up.
-	{ name: 'replay-stats', every: 1, offset: 0, budgetMs: 50_000 }
+	{ name: 'replay-stats', every: 2, offset: 1, budgetMs: 50_000 }
 ];
 
 /** A job reports `more` while work is left; keep one tick well inside the time limit. */
