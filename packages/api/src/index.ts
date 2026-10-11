@@ -3,6 +3,8 @@ export { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, sendV1, v1Url } fro
 export { apiError, fromUnknown, isApiError, type ApiError } from './errors';
 export { fromClientError } from './pb';
 export { unwrapApi } from './unwrap';
+export { createTtlCache, type TtlCache } from './ttl-cache';
+export { mapLimit } from './concurrency';
 
 export {
 	LiveLobbiesApi,
