@@ -24,6 +24,7 @@
 		"./smurf-watch": "./src/smurf-watch/index.ts",
 		"./reputation": "./src/reputation/index.ts",
 		"./rewards": "./src/rewards/index.ts",
+		"./docs": "./src/docs/index.ts",
 		"./player-performance": "./src/player-performance/index.ts",
 		"./companion": "./src/companion/index.ts",
 		"./tournaments": "./src/tournaments/index.ts"

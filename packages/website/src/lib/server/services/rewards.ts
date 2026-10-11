@@ -1,7 +1,7 @@
 import { ClientResponseError } from 'pocketbase';
 import { okAsync, ResultAsync } from 'neverthrow';
 import { parseRewardConditions, rewardImageUrl } from '@company-of-heroes/api/rewards';
-import type { RewardCondition } from '@company-of-heroes/ui/reward/metrics';
+import { isAccountReward, type RewardCondition } from '@company-of-heroes/ui/reward/metrics';
 import type {
 	PlayerRewards,
 	RewardConditionProgress,
@@ -110,6 +110,12 @@ function hasLinks(raw: unknown): boolean {
 	return false;
 }
 
+/** Account rewards only show on the main Steam ID (the first on the account); the others hide them. */
+function shownOn(owner: Owner, steamId: string): (reward: Reward) => boolean {
+	const main = owner.steamIds[0] === steamId;
+	return (reward) => main || !isAccountReward(reward.parsed);
+}
+
 /** The owner limited to one Steam ID: match metrics count that ID, account metrics stay shared. */
 function forSteamId(owner: Owner, steamId: string): Owner {
 	return { ...owner, steamIds: [steamId] };
@@ -121,7 +127,8 @@ function forSteamId(owner: Owner, steamId: string): Owner {
  * only; account metrics (comments, reputation, streaming, …) count for every Steam ID
  * on the account. Progress is computed on request. Events only mark a user as due
  * (`users.rewardsCheckedAt` cleared); the `rewards-evaluate` job unlocks all of the
- * user's Steam IDs and notifies. Editing a reward makes everyone due.
+ * user's Steam IDs and notifies. Editing a reward makes everyone due. Account rewards
+ * unlock on every Steam ID but only show on the main one, so changing it keeps them.
  */
 export class RewardsService extends Service {
 	private get unlocks() {
@@ -561,6 +568,7 @@ export class RewardsService extends Service {
 			description: hidden ? '' : reward.description,
 			imageUrl: hidden ? null : rewardImageUrl(this.pb, reward),
 			ribbon: hidden ? null : reward.ribbon || null,
+			conditions: hidden ? [] : reward.parsed,
 			secret: reward.secret,
 			sort: reward.sort,
 			unlockedAt,
@@ -577,7 +585,7 @@ export class RewardsService extends Service {
 				const when = new Map(unlocks.map((unlock) => [unlock.reward, unlock.unlockedAt]));
 				const metric = this.metrics(forSteamId(owner, steamId));
 				return all(
-					catalog.map((reward) => {
+					catalog.filter(shownOn(owner, steamId)).map((reward) => {
 						const unlockedAt = when.get(reward.id) ?? null;
 						return unlockedAt
 							? okAsync(this.view(reward, unlockedAt))
@@ -588,7 +596,7 @@ export class RewardsService extends Service {
 		);
 	}
 
-	private publicView(steamId: string): Task<PlayerRewards> {
+	private publicView(owner: Owner, steamId: string): Task<PlayerRewards> {
 		return ResultAsync.combine([this.catalog(), this.unlocked(steamId)]).map(
 			([catalog, unlocks]) => {
 				const when = new Map(unlocks.map((unlock) => [unlock.reward, unlock.unlockedAt]));
@@ -597,10 +605,16 @@ export class RewardsService extends Service {
 					linked: true,
 					rewards: catalog
 						.filter((reward) => when.has(reward.id))
+						.filter(shownOn(owner, steamId))
 						.map((reward) => this.view(reward, when.get(reward.id) ?? null))
 				};
 			}
 		);
+	}
+
+	/** Every enabled reward as the wiki shows it; secret ones stay blank. */
+	catalogView(): Task<RewardView[]> {
+		return this.catalog().map((catalog) => catalog.map((reward) => this.view(reward, null)));
 	}
 
 	/** A player's unlocked rewards; the owner also gets locked ones with progress. */
@@ -614,11 +628,13 @@ export class RewardsService extends Service {
 				return this.ownView(owner, steamId);
 			}
 
-			return cached(`rewards:player:${steamId}`, CACHE_SECONDS, () => this.publicView(steamId));
+			return cached(`rewards:player:${steamId}`, CACHE_SECONDS, () =>
+				this.publicView(owner, steamId)
+			);
 		});
 	}
 
-	/** The signed-in user's own rewards, for the first Steam ID on the account. */
+	/** The signed-in user's own rewards, for the main (first) Steam ID on the account. */
 	forUser(userId: string): Task<PlayerRewards> {
 		return this.owner(userId).andThen((owner) => {
 			const [steamId] = owner.steamIds;
@@ -734,6 +750,16 @@ export class RewardsService extends Service {
 					];
 					return this.notify(userId, fresh).map(() => fresh.length);
 				})
+				.andThen((fresh) =>
+					// Auto labels on the highest rank ever; the ladders only show the current one.
+					this.services.labelAuto
+						.grantForSteamIds(owner.steamIds)
+						.orElse((error) => {
+							console.warn('[rewards] auto labels failed', userId, error);
+							return okAsync(0);
+						})
+						.map(() => fresh)
+				)
 				.andThen((fresh) =>
 					fromPb(
 						this.pb

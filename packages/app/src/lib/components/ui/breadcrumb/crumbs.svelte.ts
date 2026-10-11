@@ -1,4 +1,4 @@
-import { getContext, hasContext, setContext } from 'svelte';
+import { getContext, hasContext, setContext, type Snippet } from 'svelte';
 import { t } from '$lib/i18n';
 import { rememberedHistoryListHref } from '$core/app/features/history/history-url';
 
@@ -12,7 +12,8 @@ const NESTED_FALLBACK: Record<string, string> = {
 	history: 'Match',
 	players: 'Player',
 	live: 'Live lobby',
-	tournaments: 'Tournament'
+	tournaments: 'Tournament',
+	wiki: 'Wiki'
 };
 
 const ADMIN_PAGES: Record<string, string> = {
@@ -36,6 +37,7 @@ const SECTIONS: Record<string, string> = {
 	players: 'Players',
 	streaming: 'Streaming',
 	tournaments: 'Tournaments',
+	wiki: 'Wiki',
 	settings: 'Settings',
 	account: 'Account',
 	admin: 'Management'
@@ -43,9 +45,24 @@ const SECTIONS: Record<string, string> = {
 
 class Breadcrumbs {
 	extra = $state<Crumb[]>([]);
+	/** A page's full trail (the wiki), shown instead of the path's. */
+	trail = $state<Crumb[] | null>(null);
+	/** Page buttons on the right of the header. */
+	actions = $state.raw<Snippet | null>(null);
 
 	setExtra(items: Crumb[]) {
 		this.extra = items;
+	}
+
+	setTrail(items: Crumb[], actions: Snippet | null = null) {
+		this.trail = items;
+		this.actions = actions;
+		return () => {
+			if (this.trail === items) {
+				this.trail = null;
+				this.actions = null;
+			}
+		};
 	}
 }
 

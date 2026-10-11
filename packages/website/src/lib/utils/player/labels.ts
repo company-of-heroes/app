@@ -17,4 +17,5 @@ export type PlayerLabel = {
 	name: string;
 	color: string;
 	sort?: number;
+	tooltip?: string;
 };

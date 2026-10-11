@@ -2,7 +2,13 @@ import { isValidSteamId, toEloMap, type EloMap } from '../domain/ratings';
 import { chunk, fromPb, sequence, type Task } from '../result';
 import { Service } from './service';
 
-export type PlayerLabel = { id: string; name: string; color: string; sort: number };
+export type PlayerLabel = {
+	id: string;
+	name: string;
+	color: string;
+	sort: number;
+	tooltip?: string;
+};
 
 /** Chunk size for `steamId = a || steamId = b ...` filters (PocketBase caps expressions per filter). */
 const CHUNK = 100;
@@ -32,11 +38,14 @@ export class PlayerInfoService extends Service {
 	labels(steamIds: string[]): Task<Map<string, PlayerLabel[]>> {
 		type Row = {
 			steamId: string;
-			expand?: { label?: { id: string; name: string; color: string; sort: number } };
+			expand?: {
+				label?: { id: string; name: string; color: string; sort: number; tooltip?: string };
+			};
 		};
 		return this.bySteamIds<Row>('player_label_assignments', steamIds, {
 			expand: 'label',
-			fields: 'steamId,expand.label.id,expand.label.name,expand.label.color,expand.label.sort'
+			fields:
+				'steamId,expand.label.id,expand.label.name,expand.label.color,expand.label.sort,expand.label.tooltip'
 		}).map((rows) => {
 			const result = new Map<string, PlayerLabel[]>();
 			for (const row of rows) {
@@ -50,7 +59,8 @@ export class PlayerInfoService extends Service {
 					id: label.id,
 					name: label.name ?? '',
 					color: label.color || '#F8C630',
-					sort: Number(label.sort ?? 0)
+					sort: Number(label.sort ?? 0),
+					...(label.tooltip ? { tooltip: label.tooltip } : {})
 				});
 				result.set(row.steamId, list);
 			}

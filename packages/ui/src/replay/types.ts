@@ -175,6 +175,8 @@ export type CommunityMatchDetail = {
 	replay?: string;
 	hasReplay?: boolean;
 	needsResult?: boolean;
+	/** The game is still being played. */
+	isLive?: boolean;
 	sessionId?: number;
 	hidden?: boolean;
 	hiddenByKeyword?: boolean;

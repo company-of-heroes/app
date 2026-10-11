@@ -105,6 +105,7 @@
 		description: description.trim(),
 		imageUrl: imagePreview ?? existingImage,
 		ribbon,
+		conditions: parsedConditions,
 		secret: false,
 		sort: 0,
 		unlockedAt: null,
@@ -755,6 +756,7 @@
 					description: '',
 					imageUrl: src,
 					ribbon: row.ribbon,
+					conditions: [],
 					secret: false,
 					sort: 0,
 					// Shown as unlocked: the table shows the design, not anyone's progress.

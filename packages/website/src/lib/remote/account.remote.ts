@@ -128,3 +128,32 @@ export const confirmEmailChange = form(confirmEmailChangeSchema, async (data) =>
 	syncLocalsUser(event);
 	redirect(303, localizeHref('/account?saved=email', locals.locale));
 });
+
+const setMainSteamIdSchema = z.object({
+	steamId: z.string().regex(/^7656119\d{10}$/, 'Invalid Steam id')
+});
+
+/** Makes a linked Steam account the main one: it shows the account rewards. */
+export const setMainSteamId = form(setMainSteamIdSchema, async (data) => {
+	const event = getRequestEvent();
+	const { locals } = event;
+	if (!locals.user) {
+		error(401, locals.t('Log in to do that.'));
+	}
+
+	const result = await locals.services.users.setMainSteamId(locals.user.id, data.steamId);
+	if (result.isErr()) {
+		invalid(locals.t(result.error.message));
+	}
+
+	const { pocketbase } = locals;
+	if (pocketbase.authStore.token && pocketbase.authStore.record) {
+		pocketbase.authStore.save(pocketbase.authStore.token, {
+			...pocketbase.authStore.record,
+			steamIds: result.value.steamIds
+		});
+	}
+
+	syncLocalsUser(event);
+	redirect(303, localizeHref('/account?saved=main', locals.locale));
+});

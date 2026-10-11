@@ -21,7 +21,6 @@
 	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import { playerPreviewId } from '../player/player-preview-cache';
 	import type { LeaderboardStatRow, PlayerEloMap } from '../format/types';
 	import {
 		formatRatio,
@@ -124,10 +123,6 @@
 						<td class="px-4 py-1.5">
 							<PlayerProfileLink
 								href={host.routes.player(stat.profile.profile_id)}
-								playerId={playerPreviewId({
-									steamId: getSteamIdFromName(stat.profile.name),
-									profileId: stat.profile.profile_id
-								}) ?? String(stat.profile.profile_id)}
 								class={cn(
 									interactive,
 									'hover:text-primary flex min-w-0 items-center gap-2 font-medium'
@@ -200,10 +195,6 @@
 					</div>
 					<PlayerProfileLink
 						href={host.routes.player(stat.profile.profile_id)}
-						playerId={playerPreviewId({
-							steamId: getSteamIdFromName(stat.profile.name),
-							profileId: stat.profile.profile_id
-						}) ?? String(stat.profile.profile_id)}
 						class={cn(
 							interactive,
 							'hover:text-primary flex min-w-0 flex-1 items-center gap-2 font-medium'

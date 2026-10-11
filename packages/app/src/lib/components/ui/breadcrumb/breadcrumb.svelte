@@ -7,7 +7,9 @@
 
 	const { t } = useI18n();
 	const breadcrumbs = useBreadcrumbs();
-	const crumbs = $derived(crumbsFromPath(page.url.pathname, breadcrumbs.extra));
+	const crumbs = $derived(
+		breadcrumbs.trail ?? crumbsFromPath(page.url.pathname, breadcrumbs.extra)
+	);
 </script>
 
 <nav aria-label={t('Breadcrumb')}>

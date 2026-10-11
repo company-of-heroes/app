@@ -18,7 +18,7 @@
 			<feDropShadow dx="0" dy="0.6" stdDeviation="0.5" flood-color="#000" flood-opacity="0.6"/>
 		</filter>
 	</defs>
-	<rect x="0" y="0" width="5.7" height="20" fill="#4d545c"/><rect x="5.7" y="0" width="2.44" height="20" fill="#cf7792"/><rect x="8.14" y="0" width="2.44" height="20" fill="#f4f1e8"/><rect x="10.58" y="0" width="48.84" height="20" fill="#cf7792"/><rect x="59.42" y="0" width="2.44" height="20" fill="#f4f1e8"/><rect x="61.86" y="0" width="2.44" height="20" fill="#cf7792"/><rect x="64.3" y="0" width="5.7" height="20" fill="#4d545c"/>
+	<rect x="0" y="0" width="2.4" height="20" fill="#1c1c1c"/><rect x="67.6" y="0" width="2.4" height="20" fill="#1c1c1c"/><rect x="2.4" y="0" width="1.2" height="20" fill="#cf7792"/><rect x="66.4" y="0" width="1.2" height="20" fill="#cf7792"/><rect x="3.6" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="66" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="4" y="0" width="5.05" height="20" fill="#4d545c"/><rect x="9.05" y="0" width="2.16" height="20" fill="#cf7792"/><rect x="11.21" y="0" width="2.16" height="20" fill="#f4f1e8"/><rect x="13.37" y="0" width="43.26" height="20" fill="#cf7792"/><rect x="56.63" y="0" width="2.16" height="20" fill="#f4f1e8"/><rect x="58.79" y="0" width="2.16" height="20" fill="#cf7792"/><rect x="60.95" y="0" width="5.05" height="20" fill="#4d545c"/>
 	<rect width="70" height="20" fill="url(#r171-weave)"/>
 	<rect width="70" height="20" fill="url(#r171-shade)"/>
 	<rect x="0.25" y="0.25" width="69.5" height="19.5" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="0.5"/>

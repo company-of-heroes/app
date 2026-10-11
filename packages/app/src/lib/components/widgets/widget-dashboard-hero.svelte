@@ -32,6 +32,7 @@
 	import MountainsIcon from 'phosphor-svelte/lib/MountainsIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
+	import StarIcon from 'phosphor-svelte/lib/StarIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import UserIcon from 'phosphor-svelte/lib/UserIcon';
 	import UserSwitchIcon from 'phosphor-svelte/lib/UserSwitchIcon';
@@ -100,6 +101,8 @@
 		app.account.isImpersonating ? null : (app.game.profile?.steam.steamid ?? null)
 	);
 	const linkedSteamIds = $derived(app.features.auth.user.steamIds ?? []);
+	/** The first linked Steam ID: it shows the account rewards. */
+	const mainSteamId = $derived(linkedSteamIds[0] ?? null);
 	/** Another linked account to look at; back to the in-game account when the game logs in. */
 	let selectedSteamId = $state<string | null>(null);
 	watch(
@@ -385,6 +388,18 @@
 			: null
 	);
 
+	async function makeMain(id: string) {
+		try {
+			await app.account.setMainSteamId(id);
+			app.toast.success(t('Main Steam account changed.'));
+			statsGeneration += 1;
+		} catch (error) {
+			app.toast.error(
+				error instanceof Error ? error.message : t('Could not change your main Steam account.')
+			);
+		}
+	}
+
 	function openTab(tab: string) {
 		activeTab = tab;
 		panelExpanded = true;
@@ -427,11 +442,7 @@
 			<PlayerHero backgroundUrl={customization.current?.backgroundUrl}>
 				{#snippet avatar()}
 					{#if profileHref && previewId}
-						<PlayerProfileLink
-							href={profileHref}
-							playerId={previewId}
-							class={cn(interactive, 'block h-full w-full')}
-						>
+						<PlayerProfileLink href={profileHref} class={cn(interactive, 'block h-full w-full')}>
 							<img
 								src={profile.steam.avatarfull}
 								alt={profile.relic.alias}
@@ -462,7 +473,7 @@
 					/>
 					<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
 					{#if app.lobby && viewingLive}
-						<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'shrink-0')}>
+						<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'flex shrink-0')}>
 							<LiveBadge label={t('In match')} />
 						</a>
 					{:else if !app.game.isRunning}
@@ -473,7 +484,6 @@
 					{#if profileHref && previewId}
 						<PlayerProfileLink
 							href={profileHref}
-							playerId={previewId}
 							class={cn(interactive, 'hover:text-primary min-w-0 truncate transition-colors')}
 						>
 							{profile.relic.alias}
@@ -511,6 +521,9 @@
 										<img src={account.avatar} alt="" class="size-6 shrink-0 rounded-xs" />
 									{/if}
 									<span class="min-w-0 flex-1 truncate">{account?.personaname ?? id}</span>
+									{#if id === mainSteamId}
+										<Badge class="shrink-0">{t('Main')}</Badge>
+									{/if}
 									{#if id === liveSteamId}
 										<Badge variant="default" class="shrink-0">{t('In game')}</Badge>
 									{/if}
@@ -519,6 +532,13 @@
 									{/if}
 								</Dropdown.Item>
 							{/each}
+							{#if steamId && steamId !== mainSteamId && !app.account.isImpersonating}
+								<Dropdown.Separator />
+								<Dropdown.Item class={dropdownItemIcon} onSelect={() => makeMain(steamId)}>
+									<StarIcon size={18} weight="duotone" class="text-primary shrink-0" />
+									<span class="min-w-0 flex-1">{t('Make this my main account')}</span>
+								</Dropdown.Item>
+							{/if}
 						</Dropdown.Root>
 					{/if}
 				{/snippet}

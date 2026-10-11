@@ -293,6 +293,24 @@ export class LiveLobbiesService extends Service {
 		);
 	}
 
+	/** True while a fresh live row still points at this saved match or its Relic session. */
+	isPlaying(lobbyId: string, sessionId: number): Task<boolean> {
+		const target =
+			sessionId > 0
+				? this.pb.filter('(lobby = {:lobbyId} || sessionId = {:sessionId})', { lobbyId, sessionId })
+				: this.pb.filter('lobby = {:lobbyId}', { lobbyId });
+		return fromPb(
+			this.live.getList<LiveRow>(1, 1, {
+				filter: `${this.pb.filter('updatedAt > {:since} && isReplay != true', {
+					since: pbDate(Date.now() - LIVE_STALE_MS)
+				})} && ${target}`,
+				fields: 'id',
+				skipTotal: true
+			}),
+			'Could not check live lobby'
+		).map((rows) => rows.items.length > 0);
+	}
+
 	get(id: string): Task<LiveLobbyRecord> {
 		return pbMaybe(this.live.getOne<LiveRow>(id))
 			.andThen((row) =>

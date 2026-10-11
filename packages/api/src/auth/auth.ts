@@ -276,6 +276,25 @@ export class AuthApi {
 		});
 	}
 
+	/** Moves a linked Steam id to the front: the main account, which shows the account rewards. */
+	setMainSteamId(steamId: string): ResultAsync<AuthUser, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		return fromPbPromise(
+			sendV1<{ steamIds: string[] }>(this.deps, '/account/steam-ids/main', {
+				method: 'PUT',
+				body: { steamId }
+			}),
+			'Could not change your main Steam account.'
+		).map(({ steamIds }) => {
+			const record = this.deps.pocketbase.authStore.record as AuthUser | null;
+			return this.#saveAuthRecord({ ...(record ?? {}), steamIds } as AuthUser);
+		});
+	}
+
 	listSteamConflicts(): ResultAsync<SteamConflict[], ApiError> {
 		const staff = requireStaff(this.deps);
 		if (staff.isErr()) {

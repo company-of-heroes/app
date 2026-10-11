@@ -1,5 +1,4 @@
 import type { PlayerLabel } from '../format/types';
-import type { LiveLobbyPlayerStats } from '../live-lobby/types';
 import type { PlayerRewards } from '../reward/types';
 import type { Tournament } from '../tournament/types';
 
@@ -150,7 +149,7 @@ export type PlayerSearchPage = {
 	more: boolean;
 };
 
-/** Compact fields shown in profile link previews. */
+/** Compact account fields (tournament rosters). */
 export type PlayerPreviewData = {
 	steamId: string;
 	profileId: number;
@@ -160,17 +159,4 @@ export type PlayerPreviewData = {
 	avatarUrl: string;
 	likeCount?: number;
 	labels?: PlayerLabel[];
-};
-
-/** Local match-faction snapshot for square link previews (no profile fetch). */
-export type PlayerFactionPreview = {
-	alias: string;
-	race: number | null;
-	modeLabel?: string | null;
-	raceLabel?: string | null;
-	avatarUrl?: string | null;
-	country?: string | null;
-	stats?: LiveLobbyPlayerStats | null;
-	rankImageSrc?: string | null;
-	factionFlagSrc?: string | null;
 };

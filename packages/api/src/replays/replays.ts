@@ -119,6 +119,8 @@ export type CommunityMatchDetail = {
 	replay: string;
 	hasReplay?: boolean;
 	needsResult?: boolean;
+	/** The game is still being played. */
+	isLive?: boolean;
 	sessionId?: number;
 	hidden?: boolean;
 	hiddenByKeyword?: boolean;
@@ -415,6 +417,7 @@ const communityMatchDetailSchema: z.ZodType<CommunityMatchDetail> = z
 		replay: z.string().optional().default(''),
 		hasReplay: z.boolean().optional(),
 		needsResult: z.boolean().optional(),
+		isLive: z.boolean().optional(),
 		sessionId: z.number().optional(),
 		hidden: z.boolean().optional(),
 		hiddenByKeyword: z.boolean().optional(),

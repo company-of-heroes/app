@@ -30,7 +30,12 @@ const config = {
 				'/live/[id]',
 				'/leaderboards/profile/[profileId]',
 				'/tournaments/[slug]',
-				'/tournaments/[slug]/edit'
+				'/tournaments/[slug]/edit',
+				'/wiki/units/[slug]',
+				'/wiki/buildings/[slug]',
+				'/wiki/commanders/[slug]',
+				'/wiki/weapons/[slug]',
+				'/wiki/maps/[slug]'
 			]
 		}
 	},

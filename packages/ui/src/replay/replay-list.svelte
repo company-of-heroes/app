@@ -75,14 +75,13 @@
 			alias: player.profile.alias,
 			steamId: player.steamId,
 			profileId: player.profile.profile_id,
-			// Basic Match — badges off via showRankBadges; stats stay for preview.
+			// Basic Match — badges off via showRankBadges; stats stay for the tooltip.
 			stats: player.stats,
 			href: playerHref(player)
 		}))}
 		{meSteamIds}
 		{highlightedPlayers}
 		outcome={tinted ? teamOutcome(match, team) : null}
-		modeLabel={matchModeLabel(match)}
 		showRankBadges={match.isRanked}
 	/>
 {/snippet}

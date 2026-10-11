@@ -1,0 +1,61 @@
+<style>
+	.lb { --bg:#2a2a2d; --b:#3d3d41; --mut:#9d9da3; --dim:#7a7a80; --gold:#f0c46b; background:var(--bg); color:#fff; font:14px/1.4 system-ui,sans-serif; border:1px solid var(--b); max-width:980px; }
+	.lb * { box-sizing:border-box; }
+	.tb { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--b); }
+	.grp { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+	.tab { padding:4px 10px; border:1px solid var(--b); color:var(--mut); font-size:13px; }
+	.tab.on { background:var(--gold); color:#222; border-color:var(--gold); }
+	.flag { width:22px; height:15px; border:1px solid var(--b); display:inline-block; }
+	.ctl { border:1px solid var(--b); padding:4px 10px; color:var(--dim); font-size:13px; }
+	.jump { font-size:12px; color:var(--gold); border:1px solid var(--gold); padding:3px 8px; }
+	table { width:100%; border-collapse:collapse; }
+	th { background:#262629; color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:6px 10px; text-align:center; border-bottom:1px solid var(--b); }
+	th.l, td.l { text-align:left; } th .ar { color:var(--gold); }
+	td { padding:7px 10px; text-align:center; border-top:1px solid #3a3a3e; font-variant-numeric:tabular-nums; }
+	.w { color:#c9f2c9; } .ls { color:#f6caca; } .elo { color:#e7a8ff; font-weight:600; }
+	.rk { display:inline-block; width:18px; height:18px; background:#55555b; vertical-align:middle; margin-right:4px; }
+	.me td { background:rgba(240,196,107,.10); } .me td:first-child { box-shadow:inset 3px 0 0 var(--gold); }
+	.av { display:inline-block; background:#55555b; vertical-align:middle; flex:none; }
+	.n { font-weight:700; color:var(--gold); } .sub { color:var(--mut); font-size:12px; }
+	.hero { display:grid; grid-template-columns:1.4fr 1fr; border-bottom:1px solid var(--b); }
+	.big { position:relative; padding:18px; display:flex; gap:16px; align-items:center; border-right:1px solid var(--b); background:rgba(240,196,107,.06); }
+	.side > div { padding:12px 14px; display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--b); }
+	.side > div:last-child { border-bottom:0; }
+	.ribbon { width:58px; height:18px; flex:none; background:repeating-linear-gradient(90deg,#1d1d1d 0 6px,#c8102e 6px 10px,#fff 10px 13px,#1d1d1d 13px 20px); border:1px solid #000; position:relative; box-shadow:0 1px 3px #0008; }
+	.ribbon:after { content:'★'; position:absolute; left:50%; top:50%; transform:translate(-50%,-52%); color:var(--gold); font-size:12px; }
+	.corner { position:absolute; top:12px; right:14px; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+	.tip { position:absolute; top:40px; right:14px; background:#1f1f22; border:1px solid var(--b); padding:8px 10px; font-size:12px; width:220px; box-shadow:0 4px 12px #0008; }
+	.note { max-width:980px; }
+</style>
+
+<h2>C + de beloning van de nummer 1, rechtsboven in zijn kaart</h2>
+<p class="subtitle">De #1 heeft rank 20 gehaald in 1v1 · Wehrmacht, dus rechtsboven in zijn hero-kaart staat de ribbon die hij daarmee heeft unlocked. Bij hover zie je titel, conditie en datum (de bestaande RewardIcon-tooltip).</p>
+
+<div class="lb">
+	<div class="tb">
+		<div class="grp"><span class="tab on">1v1</span><span class="tab">2v2</span><span class="tab">3v3</span><span class="tab">4v4</span><span style="width:8px"></span><span class="flag"></span><span class="flag" style="background:#556b2f"></span><span class="flag"></span><span class="flag"></span></div>
+		<div class="grp"><span class="jump">↓ Naar mij (#412)</span><span class="ctl">🌐 Alle landen ▾</span><span class="ctl">🔍 Zoek speler…</span></div>
+	</div>
+	<div class="hero">
+		<div class="big">
+			<span class="av" style="width:72px;height:72px;outline:2px solid #f0c46b55"></span>
+			<div><div class="n" style="font-size:19px">#1 👑 🇩🇪 Hans_GR</div><div class="elo" style="font-size:16px">2412 ELO</div><div class="sub" style="margin-top:4px"><span class="rk"></span>Lvl 20 · <span class="w">812W</span> · <span class="ls">201L</span> · 80% · <span class="w">+9 streak</span></div></div>
+			<div class="corner"><span class="ribbon"></span></div>
+			<div class="tip"><b style="color:#fff">Ritterkreuz der Ostfront</b><br><span class="sub">Ladder rank reached · Wehrmacht · 1 VS. 1: 20 / 20</span><br><span class="sub">Unlocked 3 okt 2026</span></div>
+		</div>
+		<div class="side">
+			<div><span class="sub">#2</span><span class="av" style="width:36px;height:36px"></span><div>🇵🇱 Kowal <span class="elo">2380</span><div class="sub">Lvl 20 · 640W · 190L</div></div></div>
+			<div><span class="sub">#3</span><span class="av" style="width:36px;height:36px"></span><div>🇺🇸 Ranger <span class="elo">2301</span><div class="sub">Lvl 19 · 590W · 220L</div></div></div>
+		</div>
+	</div>
+	<table>
+		<tr><th>#</th><th>Rank</th><th class="l">Speler</th><th>ELO <span class="ar">▼</span></th><th>W</th><th>L</th><th>Streak</th><th>Ratio</th><th>Δ</th></tr>
+		<tr><td>4</td><td><span class="rk"></span>19</td><td class="l">🇳🇱 Dutchie</td><td>2250</td><td class="w">433</td><td class="ls">170</td><td class="w">+1</td><td>72%</td><td class="sub">–</td></tr>
+		<tr class="me"><td>412</td><td><span class="rk"></span>11</td><td class="l">🇳🇱 <b>Jij</b></td><td>1504</td><td class="w">120</td><td class="ls">98</td><td class="w">+2</td><td>55%</td><td class="w">▲14</td></tr>
+	</table>
+</div>
+
+<div class="note" style="margin-top:14px">
+<h3>Open vraag</h3>
+<p class="sub" style="font-size:13px">Rewards worden alleen uitgereikt aan Steam-ID's die aan een account op coh1stats gekoppeld zijn. Is de #1 niet gekoppeld, dan heeft hij de reward bij ons formeel niet unlocked, ook al staat hij op lvl 20.</p>
+</div>

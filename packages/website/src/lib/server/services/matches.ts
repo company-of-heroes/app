@@ -40,6 +40,8 @@ export type MatchDetail = {
 	replay: string;
 	hasReplay: boolean;
 	needsResult: boolean;
+	/** The game is still being played (a fresh live row points at it). */
+	isLive: boolean;
 	sessionId: number;
 	hidden: boolean;
 	hiddenByKeyword: boolean;
@@ -136,11 +138,15 @@ export class MatchesService extends Service {
 			viewer && !record.hasReplay && !record.replay
 				? this.services.lobbies.isParticipant(record, viewer.id)
 				: okAsync(false);
+		const isLive: Task<boolean> = record.needsResult
+			? this.services.liveLobbies.isPlaying(record.id, record.sessionId || 0)
+			: okAsync(false);
 		return ResultAsync.combine([
 			this.services.playerInfo.likeCounts(steamIds),
 			this.services.hiddenMatches.rules(),
-			canAttach
-		]).map(([likes, rules, canAttachReplay]) => {
+			canAttach,
+			isLive
+		]).map(([likes, rules, canAttachReplay, live]) => {
 			for (const player of [...players, ...livePlayers]) {
 				if (player.steamId && likes.has(player.steamId)) {
 					player.likeCount = likes.get(player.steamId);
@@ -165,6 +171,7 @@ export class MatchesService extends Service {
 				replay: record.replay || '',
 				hasReplay,
 				needsResult: record.needsResult,
+				isLive: live,
 				sessionId: record.sessionId || 0,
 				hidden: record.isHidden,
 				hiddenByKeyword: titleHasHiddenKeyword(

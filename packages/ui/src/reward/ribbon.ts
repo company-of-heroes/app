@@ -1,3 +1,5 @@
+import type { RewardView } from './types';
+
 /** Service ribbons from `shared-assets/ribbons` (see `scripts/generate-ribbons.mjs` there). */
 export type RibbonPattern =
 	| 'bands'
@@ -64,4 +66,62 @@ export function ribbonsFrom(
 				]
 			: [];
 	});
+}
+
+export type RibbonSeries = {
+	series: string;
+	level: number;
+	/** Highest level in the series. */
+	levels: number;
+};
+
+/** Ribbon key → its ranked series, its level and the highest level of that series. */
+export function ribbonSeriesMap(ribbons: Ribbon[]): Map<string, RibbonSeries> {
+	const levels = new Map<string, number>();
+	for (const ribbon of ribbons) {
+		if (ribbon.series && ribbon.level) {
+			levels.set(ribbon.series, Math.max(levels.get(ribbon.series) ?? 0, ribbon.level));
+		}
+	}
+
+	return new Map(
+		ribbons.flatMap((ribbon) =>
+			ribbon.series && ribbon.level
+				? [
+						[
+							ribbon.key,
+							{
+								series: ribbon.series,
+								level: ribbon.level,
+								levels: levels.get(ribbon.series) ?? ribbon.level
+							}
+						] as const
+					]
+				: []
+		)
+	);
+}
+
+/**
+ * Faction a reward belongs to: the one its conditions count, else the faction its ribbon is
+ * styled after. Null for global rewards (no faction, or conditions for several).
+ */
+export function rewardRaceId(
+	reward: Pick<RewardView, 'conditions'>,
+	ribbon: Ribbon | undefined
+): number | null {
+	const raceIds = new Set(
+		(reward.conditions ?? []).flatMap((condition) =>
+			condition.filter?.raceId !== undefined ? [condition.filter.raceId] : []
+		)
+	);
+	if (raceIds.size > 1) {
+		return null;
+	}
+
+	if (raceIds.size === 1) {
+		return [...raceIds][0];
+	}
+
+	return ribbon?.raceId ?? null;
 }

@@ -68,6 +68,8 @@ Staff can hide match results from those public listings (for example during a to
 
 We may also show smurf / related-account labels when our systems link Steam accounts that appear to be used together. To do this we check public Steam data for players seen in matches. That includes asking Steam's public Web API, while a match is running, whether the game is borrowed through Steam Family Sharing and from which Steam account. We store the result (lending Steam ID, ownership, and a screening score) with that player's Steam ID.
 
+Players can also show labels next to their name. Staff add most of them by hand; some are given automatically from public Relic ladder data. For example, a player who reaches rank 20 on two of the 1v1 or 2v2 ladders gets the Veteran label. We store the label with that player's Steam ID and Relic profile ID and alias, whether or not the player has an account.
+
 Player pages also show whether the player's Steam account has VAC or game bans on record: the number of each and how many days ago the last one was issued. We read this from Steam's public Web API when the page loads and only cache it for a few minutes; we do not store it with the profile.
 
 Staff can attach public badges (for example Premium or Streamer) to Relic/Steam player identities. We store those assignments (Steam ID, Relic profile ID, and an alias snapshot) so the badges can be shown next to in-game names in the desktop app and on the public website.

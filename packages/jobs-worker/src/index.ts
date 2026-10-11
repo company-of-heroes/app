@@ -14,6 +14,8 @@ const JOBS: { name: string; every: number; offset: number; budgetMs?: number }[]
 	// Self-limiting: only lobbies whose stored ranked flag or title is stale; idle afterwards.
 	{ name: 'lobby-reprocess', every: 5, offset: 4 },
 	{ name: 'rewards-evaluate', every: 1, offset: 0 },
+	// Auto labels from the 1v1/2v2 ladders (cached by the leaderboard pages).
+	{ name: 'label-auto', every: 30, offset: 25 },
 	// Every minute, in parallel with the rest; picks up lobbies an earlier result-fill stored.
 	{ name: 'tournament-sync', every: 1, offset: 0 },
 	// Staff hear about tournament matches past their deadline.

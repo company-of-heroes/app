@@ -110,7 +110,6 @@
 				{#if playerHref && previewId}
 					<PlayerProfileLink
 						href={playerHref}
-						playerId={previewId}
 						class={cn(
 							interactive,
 							'hover:text-primary min-w-0 truncate transition-colors',

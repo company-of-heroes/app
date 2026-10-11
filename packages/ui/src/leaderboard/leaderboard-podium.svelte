@@ -16,7 +16,6 @@
 	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import { playerPreviewId } from '../player/player-preview-cache';
 	import type { LeaderboardStatRow, PlayerEloMap } from '../format/types';
 	import {
 		getEloColor,
@@ -92,10 +91,6 @@
 			{@const flagUrl = host.resolve.flagImageUrl(stat.profile.country)}
 			<PlayerProfileLink
 				href={host.routes.player(stat.profile.profile_id)}
-				playerId={playerPreviewId({
-					steamId: getSteamIdFromName(stat.profile.name),
-					profileId: stat.profile.profile_id
-				}) ?? String(stat.profile.profile_id)}
 				class={podiumCellClass(stat.rank)}
 			>
 				<div class="flex w-full items-center justify-between gap-2">

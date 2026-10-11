@@ -339,7 +339,6 @@
 			<PlayerStreamerIcon steamId={accusedSteamId(row)} />
 			<PlayerProfileLink
 				href="/players/{accusedSteamId(row)}"
-				playerId={accusedSteamId(row)}
 				class={cn(
 					interactive,
 					'text-secondary-300 hover:text-primary min-w-0 truncate font-medium'

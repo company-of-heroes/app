@@ -101,7 +101,9 @@ export const popoverSection = 'border-secondary-800 border-t px-3 py-2.5';
 export const dropdownHeader =
 	'border-secondary-800 flex items-center justify-between border-b px-4 py-3';
 
-export const dropdownSubheader = 'border-secondary-800 border-b px-4 py-3';
+/** Edge to edge through the panel's 4px padding, with room before the first item. */
+export const dropdownSubheader =
+	'border-secondary-800 -mx-[4px] -mt-[4px] mb-[4px] border-b px-4 py-3';
 
 export const dropdownItem = cn(
 	'text-secondary-200 cursor-pointer items-center rounded-sm px-3 py-2 text-sm transition-colors',
@@ -109,6 +111,9 @@ export const dropdownItem = cn(
 );
 
 export const dropdownItemIcon = 'flex gap-3 text-white';
+
+/** Edge to edge through the panel's 4px padding, with room above and below. */
+export const dropdownSeparator = 'border-secondary-800 -mx-[4px] my-[4px] border-t';
 
 export const menuItem = dropdownItem;
 

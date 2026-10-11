@@ -12,14 +12,15 @@
 
 	type Props = {
 		reward: RewardView;
+		/** Faded with a lock; defaults to not unlocked yet. The wiki shows rewards plainly. */
+		locked?: boolean;
 		class?: string;
 	};
 
-	let { reward, class: className }: Props = $props();
+	let { reward, locked: lockedProp, class: className }: Props = $props();
+	const locked = $derived(lockedProp ?? !reward.unlockedAt);
 	const { t } = useI18n();
 	const host = tryUseHost();
-	/** Not unlocked yet: only the owner sees these, faded with a lock. */
-	const locked = $derived(!reward.unlockedAt);
 	const lockedImage = 'opacity-35 grayscale';
 	const ribbon = $derived(
 		reward.ribbon
@@ -40,12 +41,16 @@
 			return formatDate(reward.unlockedAt, host?.locale() ?? 'en');
 		}
 
-		const locked = t('Locked · {percent}%', {
+		if (!locked) {
+			return '';
+		}
+
+		const lockedLabel = t('Locked · {percent}%', {
 			percent: Math.floor((reward.progress?.overall ?? 0) * 100)
 		});
 		const conditions = reward.progress?.conditions ?? [];
 		return [
-			locked,
+			lockedLabel,
 			...conditions.map(
 				(condition) =>
 					`${formatRewardCondition(condition, t)}: ${Math.min(condition.value, condition.threshold)} / ${condition.threshold}`
@@ -71,7 +76,8 @@
 	class={cn(
 		'relative inline-flex shrink-0 items-center justify-center overflow-hidden',
 		ribbon
-			? 'h-4 w-14 rounded-[1px] shadow-sm shadow-black/50'
+			? // Dark seam and a light top edge over the stripes, so it reads as cloth.
+				"h-5 w-[70px] rounded-[2px] shadow-[0_1px_2px_rgb(0_0_0/0.6)] after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[inset_0_0_0_1px_rgb(0_0_0/0.45),inset_0_1px_0_rgb(255_255_255/0.18)] after:content-['']"
 			: 'bg-secondary-900 size-8 rounded-sm',
 		locked && 'shadow-none',
 		className
@@ -83,8 +89,8 @@
 		<img
 			src={ribbon.url}
 			alt=""
-			width="56"
-			height="16"
+			width="70"
+			height="20"
 			loading="lazy"
 			class={cn('size-full', locked && lockedImage)}
 		/>

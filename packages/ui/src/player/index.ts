@@ -16,7 +16,6 @@ import PlayerMatchHistorySkeleton from './player-match-history-skeleton.svelte';
 import PlayerProfileSkeleton from './player-profile-skeleton.svelte';
 import PlayerSearchCard from './player-search-card.svelte';
 import PlayerSearchResults from './player-search-results.svelte';
-import PlayerPreviewCard from './player-preview-card.svelte';
 import PlayerProfileLink from './player-profile-link.svelte';
 import PlayerStreamerIcon from './player-streamer-icon.svelte';
 import StreamerBadgeProgress from './streamer-badge-progress.svelte';
@@ -42,7 +41,6 @@ export {
 	PlayerProfileSkeleton,
 	PlayerSearchCard,
 	PlayerSearchResults,
-	PlayerPreviewCard,
 	PlayerProfileLink,
 	PlayerStreamerIcon,
 	StreamerBadgeProgress,
@@ -69,7 +67,6 @@ export type {
 	PlayerSearchResult,
 	PlayerSearchPage,
 	PlayerPreviewData,
-	PlayerFactionPreview,
 	PlayerCustomization,
 	PlayerProfileLinkType,
 	PlayerSteamBans

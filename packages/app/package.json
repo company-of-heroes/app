@@ -25,6 +25,7 @@
 		"@babel/parser": "^7.29.8",
 		"@babel/traverse": "^7.29.8",
 		"@company-of-heroes/api": "workspace:*",
+		"@company-of-heroes/game-data": "workspace:*",
 		"@company-of-heroes/i18n": "workspace:*",
 		"@company-of-heroes/shared-assets": "workspace:*",
 		"@company-of-heroes/ui": "workspace:*",

@@ -16,7 +16,6 @@
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from './player-profile-link.svelte';
 	import PlayerStreamerIcon from './player-streamer-icon.svelte';
-	import { playerPreviewId } from './player-preview-cache';
 
 	type Props = {
 		smurf: PlayerSmurf;
@@ -34,16 +33,11 @@
 	const lenderAvatar = $derived(
 		smurf.lenderAvatarUrl ? host.resolve.avatarUrl(smurf.lenderAvatarUrl) : null
 	);
-	const previewId = $derived(
-		playerPreviewId({ steamId: smurf.lenderSteamId, profileId: smurf.lenderProfileId }) ??
-			smurf.lenderSteamId
-	);
 </script>
 
 {#if compact}
 	<PlayerProfileLink
 		href={lenderHref}
-		playerId={previewId}
 		class={cn(
 			interactive,
 			'text-destructive inline-flex shrink-0 items-center gap-0.5 text-[10px] font-bold tracking-wide uppercase hover:underline'
@@ -63,7 +57,6 @@
 		{/if}
 		<PlayerProfileLink
 			href={lenderHref}
-			playerId={previewId}
 			class={cn(interactive, 'inline-flex h-5 items-center gap-1.5 leading-none hover:underline')}
 		>
 			{#if lenderAvatar}

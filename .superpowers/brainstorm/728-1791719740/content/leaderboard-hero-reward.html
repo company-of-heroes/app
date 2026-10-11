@@ -1,0 +1,72 @@
+<style>
+	.lb { --bg:#2a2a2d; --b:#3d3d41; --mut:#9d9da3; --dim:#7a7a80; --gold:#f0c46b; background:var(--bg); color:#fff; font:14px/1.4 system-ui,sans-serif; border:1px solid var(--b); max-width:980px; }
+	.lb * { box-sizing:border-box; }
+	.tb { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--b); }
+	.grp { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+	.tab { padding:4px 10px; border:1px solid var(--b); color:var(--mut); font-size:13px; }
+	.tab.on { background:var(--gold); color:#222; border-color:var(--gold); }
+	.flag { width:22px; height:15px; border:1px solid var(--b); display:inline-block; }
+	.ctl { border:1px solid var(--b); padding:4px 10px; color:var(--dim); font-size:13px; }
+	.jump { font-size:12px; color:var(--gold); border:1px solid var(--gold); padding:3px 8px; }
+	table { width:100%; border-collapse:collapse; }
+	th { background:#262629; color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:6px 10px; text-align:center; border-bottom:1px solid var(--b); }
+	th.l, td.l { text-align:left; } th .ar { color:var(--gold); }
+	td { padding:7px 10px; text-align:center; border-top:1px solid #3a3a3e; font-variant-numeric:tabular-nums; }
+	.w { color:#c9f2c9; } .ls { color:#f6caca; } .elo { color:#e7a8ff; font-weight:600; }
+	.rk { display:inline-block; width:18px; height:18px; background:#55555b; vertical-align:middle; margin-right:4px; }
+	.me td { background:rgba(240,196,107,.10); } .me td:first-child { box-shadow:inset 3px 0 0 var(--gold); }
+	.av { display:inline-block; background:#55555b; vertical-align:middle; flex:none; }
+	.n { font-weight:700; color:var(--gold); } .sub { color:var(--mut); font-size:12px; }
+	.hero { display:grid; grid-template-columns:1.4fr 1fr; border-bottom:1px solid var(--b); }
+	.big { padding:18px; display:flex; gap:16px; align-items:center; border-right:1px solid var(--b); background:rgba(240,196,107,.06); }
+	.side > div { padding:10px 14px; display:flex; gap:10px; align-items:center; border-bottom:1px solid var(--b); }
+	.side > div:last-child { border-bottom:0; }
+	.rw { background:linear-gradient(90deg,rgba(240,196,107,.10),transparent); }
+	.ribbon { width:54px; height:16px; flex:none; background:repeating-linear-gradient(90deg,#1d1d1d 0 6px,#c8102e 6px 10px,#fff 10px 13px,#1d1d1d 13px 20px); border:1px solid #000; position:relative; }
+	.ribbon:after { content:'★'; position:absolute; left:50%; top:50%; transform:translate(-50%,-52%); color:var(--gold); font-size:11px; }
+	.pill { font-size:11px; padding:1px 6px; border:1px solid #6b8f5a; color:#c9f2c9; }
+	.pill.lock { border-color:var(--b); color:var(--mut); }
+	.note { max-width:980px; }
+</style>
+
+<h2>C + level 20-beloning rechtsboven</h2>
+<p class="subtitle">De beloning hoort bij de gekozen mode en factie (hier 1v1 · Wehrmacht). Rechtsboven in de hero, boven #2 en #3. Ze verandert mee als je een andere tab kiest.</p>
+
+<div class="lb">
+	<div class="tb">
+		<div class="grp"><span class="tab on">1v1</span><span class="tab">2v2</span><span class="tab">3v3</span><span class="tab">4v4</span><span style="width:8px"></span><span class="flag"></span><span class="flag" style="background:#556b2f"></span><span class="flag"></span><span class="flag"></span></div>
+		<div class="grp"><span class="jump">↓ Naar mij (#412)</span><span class="ctl">🌐 Alle landen ▾</span><span class="ctl">🔍 Zoek speler…</span></div>
+	</div>
+	<div class="hero">
+		<div class="big"><span class="av" style="width:72px;height:72px;outline:2px solid #f0c46b55"></span><div><div class="n" style="font-size:19px">#1 👑 🇩🇪 Hans_GR</div><div class="elo" style="font-size:16px">2412 ELO</div><div class="sub" style="margin-top:4px"><span class="rk"></span>Lvl 20 · <span class="w">812W</span> · <span class="ls">201L</span> · 80% · <span class="w">+9 streak</span></div></div></div>
+		<div class="side">
+			<div class="rw">
+				<span class="ribbon"></span>
+				<div style="flex:1;min-width:0">
+					<div style="font-weight:600">Ritterkreuz der Ostfront</div>
+					<div class="sub">Bereik rank 20 · Wehrmacht · 1v1</div>
+				</div>
+				<div style="text-align:right"><div class="sub"><b style="color:#fff">7</b> spelers lvl 20</div><span class="pill lock">🔒 Jij: lvl 11</span></div>
+			</div>
+			<div><span class="sub">#2</span><span class="av" style="width:32px;height:32px"></span><div>🇵🇱 Kowal <span class="elo">2380</span><div class="sub">Lvl 20 · 640W · 190L</div></div></div>
+			<div><span class="sub">#3</span><span class="av" style="width:32px;height:32px"></span><div>🇺🇸 Ranger <span class="elo">2301</span><div class="sub">Lvl 19 · 590W · 220L</div></div></div>
+		</div>
+	</div>
+	<table>
+		<tr><th>#</th><th>Rank</th><th class="l">Speler</th><th>ELO <span class="ar">▼</span></th><th>W</th><th>L</th><th>Streak</th><th>Ratio</th><th>Δ</th></tr>
+		<tr><td>4</td><td><span class="rk"></span>19</td><td class="l">🇳🇱 Dutchie</td><td>2250</td><td class="w">433</td><td class="ls">170</td><td class="w">+1</td><td>72%</td><td class="sub">–</td></tr>
+		<tr><td>5</td><td><span class="rk"></span>19</td><td class="l">🇫🇷 Pierre</td><td>2201</td><td class="w">390</td><td class="ls">181</td><td class="ls">-2</td><td>68%</td><td class="w">▲1</td></tr>
+		<tr class="me"><td>412</td><td><span class="rk"></span>11</td><td class="l">🇳🇱 <b>Jij</b></td><td>1504</td><td class="w">120</td><td class="ls">98</td><td class="w">+2</td><td>55%</td><td class="w">▲14</td></tr>
+	</table>
+</div>
+
+<div class="note" style="margin-top:14px">
+<h3>Gedrag van het beloningsblok</h3>
+<ul class="sub" style="font-size:13px;line-height:1.7">
+	<li>Er wordt een beloning gezocht met een conditie <b>"Ladder rank reached" ≥ 20</b> waarvan de filters passen bij deze mode en factie. Een beloning met alleen een factie- of alleen een mode-filter telt ook mee; de meest specifieke wint.</li>
+	<li>Is er geen beloning, of is ze <b>geheim</b>: dan geen blok, en #2/#3 vullen de kolom.</li>
+	<li>"7 spelers lvl 20" wordt geteld uit het geladen bord (geen extra API-call).</li>
+	<li>"Jij: lvl 11" / "✓ Behaald" alleen als je ingelogd bent en op dit bord staat (app: eigen account; website: ingelogde gebruiker).</li>
+	<li>Bij zoeken, filteren of een andere sortering verdwijnt de hero. Komt het beloningsblok dan als smalle balk boven de tabel, of verdwijnt het mee?</li>
+</ul>
+</div>

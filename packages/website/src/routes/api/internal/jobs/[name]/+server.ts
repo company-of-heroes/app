@@ -50,6 +50,8 @@ const JOBS: Record<
 		services.ratingHarvest.backfillCountries(params.get('after') ?? ''),
 	'lobby-merge': (services) => services.lobbies.mergeDuplicates(),
 	'rewards-evaluate': (services) => services.rewards.evaluateDue(),
+	// Auto labels (Veteran): rank 20 on two 1v1/2v2 ladders, read from the ladders.
+	'label-auto': (services) => services.labelAuto.run(),
 	// Tournament matches: scores from the Relic results of started tournament games.
 	'tournament-sync': (services) => services.tournaments.sync(),
 	// Tournament matches past their deadline (one notice to staff each), the players'

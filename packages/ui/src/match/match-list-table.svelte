@@ -118,8 +118,7 @@
 {#snippet factionFlags(
 	players: LiveLobbyPlayer[],
 	outcome?: 'win' | 'loss' | null,
-	isRanked = true,
-	modeLabel?: string | null
+	isRanked = true
 )}
 	<TeamPlayerSkills
 		players={players.map((player) => ({
@@ -134,7 +133,6 @@
 		{meSteamIds}
 		{highlightedPlayers}
 		{outcome}
-		{modeLabel}
 		showRankBadges={isRanked}
 	/>
 {/snippet}
@@ -191,21 +189,11 @@
 		>
 	{:else if column === 'allies'}
 		<td class={cn('px-2 py-0 whitespace-nowrap', outcomeSurface(row.alliesOutcome))}>
-			{@render factionFlags(
-				teamPlayers(row.players, 'allies'),
-				null,
-				row.isRanked !== false,
-				row.modeLabel
-			)}
+			{@render factionFlags(teamPlayers(row.players, 'allies'), null, row.isRanked !== false)}
 		</td>
 	{:else if column === 'axis'}
 		<td class={cn('px-2 py-0 whitespace-nowrap', outcomeSurface(row.axisOutcome))}>
-			{@render factionFlags(
-				teamPlayers(row.players, 'axis'),
-				null,
-				row.isRanked !== false,
-				row.modeLabel
-			)}
+			{@render factionFlags(teamPlayers(row.players, 'axis'), null, row.isRanked !== false)}
 		</td>
 	{:else if column === 'host'}
 		<td class="text-secondary-400 h-11 truncate px-4 py-0 whitespace-nowrap">
@@ -491,8 +479,7 @@
 											{@render factionFlags(
 												teamPlayers(row.players, 'allies'),
 												row.alliesOutcome,
-												row.isRanked !== false,
-												row.modeLabel
+												row.isRanked !== false
 											)}
 										</div>
 									{/if}
@@ -502,8 +489,7 @@
 											{@render factionFlags(
 												teamPlayers(row.players, 'axis'),
 												row.axisOutcome,
-												row.isRanked !== false,
-												row.modeLabel
+												row.isRanked !== false
 											)}
 										</div>
 									{/if}

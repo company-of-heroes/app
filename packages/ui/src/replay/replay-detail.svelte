@@ -20,7 +20,7 @@
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
-	import { Badge } from '../ui/badge';
+	import { Badge, LiveBadge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import * as List from '../ui/list';
 	import { StaffSection } from '../ui/staff-section';
@@ -225,6 +225,7 @@
 	);
 	const gameMode = $derived(isRanked ? t('Ranked') : t('Custom match'));
 	const statusPending = $derived(!!match.needsResult);
+	const isLive = $derived(statusPending && !!match.isLive);
 	const isPro = $derived(isProGameplayMatch(match));
 	const submittedBy = $derived(match.submittedBy ?? null);
 	const submittedByHref = $derived(
@@ -329,6 +330,9 @@
 </script>
 
 {#snippet titleMeta()}
+	{#if isLive}
+		<LiveBadge label={t('Live')} />
+	{/if}
 	{#if isPro}
 		<span class="text-primary shrink-0 text-xs font-bold tracking-wide uppercase">{t('Pro')}</span>
 	{/if}
@@ -500,7 +504,6 @@
 						{#if submittedByHref && previewId}
 							<PlayerProfileLink
 								href={submittedByHref}
-								playerId={previewId}
 								class={cn(interactive, 'hover:text-primary underline')}
 							>
 								{label}

@@ -9,6 +9,7 @@ import { DevSeedService } from './dev-seed';
 import { DevTournamentSimService } from './dev-tournament-sim';
 import { DocsService } from './docs';
 import { HiddenMatchesService } from './hidden-matches';
+import { LabelAutoService } from './label-auto';
 import { LeaderboardService } from './leaderboard';
 import { LiveLobbiesService } from './live-lobbies';
 import { LobbiesService } from './lobbies';
@@ -126,6 +127,10 @@ export class Services {
 
 	get hiddenMatches() {
 		return this.#get('hiddenMatches', HiddenMatchesService);
+	}
+
+	get labelAuto() {
+		return this.#get('labelAuto', LabelAutoService);
 	}
 
 	get leaderboard() {

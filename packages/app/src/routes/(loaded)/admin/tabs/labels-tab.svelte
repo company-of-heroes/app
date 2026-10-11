@@ -4,6 +4,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { CopyButton } from '@company-of-heroes/ui/copy-button';
 	import PlayerLabels from '$lib/components/player/player-labels.svelte';
+	import { PlayerLabels as LabelBadges } from '@company-of-heroes/ui/player';
 	import PlayerLabelEditor from '$lib/components/player/player-label-editor.svelte';
 	import { app } from '$core/app/context';
 	import { pocketbase } from '$core/pocketbase';
@@ -17,7 +18,10 @@
 		listUserLabels,
 		type UserLabel
 	} from '$core/pocketbase/user-labels';
-	import { setLabelsForSteamId } from '$core/pocketbase/player-label-cache.svelte';
+	import {
+		refreshAllPlayerLabels,
+		setLabelsForSteamId
+	} from '$core/pocketbase/player-label-cache.svelte';
 	import type { Create, Update } from '$core/pocketbase/types';
 	import { relic } from '$lib/relic';
 	import { steam } from '$core/steam';
@@ -25,22 +29,26 @@
 	import { adornedControl, adornedInput, adornedLeading } from '$lib/components/ui/variants';
 	import * as Form from '$lib/components/ui/form';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
-	import { Input } from '$lib/components/ui/input';
+	import { Checkbox, Input } from '$lib/components/ui/input';
 	import { mergeSteamProfiles, PlayersSearch } from '../../players/players-search.svelte';
 	import ColorPicker from 'svelte-awesome-color-picker';
 	import ColorPickerTrigger from '$lib/components/ui/input/color-picker-trigger.svelte';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
+	import LightningIcon from 'phosphor-svelte/lib/LightningIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
 	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 	import { useI18n } from '$lib/i18n';
 	import { watch } from 'runed';
+	import { tooltip as hoverTip } from '$lib/attachments';
 
 	const { t } = useI18n();
 
 	let name = $state('');
 	let hex = $state<string | null>(DEFAULT_LABEL_HEX);
+	let tooltip = $state('');
+	let autoRank20 = $state(false);
 	let editingSort = $state(0);
 	let labels = $state.raw<UserLabel[]>([]);
 	let isSaving = $state(false);
@@ -86,6 +94,8 @@
 	function resetForm() {
 		name = '';
 		hex = DEFAULT_LABEL_HEX;
+		tooltip = '';
+		autoRank20 = false;
 		editingSort = 0;
 		editingId = null;
 	}
@@ -110,6 +120,8 @@
 		editingId = label.id;
 		name = label.name;
 		hex = labelHex(label.color);
+		tooltip = label.tooltip ?? '';
+		autoRank20 = label.autoRank20 ?? false;
 		editingSort = label.sort ?? 0;
 		nameField?.focus();
 	};
@@ -126,6 +138,8 @@
 				const data: Update<'user_labels'> = {
 					name: trimmed,
 					color: labelHex(hex),
+					tooltip: tooltip.trim(),
+					autoRank20,
 					sort: editingSort
 				};
 				await pocketbase.collection('user_labels').update(editingId, data, { fetch });
@@ -134,6 +148,8 @@
 				const data: Create<'user_labels'> = {
 					name: trimmed,
 					color: labelHex(hex),
+					tooltip: tooltip.trim(),
+					autoRank20,
 					sort: nextSort()
 				};
 				await pocketbase.collection('user_labels').create(data, { fetch });
@@ -141,6 +157,7 @@
 			}
 
 			resetForm();
+			refreshAllPlayerLabels();
 			await loadLabels();
 		} catch (error) {
 			console.error('[ADMIN]: user label save failed:', error);
@@ -311,12 +328,51 @@
 	</div>
 </Form.Group>
 
+<Form.Group
+	inputId="new-label-tooltip"
+	label={t('Tooltip')}
+	description={t('Shown when hovering the label. Leave empty for no tooltip.')}
+>
+	<Input
+		id="new-label-tooltip"
+		bind:value={tooltip}
+		maxlength={200}
+		placeholder={t('Reached rank 20 on two 1v1 or 2v2 ladders')}
+		aria-label={t('Tooltip')}
+		onkeydown={(event) => {
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				void saveLabel();
+			}
+		}}
+	/>
+	<Checkbox
+		bind:checked={autoRank20}
+		label={t('Unlock automatically: rank 20 on two 1v1/2v2 ladders')}
+		size="sm"
+	/>
+</Form.Group>
+
 <section>
 	<div class="border-secondary-800 border-b px-4 py-3">
 		<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">{t('Labels')}</p>
 	</div>
 	{#snippet cell_label({ row }: { row: UserLabel })}
-		<Badge hex={labelHex(row.color)}>{row.name}</Badge>
+		<span class="flex min-w-0 items-center gap-2">
+			<LabelBadges labels={[row]} class="shrink-0" />
+			{#if row.autoRank20}
+				<span
+					class="text-primary inline-flex shrink-0"
+					aria-label={t('Automatic: rank 20 on two 1v1/2v2 ladders')}
+					{@attach hoverTip(t('Automatic: rank 20 on two 1v1/2v2 ladders'))}
+				>
+					<LightningIcon size={14} weight="fill" />
+				</span>
+			{/if}
+			{#if row.tooltip}
+				<span class="text-secondary-500 min-w-0 truncate text-xs">{row.tooltip}</span>
+			{/if}
+		</span>
 	{/snippet}
 	{#snippet cell_labelActions({ row }: { row: UserLabel })}
 		<div class="flex gap-2">

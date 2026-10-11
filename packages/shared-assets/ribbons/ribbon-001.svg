@@ -11,7 +11,7 @@
 			<rect width="0.5" height="1.2" fill="#000" opacity="0.1"/>
 		</pattern>
 	</defs>
-	<rect x="0" y="0" width="5.7" height="20" fill="#6b4226"/><rect x="5.7" y="0" width="2.44" height="20" fill="#c8642a"/><rect x="8.14" y="0" width="2.44" height="20" fill="#f4f1e8"/><rect x="10.58" y="0" width="48.84" height="20" fill="#c8642a"/><rect x="59.42" y="0" width="2.44" height="20" fill="#f4f1e8"/><rect x="61.86" y="0" width="2.44" height="20" fill="#c8642a"/><rect x="64.3" y="0" width="5.7" height="20" fill="#6b4226"/>
+	<rect x="0" y="0" width="2.4" height="20" fill="#56622e"/><rect x="67.6" y="0" width="2.4" height="20" fill="#56622e"/><rect x="2.4" y="0" width="0.6" height="20" fill="#f4f1e8"/><rect x="67" y="0" width="0.6" height="20" fill="#f4f1e8"/><rect x="3" y="0" width="1.4" height="20" fill="#3f6fb0"/><rect x="65.6" y="0" width="1.4" height="20" fill="#3f6fb0"/><rect x="4.4" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="65.2" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="4.8" y="0" width="4.92" height="20" fill="#6b4226"/><rect x="9.72" y="0" width="2.11" height="20" fill="#c8642a"/><rect x="11.82" y="0" width="2.11" height="20" fill="#f4f1e8"/><rect x="13.93" y="0" width="42.14" height="20" fill="#c8642a"/><rect x="56.07" y="0" width="2.11" height="20" fill="#f4f1e8"/><rect x="58.18" y="0" width="2.11" height="20" fill="#c8642a"/><rect x="60.28" y="0" width="4.92" height="20" fill="#6b4226"/>
 	<rect width="70" height="20" fill="url(#r001-weave)"/>
 	<rect width="70" height="20" fill="url(#r001-shade)"/>
 	<rect x="0.25" y="0.25" width="69.5" height="19.5" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="0.5"/>

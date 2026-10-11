@@ -45,7 +45,7 @@ export const LEADERBOARD_MODES: LeaderboardMode[] = [
 		value: 4,
 		factions: [
 			{ label: 'US Forces', value: 4, race: 0 },
-			{ label: 'British Forces', value: 6, race: 2 },
+			{ label: 'Commonwealth', value: 6, race: 2 },
 			{ label: 'Wehrmacht', value: 5, race: 1 },
 			{ label: 'Panzer Elite', value: 7, race: 3 }
 		]
@@ -55,7 +55,7 @@ export const LEADERBOARD_MODES: LeaderboardMode[] = [
 		value: 8,
 		factions: [
 			{ label: 'US Forces', value: 8, race: 0 },
-			{ label: 'British Forces', value: 10, race: 2 },
+			{ label: 'Commonwealth', value: 10, race: 2 },
 			{ label: 'Wehrmacht', value: 9, race: 1 },
 			{ label: 'Panzer Elite', value: 11, race: 3 }
 		]
@@ -65,7 +65,7 @@ export const LEADERBOARD_MODES: LeaderboardMode[] = [
 		value: 12,
 		factions: [
 			{ label: 'US Forces', value: 12, race: 0 },
-			{ label: 'British Forces', value: 14, race: 2 },
+			{ label: 'Commonwealth', value: 14, race: 2 },
 			{ label: 'Wehrmacht', value: 13, race: 1 },
 			{ label: 'Panzer Elite', value: 15, race: 3 }
 		]
@@ -75,7 +75,7 @@ export const LEADERBOARD_MODES: LeaderboardMode[] = [
 		value: 16,
 		factions: [
 			{ label: 'US Forces', value: 16, race: 0 },
-			{ label: 'British Forces', value: 18, race: 2 },
+			{ label: 'Commonwealth', value: 18, race: 2 },
 			{ label: 'Wehrmacht', value: 17, race: 1 },
 			{ label: 'Panzer Elite', value: 19, race: 3 }
 		]

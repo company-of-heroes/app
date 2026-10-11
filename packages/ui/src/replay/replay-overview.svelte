@@ -388,7 +388,6 @@
 						{#if previewId}
 							<PlayerProfileLink
 								{href}
-								playerId={previewId}
 								class={cn(interactive, nameTextClass(player.name), 'hover:text-primary')}
 							>
 								{player.name}
@@ -507,7 +506,6 @@
 						{#if previewId}
 							<PlayerProfileLink
 								{href}
-								playerId={previewId}
 								class={cn(interactive, nameTextClass(label), 'hover:text-primary')}
 							>
 								{label}

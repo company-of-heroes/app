@@ -107,7 +107,7 @@ export function getCountryDisplayName(country: string | null | undefined): strin
 const RACE_LABELS: Record<Race, string> = {
 	[Race.US]: 'US Forces',
 	[Race.Wehrmacht]: 'Wehrmacht',
-	[Race.Commonwealth]: 'British Forces',
+	[Race.Commonwealth]: 'Commonwealth',
 	[Race.PanzerElite]: 'Panzer Elite'
 };
 

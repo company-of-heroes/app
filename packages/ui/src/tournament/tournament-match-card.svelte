@@ -6,7 +6,6 @@
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import { playerPreviewId } from '../player/player-preview-cache';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import { formatDate } from '../format/date';
@@ -101,8 +100,6 @@
 		{#if player}
 			<PlayerProfileLink
 				href={host.routes.player(player.profileId)}
-				playerId={playerPreviewId({ steamId: player.steamId, profileId: player.profileId }) ??
-					String(player.profileId)}
 				class={cn(interactive, 'hover:text-primary min-w-0 flex-1 truncate')}
 			>
 				{player.alias}

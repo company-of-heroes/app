@@ -1,6 +1,7 @@
 // Generates 50 distinct WWII-style service ribbons per faction (ribbon bars as worn on a uniform) into
 // ../ribbons. Each faction has its own colours, signature pattern and devices. Then ranked series:
 // the same ribbon with 1 to 5 devices for levels 1 to 5. Two batches of 25 singles and 3 series each.
+// Every ribbon of a faction shares the same edge stripes, so the faction reads at a glance.
 // Seeded, so running it again gives the same files. Run: node scripts/generate-ribbons.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -18,6 +19,8 @@ const LEVELS = 5;
 const LEVEL_METALS = ['bronze', 'bronze', 'silver', 'silver', 'gold'];
 const WIDTH = 70;
 const HEIGHT = 20;
+/** Dark line between a faction's edge stripes and the pattern. */
+const EDGE_DIVIDER = 0.4;
 
 let state = 20261011;
 const rand = () => {
@@ -234,6 +237,12 @@ const FACTIONS = [
 			'brown'
 		],
 		patterns: ['flag', 'flag', 'flag', 'campaign', 'campaign', 'bands', 'edged', 'striped'],
+		/** Edge stripes on both sides, outside → in, in ribbon units. */
+		edge: [
+			['olive', 2.4],
+			['white', 0.6],
+			['blue', 1.4]
+		],
 		devices: ['star', 'star', 'star', 'oak', 'v', 'arrowhead'],
 		metals: ['bronze', 'bronze', 'silver', 'gold']
 	},
@@ -242,9 +251,15 @@ const FACTIONS = [
 		key: 'wehrmacht',
 		/** Device that counts the level on ranked ribbons. */
 		rank: 'pip',
-		// No red: keeps clear of the black-white-red Reich ribbons.
+		// No red in the pattern: the black-white-red edge alone marks the faction.
 		colors: ['feldgrau', 'forest', 'black', 'white', 'yellow', 'silver', 'brown', 'bone', 'slate'],
 		patterns: ['fieldgrey', 'fieldgrey', 'fieldgrey', 'edged', 'bands', 'pinstripes', 'split'],
+		/** Edge stripes on both sides, outside → in, in ribbon units. */
+		edge: [
+			['black', 1.6],
+			['white', 1.2],
+			['red', 1.6]
+		],
 		devices: ['oak', 'swords', 'swords'],
 		metals: ['silver', 'silver', 'gold']
 	},
@@ -267,6 +282,11 @@ const FACTIONS = [
 			'crimson'
 		],
 		patterns: ['theatre', 'theatre', 'theatre', 'rainbow', 'bands', 'edged', 'split', 'campaign'],
+		/** Edge stripes on both sides, outside → in, in ribbon units. */
+		edge: [
+			['khaki', 2.4],
+			['red', 1.6]
+		],
 		devices: ['oak', 'rosette', 'rosette'],
 		metals: ['bronze', 'silver', 'silver']
 	},
@@ -277,6 +297,11 @@ const FACTIONS = [
 		rank: 'pip',
 		colors: ['black', 'rose', 'slate', 'silver', 'white', 'bordeaux', 'feldgrau', 'navy'],
 		patterns: ['piped', 'piped', 'piped', 'pinstripes', 'pinstripes', 'striped', 'edged', 'split'],
+		/** Edge stripes on both sides, outside → in, in ribbon units. */
+		edge: [
+			['black', 2.4],
+			['rose', 1.2]
+		],
 		devices: ['swords', 'tank', 'tank', 'oak'],
 		metals: ['silver', 'silver', 'gold']
 	},
@@ -303,12 +328,20 @@ const FACTIONS = [
 			'brown'
 		],
 		patterns: ['bands', 'bands', 'edged', 'pinstripes', 'split', 'campaign', 'striped'],
+		/** Edge stripes on both sides, outside → in, in ribbon units. */
+		edge: [
+			['gold', 3],
+			['white', 0.8]
+		],
 		devices: ['star', 'oak', 'rosette'],
 		metals: ['bronze', 'silver', 'gold']
 	}
 ];
-/** Turns [colour, weight] into absolute stripes across the ribbon width. */
-function layout(pattern) {
+/** Width of a faction's edge stripes on one side, divider included. */
+const edgeWidth = (faction) => faction.edge.reduce((sum, [, w]) => sum + w, 0) + EDGE_DIVIDER;
+
+/** Turns [colour, weight] into absolute stripes across the ribbon, between the faction's edges. */
+function layout(pattern, faction) {
 	const merged = [];
 	for (const [color, w] of pattern) {
 		if (merged.at(-1)?.[0] === color) {
@@ -319,9 +352,10 @@ function layout(pattern) {
 	}
 
 	const total = merged.reduce((sum, [, w]) => sum + w, 0);
-	let x = 0;
+	const edge = edgeWidth(faction);
+	let x = edge;
 	return merged.map(([color, w]) => {
-		const width = (w / total) * WIDTH;
+		const width = (w / total) * (WIDTH - 2 * edge);
 		const stripe = { color, x: round(x), width: round(width) };
 		x += width;
 		return stripe;
@@ -393,7 +427,29 @@ function devices(faction) {
 	return { kind, metal, count };
 }
 
-function ribbon(index, spec) {
+/** The faction's edge stripes on the left, mirrored on the right, each closed by a dark divider. */
+function edges(faction) {
+	const rects = [];
+	let x = 0;
+	for (const [color, w] of faction.edge) {
+		rects.push([COLORS[color], x, w], [COLORS[color], WIDTH - x - w, w]);
+		x += w;
+	}
+
+	const divider = [x, WIDTH - x - EDGE_DIVIDER].map(
+		(dx) =>
+			`<rect x="${round(dx)}" y="0" width="${EDGE_DIVIDER}" height="${HEIGHT}" fill="#000" fill-opacity="0.55"/>`
+	);
+	return [
+		...rects.map(
+			([fill, rx, w]) =>
+				`<rect x="${round(rx)}" y="0" width="${round(w)}" height="${HEIGHT}" fill="${fill}"/>`
+		),
+		...divider
+	].join('');
+}
+
+function ribbon(index, faction, spec) {
 	const id = `r${String(index).padStart(3, '0')}`;
 	const stripes = spec.stripes
 		.map(
@@ -436,7 +492,7 @@ function ribbon(index, spec) {
 				: ''
 		}
 	</defs>
-	${stripes}
+	${edges(faction)}${stripes}
 	<rect width="${WIDTH}" height="${HEIGHT}" fill="url(#${id}-weave)"/>
 	<rect width="${WIDTH}" height="${HEIGHT}" fill="url(#${id}-shade)"/>
 	<rect x="0.25" y="0.25" width="${WIDTH - 0.5}" height="${HEIGHT - 0.5}" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="0.5"/>
@@ -482,7 +538,7 @@ const manifest = [];
 function uniqueStripes(faction) {
 	while (true) {
 		const pattern = pick(faction.patterns);
-		const stripes = layout(PATTERNS[pattern](faction.colors));
+		const stripes = layout(PATTERNS[pattern](faction.colors), faction);
 		const key = stripes.map((s) => `${s.color}:${Math.round(s.width)}`).join('/');
 		if (!seen.has(key)) {
 			seen.add(key);
@@ -493,7 +549,7 @@ function uniqueStripes(faction) {
 
 function write(faction, spec, extra = {}) {
 	const index = manifest.length + 1;
-	const { id, svg } = ribbon(index, spec);
+	const { id, svg } = ribbon(index, faction, spec);
 	const file = `ribbon-${String(index).padStart(3, '0')}.svg`;
 	fs.writeFileSync(path.join(OUT, file), svg);
 	manifest.push({

@@ -2,12 +2,8 @@
 	import { useHost } from '../host/host.context';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { factionIcon, interactive, outcomeSurface } from '@company-of-heroes/ui/variants';
-	import { getRaceLabel } from '../format/player-format';
 	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { LiveLobbyPlayerStats } from '../live-lobby/types';
-	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import { playerPreviewId } from '../player/player-preview-cache';
-	import type { PlayerFactionPreview } from '../player/types';
 
 	export type TeamSkillPlayer = {
 		race: number | null;
@@ -26,23 +22,19 @@
 		highlightedPlayers?: string[];
 		levelFallback?: string;
 		outcome?: 'win' | 'loss' | null;
-		modeLabel?: string | null;
-		resolveRaceLabel?: (race: number) => string;
-		/** When false, show faction flags instead of rank badges (stats still pass to previews). */
+		/** When false, show faction flags instead of rank badges (stats still show in the tooltip). */
 		showRankBadges?: boolean;
 	};
 
 	type Chip = {
 		key: string;
 		href: string | null;
-		previewId: string | null;
 		label: string;
 		ranked: boolean;
 		src: string;
 		levelText: string | null;
 		className: string;
 		iconClass: string;
-		preview: PlayerFactionPreview;
 	};
 
 	const host = useHost();
@@ -53,8 +45,6 @@
 		highlightedPlayers = [],
 		levelFallback = '-',
 		outcome = null,
-		modeLabel = null,
-		resolveRaceLabel = getRaceLabel,
 		showRankBadges = true
 	}: Props = $props();
 
@@ -138,7 +128,6 @@
 		return {
 			key: playerKey(player, index),
 			href,
-			previewId: href ? playerPreviewId(player) : null,
 			label: tipLabel(player),
 			ranked,
 			src,
@@ -147,18 +136,7 @@
 			iconClass: cn(
 				!ranked && kind === 'me' && 'ring-primary',
 				!ranked && kind === 'filtered' && 'ring-info'
-			),
-			preview: {
-				alias: player.alias,
-				race: player.race,
-				modeLabel,
-				raceLabel: player.race != null ? resolveRaceLabel(player.race) : null,
-				avatarUrl: player.avatarUrl,
-				country: player.country,
-				stats: player.stats,
-				rankImageSrc: rankSrc,
-				factionFlagSrc: host.resolve.factionFlagByRace(player.race ?? 0)
-			}
+			)
 		};
 	}
 
@@ -183,16 +161,7 @@
 	)}
 >
 	{#each chips as chip (chip.key)}
-		{#if chip.href && chip.previewId}
-			<PlayerProfileLink
-				href={chip.href}
-				playerId={chip.previewId}
-				preview={chip.preview}
-				class={chip.className}
-			>
-				{@render chipBody(chip)}
-			</PlayerProfileLink>
-		{:else if chip.href}
+		{#if chip.href}
 			<a href={chip.href} class={chip.className} {@attach tooltip(chip.label)}>
 				{@render chipBody(chip)}
 			</a>

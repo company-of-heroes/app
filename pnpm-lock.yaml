@@ -72,6 +72,9 @@ importers:
       '@company-of-heroes/api':
         specifier: workspace:*
         version: link:../api
+      '@company-of-heroes/game-data':
+        specifier: workspace:*
+        version: link:../game-data
       '@company-of-heroes/i18n':
         specifier: workspace:*
         version: link:../i18n

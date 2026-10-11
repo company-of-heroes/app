@@ -12,7 +12,6 @@
 	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
-	import { playerPreviewId } from './player-preview-cache';
 	import PlayerStatsTable from './player-stats-table.svelte';
 
 	type Props = {
@@ -57,15 +56,11 @@
 	);
 	/** Unknown until opened; a card that turned out to have none keeps its open panel. */
 	const showStats = $derived(statsCount !== 0 || statsExpanded);
-	const previewId = $derived(
-		playerPreviewId({ steamId: player.steamId, profileId: player.profileId }) ??
-			String(player.profileId)
-	);
 </script>
 
 <div class="border-secondary-800 overflow-clip border-b">
 	<div class={cn('flex gap-4 p-4', showStats && 'border-secondary-800 border-b')}>
-		<PlayerProfileLink {href} playerId={previewId} class={cn(interactive, 'shrink-0')}>
+		<PlayerProfileLink {href} class={cn(interactive, 'shrink-0')}>
 			{#if player.avatarUrl}
 				<img
 					loading="lazy"
@@ -81,7 +76,6 @@
 		<div class="min-w-0 grow py-1">
 			<PlayerProfileLink
 				{href}
-				playerId={previewId}
 				class={cn(
 					interactive,
 					'hover:text-primary mb-2 flex min-w-0 items-center gap-2 transition-colors'

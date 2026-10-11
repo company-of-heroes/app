@@ -1,7 +1,7 @@
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import type { RecordModel } from 'pocketbase';
 import type { RewardCondition } from '@company-of-heroes/ui/reward/metrics';
-import type { PlayerRewards } from '@company-of-heroes/ui/reward/types';
+import type { PlayerRewards, RewardView } from '@company-of-heroes/ui/reward/types';
 import { normalizeBaseUrl, sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fromPbPromise, pbOptions, requireAuth } from '../pb';
@@ -72,6 +72,11 @@ export function rewardImageUrl(
 
 export class RewardsApi {
 	constructor(private deps: ApiDeps) {}
+
+	/** Every enabled reward, for the wiki; secret ones stay blank. */
+	catalog(): ResultAsync<RewardView[], ApiError> {
+		return fromPbPromise(sendV1<RewardView[]>(this.deps, '/rewards'), 'Failed to load rewards.');
+	}
 
 	/** Unlocked rewards of a player; the owner also gets locked ones with progress. */
 	forPlayer(steamId: string): ResultAsync<PlayerRewards, ApiError> {

@@ -29,6 +29,22 @@ export const REWARD_METRICS = [
 
 export type RewardMetric = (typeof REWARD_METRICS)[number];
 
+/** Metrics that count one Steam ID; every other metric counts the whole account. */
+export const REWARD_STEAM_METRICS: readonly RewardMetric[] = [
+	'matches_played',
+	'wins',
+	'upset_wins',
+	'win_streak',
+	'elo_reached',
+	'rank_reached',
+	'hours_played'
+];
+
+/** A reward without a Steam ID metric is earned by the account and only shown on its main Steam ID. */
+export function isAccountReward(conditions: readonly Pick<RewardCondition, 'metric'>[]): boolean {
+	return conditions.every((condition) => !REWARD_STEAM_METRICS.includes(condition.metric));
+}
+
 export type RewardFilterKey =
 	| 'raceId'
 	| 'matchtypeId'
@@ -140,7 +156,7 @@ export function rewardConditionKey(condition: Pick<RewardCondition, 'metric' | '
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
-/** "Wins · British Forces · 1 VS. 1 · Ranked · ≥ 60 min" */
+/** "Wins · Commonwealth · 1 VS. 1 · Ranked · ≥ 60 min" */
 export function formatRewardCondition(condition: RewardCondition, t: Translate): string {
 	const parts = [t(REWARD_METRIC_CATALOG[condition.metric]?.label ?? condition.metric)];
 	const filter = condition.filter ?? {};

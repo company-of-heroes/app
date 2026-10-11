@@ -655,11 +655,13 @@ export type SmurfWatchRecord<Tmain_candidates = unknown, Tsignals = unknown> = {
 };
 
 export type UserLabelsRecord = {
+	autoRank20?: boolean;
 	color: string;
 	created: IsoAutoDateString;
 	id: string;
 	name: string;
 	sort?: number;
+	tooltip?: string;
 	updated: IsoAutoDateString;
 };
 

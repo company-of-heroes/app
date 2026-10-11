@@ -11,7 +11,6 @@
 	} from '@company-of-heroes/ui/variants';
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import { playerPreviewId } from '../player/player-preview-cache';
 	import TournamentMatchCard from './tournament-match-card.svelte';
 	import type { TournamentMatch, TournamentParticipant, TournamentStanding } from './types';
 	import { useTournament } from './context';
@@ -64,10 +63,6 @@
 						{#if player}
 							<PlayerProfileLink
 								href={host.routes.player(player.profileId)}
-								playerId={playerPreviewId({
-									steamId: player.steamId,
-									profileId: player.profileId
-								}) ?? String(player.profileId)}
 								class={cn(interactive, 'hover:text-primary font-medium')}
 							>
 								{player.alias}

@@ -13,6 +13,7 @@ import { SITE_URL } from '$core/site/urls';
 import { findCompanionUserBySteamId, readMetaVersion } from '$core/pocketbase/companion-user';
 import { findHiddenMatch, hideMatch, unhideMatch } from '$core/pocketbase/hidden-matches';
 import { invalidateHiddenMatchFilters } from '$lib/player/hidden-matches-cache';
+import { useBreadcrumbs } from '$lib/components/ui/breadcrumb';
 import { userAvatarSrc } from '$lib/components/user/user-avatar-src';
 import { getI18n, t } from '$lib/i18n';
 import { translateText } from '$lib/translate';
@@ -37,13 +38,15 @@ const doctrineBanners = import.meta.glob<string>('$lib/files/ct_branchbanner_*.p
 	import: 'default'
 });
 
-/** Desktop wiring for shared `@company-of-heroes/ui` components. Call once in the loaded layout. */
+/** Desktop wiring for shared `@company-of-heroes/ui` components. Call once in the loaded layout, after `createBreadcrumbs`. */
 export function provideAppHost(): HostContext {
+	const breadcrumbs = useBreadcrumbs();
 	return provideHost({
 		locale: () => getI18n().getLocale(),
 		openExternal: (url) =>
 			void openUrl(url).catch(() => app.toast.error(t('Could not open the link.'))),
 		href: (path) => path,
+		breadcrumbs: (steps, actions) => breadcrumbs.setTrail(steps, actions ?? null),
 		routes: {
 			player: (id) => `/players/${id}`,
 			match: (lobbyId) => `/history/${lobbyId}`,
@@ -59,7 +62,7 @@ export function provideAppHost(): HostContext {
 			tournamentNew: () => '/tournaments/new',
 			tournamentEdit: (slug) => `/tournaments/${slug}/edit`,
 			tournamentHallOfFame: () => '/tournaments/hall-of-fame',
-			wikiMap: (slug) => `${SITE_URL}/wiki/maps/${slug}`
+			wikiMap: (slug) => `/wiki/maps/${slug}`
 		},
 		url: {
 			param: (name) => page.url.searchParams.get(name),
@@ -337,6 +340,17 @@ export function provideAppHost(): HostContext {
 			},
 			rewards: {
 				forPlayer: (steamId) => unwrapApi(api.rewards.forPlayer(steamId))
+			},
+			docs: {
+				saveNote: (kind, slug, body) => unwrapApi(api.docs.saveNote(kind, slug, body)),
+				reportIssue: (title, description) =>
+					unwrapApi(
+						api.docs.report({
+							path: `${page.url.pathname}${page.url.search}`,
+							page: title,
+							description
+						})
+					)
 			},
 			tournaments: {
 				list: (scope) => unwrapApi(api.tournaments.list(scope)),

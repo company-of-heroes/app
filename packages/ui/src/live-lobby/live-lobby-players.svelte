@@ -63,7 +63,6 @@
 			{#if previewId}
 				<PlayerProfileLink
 					{href}
-					playerId={previewId}
 					aria-label={label}
 					class={cn(interactive, 'shrink-0 rounded-full')}
 				>
@@ -113,7 +112,6 @@
 			{#if previewId}
 				<PlayerProfileLink
 					{href}
-					playerId={previewId}
 					class={cn(interactive, 'min-w-0 truncate text-sm font-medium text-white')}
 				>
 					{label}

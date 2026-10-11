@@ -1,4 +1,4 @@
-import { getContext, hasContext, setContext } from 'svelte';
+import { getContext, hasContext, setContext, type Snippet } from 'svelte';
 import type { LobbyComment, MentionUser } from '../comment/types';
 import type { CommentVoteValue } from '../comment/vote';
 import type { LiveLobbyPlayer } from '../live-lobby/types';
@@ -475,6 +475,11 @@ export type HostContext = {
 	openExternal?: (url: string) => void;
 	/** Localize an internal path (website adds the locale prefix; the app returns it as is). */
 	href: (path: string) => string;
+	/**
+	 * Hosts with their own header breadcrumbs (the app): pages hand over their steps and
+	 * header actions instead of drawing a breadcrumb row. Returns a cleanup.
+	 */
+	breadcrumbs?: (steps: { label: string; href?: string }[], actions?: Snippet) => () => void;
 	routes: HostRoutes;
 	url: {
 		/** Current page search param. */

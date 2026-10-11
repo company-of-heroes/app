@@ -26,6 +26,7 @@
 	import UsersIcon from 'phosphor-svelte/lib/UsersIcon';
 	import BroadcastIcon from 'phosphor-svelte/lib/BroadcastIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
+	import BookOpenIcon from 'phosphor-svelte/lib/BookOpenIcon';
 	import logo64 from '@assets/logo/logo-64.webp';
 	import logo128 from '@assets/logo/logo-128.webp';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
@@ -75,13 +76,15 @@
 	);
 
 	createApp(app);
-	provideAppHost();
 	createBreadcrumbs();
+	provideAppHost();
 
 	const breadcrumbs = useBreadcrumbs();
 	const showBack = $derived(page.url.pathname !== '/');
 	const backHref = $derived(
-		crumbsFromPath(page.url.pathname, breadcrumbs.extra).find((crumb) => crumb.href)?.href ?? '/'
+		(breadcrumbs.trail ?? crumbsFromPath(page.url.pathname, breadcrumbs.extra)).find(
+			(crumb) => crumb.href
+		)?.href ?? '/'
 	);
 	const BOOT_ROUTES = new Set(['/splashscreen', '/setup']);
 	let hasClientHistory = $state(false);
@@ -132,8 +135,10 @@
 <svelte:boundary>
 	{#snippet pending()}{/snippet}
 	<div class="flex h-screen w-screen overflow-hidden">
+		<!-- Both columns reach a pixel below the window: Windows draws its own 1px frame there
+		(no decorations), so a closing border-b of the last block would show as a double line. -->
 		<div
-			class="border-secondary-800 bg-secondary-950 flex min-w-[300px] flex-col gap-8 border-r text-white"
+			class="border-secondary-800 bg-secondary-950 -mb-px flex min-w-[300px] flex-col gap-8 border-r text-white"
 		>
 			<div class="mt-6 flex items-center gap-4 px-4">
 				<img
@@ -172,6 +177,10 @@
 				<Nav.Link href="/tournaments">
 					<TrophyIcon size={28} weight="duotone" />
 					{t('Tournaments')}
+				</Nav.Link>
+				<Nav.Link href="/wiki">
+					<BookOpenIcon size={28} weight="duotone" />
+					{t('Wiki')}
 				</Nav.Link>
 				<Nav.Link href="/streaming">
 					<BroadcastIcon size={28} weight="duotone" />
@@ -253,7 +262,7 @@
 				</div>
 			</Nav.Root>
 		</div>
-		<div class="relative flex min-w-0 grow flex-col">
+		<div class="relative -mb-px flex min-w-0 grow flex-col">
 			<div aria-hidden="true" class="pointer-events-none absolute inset-0">
 				<img src={pageBackgroundImage} alt="" class="size-full object-cover" />
 				<div class="absolute inset-0 bg-gray-950/95 mix-blend-color"></div>
@@ -289,7 +298,10 @@
 						{/if}
 						<Breadcrumb />
 					</div>
-					<HeaderSteamPlayers />
+					<div class="flex items-center gap-3">
+						{@render breadcrumbs.actions?.()}
+						<HeaderSteamPlayers />
+					</div>
 				</header>
 				{@render children()}
 			</main>

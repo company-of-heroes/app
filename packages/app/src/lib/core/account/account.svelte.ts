@@ -731,6 +731,21 @@ export class AccountService {
 		return null;
 	}
 
+	/** Makes a linked Steam ID the main one (first in the list); it shows the account rewards. */
+	async setMainSteamId(steamId: string): Promise<void> {
+		const user = this.#user;
+		if (!user || this.isImpersonating) {
+			return;
+		}
+
+		const result = await api.auth.setMainSteamId(steamId);
+		if (result.isErr()) {
+			throw new Error(t(result.error.message));
+		}
+
+		this.#user = { ...user, steamIds: result.value.steamIds } as User;
+	}
+
 	/**
 	 * Updates display name and password on PocketBase and in local settings.
 	 * Email changes use {@link requestEmailChange} (confirm on the website).

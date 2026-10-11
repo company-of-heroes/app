@@ -66,7 +66,7 @@ export const MATCH_TYPES: Record<number, string> = {
 const RACE_LABELS: Record<number, string> = {
 	0: 'US Forces',
 	1: 'Wehrmacht',
-	2: 'British Forces',
+	2: 'Commonwealth',
 	3: 'Panzer Elite'
 };
 

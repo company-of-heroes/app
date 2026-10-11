@@ -18,7 +18,7 @@
 			<feDropShadow dx="0" dy="0.6" stdDeviation="0.5" flood-color="#000" flood-opacity="0.6"/>
 		</filter>
 	</defs>
-	<rect x="0" y="0" width="14" height="20" fill="#8f2232"/><rect x="14" y="0" width="42" height="20" fill="#e0b23a"/><rect x="56" y="0" width="14" height="20" fill="#8f2232"/>
+	<rect x="0" y="0" width="2.4" height="20" fill="#b8924a"/><rect x="67.6" y="0" width="2.4" height="20" fill="#b8924a"/><rect x="2.4" y="0" width="1.6" height="20" fill="#c23b3b"/><rect x="66" y="0" width="1.6" height="20" fill="#c23b3b"/><rect x="4" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="65.6" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="4.4" y="0" width="12.24" height="20" fill="#8f2232"/><rect x="16.64" y="0" width="36.72" height="20" fill="#e0b23a"/><rect x="53.36" y="0" width="12.24" height="20" fill="#8f2232"/>
 	<rect width="70" height="20" fill="url(#r271-weave)"/>
 	<rect width="70" height="20" fill="url(#r271-shade)"/>
 	<rect x="0.25" y="0.25" width="69.5" height="19.5" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="0.5"/>

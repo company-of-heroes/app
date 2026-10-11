@@ -31,7 +31,6 @@
 	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
-	import { playerPreviewId } from './player-preview-cache';
 	import { useHost } from '../host/host.context';
 	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { CommunityMatchDetail } from '../replay/types';
@@ -153,10 +152,6 @@
 		{#if matchPlayer.steamId}
 			<PlayerProfileLink
 				href={host.routes.player(matchPlayer.steamId)}
-				playerId={playerPreviewId({
-					steamId: matchPlayer.steamId,
-					profileId: matchPlayer.profile_id
-				}) ?? matchPlayer.steamId}
 				class={cn(
 					interactive,
 					'hover:text-primary min-w-0 truncate transition-colors',

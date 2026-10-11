@@ -2,8 +2,10 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { useHost } from '../host/host.context';
+	import { getRaceLabel } from '../format/player-format';
 	import { interactive } from '../variants';
 	import RewardIcon from './reward-icon.svelte';
+	import { rewardRaceId, ribbonSeriesMap } from './ribbon';
 	import type { PlayerRewards, RewardView } from './types';
 
 	type Props = {
@@ -16,22 +18,19 @@
 
 	type Rack = { unlocked: RewardView[]; locked: RewardView[] };
 
+	type FactionGroup = { raceId: number | null; label: string; rewards: RewardView[] };
+
 	/** Locked rewards the owner sees before expanding: the closest ones. */
 	const NEXT_UP = 3;
+	/** Rack order: US, Wehrmacht, British, Panzer Elite, then global ones. */
+	const FACTION_ORDER: (number | null)[] = [0, 1, 2, 3, null];
 
 	let { steamId, rewards: preloaded, class: className }: Props = $props();
 	const host = useHost();
 	const { t } = useI18n();
-	const seriesOf = new Map(
-		host.resolve
-			.ribbons()
-			.flatMap((ribbon) =>
-				ribbon.series && ribbon.level
-					? [[ribbon.key, { series: ribbon.series, level: ribbon.level }] as const]
-					: []
-			)
-	);
-	let showAllLocked = $state(false);
+	const ribbons = host.resolve.ribbons();
+	const ribbonByKey = new Map(ribbons.map((ribbon) => [ribbon.key, ribbon]));
+	const seriesOf = ribbonSeriesMap(ribbons);
 
 	/**
 	 * One ribbon per ranked series, like a real ribbon rack: the highest unlocked level
@@ -98,6 +97,19 @@
 		return { unlocked, locked };
 	}
 
+	/** Unlocked ribbons per faction, each group keeping its newest-first order. */
+	function byFaction(list: RewardView[]): FactionGroup[] {
+		return FACTION_ORDER.map((raceId) => ({
+			raceId,
+			label: raceId === null ? t('Global') : getRaceLabel(raceId),
+			rewards: list.filter(
+				(reward) =>
+					rewardRaceId(reward, reward.ribbon ? ribbonByKey.get(reward.ribbon) : undefined) ===
+					raceId
+			)
+		})).filter((group) => group.rewards.length > 0);
+	}
+
 	const fetched = $derived(
 		preloaded === undefined
 			? host.api.rewards
@@ -109,43 +121,45 @@
 </script>
 
 {#snippet icons({ unlocked, locked }: Rack)}
-	{@const shownLocked = showAllLocked ? locked : locked.slice(0, NEXT_UP)}
 	{#if unlocked.length > 0 || locked.length > 0}
-		<div class={cn('mb-4 flex max-w-[30rem] flex-col gap-2', className)}>
+		<div class={cn('mb-4 flex max-w-[44rem] flex-col gap-3', className)}>
 			{#if unlocked.length > 0}
-				<ul class="flex flex-wrap items-center gap-0.5" aria-label={t('Rewards')}>
-					{#each unlocked as reward (reward.id)}
-						<li class="flex"><RewardIcon {reward} /></li>
+				<ul class="flex flex-wrap gap-x-6 gap-y-3" aria-label={t('Rewards')}>
+					{#each byFaction(unlocked) as group (group.raceId ?? 'global')}
+						<li class="flex flex-col gap-1.5">
+							<span class="text-secondary-500 text-xs font-semibold tracking-wide uppercase">
+								{group.label}
+							</span>
+							<ul class="flex flex-wrap items-center gap-1" aria-label={group.label}>
+								{#each group.rewards as reward (reward.id)}
+									<li class="flex"><RewardIcon {reward} /></li>
+								{/each}
+							</ul>
+						</li>
 					{/each}
 				</ul>
 			{/if}
 			{#if locked.length > 0}
-				<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+				<div class="flex flex-wrap items-center gap-x-2 gap-y-1.5">
 					<span class="text-secondary-500 text-xs font-semibold tracking-wide uppercase">
 						{t('Next')}
 					</span>
-					<ul class="flex flex-wrap items-center gap-0.5" aria-label={t('Locked')}>
-						{#each shownLocked as reward (reward.id)}
+					<ul class="flex flex-wrap items-center gap-1" aria-label={t('Locked')}>
+						{#each locked.slice(0, NEXT_UP) as reward (reward.id)}
 							<li class="flex"><RewardIcon {reward} /></li>
 						{/each}
 					</ul>
-					{#if locked.length > NEXT_UP}
-						<button
-							type="button"
-							class={cn(
-								interactive,
-								'text-secondary-400 hover:text-primary text-xs transition-colors'
-							)}
-							aria-expanded={showAllLocked}
-							onclick={() => (showAllLocked = !showAllLocked)}
-						>
-							{showAllLocked
-								? t('Show less')
-								: t('+{count} more', { count: locked.length - NEXT_UP })}
-						</button>
-					{/if}
 				</div>
 			{/if}
+			<a
+				href={host.href(`/wiki/rewards?player=${steamId}`)}
+				class={cn(
+					interactive,
+					'text-secondary-400 hover:text-primary w-fit text-xs transition-colors'
+				)}
+			>
+				{t('Show details')}
+			</a>
 		</div>
 	{/if}
 {/snippet}

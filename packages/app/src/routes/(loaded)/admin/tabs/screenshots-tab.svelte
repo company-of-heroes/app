@@ -582,7 +582,6 @@
 							{#if owner}
 								<PlayerProfileLink
 									href="/players/{capture.steam_id}"
-									playerId={capture.steam_id}
 									class={cn(
 										interactive,
 										'text-secondary-400 hover:text-primary pointer-events-auto block truncate text-xs tabular-nums'
@@ -594,7 +593,6 @@
 							{:else}
 								<PlayerProfileLink
 									href="/players/{capture.steam_id}"
-									playerId={capture.steam_id}
 									class={cn(
 										interactive,
 										'text-secondary-400 hover:text-primary pointer-events-auto block truncate text-xs'

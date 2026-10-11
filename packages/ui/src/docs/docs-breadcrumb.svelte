@@ -36,32 +36,40 @@
 		].filter((step) => step !== null)
 	);
 	const back = $derived(steps.at(-1)!.href);
+
+	$effect(() => host.breadcrumbs?.([...steps, { label: current }], report));
 </script>
 
-<!-- The back button and breadcrumb row from the replay pages. -->
-<div class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">
-	<a
-		href={back}
-		aria-label={t('Back to wiki')}
-		class={cn(
-			interactive,
-			'border-secondary-600 bg-secondary-800 hover:border-secondary-500 hover:bg-secondary-700 inline-flex size-9 shrink-0 items-center justify-center rounded-md border text-white'
-		)}
-	>
-		<ArrowLeftIcon class="size-4" weight="duotone" />
-	</a>
-	<nav aria-label="Breadcrumb" class="font-heading min-w-0 text-sm font-bold">
-		<ol class="flex min-w-0 items-baseline">
-			{#each steps as step (step.href)}
-				<li class="shrink-0">
-					<a href={step.href} class={cn(interactive, 'text-secondary-400 hover:text-primary')}>
-						{step.label}
-					</a>
-				</li>
-				<li aria-hidden="true" class="text-secondary-500 mx-2">/</li>
-			{/each}
-			<li class="min-w-0 truncate text-white" aria-current="page">{current}</li>
-		</ol>
-	</nav>
-	<DocsReportButton page={current} class="ml-auto shrink-0" />
-</div>
+{#snippet report()}
+	<DocsReportButton page={current} class="shrink-0" />
+{/snippet}
+
+<!-- The back button and breadcrumb row from the replay pages; the app shows them in its header. -->
+{#if !host.breadcrumbs}
+	<div class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">
+		<a
+			href={back}
+			aria-label={t('Back to wiki')}
+			class={cn(
+				interactive,
+				'border-secondary-600 bg-secondary-800 hover:border-secondary-500 hover:bg-secondary-700 inline-flex size-9 shrink-0 items-center justify-center rounded-md border text-white'
+			)}
+		>
+			<ArrowLeftIcon class="size-4" weight="duotone" />
+		</a>
+		<nav aria-label="Breadcrumb" class="font-heading min-w-0 text-sm font-bold">
+			<ol class="flex min-w-0 items-baseline">
+				{#each steps as step (step.href)}
+					<li class="shrink-0">
+						<a href={step.href} class={cn(interactive, 'text-secondary-400 hover:text-primary')}>
+							{step.label}
+						</a>
+					</li>
+					<li aria-hidden="true" class="text-secondary-500 mx-2">/</li>
+				{/each}
+				<li class="min-w-0 truncate text-white" aria-current="page">{current}</li>
+			</ol>
+		</nav>
+		<DocsReportButton page={current} class="ml-auto shrink-0" />
+	</div>
+{/if}

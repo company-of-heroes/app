@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Badge } from '@company-of-heroes/ui/badge';
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Form from '@company-of-heroes/ui/form';
 	import { Input } from '@company-of-heroes/ui/input';
@@ -8,6 +9,7 @@
 	import {
 		requestEmailChange,
 		requestVerification,
+		setMainSteamId,
 		updatePassword,
 		updateProfile
 	} from '$lib/remote/account.remote';
@@ -34,6 +36,10 @@
 			return t('Email updated.');
 		}
 
+		if (data.saved === 'main') {
+			return t('Main Steam account changed.');
+		}
+
 		if (data.saved === 'verified') {
 			return t('Your email has been verified.');
 		}
@@ -53,6 +59,11 @@
 	const verificationIssue = $derived(requestVerification.fields.allIssues()?.[0]?.message);
 	const emailChangeIssue = $derived(requestEmailChange.fields.allIssues()?.[0]?.message);
 	const passwordIssue = $derived(updatePassword.fields.allIssues()?.[0]?.message);
+	const mainIssue = $derived(
+		data.steamAccounts
+			.map((account) => setMainSteamId.for(account.steamId).fields.allIssues()?.[0]?.message)
+			.find(Boolean)
+	);
 </script>
 
 <svelte:head>
@@ -78,6 +89,55 @@
 
 {#if banner}
 	<p class="text-success border-secondary-800 border-b px-4 py-3 text-sm">{banner}</p>
+{/if}
+
+{#if data.steamAccounts.length > 0}
+	<section id="steam-accounts" class="border-secondary-800 border-b">
+		<div class="border-secondary-800 border-b px-4 py-3">
+			<p class="text-sm font-medium text-white">{t('Steam accounts')}</p>
+			<p class="text-secondary-400 mt-1 text-sm">
+				{t('Account rewards only show on your main Steam account.')}
+			</p>
+		</div>
+		<ul class="-mb-px">
+			{#each data.steamAccounts as account, index (account.steamId)}
+				{@const makeMain = setMainSteamId.for(account.steamId)}
+				<li class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">
+					{#if account.avatarUrl}
+						<img src={account.avatarUrl} alt="" class="size-8 shrink-0 rounded-xs" />
+					{/if}
+					<div class="min-w-0 flex-1">
+						<p class="truncate text-sm font-medium text-white">
+							{account.name ?? account.steamId}
+						</p>
+						<p class="text-secondary-500 truncate text-xs tabular-nums">{account.steamId}</p>
+					</div>
+					{#if index === 0}
+						<Badge class="shrink-0">{t('Main')}</Badge>
+					{/if}
+					<Button
+						href={href(`/players/${account.steamId}`)}
+						variant="ghost"
+						size="sm"
+						class="shrink-0"
+					>
+						{t('View profile')}
+					</Button>
+					{#if index > 0}
+						<form {...makeMain} class="shrink-0">
+							<input {...makeMain.fields.steamId.as('hidden', account.steamId)} />
+							<Button type="submit" variant="secondary" size="sm">
+								{t('Make main account')}
+							</Button>
+						</form>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+		{#if mainIssue}
+			<p class="text-destructive border-secondary-800 border-t px-4 py-3 text-sm">{mainIssue}</p>
+		{/if}
+	</section>
 {/if}
 
 <form {...updateProfile} enctype="multipart/form-data">

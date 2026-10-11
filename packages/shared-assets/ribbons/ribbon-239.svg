@@ -11,7 +11,7 @@
 			<rect width="0.5" height="1.2" fill="#000" opacity="0.1"/>
 		</pattern>
 	</defs>
-	<rect x="0" y="0" width="31.82" height="20" fill="#5d6450"/><rect x="31.82" y="0" width="1.91" height="20" fill="#a9adb1"/><rect x="33.73" y="0" width="2.55" height="20" fill="#5d6450"/><rect x="36.27" y="0" width="1.91" height="20" fill="#a9adb1"/><rect x="38.18" y="0" width="31.82" height="20" fill="#5d6450"/>
+	<rect x="0" y="0" width="1.6" height="20" fill="#1c1c1c"/><rect x="68.4" y="0" width="1.6" height="20" fill="#1c1c1c"/><rect x="1.6" y="0" width="1.2" height="20" fill="#f4f1e8"/><rect x="67.2" y="0" width="1.2" height="20" fill="#f4f1e8"/><rect x="2.8" y="0" width="1.6" height="20" fill="#c23b3b"/><rect x="65.6" y="0" width="1.6" height="20" fill="#c23b3b"/><rect x="4.4" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="65.2" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="4.8" y="0" width="27.45" height="20" fill="#5d6450"/><rect x="32.25" y="0" width="1.65" height="20" fill="#a9adb1"/><rect x="33.9" y="0" width="2.2" height="20" fill="#5d6450"/><rect x="36.1" y="0" width="1.65" height="20" fill="#a9adb1"/><rect x="37.75" y="0" width="27.45" height="20" fill="#5d6450"/>
 	<rect width="70" height="20" fill="url(#r239-weave)"/>
 	<rect width="70" height="20" fill="url(#r239-shade)"/>
 	<rect x="0.25" y="0.25" width="69.5" height="19.5" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="0.5"/>

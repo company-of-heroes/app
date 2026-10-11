@@ -3,6 +3,8 @@ export type PlayerLabel = {
 	name: string;
 	color: string;
 	sort?: number;
+	/** Shown on hover; empty shows none. */
+	tooltip?: string;
 };
 
 export type PlayerEloSlot = {

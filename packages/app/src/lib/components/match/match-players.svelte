@@ -7,7 +7,6 @@
 	import { getMeSteamIds } from '$lib/utils/player-me';
 	import { useI18n } from '$lib/i18n';
 	import { TeamPlayerSkills } from '@company-of-heroes/ui/match';
-	import { getModeLabel } from '@company-of-heroes/ui/format/player-format';
 	import { isRankedMatch } from '@company-of-heroes/ui/format/match-type';
 
 	type Props = {
@@ -122,7 +121,6 @@
 			country: player.profile?.country ?? null
 		}))
 	);
-	const modeLabel = $derived(getModeLabel(matchTypeId));
 </script>
 
 <div {...restProps} class={cn('flex items-center', restProps.class)}>
@@ -130,7 +128,6 @@
 		players={skillPlayers}
 		{meSteamIds}
 		{highlightedPlayers}
-		{modeLabel}
 		levelFallback="-"
 		showRankBadges={match.isRanked}
 	/>

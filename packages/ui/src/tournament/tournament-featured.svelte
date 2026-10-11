@@ -9,7 +9,6 @@
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import { playerPreviewId } from '../player/player-preview-cache';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import { parseTournamentDate, roundLabel } from './format';
@@ -81,8 +80,6 @@
 			{/if}
 			<PlayerProfileLink
 				href={host.routes.player(entry.profileId)}
-				playerId={playerPreviewId({ steamId: entry.steamId, profileId: entry.profileId }) ??
-					String(entry.profileId)}
 				class={cn(
 					interactive,
 					'hover:text-primary font-heading min-w-0 truncate text-lg font-bold',

@@ -1,4 +1,5 @@
 import { errAsync, okAsync } from 'neverthrow';
+import { uncache } from '../cache';
 import { mergedProfile, steamIdsOf, type UserRow } from '../domain/users';
 import { conflict, notFound } from '../errors';
 import { fromPb, pbMaybe, sequence, type Task } from '../result';
@@ -174,6 +175,45 @@ export class UsersService extends Service {
 				'Could not link the Steam account'
 			)
 				.andThen(() => this.syncCheaterLabels(userId))
+				.map(() => ({ steamIds: next }));
+		});
+	}
+
+	/** The linked Steam accounts in order (the first is the main one), with name and avatar. */
+	steamAccounts(
+		userId: string
+	): Task<{ steamId: string; name: string | null; avatarUrl: string | null }[]> {
+		return this.steamIdsOf(userId).andThen((steamIds) =>
+			this.steam.playerSummaries(steamIds).map((summaries) =>
+				steamIds.map((steamId) => ({
+					steamId,
+					name: summaries.get(steamId)?.personaname ?? null,
+					avatarUrl: summaries.get(steamId)?.avatarmedium ?? null
+				}))
+			)
+		);
+	}
+
+	/**
+	 * Makes a linked Steam id the main one by moving it to the front. The main id carries
+	 * the account rewards and is the account's default profile.
+	 */
+	setMainSteamId(userId: string, steamId: string): Task<{ steamIds: string[] }> {
+		return this.steamIdsOf(userId).andThen((steamIds) => {
+			if (!steamIds.includes(steamId)) {
+				return errAsync(notFound('This Steam account is not linked to your account.'));
+			}
+
+			const next = [steamId, ...steamIds.filter((id) => id !== steamId)];
+			if (steamIds[0] === steamId) {
+				return okAsync({ steamIds });
+			}
+
+			return fromPb(
+				this.pb.collection('users').update(userId, { steamIds: next }),
+				'Could not change the main Steam account'
+			)
+				.andThen(() => sequence(steamIds, (id) => uncache(`rewards:player:${id}`)))
 				.map(() => ({ steamIds: next }));
 		});
 	}

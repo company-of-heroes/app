@@ -15,6 +15,7 @@
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import SignOutIcon from 'phosphor-svelte/lib/SignOutIcon';
 	import UserIcon from 'phosphor-svelte/lib/UserIcon';
+	import UserSwitchIcon from 'phosphor-svelte/lib/UserSwitchIcon';
 
 	const { t } = useI18n();
 	const user = $derived(page.data.user);
@@ -23,6 +24,7 @@
 	const displayName = $derived(user ? authDisplayName(user) : '');
 	const accountHref = $derived(href('/account'));
 	const updateProfileHref = $derived(href('/account/profile'));
+	const steamAccountsHref = $derived(href('/account#steam-accounts'));
 	const profileHref = $derived(
 		user?.steamIds?.[0] ? href(`/players/${user.steamIds[0]}`) : undefined
 	);
@@ -100,6 +102,12 @@
 				<Dropdown.Item class={dropdownItemIcon} onSelect={() => goto(profileHref)}>
 					<UserIcon size={18} weight="duotone" class="text-primary shrink-0" />
 					{t('View profile')}
+				</Dropdown.Item>
+			{/if}
+			{#if (user.steamIds?.length ?? 0) > 1}
+				<Dropdown.Item class={dropdownItemIcon} onSelect={() => goto(steamAccountsHref)}>
+					<UserSwitchIcon size={18} weight="duotone" class="text-primary shrink-0" />
+					{t('Switch account')}
 				</Dropdown.Item>
 			{/if}
 			<Dropdown.Item class={dropdownItemIcon} onSelect={() => goto(updateProfileHref)}>

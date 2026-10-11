@@ -62,7 +62,6 @@
 			{#if capture.steam_id}
 				<PlayerProfileLink
 					href="/players/{capture.steam_id}"
-					playerId={capture.steam_id}
 					class={cn(
 						interactive,
 						'text-secondary-100 hover:text-primary block truncate text-sm font-medium'

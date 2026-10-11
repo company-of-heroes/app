@@ -36,7 +36,6 @@
 		<PlayerProfileLink
 			{...restProps}
 			href={profileHref}
-			playerId={previewId}
 			class={cn('hover:text-primary min-w-0 truncate transition-colors', isMe && mePlayerText)}
 		>
 			{player.profile?.alias ?? player.name ?? t('CPU')}

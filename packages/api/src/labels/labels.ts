@@ -10,6 +10,9 @@ export type UserLabel = RecordModel & {
 	name: string;
 	color: string;
 	sort?: number;
+	tooltip?: string;
+	/** Granted automatically for rank 20 on two 1v1/2v2 ladders. */
+	autoRank20?: boolean;
 };
 
 export type PlayerLabelAssignment = RecordModel & {

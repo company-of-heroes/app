@@ -68,6 +68,11 @@ export function refreshPlayerLabels(steamIds: string[]) {
 	preloadPlayerLabels(steamIds);
 }
 
+/** Loads every cached player again, e.g. after staff renamed a label or changed its tooltip. */
+export function refreshAllPlayerLabels() {
+	refreshPlayerLabels(Object.keys(bySteam));
+}
+
 async function fetchIds(ids: string[]) {
 	try {
 		const loaded = labelsBySteamId(await listAssignmentsForSteamIds(ids));

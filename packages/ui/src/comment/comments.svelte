@@ -763,7 +763,6 @@
 						{#if steamId}
 							<PlayerProfileLink
 								{href}
-								playerId={steamId}
 								class={cn(
 									interactive,
 									'shrink-0 font-semibold',

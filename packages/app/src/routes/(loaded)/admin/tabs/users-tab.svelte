@@ -305,7 +305,6 @@
 				{#if steamId}
 					<PlayerProfileLink
 						href={resolve('/(loaded)/players/[id]', { id: steamId })}
-						playerId={steamId}
 						class={cn(interactive, 'hover:text-primary min-w-0 truncate transition-colors')}
 					>
 						<User.Name class="font-medium" />
