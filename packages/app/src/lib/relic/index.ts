@@ -7,6 +7,7 @@ import type {
 	RelicProfile,
 	TransformedMatch
 } from '@fknoobs/app';
+import { createTtlCache, mapLimit } from '@company-of-heroes/api';
 import { fetch } from '$core/http/fetch';
 import { isProfileId, isSteamId } from '$lib/utils';
 import { transformMatchHistory } from './transform-match-history';
@@ -31,10 +32,17 @@ export function relicLeaderboardFingerprint(stats?: LeaderboardStat[] | null): s
 /** Most recent raw match history items kept for the staff "Copy JSON" action. */
 const RAW_MATCH_CACHE_SIZE = 500;
 
+/** Relic GETs are cached this long, which also dedupes identical in-flight requests. */
+const REQUEST_CACHE_TTL_MS = 60_000;
+
+/** Parallel getpersonalstat chunk requests. */
+const RELIC_CHUNK_CONCURRENCY = 4;
+
 export class RelicClient {
 	private readonly baseUrl: string;
 	private readonly defaultFetchOptions: RequestInit;
 	private readonly rawMatches = new Map<number, unknown>();
+	private readonly requestCache = createTtlCache<Promise<unknown>>({ ttlMs: REQUEST_CACHE_TTL_MS });
 
 	/**
 	 * Constructs a new RelicClient instance.
@@ -119,10 +127,12 @@ export class RelicClient {
 		}
 
 		const MAX_PER_REQUEST = 10;
-		const out: RelicProfile[] = [];
-
+		const chunks: number[][] = [];
 		for (let i = 0; i < unique.length; i += MAX_PER_REQUEST) {
-			const chunk = unique.slice(i, i + MAX_PER_REQUEST);
+			chunks.push(unique.slice(i, i + MAX_PER_REQUEST));
+		}
+
+		const results = await mapLimit(chunks, RELIC_CHUNK_CONCURRENCY, async (chunk) => {
 			const result = await this.request<PersonalStat>(
 				['community', 'leaderboard', 'getpersonalstat'],
 				{
@@ -140,10 +150,10 @@ export class RelicClient {
 				);
 			});
 
-			out.push(...filteredMembers);
-		}
+			return filteredMembers;
+		});
 
-		return out;
+		return results.flat();
 	}
 
 	/**
@@ -153,23 +163,24 @@ export class RelicClient {
 	async getPersonalStats(ids: number[]): Promise<PersonalStat[]> {
 		const unique = [...new Set(ids.filter((id) => Number.isInteger(id) && id > 0))];
 		const MAX_PER_REQUEST = 10;
-		const out: PersonalStat[] = [];
-
+		const chunks: number[][] = [];
 		for (let i = 0; i < unique.length; i += MAX_PER_REQUEST) {
-			const chunk = unique.slice(i, i + MAX_PER_REQUEST);
-			try {
-				out.push(
-					await this.request<PersonalStat>(['community', 'leaderboard', 'getpersonalstat'], {
-						title: 'coh1',
-						profile_ids: JSON.stringify(chunk)
-					})
-				);
-			} catch (error) {
-				console.warn('[RELIC]: personalstat batch failed:', error);
-			}
+			chunks.push(unique.slice(i, i + MAX_PER_REQUEST));
 		}
 
-		return out;
+		const results = await mapLimit(chunks, RELIC_CHUNK_CONCURRENCY, async (chunk) => {
+			try {
+				return await this.request<PersonalStat>(['community', 'leaderboard', 'getpersonalstat'], {
+					title: 'coh1',
+					profile_ids: JSON.stringify(chunk)
+				});
+			} catch (error) {
+				console.warn('[RELIC]: personalstat batch failed:', error);
+				return null;
+			}
+		});
+
+		return results.filter((result): result is PersonalStat => result !== null);
 	}
 
 	/**
@@ -401,12 +412,13 @@ export class RelicClient {
 	}
 
 	/**
-	 * Performs a GET request against the API.
+	 * Performs a GET request against the API. Responses are cached for a minute
+	 * (key: method + URL with sorted params), except match history, which must stay fresh.
 	 *
 	 * @param pathSegments - URL path segments (will be URL‐encoded)
 	 * @param queryParams - Key/value pairs for URL query string
 	 */
-	private async request<T>(
+	private request<T>(
 		pathSegments: string[],
 		queryParams: Record<string, string | number> = {}
 	): Promise<T> {
@@ -415,7 +427,16 @@ export class RelicClient {
 		Object.entries(queryParams).forEach(([key, value]) =>
 			url.searchParams.set(key, value.toString())
 		);
+		url.searchParams.sort();
 
+		if (pathSegments.at(-1) === 'getrecentmatchhistorybyprofileid') {
+			return this.fetchJson<T>(url);
+		}
+
+		return this.requestCache.getOrLoad(`GET ${url.toString()}`, () => this.fetchJson<T>(url)) as Promise<T>;
+	}
+
+	private async fetchJson<T>(url: URL): Promise<T> {
 		let response: Response;
 		try {
 			response = await fetch(url.toString(), {

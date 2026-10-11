@@ -32,8 +32,14 @@ export function isLocalUrl(url: string): boolean {
 	}
 }
 
-export function shouldUseNativeFetch(url: string, pocketBaseOrigin: string): boolean {
-	return isPocketBaseUrl(url, pocketBaseOrigin) || isLocalUrl(url);
+export function shouldUseNativeFetch(
+	url: string,
+	pocketBaseOrigin: string,
+	siteOrigin: string
+): boolean {
+	return (
+		isPocketBaseUrl(url, pocketBaseOrigin) || isPocketBaseUrl(url, siteOrigin) || isLocalUrl(url)
+	);
 }
 
 export const localUrlPattern = /^https?:\/\/((localhost|127\.0\.0\.1|\[::1\]|::1)(:\d+)?)/i;

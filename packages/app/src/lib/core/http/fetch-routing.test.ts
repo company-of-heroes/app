@@ -8,6 +8,7 @@ import {
 } from './fetch-routing';
 
 const pbOrigin = 'https://api.coh1stats.com';
+const siteOrigin = 'https://coh1stats.com';
 
 describe('http/fetch-routing', () => {
 	describe('getUrl', () => {
@@ -56,12 +57,16 @@ describe('http/fetch-routing', () => {
 
 	describe('shouldUseNativeFetch', () => {
 		it('is true for PocketBase and localhost URLs', () => {
-			expect(shouldUseNativeFetch('https://api.coh1stats.com/api/test', pbOrigin)).toBe(true);
-			expect(shouldUseNativeFetch('http://localhost:8090/api/test', pbOrigin)).toBe(true);
+			expect(shouldUseNativeFetch('https://api.coh1stats.com/api/test', pbOrigin, siteOrigin)).toBe(
+				true
+			);
+			expect(shouldUseNativeFetch('http://localhost:8090/api/test', pbOrigin, siteOrigin)).toBe(
+				true
+			);
 		});
 
 		it('is false for external APIs', () => {
-			expect(shouldUseNativeFetch('https://reliclink.com/api', pbOrigin)).toBe(false);
+			expect(shouldUseNativeFetch('https://reliclink.com/api', pbOrigin, siteOrigin)).toBe(false);
 		});
 	});
 

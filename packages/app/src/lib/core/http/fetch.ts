@@ -1,4 +1,5 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http-original';
+import { SITE_URL } from '$core/site/urls';
 import { getUrl, localUrlPattern, shouldUseNativeFetch } from './fetch-routing';
 
 export { getUrl, isLocalUrl, isPocketBaseUrl, shouldUseNativeFetch } from './fetch-routing';
@@ -6,6 +7,7 @@ export { getUrl, isLocalUrl, isPocketBaseUrl, shouldUseNativeFetch } from './fet
 const pocketBaseOrigin = new URL(
 	(import.meta.env.PUBLIC_PB_URL as string | undefined) ?? 'https://api.coh1stats.com'
 ).origin;
+const siteOrigin = new URL(SITE_URL).origin;
 
 type FetchWindow = typeof globalThis & {
 	fetchNative?: typeof fetch;
@@ -40,20 +42,22 @@ export function configureCorsFetch(): void {
 	}
 
 	const w = window as FetchWindow;
-	const escapedOrigin = pocketBaseOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const originPattern = (origin: string) =>
+		new RegExp(`^${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
 	w.CORSFetch?.config({
-		exclude: [new RegExp(`^${escapedOrigin}`), localUrlPattern]
+		exclude: [originPattern(pocketBaseOrigin), originPattern(siteOrigin), localUrlPattern]
 	});
 }
 
 /**
  * HTTP fetch for the Tauri app. Two fixed routes, no fallbacks:
  *
- * - PocketBase + localhost: the browser's fetch (CORS-enabled, streams, no IPC)
+ * - PocketBase, the website API (SITE_URL) + localhost: the browser's fetch
+ *   (CORS-enabled, streams, no IPC)
  * - Everything else (Relic, Steam, Twitch, …): @tauri-apps/plugin-http
  */
 export function fetch(input: RequestInfo | URL, init?: AppFetchInit): Promise<Response> {
-	if (shouldUseNativeFetch(getUrl(input), pocketBaseOrigin)) {
+	if (shouldUseNativeFetch(getUrl(input), pocketBaseOrigin, siteOrigin)) {
 		return browserFetch()(input, init);
 	}
 

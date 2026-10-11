@@ -16,6 +16,18 @@ pocketbase.beforeSend = async (url, options) => ({
 	options: { ...options, fetch: options.fetch ?? appFetch }
 });
 
+const camelKeyCache = new Map<string, string>();
+
+function camelKey(key: string): string {
+	let camel = camelKeyCache.get(key);
+	if (camel === undefined) {
+		camel = camelCase(key);
+		camelKeyCache.set(key, camel);
+	}
+
+	return camel;
+}
+
 /**
  * Replaces reference arrays with their expanded objects from PocketBase expand property
  * and converts snake_case keys to camelCase
@@ -37,14 +49,14 @@ export function exp<T extends Record<string, any>>(obj: T): Expand<T> {
 
 	for (const [key, expandedValue] of Object.entries(expand)) {
 		if (expandedValue !== null && expandedValue !== undefined) {
-			const camelKey = camelCase(key);
+			const camelCased = camelKey(key);
 
 			if (Array.isArray(expandedValue)) {
-				resultObj[camelKey] = expandedValue.map((item) => exp(item));
+				resultObj[camelCased] = expandedValue.map((item) => exp(item));
 			} else if (typeof expandedValue === 'object') {
-				resultObj[camelKey] = exp(expandedValue);
+				resultObj[camelCased] = exp(expandedValue);
 			} else {
-				resultObj[camelKey] = expandedValue;
+				resultObj[camelCased] = expandedValue;
 			}
 		}
 	}
