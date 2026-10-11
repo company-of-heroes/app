@@ -59,15 +59,20 @@ export class RelicClient {
 	 * Fetches the personal stat for a given Steam ID.
 	 *
 	 * @param steamId - The Steam ID (string or bigint)
+	 * @param options - `fresh: true` skips the request cache (and refills it), for post-match refreshes
 	 * @returns The matching StatMember or null if not found
 	 */
-	async getProfileBySteamId(steamId: string | bigint): Promise<RelicProfile | null> {
+	async getProfileBySteamId(
+		steamId: string | bigint,
+		options: { fresh?: boolean } = {}
+	): Promise<RelicProfile | null> {
 		const { leaderboardStats, statGroups } = await this.request<PersonalStat>(
 			['community', 'leaderboard', 'getpersonalstat'],
 			{
 				title: 'coh1',
 				profile_names: JSON.stringify([`/steam/${steamId}`])
-			}
+			},
+			options
 		);
 
 		const members = statGroups?.[0]?.members ?? [];
@@ -417,10 +422,12 @@ export class RelicClient {
 	 *
 	 * @param pathSegments - URL path segments (will be URL‐encoded)
 	 * @param queryParams - Key/value pairs for URL query string
+	 * @param options - `fresh: true` drops the cached entry first, so the result is refetched and re-cached
 	 */
 	private request<T>(
 		pathSegments: string[],
-		queryParams: Record<string, string | number> = {}
+		queryParams: Record<string, string | number> = {},
+		options: { fresh?: boolean } = {}
 	): Promise<T> {
 		const url = new URL(`${this.baseUrl}/${pathSegments.map(encodeURIComponent).join('/')}`);
 
@@ -433,7 +440,12 @@ export class RelicClient {
 			return this.fetchJson<T>(url);
 		}
 
-		return this.requestCache.getOrLoad(`GET ${url.toString()}`, () => this.fetchJson<T>(url)) as Promise<T>;
+		const key = `GET ${url.toString()}`;
+		if (options.fresh) {
+			this.requestCache.invalidate(key);
+		}
+
+		return this.requestCache.getOrLoad(key, () => this.fetchJson<T>(url)) as Promise<T>;
 	}
 
 	private async fetchJson<T>(url: URL): Promise<T> {
