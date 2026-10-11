@@ -1,5 +1,17 @@
 # @company-of-heroes/pocketbase
 
+## 0.16.0
+
+- feat; wiki maps: every built-in map (classic and Operations) with victory, fuel, munition and strategic points, territory sectors and starting positions on the loading-screen map
+- enhance; faster data loading across the app
+- feat; staff and tournament hosts can delete a tournament (hidden from the public, they can still open and restore it)
+- enhance; player search (website and desktop app) looks in stored players first (Relic only when nothing is found), sorts results by relevance and loads more while scrolling
+- feat; single elimination tournaments can give the quarterfinals and semifinals their own match length, like the final
+- enhance; the Streamer badge is earned per Steam account: streaming time counts for the Steam account you play on, and only that account gets the badge
+- enhance; rewards are unlocked per Steam ID instead of per account: match conditions (matches, wins, upsets, win streak, rating, hours played) count only that Steam ID, account conditions (comments, reputation, streaming, …) count for every Steam ID on the account; existing unlocks are re-checked per Steam ID and keep their original date
+- feat; rewards can show one of 200 service ribbons (25 per faction plus 25 global ones, and ranked series with level 1 to 5 stars or pips, grouped in the picker) instead of an uploaded image, picked by staff in the rewards admin (ribbons another reward uses are marked "Already used"); on profiles ribbons are grouped under a small faction label (or "Global"), "Show details" opens the rewards wiki, and every ribbon carries its faction's edge stripes (US olive-white-blue, Wehrmacht black-white-red, British khaki-red, Panzer Elite black-rose, global gold)
+- feat; labels can have a tooltip, and labels marked "unlock automatically" (Veteran) are given to every player with rank 20 on two 1v1/2v2 ladders, in any mix of mode and faction
+
 ## 0.15.0
 
 - feat; tournaments with a banner, logo and map pool (including custom maps), single elimination, double elimination and round robin brackets, sign-up, seeding by ELO, plus a champion medal (picked by staff) on the winner's player profile, a replays tab with every game once the tournament is finished, and tournament games: deadlines per round with warnings, "Start tournament game" on the app dashboard, games hidden until the tournament ends, automatic results with a celebration popup, a popup when a tournament you play in starts, an Updates tab with staff posts and automatic updates (rule changes, disqualifications, deadlines, start, finish, cancel) that notify every participant in the app and on Windows, personal notices (signed up, starts soon, next match ready, staff result, knocked out, final place), a step-by-step guide for participants, opponent Steam links, "Report a problem" for matches, problem reports that staff resolve or dismiss with a note for the player, rules acceptance at sign-up and after rule changes, registration that closes automatically, proposing and accepting match times with a reminder, a stream link, featured match and LIVE markers, statistics and a hall of fame for finished tournaments, a notification bell on the website, community tournament hosts (players request the host role, staff approve it, hosts create and run their own tournaments), overdue notices for staff, and running or open tournaments on the website home page and app dashboard
