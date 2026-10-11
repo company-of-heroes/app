@@ -18,14 +18,12 @@
 	import { useI18n } from '$lib/i18n';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import { hideMatch, isHiddenFromPublic, unhideMatch } from '$core/pocketbase/hidden-matches';
 	import {
-		hideMatch,
-		isHiddenFromPublic,
-		listHiddenKeywordWords,
-		listHiddenSessionIds,
-		titleMatchesHiddenKeyword,
-		unhideMatch
-	} from '$core/pocketbase/hidden-matches';
+		filterHiddenMatches,
+		invalidateHiddenMatchFilters,
+		loadHiddenMatchFilters
+	} from '$lib/player/hidden-matches-cache';
 
 	type Props = {
 		matches: TransformedMatch[];
@@ -39,33 +37,20 @@
 	const orderedMatches = $derived(orderBy(matches, ['completiontime'], ['desc']));
 	const isStaff = $derived(app.account.isStaff);
 	let pendingSessionId = $state<number | null>(null);
-	const hiddenIds = resource(
+	const filters = resource(
 		() => true,
-		() => listHiddenSessionIds()
-	);
-	const hiddenWords = resource(
-		() => true,
-		() => listHiddenKeywordWords()
+		() => loadHiddenMatchFilters()
 	);
 	const visibleMatches = $derived.by(() => {
 		if (isStaff) {
 			return orderedMatches;
 		}
 
-		if (
-			hiddenIds.current == null ||
-			hiddenWords.current == null ||
-			hiddenIds.error ||
-			hiddenWords.error
-		) {
+		if (filters.current == null || filters.error) {
 			return [];
 		}
 
-		const ids = hiddenIds.current;
-		const words = hiddenWords.current;
-		return orderedMatches.filter(
-			(match) => !ids.has(match.id) && !titleMatchesHiddenKeyword(match.description, words)
-		);
+		return filterHiddenMatches(orderedMatches, filters.current);
 	});
 	const sessionIdsKey = $derived(orderedMatches.map((match) => match.id).join(','));
 	const savedBySession = resource(
@@ -195,14 +180,15 @@
 				app.toast.success(t('Match hidden from public overviews.'));
 			}
 
-			const next = new Set(hiddenIds.current ?? []);
+			invalidateHiddenMatchFilters();
+			const next = new Set(filters.current?.sessionIds ?? []);
 			if (currentlyHidden) {
 				next.delete(sessionId);
 			} else {
 				next.add(sessionId);
 			}
 
-			hiddenIds.mutate(next);
+			filters.mutate({ sessionIds: next, keywords: filters.current?.keywords ?? [] });
 		} catch (error) {
 			console.error('[MATCH-HISTORY]: hide toggle failed:', error);
 			app.toast.error(
@@ -270,12 +256,12 @@
 		{#each visibleMatches as match (match.id)}
 			{@const players = sortBy(match.players, ['teamid'])}
 			{@const savedId = savedBySession.current?.get(match.id)}
-			{@const isManuallyHidden = hiddenIds.current?.has(match.id) ?? false}
+			{@const isManuallyHidden = filters.current?.sessionIds.has(match.id) ?? false}
 			{@const isHidden = isHiddenFromPublic(
 				match.id,
 				match.description,
-				hiddenIds.current,
-				hiddenWords.current
+				filters.current?.sessionIds,
+				filters.current?.keywords
 			)}
 			<section class="border-secondary-800 border-b">
 				<div class="border-secondary-800 flex items-center gap-4 border-b px-4 py-2">

@@ -2,41 +2,15 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import { tableHeadRow } from '@company-of-heroes/ui/variants';
+	import PlayerFactsSkeleton from './player-facts-skeleton.svelte';
+	import PlayerHeroSkeleton from './player-hero-skeleton.svelte';
 
 	const { t } = useI18n();
 </script>
 
 <div class="border-secondary-800 overflow-clip border-b" aria-busy="true">
-	<div class="border-secondary-800 border-b">
-		<div class="flex flex-col gap-5 px-4 pt-6 pb-6 lg:flex-row lg:items-end lg:justify-between">
-			<div class="flex min-w-0 items-end gap-4 sm:gap-5">
-				<Skeleton class="size-20 shrink-0 rounded-md sm:size-28" />
-				<div class="flex min-w-0 flex-col gap-2">
-					<div class="flex items-center gap-2">
-						<Skeleton class="h-4 w-6 rounded-xs" />
-						<Skeleton class="h-5 w-14 rounded-md" />
-					</div>
-					<Skeleton class="h-9 w-56 max-w-full" />
-				</div>
-			</div>
-			<div class="flex items-center gap-2">
-				<Skeleton class="h-8 w-28 rounded-md" />
-				<Skeleton class="h-8 w-32 rounded-md" />
-			</div>
-		</div>
-	</div>
-	<div class="overflow-hidden">
-		<div class="-mr-px flex flex-wrap">
-			{#each Array(4) as _, index (index)}
-				<div
-					class="border-secondary-800 flex min-w-40 flex-1 basis-44 flex-col gap-2 border-r border-b px-4 py-3"
-				>
-					<Skeleton class="h-3 w-16" />
-					<Skeleton class="h-6 w-24" />
-				</div>
-			{/each}
-		</div>
-	</div>
+	<PlayerHeroSkeleton />
+	<PlayerFactsSkeleton />
 	<div class="border-secondary-800 border-b">
 		<div class="flex min-w-0 flex-wrap items-center gap-2 px-4 py-2.5">
 			<Skeleton class="h-8 w-14 rounded-md" />

@@ -271,8 +271,9 @@ export class Matches {
 				this.page = 1;
 			}
 		);
+		// Keyed on the query hash, so a recomputed but equal query object does not refetch.
 		this.result = resource(
-			() => [this.scope, this.query, this.page],
+			() => this.resultKey,
 			(_values, _previousValues, { signal }) => {
 				return this.getMatches(signal);
 			}
@@ -414,7 +415,7 @@ export class Matches {
 			this.query.duration != null ||
 			this.query.sort !== 'createdAt' ||
 			this.query.sortDir === 'asc';
-		const cacheKey = `matches-${md5(JSON.stringify({ ...this.query, page: this.page }))}`;
+		const cacheKey = `matches-${this.resultKey}`;
 
 		if (this.scope === 'community') {
 			return app.database.matches.getHistoryList(this.page, this.perPage, this.query, { signal });

@@ -7,6 +7,7 @@
 	import { resource } from 'runed';
 	import * as Player from '$lib/components/player';
 	import { PlayerProfile } from '@company-of-heroes/ui/player';
+	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import PlayerMatchStaffActions from '$lib/components/player/player-match-staff-actions.svelte';
 	import { MatchHistoryView } from '$lib/player/match-history-view.svelte';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
@@ -14,7 +15,7 @@
 	import CheaterAlert from '$lib/components/player/cheater-alert.svelte';
 	import PlayerScreenshots from '$lib/components/player/player-screenshots.svelte';
 	import { loadSmurfAlert } from '$lib/player/smurf';
-	import { toPlayerPageData } from '$lib/player/page-data';
+	import { toPlayerPageData, toUiMatchHistory } from '$lib/player/page-data';
 	import { findCheaterBySteamId } from '$core/pocketbase/anti-cheat';
 	import { account } from '$core/account';
 	import { app } from '$core/app/context';
@@ -125,16 +126,19 @@
 		return profile && steamId ? `${steamId}:${profile.profile_id}` : null;
 	});
 
+	// Keyed on the steam id, so it starts with the Relic profile instead of after it; the profile
+	// id is only needed to queue an unknown player (cached Relic lookup).
 	const smurf = resource(
-		() => profileKey,
-		async (key) => {
-			const profile = relicProfile.current;
-			if (!key || !profile || !steamId) {
+		() => steamId,
+		async (id) => {
+			if (!id) {
 				return null;
 			}
 
-			const value = await loadSmurfAlert(steamId, profile.profile_id).catch(() => null);
-			return { key, value };
+			const value = await loadSmurfAlert(id, () =>
+				relic.getProfileBySteamId(id).then((profile) => profile?.profile_id)
+			).catch(() => null);
+			return { steamId: id, value };
 		}
 	);
 
@@ -185,7 +189,7 @@
 	const customizationData = $derived(
 		customization.current?.steamId === steamId ? customization.current : null
 	);
-	const smurfData = $derived(smurf.current?.key === profileKey ? smurf.current : null);
+	const smurfData = $derived(smurf.current?.steamId === steamId ? smurf.current : null);
 
 	const profile = $derived(relicProfile.current);
 	const user = $derived(steamProfile.current?.user);
@@ -245,33 +249,24 @@
 
 	const labels = $derived(labelsForSteamId(user?.steamid));
 
-	// Keep the skeleton until everything the header shows has arrived, so the profile renders
-	// once instead of shifting per request. The raw Relic history is included because its ratings
-	// fill ELO gaps; only the rank enrichment for the match history tab loads afterwards.
-	const ready = $derived(
-		Boolean(
-			profile &&
-				user &&
-				headerData &&
-				customizationData &&
-				smurfData &&
-				performanceData &&
-				rawMatches
-		)
-	);
+	// The page renders once the Relic and Steam profiles are in; the hero, the facts, the
+	// performance tab and the match history each keep their own skeleton until their data is in.
+	const ready = $derived(Boolean(profile && user));
+
+	// Its own derived, so the match history view only re-sorts when the matches change.
+	const uiMatchHistory = $derived(toUiMatchHistory(rankedMatches ?? []));
 
 	const pagePlayer = $derived.by(() => {
 		if (!profile || !user) {
 			return null;
 		}
 
-		return toPlayerPageData({
+		const player = toPlayerPageData({
 			profile,
 			user,
 			game,
 			elo: playerElo,
 			performance: performanceData ?? emptyPlayerPerformance(),
-			matchHistory: rankedMatches ?? [],
 			smurf: smurfData?.value,
 			bans,
 			labels,
@@ -279,6 +274,7 @@
 			customization: customizationData?.value ?? null,
 			rewards: headerData?.rewards ?? null
 		});
+		return { ...player, matchHistory: uiMatchHistory };
 	});
 
 	const matchHistory = new MatchHistoryView(() => pagePlayer);
@@ -297,6 +293,8 @@
 	<PlayerProfile
 		player={matchHistory.player ?? pagePlayer}
 		bind:tab={currentTab}
+		heroLoading={!headerData || !customizationData}
+		factsLoading={!performanceData || !smurfData}
 		matchHistoryLoading={!rankedMatches || !matchHistory.ready}
 	>
 		{#snippet actions()}
@@ -311,14 +309,22 @@
 			{/if}
 		{/snippet}
 		{#snippet performance()}
-			<PlayerPerformance
-				profileId={profile.profile_id}
-				scope={isSelf ? 'user' : 'community'}
-				userId={isSelf ? account.userId : undefined}
-				performance={performanceData}
-				empty={isSelf ? 'self' : 'other'}
-				class="rounded-none border-0"
-			/>
+			{#if performanceData}
+				<PlayerPerformance
+					profileId={profile.profile_id}
+					scope={isSelf ? 'user' : 'community'}
+					userId={isSelf ? account.userId : undefined}
+					performance={performanceData}
+					empty={isSelf ? 'self' : 'other'}
+					class="rounded-none border-0"
+				/>
+			{:else}
+				<div class="flex flex-col gap-2 p-4" aria-busy="true">
+					{#each Array(4) as _, index (index)}
+						<Skeleton class="h-8 w-full" />
+					{/each}
+				</div>
+			{/if}
 		{/snippet}
 		{#snippet matchActions({ match })}
 			<PlayerMatchStaffActions view={matchHistory} {match} />

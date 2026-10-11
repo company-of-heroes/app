@@ -29,6 +29,7 @@
 	import { getEloColor, getEloTextShadow } from '$lib/components/leaderboard/leaderboard-utils';
 	import { app } from '$core/app/context';
 	import { resource } from 'runed';
+	import { mapLimit } from '@company-of-heroes/api';
 	import {
 		getAlliesPlayers,
 		getAxisPlayers,
@@ -104,20 +105,18 @@
 			return next;
 		}
 
-		await Promise.all(
-			source.map(async (player) => {
-				const profileId = getPlayerProfileId(player);
-				const steamId = player.steamId;
-				if (!steamId || !isValidSteamId(steamId)) {
-					return;
-				}
+		await mapLimit(source, 4, async (player) => {
+			const profileId = getPlayerProfileId(player);
+			const steamId = player.steamId;
+			if (!steamId || !isValidSteamId(steamId)) {
+				return;
+			}
 
-				const smurf = await loadSmurfAlert(steamId, profileId, 'lobby_live');
-				if (profileId != null && smurf) {
-					next[profileId] = smurf;
-				}
-			})
-		);
+			const smurf = await loadSmurfAlert(steamId, profileId, 'lobby_live');
+			if (profileId != null && smurf) {
+				next[profileId] = smurf;
+			}
+		});
 
 		return next;
 	}
@@ -131,25 +130,22 @@
 		() => ratingsKey,
 		(key) => loadCheaterSteamIds(key ? key.split(',') : [])
 	);
+	// A string key, so a lobby update with the same session, map and players does not refetch.
+	const playbackKey = $derived(
+		lobby.isReplay && lobby.map && lobby.players.length > 0
+			? `${lobby.sessionId}|${lobby.map}|${lobby.players.map((player) => `${player.playerId}:${player.race}`).join(',')}`
+			: ''
+	);
 	const playbackReplay = resource(
-		() => {
-			if (!lobby.isReplay || !lobby.map || lobby.players.length === 0) {
-				return null;
-			}
-
-			return {
-				map: lobby.map,
-				races: lobby.players.map((player) => player.race).join(',')
-			};
-		},
+		() => playbackKey,
 		async (key) => {
 			if (!key) {
 				return null;
 			}
 
 			return app.features.history.findPlaybackReplay({
-				map: key.map,
-				players: key.races.split(',').map((race) => ({ race: Number(race) }))
+				map: lobby.map,
+				players: lobby.players.map((player) => ({ race: player.race }))
 			});
 		}
 	);

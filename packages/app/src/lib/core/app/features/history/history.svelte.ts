@@ -532,7 +532,7 @@ export class History extends Feature<HistorySettings> {
 		}
 
 		try {
-			const relicProfile = await relic.getProfileBySteamId(steamId);
+			const relicProfile = await relic.getProfileBySteamId(steamId, { fresh: true });
 			if (!relicProfile) {
 				return;
 			}
@@ -590,7 +590,8 @@ export class History extends Feature<HistorySettings> {
 		const needingResults = await app.database.matches.getPaginated(1, 100, {
 			filter: `needsResult=true && hasFailed!=true && user = "${account.userId}"`,
 			fields: ['id', 'sessionId', 'replay'],
-			expand: false
+			expand: false,
+			skipTotal: true
 		});
 
 		if (needingResults.items.length === 0) {
@@ -755,7 +756,8 @@ export class History extends Feature<HistorySettings> {
 			const result = await app.database.replays.getPaginated(1, 30, {
 				filter: `createdBy = "${escapedUser}" && mapFilename ~ "${escapedMap}"`,
 				sort: '-gameDate',
-				fields: ['id', 'mapFilename', 'players', 'gameDate']
+				fields: ['id', 'mapFilename', 'players', 'gameDate'],
+				skipTotal: true
 			});
 			for (const record of result.items) {
 				const recPlayers = (record.players ?? []) as ReplayHeaderPlayer[];

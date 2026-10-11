@@ -26,7 +26,9 @@
 	import type { PlayerPageData } from './types';
 	import PlayerFact from './player-fact.svelte';
 	import PlayerFacts from './player-facts.svelte';
+	import PlayerFactsSkeleton from './player-facts-skeleton.svelte';
 	import PlayerHero from './player-hero.svelte';
+	import PlayerHeroSkeleton from './player-hero-skeleton.svelte';
 	import PlayerCompanionStaffDebug from './player-companion-staff-debug.svelte';
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerLinks from './player-links.svelte';
@@ -41,9 +43,19 @@
 		/** Host-only extras shown in the action row above the name (e.g. label editor, cheater alert). */
 		actions?: Snippet;
 		afterName?: Snippet;
+		/** Hero data (customization, likes, rewards) still loading: shows its skeleton. */
+		heroLoading?: boolean;
+		/** Fact data (tracked stats, smurf check) still loading: shows its skeleton. */
+		factsLoading?: boolean;
 	};
 
-	let { player, actions: actionsSnippet, afterName }: Props = $props();
+	let {
+		player,
+		actions: actionsSnippet,
+		afterName,
+		heroLoading = false,
+		factsLoading = false
+	}: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
@@ -93,126 +105,137 @@
 	);
 </script>
 
-<PlayerHero backgroundUrl={player.customization?.backgroundUrl}>
-	{#snippet avatar()}
-		<img
-			src={host.resolve.avatarUrl(player.avatarUrl)}
-			alt={player.alias}
-			class={cn('h-full w-full rounded-md border-2 object-cover', avatarBorder)}
-		/>
-	{/snippet}
-	{#snippet kicker()}
-		{#if flag}
-			<img class="h-4 w-auto shrink-0 rounded-xs" src={flag} alt={player.country ?? ''} />
+{#if heroLoading}
+	<PlayerHeroSkeleton />
+{:else}
+	<PlayerHero backgroundUrl={player.customization?.backgroundUrl}>
+		{#snippet avatar()}
+			<img
+				src={host.resolve.avatarUrl(player.avatarUrl)}
+				alt={player.alias}
+				class={cn('h-full w-full rounded-md border-2 object-cover', avatarBorder)}
+			/>
+		{/snippet}
+		{#snippet kicker()}
+			{#if flag}
+				<img class="h-4 w-auto shrink-0 rounded-xs" src={flag} alt={player.country ?? ''} />
+			{/if}
+			<PlayerStreamerIcon labels={player.labels} steamId={player.steamId} size={20} />
+			<PlayerLabels labels={player.labels} class="shrink-0" />
+			<span class="text-secondary-300 text-xs">
+				{t('Level {level}', { level: player.level })}
+			</span>
+			{@render afterName?.()}
+		{/snippet}
+		{#snippet title()}
+			<span class="truncate">{player.alias}</span>
+		{/snippet}
+		{#snippet beside()}
+			<LikeButton
+				target={{ kind: 'player', id: player.steamId }}
+				likeCount={player.likeCount ?? 0}
+			/>
+		{/snippet}
+		{#snippet actions()}
+			{@render actionsSnippet?.()}
+			{#if isSelf}
+				<Button
+					href={host.routes.accountProfile(player.steamId)}
+					variant="secondary"
+					size="sm"
+					class="shrink-0 bg-gray-950/60 backdrop-blur-sm"
+				>
+					<PencilSimpleIcon size={16} />
+					{t('Update profile')}
+				</Button>
+			{/if}
+		{/snippet}
+		{#if player.steamBans}
+			<SteamBanAlert bans={player.steamBans} />
 		{/if}
-		<PlayerStreamerIcon labels={player.labels} steamId={player.steamId} size={20} />
-		<PlayerLabels labels={player.labels} class="shrink-0" />
-		<span class="text-secondary-300 text-xs">
-			{t('Level {level}', { level: player.level })}
-		</span>
-		{@render afterName?.()}
-	{/snippet}
-	{#snippet title()}
-		<span class="truncate">{player.alias}</span>
-	{/snippet}
-	{#snippet beside()}
-		<LikeButton target={{ kind: 'player', id: player.steamId }} likeCount={player.likeCount ?? 0} />
-	{/snippet}
-	{#snippet actions()}
-		{@render actionsSnippet?.()}
-		{#if isSelf}
-			<Button
-				href={host.routes.accountProfile(player.steamId)}
-				variant="secondary"
-				size="sm"
-				class="shrink-0 bg-gray-950/60 backdrop-blur-sm"
-			>
-				<PencilSimpleIcon size={16} />
-				{t('Update profile')}
-			</Button>
+		{#if streamingLinks.length > 0 || otherLinks.length > 0}
+			<PlayerLinks links={[...streamingLinks, ...otherLinks]} />
 		{/if}
-	{/snippet}
-	{#if player.steamBans}
-		<SteamBanAlert bans={player.steamBans} />
-	{/if}
-	{#if streamingLinks.length > 0 || otherLinks.length > 0}
-		<PlayerLinks links={[...streamingLinks, ...otherLinks]} />
-	{/if}
-	{#if bio}
-		<p class="text-secondary-200 text-sm leading-relaxed whitespace-pre-wrap">{bio}</p>
-	{/if}
-	<RewardIcons steamId={player.steamId} rewards={player.rewards} class="mb-0" />
-</PlayerHero>
+		{#if bio}
+			<p class="text-secondary-200 text-sm leading-relaxed whitespace-pre-wrap">{bio}</p>
+		{/if}
+		<RewardIcons steamId={player.steamId} rewards={player.rewards} class="mb-0" />
+	</PlayerHero>
+{/if}
 
-<PlayerFacts>
-	{#if stats && stats.matchCount > 0}
-		<PlayerFact label={t('Record')} icon={TrophyIcon}>
-			<span class={statWins}>{stats.wins}W</span>
-			<span class="text-secondary-600">·</span>
-			<span class={statLosses}>{stats.losses}L</span>
-			<LeaderboardStatPill type="ratio" wins={stats.wins} losses={stats.losses} streak={0} />
-		</PlayerFact>
-		{#if recentMatches.length > 0}
-			<PlayerFact label={t('Recent')} icon={ClockCounterClockwiseIcon}>
-				<span class="inline-flex min-w-0 items-center gap-1 overflow-x-auto">
-					{#each recentMatches as match (match.id || match.sessionId)}
-						{@const href = match.id ? host.routes.match(match.id) : null}
-						{@const title = `${match.outcome === 1 ? t('Win') : t('Loss')}${match.raceId != null ? ` · ${getRaceLabel(match.raceId)}` : ''}${match.matchtypeId != null ? ` · ${getModeLabel(match.matchtypeId)}` : ''}`}
-						{#if href}
-							<a {href} class={cn(interactive, 'group inline-flex shrink-0')} {title}>
-								<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
-									{match.outcome === 1 ? 'W' : 'L'}
-								</Badge>
-							</a>
-						{:else}
-							<span class="inline-flex shrink-0" {title}>
-								<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
-									{match.outcome === 1 ? 'W' : 'L'}
-								</Badge>
-							</span>
-						{/if}
-					{/each}
+{#if factsLoading}
+	<PlayerFactsSkeleton />
+{:else}
+	<PlayerFacts>
+		{#if stats && stats.matchCount > 0}
+			<PlayerFact label={t('Record')} icon={TrophyIcon}>
+				<span class={statWins}>{stats.wins}W</span>
+				<span class="text-secondary-600">·</span>
+				<span class={statLosses}>{stats.losses}L</span>
+				<LeaderboardStatPill type="ratio" wins={stats.wins} losses={stats.losses} streak={0} />
+			</PlayerFact>
+			{#if recentMatches.length > 0}
+				<PlayerFact label={t('Recent')} icon={ClockCounterClockwiseIcon}>
+					<span class="inline-flex min-w-0 items-center gap-1 overflow-x-auto">
+						{#each recentMatches as match (match.id || match.sessionId)}
+							{@const href = match.id ? host.routes.match(match.id) : null}
+							{@const title = `${match.outcome === 1 ? t('Win') : t('Loss')}${match.raceId != null ? ` · ${getRaceLabel(match.raceId)}` : ''}${match.matchtypeId != null ? ` · ${getModeLabel(match.matchtypeId)}` : ''}`}
+							{#if href}
+								<a {href} class={cn(interactive, 'group inline-flex shrink-0')} {title}>
+									<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
+										{match.outcome === 1 ? 'W' : 'L'}
+									</Badge>
+								</a>
+							{:else}
+								<span class="inline-flex shrink-0" {title}>
+									<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
+										{match.outcome === 1 ? 'W' : 'L'}
+									</Badge>
+								</span>
+							{/if}
+						{/each}
+					</span>
+				</PlayerFact>
+			{/if}
+			{#if bestMap}
+				<PlayerFact label={t('Best map')} icon={MapTrifoldIcon}>
+					<span class="truncate">{normalizeMapName(bestMap.map, false)}</span>
+					{#snippet sub()}
+						<span class={statWins}>{bestMap.wins}W</span>
+						<span class="text-secondary-600">·</span>
+						<span class={statLosses}>{bestMap.losses}L</span>
+						<span class="font-medium" style:color={getRatioColor(bestMap.wins, bestMap.losses)}>
+							{winrate(bestMap.wins, bestMap.losses)}
+						</span>
+					{/snippet}
+				</PlayerFact>
+			{/if}
+		{:else}
+			<PlayerFact label={t('Tracked')} icon={TrophyIcon}>
+				<span class="text-secondary-400 font-sans text-sm font-normal whitespace-normal">
+					{emptyTrackedLabel}
 				</span>
 			</PlayerFact>
 		{/if}
-		{#if bestMap}
-			<PlayerFact label={t('Best map')} icon={MapTrifoldIcon}>
-				<span class="truncate">{normalizeMapName(bestMap.map, false)}</span>
-				{#snippet sub()}
-					<span class={statWins}>{bestMap.wins}W</span>
-					<span class="text-secondary-600">·</span>
-					<span class={statLosses}>{bestMap.losses}L</span>
-					<span class="font-medium" style:color={getRatioColor(bestMap.wins, bestMap.losses)}>
-						{winrate(bestMap.wins, bestMap.losses)}
-					</span>
-				{/snippet}
+		<PlayerFact
+			label={t('Steam ID')}
+			icon={IdentificationCardIcon}
+			sub={joinedSince ? t('Joined {date}', { date: joinedSince }) : null}
+		>
+			<a
+				href="https://steamcommunity.com/profiles/{player.steamId}"
+				target="_blank"
+				rel="noopener noreferrer"
+				class={cn(interactive, 'hover:text-primary truncate font-sans text-sm transition-colors')}
+			>
+				{player.steamId}
+			</a>
+		</PlayerFact>
+		{#if player.smurf}
+			<PlayerFact label={t('Smurf account')} icon={WarningIcon}>
+				<SmurfAlert smurf={player.smurf} showLabel={false} />
 			</PlayerFact>
 		{/if}
-	{:else}
-		<PlayerFact label={t('Tracked')} icon={TrophyIcon}>
-			<span class="text-secondary-400 font-sans text-sm font-normal whitespace-normal">
-				{emptyTrackedLabel}
-			</span>
-		</PlayerFact>
-	{/if}
-	<PlayerFact
-		label={t('Steam ID')}
-		icon={IdentificationCardIcon}
-		sub={joinedSince ? t('Joined {date}', { date: joinedSince }) : null}
-	>
-		<a
-			href="https://steamcommunity.com/profiles/{player.steamId}"
-			target="_blank"
-			rel="noopener noreferrer"
-			class={cn(interactive, 'hover:text-primary truncate font-sans text-sm transition-colors')}
-		>
-			{player.steamId}
-		</a>
-	</PlayerFact>
-	{#if player.smurf}
-		<PlayerFact label={t('Smurf account')} icon={WarningIcon}>
-			<SmurfAlert smurf={player.smurf} showLabel={false} />
-		</PlayerFact>
-	{/if}
-</PlayerFacts>
+	</PlayerFacts>
+{/if}
 <PlayerCompanionStaffDebug steamId={player.steamId} />

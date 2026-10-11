@@ -17,15 +17,21 @@ export type SmurfAlertState =
 			lenderSteam: SteamPlayerSummary | null;
 	  };
 
+/**
+ * @param profileId - The Relic profile id, or a loader for it. A loader only runs when the
+ *   player still has to be queued, so callers can start before the Relic profile is in.
+ */
 export async function loadSmurfAlert(
 	steamId: string,
-	profileId?: number,
+	profileId?: number | (() => Promise<number | undefined>),
 	source: SmurfWatchSource = 'profile'
 ): Promise<SmurfAlertState> {
 	const watch = await getSmurfWatch(steamId);
 
 	if (!watch) {
-		void enqueueSmurfWatch({ steamId, profileId, source, priority: 75 });
+		void Promise.resolve(typeof profileId === 'function' ? profileId() : profileId)
+			.catch(() => undefined)
+			.then((id) => enqueueSmurfWatch({ steamId, profileId: id, source, priority: 75 }));
 		return { status: 'pending' };
 	}
 

@@ -334,8 +334,15 @@ export class RelicClient {
 		}
 
 		try {
-			const { filterPublicMatchHistory } = await import('$core/pocketbase/hidden-matches');
-			return await filterPublicMatchHistory(matches);
+			const [{ account }, { filterHiddenMatches, loadHiddenMatchFilters }] = await Promise.all([
+				import('$core/account'),
+				import('$lib/player/hidden-matches-cache')
+			]);
+			if (account.isStaff) {
+				return matches;
+			}
+
+			return filterHiddenMatches(matches, await loadHiddenMatchFilters());
 		} catch (error) {
 			console.warn('[relic] public match history filter skipped', error);
 			return matches;

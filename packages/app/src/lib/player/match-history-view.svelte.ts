@@ -1,20 +1,20 @@
-import type { PlayerPageData } from '@company-of-heroes/ui/player';
+import type { PlayerPageData, TransformedMatch } from '@company-of-heroes/ui/player';
 import { resource } from 'runed';
 import { app } from '$core/app/context';
-import {
-	hideMatch,
-	isHiddenFromPublic,
-	listHiddenKeywordWords,
-	listHiddenSessionIds,
-	titleMatchesHiddenKeyword,
-	unhideMatch
-} from '$core/pocketbase/hidden-matches';
+import { hideMatch, isHiddenFromPublic, unhideMatch } from '$core/pocketbase/hidden-matches';
 import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 import {
 	likeCountForSteamId,
 	preloadPlayerLikeCounts
 } from '$core/pocketbase/player-vote-cache.svelte';
 import { steam } from '$core/steam';
+import {
+	filterHiddenMatches,
+	invalidateHiddenMatchFilters,
+	loadHiddenMatchFilters
+} from '$lib/player/hidden-matches-cache';
+
+const NO_MATCHES: TransformedMatch[] = [];
 
 /**
  * Desktop-only enrichment for the shared match history: hides matches staff took down,
@@ -26,37 +26,28 @@ export class MatchHistoryView {
 
 	readonly isStaff = $derived(app.account.isStaff);
 
-	readonly #hiddenIds = resource(
+	readonly #filters = resource(
 		() => true,
-		() => listHiddenSessionIds()
+		() => loadHiddenMatchFilters()
 	);
 
-	readonly #hiddenWords = resource(
-		() => true,
-		() => listHiddenKeywordWords()
+	// Keeps the same array while the page keeps its match history, so sorting and filtering
+	// do not rerun when only header data (labels, likes, customization) of the player changes.
+	readonly #matches = $derived.by(() => this.#getPlayer()?.matchHistory ?? NO_MATCHES);
+
+	readonly #ordered = $derived(
+		[...this.#matches].sort((a, b) => b.completiontime - a.completiontime)
 	);
 
-	readonly #ordered = $derived.by(() => {
-		const player = this.#getPlayer();
-		return player
-			? [...player.matchHistory].sort((a, b) => b.completiontime - a.completiontime)
-			: [];
-	});
-
+	// Non-staff see the matches as soon as they are in; the list filters once the hidden
+	// filters (cached for 5 minutes) arrive.
 	readonly #visible = $derived.by(() => {
-		if (this.isStaff) {
+		const filters = this.#filters.current;
+		if (this.isStaff || !filters) {
 			return this.#ordered;
 		}
 
-		const ids = this.#hiddenIds.current;
-		const words = this.#hiddenWords.current;
-		if (ids == null || words == null || this.#hiddenIds.error || this.#hiddenWords.error) {
-			return [];
-		}
-
-		return this.#ordered.filter(
-			(match) => !ids.has(match.id) && !titleMatchesHiddenKeyword(match.description, words)
-		);
+		return filterHiddenMatches(this.#ordered, filters);
 	});
 
 	readonly #steamIdsKey = $derived(
@@ -108,38 +99,31 @@ export class MatchHistoryView {
 		}
 	);
 
-	/** Hidden filters and avatars are in, so the list renders once instead of filling in. */
-	readonly ready = $derived(
-		(this.isStaff ||
-			(this.#hiddenIds.current != null && this.#hiddenWords.current != null) ||
-			Boolean(this.#hiddenIds.error || this.#hiddenWords.error)) &&
-			this.#avatars.current?.key === this.#steamIdsKey
-	);
+	/** Avatars are in, so the list renders once instead of filling in. */
+	readonly ready = $derived(this.#avatars.current?.key === this.#steamIdsKey);
+
+	/** Visible matches with avatars, labels, likes and saved lobbies; apart from the filtering above. */
+	readonly #rows = $derived.by(() => {
+		const avatars = this.#avatars.current?.map ?? new Map<string, string>();
+		const saved = this.#savedBySession.current;
+		return this.#visible.map((match) => ({
+			...match,
+			lobbyId: match.lobbyId ?? saved?.get(match.id) ?? null,
+			players: match.players.map((matchPlayer) => ({
+				...matchPlayer,
+				avatarUrl:
+					matchPlayer.avatarUrl ??
+					(matchPlayer.steamId ? (avatars.get(matchPlayer.steamId) ?? null) : null),
+				labels: matchPlayer.labels ?? labelsForSteamId(matchPlayer.steamId),
+				likeCount: matchPlayer.likeCount ?? likeCountForSteamId(matchPlayer.steamId) ?? undefined
+			}))
+		}));
+	});
 
 	/** The page player with the match history replaced by the enriched, visible matches. */
 	readonly player = $derived.by((): PlayerPageData | null => {
 		const player = this.#getPlayer();
-		if (!player) {
-			return null;
-		}
-
-		const avatars = this.#avatars.current?.map ?? new Map<string, string>();
-		const saved = this.#savedBySession.current;
-		return {
-			...player,
-			matchHistory: this.#visible.map((match) => ({
-				...match,
-				lobbyId: match.lobbyId ?? saved?.get(match.id) ?? null,
-				players: match.players.map((matchPlayer) => ({
-					...matchPlayer,
-					avatarUrl:
-						matchPlayer.avatarUrl ??
-						(matchPlayer.steamId ? (avatars.get(matchPlayer.steamId) ?? null) : null),
-					labels: matchPlayer.labels ?? labelsForSteamId(matchPlayer.steamId),
-					likeCount: matchPlayer.likeCount ?? likeCountForSteamId(matchPlayer.steamId) ?? undefined
-				}))
-			}))
-		};
+		return player ? { ...player, matchHistory: this.#rows } : null;
 	});
 
 	constructor(getPlayer: () => PlayerPageData | null) {
@@ -157,16 +141,12 @@ export class MatchHistoryView {
 	}
 
 	isManuallyHidden(sessionId: number): boolean {
-		return this.#hiddenIds.current?.has(sessionId) ?? false;
+		return this.#filters.current?.sessionIds.has(sessionId) ?? false;
 	}
 
 	isHidden(sessionId: number, description: string | undefined): boolean {
-		return isHiddenFromPublic(
-			sessionId,
-			description,
-			this.#hiddenIds.current,
-			this.#hiddenWords.current
-		);
+		const filters = this.#filters.current;
+		return isHiddenFromPublic(sessionId, description, filters?.sessionIds, filters?.keywords);
 	}
 
 	async setHidden(sessionId: number, hidden: boolean): Promise<void> {
@@ -178,14 +158,15 @@ export class MatchHistoryView {
 				await unhideMatch(sessionId);
 			}
 
-			const next = new Set(this.#hiddenIds.current ?? []);
+			invalidateHiddenMatchFilters();
+			const next = new Set(this.#filters.current?.sessionIds ?? []);
 			if (hidden) {
 				next.add(sessionId);
 			} else {
 				next.delete(sessionId);
 			}
 
-			this.#hiddenIds.mutate(next);
+			this.#filters.mutate({ sessionIds: next, keywords: this.#filters.current?.keywords ?? [] });
 		} finally {
 			this.pendingSessionId = null;
 		}

@@ -20,10 +20,6 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { resource, watch } from 'runed';
 	import { onDestroy, onMount } from 'svelte';
-	import type { UnsubscribeFunc } from 'pocketbase';
-	import { fetch } from '$core/http/fetch';
-	import { exp } from '$core/pocketbase';
-	import type { Match as LobbyMatch, MatchExpanded } from '$core/app/database/matches';
 	import { upperCase } from 'lodash-es';
 	import CalendarCheckIcon from 'phosphor-svelte/lib/CalendarCheckIcon';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
@@ -56,9 +52,9 @@
 		collectTodayMatchSteamIds,
 		countTodayRecord,
 		isMatchFromLocalToday,
-		matchIncludesSteamIds,
-		todayPlayedMatchesFilter
+		matchIncludesSteamIds
 	} from './dashboard-utils';
+	import { useTodayLobbies } from './today-lobbies.svelte';
 	import { getPlayerRating } from '$core/pocketbase/player-ratings';
 	import { labelsForSteamId } from '$core/pocketbase/player-label-cache.svelte';
 	import { eloMapForSteamId, mergeEloMaps } from '$lib/utils/player-elo';
@@ -88,12 +84,12 @@
 	import { Button } from '$lib/components/ui/button';
 
 	const PROFILE_POLL_MS = 90_000;
+	const STATS_BUMP_MS = 5_000;
 
 	let activeTab = $state('stats');
 	let panelExpanded = $state(false);
 	let statsGeneration = $state(0);
-	let unsubscribeToday = $state<UnsubscribeFunc>();
-	let subscribeGeneration = 0;
+	let lastBumpAt = 0;
 	let bumpTimer: ReturnType<typeof setTimeout> | null = null;
 	let profilePollTimer: ReturnType<typeof setInterval> | null = null;
 	const { t } = useI18n();
@@ -185,16 +181,21 @@
 	const profileId = $derived(profile?.relic.profile_id ?? null);
 	const todaySteamIds = $derived(collectTodayMatchSteamIds(steamId ? [steamId] : []));
 
+	/** At most one stats refetch per 5 s; events in between share the pending bump. */
 	function bumpStats() {
 		invalidatePlayerPerformanceCache(profileId ?? undefined);
 		if (bumpTimer) {
-			clearTimeout(bumpTimer);
+			return;
 		}
 
-		bumpTimer = setTimeout(() => {
-			bumpTimer = null;
-			statsGeneration += 1;
-		}, 300);
+		bumpTimer = setTimeout(
+			() => {
+				bumpTimer = null;
+				lastBumpAt = Date.now();
+				statsGeneration += 1;
+			},
+			Math.max(300, lastBumpAt + STATS_BUMP_MS - Date.now())
+		);
 	}
 
 	async function refreshRelicLeaderboards() {
@@ -204,7 +205,7 @@
 		}
 
 		try {
-			const relicProfile = await relic.getProfileBySteamId(id);
+			const relicProfile = await relic.getProfileBySteamId(id, { fresh: true });
 			if (!relicProfile) {
 				return;
 			}
@@ -242,32 +243,22 @@
 	const offMatchResult = app.on('match.result', bumpStats);
 	const offLobbyDestroyed = app.on('lobby.destroyed', bumpStats);
 
-	const todayMatches = resource(
-		() => [todaySteamIds.join(','), statsGeneration] as const,
-		async ([steamIdsKey]) => {
-			const ids = steamIdsKey ? steamIdsKey.split(',').filter(Boolean) : [];
-			if (ids.length === 0) {
-				return [];
-			}
-
-			const items = await app.database.matches.getList({
-				filter: todayPlayedMatchesFilter(ids),
-				sort: '-createdAt'
-			});
-			return items.filter(
-				(match) => isMatchFromLocalToday(match) && matchIncludesSteamIds(match, ids)
-			);
-		}
+	const todayLobbies = useTodayLobbies();
+	const todayMatches = $derived(
+		todayLobbies.items.filter(
+			(match) => isMatchFromLocalToday(match) && matchIncludesSteamIds(match, todaySteamIds)
+		)
 	);
 
+	// Only loads once the panel is open; `MatchHistory` filters hidden matches itself.
 	const recentMatches = resource(
-		() => [profileId, statsGeneration] as const,
+		() => [panelExpanded ? profileId : null, statsGeneration] as const,
 		async ([id]) => {
 			if (!id) {
 				return [];
 			}
 
-			const matches = await relic.getRecentMatchHistoryForProfile(id);
+			const matches = await relic.getRecentMatchHistoryForProfile(id, { includeHidden: true });
 			const { enrichMatchHistoryRankLevels } = await import('$lib/player/match-history-ranks');
 			const ownerStats = profile?.relic.leaderboardStats;
 			return enrichMatchHistoryRankLevels(matches, id, ownerStats);
@@ -276,7 +267,7 @@
 	);
 
 	const todayRecord = $derived(
-		countTodayRecord(todayMatches.current ?? [], profileId ?? undefined, todaySteamIds)
+		countTodayRecord(todayMatches, profileId ?? undefined, todaySteamIds)
 	);
 
 	const storedRating = resource(
@@ -297,12 +288,7 @@
 				return emptyPlayerPerformance();
 			}
 
-			return getPlayerPerformance({
-				profileId: id,
-				scope: 'user',
-				userId,
-				fresh: true
-			});
+			return getPlayerPerformance({ profileId: id, scope: 'user', userId });
 		},
 		{ initialValue: emptyPlayerPerformance() }
 	);
@@ -323,64 +309,24 @@
 		}
 	);
 
+	// A today match got its result: refresh the stats (replaces the old per-widget subscription).
 	watch(
-		() => todaySteamIds.join(','),
-		(steamIdsKey) => {
-			const ids = steamIdsKey ? steamIdsKey.split(',').filter(Boolean) : [];
-			const generation = ++subscribeGeneration;
-			void (async () => {
-				await unsubscribeToday?.();
-				if (generation !== subscribeGeneration) {
-					return;
-				}
-
-				unsubscribeToday = undefined;
-				if (ids.length === 0) {
-					return;
-				}
-
-				const next = await app.pocketbase.collection('lobbies').subscribe<LobbyMatch>(
-					'*',
-					(e) => {
-						const match = exp(e.record) as MatchExpanded;
-						if (!isMatchFromLocalToday(match) || !matchIncludesSteamIds(match, ids)) {
-							return;
-						}
-
-						if (e.action === 'create') {
-							const current = todayMatches.current || [];
-							if (!current.find((entry) => entry.id === e.record.id)) {
-								todayMatches.mutate([...current, match]);
-							}
-						} else if (e.action === 'update') {
-							todayMatches.mutate(
-								(todayMatches.current || []).map((entry) =>
-									entry.id === e.record.id ? match : entry
-								)
-							);
-							if (!match.needsResult) {
-								bumpStats();
-							}
-						} else if (e.action === 'delete') {
-							todayMatches.mutate(
-								(todayMatches.current || []).filter((entry) => entry.id !== e.record.id)
-							);
-						}
-					},
-					{
-						filter: todayPlayedMatchesFilter(ids),
-						sort: '-createdAt',
-						fetch
-					}
-				);
-
-				if (generation !== subscribeGeneration) {
-					await next();
-					return;
-				}
-
-				unsubscribeToday = next;
-			})();
+		() =>
+			[
+				todaySteamIds.join(','),
+				todayLobbies.loading,
+				todayMatches.filter((match) => !match.needsResult).length
+			] as const,
+		([steamIdsKey, loading, resolved], previous) => {
+			if (
+				previous &&
+				!loading &&
+				!previous[1] &&
+				previous[0] === steamIdsKey &&
+				resolved > previous[2]
+			) {
+				bumpStats();
+			}
 		}
 	);
 
@@ -390,7 +336,6 @@
 	});
 
 	onDestroy(() => {
-		subscribeGeneration += 1;
 		if (bumpTimer) {
 			clearTimeout(bumpTimer);
 		}
@@ -400,7 +345,6 @@
 			profilePollTimer = null;
 		}
 
-		unsubscribeToday?.();
 		offLobbySaved();
 		offMatchResult();
 		offLobbyDestroyed();

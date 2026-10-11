@@ -24,6 +24,10 @@
 		/** …and the matching `Tabs.Content`s here. */
 		extraTabContent?: Snippet;
 		matchHistoryLoading?: boolean;
+		/** Hero data (customization, likes, rewards) still loading. */
+		heroLoading?: boolean;
+		/** Fact data (tracked stats, smurf check) still loading. */
+		factsLoading?: boolean;
 		matchActions?: Snippet<[{ match: TransformedMatch }]>;
 	};
 
@@ -35,6 +39,8 @@
 		extraTabs,
 		extraTabContent,
 		matchHistoryLoading = false,
+		heroLoading = false,
+		factsLoading = false,
 		matchActions
 	}: Props = $props();
 	const { t } = useI18n();
@@ -46,7 +52,7 @@
 </script>
 
 <div class="border-secondary-900 overflow-clip border-b">
-	<PlayerProfileHeader {player} {actions} />
+	<PlayerProfileHeader {player} {actions} {heroLoading} {factsLoading} />
 	<TournamentTrophies steamId={player.steamId} />
 	<Tabs.Root bind:value={tab} class="border-secondary-800 border-b">
 		<Tabs.List class="px-4">
