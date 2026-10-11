@@ -12,6 +12,7 @@ import { app } from '$core/app/context';
 import { SITE_URL } from '$core/site/urls';
 import { findCompanionUserBySteamId, readMetaVersion } from '$core/pocketbase/companion-user';
 import { findHiddenMatch, hideMatch, unhideMatch } from '$core/pocketbase/hidden-matches';
+import { invalidateHiddenMatchFilters } from '$lib/player/hidden-matches-cache';
 import { userAvatarSrc } from '$lib/components/user/user-avatar-src';
 import { getI18n, t } from '$lib/i18n';
 import { translateText } from '$lib/translate';
@@ -295,6 +296,8 @@ export function provideAppHost(): HostContext {
 					} else {
 						await unhideMatch(sessionId);
 					}
+
+					invalidateHiddenMatchFilters();
 				}
 			},
 			profile: {
