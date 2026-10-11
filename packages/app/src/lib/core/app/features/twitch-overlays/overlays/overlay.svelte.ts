@@ -11,6 +11,7 @@ import {
 } from '@tauri-apps/plugin-fs';
 import { join, appDataDir } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
+import { getVersion } from '@tauri-apps/api/app';
 import { pocketbase } from '$core/pocketbase';
 import type { UserOverlaysResponse } from '$core/pocketbase/types';
 import { fetch } from '$core/http/fetch';
@@ -36,6 +37,12 @@ type DefaultSourceHash = {
 	version?: string;
 };
 
+/** What the last successful register() installed from: skip it next boot when unchanged. */
+type BundleState = {
+	zipHash: string;
+	appVersion: string;
+};
+
 export abstract class Overlay {
 	baseDir = BaseDirectory.AppData;
 
@@ -50,10 +57,85 @@ export abstract class Overlay {
 
 	#bundledDistHash: string | null = null;
 	#bundledZipFingerprint: string | null = null;
+	#bundleBytes: Promise<Uint8Array> | null = null;
+	#bundleState: Promise<BundleState> | null = null;
 
-	/** Returns true when the local overlay was replaced from the bundled zip. */
+	/**
+	 * Returns true when the local overlay was replaced from the bundled zip.
+	 * Skips all unzip/zip/hash work when the bundled zip and the app version
+	 * match the last successful register and the overlay folder still exists.
+	 */
 	async register(): Promise<boolean> {
 		const installed = await exists(this.path, { baseDir: this.baseDir });
+		const bundle = await this.#getBundleState();
+		if (installed && (await this.#isBundleRegistered(bundle))) {
+			return false;
+		}
+
+		const replaced = await this.#registerBundle(installed);
+		await this.#saveBundleState(bundle);
+		return replaced;
+	}
+
+	/** The bundled zip, fetched once on first use. */
+	#loadBundle(): Promise<Uint8Array> {
+		// A same-origin Vite asset: the webview's own fetch serves it (cors-fetch passes
+		// relative URLs through), while the HTTP plugin cannot reach the app origin.
+		this.#bundleBytes ??= globalThis
+			.fetch(this.zipUrl)
+			.then(async (response) => {
+				if (!response.ok) {
+					throw new Error(`Failed to load bundled overlay: ${response.status}`);
+				}
+
+				return new Uint8Array(await response.arrayBuffer());
+			})
+			.catch((error) => {
+				this.#bundleBytes = null;
+				throw error;
+			});
+		return this.#bundleBytes;
+	}
+
+	#getBundleState(): Promise<BundleState> {
+		this.#bundleState ??= Promise.all([this.#loadBundle(), getVersion()])
+			.then(async ([bytes, appVersion]) => ({ zipHash: await this.hashBytes(bytes), appVersion }))
+			.catch((error) => {
+				this.#bundleState = null;
+				throw error;
+			});
+		return this.#bundleState;
+	}
+
+	async #isBundleRegistered(bundle: BundleState): Promise<boolean> {
+		const statePath = `${this.path}/.overlay-bundle-state.json`;
+		try {
+			if (!(await exists(statePath, { baseDir: this.baseDir }))) {
+				return false;
+			}
+
+			const saved = JSON.parse(
+				await readTextFile(statePath, { baseDir: this.baseDir })
+			) as Partial<BundleState>;
+			return saved.zipHash === bundle.zipHash && saved.appVersion === bundle.appVersion;
+		} catch {
+			return false;
+		}
+	}
+
+	async #saveBundleState(bundle: BundleState) {
+		if (!(await exists(this.path, { baseDir: this.baseDir }))) {
+			return;
+		}
+
+		await writeTextFile(
+			`${this.path}/.overlay-bundle-state.json`,
+			JSON.stringify(bundle satisfies BundleState, null, 2),
+			{ baseDir: this.baseDir }
+		);
+	}
+
+	async #registerBundle(installed: boolean): Promise<boolean> {
 		if (!installed) {
 			await this.install();
 			await this.writeVersionFile();
@@ -114,7 +196,7 @@ export abstract class Overlay {
 
 	async install() {
 		const path = await join(await appDataDir(), this.path);
-		await unzip(this.zipUrl, path);
+		await unzip(await this.#loadBundle(), path);
 	}
 
 	async overwriteWithLatest(options: { backup?: boolean } = {}) {
@@ -223,12 +305,7 @@ export abstract class Overlay {
 	}
 
 	async zipContent(subdir?: string): Promise<Uint8Array> {
-		const sourcePath = await this.getPath();
-		const bytes = await invoke<number[]>('zip_directory', {
-			source: sourcePath,
-			subdir: subdir ?? null
-		});
-		return Uint8Array.from(bytes);
+		return this.zipContentAt(await this.getPath(), subdir);
 	}
 
 	async hashBytes(bytes: Uint8Array): Promise<string> {
@@ -260,7 +337,7 @@ export abstract class Overlay {
 			await remove(cachePath, { baseDir: this.baseDir, recursive: true });
 			await mkdir(cachePath, { baseDir: this.baseDir, recursive: true });
 			const cacheRoot = await join(await appDataDir(), cachePath);
-			await unzip(this.zipUrl, cacheRoot);
+			await unzip(await this.#loadBundle(), cacheRoot);
 
 			const distIndex = `${cachePath}/${this.publishPath}/index.html`;
 			if (!(await exists(distIndex, { baseDir: this.baseDir }))) {
@@ -281,11 +358,11 @@ export abstract class Overlay {
 	}
 
 	async zipContentAt(sourceRoot: string, subdir?: string): Promise<Uint8Array> {
-		const bytes = await invoke<number[]>('zip_directory', {
+		const bytes = await invoke<ArrayBuffer>('zip_directory', {
 			source: sourceRoot,
 			subdir: subdir ?? null
 		});
-		return Uint8Array.from(bytes);
+		return new Uint8Array(bytes);
 	}
 
 	async syncBundledDistIfNeeded(): Promise<boolean> {

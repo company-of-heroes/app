@@ -1,9 +1,35 @@
 use std::fs::{self, File};
 use std::io::{self, Cursor, Write};
 use std::path::{Component, Path, PathBuf};
+use tauri::ipc::{InvokeBody, Request, Response};
 use tauri::{AppHandle, Manager, Runtime};
 use zip::write::FileOptions;
 use zip::{ZipArchive, ZipWriter};
+
+const DESTINATION_HEADER: &str = "x-unzip-destination";
+
+/// Reverses JS `encodeURIComponent`.
+fn decode_uri_component(value: &str) -> Result<String, String> {
+    let bytes = value.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' {
+            let hex = value
+                .get(i + 1..i + 3)
+                .ok_or_else(|| format!("Invalid encoding: {}", value))?;
+            let byte =
+                u8::from_str_radix(hex, 16).map_err(|_| format!("Invalid encoding: {}", value))?;
+            decoded.push(byte);
+            i += 3;
+        } else {
+            decoded.push(bytes[i]);
+            i += 1;
+        }
+    }
+
+    String::from_utf8(decoded).map_err(|e| e.to_string())
+}
 
 /// The zip commands only touch the app's own data and cache folders (overlays live there),
 /// so a script in the webview cannot use them to read or write anywhere else on disk.
@@ -94,11 +120,21 @@ pub async fn unzip_file<R: Runtime>(
 #[tauri::command]
 pub async fn unzip_bytes<R: Runtime>(
     app: AppHandle<R>,
-    zip_data: Vec<u8>,
-    destination: String,
+    request: Request<'_>,
 ) -> Result<(), String> {
+    // The zip arrives as the raw IPC body (no JSON number array); the destination
+    // travels URI-encoded in a header so non-ASCII profile paths survive.
+    let InvokeBody::Raw(zip_data) = request.body() else {
+        return Err("Expected the zip as raw bytes".to_string());
+    };
+    let destination = request
+        .headers()
+        .get(DESTINATION_HEADER)
+        .and_then(|value| value.to_str().ok())
+        .ok_or_else(|| format!("Missing {} header", DESTINATION_HEADER))
+        .and_then(decode_uri_component)?;
     let destination = ensure_app_path(&app, &destination)?;
-    let cursor = Cursor::new(zip_data);
+    let cursor = Cursor::new(zip_data.as_slice());
     let mut archive =
         ZipArchive::new(cursor).map_err(|e| format!("Failed to read zip archive: {}", e))?;
 
@@ -197,7 +233,7 @@ pub async fn zip_directory<R: Runtime>(
     app: AppHandle<R>,
     source: String,
     subdir: Option<String>,
-) -> Result<Vec<u8>, String> {
+) -> Result<Response, String> {
     let source_path = ensure_app_path(&app, &source)?;
     let zip_root = match subdir.as_deref() {
         Some(name) => ensure_app_path(&app, &source_path.join(name).to_string_lossy())?,
@@ -215,5 +251,6 @@ pub async fn zip_directory<R: Runtime>(
     add_dir_to_zip(&mut zip, &zip_root, &zip_root, options)?;
     let buffer = zip.finish().map_err(|e| e.to_string())?;
 
-    Ok(buffer.into_inner())
+    // Raw bytes over IPC: an ArrayBuffer in JS instead of a JSON number array.
+    Ok(Response::new(buffer.into_inner()))
 }
