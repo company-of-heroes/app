@@ -1,4 +1,4 @@
-import { okAsync, ResultAsync } from 'neverthrow';
+import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { cached } from '../cache';
 import { avatarOf } from '../clients/steam';
 import { eloSlotCount, steamIdFromRelicName, toEloMap } from '../domain/ratings';
@@ -38,6 +38,8 @@ export const SEARCH_PAGE_SIZE = 20;
 const CANDIDATES = 500;
 /** Shortest query that also searches inside names when few names start with it. */
 const CONTAINS_MIN_LENGTH = 3;
+/** Set once the `alias_lower` fallback was logged (PocketBase before migration 1791000050). */
+let aliasLowerMissingLogged = false;
 /** Relic's "no match" result code for fuzzy search; then try the exact alias. */
 const RELIC_NOT_FOUND = 10;
 
@@ -158,6 +160,22 @@ export class PlayersService extends Service {
 			}),
 			'alias_lower'
 		)
+			.orElse((error) => {
+				// No `alias_lower` field yet (migration 1791000050 not run): the old prefix scan.
+				if (error.status !== 400) {
+					return errAsync(error);
+				}
+
+				if (!aliasLowerMissingLogged) {
+					aliasLowerMissingLogged = true;
+					console.warn('[services] player search: alias_lower missing, using alias ~ query');
+				}
+
+				return this.storedMatching(
+					this.pb.filter('alias ~ {:prefix}', { prefix: `${query}%` }),
+					'-updated'
+				);
+			})
 			.andThen((prefix) =>
 				prefix.length < SEARCH_PAGE_SIZE && query.length >= CONTAINS_MIN_LENGTH
 					? this.storedMatching(this.pb.filter('alias ~ {:query}', { query }), '-updated').map(
