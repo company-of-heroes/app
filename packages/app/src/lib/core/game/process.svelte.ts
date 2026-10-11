@@ -5,6 +5,10 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { dev } from '$app/environment';
 import Emittery from 'emittery';
 
+/** Process poll cadence: slow while CoH is closed, fast while it runs so an exit is noticed quickly. */
+const PROCESS_POLL_IDLE_MS = 3000;
+const PROCESS_POLL_RUNNING_MS = 1000;
+
 /**
  * Tracks the Company of Heroes process: running state, window focus and the
  * in-game chat state (reported by the Rust side).
@@ -26,7 +30,7 @@ export class Game extends Emittery {
 	/** Prevents duplicate "game started" notifications per session. */
 	didNotify = $state<boolean>(false);
 
-	#checkGameInterval: ReturnType<typeof setInterval> | null = null;
+	#checkGameTimer: ReturnType<typeof setTimeout> | null = null;
 	#focusInterval: ReturnType<typeof setInterval> | null = null;
 	#unlisteners: UnlistenFn[] = [];
 	#started = false;
@@ -40,9 +44,7 @@ export class Game extends Emittery {
 
 		this.#started = true;
 
-		this.#checkGameInterval = setInterval(() => {
-			void this.#pollProcessRunning();
-		}, 1000);
+		this.#scheduleProcessPoll(0);
 
 		this.#unlisteners.push(
 			await listen('game-chat-enter', () => {
@@ -55,9 +57,9 @@ export class Game extends Emittery {
 	}
 
 	stop(): void {
-		if (this.#checkGameInterval) {
-			clearInterval(this.#checkGameInterval);
-			this.#checkGameInterval = null;
+		if (this.#checkGameTimer) {
+			clearTimeout(this.#checkGameTimer);
+			this.#checkGameTimer = null;
 		}
 
 		this.#processCheckGeneration += 1;
@@ -69,6 +71,19 @@ export class Game extends Emittery {
 
 		this.#unlisteners = [];
 		this.#started = false;
+	}
+
+	#scheduleProcessPoll(delay: number): void {
+		const timer = setTimeout(async () => {
+			await this.#pollProcessRunning();
+			// stop() (or a restart) replaced the timer while the check was in flight.
+			if (this.#checkGameTimer !== timer) {
+				return;
+			}
+
+			this.#scheduleProcessPoll(this.isRunning ? PROCESS_POLL_RUNNING_MS : PROCESS_POLL_IDLE_MS);
+		}, delay);
+		this.#checkGameTimer = timer;
 	}
 
 	async #pollProcessRunning(): Promise<void> {
