@@ -16,6 +16,7 @@ import type { PlayerRewards } from '../reward/types';
 import type { DocKind } from '@company-of-heroes/game-data/types';
 import type { DocsNote } from '../docs/types';
 import type { Medal } from '../tournament/medal';
+import type { Ribbon } from '../reward/ribbon';
 import type { HostNotification } from '../notifications/types';
 import type {
 	HallOfFame,
@@ -32,6 +33,7 @@ import type {
 	TournamentMap,
 	TournamentMatch,
 	TournamentMatchResult,
+	TournamentMedalUse,
 	TournamentPost,
 	TournamentPostInput,
 	TournamentReport,
@@ -121,6 +123,8 @@ export type HostRoutes = {
 	/** Where to get the desktop app; the app itself omits it. */
 	downloadApp?: () => string;
 	tournamentHallOfFame: () => string;
+	/** Wiki page of a built-in map; the app links to the website. Offline hosts omit it. */
+	wikiMap?: (slug: string) => string;
 	/** Dev-only tournament simulator (website in dev mode); hosts without it hide the links. */
 	tournamentSimulator?: (slug?: string) => string;
 };
@@ -190,6 +194,8 @@ export type HostResolvers = {
 	actionIcon: (key: string) => string | undefined;
 	/** Champion medals from `shared-assets/medals`, in file order. Hosts without them return []. */
 	medals: () => Medal[];
+	/** Reward ribbons from `shared-assets/ribbons`, in file order. Hosts without them return []. */
+	ribbons: () => Ribbon[];
 	/** Avatar for a comment author / mention; hosts may add a generated fallback. */
 	userAvatar: (
 		user: { id: string; avatarUrl?: string },
@@ -337,6 +343,8 @@ export type HostApi = {
 		update: (id: string, input: TournamentUpdate, images?: TournamentImages) => Promise<Tournament>;
 		/** Staff-made maps; built-in maps are `BUILT_IN_MAPS`. */
 		listMaps: () => Promise<TournamentMap[]>;
+		/** The medal every tournament uses, so the picker can mark them as taken. */
+		usedMedals: () => Promise<TournamentMedalUse[]>;
 		/** Staff only. */
 		createMap: (name: string, icon: File | null) => Promise<TournamentMap>;
 		/** `acceptRules` is required when the tournament has rules. */

@@ -6,7 +6,7 @@ import { unwrapAsync } from '$lib/errors/unwrap';
 import { DOCS_NOTE_MAX, DOCS_REPORT_MAX } from '$lib/server/services/docs';
 
 const saveDocsNoteSchema = z.object({
-	kind: z.enum(['unit', 'building', 'commander', 'weapon']),
+	kind: z.enum(['unit', 'building', 'commander', 'weapon', 'map']),
 	slug: z.string().regex(/^[a-z0-9-]{1,120}$/),
 	body: z.string().max(DOCS_NOTE_MAX)
 });

@@ -23,6 +23,7 @@
 	import LikeButton from '../comment/like-button.svelte';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
+	import { CopyButton } from '../ui/copy-button';
 	import type { PlayerPageData } from './types';
 	import PlayerFact from './player-fact.svelte';
 	import PlayerFacts from './player-facts.svelte';
@@ -222,14 +223,17 @@
 			icon={IdentificationCardIcon}
 			sub={joinedSince ? t('Joined {date}', { date: joinedSince }) : null}
 		>
-			<a
-				href="https://steamcommunity.com/profiles/{player.steamId}"
-				target="_blank"
-				rel="noopener noreferrer"
-				class={cn(interactive, 'hover:text-primary truncate font-sans text-sm transition-colors')}
-			>
-				{player.steamId}
-			</a>
+			<span class="flex min-w-0 items-center gap-1.5">
+				<a
+					href="https://steamcommunity.com/profiles/{player.steamId}"
+					target="_blank"
+					rel="noopener noreferrer"
+					class={cn(interactive, 'hover:text-primary truncate font-sans text-sm transition-colors')}
+				>
+					{player.steamId}
+				</a>
+				<CopyButton value={player.steamId} label={t('Copy Steam ID')} />
+			</span>
 		</PlayerFact>
 		{#if player.smurf}
 			<PlayerFact label={t('Smurf account')} icon={WarningIcon}>

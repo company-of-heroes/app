@@ -1,10 +1,16 @@
-import type { DocKind, DocModifier, DocRef } from '@company-of-heroes/game-data/types';
+import type {
+	DocKind,
+	DocModifier,
+	DocRef,
+	MapPointType
+} from '@company-of-heroes/game-data/types';
 
 const KIND_PATH: Record<DocKind, string> = {
 	unit: 'units',
 	building: 'buildings',
 	commander: 'commanders',
-	weapon: 'weapons'
+	weapon: 'weapons',
+	map: 'maps'
 };
 
 /**
@@ -200,4 +206,9 @@ export function effectivenessTone(value: number | undefined): string {
 	}
 
 	return value <= 1.5 ? 'text-lime-300' : 'text-green-400';
+}
+
+/** Point blueprints that look the same in game (the strategic point variants) share a key. */
+export function mapPointKey(kind: Pick<MapPointType, 'name' | 'icon'>): string {
+	return `${kind.name}:${kind.icon}`;
 }

@@ -103,6 +103,10 @@ export const updateTournament = command(
 	}
 );
 
+export const listUsedTournamentMedals = command(() =>
+	unwrapAsync(getRequestEvent().locals.services.tournaments.usedMedals())
+);
+
 export const listTournamentMaps = command(() =>
 	unwrapAsync(getRequestEvent().locals.services.tournaments.listMaps())
 );

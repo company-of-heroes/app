@@ -17,6 +17,8 @@ export type RewardView = {
 	title: string;
 	description: string;
 	imageUrl: string | null;
+	/** Ribbon key from `shared-assets/ribbons` (e.g. `ribbon-042`); shown instead of the image. */
+	ribbon: string | null;
 	/** Title and description stay hidden until unlocked. */
 	secret: boolean;
 	sort: number;

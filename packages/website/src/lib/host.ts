@@ -66,6 +66,7 @@ import {
 	fetchTournament,
 	joinTournament,
 	listTournamentMaps,
+	listUsedTournamentMedals,
 	listTournaments,
 	listTournamentsWonBy,
 	seedTournament,
@@ -109,6 +110,7 @@ import {
 import { getFactionFlagByLeaderboardId } from '$lib/utils/media/ranks';
 import { getActionIcon } from '$lib/utils/media/action-icons';
 import { getMedals } from '$lib/utils/media/medals';
+import { getRibbons } from '$lib/utils/media/ribbons';
 import {
 	flagImageUrl,
 	getRankImageByLeaderboardId,
@@ -209,6 +211,7 @@ export function provideWebsiteHost(): HostContext {
 			tournamentEdit: (slug) => href(`/tournaments/${slug}/edit`),
 			downloadApp: () => RELEASE_PAGE_URL,
 			tournamentHallOfFame: () => href('/tournaments/hall-of-fame'),
+			wikiMap: (slug) => href(`/wiki/maps/${slug}`),
 			tournamentSimulator: dev
 				? (slug) => href(slug ? `/tournaments/simulate?slug=${slug}` : '/tournaments/simulate')
 				: undefined
@@ -238,6 +241,7 @@ export function provideWebsiteHost(): HostContext {
 			doctrineBanner: (file) => `/doctrines/${file}`,
 			actionIcon: getActionIcon,
 			medals: getMedals,
+			ribbons: getRibbons,
 			userAvatar: (user, options) =>
 				user.avatarUrl ? withFileThumb(user.avatarUrl, options?.thumb) : undefined
 		},
@@ -386,6 +390,7 @@ export function provideWebsiteHost(): HostContext {
 				create: (input, images = {}) => withMessage(createTournament({ input, images })),
 				update: (id, input, images = {}) => withMessage(updateTournament({ id, input, images })),
 				listMaps: () => withMessage(listTournamentMaps()),
+				usedMedals: () => withMessage(listUsedTournamentMedals()),
 				createMap: (name, icon) => withMessage(createTournamentMap({ name, icon })),
 				register: (id, steamId, acceptRules) =>
 					withMessage(joinTournament({ id, steamId, acceptRules })),

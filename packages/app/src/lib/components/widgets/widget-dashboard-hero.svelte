@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isStreamingLink } from '@company-of-heroes/api';
-	import { api } from '$core/api';
+	import { api, unwrapApi } from '$core/api';
+	import * as Reward from '@company-of-heroes/ui/reward';
 	import { app } from '$core/app/context';
 	import { Alert } from '$lib/components/ui/alert';
 	import { PlayerStatsTable } from '@company-of-heroes/ui/player';
@@ -279,6 +280,11 @@
 		() => [steamId, statsGeneration] as const,
 		async ([id]) => (id ? getPlayerRating(id) : null)
 	);
+	// Own rewards for the shown Steam ID (unlocked + progress); refetched after a match result.
+	const rewards = resource(
+		() => [steamId, statsGeneration] as const,
+		async ([id]) => (id ? unwrapApi(api.rewards.forPlayer(id)).catch(() => null) : null)
+	);
 	const playerElo = $derived(
 		mergeEloMaps(
 			storedRating.current?.elo,
@@ -522,6 +528,11 @@
 				{#if bio}
 					<p class="text-secondary-200 text-sm leading-relaxed whitespace-pre-wrap">{bio}</p>
 				{/if}
+				<Reward.Icons
+					steamId={profile.steam.steamid}
+					rewards={rewards.current ?? null}
+					class="mb-0"
+				/>
 			</PlayerHero>
 
 			<PlayerFacts>

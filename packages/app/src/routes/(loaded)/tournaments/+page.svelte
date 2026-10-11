@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { resource } from 'runed';
 	import type { Tournament } from '@company-of-heroes/api';
-	import { TournamentOverview } from '@company-of-heroes/ui/tournament';
-	import { Skeleton } from '@company-of-heroes/ui/skeleton';
+	import { TournamentOverview, TournamentOverviewSkeleton } from '@company-of-heroes/ui/tournament';
 	import { cachedTournaments, loadTournaments } from '$lib/tournaments/tournament-lists';
 	import { useI18n } from '$lib/i18n';
 
@@ -35,9 +34,5 @@
 		{t('Could not load tournaments.')}
 	</p>
 {:else}
-	<div class="border-secondary-800 space-y-2 border-b px-4 py-3">
-		<Skeleton class="h-5 w-48" />
-		<Skeleton class="h-16 w-full" />
-		<Skeleton class="h-16 w-full" />
-	</div>
+	<TournamentOverviewSkeleton />
 {/if}

@@ -80,7 +80,12 @@ const HOLD_ACTION_KEYS = new Set([
 ]);
 
 function isHoldAction(keys: string[]): boolean {
-	return keys.length > 0 && keys.every((key) => HOLD_ACTION_KEYS.has(key));
+	// A repeated arrow is a sequence to type, not a direction to hold.
+	return (
+		keys.length > 0 &&
+		new Set(keys).size === keys.length &&
+		keys.every((key) => HOLD_ACTION_KEYS.has(key))
+	);
 }
 
 function fingerprintBindings(bindings: Shortcut[]) {
@@ -360,11 +365,38 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 		}
 	}
 
-	private async registerBinding(trigger: string, actionKeys: string[]) {
+	private async registerBinding(trigger: string, triggerKeys: string[], actionKeys: string[]) {
 		const keysToSend = actionKeysForSendKeys(actionKeys);
+		const triggerKey = actionKeysForSendKeys(triggerKeys)[0];
+		// RegisterHotKey also fires on injected input, so a sequence that types its own
+		// trigger key (R → R R R Tab R) would retrigger itself without unregistering first.
+		const sendsTrigger = triggerKey != null && keysToSend.includes(triggerKey);
+		let sending = false;
+
+		const send = async () => {
+			if (!sendsTrigger) {
+				await invoke('send_keys', { keys: keysToSend });
+				return;
+			}
+
+			await this.runRegistration(async () => {
+				if (!this.registeredTriggers.has(trigger)) {
+					return;
+				}
+
+				await this.forceUnregisterTrigger(trigger);
+				try {
+					await invoke('send_keys', { keys: keysToSend });
+				} finally {
+					await register(trigger, handler).catch((error) => {
+						console.error('Failed to re-register shortcut', trigger, error);
+					});
+				}
+			});
+		};
 
 		const handler = (event: { state: string; shortcut: string }) => {
-			if (keysToSend.length === 0) {
+			if (keysToSend.length === 0 || sending) {
 				return;
 			}
 
@@ -374,11 +406,16 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 					return;
 				}
 
-				if (event.state !== 'Pressed') {
+				if (event.state !== 'Pressed' || sending) {
 					return;
 				}
 
-				await invoke('send_keys', { keys: keysToSend });
+				sending = true;
+				try {
+					await send();
+				} finally {
+					sending = false;
+				}
 			})().catch((error) => {
 				console.error('Failed to send shortcut action keys', error);
 			});
@@ -451,7 +488,7 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 				}
 
 				try {
-					await this.registerBinding(trigger, [...shortcut.actionKeys]);
+					await this.registerBinding(trigger, [...shortcut.triggerKeys], [...shortcut.actionKeys]);
 				} catch (error) {
 					console.error('Error registering shortcut', trigger, error);
 				}
@@ -682,15 +719,25 @@ export class Shortcuts extends Feature<ShortcutSettings> {
 			}
 
 			event.preventDefault();
-			const key = getShortcutKey(event);
+			if (event.repeat) {
+				return;
+			}
 
+			const key = getShortcutKey(event);
 			if (!key) {
 				return;
 			}
 
-			const targetArray = type === 'trigger' ? keybinding.triggerKeys : keybinding.actionKeys;
-			if (!targetArray.includes(key)) {
-				targetArray.push(key);
+			// Triggers are one chord; actions are a sequence, so the same key may repeat.
+			if (type === 'action') {
+				// Modifiers are never sent (see actionKeysForSendKeys).
+				if (ACTION_MODIFIER_KEYS.has(key)) {
+					return;
+				}
+
+				keybinding.actionKeys.push(key);
+			} else if (!keybinding.triggerKeys.includes(key)) {
+				keybinding.triggerKeys.push(key);
 			}
 
 			const active = entry?.[type];

@@ -5,6 +5,7 @@
 	import { confirmation } from '$lib/components/ui/modal';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import { CopyButton } from '@company-of-heroes/ui/copy-button';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
 	import * as User from '$lib/components/user';
@@ -213,6 +214,7 @@
 				<li class="flex flex-col gap-2 px-4 py-3">
 					<span class="flex items-center gap-2 text-sm">
 						<span class="font-mono">{conflict.steamId}</span>
+						<CopyButton value={conflict.steamId} label={t('Copy Steam ID')} />
 						{#if !conflict.requester}
 							<Badge variant="default">{t('Already shared')}</Badge>
 						{/if}

@@ -19,6 +19,7 @@
 		"./skeleton": "./src/ui/skeleton/index.ts",
 		"./badge": "./src/ui/badge/index.ts",
 		"./staff-section": "./src/ui/staff-section/index.ts",
+		"./copy-button": "./src/ui/copy-button/index.ts",
 		"./alert": "./src/ui/alert/index.ts",
 		"./box": "./src/ui/box/index.ts",
 		"./accordion": "./src/ui/accordion/index.ts",

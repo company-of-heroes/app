@@ -11,6 +11,8 @@
 	type Props = {
 		name: string;
 		icon?: string;
+		/** Picture instead of the icon (a map's picture). */
+		image?: string;
 		faction?: Faction;
 		/** Kind shown above the name ("Unit", "Building", …). */
 		kicker: string;
@@ -27,8 +29,20 @@
 		children?: Snippet;
 	};
 
-	let { name, icon, faction, kicker, help, extra, cost, pop, banner, parent, children }: Props =
-		$props();
+	let {
+		name,
+		icon,
+		image,
+		faction,
+		kicker,
+		help,
+		extra,
+		cost,
+		pop,
+		banner,
+		parent,
+		children
+	}: Props = $props();
 	const { t } = useI18n();
 
 	const raceId = $derived(faction ? FACTION_RACE_ID[faction] : null);
@@ -50,7 +64,11 @@
 		></div>
 	{/if}
 	<div class="flex items-center gap-4">
-		<DocsIcon {icon} {name} class="size-16" />
+		{#if image}
+			<img src={image} alt="" class="size-16 shrink-0 rounded-sm bg-gray-950 object-cover" />
+		{:else}
+			<DocsIcon {icon} {name} class="size-16" />
+		{/if}
 		<div class="min-w-0 flex-1">
 			<h1 class="font-heading text-3xl leading-tight font-bold text-white">{name}</h1>
 			<p class="text-secondary-400 mt-1 text-sm">

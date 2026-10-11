@@ -224,22 +224,49 @@
 	{@render content(initial)}
 {:else}
 	{#await hallOfFame}
-		<div class={flushHeader}>
-			<Skeleton class="h-3 w-24" />
-		</div>
-		<div class="overflow-hidden">
-			<div class="-mr-px grid sm:grid-cols-2 xl:grid-cols-3">
-				{#each [0, 1, 2] as index (index)}
-					<div class="border-secondary-800 flex gap-4 border-r border-b px-4 py-4">
-						<Skeleton class="size-16 shrink-0" />
-						<div class="flex flex-1 flex-col gap-2">
-							<Skeleton class="h-5 w-3/4" />
-							<Skeleton class="h-3 w-1/2" />
-							<Skeleton class="h-4 w-2/3" />
-						</div>
-					</div>
-				{/each}
+		<div aria-busy="true">
+			<div class={flushHeader}>
+				<Skeleton class="h-4 w-24" />
 			</div>
+			<div class="border-secondary-800 border-b">
+				<div class="-mb-px overflow-hidden">
+					<div class="-mr-px grid sm:grid-cols-2 xl:grid-cols-3">
+						{#each { length: 6 }, index (index)}
+							<div class="border-secondary-800 flex min-w-0 gap-4 border-r border-b px-4 py-4">
+								<Skeleton class="size-16 shrink-0 rounded-md" />
+								<div class="flex min-w-0 flex-1 flex-col gap-2">
+									<div class="flex flex-col gap-1">
+										<Skeleton class="h-6 w-3/4" />
+										<Skeleton class="h-4 w-1/2" />
+									</div>
+									<div class="flex flex-col gap-1">
+										{#each ['w-32', 'w-28', 'w-24'] as width (width)}
+											<div class="flex h-5 items-center gap-2">
+												<Skeleton class="size-3.5 shrink-0" />
+												<Skeleton class="h-4 {width}" />
+											</div>
+										{/each}
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+			<div class={flushHeader}>
+				<Skeleton class="h-4 w-24" />
+			</div>
+			<div class="border-secondary-800 flex h-9 items-center border-b px-4">
+				<Skeleton class="h-3 w-full" />
+			</div>
+			{#each { length: 5 }, index (index)}
+				<div class="border-secondary-800 flex h-11 items-center gap-8 border-b px-4">
+					<Skeleton class="h-4 w-4 shrink-0" />
+					<Skeleton class="h-4 w-40" />
+					<Skeleton class="ms-auto h-4 w-8 shrink-0" />
+					<Skeleton class="h-4 w-8 shrink-0" />
+				</div>
+			{/each}
 		</div>
 	{:then data}
 		{@render content(data)}

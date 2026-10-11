@@ -1,0 +1,8541 @@
+[
+	{
+		"id": "r001",
+		"file": "ribbon-001.svg",
+		"title": "Brown, orange and white edged ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "edged",
+		"stripes": [
+			"#6b4226",
+			"#c8642a",
+			"#f4f1e8",
+			"#c8642a",
+			"#f4f1e8",
+			"#c8642a",
+			"#6b4226"
+		],
+		"device": null
+	},
+	{
+		"id": "r002",
+		"file": "ribbon-002.svg",
+		"title": "Navy, white and red flag ribbon with bronze V device",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#b8924a",
+			"#c8642a",
+			"#b8924a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "v",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r003",
+		"file": "ribbon-003.svg",
+		"title": "Blue, olive and navy campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#3f6fb0",
+			"#56622e",
+			"#24406b",
+			"#6b4226",
+			"#3f6fb0",
+			"#56622e",
+			"#3f6fb0",
+			"#6b4226",
+			"#56622e",
+			"#24406b",
+			"#3f6fb0"
+		],
+		"device": null
+	},
+	{
+		"id": "r004",
+		"file": "ribbon-004.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#6b4226",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r005",
+		"file": "ribbon-005.svg",
+		"title": "Navy, red and white edged ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "edged",
+		"stripes": [
+			"#24406b",
+			"#c23b3b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r006",
+		"file": "ribbon-006.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r007",
+		"file": "ribbon-007.svg",
+		"title": "Navy, red and sky campaign ribbon with 3 bronze stars",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#24406b",
+			"#c23b3b",
+			"#7fb0d8",
+			"#6b4226",
+			"#24406b",
+			"#c23b3b",
+			"#24406b",
+			"#6b4226",
+			"#c23b3b",
+			"#7fb0d8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 3
+		}
+	},
+	{
+		"id": "r008",
+		"file": "ribbon-008.svg",
+		"title": "White, blue and sky campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#f4f1e8",
+			"#3f6fb0",
+			"#7fb0d8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#2f5a34",
+			"#3f6fb0",
+			"#7fb0d8",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r009",
+		"file": "ribbon-009.svg",
+		"title": "White, brown and blue campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#f4f1e8",
+			"#6b4226",
+			"#3f6fb0",
+			"#6b4226",
+			"#f4f1e8",
+			"#6b4226",
+			"#f4f1e8",
+			"#6b4226",
+			"#3f6fb0",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r010",
+		"file": "ribbon-010.svg",
+		"title": "Khaki and navy edged ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "edged",
+		"stripes": [
+			"#b8924a",
+			"#24406b",
+			"#b8924a"
+		],
+		"device": null
+	},
+	{
+		"id": "r011",
+		"file": "ribbon-011.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#b8924a",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r012",
+		"file": "ribbon-012.svg",
+		"title": "Green, olive and navy bands ribbon with bronze oak leaf cluster",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#2f5a34",
+			"#56622e",
+			"#2f5a34",
+			"#24406b",
+			"#2f5a34",
+			"#56622e",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r013",
+		"file": "ribbon-013.svg",
+		"title": "Sky, brown and khaki campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#7fb0d8",
+			"#6b4226",
+			"#b8924a",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#6b4226",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#6b4226",
+			"#b8924a",
+			"#7fb0d8"
+		],
+		"device": null
+	},
+	{
+		"id": "r014",
+		"file": "ribbon-014.svg",
+		"title": "Orange, green and white edged ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "edged",
+		"stripes": [
+			"#c8642a",
+			"#2f5a34",
+			"#f4f1e8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#2f5a34",
+			"#c8642a"
+		],
+		"device": null
+	},
+	{
+		"id": "r015",
+		"file": "ribbon-015.svg",
+		"title": "Olive, blue and green bands ribbon with bronze arrowhead",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#56622e",
+			"#3f6fb0",
+			"#2f5a34",
+			"#3f6fb0",
+			"#56622e"
+		],
+		"device": {
+			"kind": "arrowhead",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r016",
+		"file": "ribbon-016.svg",
+		"title": "Blue, olive and navy campaign ribbon with bronze arrowhead",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#3f6fb0",
+			"#56622e",
+			"#24406b",
+			"#c23b3b",
+			"#3f6fb0",
+			"#56622e",
+			"#3f6fb0",
+			"#c23b3b",
+			"#56622e",
+			"#24406b",
+			"#3f6fb0"
+		],
+		"device": {
+			"kind": "arrowhead",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r017",
+		"file": "ribbon-017.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#b8924a",
+			"#6b4226",
+			"#b8924a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r018",
+		"file": "ribbon-018.svg",
+		"title": "Gold and orange bands ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#c8642a",
+			"#e0b23a"
+		],
+		"device": null
+	},
+	{
+		"id": "r019",
+		"file": "ribbon-019.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#c8642a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r020",
+		"file": "ribbon-020.svg",
+		"title": "Brown, navy and khaki bands ribbon with 2 gold stars",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#6b4226",
+			"#24406b",
+			"#b8924a",
+			"#f4f1e8",
+			"#b8924a",
+			"#24406b",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 2
+		}
+	},
+	{
+		"id": "r021",
+		"file": "ribbon-021.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r022",
+		"file": "ribbon-022.svg",
+		"title": "Sky, green and brown campaign ribbon with 2 bronze stars",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#7fb0d8",
+			"#2f5a34",
+			"#6b4226",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#2f5a34",
+			"#6b4226",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		}
+	},
+	{
+		"id": "r023",
+		"file": "ribbon-023.svg",
+		"title": "Orange, navy and sky bands ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#c8642a",
+			"#24406b",
+			"#7fb0d8",
+			"#24406b",
+			"#c8642a"
+		],
+		"device": null
+	},
+	{
+		"id": "r024",
+		"file": "ribbon-024.svg",
+		"title": "Red, white and olive campaign ribbon with 3 bronze stars",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#c23b3b",
+			"#f4f1e8",
+			"#56622e",
+			"#3f6fb0",
+			"#c23b3b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#56622e",
+			"#c23b3b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 3
+		}
+	},
+	{
+		"id": "r025",
+		"file": "ribbon-025.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#e0b23a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r026",
+		"file": "ribbon-026.svg",
+		"title": "Forest, yellow and black split ribbon with gold swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#34452c",
+			"#d9b43a",
+			"#1c1c1c"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r027",
+		"file": "ribbon-027.svg",
+		"title": "White, silver and forest split ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#f4f1e8",
+			"#a9adb1",
+			"#34452c"
+		],
+		"device": null
+	},
+	{
+		"id": "r028",
+		"file": "ribbon-028.svg",
+		"title": "Black, white and feldgrau fieldgrey ribbon with gold swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#1c1c1c",
+			"#f4f1e8",
+			"#5d6450",
+			"#e6dfcc",
+			"#5d6450",
+			"#f4f1e8",
+			"#1c1c1c"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r029",
+		"file": "ribbon-029.svg",
+		"title": "Black, white and brown fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#1c1c1c",
+			"#f4f1e8",
+			"#6b4226",
+			"#f4f1e8",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r030",
+		"file": "ribbon-030.svg",
+		"title": "White, black and feldgrau fieldgrey ribbon with gold swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#5d6450",
+			"#a9adb1",
+			"#5d6450",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r031",
+		"file": "ribbon-031.svg",
+		"title": "Black, white and feldgrau fieldgrey ribbon with silver swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#1c1c1c",
+			"#f4f1e8",
+			"#5d6450",
+			"#d9b43a",
+			"#5d6450",
+			"#f4f1e8",
+			"#1c1c1c"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r032",
+		"file": "ribbon-032.svg",
+		"title": "White, black and feldgrau fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#5d6450",
+			"#34452c",
+			"#5d6450",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r033",
+		"file": "ribbon-033.svg",
+		"title": "Silver and bone pinstripes ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#a9adb1",
+			"#e6dfcc",
+			"#a9adb1",
+			"#e6dfcc",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r034",
+		"file": "ribbon-034.svg",
+		"title": "White and black bands ribbon with silver oak leaf cluster",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r035",
+		"file": "ribbon-035.svg",
+		"title": "White, black and brown fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#6b4226",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r036",
+		"file": "ribbon-036.svg",
+		"title": "White, black and feldgrau fieldgrey ribbon with silver oak leaf cluster",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r037",
+		"file": "ribbon-037.svg",
+		"title": "Forest and feldgrau edged ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#34452c",
+			"#5d6450",
+			"#34452c"
+		],
+		"device": null
+	},
+	{
+		"id": "r038",
+		"file": "ribbon-038.svg",
+		"title": "Bone and black edged ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#e6dfcc",
+			"#1c1c1c",
+			"#e6dfcc"
+		],
+		"device": null
+	},
+	{
+		"id": "r039",
+		"file": "ribbon-039.svg",
+		"title": "Feldgrau, brown and silver split ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#5d6450",
+			"#6b4226",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r040",
+		"file": "ribbon-040.svg",
+		"title": "White, black and feldgrau fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#5d6450",
+			"#6b4226",
+			"#5d6450",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r041",
+		"file": "ribbon-041.svg",
+		"title": "Bone and slate pinstripes ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#e6dfcc",
+			"#4d545c",
+			"#e6dfcc",
+			"#4d545c",
+			"#e6dfcc",
+			"#4d545c",
+			"#e6dfcc",
+			"#4d545c",
+			"#e6dfcc",
+			"#4d545c",
+			"#e6dfcc",
+			"#4d545c",
+			"#e6dfcc"
+		],
+		"device": null
+	},
+	{
+		"id": "r042",
+		"file": "ribbon-042.svg",
+		"title": "Yellow, black and silver bands ribbon with gold swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#d9b43a",
+			"#1c1c1c",
+			"#a9adb1",
+			"#1c1c1c",
+			"#d9b43a"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r043",
+		"file": "ribbon-043.svg",
+		"title": "Feldgrau, silver and slate split ribbon with gold swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#5d6450",
+			"#a9adb1",
+			"#4d545c"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r044",
+		"file": "ribbon-044.svg",
+		"title": "Black, white and feldgrau fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#1c1c1c",
+			"#f4f1e8",
+			"#5d6450",
+			"#f4f1e8",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r045",
+		"file": "ribbon-045.svg",
+		"title": "White, black and feldgrau fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#5d6450",
+			"#d9b43a",
+			"#5d6450",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r046",
+		"file": "ribbon-046.svg",
+		"title": "Feldgrau, white and brown split ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#5d6450",
+			"#f4f1e8",
+			"#6b4226"
+		],
+		"device": null
+	},
+	{
+		"id": "r047",
+		"file": "ribbon-047.svg",
+		"title": "Forest and white pinstripes ribbon with silver oak leaf cluster",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#34452c",
+			"#f4f1e8",
+			"#34452c",
+			"#f4f1e8",
+			"#34452c",
+			"#f4f1e8",
+			"#34452c",
+			"#f4f1e8",
+			"#34452c",
+			"#f4f1e8",
+			"#34452c",
+			"#f4f1e8",
+			"#34452c"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r048",
+		"file": "ribbon-048.svg",
+		"title": "Black, white and forest fieldgrey ribbon with silver swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#1c1c1c",
+			"#f4f1e8",
+			"#34452c",
+			"#f4f1e8",
+			"#1c1c1c"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r049",
+		"file": "ribbon-049.svg",
+		"title": "White, black and brown fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#6b4226",
+			"#d9b43a",
+			"#6b4226",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r050",
+		"file": "ribbon-050.svg",
+		"title": "Feldgrau, bone and silver bands ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#5d6450",
+			"#e6dfcc",
+			"#a9adb1",
+			"#e6dfcc",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r051",
+		"file": "ribbon-051.svg",
+		"title": "Sand, black and sky theatre ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#cfb07a",
+			"#1c1c1c",
+			"#7fb0d8",
+			"#1c1c1c",
+			"#cfb07a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r052",
+		"file": "ribbon-052.svg",
+		"title": "Black, white and green bands ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#1c1c1c",
+			"#f4f1e8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r053",
+		"file": "ribbon-053.svg",
+		"title": "Navy, black and crimson theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#24406b",
+			"#1c1c1c",
+			"#8f2232",
+			"#1c1c1c",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r054",
+		"file": "ribbon-054.svg",
+		"title": "Navy, red and khaki edged ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#24406b",
+			"#c23b3b",
+			"#b8924a",
+			"#c23b3b",
+			"#b8924a",
+			"#c23b3b",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r055",
+		"file": "ribbon-055.svg",
+		"title": "Sand, gold and green theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#cfb07a",
+			"#e0b23a",
+			"#2f5a34",
+			"#e0b23a",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r056",
+		"file": "ribbon-056.svg",
+		"title": "Sand and white edged ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#cfb07a",
+			"#f4f1e8",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r057",
+		"file": "ribbon-057.svg",
+		"title": "Purple, blue and green rainbow ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "rainbow",
+		"stripes": [
+			"#6b2d5c",
+			"#3f6fb0",
+			"#2f5a34",
+			"#e0b23a",
+			"#c8642a",
+			"#c23b3b",
+			"#c8642a",
+			"#e0b23a",
+			"#2f5a34",
+			"#3f6fb0",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r058",
+		"file": "ribbon-058.svg",
+		"title": "Purple, blue and green rainbow ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "rainbow",
+		"stripes": [
+			"#6b2d5c",
+			"#3f6fb0",
+			"#2f5a34",
+			"#e0b23a",
+			"#c8642a",
+			"#c23b3b",
+			"#8f2232",
+			"#c23b3b",
+			"#c8642a",
+			"#e0b23a",
+			"#2f5a34",
+			"#3f6fb0",
+			"#6b2d5c"
+		],
+		"device": null
+	},
+	{
+		"id": "r059",
+		"file": "ribbon-059.svg",
+		"title": "Gold, sky and sand split ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#e0b23a",
+			"#7fb0d8",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r060",
+		"file": "ribbon-060.svg",
+		"title": "Green, crimson and gold theatre ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#8f2232",
+			"#e0b23a",
+			"#8f2232",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r061",
+		"file": "ribbon-061.svg",
+		"title": "Sand, sky and black theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#cfb07a",
+			"#7fb0d8",
+			"#1c1c1c",
+			"#7fb0d8",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r062",
+		"file": "ribbon-062.svg",
+		"title": "Khaki, gold and black campaign ribbon with bronze rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#b8924a",
+			"#e0b23a",
+			"#1c1c1c",
+			"#c23b3b",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#c23b3b",
+			"#e0b23a",
+			"#1c1c1c",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r063",
+		"file": "ribbon-063.svg",
+		"title": "Gold, crimson and sand bands ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#8f2232",
+			"#cfb07a",
+			"#7fb0d8",
+			"#cfb07a",
+			"#8f2232",
+			"#e0b23a"
+		],
+		"device": null
+	},
+	{
+		"id": "r064",
+		"file": "ribbon-064.svg",
+		"title": "Khaki, black and navy theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#b8924a",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#b8924a"
+		],
+		"device": null
+	},
+	{
+		"id": "r065",
+		"file": "ribbon-065.svg",
+		"title": "Green, navy and gold theatre ribbon with bronze rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r066",
+		"file": "ribbon-066.svg",
+		"title": "Khaki, crimson and purple theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#b8924a",
+			"#8f2232",
+			"#6b2d5c",
+			"#8f2232",
+			"#b8924a"
+		],
+		"device": null
+	},
+	{
+		"id": "r067",
+		"file": "ribbon-067.svg",
+		"title": "Purple, khaki and crimson bands ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#b8924a",
+			"#8f2232",
+			"#2f5a34",
+			"#8f2232",
+			"#b8924a",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r068",
+		"file": "ribbon-068.svg",
+		"title": "Sand, white and red theatre ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#cfb07a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#cfb07a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r069",
+		"file": "ribbon-069.svg",
+		"title": "Sky, green and white campaign ribbon with silver oak leaf cluster",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#7fb0d8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r070",
+		"file": "ribbon-070.svg",
+		"title": "Green, red and gold theatre ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#c23b3b",
+			"#e0b23a",
+			"#c23b3b",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r071",
+		"file": "ribbon-071.svg",
+		"title": "Sand, crimson and black campaign ribbon with silver oak leaf cluster",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#cfb07a",
+			"#8f2232",
+			"#1c1c1c",
+			"#e0b23a",
+			"#cfb07a",
+			"#8f2232",
+			"#cfb07a",
+			"#e0b23a",
+			"#8f2232",
+			"#1c1c1c",
+			"#cfb07a"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r072",
+		"file": "ribbon-072.svg",
+		"title": "Sky and green edged ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#7fb0d8",
+			"#2f5a34",
+			"#7fb0d8"
+		],
+		"device": null
+	},
+	{
+		"id": "r073",
+		"file": "ribbon-073.svg",
+		"title": "Khaki, green and crimson bands ribbon with bronze rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#b8924a",
+			"#2f5a34",
+			"#8f2232",
+			"#7fb0d8",
+			"#8f2232",
+			"#2f5a34",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r074",
+		"file": "ribbon-074.svg",
+		"title": "Navy, gold and green theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#24406b",
+			"#e0b23a",
+			"#2f5a34",
+			"#e0b23a",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r075",
+		"file": "ribbon-075.svg",
+		"title": "Khaki, green and sky edged ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#b8924a",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#b8924a"
+		],
+		"device": null
+	},
+	{
+		"id": "r076",
+		"file": "ribbon-076.svg",
+		"title": "White, black and silver split ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "split",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r077",
+		"file": "ribbon-077.svg",
+		"title": "Feldgrau, bordeaux and navy split ribbon with gold tank badge",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "split",
+		"stripes": [
+			"#5d6450",
+			"#5e1d2a",
+			"#24406b"
+		],
+		"device": {
+			"kind": "tank",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r078",
+		"file": "ribbon-078.svg",
+		"title": "Slate and white edged ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c"
+		],
+		"device": null
+	},
+	{
+		"id": "r079",
+		"file": "ribbon-079.svg",
+		"title": "Feldgrau and bordeaux pinstripes ribbon with gold swords",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5d6450",
+			"#5e1d2a",
+			"#5d6450",
+			"#5e1d2a",
+			"#5d6450",
+			"#5e1d2a",
+			"#5d6450",
+			"#5e1d2a",
+			"#5d6450"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r080",
+		"file": "ribbon-080.svg",
+		"title": "Black, rose and feldgrau split ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "split",
+		"stripes": [
+			"#1c1c1c",
+			"#cf7792",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r081",
+		"file": "ribbon-081.svg",
+		"title": "Feldgrau and slate pinstripes ribbon with gold swords",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5d6450",
+			"#4d545c",
+			"#5d6450",
+			"#4d545c",
+			"#5d6450"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r082",
+		"file": "ribbon-082.svg",
+		"title": "Rose and black piped ribbon with silver oak leaf cluster",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r083",
+		"file": "ribbon-083.svg",
+		"title": "Rose, black and navy piped ribbon with silver swords",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r084",
+		"file": "ribbon-084.svg",
+		"title": "Slate and black striped ribbon with gold tank badge",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c"
+		],
+		"device": {
+			"kind": "tank",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r085",
+		"file": "ribbon-085.svg",
+		"title": "Slate, rose and navy striped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#4d545c",
+			"#cf7792",
+			"#24406b",
+			"#cf7792",
+			"#24406b",
+			"#cf7792",
+			"#24406b",
+			"#cf7792",
+			"#24406b",
+			"#cf7792",
+			"#4d545c"
+		],
+		"device": null
+	},
+	{
+		"id": "r086",
+		"file": "ribbon-086.svg",
+		"title": "Black and slate pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r087",
+		"file": "ribbon-087.svg",
+		"title": "Silver and black piped ribbon with gold tank badge",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#a9adb1",
+			"#1c1c1c",
+			"#a9adb1",
+			"#1c1c1c",
+			"#a9adb1",
+			"#1c1c1c",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "tank",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r088",
+		"file": "ribbon-088.svg",
+		"title": "Black and feldgrau pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r089",
+		"file": "ribbon-089.svg",
+		"title": "Navy, white and silver split ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "split",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r090",
+		"file": "ribbon-090.svg",
+		"title": "Rose, black and slate piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r091",
+		"file": "ribbon-091.svg",
+		"title": "Slate and silver pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c"
+		],
+		"device": null
+	},
+	{
+		"id": "r092",
+		"file": "ribbon-092.svg",
+		"title": "Feldgrau, bordeaux and navy striped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#5d6450",
+			"#5e1d2a",
+			"#24406b",
+			"#5e1d2a",
+			"#24406b",
+			"#5e1d2a",
+			"#24406b",
+			"#5e1d2a",
+			"#24406b",
+			"#5e1d2a",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r093",
+		"file": "ribbon-093.svg",
+		"title": "Rose, black and navy piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r094",
+		"file": "ribbon-094.svg",
+		"title": "White and navy edged ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#f4f1e8",
+			"#24406b",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r095",
+		"file": "ribbon-095.svg",
+		"title": "Bordeaux and silver pinstripes ribbon with silver swords",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5e1d2a",
+			"#a9adb1",
+			"#5e1d2a",
+			"#a9adb1",
+			"#5e1d2a",
+			"#a9adb1",
+			"#5e1d2a",
+			"#a9adb1",
+			"#5e1d2a"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r096",
+		"file": "ribbon-096.svg",
+		"title": "Rose, slate and bordeaux piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#5e1d2a",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r097",
+		"file": "ribbon-097.svg",
+		"title": "Rose, black and slate piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r098",
+		"file": "ribbon-098.svg",
+		"title": "Silver, black and feldgrau piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#a9adb1",
+			"#1c1c1c",
+			"#a9adb1",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#a9adb1",
+			"#1c1c1c",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r099",
+		"file": "ribbon-099.svg",
+		"title": "Rose, black and white piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r100",
+		"file": "ribbon-100.svg",
+		"title": "Rose, black and bordeaux piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#5e1d2a",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r101",
+		"file": "ribbon-101.svg",
+		"title": "Purple, khaki and sky bands ribbon with bronze rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#b8924a",
+			"#6b2d5c",
+			"#7fb0d8",
+			"#6b2d5c",
+			"#b8924a",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r102",
+		"file": "ribbon-102.svg",
+		"title": "White, brown and orange bands ribbon with gold rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#6b4226",
+			"#c8642a",
+			"#6b4226",
+			"#3f6fb0",
+			"#6b4226",
+			"#c8642a",
+			"#6b4226",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r103",
+		"file": "ribbon-103.svg",
+		"title": "Red, black and green bands ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#c23b3b",
+			"#1c1c1c",
+			"#c23b3b",
+			"#2f5a34",
+			"#c23b3b",
+			"#1c1c1c",
+			"#c23b3b"
+		],
+		"device": null
+	},
+	{
+		"id": "r104",
+		"file": "ribbon-104.svg",
+		"title": "White, olive and black bands ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#56622e",
+			"#1c1c1c",
+			"#7fb0d8",
+			"#c8642a",
+			"#7fb0d8",
+			"#1c1c1c",
+			"#56622e",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r105",
+		"file": "ribbon-105.svg",
+		"title": "Blue, navy and crimson striped ribbon with silver oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "striped",
+		"stripes": [
+			"#3f6fb0",
+			"#24406b",
+			"#8f2232",
+			"#24406b",
+			"#8f2232",
+			"#24406b",
+			"#8f2232",
+			"#24406b",
+			"#8f2232",
+			"#24406b",
+			"#8f2232",
+			"#24406b",
+			"#3f6fb0"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r106",
+		"file": "ribbon-106.svg",
+		"title": "Blue, black and khaki campaign ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "campaign",
+		"stripes": [
+			"#3f6fb0",
+			"#1c1c1c",
+			"#b8924a",
+			"#c23b3b",
+			"#3f6fb0",
+			"#1c1c1c",
+			"#3f6fb0",
+			"#c23b3b",
+			"#1c1c1c",
+			"#b8924a",
+			"#3f6fb0"
+		],
+		"device": null
+	},
+	{
+		"id": "r107",
+		"file": "ribbon-107.svg",
+		"title": "Black, purple and brown bands ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#1c1c1c",
+			"#6b2d5c",
+			"#6b4226",
+			"#3f6fb0",
+			"#1c1c1c",
+			"#3f6fb0",
+			"#6b4226",
+			"#6b2d5c",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r108",
+		"file": "ribbon-108.svg",
+		"title": "Khaki and red striped ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "striped",
+		"stripes": [
+			"#b8924a",
+			"#c23b3b",
+			"#b8924a",
+			"#c23b3b",
+			"#b8924a"
+		],
+		"device": null
+	},
+	{
+		"id": "r109",
+		"file": "ribbon-109.svg",
+		"title": "Orange, gold and sky bands ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#c8642a",
+			"#e0b23a",
+			"#7fb0d8",
+			"#b8924a",
+			"#7fb0d8",
+			"#e0b23a",
+			"#c8642a"
+		],
+		"device": null
+	},
+	{
+		"id": "r110",
+		"file": "ribbon-110.svg",
+		"title": "Crimson and green pinstripes ribbon with bronze oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#8f2232",
+			"#2f5a34",
+			"#8f2232",
+			"#2f5a34",
+			"#8f2232",
+			"#2f5a34",
+			"#8f2232",
+			"#2f5a34",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r111",
+		"file": "ribbon-111.svg",
+		"title": "Gold and red edged ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "edged",
+		"stripes": [
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a"
+		],
+		"device": null
+	},
+	{
+		"id": "r112",
+		"file": "ribbon-112.svg",
+		"title": "Gold and red pinstripes ribbon with gold oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r113",
+		"file": "ribbon-113.svg",
+		"title": "Brown, olive and crimson bands ribbon with silver rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b4226",
+			"#56622e",
+			"#8f2232",
+			"#56622e",
+			"#8f2232",
+			"#56622e",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r114",
+		"file": "ribbon-114.svg",
+		"title": "Brown and red pinstripes ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#6b4226",
+			"#c23b3b",
+			"#6b4226",
+			"#c23b3b",
+			"#6b4226",
+			"#c23b3b",
+			"#6b4226",
+			"#c23b3b",
+			"#6b4226",
+			"#c23b3b",
+			"#6b4226",
+			"#c23b3b",
+			"#6b4226"
+		],
+		"device": null
+	},
+	{
+		"id": "r115",
+		"file": "ribbon-115.svg",
+		"title": "Sky, navy and gold striped ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "striped",
+		"stripes": [
+			"#7fb0d8",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#7fb0d8"
+		],
+		"device": null
+	},
+	{
+		"id": "r116",
+		"file": "ribbon-116.svg",
+		"title": "Black and navy pinstripes ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r117",
+		"file": "ribbon-117.svg",
+		"title": "Olive, black and gold edged ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "edged",
+		"stripes": [
+			"#56622e",
+			"#1c1c1c",
+			"#e0b23a",
+			"#1c1c1c",
+			"#e0b23a",
+			"#1c1c1c",
+			"#56622e"
+		],
+		"device": null
+	},
+	{
+		"id": "r118",
+		"file": "ribbon-118.svg",
+		"title": "Crimson and olive pinstripes ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#8f2232",
+			"#56622e",
+			"#8f2232",
+			"#56622e",
+			"#8f2232"
+		],
+		"device": null
+	},
+	{
+		"id": "r119",
+		"file": "ribbon-119.svg",
+		"title": "Brown and blue bands ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b4226",
+			"#3f6fb0",
+			"#6b4226"
+		],
+		"device": null
+	},
+	{
+		"id": "r120",
+		"file": "ribbon-120.svg",
+		"title": "Orange and red bands ribbon with bronze star",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#c8642a",
+			"#c23b3b",
+			"#c8642a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r121",
+		"file": "ribbon-121.svg",
+		"title": "Navy and sky bands ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#7fb0d8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r122",
+		"file": "ribbon-122.svg",
+		"title": "Black, olive and green bands ribbon with bronze star",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#1c1c1c",
+			"#56622e",
+			"#2f5a34",
+			"#56622e",
+			"#1c1c1c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r123",
+		"file": "ribbon-123.svg",
+		"title": "Sky, navy and blue striped ribbon with silver oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "striped",
+		"stripes": [
+			"#7fb0d8",
+			"#24406b",
+			"#3f6fb0",
+			"#24406b",
+			"#3f6fb0",
+			"#24406b",
+			"#3f6fb0",
+			"#24406b",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r124",
+		"file": "ribbon-124.svg",
+		"title": "Olive, green and orange striped ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "striped",
+		"stripes": [
+			"#56622e",
+			"#2f5a34",
+			"#c8642a",
+			"#2f5a34",
+			"#c8642a",
+			"#2f5a34",
+			"#c8642a",
+			"#2f5a34",
+			"#c8642a",
+			"#2f5a34",
+			"#56622e"
+		],
+		"device": null
+	},
+	{
+		"id": "r125",
+		"file": "ribbon-125.svg",
+		"title": "Sky and khaki pinstripes ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#7fb0d8",
+			"#b8924a",
+			"#7fb0d8",
+			"#b8924a",
+			"#7fb0d8"
+		],
+		"device": null
+	},
+	{
+		"id": "r126",
+		"file": "ribbon-126.svg",
+		"title": "Navy, white and red flag ribbon, level 1",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#c8642a",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "americans-1",
+		"level": 1
+	},
+	{
+		"id": "r127",
+		"file": "ribbon-127.svg",
+		"title": "Navy, white and red flag ribbon, level 2",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#c8642a",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "americans-1",
+		"level": 2
+	},
+	{
+		"id": "r128",
+		"file": "ribbon-128.svg",
+		"title": "Navy, white and red flag ribbon, level 3",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#c8642a",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "americans-1",
+		"level": 3
+	},
+	{
+		"id": "r129",
+		"file": "ribbon-129.svg",
+		"title": "Navy, white and red flag ribbon, level 4",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#c8642a",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "americans-1",
+		"level": 4
+	},
+	{
+		"id": "r130",
+		"file": "ribbon-130.svg",
+		"title": "Navy, white and red flag ribbon, level 5",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#c8642a",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "americans-1",
+		"level": 5
+	},
+	{
+		"id": "r131",
+		"file": "ribbon-131.svg",
+		"title": "Khaki, orange and red campaign ribbon, level 1",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#b8924a",
+			"#c8642a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#c8642a",
+			"#c23b3b",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "americans-2",
+		"level": 1
+	},
+	{
+		"id": "r132",
+		"file": "ribbon-132.svg",
+		"title": "Khaki, orange and red campaign ribbon, level 2",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#b8924a",
+			"#c8642a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#c8642a",
+			"#c23b3b",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "americans-2",
+		"level": 2
+	},
+	{
+		"id": "r133",
+		"file": "ribbon-133.svg",
+		"title": "Khaki, orange and red campaign ribbon, level 3",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#b8924a",
+			"#c8642a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#c8642a",
+			"#c23b3b",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "americans-2",
+		"level": 3
+	},
+	{
+		"id": "r134",
+		"file": "ribbon-134.svg",
+		"title": "Khaki, orange and red campaign ribbon, level 4",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#b8924a",
+			"#c8642a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#c8642a",
+			"#c23b3b",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "americans-2",
+		"level": 4
+	},
+	{
+		"id": "r135",
+		"file": "ribbon-135.svg",
+		"title": "Khaki, orange and red campaign ribbon, level 5",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#b8924a",
+			"#c8642a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#c8642a",
+			"#c23b3b",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "americans-2",
+		"level": 5
+	},
+	{
+		"id": "r136",
+		"file": "ribbon-136.svg",
+		"title": "Gold, green and blue bands ribbon, level 1",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#3f6fb0",
+			"#56622e",
+			"#3f6fb0",
+			"#2f5a34",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "americans-3",
+		"level": 1
+	},
+	{
+		"id": "r137",
+		"file": "ribbon-137.svg",
+		"title": "Gold, green and blue bands ribbon, level 2",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#3f6fb0",
+			"#56622e",
+			"#3f6fb0",
+			"#2f5a34",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "americans-3",
+		"level": 2
+	},
+	{
+		"id": "r138",
+		"file": "ribbon-138.svg",
+		"title": "Gold, green and blue bands ribbon, level 3",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#3f6fb0",
+			"#56622e",
+			"#3f6fb0",
+			"#2f5a34",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "americans-3",
+		"level": 3
+	},
+	{
+		"id": "r139",
+		"file": "ribbon-139.svg",
+		"title": "Gold, green and blue bands ribbon, level 4",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#3f6fb0",
+			"#56622e",
+			"#3f6fb0",
+			"#2f5a34",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "americans-3",
+		"level": 4
+	},
+	{
+		"id": "r140",
+		"file": "ribbon-140.svg",
+		"title": "Gold, green and blue bands ribbon, level 5",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#3f6fb0",
+			"#56622e",
+			"#3f6fb0",
+			"#2f5a34",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "americans-3",
+		"level": 5
+	},
+	{
+		"id": "r141",
+		"file": "ribbon-141.svg",
+		"title": "Forest and white edged ribbon, level 1",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#34452c",
+			"#f4f1e8",
+			"#34452c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "wehrmacht-1",
+		"level": 1
+	},
+	{
+		"id": "r142",
+		"file": "ribbon-142.svg",
+		"title": "Forest and white edged ribbon, level 2",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#34452c",
+			"#f4f1e8",
+			"#34452c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "wehrmacht-1",
+		"level": 2
+	},
+	{
+		"id": "r143",
+		"file": "ribbon-143.svg",
+		"title": "Forest and white edged ribbon, level 3",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#34452c",
+			"#f4f1e8",
+			"#34452c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "wehrmacht-1",
+		"level": 3
+	},
+	{
+		"id": "r144",
+		"file": "ribbon-144.svg",
+		"title": "Forest and white edged ribbon, level 4",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#34452c",
+			"#f4f1e8",
+			"#34452c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "wehrmacht-1",
+		"level": 4
+	},
+	{
+		"id": "r145",
+		"file": "ribbon-145.svg",
+		"title": "Forest and white edged ribbon, level 5",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#34452c",
+			"#f4f1e8",
+			"#34452c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "wehrmacht-1",
+		"level": 5
+	},
+	{
+		"id": "r146",
+		"file": "ribbon-146.svg",
+		"title": "Bone, white and brown bands ribbon, level 1",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#f4f1e8",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#f4f1e8",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "wehrmacht-2",
+		"level": 1
+	},
+	{
+		"id": "r147",
+		"file": "ribbon-147.svg",
+		"title": "Bone, white and brown bands ribbon, level 2",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#f4f1e8",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#f4f1e8",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "wehrmacht-2",
+		"level": 2
+	},
+	{
+		"id": "r148",
+		"file": "ribbon-148.svg",
+		"title": "Bone, white and brown bands ribbon, level 3",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#f4f1e8",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#f4f1e8",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "wehrmacht-2",
+		"level": 3
+	},
+	{
+		"id": "r149",
+		"file": "ribbon-149.svg",
+		"title": "Bone, white and brown bands ribbon, level 4",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#f4f1e8",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#f4f1e8",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "wehrmacht-2",
+		"level": 4
+	},
+	{
+		"id": "r150",
+		"file": "ribbon-150.svg",
+		"title": "Bone, white and brown bands ribbon, level 5",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#f4f1e8",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#f4f1e8",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "wehrmacht-2",
+		"level": 5
+	},
+	{
+		"id": "r151",
+		"file": "ribbon-151.svg",
+		"title": "White, black and forest fieldgrey ribbon, level 1",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#34452c",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "wehrmacht-3",
+		"level": 1
+	},
+	{
+		"id": "r152",
+		"file": "ribbon-152.svg",
+		"title": "White, black and forest fieldgrey ribbon, level 2",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#34452c",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "wehrmacht-3",
+		"level": 2
+	},
+	{
+		"id": "r153",
+		"file": "ribbon-153.svg",
+		"title": "White, black and forest fieldgrey ribbon, level 3",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#34452c",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "wehrmacht-3",
+		"level": 3
+	},
+	{
+		"id": "r154",
+		"file": "ribbon-154.svg",
+		"title": "White, black and forest fieldgrey ribbon, level 4",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#34452c",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "wehrmacht-3",
+		"level": 4
+	},
+	{
+		"id": "r155",
+		"file": "ribbon-155.svg",
+		"title": "White, black and forest fieldgrey ribbon, level 5",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#34452c",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "wehrmacht-3",
+		"level": 5
+	},
+	{
+		"id": "r156",
+		"file": "ribbon-156.svg",
+		"title": "Purple, red and sky split ribbon, level 1",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#6b2d5c",
+			"#c23b3b",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "british-1",
+		"level": 1
+	},
+	{
+		"id": "r157",
+		"file": "ribbon-157.svg",
+		"title": "Purple, red and sky split ribbon, level 2",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#6b2d5c",
+			"#c23b3b",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "british-1",
+		"level": 2
+	},
+	{
+		"id": "r158",
+		"file": "ribbon-158.svg",
+		"title": "Purple, red and sky split ribbon, level 3",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#6b2d5c",
+			"#c23b3b",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "british-1",
+		"level": 3
+	},
+	{
+		"id": "r159",
+		"file": "ribbon-159.svg",
+		"title": "Purple, red and sky split ribbon, level 4",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#6b2d5c",
+			"#c23b3b",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "british-1",
+		"level": 4
+	},
+	{
+		"id": "r160",
+		"file": "ribbon-160.svg",
+		"title": "Purple, red and sky split ribbon, level 5",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#6b2d5c",
+			"#c23b3b",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "british-1",
+		"level": 5
+	},
+	{
+		"id": "r161",
+		"file": "ribbon-161.svg",
+		"title": "Crimson and white edged ribbon, level 1",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "british-2",
+		"level": 1
+	},
+	{
+		"id": "r162",
+		"file": "ribbon-162.svg",
+		"title": "Crimson and white edged ribbon, level 2",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "british-2",
+		"level": 2
+	},
+	{
+		"id": "r163",
+		"file": "ribbon-163.svg",
+		"title": "Crimson and white edged ribbon, level 3",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "british-2",
+		"level": 3
+	},
+	{
+		"id": "r164",
+		"file": "ribbon-164.svg",
+		"title": "Crimson and white edged ribbon, level 4",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "british-2",
+		"level": 4
+	},
+	{
+		"id": "r165",
+		"file": "ribbon-165.svg",
+		"title": "Crimson and white edged ribbon, level 5",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "british-2",
+		"level": 5
+	},
+	{
+		"id": "r166",
+		"file": "ribbon-166.svg",
+		"title": "Khaki, purple and navy split ribbon, level 1",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#b8924a",
+			"#6b2d5c",
+			"#24406b"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "british-3",
+		"level": 1
+	},
+	{
+		"id": "r167",
+		"file": "ribbon-167.svg",
+		"title": "Khaki, purple and navy split ribbon, level 2",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#b8924a",
+			"#6b2d5c",
+			"#24406b"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "british-3",
+		"level": 2
+	},
+	{
+		"id": "r168",
+		"file": "ribbon-168.svg",
+		"title": "Khaki, purple and navy split ribbon, level 3",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#b8924a",
+			"#6b2d5c",
+			"#24406b"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "british-3",
+		"level": 3
+	},
+	{
+		"id": "r169",
+		"file": "ribbon-169.svg",
+		"title": "Khaki, purple and navy split ribbon, level 4",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#b8924a",
+			"#6b2d5c",
+			"#24406b"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "british-3",
+		"level": 4
+	},
+	{
+		"id": "r170",
+		"file": "ribbon-170.svg",
+		"title": "Khaki, purple and navy split ribbon, level 5",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#b8924a",
+			"#6b2d5c",
+			"#24406b"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "british-3",
+		"level": 5
+	},
+	{
+		"id": "r171",
+		"file": "ribbon-171.svg",
+		"title": "Slate, rose and white edged ribbon, level 1",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#4d545c",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#4d545c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "panzer_elite-1",
+		"level": 1
+	},
+	{
+		"id": "r172",
+		"file": "ribbon-172.svg",
+		"title": "Slate, rose and white edged ribbon, level 2",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#4d545c",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#4d545c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "panzer_elite-1",
+		"level": 2
+	},
+	{
+		"id": "r173",
+		"file": "ribbon-173.svg",
+		"title": "Slate, rose and white edged ribbon, level 3",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#4d545c",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#4d545c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "panzer_elite-1",
+		"level": 3
+	},
+	{
+		"id": "r174",
+		"file": "ribbon-174.svg",
+		"title": "Slate, rose and white edged ribbon, level 4",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#4d545c",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#4d545c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "panzer_elite-1",
+		"level": 4
+	},
+	{
+		"id": "r175",
+		"file": "ribbon-175.svg",
+		"title": "Slate, rose and white edged ribbon, level 5",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#4d545c",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#4d545c"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "panzer_elite-1",
+		"level": 5
+	},
+	{
+		"id": "r176",
+		"file": "ribbon-176.svg",
+		"title": "Silver and slate pinstripes ribbon, level 1",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "panzer_elite-2",
+		"level": 1
+	},
+	{
+		"id": "r177",
+		"file": "ribbon-177.svg",
+		"title": "Silver and slate pinstripes ribbon, level 2",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "panzer_elite-2",
+		"level": 2
+	},
+	{
+		"id": "r178",
+		"file": "ribbon-178.svg",
+		"title": "Silver and slate pinstripes ribbon, level 3",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "panzer_elite-2",
+		"level": 3
+	},
+	{
+		"id": "r179",
+		"file": "ribbon-179.svg",
+		"title": "Silver and slate pinstripes ribbon, level 4",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "panzer_elite-2",
+		"level": 4
+	},
+	{
+		"id": "r180",
+		"file": "ribbon-180.svg",
+		"title": "Silver and slate pinstripes ribbon, level 5",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "panzer_elite-2",
+		"level": 5
+	},
+	{
+		"id": "r181",
+		"file": "ribbon-181.svg",
+		"title": "White and black pinstripes ribbon, level 1",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "panzer_elite-3",
+		"level": 1
+	},
+	{
+		"id": "r182",
+		"file": "ribbon-182.svg",
+		"title": "White and black pinstripes ribbon, level 2",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "panzer_elite-3",
+		"level": 2
+	},
+	{
+		"id": "r183",
+		"file": "ribbon-183.svg",
+		"title": "White and black pinstripes ribbon, level 3",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "panzer_elite-3",
+		"level": 3
+	},
+	{
+		"id": "r184",
+		"file": "ribbon-184.svg",
+		"title": "White and black pinstripes ribbon, level 4",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "panzer_elite-3",
+		"level": 4
+	},
+	{
+		"id": "r185",
+		"file": "ribbon-185.svg",
+		"title": "White and black pinstripes ribbon, level 5",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "panzer_elite-3",
+		"level": 5
+	},
+	{
+		"id": "r186",
+		"file": "ribbon-186.svg",
+		"title": "Crimson, blue and black bands ribbon, level 1",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#8f2232",
+			"#3f6fb0",
+			"#1c1c1c",
+			"#3f6fb0",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "global-1",
+		"level": 1
+	},
+	{
+		"id": "r187",
+		"file": "ribbon-187.svg",
+		"title": "Crimson, blue and black bands ribbon, level 2",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#8f2232",
+			"#3f6fb0",
+			"#1c1c1c",
+			"#3f6fb0",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "global-1",
+		"level": 2
+	},
+	{
+		"id": "r188",
+		"file": "ribbon-188.svg",
+		"title": "Crimson, blue and black bands ribbon, level 3",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#8f2232",
+			"#3f6fb0",
+			"#1c1c1c",
+			"#3f6fb0",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "global-1",
+		"level": 3
+	},
+	{
+		"id": "r189",
+		"file": "ribbon-189.svg",
+		"title": "Crimson, blue and black bands ribbon, level 4",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#8f2232",
+			"#3f6fb0",
+			"#1c1c1c",
+			"#3f6fb0",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "global-1",
+		"level": 4
+	},
+	{
+		"id": "r190",
+		"file": "ribbon-190.svg",
+		"title": "Crimson, blue and black bands ribbon, level 5",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#8f2232",
+			"#3f6fb0",
+			"#1c1c1c",
+			"#3f6fb0",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "global-1",
+		"level": 5
+	},
+	{
+		"id": "r191",
+		"file": "ribbon-191.svg",
+		"title": "Gold, green and purple split ribbon, level 1",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "global-2",
+		"level": 1
+	},
+	{
+		"id": "r192",
+		"file": "ribbon-192.svg",
+		"title": "Gold, green and purple split ribbon, level 2",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "global-2",
+		"level": 2
+	},
+	{
+		"id": "r193",
+		"file": "ribbon-193.svg",
+		"title": "Gold, green and purple split ribbon, level 3",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "global-2",
+		"level": 3
+	},
+	{
+		"id": "r194",
+		"file": "ribbon-194.svg",
+		"title": "Gold, green and purple split ribbon, level 4",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "global-2",
+		"level": 4
+	},
+	{
+		"id": "r195",
+		"file": "ribbon-195.svg",
+		"title": "Gold, green and purple split ribbon, level 5",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#e0b23a",
+			"#2f5a34",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "global-2",
+		"level": 5
+	},
+	{
+		"id": "r196",
+		"file": "ribbon-196.svg",
+		"title": "Olive and sky bands ribbon, level 1",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#56622e",
+			"#7fb0d8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "global-3",
+		"level": 1
+	},
+	{
+		"id": "r197",
+		"file": "ribbon-197.svg",
+		"title": "Olive and sky bands ribbon, level 2",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#56622e",
+			"#7fb0d8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "global-3",
+		"level": 2
+	},
+	{
+		"id": "r198",
+		"file": "ribbon-198.svg",
+		"title": "Olive and sky bands ribbon, level 3",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#56622e",
+			"#7fb0d8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "global-3",
+		"level": 3
+	},
+	{
+		"id": "r199",
+		"file": "ribbon-199.svg",
+		"title": "Olive and sky bands ribbon, level 4",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#56622e",
+			"#7fb0d8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "global-3",
+		"level": 4
+	},
+	{
+		"id": "r200",
+		"file": "ribbon-200.svg",
+		"title": "Olive and sky bands ribbon, level 5",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#56622e",
+			"#7fb0d8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "global-3",
+		"level": 5
+	},
+	{
+		"id": "r201",
+		"file": "ribbon-201.svg",
+		"title": "Olive, blue and red bands ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#56622e",
+			"#3f6fb0",
+			"#c23b3b",
+			"#3f6fb0",
+			"#56622e"
+		],
+		"device": null
+	},
+	{
+		"id": "r202",
+		"file": "ribbon-202.svg",
+		"title": "Navy, blue and sky bands ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#3f6fb0",
+			"#7fb0d8",
+			"#c8642a",
+			"#24406b",
+			"#c8642a",
+			"#7fb0d8",
+			"#3f6fb0",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r203",
+		"file": "ribbon-203.svg",
+		"title": "Gold, sky and white striped ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "striped",
+		"stripes": [
+			"#e0b23a",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#e0b23a"
+		],
+		"device": null
+	},
+	{
+		"id": "r204",
+		"file": "ribbon-204.svg",
+		"title": "Brown, orange and blue campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#6b4226",
+			"#c8642a",
+			"#3f6fb0",
+			"#7fb0d8",
+			"#6b4226",
+			"#c8642a",
+			"#6b4226",
+			"#7fb0d8",
+			"#c8642a",
+			"#3f6fb0",
+			"#6b4226"
+		],
+		"device": null
+	},
+	{
+		"id": "r205",
+		"file": "ribbon-205.svg",
+		"title": "White, orange and brown campaign ribbon with silver star",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#f4f1e8",
+			"#c8642a",
+			"#6b4226",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#c8642a",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#c8642a",
+			"#6b4226",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r206",
+		"file": "ribbon-206.svg",
+		"title": "Khaki, blue and white edged ribbon with gold star",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "edged",
+		"stripes": [
+			"#b8924a",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r207",
+		"file": "ribbon-207.svg",
+		"title": "Navy, orange and khaki campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#24406b",
+			"#c8642a",
+			"#b8924a",
+			"#56622e",
+			"#24406b",
+			"#c8642a",
+			"#24406b",
+			"#56622e",
+			"#c8642a",
+			"#b8924a",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r208",
+		"file": "ribbon-208.svg",
+		"title": "Navy, blue and khaki campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#24406b",
+			"#3f6fb0",
+			"#b8924a",
+			"#3f6fb0",
+			"#24406b",
+			"#3f6fb0",
+			"#24406b",
+			"#3f6fb0",
+			"#b8924a",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r209",
+		"file": "ribbon-209.svg",
+		"title": "Blue, brown and navy campaign ribbon with silver oak leaf cluster",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#3f6fb0",
+			"#6b4226",
+			"#24406b",
+			"#b8924a",
+			"#3f6fb0",
+			"#6b4226",
+			"#3f6fb0",
+			"#b8924a",
+			"#6b4226",
+			"#24406b",
+			"#3f6fb0"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r210",
+		"file": "ribbon-210.svg",
+		"title": "Navy, white and red flag ribbon with bronze V device",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#b8924a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "v",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r211",
+		"file": "ribbon-211.svg",
+		"title": "Green, khaki and brown campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#2f5a34",
+			"#b8924a",
+			"#6b4226",
+			"#c8642a",
+			"#2f5a34",
+			"#b8924a",
+			"#2f5a34",
+			"#c8642a",
+			"#b8924a",
+			"#6b4226",
+			"#2f5a34"
+		],
+		"device": null
+	},
+	{
+		"id": "r212",
+		"file": "ribbon-212.svg",
+		"title": "Green, orange and khaki edged ribbon with bronze oak leaf cluster",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "edged",
+		"stripes": [
+			"#2f5a34",
+			"#c8642a",
+			"#b8924a",
+			"#c8642a",
+			"#b8924a",
+			"#c8642a",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r213",
+		"file": "ribbon-213.svg",
+		"title": "Sky, red and green campaign ribbon with 2 silver stars",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#7fb0d8",
+			"#c23b3b",
+			"#2f5a34",
+			"#56622e",
+			"#7fb0d8",
+			"#c23b3b",
+			"#7fb0d8",
+			"#56622e",
+			"#c23b3b",
+			"#2f5a34",
+			"#7fb0d8"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 2
+		}
+	},
+	{
+		"id": "r214",
+		"file": "ribbon-214.svg",
+		"title": "Red and olive striped ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "striped",
+		"stripes": [
+			"#c23b3b",
+			"#56622e",
+			"#c23b3b",
+			"#56622e",
+			"#c23b3b",
+			"#56622e",
+			"#c23b3b",
+			"#56622e",
+			"#c23b3b",
+			"#56622e",
+			"#c23b3b"
+		],
+		"device": null
+	},
+	{
+		"id": "r215",
+		"file": "ribbon-215.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#c8642a",
+			"#24406b",
+			"#c8642a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r216",
+		"file": "ribbon-216.svg",
+		"title": "Orange, red and navy bands ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#c8642a",
+			"#c23b3b",
+			"#c8642a",
+			"#24406b",
+			"#c8642a",
+			"#c23b3b",
+			"#c8642a"
+		],
+		"device": null
+	},
+	{
+		"id": "r217",
+		"file": "ribbon-217.svg",
+		"title": "Gold, brown and olive campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#e0b23a",
+			"#6b4226",
+			"#56622e",
+			"#6b4226",
+			"#e0b23a",
+			"#6b4226",
+			"#e0b23a",
+			"#6b4226",
+			"#56622e",
+			"#e0b23a"
+		],
+		"device": null
+	},
+	{
+		"id": "r218",
+		"file": "ribbon-218.svg",
+		"title": "Blue and olive bands ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "bands",
+		"stripes": [
+			"#3f6fb0",
+			"#56622e",
+			"#3f6fb0"
+		],
+		"device": null
+	},
+	{
+		"id": "r219",
+		"file": "ribbon-219.svg",
+		"title": "Navy, white and red flag ribbon with 3 bronze stars",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#2f5a34",
+			"#c8642a",
+			"#2f5a34",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 3
+		}
+	},
+	{
+		"id": "r220",
+		"file": "ribbon-220.svg",
+		"title": "Navy and olive edged ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "edged",
+		"stripes": [
+			"#24406b",
+			"#56622e",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r221",
+		"file": "ribbon-221.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#6b4226",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r222",
+		"file": "ribbon-222.svg",
+		"title": "Olive, red and sky campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#56622e",
+			"#c23b3b",
+			"#7fb0d8",
+			"#c23b3b",
+			"#56622e",
+			"#c23b3b",
+			"#56622e",
+			"#c23b3b",
+			"#7fb0d8",
+			"#56622e"
+		],
+		"device": null
+	},
+	{
+		"id": "r223",
+		"file": "ribbon-223.svg",
+		"title": "Navy, white and red flag ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#c8642a",
+			"#56622e",
+			"#c8642a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r224",
+		"file": "ribbon-224.svg",
+		"title": "Khaki, gold and brown campaign ribbon",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "campaign",
+		"stripes": [
+			"#b8924a",
+			"#e0b23a",
+			"#6b4226",
+			"#56622e",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#56622e",
+			"#e0b23a",
+			"#6b4226",
+			"#b8924a"
+		],
+		"device": null
+	},
+	{
+		"id": "r225",
+		"file": "ribbon-225.svg",
+		"title": "Orange, navy and khaki striped ribbon with bronze arrowhead",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "striped",
+		"stripes": [
+			"#c8642a",
+			"#24406b",
+			"#b8924a",
+			"#24406b",
+			"#b8924a",
+			"#24406b",
+			"#b8924a",
+			"#24406b",
+			"#c8642a"
+		],
+		"device": {
+			"kind": "arrowhead",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r226",
+		"file": "ribbon-226.svg",
+		"title": "Yellow, forest and feldgrau bands ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#d9b43a",
+			"#34452c",
+			"#5d6450",
+			"#34452c",
+			"#d9b43a"
+		],
+		"device": null
+	},
+	{
+		"id": "r227",
+		"file": "ribbon-227.svg",
+		"title": "Feldgrau and black pinstripes ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r228",
+		"file": "ribbon-228.svg",
+		"title": "Forest, feldgrau and black split ribbon with silver oak leaf cluster",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#34452c",
+			"#5d6450",
+			"#1c1c1c"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r229",
+		"file": "ribbon-229.svg",
+		"title": "Black, yellow and white bands ribbon with gold oak leaf cluster",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#1c1c1c",
+			"#d9b43a",
+			"#f4f1e8",
+			"#d9b43a",
+			"#1c1c1c"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r230",
+		"file": "ribbon-230.svg",
+		"title": "White, black and feldgrau fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#5d6450",
+			"#4d545c",
+			"#5d6450",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r231",
+		"file": "ribbon-231.svg",
+		"title": "Silver and yellow pinstripes ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#a9adb1",
+			"#d9b43a",
+			"#a9adb1",
+			"#d9b43a",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r232",
+		"file": "ribbon-232.svg",
+		"title": "Yellow and bone pinstripes ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#d9b43a",
+			"#e6dfcc",
+			"#d9b43a",
+			"#e6dfcc",
+			"#d9b43a"
+		],
+		"device": null
+	},
+	{
+		"id": "r233",
+		"file": "ribbon-233.svg",
+		"title": "Brown, forest and silver edged ribbon with silver oak leaf cluster",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#6b4226",
+			"#34452c",
+			"#a9adb1",
+			"#34452c",
+			"#a9adb1",
+			"#34452c",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r234",
+		"file": "ribbon-234.svg",
+		"title": "White, black and forest fieldgrey ribbon with gold swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#f4f1e8",
+			"#1c1c1c",
+			"#34452c",
+			"#4d545c",
+			"#34452c",
+			"#1c1c1c",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r235",
+		"file": "ribbon-235.svg",
+		"title": "Black, white and feldgrau fieldgrey ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#1c1c1c",
+			"#f4f1e8",
+			"#5d6450",
+			"#34452c",
+			"#5d6450",
+			"#f4f1e8",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r236",
+		"file": "ribbon-236.svg",
+		"title": "Slate, silver and brown bands ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#4d545c",
+			"#a9adb1",
+			"#6b4226",
+			"#a9adb1",
+			"#4d545c"
+		],
+		"device": null
+	},
+	{
+		"id": "r237",
+		"file": "ribbon-237.svg",
+		"title": "Bone, brown and black split ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#e6dfcc",
+			"#6b4226",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r238",
+		"file": "ribbon-238.svg",
+		"title": "Forest and brown pinstripes ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#34452c",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#34452c",
+			"#6b4226",
+			"#34452c"
+		],
+		"device": null
+	},
+	{
+		"id": "r239",
+		"file": "ribbon-239.svg",
+		"title": "Feldgrau and silver pinstripes ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5d6450",
+			"#a9adb1",
+			"#5d6450",
+			"#a9adb1",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r240",
+		"file": "ribbon-240.svg",
+		"title": "Brown, yellow and silver split ribbon with silver swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#6b4226",
+			"#d9b43a",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r241",
+		"file": "ribbon-241.svg",
+		"title": "Yellow and silver edged ribbon with silver oak leaf cluster",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#d9b43a",
+			"#a9adb1",
+			"#d9b43a"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r242",
+		"file": "ribbon-242.svg",
+		"title": "Yellow and white edged ribbon with silver oak leaf cluster",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#d9b43a",
+			"#f4f1e8",
+			"#d9b43a"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r243",
+		"file": "ribbon-243.svg",
+		"title": "Bone, yellow and brown bands ribbon with gold swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#d9b43a",
+			"#6b4226",
+			"#d9b43a",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r244",
+		"file": "ribbon-244.svg",
+		"title": "Silver and yellow edged ribbon with silver swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#a9adb1",
+			"#d9b43a",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r245",
+		"file": "ribbon-245.svg",
+		"title": "Feldgrau, black and bone bands ribbon with silver swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#5d6450",
+			"#1c1c1c",
+			"#e6dfcc",
+			"#1c1c1c",
+			"#5d6450"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r246",
+		"file": "ribbon-246.svg",
+		"title": "Black, white and forest fieldgrey ribbon with gold swords",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "fieldgrey",
+		"stripes": [
+			"#1c1c1c",
+			"#f4f1e8",
+			"#34452c",
+			"#6b4226",
+			"#34452c",
+			"#f4f1e8",
+			"#1c1c1c"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r247",
+		"file": "ribbon-247.svg",
+		"title": "Yellow and feldgrau edged ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#d9b43a",
+			"#5d6450",
+			"#d9b43a"
+		],
+		"device": null
+	},
+	{
+		"id": "r248",
+		"file": "ribbon-248.svg",
+		"title": "Slate and yellow edged ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "edged",
+		"stripes": [
+			"#4d545c",
+			"#d9b43a",
+			"#4d545c"
+		],
+		"device": null
+	},
+	{
+		"id": "r249",
+		"file": "ribbon-249.svg",
+		"title": "White, bone and black split ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#f4f1e8",
+			"#e6dfcc",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r250",
+		"file": "ribbon-250.svg",
+		"title": "Forest and bone pinstripes ribbon",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#34452c",
+			"#e6dfcc",
+			"#34452c",
+			"#e6dfcc",
+			"#34452c"
+		],
+		"device": null
+	},
+	{
+		"id": "r251",
+		"file": "ribbon-251.svg",
+		"title": "Sand, purple and green theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#cfb07a",
+			"#6b2d5c",
+			"#2f5a34",
+			"#6b2d5c",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r252",
+		"file": "ribbon-252.svg",
+		"title": "Green and khaki edged ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#2f5a34",
+			"#b8924a",
+			"#2f5a34"
+		],
+		"device": null
+	},
+	{
+		"id": "r253",
+		"file": "ribbon-253.svg",
+		"title": "Navy, red and purple bands ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#c23b3b",
+			"#6b2d5c",
+			"#e0b23a",
+			"#1c1c1c",
+			"#e0b23a",
+			"#6b2d5c",
+			"#c23b3b",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r254",
+		"file": "ribbon-254.svg",
+		"title": "Sand, white and green theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#cfb07a",
+			"#f4f1e8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r255",
+		"file": "ribbon-255.svg",
+		"title": "Navy, crimson and purple split ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#24406b",
+			"#8f2232",
+			"#6b2d5c"
+		],
+		"device": null
+	},
+	{
+		"id": "r256",
+		"file": "ribbon-256.svg",
+		"title": "Black, red and green split ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#1c1c1c",
+			"#c23b3b",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r257",
+		"file": "ribbon-257.svg",
+		"title": "Khaki, black and gold theatre ribbon with silver oak leaf cluster",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#b8924a",
+			"#1c1c1c",
+			"#e0b23a",
+			"#1c1c1c",
+			"#b8924a"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r258",
+		"file": "ribbon-258.svg",
+		"title": "Purple and navy bands ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#24406b",
+			"#6b2d5c"
+		],
+		"device": null
+	},
+	{
+		"id": "r259",
+		"file": "ribbon-259.svg",
+		"title": "Navy, green and khaki bands ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#2f5a34",
+			"#b8924a",
+			"#1c1c1c",
+			"#b8924a",
+			"#2f5a34",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r260",
+		"file": "ribbon-260.svg",
+		"title": "Navy, green and crimson theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#24406b",
+			"#2f5a34",
+			"#8f2232",
+			"#2f5a34",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r261",
+		"file": "ribbon-261.svg",
+		"title": "Sand and sky bands ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#cfb07a",
+			"#7fb0d8",
+			"#cfb07a",
+			"#7fb0d8",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r262",
+		"file": "ribbon-262.svg",
+		"title": "Navy, red and white campaign ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#24406b",
+			"#c23b3b",
+			"#f4f1e8",
+			"#b8924a",
+			"#24406b",
+			"#c23b3b",
+			"#24406b",
+			"#b8924a",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r263",
+		"file": "ribbon-263.svg",
+		"title": "Sand, sky and crimson theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#cfb07a",
+			"#7fb0d8",
+			"#8f2232",
+			"#7fb0d8",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r264",
+		"file": "ribbon-264.svg",
+		"title": "Green, gold and white campaign ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#2f5a34",
+			"#e0b23a",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#2f5a34",
+			"#e0b23a",
+			"#2f5a34",
+			"#1c1c1c",
+			"#e0b23a",
+			"#f4f1e8",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r265",
+		"file": "ribbon-265.svg",
+		"title": "Red, crimson and purple campaign ribbon with bronze rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#c23b3b",
+			"#8f2232",
+			"#6b2d5c",
+			"#b8924a",
+			"#c23b3b",
+			"#8f2232",
+			"#c23b3b",
+			"#b8924a",
+			"#8f2232",
+			"#6b2d5c",
+			"#c23b3b"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r266",
+		"file": "ribbon-266.svg",
+		"title": "Green, red and sky campaign ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#2f5a34",
+			"#c23b3b",
+			"#7fb0d8",
+			"#8f2232",
+			"#2f5a34",
+			"#c23b3b",
+			"#2f5a34",
+			"#8f2232",
+			"#c23b3b",
+			"#7fb0d8",
+			"#2f5a34"
+		],
+		"device": null
+	},
+	{
+		"id": "r267",
+		"file": "ribbon-267.svg",
+		"title": "Crimson, green and purple split ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#8f2232",
+			"#2f5a34",
+			"#6b2d5c"
+		],
+		"device": null
+	},
+	{
+		"id": "r268",
+		"file": "ribbon-268.svg",
+		"title": "Green, crimson and black theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#8f2232",
+			"#1c1c1c",
+			"#8f2232",
+			"#2f5a34"
+		],
+		"device": null
+	},
+	{
+		"id": "r269",
+		"file": "ribbon-269.svg",
+		"title": "Purple, white and green campaign ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#6b2d5c",
+			"#f4f1e8",
+			"#2f5a34",
+			"#e0b23a",
+			"#6b2d5c",
+			"#f4f1e8",
+			"#6b2d5c",
+			"#e0b23a",
+			"#f4f1e8",
+			"#2f5a34",
+			"#6b2d5c"
+		],
+		"device": null
+	},
+	{
+		"id": "r270",
+		"file": "ribbon-270.svg",
+		"title": "Sand, khaki and green theatre ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#cfb07a",
+			"#b8924a",
+			"#2f5a34",
+			"#b8924a",
+			"#cfb07a"
+		],
+		"device": null
+	},
+	{
+		"id": "r271",
+		"file": "ribbon-271.svg",
+		"title": "Crimson and gold bands ribbon with bronze oak leaf cluster",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#8f2232",
+			"#e0b23a",
+			"#8f2232"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r272",
+		"file": "ribbon-272.svg",
+		"title": "White and gold bands ribbon with silver rosette",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#e0b23a",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r273",
+		"file": "ribbon-273.svg",
+		"title": "Gold, navy and crimson split ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "split",
+		"stripes": [
+			"#e0b23a",
+			"#24406b",
+			"#8f2232"
+		],
+		"device": null
+	},
+	{
+		"id": "r274",
+		"file": "ribbon-274.svg",
+		"title": "Khaki, purple and gold bands ribbon",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "bands",
+		"stripes": [
+			"#b8924a",
+			"#6b2d5c",
+			"#e0b23a",
+			"#f4f1e8",
+			"#e0b23a",
+			"#6b2d5c",
+			"#b8924a"
+		],
+		"device": null
+	},
+	{
+		"id": "r275",
+		"file": "ribbon-275.svg",
+		"title": "Green and black edged ribbon with bronze oak leaf cluster",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "edged",
+		"stripes": [
+			"#2f5a34",
+			"#1c1c1c",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r276",
+		"file": "ribbon-276.svg",
+		"title": "Navy and silver pinstripes ribbon with gold oak leaf cluster",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#24406b",
+			"#a9adb1",
+			"#24406b",
+			"#a9adb1",
+			"#24406b",
+			"#a9adb1",
+			"#24406b",
+			"#a9adb1",
+			"#24406b"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r277",
+		"file": "ribbon-277.svg",
+		"title": "Slate and rose pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c"
+		],
+		"device": null
+	},
+	{
+		"id": "r278",
+		"file": "ribbon-278.svg",
+		"title": "Silver and rose pinstripes ribbon with gold tank badge",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#a9adb1",
+			"#cf7792",
+			"#a9adb1",
+			"#cf7792",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "tank",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r279",
+		"file": "ribbon-279.svg",
+		"title": "Bordeaux and rose pinstripes ribbon with silver oak leaf cluster",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5e1d2a",
+			"#cf7792",
+			"#5e1d2a",
+			"#cf7792",
+			"#5e1d2a"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r280",
+		"file": "ribbon-280.svg",
+		"title": "Silver, slate and white piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r281",
+		"file": "ribbon-281.svg",
+		"title": "Rose and navy striped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#cf7792",
+			"#24406b",
+			"#cf7792",
+			"#24406b",
+			"#cf7792",
+			"#24406b",
+			"#cf7792",
+			"#24406b",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r282",
+		"file": "ribbon-282.svg",
+		"title": "Rose and slate piped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r283",
+		"file": "ribbon-283.svg",
+		"title": "Silver and bordeaux striped ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#a9adb1",
+			"#5e1d2a",
+			"#a9adb1",
+			"#5e1d2a",
+			"#a9adb1",
+			"#5e1d2a",
+			"#a9adb1",
+			"#5e1d2a",
+			"#a9adb1",
+			"#5e1d2a",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r284",
+		"file": "ribbon-284.svg",
+		"title": "Rose, black and bordeaux piped ribbon with silver tank badge",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#5e1d2a",
+			"#1c1c1c",
+			"#cf7792",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "tank",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r285",
+		"file": "ribbon-285.svg",
+		"title": "Feldgrau, black and navy edged ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#5d6450",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r286",
+		"file": "ribbon-286.svg",
+		"title": "Rose, black and slate striped ribbon with silver swords",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#cf7792",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r287",
+		"file": "ribbon-287.svg",
+		"title": "Feldgrau and bordeaux edged ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#5d6450",
+			"#5e1d2a",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r288",
+		"file": "ribbon-288.svg",
+		"title": "Rose, feldgrau and slate split ribbon with silver swords",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "split",
+		"stripes": [
+			"#cf7792",
+			"#5d6450",
+			"#4d545c"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r289",
+		"file": "ribbon-289.svg",
+		"title": "Navy, slate and black edged ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#24406b",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#24406b"
+		],
+		"device": null
+	},
+	{
+		"id": "r290",
+		"file": "ribbon-290.svg",
+		"title": "Feldgrau and black pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450",
+			"#1c1c1c",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r291",
+		"file": "ribbon-291.svg",
+		"title": "Rose and silver edged ribbon with silver tank badge",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#cf7792",
+			"#a9adb1",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "tank",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r292",
+		"file": "ribbon-292.svg",
+		"title": "Rose, slate and silver piped ribbon with silver tank badge",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#a9adb1",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "tank",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r293",
+		"file": "ribbon-293.svg",
+		"title": "White and slate pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#f4f1e8",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r294",
+		"file": "ribbon-294.svg",
+		"title": "Rose and white pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792"
+		],
+		"device": null
+	},
+	{
+		"id": "r295",
+		"file": "ribbon-295.svg",
+		"title": "White, feldgrau and silver split ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "split",
+		"stripes": [
+			"#f4f1e8",
+			"#5d6450",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r296",
+		"file": "ribbon-296.svg",
+		"title": "Silver, rose and white edged ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "edged",
+		"stripes": [
+			"#a9adb1",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#f4f1e8",
+			"#cf7792",
+			"#a9adb1"
+		],
+		"device": null
+	},
+	{
+		"id": "r297",
+		"file": "ribbon-297.svg",
+		"title": "Bordeaux and feldgrau pinstripes ribbon with gold tank badge",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5e1d2a",
+			"#5d6450",
+			"#5e1d2a",
+			"#5d6450",
+			"#5e1d2a"
+		],
+		"device": {
+			"kind": "tank",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r298",
+		"file": "ribbon-298.svg",
+		"title": "Feldgrau and navy pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450"
+		],
+		"device": null
+	},
+	{
+		"id": "r299",
+		"file": "ribbon-299.svg",
+		"title": "Black and navy pinstripes ribbon",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c",
+			"#24406b",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r300",
+		"file": "ribbon-300.svg",
+		"title": "Rose, slate and navy piped ribbon with silver swords",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#24406b",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "swords",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r301",
+		"file": "ribbon-301.svg",
+		"title": "Sky, gold and olive split ribbon with bronze rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#7fb0d8",
+			"#e0b23a",
+			"#56622e"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r302",
+		"file": "ribbon-302.svg",
+		"title": "Gold, sky and purple split ribbon with gold rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#e0b23a",
+			"#7fb0d8",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r303",
+		"file": "ribbon-303.svg",
+		"title": "Khaki, gold and navy campaign ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "campaign",
+		"stripes": [
+			"#b8924a",
+			"#e0b23a",
+			"#24406b",
+			"#6b4226",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#6b4226",
+			"#e0b23a",
+			"#24406b",
+			"#b8924a"
+		],
+		"device": null
+	},
+	{
+		"id": "r304",
+		"file": "ribbon-304.svg",
+		"title": "Gold, khaki and black bands ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#1c1c1c",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#e0b23a"
+		],
+		"device": null
+	},
+	{
+		"id": "r305",
+		"file": "ribbon-305.svg",
+		"title": "Blue, olive and brown split ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#3f6fb0",
+			"#56622e",
+			"#6b4226"
+		],
+		"device": null
+	},
+	{
+		"id": "r306",
+		"file": "ribbon-306.svg",
+		"title": "Navy, blue and crimson edged ribbon with bronze rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "edged",
+		"stripes": [
+			"#24406b",
+			"#3f6fb0",
+			"#8f2232",
+			"#3f6fb0",
+			"#8f2232",
+			"#3f6fb0",
+			"#24406b"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r307",
+		"file": "ribbon-307.svg",
+		"title": "Green, khaki and navy bands ribbon with silver rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#2f5a34",
+			"#b8924a",
+			"#24406b",
+			"#b8924a",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r308",
+		"file": "ribbon-308.svg",
+		"title": "Black and olive pinstripes ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#1c1c1c",
+			"#56622e",
+			"#1c1c1c",
+			"#56622e",
+			"#1c1c1c",
+			"#56622e",
+			"#1c1c1c",
+			"#56622e",
+			"#1c1c1c"
+		],
+		"device": null
+	},
+	{
+		"id": "r309",
+		"file": "ribbon-309.svg",
+		"title": "Purple, navy and olive edged ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "edged",
+		"stripes": [
+			"#6b2d5c",
+			"#24406b",
+			"#56622e",
+			"#24406b",
+			"#56622e",
+			"#24406b",
+			"#6b2d5c"
+		],
+		"device": null
+	},
+	{
+		"id": "r310",
+		"file": "ribbon-310.svg",
+		"title": "Crimson, sky and brown campaign ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "campaign",
+		"stripes": [
+			"#8f2232",
+			"#7fb0d8",
+			"#6b4226",
+			"#1c1c1c",
+			"#8f2232",
+			"#7fb0d8",
+			"#8f2232",
+			"#1c1c1c",
+			"#7fb0d8",
+			"#6b4226",
+			"#8f2232"
+		],
+		"device": null
+	},
+	{
+		"id": "r311",
+		"file": "ribbon-311.svg",
+		"title": "Purple, brown and sky striped ribbon with gold oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "striped",
+		"stripes": [
+			"#6b2d5c",
+			"#6b4226",
+			"#7fb0d8",
+			"#6b4226",
+			"#7fb0d8",
+			"#6b4226",
+			"#7fb0d8",
+			"#6b4226",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r312",
+		"file": "ribbon-312.svg",
+		"title": "Olive, brown and orange split ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#56622e",
+			"#6b4226",
+			"#c8642a"
+		],
+		"device": null
+	},
+	{
+		"id": "r313",
+		"file": "ribbon-313.svg",
+		"title": "Green, sky and purple split ribbon with gold oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#2f5a34",
+			"#7fb0d8",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r314",
+		"file": "ribbon-314.svg",
+		"title": "Blue, green and white split ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#3f6fb0",
+			"#2f5a34",
+			"#f4f1e8"
+		],
+		"device": null
+	},
+	{
+		"id": "r315",
+		"file": "ribbon-315.svg",
+		"title": "Orange, navy and red split ribbon with bronze star",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#c8642a",
+			"#24406b",
+			"#c23b3b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r316",
+		"file": "ribbon-316.svg",
+		"title": "Olive, white and red campaign ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "campaign",
+		"stripes": [
+			"#56622e",
+			"#f4f1e8",
+			"#c23b3b",
+			"#b8924a",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#b8924a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#56622e"
+		],
+		"device": null
+	},
+	{
+		"id": "r317",
+		"file": "ribbon-317.svg",
+		"title": "Sky, navy and brown split ribbon with gold rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#7fb0d8",
+			"#24406b",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r318",
+		"file": "ribbon-318.svg",
+		"title": "White and sky pinstripes ribbon with bronze oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#f4f1e8",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#f4f1e8",
+			"#7fb0d8",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r319",
+		"file": "ribbon-319.svg",
+		"title": "Purple and khaki pinstripes ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#6b2d5c",
+			"#b8924a",
+			"#6b2d5c",
+			"#b8924a",
+			"#6b2d5c",
+			"#b8924a",
+			"#6b2d5c",
+			"#b8924a",
+			"#6b2d5c"
+		],
+		"device": null
+	},
+	{
+		"id": "r320",
+		"file": "ribbon-320.svg",
+		"title": "Navy and green pinstripes ribbon with silver oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#24406b",
+			"#2f5a34",
+			"#24406b",
+			"#2f5a34",
+			"#24406b",
+			"#2f5a34",
+			"#24406b",
+			"#2f5a34",
+			"#24406b"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "silver",
+			"count": 1
+		}
+	},
+	{
+		"id": "r321",
+		"file": "ribbon-321.svg",
+		"title": "Purple, crimson and gold edged ribbon with 2 gold stars",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "edged",
+		"stripes": [
+			"#6b2d5c",
+			"#8f2232",
+			"#e0b23a",
+			"#8f2232",
+			"#e0b23a",
+			"#8f2232",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 2
+		}
+	},
+	{
+		"id": "r322",
+		"file": "ribbon-322.svg",
+		"title": "Purple, blue and green bands ribbon with bronze star",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#3f6fb0",
+			"#2f5a34",
+			"#8f2232",
+			"#24406b",
+			"#8f2232",
+			"#2f5a34",
+			"#3f6fb0",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r323",
+		"file": "ribbon-323.svg",
+		"title": "Red, navy and gold striped ribbon with bronze oak leaf cluster",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "striped",
+		"stripes": [
+			"#c23b3b",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#e0b23a",
+			"#24406b",
+			"#c23b3b"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r324",
+		"file": "ribbon-324.svg",
+		"title": "Brown, olive and green campaign ribbon with bronze rosette",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "campaign",
+		"stripes": [
+			"#6b4226",
+			"#56622e",
+			"#2f5a34",
+			"#c8642a",
+			"#6b4226",
+			"#56622e",
+			"#6b4226",
+			"#c8642a",
+			"#56622e",
+			"#2f5a34",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		}
+	},
+	{
+		"id": "r325",
+		"file": "ribbon-325.svg",
+		"title": "Red and green bands ribbon",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#c23b3b",
+			"#2f5a34",
+			"#c23b3b",
+			"#2f5a34",
+			"#c23b3b"
+		],
+		"device": null
+	},
+	{
+		"id": "r326",
+		"file": "ribbon-326.svg",
+		"title": "Navy, white and red flag ribbon, level 1",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#e0b23a",
+			"#2f5a34",
+			"#e0b23a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "americans-4",
+		"level": 1
+	},
+	{
+		"id": "r327",
+		"file": "ribbon-327.svg",
+		"title": "Navy, white and red flag ribbon, level 2",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#e0b23a",
+			"#2f5a34",
+			"#e0b23a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "americans-4",
+		"level": 2
+	},
+	{
+		"id": "r328",
+		"file": "ribbon-328.svg",
+		"title": "Navy, white and red flag ribbon, level 3",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#e0b23a",
+			"#2f5a34",
+			"#e0b23a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "americans-4",
+		"level": 3
+	},
+	{
+		"id": "r329",
+		"file": "ribbon-329.svg",
+		"title": "Navy, white and red flag ribbon, level 4",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#e0b23a",
+			"#2f5a34",
+			"#e0b23a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "americans-4",
+		"level": 4
+	},
+	{
+		"id": "r330",
+		"file": "ribbon-330.svg",
+		"title": "Navy, white and red flag ribbon, level 5",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#e0b23a",
+			"#2f5a34",
+			"#e0b23a",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "americans-4",
+		"level": 5
+	},
+	{
+		"id": "r331",
+		"file": "ribbon-331.svg",
+		"title": "Navy, white and red flag ribbon, level 1",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "americans-5",
+		"level": 1
+	},
+	{
+		"id": "r332",
+		"file": "ribbon-332.svg",
+		"title": "Navy, white and red flag ribbon, level 2",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "americans-5",
+		"level": 2
+	},
+	{
+		"id": "r333",
+		"file": "ribbon-333.svg",
+		"title": "Navy, white and red flag ribbon, level 3",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "americans-5",
+		"level": 3
+	},
+	{
+		"id": "r334",
+		"file": "ribbon-334.svg",
+		"title": "Navy, white and red flag ribbon, level 4",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "americans-5",
+		"level": 4
+	},
+	{
+		"id": "r335",
+		"file": "ribbon-335.svg",
+		"title": "Navy, white and red flag ribbon, level 5",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "flag",
+		"stripes": [
+			"#24406b",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#2f5a34",
+			"#7fb0d8",
+			"#2f5a34",
+			"#f4f1e8",
+			"#c23b3b",
+			"#f4f1e8",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "americans-5",
+		"level": 5
+	},
+	{
+		"id": "r336",
+		"file": "ribbon-336.svg",
+		"title": "Olive and white striped ribbon, level 1",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "striped",
+		"stripes": [
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "americans-6",
+		"level": 1
+	},
+	{
+		"id": "r337",
+		"file": "ribbon-337.svg",
+		"title": "Olive and white striped ribbon, level 2",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "striped",
+		"stripes": [
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "americans-6",
+		"level": 2
+	},
+	{
+		"id": "r338",
+		"file": "ribbon-338.svg",
+		"title": "Olive and white striped ribbon, level 3",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "striped",
+		"stripes": [
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "americans-6",
+		"level": 3
+	},
+	{
+		"id": "r339",
+		"file": "ribbon-339.svg",
+		"title": "Olive and white striped ribbon, level 4",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "striped",
+		"stripes": [
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "americans-6",
+		"level": 4
+	},
+	{
+		"id": "r340",
+		"file": "ribbon-340.svg",
+		"title": "Olive and white striped ribbon, level 5",
+		"faction": "americans",
+		"raceId": 0,
+		"pattern": "striped",
+		"stripes": [
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e",
+			"#f4f1e8",
+			"#56622e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "americans-6",
+		"level": 5
+	},
+	{
+		"id": "r341",
+		"file": "ribbon-341.svg",
+		"title": "Bone, black and silver bands ribbon, level 1",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#1c1c1c",
+			"#a9adb1",
+			"#6b4226",
+			"#a9adb1",
+			"#1c1c1c",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "wehrmacht-4",
+		"level": 1
+	},
+	{
+		"id": "r342",
+		"file": "ribbon-342.svg",
+		"title": "Bone, black and silver bands ribbon, level 2",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#1c1c1c",
+			"#a9adb1",
+			"#6b4226",
+			"#a9adb1",
+			"#1c1c1c",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "wehrmacht-4",
+		"level": 2
+	},
+	{
+		"id": "r343",
+		"file": "ribbon-343.svg",
+		"title": "Bone, black and silver bands ribbon, level 3",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#1c1c1c",
+			"#a9adb1",
+			"#6b4226",
+			"#a9adb1",
+			"#1c1c1c",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "wehrmacht-4",
+		"level": 3
+	},
+	{
+		"id": "r344",
+		"file": "ribbon-344.svg",
+		"title": "Bone, black and silver bands ribbon, level 4",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#1c1c1c",
+			"#a9adb1",
+			"#6b4226",
+			"#a9adb1",
+			"#1c1c1c",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "wehrmacht-4",
+		"level": 4
+	},
+	{
+		"id": "r345",
+		"file": "ribbon-345.svg",
+		"title": "Bone, black and silver bands ribbon, level 5",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#e6dfcc",
+			"#1c1c1c",
+			"#a9adb1",
+			"#6b4226",
+			"#a9adb1",
+			"#1c1c1c",
+			"#e6dfcc"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "wehrmacht-4",
+		"level": 5
+	},
+	{
+		"id": "r346",
+		"file": "ribbon-346.svg",
+		"title": "White, yellow and black bands ribbon, level 1",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "wehrmacht-5",
+		"level": 1
+	},
+	{
+		"id": "r347",
+		"file": "ribbon-347.svg",
+		"title": "White, yellow and black bands ribbon, level 2",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "wehrmacht-5",
+		"level": 2
+	},
+	{
+		"id": "r348",
+		"file": "ribbon-348.svg",
+		"title": "White, yellow and black bands ribbon, level 3",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "wehrmacht-5",
+		"level": 3
+	},
+	{
+		"id": "r349",
+		"file": "ribbon-349.svg",
+		"title": "White, yellow and black bands ribbon, level 4",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "wehrmacht-5",
+		"level": 4
+	},
+	{
+		"id": "r350",
+		"file": "ribbon-350.svg",
+		"title": "White, yellow and black bands ribbon, level 5",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8",
+			"#1c1c1c",
+			"#f4f1e8",
+			"#d9b43a",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "wehrmacht-5",
+		"level": 5
+	},
+	{
+		"id": "r351",
+		"file": "ribbon-351.svg",
+		"title": "Silver, forest and brown split ribbon, level 1",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#a9adb1",
+			"#34452c",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "wehrmacht-6",
+		"level": 1
+	},
+	{
+		"id": "r352",
+		"file": "ribbon-352.svg",
+		"title": "Silver, forest and brown split ribbon, level 2",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#a9adb1",
+			"#34452c",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "wehrmacht-6",
+		"level": 2
+	},
+	{
+		"id": "r353",
+		"file": "ribbon-353.svg",
+		"title": "Silver, forest and brown split ribbon, level 3",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#a9adb1",
+			"#34452c",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "wehrmacht-6",
+		"level": 3
+	},
+	{
+		"id": "r354",
+		"file": "ribbon-354.svg",
+		"title": "Silver, forest and brown split ribbon, level 4",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#a9adb1",
+			"#34452c",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "wehrmacht-6",
+		"level": 4
+	},
+	{
+		"id": "r355",
+		"file": "ribbon-355.svg",
+		"title": "Silver, forest and brown split ribbon, level 5",
+		"faction": "wehrmacht",
+		"raceId": 1,
+		"pattern": "split",
+		"stripes": [
+			"#a9adb1",
+			"#34452c",
+			"#6b4226"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "wehrmacht-6",
+		"level": 5
+	},
+	{
+		"id": "r356",
+		"file": "ribbon-356.svg",
+		"title": "Green, navy and sand theatre ribbon, level 1",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#24406b",
+			"#cfb07a",
+			"#24406b",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "british-4",
+		"level": 1
+	},
+	{
+		"id": "r357",
+		"file": "ribbon-357.svg",
+		"title": "Green, navy and sand theatre ribbon, level 2",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#24406b",
+			"#cfb07a",
+			"#24406b",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "british-4",
+		"level": 2
+	},
+	{
+		"id": "r358",
+		"file": "ribbon-358.svg",
+		"title": "Green, navy and sand theatre ribbon, level 3",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#24406b",
+			"#cfb07a",
+			"#24406b",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "british-4",
+		"level": 3
+	},
+	{
+		"id": "r359",
+		"file": "ribbon-359.svg",
+		"title": "Green, navy and sand theatre ribbon, level 4",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#24406b",
+			"#cfb07a",
+			"#24406b",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "british-4",
+		"level": 4
+	},
+	{
+		"id": "r360",
+		"file": "ribbon-360.svg",
+		"title": "Green, navy and sand theatre ribbon, level 5",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#24406b",
+			"#cfb07a",
+			"#24406b",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "british-4",
+		"level": 5
+	},
+	{
+		"id": "r361",
+		"file": "ribbon-361.svg",
+		"title": "Green, crimson and white theatre ribbon, level 1",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "british-5",
+		"level": 1
+	},
+	{
+		"id": "r362",
+		"file": "ribbon-362.svg",
+		"title": "Green, crimson and white theatre ribbon, level 2",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "british-5",
+		"level": 2
+	},
+	{
+		"id": "r363",
+		"file": "ribbon-363.svg",
+		"title": "Green, crimson and white theatre ribbon, level 3",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "british-5",
+		"level": 3
+	},
+	{
+		"id": "r364",
+		"file": "ribbon-364.svg",
+		"title": "Green, crimson and white theatre ribbon, level 4",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "british-5",
+		"level": 4
+	},
+	{
+		"id": "r365",
+		"file": "ribbon-365.svg",
+		"title": "Green, crimson and white theatre ribbon, level 5",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "theatre",
+		"stripes": [
+			"#2f5a34",
+			"#8f2232",
+			"#f4f1e8",
+			"#8f2232",
+			"#2f5a34"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "british-5",
+		"level": 5
+	},
+	{
+		"id": "r366",
+		"file": "ribbon-366.svg",
+		"title": "Gold, red and sky campaign ribbon, level 1",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#e0b23a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#b8924a",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "british-6",
+		"level": 1
+	},
+	{
+		"id": "r367",
+		"file": "ribbon-367.svg",
+		"title": "Gold, red and sky campaign ribbon, level 2",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#e0b23a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#b8924a",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "british-6",
+		"level": 2
+	},
+	{
+		"id": "r368",
+		"file": "ribbon-368.svg",
+		"title": "Gold, red and sky campaign ribbon, level 3",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#e0b23a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#b8924a",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "british-6",
+		"level": 3
+	},
+	{
+		"id": "r369",
+		"file": "ribbon-369.svg",
+		"title": "Gold, red and sky campaign ribbon, level 4",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#e0b23a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#b8924a",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "british-6",
+		"level": 4
+	},
+	{
+		"id": "r370",
+		"file": "ribbon-370.svg",
+		"title": "Gold, red and sky campaign ribbon, level 5",
+		"faction": "british",
+		"raceId": 2,
+		"pattern": "campaign",
+		"stripes": [
+			"#e0b23a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#b8924a",
+			"#e0b23a",
+			"#c23b3b",
+			"#e0b23a",
+			"#b8924a",
+			"#c23b3b",
+			"#7fb0d8",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "rosette",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "british-6",
+		"level": 5
+	},
+	{
+		"id": "r371",
+		"file": "ribbon-371.svg",
+		"title": "Silver, navy and feldgrau striped ribbon, level 1",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#a9adb1",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "panzer_elite-4",
+		"level": 1
+	},
+	{
+		"id": "r372",
+		"file": "ribbon-372.svg",
+		"title": "Silver, navy and feldgrau striped ribbon, level 2",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#a9adb1",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "panzer_elite-4",
+		"level": 2
+	},
+	{
+		"id": "r373",
+		"file": "ribbon-373.svg",
+		"title": "Silver, navy and feldgrau striped ribbon, level 3",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#a9adb1",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "panzer_elite-4",
+		"level": 3
+	},
+	{
+		"id": "r374",
+		"file": "ribbon-374.svg",
+		"title": "Silver, navy and feldgrau striped ribbon, level 4",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#a9adb1",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "panzer_elite-4",
+		"level": 4
+	},
+	{
+		"id": "r375",
+		"file": "ribbon-375.svg",
+		"title": "Silver, navy and feldgrau striped ribbon, level 5",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#a9adb1",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#5d6450",
+			"#24406b",
+			"#a9adb1"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "panzer_elite-4",
+		"level": 5
+	},
+	{
+		"id": "r376",
+		"file": "ribbon-376.svg",
+		"title": "Bordeaux, slate and black striped ribbon, level 1",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#5e1d2a",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#5e1d2a"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "panzer_elite-5",
+		"level": 1
+	},
+	{
+		"id": "r377",
+		"file": "ribbon-377.svg",
+		"title": "Bordeaux, slate and black striped ribbon, level 2",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#5e1d2a",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#5e1d2a"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "panzer_elite-5",
+		"level": 2
+	},
+	{
+		"id": "r378",
+		"file": "ribbon-378.svg",
+		"title": "Bordeaux, slate and black striped ribbon, level 3",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#5e1d2a",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#5e1d2a"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "panzer_elite-5",
+		"level": 3
+	},
+	{
+		"id": "r379",
+		"file": "ribbon-379.svg",
+		"title": "Bordeaux, slate and black striped ribbon, level 4",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#5e1d2a",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#5e1d2a"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "panzer_elite-5",
+		"level": 4
+	},
+	{
+		"id": "r380",
+		"file": "ribbon-380.svg",
+		"title": "Bordeaux, slate and black striped ribbon, level 5",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "striped",
+		"stripes": [
+			"#5e1d2a",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#1c1c1c",
+			"#4d545c",
+			"#5e1d2a"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "panzer_elite-5",
+		"level": 5
+	},
+	{
+		"id": "r381",
+		"file": "ribbon-381.svg",
+		"title": "Rose, slate and white piped ribbon, level 1",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "panzer_elite-6",
+		"level": 1
+	},
+	{
+		"id": "r382",
+		"file": "ribbon-382.svg",
+		"title": "Rose, slate and white piped ribbon, level 2",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "panzer_elite-6",
+		"level": 2
+	},
+	{
+		"id": "r383",
+		"file": "ribbon-383.svg",
+		"title": "Rose, slate and white piped ribbon, level 3",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "panzer_elite-6",
+		"level": 3
+	},
+	{
+		"id": "r384",
+		"file": "ribbon-384.svg",
+		"title": "Rose, slate and white piped ribbon, level 4",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "panzer_elite-6",
+		"level": 4
+	},
+	{
+		"id": "r385",
+		"file": "ribbon-385.svg",
+		"title": "Rose, slate and white piped ribbon, level 5",
+		"faction": "panzer_elite",
+		"raceId": 3,
+		"pattern": "piped",
+		"stripes": [
+			"#cf7792",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#f4f1e8",
+			"#4d545c",
+			"#cf7792",
+			"#4d545c",
+			"#cf7792"
+		],
+		"device": {
+			"kind": "pip",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "panzer_elite-6",
+		"level": 5
+	},
+	{
+		"id": "r386",
+		"file": "ribbon-386.svg",
+		"title": "Purple, olive and orange bands ribbon, level 1",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#56622e",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#56622e",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "global-4",
+		"level": 1
+	},
+	{
+		"id": "r387",
+		"file": "ribbon-387.svg",
+		"title": "Purple, olive and orange bands ribbon, level 2",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#56622e",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#56622e",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "global-4",
+		"level": 2
+	},
+	{
+		"id": "r388",
+		"file": "ribbon-388.svg",
+		"title": "Purple, olive and orange bands ribbon, level 3",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#56622e",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#56622e",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "global-4",
+		"level": 3
+	},
+	{
+		"id": "r389",
+		"file": "ribbon-389.svg",
+		"title": "Purple, olive and orange bands ribbon, level 4",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#56622e",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#56622e",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "global-4",
+		"level": 4
+	},
+	{
+		"id": "r390",
+		"file": "ribbon-390.svg",
+		"title": "Purple, olive and orange bands ribbon, level 5",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#6b2d5c",
+			"#56622e",
+			"#c8642a",
+			"#b8924a",
+			"#e0b23a",
+			"#b8924a",
+			"#c8642a",
+			"#56622e",
+			"#6b2d5c"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "global-4",
+		"level": 5
+	},
+	{
+		"id": "r391",
+		"file": "ribbon-391.svg",
+		"title": "Navy, blue and white bands ribbon, level 1",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#8f2232",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "global-5",
+		"level": 1
+	},
+	{
+		"id": "r392",
+		"file": "ribbon-392.svg",
+		"title": "Navy, blue and white bands ribbon, level 2",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#8f2232",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "global-5",
+		"level": 2
+	},
+	{
+		"id": "r393",
+		"file": "ribbon-393.svg",
+		"title": "Navy, blue and white bands ribbon, level 3",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#8f2232",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "global-5",
+		"level": 3
+	},
+	{
+		"id": "r394",
+		"file": "ribbon-394.svg",
+		"title": "Navy, blue and white bands ribbon, level 4",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#8f2232",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "global-5",
+		"level": 4
+	},
+	{
+		"id": "r395",
+		"file": "ribbon-395.svg",
+		"title": "Navy, blue and white bands ribbon, level 5",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#24406b",
+			"#3f6fb0",
+			"#f4f1e8",
+			"#8f2232",
+			"#f4f1e8",
+			"#3f6fb0",
+			"#24406b"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "global-5",
+		"level": 5
+	},
+	{
+		"id": "r396",
+		"file": "ribbon-396.svg",
+		"title": "White, red and black bands ribbon, level 1",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#c23b3b",
+			"#1c1c1c",
+			"#b8924a",
+			"#1c1c1c",
+			"#c23b3b",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "global-6",
+		"level": 1
+	},
+	{
+		"id": "r397",
+		"file": "ribbon-397.svg",
+		"title": "White, red and black bands ribbon, level 2",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#c23b3b",
+			"#1c1c1c",
+			"#b8924a",
+			"#1c1c1c",
+			"#c23b3b",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "global-6",
+		"level": 2
+	},
+	{
+		"id": "r398",
+		"file": "ribbon-398.svg",
+		"title": "White, red and black bands ribbon, level 3",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#c23b3b",
+			"#1c1c1c",
+			"#b8924a",
+			"#1c1c1c",
+			"#c23b3b",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "global-6",
+		"level": 3
+	},
+	{
+		"id": "r399",
+		"file": "ribbon-399.svg",
+		"title": "White, red and black bands ribbon, level 4",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#c23b3b",
+			"#1c1c1c",
+			"#b8924a",
+			"#1c1c1c",
+			"#c23b3b",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "global-6",
+		"level": 4
+	},
+	{
+		"id": "r400",
+		"file": "ribbon-400.svg",
+		"title": "White, red and black bands ribbon, level 5",
+		"faction": "global",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#f4f1e8",
+			"#c23b3b",
+			"#1c1c1c",
+			"#b8924a",
+			"#1c1c1c",
+			"#c23b3b",
+			"#f4f1e8"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "global-6",
+		"level": 5
+	}
+]

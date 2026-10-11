@@ -9,15 +9,21 @@
 	type Props = {
 		/** Player whose tournament wins to show. */
 		steamId: string;
+		/** Preloaded by the host so the section does not pop in after render; fetched otherwise. */
+		tournaments?: Tournament[] | null;
 	};
 
-	let { steamId }: Props = $props();
+	let { steamId, tournaments: preloaded }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 	const uid = $props.id();
 	const medals = host.resolve.medals();
 
-	const won = $derived(host.api.tournaments.wonBy(steamId).catch((): Tournament[] => []));
+	const won = $derived(
+		preloaded === undefined
+			? host.api.tournaments.wonBy(steamId).catch((): Tournament[] => [])
+			: (preloaded ?? [])
+	);
 
 	/** Service-ribbon colours: crimson, navy, olive, khaki, bone, black. */
 	const RIBBON = ['#8f2232', '#24406b', '#56622e', '#b8924a', '#e6dfcc', '#1c1c1c'];

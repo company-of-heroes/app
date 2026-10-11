@@ -5,6 +5,7 @@
 	import * as Player from '$lib/components/player';
 	import { app } from '$core/app/context';
 	import { Button } from '$lib/components/ui/button';
+	import { CopyButton } from '@company-of-heroes/ui/copy-button';
 	import { PlayerStatsTable, PlayerStreamerIcon } from '@company-of-heroes/ui/player';
 	import { MatchHistory } from '../match-history';
 	import { relic } from '$lib/relic';
@@ -36,8 +37,9 @@
 			</div>
 			<List.Root class="mt-2">
 				<List.Title>{t('Steam ID:')}</List.Title>
-				<List.Value>
+				<List.Value class="flex items-center gap-1.5">
 					<Profile.Steamid />
+					<CopyButton value={app.game.profile.steam.steamid} label={t('Copy Steam ID')} />
 				</List.Value>
 				<List.Title>{t('Created:')}</List.Title>
 				<List.Value>

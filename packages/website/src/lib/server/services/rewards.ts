@@ -9,6 +9,7 @@ import type {
 	RewardView
 } from '@company-of-heroes/ui/reward/types';
 import { cached, uncache } from '../cache';
+import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
 import { steamIdsOf } from '../domain/users';
 import { all, fromPb, sequence, type Task } from '../result';
 import { Service } from './service';
@@ -24,6 +25,7 @@ type RewardRow = {
 	title: string;
 	description: string;
 	image: string;
+	ribbon: string;
 	conditions: unknown;
 	secret: boolean;
 	sort: number;
@@ -50,6 +52,8 @@ type OwnerRow = {
 
 type Unlock = { reward: string; unlockedAt: string };
 
+type Checked = { reward: Reward; created: boolean; seenBefore: boolean };
+
 type Metric = (condition: RewardCondition) => Task<number>;
 
 const OWNER_FIELDS = 'id,steamIds,reputation,avatar,created';
@@ -63,6 +67,15 @@ function toOwner(row: OwnerRow): Owner {
 		hasAvatar: Boolean(row.avatar),
 		created: row.created ?? ''
 	};
+}
+
+/** Relic automatch ladders 4–19: four per mode (1v1 to 4v4), in race order US, Wehrmacht, British, Panzer Elite. */
+function automatchLadder(leaderboardId: number): { raceId: number; matchtypeId: number } | null {
+	if (leaderboardId < 4 || leaderboardId > 19) {
+		return null;
+	}
+
+	return { raceId: (leaderboardId - 4) % 4, matchtypeId: Math.floor((leaderboardId - 4) / 4) + 1 };
 }
 
 /** PocketBase's stored date format, so it compares as a string. */
@@ -97,15 +110,22 @@ function hasLinks(raw: unknown): boolean {
 	return false;
 }
 
+/** The owner limited to one Steam ID: match metrics count that ID, account metrics stay shared. */
+function forSteamId(owner: Owner, steamId: string): Owner {
+	return { ...owner, steamIds: [steamId] };
+}
+
 /**
  * Steam-style rewards. Admins define them (`rewards`); unlocks are stored once per
- * user (`user_rewards`) and never taken back. Progress is computed on request.
- * Events only mark a user as due (`users.rewardsCheckedAt` cleared); the
- * `rewards-evaluate` job unlocks and notifies. Editing a reward makes everyone due.
+ * Steam ID (`steam_rewards`) and never taken back. Match metrics count that Steam ID
+ * only; account metrics (comments, reputation, streaming, …) count for every Steam ID
+ * on the account. Progress is computed on request. Events only mark a user as due
+ * (`users.rewardsCheckedAt` cleared); the `rewards-evaluate` job unlocks all of the
+ * user's Steam IDs and notifies. Editing a reward makes everyone due.
  */
 export class RewardsService extends Service {
 	private get unlocks() {
-		return this.pb.collection('user_rewards');
+		return this.pb.collection('steam_rewards');
 	}
 
 	/** Enabled rewards with valid conditions. */
@@ -116,7 +136,7 @@ export class RewardsService extends Service {
 					filter: 'enabled = true',
 					sort: 'sort,title',
 					fields:
-						'id,collectionId,collectionName,title,description,image,conditions,secret,sort,updated'
+						'id,collectionId,collectionName,title,description,image,ribbon,conditions,secret,sort,updated'
 				}),
 				'Could not load rewards'
 			)
@@ -165,14 +185,28 @@ export class RewardsService extends Service {
 		).map((page) => (page.items[0] ? toOwner(page.items[0]) : null));
 	}
 
-	private unlocked(userId: string): Task<Unlock[]> {
+	private unlocked(steamId: string): Task<Unlock[]> {
 		return fromPb(
 			this.unlocks.getFullList<Unlock>({
-				filter: this.pb.filter('user = {:userId}', { userId }),
+				filter: this.pb.filter('steamId = {:steamId}', { steamId }),
 				fields: 'reward,unlockedAt'
 			}),
 			'Could not load rewards'
 		);
+	}
+
+	/**
+	 * Unlocks from before rewards were per Steam ID. Only read so a Steam ID that earns
+	 * one again keeps its original date and the user is not notified twice.
+	 */
+	private legacyUnlocks(userId: string): Task<Map<string, string>> {
+		return fromPb(
+			this.pb.collection('user_rewards').getFullList<Unlock>({
+				filter: this.pb.filter('user = {:userId}', { userId }),
+				fields: 'reward,unlockedAt'
+			}),
+			'Could not load rewards'
+		).map((rows) => new Map(rows.map((row) => [row.reward, row.unlockedAt])));
 	}
 
 	private count(collection: string, filter: string): Task<number> {
@@ -270,6 +304,49 @@ export class RewardsService extends Service {
 					}
 				}
 				return best;
+			}, 0)
+		);
+	}
+
+	/**
+	 * Highest Relic ladder rank (1–20) on the automatch ladders, optionally for one faction
+	 * and/or mode. Uses the highest rank ever reached, so a later drop does not matter.
+	 * Relic being unreachable counts as 0, so the other rewards still evaluate.
+	 */
+	private rankReached(owner: Owner, condition: RewardCondition): Task<number> {
+		const { raceId, matchtypeId } = condition.filter ?? {};
+		return all(
+			owner.steamIds.map((steamId) =>
+				this.relic
+					.get<RelicPersonalStat>(
+						`/community/leaderboard/getpersonalstat?title=coh1&profile_names=${encodeURIComponent(JSON.stringify([`/steam/${steamId}`]))}`
+					)
+					.map(
+						(data) =>
+							profileFromPersonalStat(data, (member) => member.name === `/steam/${steamId}`)
+								?.leaderboardStats ?? []
+					)
+					.orElse((error) => {
+						console.warn('[rewards] relic rank failed', steamId, error);
+						return okAsync([]);
+					})
+			)
+		).map((perSteamId) =>
+			perSteamId.flat().reduce((best, stat) => {
+				const ladder = automatchLadder(stat.leaderboard_id);
+				if (
+					!ladder ||
+					(raceId !== undefined && ladder.raceId !== raceId) ||
+					(matchtypeId !== undefined && ladder.matchtypeId !== matchtypeId)
+				) {
+					return best;
+				}
+
+				const reached = Math.max(
+					Number((stat as { highestranklevel?: number }).highestranklevel) || 0,
+					Number(stat.ranklevel) || 0
+				);
+				return Math.max(best, reached);
 			}, 0)
 		);
 	}
@@ -385,6 +462,8 @@ export class RewardsService extends Service {
 				return this.winStreak(owner, condition);
 			case 'elo_reached':
 				return this.eloReached(owner, condition);
+			case 'rank_reached':
+				return this.rankReached(owner, condition);
 			case 'hours_played':
 				return this.hoursPlayed(owner);
 			case 'matches_recorded':
@@ -481,6 +560,7 @@ export class RewardsService extends Service {
 			title: hidden ? '' : reward.title,
 			description: hidden ? '' : reward.description,
 			imageUrl: hidden ? null : rewardImageUrl(this.pb, reward),
+			ribbon: hidden ? null : reward.ribbon || null,
 			secret: reward.secret,
 			sort: reward.sort,
 			unlockedAt,
@@ -490,12 +570,12 @@ export class RewardsService extends Service {
 		};
 	}
 
-	/** Everything the owner sees: unlocked rewards, and locked ones with progress. */
-	private ownView(owner: Owner): Task<PlayerRewards> {
-		return ResultAsync.combine([this.catalog(), this.unlocked(owner.id)]).andThen(
+	/** Everything the owner sees for one Steam ID: unlocked rewards, and locked ones with progress. */
+	private ownView(owner: Owner, steamId: string): Task<PlayerRewards> {
+		return ResultAsync.combine([this.catalog(), this.unlocked(steamId)]).andThen(
 			([catalog, unlocks]) => {
 				const when = new Map(unlocks.map((unlock) => [unlock.reward, unlock.unlockedAt]));
-				const metric = this.metrics(owner);
+				const metric = this.metrics(forSteamId(owner, steamId));
 				return all(
 					catalog.map((reward) => {
 						const unlockedAt = when.get(reward.id) ?? null;
@@ -508,8 +588,8 @@ export class RewardsService extends Service {
 		);
 	}
 
-	private publicView(owner: Owner): Task<PlayerRewards> {
-		return ResultAsync.combine([this.catalog(), this.unlocked(owner.id)]).map(
+	private publicView(steamId: string): Task<PlayerRewards> {
+		return ResultAsync.combine([this.catalog(), this.unlocked(steamId)]).map(
 			([catalog, unlocks]) => {
 				const when = new Map(unlocks.map((unlock) => [unlock.reward, unlock.unlockedAt]));
 				return {
@@ -531,16 +611,21 @@ export class RewardsService extends Service {
 			}
 
 			if (viewerId === owner.id) {
-				return this.ownView(owner);
+				return this.ownView(owner, steamId);
 			}
 
-			return cached(`rewards:player:${steamId}`, CACHE_SECONDS, () => this.publicView(owner));
+			return cached(`rewards:player:${steamId}`, CACHE_SECONDS, () => this.publicView(steamId));
 		});
 	}
 
-	/** The signed-in user's own rewards. */
+	/** The signed-in user's own rewards, for the first Steam ID on the account. */
 	forUser(userId: string): Task<PlayerRewards> {
-		return this.owner(userId).andThen((owner) => this.ownView(owner));
+		return this.owner(userId).andThen((owner) => {
+			const [steamId] = owner.steamIds;
+			return steamId
+				? this.ownView(owner, steamId)
+				: okAsync<PlayerRewards>({ owned: true, linked: false, rewards: [] });
+		});
 	}
 
 	/** Queues users for the next `rewards-evaluate` run (skips ones already queued). */
@@ -556,13 +641,13 @@ export class RewardsService extends Service {
 	}
 
 	/** Creates the unlock; false when another run already did. */
-	private unlock(userId: string, rewardId: string): Task<boolean> {
+	private unlock(steamId: string, rewardId: string, unlockedAt: string): Task<boolean> {
 		return fromPb(
 			this.unlocks
-				.create({ user: userId, reward: rewardId, unlockedAt: new Date().toISOString() })
+				.create({ steamId, reward: rewardId, unlockedAt })
 				.then(() => true)
 				.catch((error) => {
-					// The unique (user, reward) index makes a repeat unlock a no-op.
+					// The unique (steamId, reward) index makes a repeat unlock a no-op.
 					if (error instanceof ClientResponseError && error.status === 400) {
 						return false;
 					}
@@ -595,44 +680,68 @@ export class RewardsService extends Service {
 		).map(() => undefined);
 	}
 
-	/** Unlocks every reward the user now qualifies for; returns how many were new. */
-	evaluate(userId: string): Task<number> {
-		return ResultAsync.combine([this.catalog(), this.owner(userId), this.unlocked(userId)]).andThen(
-			([catalog, owner, unlocks]) => {
-				const have = new Set(unlocks.map((unlock) => unlock.reward));
-				const metric = this.metrics(owner);
-				return all(
-					catalog
-						.filter((reward) => !have.has(reward.id))
-						.map((reward) =>
-							this.progress(reward, metric).map((progress) => ({ reward, progress }))
-						)
-				)
-					.andThen((checked) =>
-						sequence(
-							checked.filter(({ progress }) => progress.overall >= 1),
-							({ reward }) => this.unlock(userId, reward.id).map((created) => ({ reward, created }))
-						)
+	/** Unlocks every reward one Steam ID now qualifies for. */
+	private evaluateSteamId(
+		owner: Owner,
+		steamId: string,
+		catalog: Reward[],
+		legacy: Map<string, string>
+	): Task<Checked[]> {
+		return this.unlocked(steamId).andThen((unlocks) => {
+			const have = new Set(unlocks.map((unlock) => unlock.reward));
+			const metric = this.metrics(forSteamId(owner, steamId));
+			return all(
+				catalog
+					.filter((reward) => !have.has(reward.id))
+					.map((reward) => this.progress(reward, metric).map((progress) => ({ reward, progress })))
+			)
+				.andThen((checked) =>
+					sequence(
+						checked.filter(({ progress }) => progress.overall >= 1),
+						({ reward }) => {
+							const earlier = legacy.get(reward.id);
+							return this.unlock(steamId, reward.id, earlier ?? new Date().toISOString()).map(
+								(created): Checked => ({ reward, created, seenBefore: earlier !== undefined })
+							);
+						}
 					)
-					.andThen((results) => {
-						const fresh = results.filter(({ created }) => created).map(({ reward }) => reward);
-						return this.notify(userId, fresh)
-							.andThen(() =>
-								fresh.length > 0
-									? sequence(owner.steamIds, (steamId) => uncache(`rewards:player:${steamId}`))
-									: okAsync([])
-							)
-							.map(() => fresh.length);
-					})
-					.andThen((fresh) =>
-						fromPb(
-							this.pb
-								.collection('users')
-								.update(userId, { rewardsCheckedAt: new Date().toISOString() }),
-							'Could not save rewards check'
-						).map(() => fresh)
-					);
-			}
+				)
+				.andThen((results) =>
+					results.some(({ created }) => created)
+						? uncache(`rewards:player:${steamId}`).map(() => results)
+						: okAsync(results)
+				);
+		});
+	}
+
+	/** Unlocks every reward the user's Steam IDs now qualify for; returns how many were new. */
+	evaluate(userId: string): Task<number> {
+		return ResultAsync.combine([
+			this.catalog(),
+			this.owner(userId),
+			this.legacyUnlocks(userId)
+		]).andThen(([catalog, owner, legacy]) =>
+			sequence(owner.steamIds, (steamId) => this.evaluateSteamId(owner, steamId, catalog, legacy))
+				.andThen((perSteamId) => {
+					// Notify each reward once, even when several Steam IDs unlocked it in this run.
+					const fresh = [
+						...new Map(
+							perSteamId
+								.flat()
+								.filter(({ created, seenBefore }) => created && !seenBefore)
+								.map(({ reward }) => [reward.id, reward])
+						).values()
+					];
+					return this.notify(userId, fresh).map(() => fresh.length);
+				})
+				.andThen((fresh) =>
+					fromPb(
+						this.pb
+							.collection('users')
+							.update(userId, { rewardsCheckedAt: new Date().toISOString() }),
+						'Could not save rewards check'
+					).map(() => fresh)
+				)
 		);
 	}
 

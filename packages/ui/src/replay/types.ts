@@ -166,6 +166,7 @@ export type CommunityMatchDetail = {
 	durationSeconds: number | null;
 	likeCount: number;
 	downloadCount: number;
+	commentCount?: number;
 	players: CommunityPlayer[];
 	result: MatchResult;
 	title?: string;

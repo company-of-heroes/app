@@ -140,6 +140,7 @@ pub(crate) fn send_action_keys(
 
     for key_name in keys_to_send {
         let key = parse_key(key_name).ok_or_else(|| format!("Unsupported key: {}", key_name))?;
+
         enigo.key(key, direction).map_err(|e| e.to_string())?;
 
         if direction == Direction::Click {
@@ -161,15 +162,67 @@ pub(crate) fn release_all_held_internal() -> Result<(), String> {
     Ok(())
 }
 
+/// Runs off the main thread: a long sequence would otherwise freeze the window.
 #[command]
-pub fn send_keys(keys: Vec<String>, action: Option<String>) -> Result<(), String> {
+pub async fn send_keys(keys: Vec<String>, action: Option<String>) -> Result<(), String> {
     let direction = match action.as_deref() {
         Some("press") => Direction::Press,
         Some("release") => Direction::Release,
         _ => Direction::Click,
     };
 
-    send_action_keys(&keys, direction, true)
+    tokio::task::spawn_blocking(move || {
+        #[cfg(target_os = "windows")]
+        if direction == Direction::Click {
+            return send_sequence_scancode(&keys);
+        }
+
+        send_action_keys(&keys, direction, true)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Hold per key in a sequence; same as chat typing, which DirectInput reads reliably.
+#[cfg(target_os = "windows")]
+const SEQUENCE_KEY_HOLD_US: u64 = 1000;
+/// Gap between keys so DirectInput sees each down/up pair (R R R is not one long press).
+#[cfg(target_os = "windows")]
+const SEQUENCE_KEY_GAP_US: u64 = 4000;
+
+/// Types a key sequence (R R R Tab R) as scancodes. Enigo's virtual-key clicks needed
+/// 50ms per key and still lost keys in long sequences; DirectInput reads scancodes.
+#[cfg(target_os = "windows")]
+fn send_sequence_scancode(keys: &[String]) -> Result<(), String> {
+    let scans = keys
+        .iter()
+        .map(|key| key_to_scan(key).ok_or_else(|| format!("Unsupported key: {}", key)))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    release_chat_modifiers()?;
+
+    for (index, (vk, extended)) in scans.into_iter().enumerate() {
+        if index > 0 {
+            precise_sleep(time::Duration::from_micros(SEQUENCE_KEY_GAP_US));
+        }
+
+        send_inputs(&[vk_input(vk, true, extended)])?;
+        precise_sleep(time::Duration::from_micros(SEQUENCE_KEY_HOLD_US));
+        send_inputs(&[vk_input(vk, false, extended)])?;
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn key_to_scan(key: &str) -> Option<(VIRTUAL_KEY, bool)> {
+    use windows::Win32::UI::Input::KeyboardAndMouse::{MapVirtualKeyW, MAPVK_VK_TO_VSC_EX};
+
+    let vk = token_to_vk(key)?;
+    // MAPVK_VK_TO_VSC_EX puts 0xE0 in the high byte for extended keys (arrows, Home, …).
+    let scan = unsafe { MapVirtualKeyW(vk, MAPVK_VK_TO_VSC_EX) };
+    let extended = scan & 0xFF00 == 0xE000 || key.eq_ignore_ascii_case("numpadenter");
+    Some((VIRTUAL_KEY(vk as u16), extended))
 }
 
 #[command]

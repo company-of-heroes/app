@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack, type Snippet } from 'svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
-	import { resource } from 'runed';
+	import { resource, watch } from 'runed';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import ChecksIcon from 'phosphor-svelte/lib/ChecksIcon';
 	import EyeIcon from 'phosphor-svelte/lib/Eye';
@@ -70,6 +70,8 @@
 	const isDeleted = $derived(match.visibility === 'deleted');
 	const isMemberHeader = $derived(isMember || isDeleted);
 	const commentTarget = $derived({ kind: isMember ? 'replay' : 'lobby', id: match.id } as const);
+	// Follows the match, then the comments list once the tab has loaded it.
+	let commentCount = $derived(match.commentCount ?? 0);
 	const hasReplay = $derived(match.hasReplay ?? Boolean(match.replay));
 	const isOwner = $derived(isMember && !!user?.id && match.uploadedBy?.id === user.id);
 	const editHref = $derived(
@@ -89,7 +91,8 @@
 	const sessionId = $derived(match.sessionId ?? 0);
 
 	// --- replay file -------------------------------------------------------------
-	let tab = $state('overview');
+	// `?comment=<id>` from a notification opens the comments tab.
+	let tab = $state(host.url.param('comment') ? 'comments' : 'overview');
 	let replay = $state.raw<ParsedReplay | null>(null);
 	let parseId = $state<number | null>(null);
 	let actionsLoaded = $state(false);
@@ -174,6 +177,17 @@
 			cancelled = true;
 		};
 	});
+
+	// A notification clicked while already on this page only changes the URL.
+	watch(
+		() => host.url.param('comment'),
+		(comment) => {
+			if (comment) {
+				tab = 'comments';
+			}
+		},
+		{ lazy: true }
+	);
 
 	// --- header facts -------------------------------------------------------------
 	const parsedPlayers = $derived((replay?.players.length ?? 0) > 0);
@@ -526,7 +540,7 @@
 {/if}
 
 {#snippet comments()}
-	<Comments target={commentTarget} />
+	<Comments target={commentTarget} showHeader={false} oncount={(count) => (commentCount = count)} />
 {/snippet}
 
 {#if !hasReplay || (errorMessage && match.players.length > 0)}
@@ -539,20 +553,32 @@
 			{#if downloadHref}{t('You can still download the .rec file above.')}{/if}
 		</p>
 	{/if}
-	<ReplayTabs bind:value={tab} showChat={false} showScreenshots={!!screenshots} {screenshots}>
+	<ReplayTabs
+		bind:value={tab}
+		showChat={false}
+		showScreenshots={!!screenshots}
+		{screenshots}
+		{comments}
+		{commentCount}
+	>
 		{#snippet overview()}
 			<ReplayOverview {match} {livePlayers} {nameExtra} />
-			{@render comments()}
 		{/snippet}
 	</ReplayTabs>
 {:else if loading}
 	<ReplayTabsSkeleton flush showTitle={false} />
 {:else if errorMessage}
 	<p class="text-secondary-400 px-4 py-3 text-sm">{errorMessage}</p>
-	{@render comments()}
+	<Comments target={commentTarget} />
 {:else if replayData}
 	<ReplayRoot replay={replayData}>
-		<ReplayTabs bind:value={tab} showScreenshots={!!screenshots} {screenshots}>
+		<ReplayTabs
+			bind:value={tab}
+			showScreenshots={!!screenshots}
+			{screenshots}
+			{comments}
+			{commentCount}
+		>
 			{#snippet overview()}
 				<ReplayOverview {match} {livePlayers} {nameExtra} />
 				{#if actionsPending || (!actionsLoaded && parseId != null)}
@@ -560,7 +586,6 @@
 				{:else}
 					<ReplayActions />
 				{/if}
-				{@render comments()}
 			{/snippet}
 			{#snippet chat()}
 				<ReplayChat />

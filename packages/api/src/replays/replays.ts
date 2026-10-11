@@ -115,6 +115,7 @@ export type CommunityMatchDetail = {
 	durationSeconds: number | null;
 	likeCount: number;
 	downloadCount: number;
+	commentCount: number;
 	replay: string;
 	hasReplay?: boolean;
 	needsResult?: boolean;
@@ -410,6 +411,7 @@ const communityMatchDetailSchema: z.ZodType<CommunityMatchDetail> = z
 		durationSeconds: z.number().nullable().optional().default(null),
 		likeCount: z.number().optional().default(0),
 		downloadCount: z.number().optional().default(0),
+		commentCount: z.number().optional().default(0),
 		replay: z.string().optional().default(''),
 		hasReplay: z.boolean().optional(),
 		needsResult: z.boolean().optional(),

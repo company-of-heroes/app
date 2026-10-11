@@ -19,6 +19,8 @@
 	import * as Form from '$lib/components/ui/form';
 	import { Checkbox, FileDropzone, Input, Select, Textarea } from '$lib/components/ui/input';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
+	import { surfacePanel } from '$lib/components/ui/variants';
+	import { cn } from '$lib/utils';
 	import { app } from '$core/app/context';
 	import { api, unwrapApi } from '$core/api';
 	import { useI18n } from '$lib/i18n';
@@ -79,16 +81,22 @@
 	let image = $state<File | null>(null);
 	let imagePreview = $state<string | null>(null);
 	let existingImage = $state<string | null>(null);
+	let ribbon = $state<string | null>(null);
 	let isSaving = $state(false);
 	let deletingId = $state<string | null>(null);
 	let nextKey = 0;
 
+	const usedRibbons = $derived(
+		rewards.flatMap((reward) => (reward.id !== editingId && reward.ribbon ? [reward.ribbon] : []))
+	);
 	const parsedConditions = $derived(conditions.map(toCondition));
 	const conditionsValid = $derived(rewardConditionsSchema.safeParse(parsedConditions).success);
+	const conditionErrors = $derived(parsedConditions.map(conditionError));
+	const hasConditionErrors = $derived(conditionErrors.some(Boolean));
 	const canSave = $derived(
 		title.trim().length > 0 &&
 			conditionsValid &&
-			(Boolean(image) || Boolean(editingId)) &&
+			(Boolean(image) || Boolean(ribbon) || Boolean(existingImage)) &&
 			!isSaving
 	);
 	const preview = $derived<Reward.RewardView>({
@@ -96,6 +104,7 @@
 		title: title.trim() || t('Reward title'),
 		description: description.trim(),
 		imageUrl: imagePreview ?? existingImage,
+		ribbon,
 		secret: false,
 		sort: 0,
 		unlockedAt: null,
@@ -148,13 +157,27 @@
 		return value === '' || value === null ? undefined : Math.round(Number(value));
 	}
 
+	/** Some metrics only exist for a few modes (ladder rank: automatch 1v1 to 4v4). */
+	function allowsMode(row: ConditionRow, value: string) {
+		const allowed = Reward.REWARD_METRIC_CATALOG[row.metric].matchtypeIds;
+		return value === ANY || !allowed || allowed.includes(Number(value));
+	}
+
+	function modeItemsFor(row: ConditionRow) {
+		return modeItems.filter((item) => allowsMode(row, item.value));
+	}
+
 	function toCondition(row: ConditionRow): Reward.RewardCondition {
 		const filter: Reward.RewardConditionFilter = {};
 		if (supports(row, 'raceId') && row.raceId !== ANY) {
 			filter.raceId = Number(row.raceId);
 		}
 
-		if (supports(row, 'matchtypeId') && row.matchtypeId !== ANY) {
+		if (
+			supports(row, 'matchtypeId') &&
+			row.matchtypeId !== ANY &&
+			allowsMode(row, row.matchtypeId)
+		) {
 			filter.matchtypeId = Number(row.matchtypeId);
 		}
 
@@ -206,9 +229,37 @@
 		};
 	}
 
-	function thresholdLabel(row: ConditionRow) {
+	function hasFilters(row: ConditionRow) {
+		return Reward.REWARD_METRIC_CATALOG[row.metric].filters.length > 0;
+	}
+
+	function unitLabel(row: ConditionRow) {
 		const unit = Reward.REWARD_METRIC_CATALOG[row.metric].unit;
-		return unit ? t(unit) : t('Threshold');
+		return unit ? t(unit) : null;
+	}
+
+	/** Why one condition is not valid, or null. */
+	function conditionError(condition: Reward.RewardCondition, index: number): string | null {
+		if (condition.threshold < 1) {
+			return t('The threshold must be at least 1.');
+		}
+
+		const max = Reward.REWARD_METRIC_CATALOG[condition.metric].max;
+		if (max !== undefined && condition.threshold > max) {
+			return t('The threshold can be at most {max}.', { max });
+		}
+
+		const { minMinutes, maxMinutes } = condition.filter ?? {};
+		if (minMinutes !== undefined && maxMinutes !== undefined && minMinutes > maxMinutes) {
+			return t('The minimum duration must be below the maximum.');
+		}
+
+		const key = Reward.rewardConditionKey(condition);
+		if (parsedConditions.findIndex((other) => Reward.rewardConditionKey(other) === key) < index) {
+			return t('This condition is the same as an earlier one.');
+		}
+
+		return null;
 	}
 
 	function setPreview(url: string | null) {
@@ -229,6 +280,7 @@
 		conditions = [newRow()];
 		image = null;
 		existingImage = null;
+		ribbon = null;
 		setPreview(null);
 	}
 
@@ -270,6 +322,7 @@
 
 		image = null;
 		existingImage = api.rewards.imageUrl(reward);
+		ribbon = reward.ribbon || null;
 		setPreview(null);
 	}
 
@@ -342,6 +395,7 @@
 		const input = {
 			title,
 			description,
+			ribbon,
 			conditions: parsedConditions,
 			enabled,
 			secret,
@@ -352,7 +406,7 @@
 			if (editingId) {
 				await unwrapApi(api.rewards.update(editingId, input, image));
 				app.toast.success(t('Reward updated.'));
-			} else if (image) {
+			} else {
 				await unwrapApi(api.rewards.create(input, image));
 				app.toast.success(t('Reward created.'));
 			}
@@ -424,92 +478,197 @@
 		changeFileLabel={t('Change image')}
 		onFileChange={(file) => void pickImage(file)}
 	/>
+	<div class="flex flex-col gap-2">
+		<p class="text-secondary-300 text-sm">{t('Or pick a ribbon instead of an image')}</p>
+		<Reward.RibbonField bind:value={ribbon} used={usedRibbons} />
+	</div>
 </Form.Group>
 
 <Form.Group
 	layout="stacked"
+	wide
 	label={t('Conditions')}
 	description={t(
 		'All conditions must be met. Match conditions count finished, non-Skirmish matches.'
 	)}
 >
-	{#each conditions as row (row.key)}
-		<div class="flex w-full min-w-0 flex-wrap items-center gap-2">
-			<Select type="single" bind:value={row.metric} items={metricItems} size="sm" class="w-56" />
-			{#if !isBoolean(row)}
-				<Input
-					type="number"
-					min={1}
-					class="w-28 flex-none"
-					bind:value={row.threshold}
-					placeholder={thresholdLabel(row)}
-					aria-label={thresholdLabel(row)}
-					{@attach tooltip(thresholdLabel(row))}
-				/>
-			{/if}
-			{#if supports(row, 'raceId')}
-				<Select type="single" bind:value={row.raceId} items={raceItems} size="sm" class="w-40" />
-			{/if}
-			{#if supports(row, 'matchtypeId')}
-				<Select
-					type="single"
-					bind:value={row.matchtypeId}
-					items={modeItems}
-					size="sm"
-					class="w-40"
-				/>
-			{/if}
-			{#if supports(row, 'ranked')}
-				<Select type="single" bind:value={row.ranked} items={rankedItems} size="sm" class="w-44" />
-			{/if}
-			{#if supports(row, 'map')}
-				<Select type="single" bind:value={row.map} items={mapItems} size="sm" class="w-48" />
-			{/if}
-			{#if supports(row, 'minMinutes')}
-				<Input
-					type="number"
-					min={1}
-					class="w-28 flex-none"
-					bind:value={row.minMinutes}
-					placeholder={t('Min. minutes')}
-					aria-label={t('Min. minutes')}
-				/>
-			{/if}
-			{#if supports(row, 'maxMinutes')}
-				<Input
-					type="number"
-					min={1}
-					class="w-28 flex-none"
-					bind:value={row.maxMinutes}
-					placeholder={t('Max. minutes')}
-					aria-label={t('Max. minutes')}
-				/>
-			{/if}
-			{#if supports(row, 'minAvgElo')}
-				<Input
-					type="number"
-					min={0}
-					class="w-36 flex-none"
-					bind:value={row.minAvgElo}
-					placeholder={t('Min. average ELO')}
-					aria-label={t('Min. average ELO')}
-				/>
-			{/if}
-			{#if supports(row, 'pro')}
-				<Checkbox bind:checked={row.pro} label={t('Pro lobby')} size="sm" />
-			{/if}
-			<Button
-				type="button"
-				size="sm"
-				variant="ghost"
-				disabled={conditions.length <= 1}
-				onclick={() => removeCondition(row.key)}
-				aria-label={t('Remove condition')}
-			>
-				<XIcon size={16} />
-			</Button>
-		</div>
-	{/each}
+	<ol class="flex flex-col">
+		{#each conditions as row, index (row.key)}
+			{@const id = `reward-condition-${row.key}`}
+			{@const unit = unitLabel(row)}
+			{@const error = conditionErrors[index]}
+			<li class="flex flex-col">
+				{#if index > 0}
+					<div
+						class="text-secondary-500 flex items-center gap-3 py-2 text-xs font-semibold tracking-wide uppercase"
+					>
+						<span class="bg-secondary-800 h-px flex-1"></span>
+						{t('and')}
+						<span class="bg-secondary-800 h-px flex-1"></span>
+					</div>
+				{/if}
+				<div class={cn(surfacePanel, error && 'border-destructive/60')}>
+					<div class="flex flex-wrap items-end gap-3 p-3">
+						<span
+							class="bg-secondary-800 text-secondary-300 flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold"
+						>
+							{index + 1}
+						</span>
+						<div class="flex min-w-48 flex-1 flex-col gap-1.5">
+							<Form.Label class="text-xs">{t('Metric')}</Form.Label>
+							<Select
+								type="single"
+								bind:value={row.metric}
+								items={metricItems}
+								size="sm"
+								aria-label={t('Metric')}
+							/>
+						</div>
+						{#if !isBoolean(row)}
+							<div class="flex w-44 flex-col gap-1.5">
+								<Form.Label for="{id}-threshold" class="text-xs">{t('At least')}</Form.Label>
+								<Input
+									id="{id}-threshold"
+									type="number"
+									min={1}
+									max={Reward.REWARD_METRIC_CATALOG[row.metric].max}
+									size="sm"
+									bind:value={row.threshold}
+									trailing={unit ? unitSuffix : undefined}
+								/>
+								{#snippet unitSuffix()}
+									<span class="text-xs">{unit}</span>
+								{/snippet}
+							</div>
+						{/if}
+						<Button
+							type="button"
+							size="icon-sm"
+							variant="ghost"
+							class="text-secondary-400 ms-auto mb-0.5"
+							disabled={conditions.length <= 1}
+							onclick={() => removeCondition(row.key)}
+							aria-label={t('Remove condition')}
+							{@attach tooltip(t('Remove condition'))}
+						>
+							<TrashIcon size={16} />
+						</Button>
+					</div>
+					{#if hasFilters(row)}
+						<div class="border-secondary-800 border-t p-3">
+							<p class="text-secondary-500 mb-2 text-xs font-semibold tracking-wide uppercase">
+								{t('Filters')}
+							</p>
+							<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+								{#if supports(row, 'raceId')}
+									<div class="flex flex-col gap-1.5">
+										<Form.Label class="text-xs">{t('Faction')}</Form.Label>
+										<Select
+											type="single"
+											bind:value={row.raceId}
+											items={raceItems}
+											size="sm"
+											aria-label={t('Faction')}
+										/>
+									</div>
+								{/if}
+								{#if supports(row, 'matchtypeId')}
+									<div class="flex flex-col gap-1.5">
+										<Form.Label class="text-xs">{t('Mode')}</Form.Label>
+										<Select
+											type="single"
+											bind:value={row.matchtypeId}
+											items={modeItemsFor(row)}
+											size="sm"
+											aria-label={t('Mode')}
+										/>
+									</div>
+								{/if}
+								{#if supports(row, 'ranked')}
+									<div class="flex flex-col gap-1.5">
+										<Form.Label class="text-xs">{t('Ranked')}</Form.Label>
+										<Select
+											type="single"
+											bind:value={row.ranked}
+											items={rankedItems}
+											size="sm"
+											aria-label={t('Ranked')}
+										/>
+									</div>
+								{/if}
+								{#if supports(row, 'map')}
+									<div class="flex flex-col gap-1.5">
+										<Form.Label class="text-xs">{t('Map')}</Form.Label>
+										<Select
+											type="single"
+											bind:value={row.map}
+											items={mapItems}
+											size="sm"
+											aria-label={t('Map')}
+										/>
+									</div>
+								{/if}
+								{#if supports(row, 'minMinutes') || supports(row, 'maxMinutes')}
+									<div class="flex flex-col gap-1.5">
+										<Form.Label for="{id}-min-minutes" class="text-xs">
+											{t('Duration (minutes)')}
+										</Form.Label>
+										<div class="flex items-center gap-2">
+											{#if supports(row, 'minMinutes')}
+												<Input
+													id="{id}-min-minutes"
+													type="number"
+													min={1}
+													size="sm"
+													bind:value={row.minMinutes}
+													placeholder={t('Min.')}
+													aria-label={t('Min. minutes')}
+												/>
+											{/if}
+											{#if supports(row, 'maxMinutes')}
+												<span class="text-secondary-500">–</span>
+												<Input
+													type="number"
+													min={1}
+													size="sm"
+													bind:value={row.maxMinutes}
+													placeholder={t('Max.')}
+													aria-label={t('Max. minutes')}
+												/>
+											{/if}
+										</div>
+									</div>
+								{/if}
+								{#if supports(row, 'minAvgElo')}
+									<div class="flex flex-col gap-1.5">
+										<Form.Label for="{id}-min-elo" class="text-xs">
+											{t('Min. average ELO')}
+										</Form.Label>
+										<Input
+											id="{id}-min-elo"
+											type="number"
+											min={0}
+											size="sm"
+											bind:value={row.minAvgElo}
+											placeholder={t('Any')}
+										/>
+									</div>
+								{/if}
+								{#if supports(row, 'pro')}
+									<div class="flex items-end pb-1.5">
+										<Checkbox bind:checked={row.pro} label={t('Pro lobbies only')} size="sm" />
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/if}
+					{#if error}
+						<p class="border-secondary-800 text-destructive border-t px-3 py-2 text-sm">{error}</p>
+					{/if}
+				</div>
+			</li>
+		{/each}
+	</ol>
 	<div class="flex flex-wrap items-center gap-3">
 		<Button
 			type="button"
@@ -522,7 +681,13 @@
 			<PlusIcon size={16} />
 			{t('Add condition')}
 		</Button>
-		{#if !conditionsValid}
+		<span class="text-secondary-500 text-sm">
+			{t('{count} of {max} conditions', {
+				count: conditions.length,
+				max: Reward.REWARD_CONDITIONS_MAX
+			})}
+		</span>
+		{#if !conditionsValid && !hasConditionErrors}
 			<span class="text-destructive text-sm">
 				{t(
 					'Each condition needs a threshold of at least 1, a different metric or filter, and a minimum duration below the maximum.'
@@ -582,7 +747,22 @@
 	</div>
 	{#snippet cell_image({ row }: { row: RewardRecord })}
 		{@const src = api.rewards.imageUrl(row)}
-		{#if src}
+		{#if row.ribbon}
+			<Reward.Icon
+				reward={{
+					id: row.id,
+					title: row.title,
+					description: '',
+					imageUrl: src,
+					ribbon: row.ribbon,
+					secret: false,
+					sort: 0,
+					// Shown as unlocked: the table shows the design, not anyone's progress.
+					unlockedAt: row.updated
+				}}
+				class="h-4 w-14"
+			/>
+		{:else if src}
 			<img {src} alt="" width="40" height="40" class="size-10 rounded object-cover" />
 		{:else}
 			<TrophyIcon size={24} class="text-secondary-600" />

@@ -1,12 +1,13 @@
 import { getModeLabel, getRaceLabel, normalizeMapName } from '../format/player-format';
 
-/** What a reward condition counts. Match metrics add up over every Steam id on the account. */
+/** What a reward condition counts. Match metrics count one Steam ID; account metrics count for every Steam ID on the account. */
 export const REWARD_METRICS = [
 	'matches_played',
 	'wins',
 	'upset_wins',
 	'win_streak',
 	'elo_reached',
+	'rank_reached',
 	'hours_played',
 	'matches_recorded',
 	'reputation',
@@ -76,7 +77,17 @@ export type RewardMetricInfo = {
 	boolean?: boolean;
 	/** What the threshold means, for the admin form. */
 	unit?: string;
+	/** Highest threshold that can be reached. */
+	max?: number;
+	/** The only match types the mode filter may pick; every counted one when unset. */
+	matchtypeIds?: readonly number[];
 };
+
+/** Highest Relic ladder rank (level 20 is the top rank of each faction). */
+export const REWARD_RANK_MAX = 20;
+
+/** Automatch 1v1 to 4v4: the only modes with a Relic ladder rank. */
+export const REWARD_RANK_MATCHTYPE_IDS = [1, 2, 3, 4] as const;
 
 /** Metric → English label, the filters it supports and its threshold unit. */
 export const REWARD_METRIC_CATALOG: Record<RewardMetric, RewardMetricInfo> = {
@@ -85,6 +96,13 @@ export const REWARD_METRIC_CATALOG: Record<RewardMetric, RewardMetricInfo> = {
 	upset_wins: { label: 'Upset wins (1v1)', filters: ['raceId'] },
 	win_streak: { label: 'Longest win streak', filters: ['raceId', 'matchtypeId', 'ranked'] },
 	elo_reached: { label: 'Rating reached', filters: ['raceId', 'matchtypeId'], unit: 'ELO' },
+	rank_reached: {
+		label: 'Ladder rank reached',
+		filters: ['raceId', 'matchtypeId'],
+		unit: 'Rank',
+		max: REWARD_RANK_MAX,
+		matchtypeIds: REWARD_RANK_MATCHTYPE_IDS
+	},
 	hours_played: { label: 'Hours played', filters: [], unit: 'Hours' },
 	matches_recorded: { label: 'Matches recorded', filters: [] },
 	reputation: { label: 'Reputation', filters: [] },

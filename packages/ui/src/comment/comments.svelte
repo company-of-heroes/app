@@ -24,6 +24,10 @@
 
 	type Props = {
 		target: CommentTarget;
+		/** Title row with the count; off when a tab already names the section. */
+		showHeader?: boolean;
+		/** Called with the number of visible comments once loaded and after every change. */
+		oncount?: (count: number) => void;
 		class?: string;
 	};
 
@@ -39,7 +43,7 @@
 		ontoggle: () => void;
 	};
 
-	let { target, class: className }: Props = $props();
+	let { target, showHeader = true, oncount, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 	const kind = $derived(target.kind);
@@ -73,6 +77,14 @@
 	const tree = $derived(buildTree(items));
 	const myName = $derived(user?.name || t('Player'));
 	const liveCount = $derived(items.filter((item) => !item.deleted).length);
+	watch(
+		() => [comments.current, liveCount] as const,
+		([loaded, count]) => {
+			if (loaded) {
+				oncount?.(count);
+			}
+		}
+	);
 	const staff = $derived(user?.isStaff ?? false);
 	const commentAction = 'h-7 gap-1.5 px-2 text-xs';
 	const quickReplies = $derived([
@@ -541,15 +553,17 @@
 	}
 </script>
 
-<section class={cn('border-secondary-800 border-t', className)}>
-	<div class="border-secondary-800 flex items-center gap-2 border-b px-4 py-2.5">
-		<h2 class="font-bold text-white">{t('Comments')}</h2>
-		{#if liveCount > 0}
-			<span class="bg-secondary-800 text-secondary-400 px-1.5 py-0.5 text-xs tabular-nums">
-				{liveCount}
-			</span>
-		{/if}
-	</div>
+<section class={cn(showHeader && 'border-secondary-800 border-t', className)}>
+	{#if showHeader}
+		<div class="border-secondary-800 flex items-center gap-2 border-b px-4 py-2.5">
+			<h2 class="font-bold text-white">{t('Comments')}</h2>
+			{#if liveCount > 0}
+				<span class="bg-secondary-800 text-secondary-400 px-1.5 py-0.5 text-xs tabular-nums">
+					{liveCount}
+				</span>
+			{/if}
+		</div>
+	{/if}
 
 	<div class="flex flex-col">
 		{#if comments.loading && items.length === 0}

@@ -24,6 +24,7 @@ export type {
 	TournamentMap,
 	TournamentMatch,
 	TournamentMatchResult,
+	TournamentMedalUse,
 	TournamentParticipant,
 	TournamentPost,
 	TournamentPostInput,

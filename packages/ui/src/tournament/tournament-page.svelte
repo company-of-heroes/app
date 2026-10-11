@@ -6,6 +6,7 @@
 	import {
 		flushHeader,
 		flushHeaderTitle,
+		interactive,
 		markdownProse,
 		tableHeadText
 	} from '@company-of-heroes/ui/variants';
@@ -21,7 +22,7 @@
 	import UsersThreeIcon from 'phosphor-svelte/lib/UsersThreeIcon';
 	import { renderMarkdown } from '../comment/markdown';
 	import { formatDate, formatRelative } from '../format/date';
-	import { swapSlots } from '@company-of-heroes/api/tournaments';
+	import { swapSlots, wikiMapSlug } from '@company-of-heroes/api/tournaments';
 	import { useHost, type PlayerSearchOption } from '../host/host.context';
 	import { getCachedPlayerPreview } from '../player/player-preview-cache';
 	import type { PlayerPreviewData } from '../player/types';
@@ -51,6 +52,7 @@
 	import type {
 		MyTournamentMatch,
 		TournamentDetail,
+		TournamentMap,
 		TournamentMatch,
 		TournamentMatchResult,
 		TournamentParticipant,
@@ -177,6 +179,8 @@
 		}
 	);
 	const champion = $derived(tournament.winner ? participants.get(tournament.winner) : undefined);
+	/** The medal the winner gets on their profile, picked in the tournament form. */
+	const medal = $derived(host.resolve.medals().find((m) => m.key === tournament.medal));
 	const description = $derived(
 		tournament.description ? renderMarkdown(tournament.description) : ''
 	);
@@ -365,6 +369,20 @@
 	}
 
 	const reload = () => host.api.tournaments.get(tournament.id);
+
+	/** Wiki page of a built-in pool map, or null for workshop / custom maps. */
+	function mapHref(ref: string) {
+		const slug = wikiMapSlug(ref);
+		return slug && host.routes.wikiMap ? host.routes.wikiMap(slug) : null;
+	}
+
+	/** The app hands the website wiki link to the browser. */
+	function openMap(event: MouseEvent, url: string) {
+		if (host.openExternal) {
+			event.preventDefault();
+			host.openExternal(url);
+		}
+	}
 
 	function when(value: string | null) {
 		const date = parseTournamentDate(value);
@@ -704,123 +722,142 @@
 			</div>
 		</div>
 
-		{#if champion}
-			<div
-				class="border-warning/30 bg-warning/10 flex shrink-0 items-center gap-3 rounded-md border px-4 py-3 backdrop-blur-sm"
-			>
-				<TrophyIcon size={28} weight="duotone" class="text-warning shrink-0" />
-				<p class="font-semibold text-white">
-					{t('{name} won the tournament.', { name: champion.alias })}
-				</p>
-			</div>
-		{:else if isOpen(tournament) && !tournament.deletedAt}
-			<div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:min-w-72">
-				{#if me}
-					<div class="flex flex-wrap items-center justify-end gap-3">
-						<span class="text-success flex items-center gap-1.5 font-semibold">
-							<CheckCircleIcon size={20} weight="fill" />
-							{t('You are signed up.')}
-						</span>
-						<Button
-							variant="destructive"
-							disabled={busy}
-							onclick={() =>
-								act(() => host.api.tournaments.withdraw(tournament.id), t('You withdrew.'))}
-						>
-							{t('Withdraw')}
-						</Button>
+		{#if medal || champion || (isOpen(tournament) && !tournament.deletedAt)}
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-end lg:shrink-0">
+				{#if medal}
+					<div class="flex min-w-0 items-center gap-3">
+						<img
+							src={medal.url}
+							alt=""
+							class="h-20 w-auto shrink-0 drop-shadow-[0_2px_2px_rgb(0_0_0/0.6)]"
+						/>
+						<div class="flex min-w-0 flex-col gap-0.5 sm:max-w-44">
+							<span class={cn(tableHeadText, 'text-warning')}>{t('Champion medal')}</span>
+							<span class="text-secondary-300 text-xs text-pretty">
+								{t('The winner takes the medal home.')}
+							</span>
+						</div>
 					</div>
-				{:else if registrationClosed(tournament)}
-					<p class="text-secondary-300 text-sm">{t('Registration is closed.')}</p>
-				{:else if isFull(tournament)}
-					<p class="text-secondary-300 text-sm">{t('This tournament is full.')}</p>
-				{:else if !host.auth.user}
-					<Popover side="bottom" align="end" contentClass="w-80 max-w-[calc(100vw-2rem)] p-0">
-						{#snippet trigger({ props })}
-							<Button {...props} class="w-full justify-center">
+				{/if}
+				{#if champion}
+					<div
+						class="border-warning/30 bg-warning/10 flex shrink-0 items-center gap-3 rounded-md border px-4 py-3 backdrop-blur-sm"
+					>
+						<TrophyIcon size={28} weight="duotone" class="text-warning shrink-0" />
+						<p class="font-semibold text-white">
+							{t('{name} won the tournament.', { name: champion.alias })}
+						</p>
+					</div>
+				{:else if isOpen(tournament) && !tournament.deletedAt}
+					<div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:min-w-72">
+						{#if me}
+							<div class="flex flex-wrap items-center justify-end gap-3">
+								<span class="text-success flex items-center gap-1.5 font-semibold">
+									<CheckCircleIcon size={20} weight="fill" />
+									{t('You are signed up.')}
+								</span>
+								<Button
+									variant="destructive"
+									disabled={busy}
+									onclick={() =>
+										act(() => host.api.tournaments.withdraw(tournament.id), t('You withdrew.'))}
+								>
+									{t('Withdraw')}
+								</Button>
+							</div>
+						{:else if registrationClosed(tournament)}
+							<p class="text-secondary-300 text-sm">{t('Registration is closed.')}</p>
+						{:else if isFull(tournament)}
+							<p class="text-secondary-300 text-sm">{t('This tournament is full.')}</p>
+						{:else if !host.auth.user}
+							<Popover side="bottom" align="end" contentClass="w-80 max-w-[calc(100vw-2rem)] p-0">
+								{#snippet trigger({ props })}
+									<Button {...props} class="w-full justify-center">
+										<SwordIcon size={18} weight="fill" />
+										{t('Join tournament')}
+									</Button>
+								{/snippet}
+								<div class="border-secondary-800 border-b px-4 py-3">
+									<p class="font-semibold text-white">{t('Sign in to join')}</p>
+									<p class="text-secondary-400 mt-1 text-sm">
+										{t(
+											'Join with your existing account, or sign in with Steam: we find or create the account for your Steam ID and bring you back here.'
+										)}
+									</p>
+								</div>
+								<div class="flex flex-col gap-2 px-4 py-3">
+									{#if host.routes.steamLogin}
+										<Button
+											href={host.routes.steamLogin()}
+											data-sveltekit-reload
+											class="justify-center"
+										>
+											<SteamLogoIcon size={18} weight="fill" />
+											{t('Participate with Steam')}
+										</Button>
+									{/if}
+									<Button variant="secondary" href={host.routes.login()} class="justify-center">
+										{t('Participate with an existing account')}
+									</Button>
+								</div>
+							</Popover>
+						{:else if steamIds.length === 0}
+							<p class="text-secondary-300 text-sm">{t('Link a Steam account to join.')}</p>
+						{:else}
+							{#if steamIds.length > 1}
+								<Select
+									items={steamIds.map((id) => ({ value: id, label: accounts[id]?.alias ?? id }))}
+									type="single"
+									bind:value={steamId}
+									aria-label={t('Steam account')}
+								>
+									{#snippet item({ value, label })}
+										{@const avatar = accounts[value]?.avatarUrl}
+										{#if avatar}
+											<img
+												src={host.resolve.avatarUrl(avatar)}
+												alt=""
+												class="size-5 shrink-0 rounded object-cover"
+											/>
+										{:else}
+											<span class="bg-secondary-800 size-5 shrink-0 rounded"></span>
+										{/if}
+										<span class="truncate">{label}</span>
+									{/snippet}
+								</Select>
+							{/if}
+							{#if tournament.rules.trim()}
+								<div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+									<Checkbox
+										bind:checked={rulesChecked}
+										size="sm"
+										disabled={busy}
+										label={t('I have read and accept the rules')}
+									/>
+									<Button variant="link" size="sm" onclick={() => (tab = 'info')}>
+										{t('Read the rules')}
+									</Button>
+								</div>
+							{/if}
+							<Button
+								class="w-full justify-center"
+								disabled={busy || !steamId || (!!tournament.rules.trim() && !rulesChecked)}
+								onclick={() =>
+									act(
+										() =>
+											host.api.tournaments.register(
+												tournament.id,
+												steamId,
+												!!tournament.rules.trim() && rulesChecked
+											),
+										t('You are signed up.')
+									)}
+							>
 								<SwordIcon size={18} weight="fill" />
 								{t('Join tournament')}
 							</Button>
-						{/snippet}
-						<div class="border-secondary-800 border-b px-4 py-3">
-							<p class="font-semibold text-white">{t('Sign in to join')}</p>
-							<p class="text-secondary-400 mt-1 text-sm">
-								{t(
-									'Join with your existing account, or sign in with Steam: we find or create the account for your Steam ID and bring you back here.'
-								)}
-							</p>
-						</div>
-						<div class="flex flex-col gap-2 px-4 py-3">
-							{#if host.routes.steamLogin}
-								<Button
-									href={host.routes.steamLogin()}
-									data-sveltekit-reload
-									class="justify-center"
-								>
-									<SteamLogoIcon size={18} weight="fill" />
-									{t('Participate with Steam')}
-								</Button>
-							{/if}
-							<Button variant="secondary" href={host.routes.login()} class="justify-center">
-								{t('Participate with an existing account')}
-							</Button>
-						</div>
-					</Popover>
-				{:else if steamIds.length === 0}
-					<p class="text-secondary-300 text-sm">{t('Link a Steam account to join.')}</p>
-				{:else}
-					{#if steamIds.length > 1}
-						<Select
-							items={steamIds.map((id) => ({ value: id, label: accounts[id]?.alias ?? id }))}
-							type="single"
-							bind:value={steamId}
-							aria-label={t('Steam account')}
-						>
-							{#snippet item({ value, label })}
-								{@const avatar = accounts[value]?.avatarUrl}
-								{#if avatar}
-									<img
-										src={host.resolve.avatarUrl(avatar)}
-										alt=""
-										class="size-5 shrink-0 rounded object-cover"
-									/>
-								{:else}
-									<span class="bg-secondary-800 size-5 shrink-0 rounded"></span>
-								{/if}
-								<span class="truncate">{label}</span>
-							{/snippet}
-						</Select>
-					{/if}
-					{#if tournament.rules.trim()}
-						<div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-							<Checkbox
-								bind:checked={rulesChecked}
-								size="sm"
-								disabled={busy}
-								label={t('I have read and accept the rules')}
-							/>
-							<Button variant="link" size="sm" onclick={() => (tab = 'info')}>
-								{t('Read the rules')}
-							</Button>
-						</div>
-					{/if}
-					<Button
-						class="w-full justify-center"
-						disabled={busy || !steamId || (!!tournament.rules.trim() && !rulesChecked)}
-						onclick={() =>
-							act(
-								() =>
-									host.api.tournaments.register(
-										tournament.id,
-										steamId,
-										!!tournament.rules.trim() && rulesChecked
-									),
-								t('You are signed up.')
-							)}
-					>
-						<SwordIcon size={18} weight="fill" />
-						{t('Join tournament')}
-					</Button>
+						{/if}
+					</div>
 				{/if}
 			</div>
 		{/if}
@@ -1103,18 +1140,35 @@
 				class="border-secondary-800 grid grid-cols-[repeat(auto-fill,minmax(7rem,8.5rem))] gap-3 border-b px-4 py-4"
 			>
 				{#each tournament.mapPool as map (map.ref)}
-					<li class="flex min-w-0 flex-col gap-2">
-						<TournamentMapThumb {map} class="w-full" />
-						<span
-							class="text-secondary-200 truncate text-sm"
-							{@attach tooltip(escapeHtml(map.name))}>{map.name}</span
-						>
+					{@const href = mapHref(map.ref)}
+					<li class="min-w-0">
+						{#if href}
+							<a
+								{href}
+								onclick={(event) => openMap(event, href)}
+								class={cn(interactive, 'group flex flex-col gap-2')}
+							>
+								{@render poolMap(map)}
+							</a>
+						{:else}
+							<div class="flex flex-col gap-2">
+								{@render poolMap(map)}
+							</div>
+						{/if}
 					</li>
 				{/each}
 			</ul>
 		{/if}
 	</Tabs.Content>
 </Tabs.Root>
+
+{#snippet poolMap(map: TournamentMap)}
+	<TournamentMapThumb {map} class="w-full" />
+	<span
+		class="text-secondary-200 truncate text-sm group-hover:text-white group-hover:underline"
+		{@attach tooltip(escapeHtml(map.name))}>{map.name}</span
+	>
+{/snippet}
 
 <TournamentMatchDialog
 	match={editing}

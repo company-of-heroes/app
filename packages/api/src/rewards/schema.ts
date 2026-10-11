@@ -36,6 +36,21 @@ export const rewardConditionSchema = z
 		{ message: 'Yes/no conditions have a threshold of 1.' }
 	)
 	.refine(
+		(condition) => {
+			const max = REWARD_METRIC_CATALOG[condition.metric].max;
+			return max === undefined || condition.threshold <= max;
+		},
+		{ message: 'The threshold is above the highest reachable value.' }
+	)
+	.refine(
+		(condition) => {
+			const allowed = REWARD_METRIC_CATALOG[condition.metric].matchtypeIds;
+			const matchtypeId = condition.filter?.matchtypeId;
+			return !allowed || matchtypeId === undefined || allowed.includes(matchtypeId);
+		},
+		{ message: 'This metric does not support that mode.' }
+	)
+	.refine(
 		({ filter }) =>
 			filter?.minMinutes === undefined ||
 			filter?.maxMinutes === undefined ||

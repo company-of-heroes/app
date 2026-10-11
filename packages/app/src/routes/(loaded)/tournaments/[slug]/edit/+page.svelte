@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resource } from 'runed';
-	import { TournamentForm } from '@company-of-heroes/ui/tournament';
+	import { TournamentForm, TournamentFormSkeleton } from '@company-of-heroes/ui/tournament';
 	import { flushHeader, flushSectionTitle } from '@company-of-heroes/ui/variants';
 	import { api, unwrapApi } from '$core/api';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
@@ -33,7 +33,5 @@
 		{t('Tournament not found.')}
 	</p>
 {:else}
-	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-		{t('Loading...')}
-	</p>
+	<TournamentFormSkeleton />
 {/if}

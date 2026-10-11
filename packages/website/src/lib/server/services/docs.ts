@@ -4,9 +4,11 @@ import {
 	type BuildingPage,
 	type CommanderPage,
 	type DocKind,
+	type DocMapRow,
 	type DocWeaponRow,
 	type DocsOverview,
 	type GameDocs,
+	type MapPage,
 	type UnitPage,
 	type WeaponPage
 } from '@company-of-heroes/game-data';
@@ -28,7 +30,7 @@ type NoteRecord = { id: string; body: string; updated: string };
 const noteKey = (kind: DocKind, slug: string) => `docs:note:${kind}:${slug}`;
 
 /**
- * Unit, building, commander and weapon documentation: generated game data
+ * Unit, building, commander, weapon and map documentation: generated game data
  * (`@company-of-heroes/game-data`) plus one staff-written tip per item (`docs_notes`).
  */
 export class DocsService extends Service {
@@ -41,7 +43,8 @@ export class DocsService extends Service {
 			unit: docs.units,
 			building: docs.buildings,
 			commander: docs.commanders,
-			weapon: docs.weapons
+			weapon: docs.weapons,
+			map: docs.maps
 		};
 		return items[kind].has(slug);
 	}
@@ -72,6 +75,10 @@ export class DocsService extends Service {
 		return this.data().map((docs) => docs.weaponList());
 	}
 
+	maps(): Task<DocMapRow[]> {
+		return this.data().map((docs) => docs.mapList());
+	}
+
 	/** Every docs page path, for the sitemap. */
 	paths(): Task<string[]> {
 		return this.data().map((docs) => docs.paths());
@@ -91,6 +98,10 @@ export class DocsService extends Service {
 
 	weapon(slug: string): Task<WithNote<WeaponPage>> {
 		return this.page('weapon', slug, (docs) => docs.weaponPage(slug));
+	}
+
+	map(slug: string): Task<WithNote<MapPage>> {
+		return this.page('map', slug, (docs) => docs.mapPage(slug));
 	}
 
 	private noteRecord(kind: DocKind, slug: string): Task<NoteRecord | null> {

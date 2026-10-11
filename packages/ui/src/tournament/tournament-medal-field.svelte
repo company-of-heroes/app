@@ -19,10 +19,12 @@
 	type Props = {
 		/** Medal key (e.g. `medal-042`), or null for the default medal. */
 		value: string | null;
+		/** The tournament being edited: its own medal is not "already used". */
+		tournamentId?: string;
 		disabled?: boolean;
 	};
 
-	let { value = $bindable(), disabled = false }: Props = $props();
+	let { value = $bindable(), tournamentId, disabled = false }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
@@ -31,6 +33,8 @@
 
 	let open = $state(false);
 	let metal = $state('all');
+	/** Medals other tournaments already use. */
+	let used = $state.raw(new Set<string>());
 
 	const selected = $derived(medals.find((medal) => medal.key === value) ?? null);
 	const visible = $derived(
@@ -40,6 +44,18 @@
 		{ value: 'all', label: t('All') },
 		...MEDAL_METALS.map((value) => ({ value, label: t(METAL_LABELS[value]) }))
 	]);
+
+	async function openPicker() {
+		open = true;
+		try {
+			const uses = await host.api.tournaments.usedMedals();
+			used = new Set(
+				uses.filter((use) => use.tournamentId !== tournamentId).map((use) => use.medal)
+			);
+		} catch {
+			used = new Set();
+		}
+	}
 
 	function choose(key: string) {
 		value = key;
@@ -64,7 +80,7 @@
 				variant="secondary"
 				size="sm"
 				disabled={disabled || medals.length === 0}
-				onclick={() => (open = true)}
+				onclick={openPicker}
 			>
 				{selected ? t('Change medal') : t('Choose medal')}
 			</Button>
@@ -110,20 +126,31 @@
 			</div>
 			<ul class="grid grid-cols-4 gap-1 overflow-y-auto p-3 sm:grid-cols-6 md:grid-cols-8">
 				{#each visible as medal (medal.key)}
+					{@const taken = used.has(medal.key) && medal.key !== value}
 					<li>
 						<button
 							type="button"
-							title={medal.title}
+							title={taken ? `${medal.title} (${t('Already used')})` : medal.title}
 							aria-label={medal.title}
 							aria-pressed={medal.key === value}
+							disabled={taken}
 							onclick={() => choose(medal.key)}
 							class={cn(
 								interactive,
-								'hover:bg-secondary-800/60 flex w-full justify-center rounded-md border py-2 transition-colors',
+								'flex w-full flex-col items-center gap-1 rounded-md border py-2 transition-colors',
+								taken ? '' : 'hover:bg-secondary-800/60',
 								medal.key === value ? 'border-warning bg-warning/10' : 'border-transparent'
 							)}
 						>
-							<img src={medal.url} alt="" loading="lazy" class="h-24 w-auto" />
+							<img
+								src={medal.url}
+								alt=""
+								loading="lazy"
+								class={cn('h-24 w-auto', taken && 'opacity-30 grayscale')}
+							/>
+							{#if taken}
+								<span class="text-secondary-500 text-xs">{t('Already used')}</span>
+							{/if}
 						</button>
 					</li>
 				{/each}

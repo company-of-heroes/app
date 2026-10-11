@@ -5,6 +5,7 @@
 	import { resource } from 'runed';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import { useHost } from '../host/host.context';
+	import { CopyButton } from '../ui/copy-button';
 	import * as List from '../ui/list';
 	import type { LeaderboardStat, PlayerLabel, PlayerSearchResult } from './types';
 	import PlayerLabels from './player-labels.svelte';
@@ -102,7 +103,16 @@
 			</PlayerProfileLink>
 			<List.Root class="gap-x-4">
 				<List.Title>{t('Steam ID:')}</List.Title>
-				<List.Value>{player.steamId || '—'}</List.Value>
+				<List.Value>
+					{#if player.steamId}
+						<span class="inline-flex items-center gap-1.5">
+							{player.steamId}
+							<CopyButton value={player.steamId} label={t('Copy Steam ID')} />
+						</span>
+					{:else}
+						—
+					{/if}
+				</List.Value>
 				<List.Title>{t('Profile ID:')}</List.Title>
 				<List.Value>{player.profileId}</List.Value>
 			</List.Root>

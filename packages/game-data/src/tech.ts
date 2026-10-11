@@ -11,22 +11,22 @@ export const TECH_ORDER: Record<Faction, { slug: string; tier: string }[]> = {
 		{ slug: 'us-hq', tier: 'HQ' },
 		// Neither needs another building.
 		{ slug: 'barracks', tier: 'T1' },
-		{ slug: 'support-weapons', tier: 'T1' },
-		// Needs the Barracks or the Weapons Support Center.
-		{ slug: 'us-quarter-master', tier: 'T2' },
-		// Both need the Supply Yard.
+		{ slug: 'support-weapons', tier: 'T2' },
+		// Both only need the Supply Yard in the game files, but players call the Tank Depot T4.
 		{ slug: 'motorpool', tier: 'T3' },
-		{ slug: '2nd-motorpool', tier: 'T3' }
+		{ slug: '2nd-motorpool', tier: 'T4' },
+		// Needs the Barracks or the Weapons Support Center.
+		{ slug: 'us-quarter-master', tier: '-' }
 	],
 	axis: [
 		{ slug: 'wh-hq', tier: 'HQ' },
 		{ slug: 'basic-support', tier: 'T1' },
-		// Needs Wehrmacht Quarters.
-		{ slug: 'wh-quarter-master', tier: 'T2' },
 		// Battle phases 2, 3 and 4.
 		{ slug: 'platoon-support-building', tier: 'T2' },
 		{ slug: 'company-support-building', tier: 'T3' },
-		{ slug: 'battalion-support-building', tier: 'T4' }
+		{ slug: 'battalion-support-building', tier: 'T4' },
+		// Needs Wehrmacht Quarters.
+		{ slug: 'wh-quarter-master', tier: '-' }
 	],
 	allies_commonwealth: [
 		{ slug: 'hq-squad', tier: 'HQ' },
@@ -36,11 +36,11 @@ export const TECH_ORDER: Record<Faction, { slug: string; tier: string }[]> = {
 	],
 	axis_panzer_elite: [
 		{ slug: 'pe-hq', tier: 'HQ' },
-		// Neither needs another building.
-		{ slug: 'kampfgruppe-kompanie', tier: 'T1' },
 		{ slug: 'logistik-kompanie', tier: 'T1' },
+		// Neither needs another building.
+		{ slug: 'kampfgruppe-kompanie', tier: 'T2' },
 		// Each needs the Kampfgruppe or the Logistik Kompanie.
-		{ slug: 'panzerjager-kommand', tier: 'T2' },
-		{ slug: 'panzer-artillerie-kommand', tier: 'T2' }
+		{ slug: 'panzerjager-kommand', tier: 'T3' },
+		{ slug: 'panzer-artillerie-kommand', tier: 'T4' }
 	]
 };

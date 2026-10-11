@@ -461,6 +461,13 @@ export type HallOfFamePlayer = {
 	podiums: number;
 };
 
+/** A tournament that has a champion medal picked. */
+export type TournamentMedalUse = {
+	tournamentId: string;
+	/** e.g. `medal-042`. */
+	medal: string;
+};
+
 export type HallOfFame = {
 	tournaments: HallOfFameEntry[];
 	/** Most titles first, then most podiums. */

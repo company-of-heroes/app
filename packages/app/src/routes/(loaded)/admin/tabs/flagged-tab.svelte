@@ -3,6 +3,7 @@
 	import { confirmation } from '$lib/components/ui/modal';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import { CopyButton } from '@company-of-heroes/ui/copy-button';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import CaptureImage from '$lib/components/anti-cheat/capture-image.svelte';
 	import { interactive, tabTrigger, type SemanticVariant } from '$lib/components/ui/variants';
@@ -389,8 +390,12 @@
 							{#if row.session_id && row.accused_steam_id}
 								·
 							{/if}
-							{#if row.accused_steam_id}<span class="tabular-nums">{row.accused_steam_id}</span
-								>{/if}
+							{#if row.accused_steam_id}
+								<span class="inline-flex items-center gap-1 align-middle tabular-nums">
+									{row.accused_steam_id}
+									<CopyButton value={row.accused_steam_id} label={t('Copy Steam ID')} size={12} />
+								</span>
+							{/if}
 						</p>
 					{/if}
 					{#if captures.loading}

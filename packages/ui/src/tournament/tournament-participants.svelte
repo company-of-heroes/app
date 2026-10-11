@@ -65,7 +65,7 @@
 					: 'text-secondary-400';
 
 	const expanded = new SvelteSet<string>();
-	const actions = $derived(!!(onReorder || onDisqualify));
+	const actions = $derived(!!onReorder);
 	const columns = $derived(actions ? 5 : 4);
 
 	function toggle(id: string) {
@@ -122,7 +122,7 @@
 						{#if actions}
 							<th class="w-36 px-4 py-2"><span class="sr-only">{t('Actions')}</span></th>
 						{/if}
-						<th class={cn('px-2 py-2', onRemove ? 'w-52' : 'w-44')}>
+						<th class={cn('px-2 py-2', onDisqualify ? 'w-64' : onRemove ? 'w-52' : 'w-44')}>
 							<span class="sr-only">{t('Stats')}</span>
 						</th>
 					</tr>
@@ -246,15 +246,6 @@
 														<ArrowDownIcon size={14} />
 													</Button>
 												{/if}
-												{#if onDisqualify && participant.status === 'registered'}
-													<Button
-														variant="destructive"
-														size="sm"
-														onclick={() => onDisqualify?.(participant)}
-													>
-														{t('Disqualify')}
-													</Button>
-												{/if}
 											</div>
 										</td>
 									{/if}
@@ -268,6 +259,15 @@
 											>
 												{t('View profile')}
 											</Button>
+											{#if onDisqualify && participant.status === 'registered'}
+												<Button
+													variant="destructive"
+													size="sm"
+													onclick={() => onDisqualify?.(participant)}
+												>
+													{t('Disqualify')}
+												</Button>
+											{/if}
 											{#if onRemove && participant.status === 'registered'}
 												<Button
 													variant="ghost"

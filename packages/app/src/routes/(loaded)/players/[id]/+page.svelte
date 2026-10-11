@@ -7,7 +7,6 @@
 	import { resource } from 'runed';
 	import * as Player from '$lib/components/player';
 	import { PlayerProfile } from '@company-of-heroes/ui/player';
-	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import PlayerMatchStaffActions from '$lib/components/player/player-match-staff-actions.svelte';
 	import { MatchHistoryView } from '$lib/player/match-history-view.svelte';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
@@ -92,14 +91,15 @@
 				return null;
 			}
 
-			const [playerRating, cheater, likeCount, rewards] = await Promise.all([
+			const [playerRating, cheater, likeCount, rewards, tournaments] = await Promise.all([
 				getPlayerRating(id).catch(() => null),
 				findCheaterBySteamId(id).catch(() => null),
 				app.database.playerSocial.getLikeCount(id),
 				unwrapApi(api.rewards.forPlayer(id)).catch(() => null),
+				unwrapApi(api.tournaments.wonBy(id)).catch(() => []),
 				loadPlayerLabels([id])
 			]);
-			return { steamId: id, playerRating, cheater: !!cheater, likeCount, rewards };
+			return { steamId: id, playerRating, cheater: !!cheater, likeCount, rewards, tournaments };
 		}
 	);
 
@@ -249,9 +249,11 @@
 
 	const labels = $derived(labelsForSteamId(user?.steamid));
 
-	// The page renders once the Relic and Steam profiles are in; the hero, the facts, the
-	// performance tab and the match history each keep their own skeleton until their data is in.
-	const ready = $derived(Boolean(profile && user));
+	// The top of the page (hero, trophies, facts) renders in one go once its data is in, so it does
+	// not jump while each part fills in; only the slow match history keeps its own skeleton.
+	const ready = $derived(
+		Boolean(profile && user && headerData && customizationData && performanceData && smurfData)
+	);
 
 	// Its own derived, so the match history view only re-sorts when the matches change.
 	const uiMatchHistory = $derived(toUiMatchHistory(rankedMatches ?? []));
@@ -272,7 +274,8 @@
 			labels,
 			likeCount: headerData?.likeCount ?? 0,
 			customization: customizationData?.value ?? null,
-			rewards: headerData?.rewards ?? null
+			rewards: headerData?.rewards ?? null,
+			tournaments: headerData?.tournaments ?? []
 		});
 		return { ...player, matchHistory: uiMatchHistory };
 	});
@@ -293,8 +296,6 @@
 	<PlayerProfile
 		player={matchHistory.player ?? pagePlayer}
 		bind:tab={currentTab}
-		heroLoading={!headerData || !customizationData}
-		factsLoading={!performanceData || !smurfData}
 		matchHistoryLoading={!rankedMatches || !matchHistory.ready}
 	>
 		{#snippet actions()}
@@ -318,12 +319,6 @@
 					empty={isSelf ? 'self' : 'other'}
 					class="rounded-none border-0"
 				/>
-			{:else}
-				<div class="flex flex-col gap-2 p-4" aria-busy="true">
-					{#each Array(4) as _, index (index)}
-						<Skeleton class="h-8 w-full" />
-					{/each}
-				</div>
 			{/if}
 		{/snippet}
 		{#snippet matchActions({ match })}

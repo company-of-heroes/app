@@ -93,6 +93,7 @@
 				</a>
 			{/each}
 			<a href={host.href('/wiki/weapons')} class={pageTab}>{t('Weapons')}</a>
+			<a href={host.href('/wiki/maps')} class={pageTab}>{t('Maps')}</a>
 		</nav>
 		<label class={cn(controlBase, 'flex w-full items-center sm:w-58')}>
 			<MagnifyingGlassIcon class="text-secondary-500 ml-3 size-4 shrink-0" />

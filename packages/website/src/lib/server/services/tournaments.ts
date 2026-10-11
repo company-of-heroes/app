@@ -18,6 +18,7 @@ import {
 	type TournamentMap,
 	type TournamentMatch,
 	type TournamentMatchResult,
+	type TournamentMedalUse,
 	type TournamentParticipant,
 	type TournamentPost,
 	type TournamentPostInput,
@@ -502,6 +503,17 @@ export class TournamentsService extends Service {
 			(records) =>
 				new Map(records.map((record) => [`${CUSTOM_MAP_PREFIX}${record.id}`, this.toMap(record)]))
 		);
+	}
+
+	/** The medal every tournament uses (deleted ones included), for the medal picker. */
+	usedMedals(): Task<TournamentMedalUse[]> {
+		return fromPb(
+			this.tournaments.getFullList<{ id: string; medal: string }>({
+				filter: 'medal != ""',
+				fields: 'id,medal'
+			}),
+			'Could not load the medals'
+		).map((records) => records.map((record) => ({ tournamentId: record.id, medal: record.medal })));
 	}
 
 	/** Every staff-made map, for the map pool picker. */

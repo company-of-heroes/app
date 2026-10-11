@@ -53,7 +53,7 @@
 
 <div class="border-secondary-900 overflow-clip border-b">
 	<PlayerProfileHeader {player} {actions} {heroLoading} {factsLoading} />
-	<TournamentTrophies steamId={player.steamId} />
+	<TournamentTrophies steamId={player.steamId} tournaments={player.tournaments} />
 	<Tabs.Root bind:value={tab} class="border-secondary-800 border-b">
 		<Tabs.List class="px-4">
 			<Tabs.Trigger value="stats">{t('Stats')}</Tabs.Trigger>

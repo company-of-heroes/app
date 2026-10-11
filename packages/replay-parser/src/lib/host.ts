@@ -52,6 +52,7 @@ export function provideLocalHost(): HostContext {
 			doctrineBanner,
 			actionIcon,
 			medals: () => [],
+			ribbons: () => [],
 			userAvatar: () => undefined
 		},
 		auth: {

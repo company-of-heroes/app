@@ -2,7 +2,7 @@
 
 export type Faction = 'allies' | 'allies_commonwealth' | 'axis' | 'axis_panzer_elite';
 
-export type DocKind = 'unit' | 'building' | 'commander' | 'weapon';
+export type DocKind = 'unit' | 'building' | 'commander' | 'weapon' | 'map';
 
 export type DocCost = {
 	manpower?: number;
@@ -369,4 +369,77 @@ export type FactionOverview = {
 export type DocsOverview = {
 	meta: DocMeta;
 	factions: FactionOverview[];
+};
+
+/** `data/stock-maps.json`, written by `company-of-heroes-assets/tools/extract_wiki_maps.py`. */
+export type MapMode = 'classic' | 'assault' | 'panzerkrieg' | 'stonewall';
+
+/** 0..1 from the top-left corner of the map picture, which spans the whole map. */
+export type MapPosition = { x: number; y: number };
+
+/** `sector`: the territory sector it makes (an id in the map's sector-id image); not on victory points. */
+export type MapSectorPosition = MapPosition & { sector?: number };
+
+/** A capture point blueprint: victory point, strategic point, fuel or munition point. */
+export type MapPointType = {
+	name: string;
+	/** Tacmap icon key (`resources_resource_tacmap_fuel_med`). */
+	icon: string | null;
+	victory: boolean;
+	/** Makes the territory sector it stands in (resource and strategic points; not victory points). */
+	territory: boolean;
+	/** Per minute while held. */
+	income: Pick<DocCost, 'manpower' | 'munition' | 'fuel'>;
+	captureTime: number;
+	revertTime: number;
+};
+
+export type DocMap = {
+	slug: string;
+	/** Scenario file name (`2p_semois`), the map a lobby stores. */
+	key: string;
+	name: string;
+	description: string;
+	mode: MapMode;
+	/** A community map that ships with the game. */
+	community: boolean;
+	players: number;
+	/** In game units (metres). */
+	size: { width: number; height: number };
+	/** Territory sectors. */
+	sectors: number;
+	/** HQ positions; none on Operations maps (the script places players). */
+	starts: MapSectorPosition[];
+	/**
+	 * The white start circles on the map picture (near, not on, the HQs), with the nearest HQ's
+	 * sector. Empty when the picture has none (the page then marks `starts` itself).
+	 */
+	startMarkers: MapSectorPosition[];
+	points: (MapSectorPosition & { type: string })[];
+};
+
+export type StockMaps = {
+	pointTypes: Record<string, MapPointType>;
+	maps: DocMap[];
+};
+
+/** One kind of point on a map, with how many there are. */
+export type MapPointCount = MapPointType & { type: string; count: number };
+
+export type DocMapRow = Pick<
+	DocMap,
+	'slug' | 'key' | 'name' | 'mode' | 'community' | 'players' | 'size' | 'sectors'
+> & {
+	victoryPoints: number;
+	/** Fuel and munitions per minute with every point held. */
+	income: MapPointType['income'];
+};
+
+export type MapPage = {
+	map: DocMap;
+	pointTypes: Record<string, MapPointType>;
+	/** Point kinds on this map, victory points first, then by name. */
+	counts: MapPointCount[];
+	/** Per minute with every point held. */
+	income: MapPointType['income'];
 };

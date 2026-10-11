@@ -25,6 +25,8 @@ export type RewardRecord = RecordModel & {
 	title: string;
 	description: string;
 	image: string;
+	/** Ribbon key (e.g. `ribbon-042`), or empty to show the image. */
+	ribbon: string;
 	conditions: RewardCondition[] | null;
 	enabled: boolean;
 	secret: boolean;
@@ -34,6 +36,8 @@ export type RewardRecord = RecordModel & {
 export type RewardInput = {
 	title: string;
 	description: string;
+	/** Ribbon key, or null to show the image. */
+	ribbon: string | null;
 	conditions: RewardCondition[];
 	enabled: boolean;
 	secret: boolean;
@@ -111,8 +115,12 @@ export class RewardsApi {
 		return rewardImageUrl(this.deps.pocketbase, record, this.deps.baseUrl);
 	}
 
-	/** Admin: `image` is required on create. */
-	create(input: RewardInput, image: File): ResultAsync<RewardRecord, ApiError> {
+	/** Admin: needs an `image` or a ribbon. */
+	create(input: RewardInput, image: File | null): ResultAsync<RewardRecord, ApiError> {
+		if (!image && !input.ribbon) {
+			return errAsync(apiError(400, 'Choose an image or a ribbon.'));
+		}
+
 		return this.#body(input, image).andThen((body) =>
 			fromPbPromise(
 				this.deps.pocketbase.collection('rewards').create<RewardRecord>(body, pbOptions(this.deps)),
@@ -157,9 +165,15 @@ export class RewardsApi {
 			return errAsync(apiError(400, 'Check the conditions and try again.'));
 		}
 
+		const ribbon = input.ribbon ?? '';
+		if (ribbon && !/^ribbon-\d{3}$/.test(ribbon)) {
+			return errAsync(apiError(400, 'Choose a ribbon from the list.'));
+		}
+
 		const body: Record<string, unknown> = {
 			title,
 			description,
+			ribbon,
 			conditions: conditions.data,
 			enabled: input.enabled,
 			secret: input.secret,

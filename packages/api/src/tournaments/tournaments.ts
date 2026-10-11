@@ -17,6 +17,7 @@ import type {
 	TournamentInput,
 	TournamentMatch,
 	TournamentMatchResult,
+	TournamentMedalUse,
 	TournamentPost,
 	TournamentPostInput,
 	TournamentReport,
@@ -476,6 +477,14 @@ export class TournamentsApi {
 		return fromPbPromise(
 			sendV1<TournamentStats>(this.deps, path(idOrSlug, '/stats')),
 			'Could not load the stats.'
+		);
+	}
+
+	/** The medal every tournament uses (deleted ones included). */
+	usedMedals(): ResultAsync<TournamentMedalUse[], ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentMedalUse[]>(this.deps, '/tournaments/medals'),
+			'Could not load the medals.'
 		);
 	}
 

@@ -36,6 +36,7 @@ export type MatchDetail = {
 	durationSeconds: number | null;
 	likeCount: number;
 	downloadCount: number;
+	commentCount: number;
 	replay: string;
 	hasReplay: boolean;
 	needsResult: boolean;
@@ -160,6 +161,7 @@ export class MatchesService extends Service {
 				durationSeconds: row.durationSeconds,
 				likeCount: record.likeCount || 0,
 				downloadCount: record.downloadCount || 0,
+				commentCount: Number(record.commentCount) || 0,
 				replay: record.replay || '',
 				hasReplay,
 				needsResult: record.needsResult,

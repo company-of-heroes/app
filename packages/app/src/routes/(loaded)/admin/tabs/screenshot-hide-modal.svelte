@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CaptureImage from '$lib/components/anti-cheat/capture-image.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { CopyButton } from '@company-of-heroes/ui/copy-button';
 	import type { CaptureRecord } from '$core/pocketbase/anti-cheat';
 	import { cn, normalizeMapName } from '$lib/utils';
 	import { interactive } from '$lib/components/ui/variants';
@@ -73,7 +74,10 @@
 				<p class="text-secondary-100 truncate text-sm font-medium">{owner}</p>
 			{/if}
 			{#if owner && capture.steam_id}
-				<p class="text-secondary-400 mt-0.5 truncate text-sm tabular-nums">{capture.steam_id}</p>
+				<p class="text-secondary-400 mt-0.5 flex min-w-0 items-center gap-1.5 text-sm tabular-nums">
+					<span class="truncate">{capture.steam_id}</span>
+					<CopyButton value={capture.steam_id} label={t('Copy Steam ID')} />
+				</p>
 			{/if}
 		{/if}
 		{#if meta}

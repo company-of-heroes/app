@@ -14,7 +14,13 @@ import type {
 	DocUpgrade,
 	DocUpgradeEntry,
 	DocWeapon,
+	DocMap,
+	DocMapRow,
 	Faction,
+	MapPage,
+	MapPointCount,
+	MapPointType,
+	StockMaps,
 	UnitCallIn,
 	UnitPage,
 	WeaponPage
@@ -70,6 +76,8 @@ export class GameDocs {
 	readonly upgrades: Map<string, DocUpgrade>;
 	readonly abilities: Map<string, DocAbility>;
 	readonly weapons: Map<string, DocWeapon>;
+	readonly maps: Map<string, DocMap>;
+	readonly mapPointTypes: Record<string, MapPointType>;
 	readonly meta: DocMeta;
 
 	constructor(
@@ -81,9 +89,12 @@ export class GameDocs {
 			upgrades: DocUpgrade[];
 			abilities: DocAbility[];
 			weapons: DocWeapon[];
+			maps: StockMaps;
 		}
 	) {
 		this.meta = meta;
+		this.maps = bySlug(data.maps.maps);
+		this.mapPointTypes = data.maps.pointTypes;
 		this.units = bySlug(data.units.map(withIcon));
 		this.buildings = bySlug(data.buildings.map(withIcon));
 		this.commanders = bySlug(data.commanders);
@@ -720,13 +731,90 @@ export class GameDocs {
 			.sort((a, b) => a.name.localeCompare(b.name));
 	}
 
+	/**
+	 * The point kinds on a map with how many of each. Point blueprints that look the same in game
+	 * (the strategic point variants) count as one kind.
+	 */
+	private mapPointCounts(map: DocMap): MapPointCount[] {
+		const counts = new Map<string, MapPointCount>();
+		for (const point of map.points) {
+			const kind = this.mapPointTypes[point.type];
+			if (!kind) {
+				continue;
+			}
+
+			const key = `${kind.name}:${kind.icon}`;
+			const count = counts.get(key);
+			counts.set(
+				key,
+				count ? { ...count, count: count.count + 1 } : { ...kind, type: point.type, count: 1 }
+			);
+		}
+
+		// Victory points, fuel, munitions, then strategic points; low to high income within each.
+		const rank = (kind: MapPointType) =>
+			kind.victory ? 0 : kind.income.fuel ? 1 : kind.income.munition ? 2 : 3;
+		const amount = (kind: MapPointType) => (kind.income.fuel ?? 0) + (kind.income.munition ?? 0);
+		return [...counts.values()].sort(
+			(a, b) => rank(a) - rank(b) || amount(a) - amount(b) || a.name.localeCompare(b.name)
+		);
+	}
+
+	/** Fuel, munitions and manpower per minute from every point on the map. */
+	private mapIncome(counts: MapPointCount[]): MapPointType['income'] {
+		const income: MapPointType['income'] = {};
+		for (const kind of counts) {
+			for (const resource of ['manpower', 'munition', 'fuel'] as const) {
+				const value = kind.income[resource];
+				if (value) {
+					income[resource] = Math.round(((income[resource] ?? 0) + value * kind.count) * 10) / 10;
+				}
+			}
+		}
+
+		return income;
+	}
+
+	/** The built-in maps (classic and Operations), in the order of the extractor: mode, players, name. */
+	mapList(): DocMapRow[] {
+		return [...this.maps.values()].map((map) => {
+			const counts = this.mapPointCounts(map);
+			return {
+				slug: map.slug,
+				key: map.key,
+				name: map.name,
+				mode: map.mode,
+				community: map.community,
+				players: map.players,
+				size: map.size,
+				sectors: map.sectors,
+				victoryPoints: counts
+					.filter((kind) => kind.victory)
+					.reduce((sum, kind) => sum + kind.count, 0),
+				income: this.mapIncome(counts)
+			};
+		});
+	}
+
+	mapPage(slug: string): MapPage | undefined {
+		const map = this.maps.get(slug);
+		if (!map) {
+			return undefined;
+		}
+
+		const counts = this.mapPointCounts(map);
+		return { map, pointTypes: this.mapPointTypes, counts, income: this.mapIncome(counts) };
+	}
+
 	/** Every page path, for the sitemap. */
 	paths(): string[] {
 		return [
 			...this.listedUnits.map((unit) => `/wiki/units/${unit.slug}`),
 			...[...this.buildings.keys()].map((slug) => `/wiki/buildings/${slug}`),
 			...[...this.commanders.keys()].map((slug) => `/wiki/commanders/${slug}`),
-			...this.weaponList().map((ref) => `/wiki/weapons/${ref.slug}`)
+			...this.weaponList().map((ref) => `/wiki/weapons/${ref.slug}`),
+			'/wiki/maps',
+			...[...this.maps.keys()].map((slug) => `/wiki/maps/${slug}`)
 		];
 	}
 }
@@ -742,9 +830,10 @@ export function loadGameDocs(): Promise<GameDocs> {
 		import('../data/commanders.json'),
 		import('../data/upgrades.json'),
 		import('../data/abilities.json'),
-		import('../data/weapons.json')
+		import('../data/weapons.json'),
+		import('../data/stock-maps.json')
 	]).then(
-		([meta, units, buildings, commanders, upgrades, abilities, weapons]) =>
+		([meta, units, buildings, commanders, upgrades, abilities, weapons, maps]) =>
 			new GameDocs(meta.default as DocMeta, {
 				// Generated JSON; the inferred types are too varied for a direct cast.
 				units: units.default as unknown as DocUnit[],
@@ -752,7 +841,8 @@ export function loadGameDocs(): Promise<GameDocs> {
 				commanders: commanders.default as DocCommander[],
 				upgrades: upgrades.default as unknown as DocUpgrade[],
 				abilities: abilities.default as unknown as DocAbility[],
-				weapons: weapons.default as unknown as DocWeapon[]
+				weapons: weapons.default as unknown as DocWeapon[],
+				maps: maps.default as unknown as StockMaps
 			})
 	);
 	return loading;

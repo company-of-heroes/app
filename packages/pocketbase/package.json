@@ -8,6 +8,7 @@
 		"serve": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up",
 		"serve:build": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
 		"down": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
+		"seed:rewards": "node scripts/seed-rewards.mjs",
 		"typegen": "npx pocketbase-typegen --env --out ../app/src/lib/core/pocketbase/types.ts"
 	},
 	"devDependencies": {

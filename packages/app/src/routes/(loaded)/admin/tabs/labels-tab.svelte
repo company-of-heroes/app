@@ -2,6 +2,7 @@
 	import { confirmation } from '$lib/components/ui/modal';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import { CopyButton } from '@company-of-heroes/ui/copy-button';
 	import PlayerLabels from '$lib/components/player/player-labels.svelte';
 	import PlayerLabelEditor from '$lib/components/player/player-label-editor.svelte';
 	import { app } from '$core/app/context';
@@ -392,7 +393,10 @@
 					<span class="truncate font-medium">{row.relic.alias}</span>
 					<PlayerLabels steamId={row.steam.steamid} class="shrink-0" />
 				</span>
-				<span class="text-secondary-400 text-xs">{row.steam.steamid}</span>
+				<span class="text-secondary-400 flex items-center gap-1 text-xs">
+					{row.steam.steamid}
+					<CopyButton value={row.steam.steamid} label={t('Copy Steam ID')} size={12} />
+				</span>
 			</span>
 		{/snippet}
 		{#snippet cell_playerActions({ row }: { row: (typeof playerSearch.results)[number] })}

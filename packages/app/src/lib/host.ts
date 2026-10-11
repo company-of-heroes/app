@@ -27,6 +27,7 @@ import {
 import { flagImageUrl } from '$lib/utils/leaderboard-resolvers';
 import { getActionIcon } from '$lib/utils/action-icons';
 import { getMedals } from '$lib/utils/medals';
+import { getRibbons } from '$lib/utils/ribbons';
 import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 import { isStreamerLive } from '$core/pocketbase/live-streamers-cache.svelte';
 
@@ -57,7 +58,8 @@ export function provideAppHost(): HostContext {
 			tournament: (slug) => `/tournaments/${slug}`,
 			tournamentNew: () => '/tournaments/new',
 			tournamentEdit: (slug) => `/tournaments/${slug}/edit`,
-			tournamentHallOfFame: () => '/tournaments/hall-of-fame'
+			tournamentHallOfFame: () => '/tournaments/hall-of-fame',
+			wikiMap: (slug) => `${SITE_URL}/wiki/maps/${slug}`
 		},
 		url: {
 			param: (name) => page.url.searchParams.get(name),
@@ -86,6 +88,7 @@ export function provideAppHost(): HostContext {
 				Object.entries(doctrineBanners).find(([path]) => path.endsWith(`/${file}`))?.[1] ?? '',
 			actionIcon: getActionIcon,
 			medals: getMedals,
+			ribbons: getRibbons,
 			userAvatar: (user, options) =>
 				user.avatarUrl
 					? withFileThumb(user.avatarUrl, options?.thumb)
@@ -342,6 +345,7 @@ export function provideAppHost(): HostContext {
 				create: (input, images) => unwrapApi(api.tournaments.create(input, images)),
 				update: (id, input, images) => unwrapApi(api.tournaments.update(id, input, images)),
 				listMaps: () => unwrapApi(api.tournaments.listMaps()),
+				usedMedals: () => unwrapApi(api.tournaments.usedMedals()),
 				createMap: (name, icon) => unwrapApi(api.tournaments.createMap(name, icon)),
 				register: (id, steamId, acceptRules) =>
 					unwrapApi(api.tournaments.register(id, steamId, acceptRules)),

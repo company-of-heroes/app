@@ -2,6 +2,7 @@ import type {
 	BuildingPage,
 	CommanderPage,
 	DocKind,
+	MapPage,
 	UnitPage,
 	WeaponPage
 } from '@company-of-heroes/game-data/types';
@@ -15,5 +16,17 @@ export type DocsUnitPageData = WithNote<UnitPage>;
 export type DocsBuildingPageData = WithNote<BuildingPage>;
 export type DocsCommanderPageData = WithNote<CommanderPage>;
 export type DocsWeaponPageData = WithNote<WeaponPage>;
+export type DocsMapPageData = WithNote<MapPage>;
+
+/**
+ * Map images from `packages/shared-assets/maps` (the host bundles them): the map picture (the
+ * loading-screen one, with the start circles), a small one for lists, the territory sector lines
+ * drawn over it, and a grey image with the sector id of every territory cell (to colour a sector
+ * on hover).
+ */
+export type DocsMapImage = (
+	slug: string,
+	variant: 'full' | 'thumb' | 'sectors' | 'sector-ids'
+) => string | undefined;
 
 export type { DocKind };
