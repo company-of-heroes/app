@@ -3,7 +3,8 @@ import { mapLimit, type ReplaysQuery } from '@company-of-heroes/api';
 import { cached } from '../cache';
 import { mapDisplayName } from '../domain/map-name';
 import { badRequest, unauthorized } from '../errors';
-import { chunk, fromPb, type Task } from '../result';
+import { anyOfChunks } from '../pb';
+import { fromPb, type Task } from '../result';
 import { Service } from './service';
 import {
 	filterAstSchema,
@@ -110,8 +111,7 @@ function oneLobbyPerSession(records: LobbyListRecord[]): LobbyListRecord[] {
 	});
 }
 const PB_MAX_PER_PAGE = 500;
-/** Lobby ids per `lobby_player_index` query of the user's games, and queries in flight. */
-const USER_GAMES_CHUNK = 200;
+/** `lobby_player_index` queries of the user's games in flight. */
 const USER_GAMES_CONCURRENCY = 4;
 
 type SortEntry = { id: string; createdAt: string; value: number };
@@ -447,10 +447,9 @@ export class MatchHistoryService extends Service {
 				)
 			)
 			.map((ids) =>
-				chunk(ids, USER_GAMES_CHUNK).map((slice) => {
-					const lobbies = slice.map((id) => this.pb.filter('lobby = {:id}', { id })).join(' || ');
-					return `(${lobbies}) && counts = true`;
-				})
+				anyOfChunks(ids.map((id) => this.pb.filter('lobby = {:id}', { id }))).map(
+					(lobbies) => `(${lobbies}) && counts = true`
+				)
 			);
 	}
 
