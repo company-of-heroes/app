@@ -9,7 +9,8 @@ import { isValidSteamId } from '../ratings/ratings';
 import { requireStaff } from '../staff';
 
 const CAPTURE_NAME_SEARCH_LIMIT = 25;
-const CHEATER_LOOKUP_CHUNK = 40;const CAPTURE_FIELDS =
+const CHEATER_LOOKUP_CHUNK = 40;
+const CAPTURE_FIELDS =
 	'id,collectionId,collectionName,created,session_id,steam_id,map,captured_at,image,user,game_focused,hidden,hiddenAt,hiddenBy,expand';
 
 export type CaptureRecord = RecordModel & {
