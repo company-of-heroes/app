@@ -24,6 +24,8 @@ export type AccountStatus = 'idle' | 'authenticating' | 'authenticated' | 'signe
 const SESSION_REFRESH_MS = 12 * 60 * 60 * 1000;
 /** A stored token with less time left than this is renewed at boot instead of reused. */
 const TOKEN_REUSE_MARGIN_MS = 5 * 60 * 1000;
+/** Retries for a reused session the server did not answer for; then the 12h refresh takes over. */
+const VERIFY_RETRY_MS = [5_000, 15_000, 60_000];
 /** Loopback ports for the Steam login callback (the website allows exactly these). */
 const LOGIN_PORTS = [8001, 8002, 8003, 8004, 8005];
 /** How long the browser Steam login may take before the app stops listening. */
@@ -76,6 +78,13 @@ export class AccountService {
 	/** True while the browser Steam login is waiting for its callback. */
 	isSteamLoginPending = $state(false);
 	#cancelSteamLogin: (() => void) | null = null;
+	#sessionLostListeners = new Set<() => void>();
+
+	/** Called when the session reused at boot is rejected by the server (see `#verifyStoredSession`). */
+	onSessionLost(listener: () => void): () => void {
+		this.#sessionLostListeners.add(listener);
+		return () => this.#sessionLostListeners.delete(listener);
+	}
 
 	/**
 	 * Authenticates the account, recovering or creating it when necessary.
@@ -220,8 +229,17 @@ export class AccountService {
 		return this.#authenticate(credentials);
 	}
 
-	/** Confirms a reused session: a fresh record and token, or a new sign-in when it was revoked. */
-	async #verifyStoredSession() {
+	/**
+	 * Confirms a reused session: a fresh record and token. A rejected session clears the stored
+	 * token and reports it lost, so boot runs the account phase again (password, backup, sign-in
+	 * screen). An unreachable server is retried a few times.
+	 */
+	async #verifyStoredSession(attempt = 0) {
+		// Signed out or impersonating meanwhile: this session is no longer the one to verify.
+		if (this.isImpersonating || !this.#user) {
+			return;
+		}
+
 		try {
 			const auth = await pocketbase.collection('users').authRefresh<User>({ fetch });
 			if (this.isImpersonating) {
@@ -232,13 +250,27 @@ export class AccountService {
 			await this.#storeSessionToken(auth.token);
 			await this.#syncLocalEmailFromUser();
 		} catch (error) {
-			if (!isAuthRejection(error)) {
-				console.warn('[ACCOUNT]: could not verify the stored session:', error);
+			if (isAuthRejection(error)) {
+				console.warn('[ACCOUNT]: stored session was rejected:', error);
+				pocketbase.authStore.clear();
+				for (const listener of this.#sessionLostListeners) {
+					listener();
+				}
+
 				return;
 			}
 
-			console.warn('[ACCOUNT]: stored session was rejected, signing in again:', error);
-			await this.#signInAgain();
+			const delay = VERIFY_RETRY_MS[attempt];
+			if (delay === undefined) {
+				console.warn('[ACCOUNT]: could not verify the stored session, giving up:', error);
+				return;
+			}
+
+			console.warn(
+				`[ACCOUNT]: could not verify the stored session, retrying in ${delay} ms:`,
+				error
+			);
+			setTimeout(() => void this.#verifyStoredSession(attempt + 1), delay);
 		}
 	}
 

@@ -75,6 +75,14 @@ export class Boot {
 	/** Route to open after the splash, when a reload started on another page. */
 	returnTo: string | null = null;
 
+	constructor() {
+		// The session reused at boot was rejected after the UI opened: start over, so the
+		// account phase tries the password and the backup and ends on the sign-in screen.
+		account.onSessionLost(() => {
+			window.location.assign('/splashscreen');
+		});
+	}
+
 	/** Called by the splashscreen once boot is ready. */
 	async dismissSplash(): Promise<void> {
 		if (this.phase !== 'ready') {
