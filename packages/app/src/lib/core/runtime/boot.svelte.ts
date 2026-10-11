@@ -79,7 +79,7 @@ export class Boot {
 		// The session reused at boot was rejected after the UI opened: start over, so the
 		// account phase tries the password and the backup and ends on the sign-in screen.
 		account.onSessionLost(() => {
-			window.location.assign('/splashscreen');
+			void settings.flush().finally(() => window.location.assign('/splashscreen'));
 		});
 	}
 
