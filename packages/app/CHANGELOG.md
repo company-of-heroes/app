@@ -1,5 +1,43 @@
 # @company-of-heroes/app
 
+## 0.72.0
+
+- fix; wiki shows the guns of HMG and mortar teams, Tank Busters, Assault Grenadiers, the Crocodile, Calliope, Hetzer and halftracks, and links research weapons (BAR, 76mm, APCR, Ranger bazookas) to their units
+- enhance; player profile and dashboard headers use the new hero layout with a stat strip, like the tournament pages; player labels (Staff, Streamer, …) use the shared badge style everywhere; admin label and notification lists use the regular tables
+- feat; copy button next to every Steam ID
+- enhance; the dashboard profile shows your rewards under the bio (unlocked ones, and locked ones with your progress) for the Steam account you are viewing
+- feat; staff and tournament hosts can drag players to change the seeding, and drag players onto each other in a running bracket to swap them (unplayed matches only)
+- feat; staff and tournament hosts can generate the bracket during seeding, swap players in it and start the tournament with it later; only they see it until the start
+- enhance; wiki weapon target table shows ×1 instead of a dash where a weapon has no modifier against an armour type
+- fix; wiki reinforce costs of team weapons, emplacement and glider prices, Panzer Elite tech tiers, duplicate doctrine abilities and weapon names are corrected
+- enhance; faster data loading across the app
+- feat; staff and tournament hosts can delete a tournament (hidden from the public, they can still open and restore it)
+- fix; wiki no longer lists what multiplayer never offers: the Eselschreck, Canadian Infantry, British Supply Yard and tank traps, the Panzer Elite bunker, singleplayer abilities and another faction's doctrine abilities
+- enhance; built-in maps in a tournament map pool link to their wiki page
+- feat; wiki shows who builds what, building and research prerequisites, the emplacements, mines and gliders doctrines unlock, abilities a doctrine pick grants, and medal reward units with a badge
+- enhance; show a live badge on the details of a match that is still being played
+- enhance; player search (website and desktop app) looks in stored players first (Relic only when nothing is found), sorts results by relevance and loads more while scrolling
+- feat; account rewards (comments, reputation, streaming, …) only show on your main Steam account, which you can change from the dashboard's account switcher in the app or under Steam accounts on the website's account page
+- feat; tournament hosts and staff can add players by Steam ID (also right in the create form) and remove them again, until the tournament starts
+- enhance; the Streamer badge is earned per Steam account: streaming time counts for the Steam account you play on, and only that account gets the badge
+- enhance; hovering a player name no longer opens a preview card, so label tooltips show without a popup in the way
+- fix; wiki no longer lists the Wehrmacht Light Field Howitzer, which is not available in multiplayer
+- fix; text-to-speech no longer shows ElevenLabs API key errors or turns itself off while StreamElements is the selected provider
+- enhance; wiki weapon stats show the distant band, aim, burst and reload ranges, per-range timing multipliers, rear penetration, targets a weapon cannot hit and area damage by distance from the impact
+- feat; reward condition "Ladder rank reached": the highest Relic rank (up to 20) a Steam ID reached in automatch 1v1 to 4v4, per faction and/or mode
+- enhance; delete, remove and other destructive buttons are red everywhere, and confirmations open in the same in-app dialog with a red confirm button for destructive actions
+- fix; show the British faction as Commonwealth instead of British Forces
+- feat; rewards can show one of 200 service ribbons (25 per faction plus 25 global ones, and ranked series with level 1 to 5 stars or pips, grouped in the picker) instead of an uploaded image, picked by staff in the rewards admin (ribbons another reward uses are marked "Already used"); on profiles ribbons are grouped under a small faction label (or "Global"), "Show details" opens the rewards wiki, and every ribbon carries its faction's edge stripes (US olive-white-blue, Wehrmacht black-white-red, British khaki-red, Panzer Elite black-rose, global gold)
+- fix; wiki upgrade popovers show the faction of the page instead of US Forces for upgrades several factions share (Wehrmacht phases)
+- fix; wiki no longer lists the Tiger twice under Wehrmacht call-ins and the Blitzkrieg doctrine (the Voss Tiger medal reward is the same tank)
+- fix; player profiles no longer jump while loading: header, tournament titles, rewards and stats appear in one go
+- enhance; replay comments moved from below the overview to their own Comments tab, which shows the comment count
+- enhance; the champion medal picker marks medals another tournament already uses as "Already used"
+- fix; wiki and stats popovers no longer count the gun as a squad member of team weapons (Pak 38, 57mm, 17 Pounder, 88mm Flak, Bofors, howitzers, Nebelwerfer now show 3 crew)
+- feat; keybindings can send a sequence of keys to the game, including repeats (R → R R R Tab R)
+- feat; labels can have a tooltip, and labels marked "unlock automatically" (Veteran) are given to every player with rank 20 on two 1v1/2v2 ladders, in any mix of mode and faction
+- feat; the wiki (units, buildings, commanders, weapons and maps, with staff tips and issue reports) is now in the desktop app, and a new rewards wiki page lists every ribbon per faction with what unlocks it, including a player's unlocks and your own progress
+
 ## 0.71.0
 
 - feat; tournaments with a banner, logo and map pool (including custom maps), single elimination, double elimination and round robin brackets, sign-up, seeding by ELO, plus a champion medal (picked by staff) on the winner's player profile, a replays tab with every game once the tournament is finished, and tournament games: deadlines per round with warnings, "Start tournament game" on the app dashboard, games hidden until the tournament ends, automatic results with a celebration popup, a popup when a tournament you play in starts, an Updates tab with staff posts and automatic updates (rule changes, disqualifications, deadlines, start, finish, cancel) that notify every participant in the app and on Windows, personal notices (signed up, starts soon, next match ready, staff result, knocked out, final place), a step-by-step guide for participants, opponent Steam links, "Report a problem" for matches, problem reports that staff resolve or dismiss with a note for the player, rules acceptance at sign-up and after rule changes, registration that closes automatically, proposing and accepting match times with a reminder, a stream link, featured match and LIVE markers, statistics and a hall of fame for finished tournaments, a notification bell on the website, community tournament hosts (players request the host role, staff approve it, hosts create and run their own tournaments), overdue notices for staff, and running or open tournaments on the website home page and app dashboard
