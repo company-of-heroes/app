@@ -7,6 +7,19 @@ export type HeadToHeadMatchup = {
 	losses: number;
 };
 export type HeadToHeadMode = { matchtypeId: number; wins: number; losses: number };
+/** One game behind the record, from the user's side. */
+export type HeadToHeadGame = {
+	/** The user's own lobby (for the match link). */
+	lobbyId: string;
+	sessionId: number;
+	won: boolean;
+	raceId: number | null;
+	theirRaceId: number | null;
+	matchtypeId: number | null;
+	map: string;
+	/** `lobbies.createdAt` of `lobbyId`; `null` until loaded or when missing. */
+	createdAt: string | null;
+};
 export type HeadToHead = {
 	profileId: number;
 	matchCount: number;
@@ -15,6 +28,8 @@ export type HeadToHead = {
 	lastSessionId: number | null;
 	byMatchup: HeadToHeadMatchup[];
 	byMode: HeadToHeadMode[];
+	/** Newest first (by session id), at most `GAME_LIMIT`. */
+	games: HeadToHeadGame[];
 };
 
 /** One `lobby_player_index` row (of the user or of the other player). */
@@ -26,9 +41,11 @@ export type HeadToHeadRow = {
 	outcome: number | null;
 	race_id: number | null;
 	matchtype_id: number | null;
+	map: string;
 };
 
-export const ROW_FIELDS = 'id,lobby,session_id,profile_id,outcome,race_id,matchtype_id';
+export const ROW_FIELDS = 'id,lobby,session_id,profile_id,outcome,race_id,matchtype_id,map';
+export const GAME_LIMIT = 100;
 
 type WinLoss = { wins: number; losses: number };
 
@@ -40,7 +57,8 @@ export function emptyHeadToHead(profileId: number): HeadToHead {
 		losses: 0,
 		lastSessionId: null,
 		byMatchup: [],
-		byMode: []
+		byMode: [],
+		games: []
 	};
 }
 
@@ -99,6 +117,7 @@ export function summarizeHeadToHead(
 	const summary = emptyHeadToHead(profileId);
 	const matchups = new Map<string, HeadToHeadMatchup>();
 	const modes = new Map<number, HeadToHeadMode>();
+	const games: HeadToHeadGame[] = [];
 	for (const [sessionId, me] of perSession(mine)) {
 		const them = theirSessions.get(sessionId);
 		if (!them || me.profile_id === them.profile_id || !isOpponent(me, them)) {
@@ -114,6 +133,16 @@ export function summarizeHeadToHead(
 			}
 		};
 		count(summary);
+		games.push({
+			lobbyId: me.lobby,
+			sessionId,
+			won,
+			raceId: me.race_id,
+			theirRaceId: them.race_id,
+			matchtypeId: me.matchtype_id,
+			map: me.map ?? '',
+			createdAt: null
+		});
 		summary.lastSessionId = Math.max(summary.lastSessionId ?? 0, sessionId);
 		if (isRace(me.race_id) && isRace(them.race_id)) {
 			const key = `${me.race_id}:${them.race_id}`;
@@ -142,6 +171,7 @@ export function summarizeHeadToHead(
 		...summary,
 		matchCount: summary.wins + summary.losses,
 		byMatchup: [...matchups.values()].sort(byGames),
-		byMode: [...modes.values()].sort(byGames)
+		byMode: [...modes.values()].sort(byGames),
+		games: games.sort((a, b) => b.sessionId - a.sessionId).slice(0, GAME_LIMIT)
 	};
 }

@@ -1,6 +1,7 @@
 import { okAsync, ResultAsync } from 'neverthrow';
 import { cached } from '../cache';
-import { all, fromPb, type Task } from '../result';
+import { anyOfChunks } from '../pb';
+import { all, fromPb, sequence, type Task } from '../result';
 import {
 	emptyHeadToHead,
 	ROW_FIELDS,
@@ -16,6 +17,28 @@ const TARGET_LIMIT = 16;
 type Identity = { key: string; filter: string };
 
 export class HeadToHeadService extends Service {
+	/** Fills each game's `createdAt` from its lobby; a lobby that is gone keeps `null`. */
+	private withDates(summary: HeadToHead): Task<HeadToHead> {
+		const ids = [...new Set(summary.games.map((game) => game.lobbyId))];
+		return sequence(anyOfChunks(ids.map((id) => this.pb.filter('id = {:id}', { id }))), (filter) =>
+			fromPb(
+				this.pb
+					.collection('lobbies')
+					.getFullList<{ id: string; createdAt: string }>({ filter, fields: 'id,createdAt' }),
+				'Could not load head to head'
+			)
+		).map((pages) => {
+			const dates = new Map(pages.flat().map((lobby) => [lobby.id, lobby.createdAt]));
+			return {
+				...summary,
+				games: summary.games.map((game) => ({
+					...game,
+					createdAt: dates.get(game.lobbyId) ?? null
+				}))
+			};
+		});
+	}
+
 	private rowsFor(identity: string): Task<HeadToHeadRow[]> {
 		return ResultAsync.combine([
 			fromPb(
@@ -78,10 +101,10 @@ export class HeadToHeadService extends Service {
 			const myRows = () => (mine ??= this.rowsFor(identity.filter));
 			return all(
 				targets.map((id) =>
-					cached(`h2h:${identity.key}:${id}`, CACHE_SECONDS, () =>
-						all([myRows(), this.rowsFor(this.pb.filter('profile_id = {:id}', { id }))]).map(
-							([m, t]) => summarizeHeadToHead(id, m, t)
-						)
+					cached(`h2h:v2:${identity.key}:${id}`, CACHE_SECONDS, () =>
+						all([myRows(), this.rowsFor(this.pb.filter('profile_id = {:id}', { id }))])
+							.map(([m, t]) => summarizeHeadToHead(id, m, t))
+							.andThen((summary) => this.withDates(summary))
 					)
 				)
 			).map((summaries) =>

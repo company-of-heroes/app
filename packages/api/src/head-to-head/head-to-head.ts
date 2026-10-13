@@ -16,6 +16,19 @@ export type HeadToHeadMode = {
 	losses: number;
 };
 
+/** One game behind the record, from the user's side. */
+export type HeadToHeadGame = {
+	/** The user's own lobby (for the match link). */
+	lobbyId: string;
+	sessionId: number;
+	won: boolean;
+	raceId: number | null;
+	theirRaceId: number | null;
+	matchtypeId: number | null;
+	map: string;
+	createdAt: string | null;
+};
+
 export type HeadToHead = {
 	profileId: number;
 	matchCount: number;
@@ -24,6 +37,8 @@ export type HeadToHead = {
 	lastSessionId: number | null;
 	byMatchup: HeadToHeadMatchup[];
 	byMode: HeadToHeadMode[];
+	/** Newest first, at most 100. */
+	games: HeadToHeadGame[];
 };
 
 export const emptyHeadToHead = (profileId: number): HeadToHead => ({
@@ -33,11 +48,23 @@ export const emptyHeadToHead = (profileId: number): HeadToHead => ({
 	losses: 0,
 	lastSessionId: null,
 	byMatchup: [],
-	byMode: []
+	byMode: [],
+	games: []
 });
 
 const CACHE_TTL_MS = 60_000;
 const headToHeadCache = new Map<string, { at: number; value: HeadToHead }>();
+
+const gameSchema = z.object({
+	lobbyId: z.string(),
+	sessionId: z.number(),
+	won: z.boolean(),
+	raceId: z.number().nullable(),
+	theirRaceId: z.number().nullable(),
+	matchtypeId: z.number().nullable(),
+	map: z.string(),
+	createdAt: z.string().nullable()
+});
 
 const headToHeadSchema: z.ZodType<HeadToHead> = z.object({
 	profileId: z.number(),
@@ -59,7 +86,9 @@ const headToHeadSchema: z.ZodType<HeadToHead> = z.object({
 			wins: z.number(),
 			losses: z.number()
 		})
-	)
+	),
+	// An older server has no `games`.
+	games: z.array(gameSchema).default([])
 });
 
 const responseSchema = z.record(z.string(), headToHeadSchema);
