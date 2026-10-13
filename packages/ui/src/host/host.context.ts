@@ -18,6 +18,7 @@ import type { DocsNote } from '../docs/types';
 import type { Medal } from '../tournament/medal';
 import type { Ribbon } from '../reward/ribbon';
 import type { HostNotification } from '../notifications/types';
+import type { HeadToHead } from '../head-to-head/types';
 import type {
 	HallOfFame,
 	MyTournamentHostRequest,
@@ -216,6 +217,8 @@ export type HostApi = {
 		getStats: (
 			id: string
 		) => Promise<{ leaderboardStats: LeaderboardStat[]; elo: PlayerEloMap } | null>;
+		/** The signed-in user's record against these Relic profiles, keyed by profile id. */
+		headToHead: (profileIds: number[]) => Promise<Record<number, HeadToHead>>;
 	};
 	social: {
 		getMyVote: (target: LikeTarget) => Promise<CommentVoteValue>;

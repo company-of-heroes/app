@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
+	import { resource } from 'runed';
 	import { formatRelative } from '../format/date';
 	import { useHost } from '../host/host.context';
 	import * as Tabs from '../ui/tabs';
@@ -11,6 +12,7 @@
 	import PlayerStatsTable from './player-stats-table.svelte';
 	import PlayerPerformancePanel from '../player-performance/player-performance-panel.svelte';
 	import TournamentTrophies from '../tournament/tournament-trophies.svelte';
+	import HeadToHeadPanel from '../head-to-head/head-to-head-panel.svelte';
 
 	type Props = {
 		player: PlayerPageData;
@@ -49,6 +51,14 @@
 	const showAvatars = $derived(
 		player.matchHistory.some((match) => match.players.some((p) => Boolean(p.avatarUrl)))
 	);
+	const showHeadToHead = $derived(
+		!!host.auth.user && !host.auth.isSelf(player.steamId, player.profileId)
+	);
+	// Only fetched once the tab is opened.
+	const headToHead = resource(
+		() => (showHeadToHead && tab === 'head-to-head' ? player.profileId : null),
+		async (id) => (id ? ((await host.api.players.headToHead([id]))[id] ?? null) : null)
+	);
 </script>
 
 <div class="border-secondary-900 overflow-clip border-b">
@@ -59,6 +69,9 @@
 			<Tabs.Trigger value="stats">{t('Stats')}</Tabs.Trigger>
 			<Tabs.Trigger value="performance">{t('Performance')}</Tabs.Trigger>
 			<Tabs.Trigger value="match-history">{t('Match history')}</Tabs.Trigger>
+			{#if showHeadToHead}
+				<Tabs.Trigger value="head-to-head">{t('Head to head')}</Tabs.Trigger>
+			{/if}
 			{@render extraTabs?.()}
 		</Tabs.List>
 		<div class="border-secondary-800 border-t">
@@ -77,6 +90,16 @@
 					<PlayerMatchHistorySkeleton />
 				{:else}
 					<PlayerMatchHistory {player} {showAvatars} {matchActions} />
+				{/if}
+			</Tabs.Content>
+			<Tabs.Content value="head-to-head">
+				{#if showHeadToHead && tab === 'head-to-head'}
+					<HeadToHeadPanel
+						record={headToHead.current ?? null}
+						alias={player.alias}
+						loading={headToHead.loading}
+						error={!!headToHead.error}
+					/>
 				{/if}
 			</Tabs.Content>
 			{@render extraTabContent?.()}
