@@ -8,6 +8,7 @@ import { CompatService } from './compat';
 import { DevSeedService } from './dev-seed';
 import { DevTournamentSimService } from './dev-tournament-sim';
 import { DocsService } from './docs';
+import { HeadToHeadService } from './head-to-head';
 import { HiddenMatchesService } from './hidden-matches';
 import { LabelAutoService } from './label-auto';
 import { LeaderboardService } from './leaderboard';
@@ -123,6 +124,10 @@ export class Services {
 
 	get docs() {
 		return this.#get('docs', DocsService);
+	}
+
+	get headToHead() {
+		return this.#get('headToHead', HeadToHeadService);
 	}
 
 	get hiddenMatches() {
