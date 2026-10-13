@@ -75,7 +75,8 @@ export function provideLocalHost(): HostContext {
 				getPreview: async () => null,
 				search: async () => [],
 				getElo: async () => ({}),
-				getStats: async () => null
+				getStats: async () => null,
+				headToHead: async () => ({})
 			},
 			social: {
 				getMyVote: async () => 0,

@@ -11,6 +11,7 @@ import { api, unwrapApi } from '$core/api';
 import { app } from '$core/app/context';
 import { SITE_URL } from '$core/site/urls';
 import { findCompanionUserBySteamId, readMetaVersion } from '$core/pocketbase/companion-user';
+import { getHeadToHead } from '$core/pocketbase/head-to-head';
 import { findHiddenMatch, hideMatch, unhideMatch } from '$core/pocketbase/hidden-matches';
 import { invalidateHiddenMatchFilters } from '$lib/player/hidden-matches-cache';
 import { useBreadcrumbs } from '$lib/components/ui/breadcrumb';
@@ -154,7 +155,9 @@ export function provideAppHost(): HostContext {
 						profileId: player.profileId || null
 					}));
 				},
-				searchPage: (query, page) => unwrapApi(api.players.searchPage(query, page))
+				searchPage: (query, page) => unwrapApi(api.players.searchPage(query, page)),
+				headToHead: (profileIds) =>
+					getHeadToHead(profileIds, app.game.profile?.relic.profile_id ?? null)
 			},
 			social: {
 				getMyVote: ({ kind, id }) => {

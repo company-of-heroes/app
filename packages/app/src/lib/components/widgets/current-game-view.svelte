@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { SmurfAlert } from '@company-of-heroes/ui/player';
+	import { HeadToHeadChip } from '@company-of-heroes/ui/head-to-head';
+	import type { HeadToHead } from '@company-of-heroes/ui/head-to-head/types';
 	import { toPlayerSmurf } from '$lib/player/page-data';
 	import type { LobbyPlayer } from '@fknoobs/app';
 	import type { Match } from '$core/game/lobby';
@@ -26,6 +28,8 @@
 	} from '$lib/utils/game';
 	import { loadSmurfAlert, type SmurfAlertState } from '$lib/player/smurf';
 	import { loadCheaterSteamIds } from '$core/pocketbase/anti-cheat';
+	import { getHeadToHead } from '$core/pocketbase/head-to-head';
+	import { account } from '$core/account';
 	import { getEloColor, getEloTextShadow } from '$lib/components/leaderboard/leaderboard-utils';
 	import { app } from '$core/app/context';
 	import { resource } from 'runed';
@@ -126,6 +130,36 @@
 		() => loadSmurfs(humans)
 	);
 	const smurfs = $derived(smurfAlerts.current);
+	const opponentIds = $derived.by(() => {
+		if (lobby.isReplay || !account.isAuthenticated) {
+			return [] as number[];
+		}
+
+		const ids = humans
+			.filter((player) => !isHighlightedPlayer(player, highlightPlayerId))
+			.map((player) => getPlayerProfileId(player))
+			.filter((id): id is number => id != null && id > 0 && id !== highlightPlayerId);
+		return [...new Set(ids)].sort((a, b) => a - b);
+	});
+	// A string key, so a lobby update with the same opponents does not refetch.
+	const headToHeadKey = $derived(opponentIds.join(','));
+	const headToHead = resource(
+		() => headToHeadKey,
+		async (key) => {
+			if (!key) {
+				return {} as Record<number, HeadToHead>;
+			}
+
+			try {
+				return await getHeadToHead(
+					key.split(',').map(Number),
+					app.game.profile?.relic.profile_id ?? null
+				);
+			} catch {
+				return {} as Record<number, HeadToHead>;
+			}
+		}
+	);
 	const cheaters = resource(
 		() => ratingsKey,
 		(key) => loadCheaterSteamIds(key ? key.split(',') : [])
@@ -319,8 +353,12 @@
 	})}
 	{#if lobbyPlayer}
 		{@const smurf = args.profileId != null && smurfs ? smurfs[args.profileId] : undefined}
+		{@const h2h = args.profileId != null ? headToHead.current?.[args.profileId] : undefined}
 		<PlayerUi.Root player={lobbyPlayer} race={lobbyPlayer.race}>
 			<PlayerUi.Labels class="shrink-0" />
+			{#if h2h && h2h.matchCount > 0 && !isHighlightedPlayer(lobbyPlayer, highlightPlayerId)}
+				<HeadToHeadChip record={h2h} alias={args.name} />
+			{/if}
 			{#if smurf?.status === 'shared'}
 				{@const shared = toPlayerSmurf(smurf)}
 				{#if shared}

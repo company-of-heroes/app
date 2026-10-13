@@ -82,6 +82,7 @@ import {
 	saveProfileCustomization
 } from '$lib/remote/profile-customization.remote';
 import { pickOwnedSteamId } from '@company-of-heroes/api';
+import { getHeadToHead } from '$lib/remote/head-to-head.remote';
 import { getPlayerElo, getPlayerPreview, getPlayerStats } from '$lib/remote/player-preview.remote';
 import { searchPlayers } from '$lib/remote/players.remote';
 import {
@@ -276,7 +277,8 @@ export function provideWebsiteHost(): HostContext {
 				search: (q) => searchPlayersForUpload({ q }),
 				searchPage: (q, page) => searchPlayers({ q, page }),
 				getElo: (steamId) => getPlayerElo(steamId),
-				getStats: (id) => getPlayerStats(id)
+				getStats: (id) => getPlayerStats(id),
+				headToHead: (profileIds) => getHeadToHead({ profileIds })
 			},
 			social: {
 				getMyVote: ({ kind, id }) =>
