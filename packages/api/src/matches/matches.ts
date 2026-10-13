@@ -5,6 +5,7 @@ import { type ApiDeps, normalizeBaseUrl, resolveAuthHeaders, sendV1, v1Base } fr
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import { fromPbPromise, pbOptions, requireAuth } from '../pb';
+import type { CommunityMatch } from '../replays/replays';
 
 export type FilterOperator = 'gt' | 'gte' | 'lt' | 'lte';
 export type HistorySortField = 'createdAt' | 'likeCount' | 'downloadCount' | 'commentCount';
@@ -293,6 +294,26 @@ export class MatchesApi {
 
 			return ok(parsed.data);
 		});
+	}
+
+	/**
+	 * History rows of these lobbies (signed-in user, at most 100), in the order asked.
+	 * Same rows as `/match-history`, read as list rows like `ReplaysApi.getHistory`.
+	 */
+	getHistoryRowsByIds(ids: string[]): ResultAsync<CommunityMatch[], ApiError> {
+		if (ids.length === 0) {
+			return okAsync([]);
+		}
+
+		const params = new URLSearchParams({ ids: ids.join(',') });
+		return fromPbPromise(
+			sendV1<{ items?: CommunityMatch[] }>(
+				this.deps,
+				`/match-history/by-ids?${params.toString()}`,
+				{ timeoutMs: 30_000 }
+			),
+			'Failed to load match history.'
+		).map((response) => response.items ?? []);
 	}
 
 	searchHistoryPlayers(

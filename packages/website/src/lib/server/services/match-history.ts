@@ -215,19 +215,25 @@ export class MatchHistoryService extends Service {
 		});
 	}
 
-	private recordsByIds(ids: string[]): Task<LobbyListRecord[]> {
+	/** Lobbies by id, in the order of `ids`; `scope` is ANDed onto each id chunk. */
+	private recordsByIds(ids: string[], scope = ''): Task<LobbyListRecord[]> {
 		if (ids.length === 0) {
 			return okAsync([]);
 		}
 
 		const order = new Map(ids.map((id, i) => [id, i]));
-		return fromPb(
-			this.lobbies.getFullList<LobbyListRecord>({
-				filter: ids.map((id) => this.pb.filter('id = {:id}', { id })).join(' || '),
-				fields: HISTORY_ROW_FIELDS
-			}),
-			'Could not load matches'
-		).map((records) => records.sort((a, b) => order.get(a.id)! - order.get(b.id)!));
+		const chunks = anyOfChunks(ids.map((id) => this.pb.filter('id = {:id}', { id })));
+		return ResultAsync.combine(
+			chunks.map((chunk) =>
+				fromPb(
+					this.lobbies.getFullList<LobbyListRecord>({
+						filter: scope ? `(${chunk}) && ${scope}` : chunk,
+						fields: HISTORY_ROW_FIELDS
+					}),
+					'Could not load matches'
+				)
+			)
+		).map((batches) => batches.flat().sort((a, b) => order.get(a.id)! - order.get(b.id)!));
 	}
 
 	private lobbyIdsOf(indexFilter: string): Task<string[]> {
@@ -402,19 +408,36 @@ export class MatchHistoryService extends Service {
 								scope.kind === 'user' ? scope.userId : ''
 							)
 				)
-				.andThen(({ records, total }) => {
-					const rows = oneLobbyPerSession(records).map(toHistoryRow);
-					return this.loadRawPlayers(rowsNeedingRawPlayers(rows)).map((raw) => {
-						attachPlayerStats(rows, raw);
-						return {
-							page: input.page,
-							perPage: input.perPage,
-							totalItems: total,
-							totalPages: total > 0 ? Math.ceil(total / input.perPage) : 0,
-							items: rows
-						};
-					});
-				});
+				.andThen(({ records, total }) =>
+					this.toRows(oneLobbyPerSession(records)).map((rows) => ({
+						page: input.page,
+						perPage: input.perPage,
+						totalItems: total,
+						totalPages: total > 0 ? Math.ceil(total / input.perPage) : 0,
+						items: rows
+					}))
+				);
+		});
+	}
+
+	/** History rows of these lobbies (at most 100), in the order of `ids`; hidden ones only for staff. */
+	rowsByIds(ids: string[], viewer: HistoryViewer): Task<HistoryRow[]> {
+		if (!viewer) {
+			return errAsync(signInError());
+		}
+
+		const unique = [...new Set(ids)].slice(0, 100);
+		return this.recordsByIds(unique, viewer.isStaff ? '' : 'isHidden = false').andThen((records) =>
+			this.toRows(records)
+		);
+	}
+
+	/** List rows of lobby records, with ladder stats from the raw players where rows lack them. */
+	private toRows(records: LobbyListRecord[]): Task<HistoryRow[]> {
+		const rows = records.map(toHistoryRow);
+		return this.loadRawPlayers(rowsNeedingRawPlayers(rows)).map((raw) => {
+			attachPlayerStats(rows, raw);
+			return rows;
 		});
 	}
 
@@ -423,13 +446,15 @@ export class MatchHistoryService extends Service {
 			return okAsync(new Map());
 		}
 
-		return fromPb(
-			this.lobbies.getFullList<RawLobby>({
-				filter: ids.map((id) => this.pb.filter('id = {:id}', { id })).join(' || '),
-				fields: 'id,players,result,isRanked'
-			}),
-			'Could not load matches'
-		).map((records) => new Map(records.map((record) => [record.id, record])));
+		const chunks = anyOfChunks(ids.map((id) => this.pb.filter('id = {:id}', { id })));
+		return ResultAsync.combine(
+			chunks.map((filter) =>
+				fromPb(
+					this.lobbies.getFullList<RawLobby>({ filter, fields: 'id,players,result,isRanked' }),
+					'Could not load matches'
+				)
+			)
+		).map((batches) => new Map(batches.flat().map((record) => [record.id, record])));
 	}
 
 	/**

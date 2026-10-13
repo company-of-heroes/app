@@ -11,7 +11,7 @@ import type {
 	PlayerPreviewData,
 	PlayerSearchPage
 } from '../player/types';
-import type { CommunityMatchDetail, MatchResultPlayer } from '../replay/types';
+import type { CommunityMatch, CommunityMatchDetail, MatchResultPlayer } from '../replay/types';
 import type { PlayerRewards } from '../reward/types';
 import type { DocKind } from '@company-of-heroes/game-data/types';
 import type { DocsNote } from '../docs/types';
@@ -219,6 +219,8 @@ export type HostApi = {
 		) => Promise<{ leaderboardStats: LeaderboardStat[]; elo: PlayerEloMap } | null>;
 		/** The signed-in user's record against these Relic profiles, keyed by profile id. */
 		headToHead: (profileIds: number[]) => Promise<Record<number, HeadToHead>>;
+		/** History rows of the games behind a record (`HeadToHeadGame.lobbyId`), in that order. */
+		headToHeadMatches: (lobbyIds: string[]) => Promise<CommunityMatch[]>;
 	};
 	social: {
 		getMyVote: (target: LikeTarget) => Promise<CommentVoteValue>;

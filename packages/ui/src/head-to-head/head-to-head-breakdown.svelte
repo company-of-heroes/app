@@ -9,9 +9,12 @@
 		tableHeadRow
 	} from '@company-of-heroes/ui/variants';
 	import CaretRightIcon from 'phosphor-svelte/lib/CaretRightIcon';
+	import { resource } from 'runed';
 	import { getModeLabel, getRaceLabel, getRatioColor, winrate } from '../format/player-format';
 	import { useHost } from '../host/host.context';
-	import HeadToHeadGames from './head-to-head-games.svelte';
+	import ReplayList from '../replay/replay-list.svelte';
+	import ReplayListSkeleton from '../replay/replay-list-skeleton.svelte';
+	import type { CommunityMatch } from '../replay/types';
 	import type { HeadToHead } from './types';
 
 	type Props = {
@@ -26,9 +29,22 @@
 
 	// One row open at a time, across both sections.
 	let expanded = $state<string | null>(null);
+	let opened = $state(false);
 
 	function toggle(key: string) {
 		expanded = expanded === key ? null : key;
+		opened = true;
+	}
+
+	// Every game's row, loaded once on the first expand and shared by all rows.
+	const matches = resource(
+		() => (opened ? record.games.map((game) => game.lobbyId).join(',') : null),
+		async (ids) => (ids ? await host.api.players.headToHeadMatches(ids.split(',')) : [])
+	);
+	const matchById = $derived(new Map((matches.current ?? []).map((match) => [match.id, match])));
+
+	function matchesOf(games: HeadToHead['games']): CommunityMatch[] {
+		return games.flatMap((game) => matchById.get(game.lobbyId) ?? []);
 	}
 </script>
 
@@ -43,9 +59,28 @@
 {/snippet}
 
 {#snippet detail(games: HeadToHead['games'])}
+	<!-- The list has no bottom line of its own; the cell closes it. -->
 	<tr>
 		<td colspan={5} class="border-secondary-800 border-b p-0">
-			<HeadToHeadGames {games} />
+			<!-- w-0 keeps the list's width out of the stat columns; it scrolls on its own. -->
+			<div class="w-0 min-w-full">
+				{#if matches.error}
+					<p class="text-secondary-400 px-4 py-3 text-sm">{t('Could not load replays.')}</p>
+				{:else if matches.loading || matches.current === undefined}
+					<ReplayListSkeleton rowCount={Math.min(games.length, 10)} />
+				{:else}
+					<ReplayList
+						matches={matchesOf(games)}
+						meSteamIds={host.auth.user?.steamIds ?? []}
+						highlightedPlayers={[String(record.profileId)]}
+						sort="createdAt"
+						sortDir="desc"
+						onSort={() => {}}
+						mapLabel={t('Map')}
+						emptyMessage={t('No matches found.')}
+					/>
+				{/if}
+			</div>
 		</td>
 	</tr>
 {/snippet}
