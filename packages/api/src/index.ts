@@ -210,6 +210,15 @@ export {
 	type PlayerPerformance
 } from './player-performance';
 
+export {
+	HeadToHeadApi,
+	emptyHeadToHead,
+	invalidateHeadToHeadCache,
+	type HeadToHead,
+	type HeadToHeadMatchup,
+	type HeadToHeadMode
+} from './head-to-head';
+
 export { CompanionApi, readMetaVersion, type CompanionUser } from './companion';
 
 export {

@@ -26,6 +26,7 @@
 		"./rewards": "./src/rewards/index.ts",
 		"./docs": "./src/docs/index.ts",
 		"./player-performance": "./src/player-performance/index.ts",
+		"./head-to-head": "./src/head-to-head/index.ts",
 		"./companion": "./src/companion/index.ts",
 		"./tournaments": "./src/tournaments/index.ts"
 	},
