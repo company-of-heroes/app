@@ -56,5 +56,5 @@
 			{winrate(record.wins, record.losses)}
 		</span>
 	</div>
-	<HeadToHeadBreakdown {record} />
+	<HeadToHeadBreakdown {record} expandable />
 {/if}

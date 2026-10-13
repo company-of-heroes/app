@@ -6,4 +6,4 @@
 '@company-of-heroes/i18n': patch
 ---
 
-feat; head to head record against lobby opponents and on player profiles
+feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup

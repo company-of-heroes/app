@@ -2473,5 +2473,7 @@
 	"Shown when hovering the label. Leave empty for no tooltip.": "Se muestra al pasar el ratón sobre la etiqueta. Déjalo vacío para no mostrar nada.",
 	"Reached rank 20 on two 1v1 or 2v2 ladders": "Alcanzó el rango 20 en dos clasificaciones 1v1 o 2v2",
 	"Unlock automatically: rank 20 on two 1v1/2v2 ladders": "Desbloquear automáticamente: rango 20 en dos clasificaciones 1v1/2v2",
-	"Automatic: rank 20 on two 1v1/2v2 ladders": "Automática: rango 20 en dos clasificaciones 1v1/2v2"
+	"Automatic: rank 20 on two 1v1/2v2 ladders": "Automática: rango 20 en dos clasificaciones 1v1/2v2",
+	"You vs {alias}": "Tú vs {alias}",
+	"No games yet": "Aún sin partidas"
 }

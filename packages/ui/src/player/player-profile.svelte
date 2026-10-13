@@ -60,15 +60,23 @@
 			tab = 'stats';
 		}
 	});
-	// Only fetched once the tab is opened.
+	// Loaded with the profile: the header shows the record too.
 	const headToHead = resource(
-		() => (showHeadToHead && tab === 'head-to-head' ? player.profileId : null),
+		() => (showHeadToHead ? player.profileId : null),
 		async (id) => (id ? ((await host.api.players.headToHead([id]))[id] ?? null) : null)
 	);
 </script>
 
 <div class="border-secondary-900 overflow-clip border-b">
-	<PlayerProfileHeader {player} {actions} {heroLoading} {factsLoading} />
+	<PlayerProfileHeader
+		{player}
+		{actions}
+		{heroLoading}
+		{factsLoading}
+		headToHead={showHeadToHead ? (headToHead.current ?? null) : null}
+		headToHeadLoading={showHeadToHead && headToHead.loading}
+		onHeadToHead={() => (tab = 'head-to-head')}
+	/>
 	<TournamentTrophies steamId={player.steamId} tournaments={player.tournaments} />
 	<Tabs.Root bind:value={tab} class="border-secondary-800 border-b">
 		<Tabs.List class="px-4">

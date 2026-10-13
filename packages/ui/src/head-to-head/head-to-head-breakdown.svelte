@@ -1,18 +1,54 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
-	import { factionIcon, statLosses, statWins, tableHeadRow } from '@company-of-heroes/ui/variants';
+	import { cn } from '@company-of-heroes/ui/cn';
+	import {
+		factionIcon,
+		interactive,
+		statLosses,
+		statWins,
+		tableHeadRow
+	} from '@company-of-heroes/ui/variants';
+	import CaretRightIcon from 'phosphor-svelte/lib/CaretRightIcon';
 	import { getModeLabel, getRaceLabel, getRatioColor, winrate } from '../format/player-format';
 	import { useHost } from '../host/host.context';
+	import HeadToHeadGames from './head-to-head-games.svelte';
 	import type { HeadToHead } from './types';
 
 	type Props = {
 		record: HeadToHead;
+		/** Rows open the games behind them (too wide for the chip popover). */
+		expandable?: boolean;
 	};
 
-	let { record }: Props = $props();
+	let { record, expandable = false }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
+
+	// One row open at a time, across both sections.
+	let expanded = $state<string | null>(null);
+
+	function toggle(key: string) {
+		expanded = expanded === key ? null : key;
+	}
 </script>
+
+{#snippet caret(open: boolean)}
+	{#if expandable}
+		<CaretRightIcon
+			size={12}
+			weight="bold"
+			class={cn('text-secondary-500 shrink-0 transition-transform', open && 'rotate-90')}
+		/>
+	{/if}
+{/snippet}
+
+{#snippet detail(games: HeadToHead['games'])}
+	<tr>
+		<td colspan={5} class="border-secondary-800 border-b p-0">
+			<HeadToHeadGames {games} />
+		</td>
+	</tr>
+{/snippet}
 
 {#snippet statHeads(title: string)}
 	<tr class={tableHeadRow}>
@@ -56,9 +92,14 @@
 			<tbody>
 				{@render statHeads(t('By matchup'))}
 				{#each record.byMatchup as row (`${row.raceId}-${row.theirRaceId}`)}
-					<tr class="border-secondary-800 border-b">
+					{@const key = `matchup-${row.raceId}-${row.theirRaceId}`}
+					<tr
+						class={cn('border-secondary-800 border-b', expandable && interactive)}
+						onclick={expandable ? () => toggle(key) : undefined}
+					>
 						<td class="max-w-0 px-4 py-1.5">
 							<div class="flex min-w-0 items-center gap-2">
+								{@render caret(expanded === key)}
 								{@render faction(row.raceId)}
 								<span class="text-secondary-500 shrink-0 text-xs">{t('vs')}</span>
 								{@render faction(row.theirRaceId)}
@@ -66,6 +107,13 @@
 						</td>
 						{@render statCells(row)}
 					</tr>
+					{#if expandable && expanded === key}
+						{@render detail(
+							record.games.filter(
+								(game) => game.raceId === row.raceId && game.theirRaceId === row.theirRaceId
+							)
+						)}
+					{/if}
 				{/each}
 			</tbody>
 		{/if}
@@ -73,10 +121,22 @@
 			<tbody>
 				{@render statHeads(t('By mode'))}
 				{#each record.byMode as row (row.matchtypeId)}
-					<tr class="border-secondary-800 border-b">
-						<td class="max-w-0 truncate px-4 py-1.5 text-white">{getModeLabel(row.matchtypeId)}</td>
+					{@const key = `mode-${row.matchtypeId}`}
+					<tr
+						class={cn('border-secondary-800 border-b', expandable && interactive)}
+						onclick={expandable ? () => toggle(key) : undefined}
+					>
+						<td class="max-w-0 px-4 py-1.5 text-white">
+							<div class="flex min-w-0 items-center gap-2">
+								{@render caret(expanded === key)}
+								<span class="min-w-0 truncate">{getModeLabel(row.matchtypeId)}</span>
+							</div>
+						</td>
 						{@render statCells(row)}
 					</tr>
+					{#if expandable && expanded === key}
+						{@render detail(record.games.filter((game) => game.matchtypeId === row.matchtypeId))}
+					{/if}
 				{/each}
 			</tbody>
 		{/if}

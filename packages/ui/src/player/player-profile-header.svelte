@@ -7,6 +7,7 @@
 	import IdentificationCardIcon from 'phosphor-svelte/lib/IdentificationCardIcon';
 	import MapTrifoldIcon from 'phosphor-svelte/lib/MapTrifoldIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
+	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import WarningIcon from 'phosphor-svelte/lib/WarningIcon';
 	import { formatDate } from '../format/date';
@@ -18,12 +19,14 @@
 		normalizeMapName,
 		winrate
 	} from '../format/player-format';
+	import type { HeadToHead } from '../head-to-head/types';
 	import { useHost } from '../host/host.context';
 	import LeaderboardStatPill from '../leaderboard/leaderboard-stat-pill.svelte';
 	import LikeButton from '../comment/like-button.svelte';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import { CopyButton } from '../ui/copy-button';
+	import { Skeleton } from '../ui/skeleton';
 	import type { PlayerPageData } from './types';
 	import PlayerFact from './player-fact.svelte';
 	import PlayerFacts from './player-facts.svelte';
@@ -48,6 +51,11 @@
 		heroLoading?: boolean;
 		/** Fact data (tracked stats, smurf check) still loading: shows its skeleton. */
 		factsLoading?: boolean;
+		/** Signed-in user's record against this player; `null` hides the fact. */
+		headToHead?: HeadToHead | null;
+		headToHeadLoading?: boolean;
+		/** Opens the head-to-head tab. */
+		onHeadToHead?: () => void;
 	};
 
 	let {
@@ -55,7 +63,10 @@
 		actions: actionsSnippet,
 		afterName,
 		heroLoading = false,
-		factsLoading = false
+		factsLoading = false,
+		headToHead = null,
+		headToHeadLoading = false,
+		onHeadToHead
 	}: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
@@ -105,6 +116,19 @@
 		(player.customization?.links ?? []).filter((link) => !isStreamingLink(link))
 	);
 </script>
+
+{#snippet headToHeadValue(record: HeadToHead)}
+	{#if record.matchCount > 0}
+		<span class={statWins}>{record.wins}W</span>
+		<span class="text-secondary-600">·</span>
+		<span class={statLosses}>{record.losses}L</span>
+		<LeaderboardStatPill type="ratio" wins={record.wins} losses={record.losses} streak={0} />
+	{:else}
+		<span class="text-secondary-400 font-sans text-sm font-normal whitespace-normal">
+			{t('No games yet')}
+		</span>
+	{/if}
+{/snippet}
 
 {#if heroLoading}
 	<PlayerHeroSkeleton />
@@ -216,6 +240,32 @@
 				<span class="text-secondary-400 font-sans text-sm font-normal whitespace-normal">
 					{emptyTrackedLabel}
 				</span>
+			</PlayerFact>
+		{/if}
+		{#if headToHeadLoading || headToHead}
+			<PlayerFact
+				label={t('Head to head')}
+				icon={SwordIcon}
+				sub={!headToHeadLoading && headToHead && headToHead.matchCount > 0
+					? `${t('You vs {alias}', { alias: player.alias })} · ${t('{count} games', { count: headToHead.matchCount })}`
+					: null}
+			>
+				{#if headToHeadLoading}
+					<Skeleton class="h-4 w-24" />
+				{:else if headToHead && onHeadToHead}
+					<button
+						type="button"
+						class={cn(
+							interactive,
+							'flex min-w-0 items-center gap-2 transition-opacity hover:opacity-80'
+						)}
+						onclick={onHeadToHead}
+					>
+						{@render headToHeadValue(headToHead)}
+					</button>
+				{:else if headToHead}
+					{@render headToHeadValue(headToHead)}
+				{/if}
 			</PlayerFact>
 		{/if}
 		<PlayerFact

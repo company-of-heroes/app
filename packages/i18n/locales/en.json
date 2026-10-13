@@ -2473,5 +2473,7 @@
 	"Shown when hovering the label. Leave empty for no tooltip.": "Shown when hovering the label. Leave empty for no tooltip.",
 	"Reached rank 20 on two 1v1 or 2v2 ladders": "Reached rank 20 on two 1v1 or 2v2 ladders",
 	"Unlock automatically: rank 20 on two 1v1/2v2 ladders": "Unlock automatically: rank 20 on two 1v1/2v2 ladders",
-	"Automatic: rank 20 on two 1v1/2v2 ladders": "Automatic: rank 20 on two 1v1/2v2 ladders"
+	"Automatic: rank 20 on two 1v1/2v2 ladders": "Automatic: rank 20 on two 1v1/2v2 ladders",
+	"You vs {alias}": "You vs {alias}",
+	"No games yet": "No games yet"
 }

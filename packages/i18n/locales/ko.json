@@ -2473,5 +2473,7 @@
 	"Shown when hovering the label. Leave empty for no tooltip.": "라벨에 마우스를 올리면 표시됩니다. 비워 두면 툴팁이 표시되지 않습니다.",
 	"Reached rank 20 on two 1v1 or 2v2 ladders": "1v1 또는 2v2 래더 두 곳에서 20랭크 달성",
 	"Unlock automatically: rank 20 on two 1v1/2v2 ladders": "자동 잠금 해제: 1v1/2v2 래더 두 곳에서 20랭크",
-	"Automatic: rank 20 on two 1v1/2v2 ladders": "자동: 1v1/2v2 래더 두 곳에서 20랭크"
+	"Automatic: rank 20 on two 1v1/2v2 ladders": "자동: 1v1/2v2 래더 두 곳에서 20랭크",
+	"You vs {alias}": "나 vs {alias}",
+	"No games yet": "아직 경기 없음"
 }
