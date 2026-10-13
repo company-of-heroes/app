@@ -54,6 +54,12 @@
 	const showHeadToHead = $derived(
 		!!host.auth.user && !host.auth.isSelf(player.steamId, player.profileId)
 	);
+	// The tab is persisted by the host; reset it when the head-to-head tab is not available.
+	$effect(() => {
+		if (!showHeadToHead && tab === 'head-to-head') {
+			tab = 'stats';
+		}
+	});
 	// Only fetched once the tab is opened.
 	const headToHead = resource(
 		() => (showHeadToHead && tab === 'head-to-head' ? player.profileId : null),

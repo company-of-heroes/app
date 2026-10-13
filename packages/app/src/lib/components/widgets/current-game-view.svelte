@@ -135,8 +135,10 @@
 			return [] as number[];
 		}
 
+		const myTeam = lobby.me?.team;
 		const ids = humans
 			.filter((player) => !isHighlightedPlayer(player, highlightPlayerId))
+			.filter((player) => myTeam == null || player.team !== myTeam)
 			.map((player) => getPlayerProfileId(player))
 			.filter((id): id is number => id != null && id > 0 && id !== highlightPlayerId);
 		return [...new Set(ids)].sort((a, b) => a - b);
