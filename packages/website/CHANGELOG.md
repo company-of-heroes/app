@@ -1,5 +1,9 @@
 # @company-of-heroes/website
 
+## 1.18.0
+
+- enhance; complete SEO: shared meta tags with Open Graph and Twitter cards on every page, structured data for players, tournaments and the wiki, server-rendered player page tags, noindex on account and editor pages, and a sitemap with players and tournaments
+
 ## 1.17.1
 
 - fix; hiding a tournament from the public is now saved
