@@ -21,7 +21,13 @@
 	);
 
 	// Keeps the previous result up while a toggle refetches, so the panels do not flash.
-	const compare = $derived(result.current);
+	const compare = $derived.by(() => {
+		const current = result.current;
+		const id = page.params.id;
+		const matches =
+			current && (current.them.steamId === id || String(current.them.profileId) === id);
+		return matches ? current : undefined;
+	});
 	const selected = $derived(
 		compare?.accounts.filter((account) => account.selected).map((account) => account.steamId) ?? []
 	);
@@ -47,13 +53,17 @@
 	]}
 />
 
-{#if compare?.isSelf}
+{#if result.error}
+	<div class="border-secondary-800 border-b px-4 py-6">
+		<p class="text-secondary-400 text-sm">{t('Could not load the comparison.')}</p>
+	</div>
+{:else if compare?.isSelf}
 	<div class="border-secondary-800 flex flex-col items-start gap-3 border-b px-4 py-6">
 		<h1 class="text-xl font-semibold text-white">{t('This is you')}</h1>
 		<p class="text-secondary-400 text-sm">
 			{t('You cannot compare yourself with your own account.')}
 		</p>
-		<Button href={host.routes.player(page.params.id!)}>{t('Back to profile')}</Button>
+		<Button href={host.routes.player(compare.them.steamId)}>{t('Back to profile')}</Button>
 	</div>
 {:else if compare}
 	<Compare.Root {compare} {selected} {onSelect}>
@@ -66,10 +76,6 @@
 			<Compare.Maps />
 		</div>
 	</Compare.Root>
-{:else if result.error}
-	<div class="border-secondary-800 border-b px-4 py-6">
-		<p class="text-secondary-400 text-sm">{t('Could not load the comparison.')}</p>
-	</div>
 {:else}
 	<Compare.Skeleton />
 {/if}
