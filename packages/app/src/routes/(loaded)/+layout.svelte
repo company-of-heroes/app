@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Nav from '$lib/components/ui/nav';
 	import { watch } from 'runed';
-	import { untrack } from 'svelte';
 	import { Label } from '$lib/components/ui/label';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import { app, createApp } from '$core/app/context';
@@ -110,26 +109,19 @@
 		}
 	};
 
-	// Redirect on match start from any loaded route (not only the dashboard).
-	// untrack on the catch-up read so we don't force-navigate when the user
-	// leaves /current-game while a match is still active.
-	$effect(() => {
-		const redirectToCurrentGame = () => {
-			if (page.url.pathname === '/current-game') {
+	// Open the live match from any loaded route once the server has saved its lobby.
+	// Only on a new id, so leaving the match page while it is live is not undone.
+	watch(
+		() => app.liveLobbyId,
+		(id) => {
+			const href = id ? `/history/${id}` : null;
+			if (!href || page.url.pathname === href) {
 				return;
 			}
 
-			scheduleGoto('/current-game');
-		};
-
-		untrack(() => {
-			if (app.lobby?.started) {
-				redirectToCurrentGame();
-			}
-		});
-
-		return app.on('lobby.started', redirectToCurrentGame);
-	});
+			scheduleGoto(href);
+		}
+	);
 </script>
 
 <svelte:boundary>

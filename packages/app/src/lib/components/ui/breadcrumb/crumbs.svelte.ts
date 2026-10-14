@@ -86,10 +86,6 @@ export function crumbsFromPath(pathname: string, extra: Crumb[]): Crumb[] {
 		return [{ label: t('Dashboard') }];
 	}
 
-	if (parts[0] === 'current-game') {
-		return [{ label: t('Dashboard'), href: '/' }, extra[0] ?? { label: t('Current game') }];
-	}
-
 	if (parts[0] === 'live') {
 		return [{ label: t('Dashboard'), href: '/' }, extra[0] ?? { label: t('Live lobby') }];
 	}

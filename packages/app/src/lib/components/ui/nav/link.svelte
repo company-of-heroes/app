@@ -7,7 +7,7 @@
 	let isActive = $derived.by(() => {
 		const pathname = page.url.pathname;
 		if (restProps.href === '/') {
-			return pathname === '/current-game' || pathname === '/';
+			return pathname === '/';
 		}
 
 		const prefixes = [restProps.href, path].filter((value): value is string => !!value);

@@ -2,6 +2,9 @@ import type { Match } from '$core/game/lobby';
 
 export { CURRENT_GAME_TEST } from './current-game-test';
 
+/** Saved lobby `CURRENT_GAME_TEST` was generated from; dev opens it as the live match. */
+export const DEV_LIVE_LOBBY_ID = 'xs7mk2ona3l6e7v';
+
 export const LOBBY_4V4 = {
 	sessionId: 143239320,
 	startedAt: '23:02:21.11',

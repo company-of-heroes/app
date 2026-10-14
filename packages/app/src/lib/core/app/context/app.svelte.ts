@@ -30,7 +30,7 @@ import { SocketManager, SocketState } from '$core/app/socket.svelte';
 import { notifications as notificationsService } from '$core/notifications/notifications.svelte';
 import { tournamentGames as tournamentGamesService } from '$core/tournaments/tournament-games.svelte';
 import { startTray } from '$core/app/tray.svelte';
-import { LOBBY_4V4, RANKED_2V2 } from '$lib/dev';
+import { CURRENT_GAME_TEST, DEV_LIVE_LOBBY_ID } from '$lib/dev';
 import GameStartedNotificationAudio from '$lib/files/game-started-stop-watch-effect.mp3?url';
 import { t } from '$lib/i18n';
 
@@ -96,6 +96,9 @@ export class AppContext extends Emittery<AppEvents> {
 
 	/** The currently active lobby (null when not in a game). */
 	lobby = $state.raw<Match | null>(null);
+
+	/** Saved `lobbies` id of the live match, once the server links it (null until then). */
+	liveLobbyId = $state<string | null>(null);
 
 	/** Game log watcher + lobby session. */
 	gameLog: GameLogService;
@@ -336,15 +339,11 @@ export class AppContext extends Emittery<AppEvents> {
 				}
 			);
 
-			// Dev: simulate lobby state changes.
-			// if (dev) {
-			// 	setTimeout(() => {
-			// 		this.lobby = RANKED_2V2 as unknown as Match;
-			// 	}, 1000);
-			// 	setTimeout(() => {
-			// 		this.lobby = LOBBY_4V4 as unknown as Match;
-			// 	}, 5000);
-			// }
+			// Dev: always sit in a match so the in-game screens can be checked without CoH.
+			if (dev && !this.lobby) {
+				this.lobby = CURRENT_GAME_TEST;
+				this.liveLobbyId = DEV_LIVE_LOBBY_ID;
+			}
 		});
 
 		this.gameLog.on('ready', () => {
@@ -531,6 +530,7 @@ export class AppContext extends Emittery<AppEvents> {
 		// Invalidate in-flight upserts from a previous lobby without deleting the new row.
 		this.#liveLobbyGeneration += 1;
 		this.#durableLobbyEmittedKey = null;
+		this.liveLobbyId = null;
 		this.#liveUpsertPending = null;
 		this.#stopLiveLobbyHeartbeat();
 
@@ -739,6 +739,7 @@ export class AppContext extends Emittery<AppEvents> {
 				}
 
 				this.#durableLobbyEmittedKey = key;
+				this.liveLobbyId = lobbyId;
 				this.emit('lobby.saved', {
 					id: lobbyId,
 					sessionId: match.sessionId
@@ -765,7 +766,8 @@ export class AppContext extends Emittery<AppEvents> {
 		this.#publishedStartedKey = null;
 		this.#replayNameAttachKey = null;
 		this.game.isIngame = false;
-		this.lobby = null;
+		this.lobby = dev ? CURRENT_GAME_TEST : null;
+		this.liveLobbyId = dev ? DEV_LIVE_LOBBY_ID : null;
 		this.database.lobbiesLive
 			.removeLobby()
 			.catch((error) => console.warn('[APP]: lobbies_live cleanup on game exit failed:', error));

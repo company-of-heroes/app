@@ -2,10 +2,15 @@
 	import type { LobbyPlayer } from '@fknoobs/app';
 	import { page } from '$app/state';
 	import { ReplayDetail, PageSkeleton as ReplayPageSkeleton } from '@company-of-heroes/ui/replay';
+	import { isAlliesRace } from '@company-of-heroes/ui/replay/utils';
+	import { HeadToHeadChip } from '@company-of-heroes/ui/head-to-head';
+	import type { HeadToHead } from '@company-of-heroes/ui/head-to-head/types';
 	import { resource, watch } from 'runed';
 	import { api, unwrapApi } from '$core/api';
 	import { app } from '$core/app/context';
+	import { account } from '$core/account';
 	import { loadCheaterSteamIds } from '$core/pocketbase/anti-cheat';
+	import { getHeadToHead } from '$core/pocketbase/head-to-head';
 	import * as Match from '$lib/components/match';
 	import * as Player from '$lib/components/player';
 	import { SetCrumbs } from '$lib/components/ui/breadcrumb';
@@ -45,6 +50,43 @@
 		(key) => loadCheaterSteamIds(key ? key.split(',') : [])
 	);
 
+	/** The signed-in user's own slot, when they played this match. */
+	const me = $derived.by(() => {
+		const steamIds = account.user?.steamIds ?? [];
+		return (detail?.players ?? []).find(
+			(player) => !!player.steamId && steamIds.includes(player.steamId)
+		);
+	});
+	// Your record against everyone outside your own team (every player when you did not play).
+	const opponentIds = $derived.by(() => {
+		if (!account.isAuthenticated) {
+			return [] as number[];
+		}
+
+		const ids = (detail?.players ?? [])
+			.filter((player) => player !== me)
+			.filter((player) => !me || isAlliesRace(player.race) !== isAlliesRace(me.race))
+			.map((player) => player.profile?.profile_id)
+			.filter((id): id is number => id != null && id > 0);
+		return [...new Set(ids)].sort((a, b) => a - b);
+	});
+	// A string key, so a refetch with the same players does not reload the records.
+	const headToHeadKey = $derived(opponentIds.join(','));
+	const headToHead = resource(
+		() => headToHeadKey,
+		async (key) => {
+			if (!key) {
+				return {} as Record<number, HeadToHead>;
+			}
+
+			try {
+				return await getHeadToHead(key.split(',').map(Number), me?.profile.profile_id ?? null);
+			} catch {
+				return {} as Record<number, HeadToHead>;
+			}
+		}
+	);
+
 	// Pending results fill in on the server; keep the page current while it waits.
 	watch(
 		() => [page.params.id, !!detail?.needsResult] as const,
@@ -72,7 +114,11 @@
 {#if detail}
 	<div class="border-secondary-900 overflow-clip border-b">
 		<ReplayDetail match={detail} showNav={false}>
-			{#snippet nameExtra({ steamId })}
+			{#snippet nameExtra({ name, steamId, profileId })}
+				{@const record = profileId != null ? headToHead.current?.[profileId] : undefined}
+				{#if record}
+					<HeadToHeadChip {record} alias={name} />
+				{/if}
 				{#if steamId}
 					<Player.Labels {steamId} class="shrink-0" />
 					{#if cheaters.current?.has(steamId)}

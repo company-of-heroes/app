@@ -104,8 +104,8 @@
 				>
 					{t('Recent games')}
 				</Button>
-				{#if app.lobby}
-					<Button href="/current-game" variant="secondary">{t('Current Game')}</Button>
+				{#if app.lobby && app.liveLobbyId}
+					<Button href="/history/{app.liveLobbyId}" variant="secondary">{t('Current Game')}</Button>
 				{/if}
 			</div>
 		</div>

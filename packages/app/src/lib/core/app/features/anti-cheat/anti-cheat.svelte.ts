@@ -14,6 +14,7 @@ import { fetch } from '$core/http/fetch';
 import { Feature } from '../feature.svelte';
 import { shortcuts } from '../shortcuts';
 import { t } from '$lib/i18n';
+import { CURRENT_GAME_TEST } from '$lib/dev';
 import ChatAnnouncePrompt from './chat-announce-prompt.svelte';
 
 export type AntiCheatSettings = {
@@ -341,7 +342,8 @@ export class AntiCheat extends Feature<AntiCheatSettings> {
 			return;
 		}
 
-		if (match.isReplay) {
+		// Dev placeholder match (see app context): nothing to capture.
+		if (match.isReplay || match === CURRENT_GAME_TEST) {
 			return;
 		}
 

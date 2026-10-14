@@ -472,10 +472,15 @@
 						size={20}
 					/>
 					<Player.Labels steamId={profile.steam.steamid} class="shrink-0" />
-					{#if app.lobby && viewingLive}
-						<a href={resolve('/(loaded)/current-game')} class={cn(interactive, 'flex shrink-0')}>
+					{#if app.lobby && viewingLive && app.liveLobbyId}
+						<a
+							href={resolve('/(loaded)/history/[id]', { id: app.liveLobbyId })}
+							class={cn(interactive, 'flex shrink-0')}
+						>
 							<LiveBadge label={t('In match')} />
 						</a>
+					{:else if app.lobby && viewingLive}
+						<LiveBadge label={t('In match')} class="shrink-0" />
 					{:else if !app.game.isRunning}
 						<Badge variant="default" class="shrink-0">{t('Not running')}</Badge>
 					{/if}
