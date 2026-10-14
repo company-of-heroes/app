@@ -43,7 +43,8 @@ function isFree(port) {
 }
 
 async function freePort(from) {
-	for (let port = from; port < from + 100; port += 2) {
+	// Wide range: Windows (winnat / Hyper-V / WSL) reserves blocks of 100 ports that can cover 1420.
+	for (let port = from; port < from + 2000; port += 2) {
 		// The port above is for HMR when TAURI_DEV_HOST is set.
 		if ((await isFree(port)) && (await isFree(port + 1))) {
 			return port;
