@@ -1,7 +1,6 @@
 export {
 	CompareApi,
-	type Compare,
 	type CompareAccount,
-	type CompareBestElo,
-	type CompareBestRank
+	type CompareAccountData,
+	type CompareData
 } from './compare';

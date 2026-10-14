@@ -1,17 +1,22 @@
-import { errAsync, okAsync, ResultAsync } from 'neverthrow';
+import { okAsync, ResultAsync } from 'neverthrow';
 import { cached } from '../cache';
 import { badRequest } from '../errors';
-import { all, chunk, fromPb, type Task } from '../result';
-import { bestElo, bestRanks, type Compare } from '../domain/compare';
-import { summarizePerformance, type PlayerPerformance } from '../domain/performance';
-import { emptyHeadToHead, type HeadToHead } from '../domain/head-to-head';
+import { all, chunk, ensure, fromPb, type Task } from '../result';
+import {
+	COMPARE_ROW_FIELDS,
+	rowsPerAccount,
+	type Compare,
+	type CompareAccountData,
+	type CompareRow
+} from '../domain/compare';
+import { summarizePerformance } from '../domain/performance';
+import { emptyHeadToHead, summarizeHeadToHead } from '../domain/head-to-head';
 import { toEloMap, type EloMap } from '../domain/ratings';
 import {
 	profileFromPersonalStat,
 	type RelicPersonalStat,
 	type RelicProfile
 } from '../domain/relic-matches';
-import type { PlayerPage } from './player-page';
 import { Service } from './service';
 
 const CACHE_SECONDS = 45;
@@ -49,7 +54,7 @@ export class CompareService extends Service {
 		).map((pages) => new Map(pages.flat()));
 	}
 
-	private elo(steamIds: string[]): Task<{ steamId: string; elo: EloMap }[]> {
+	private elo(steamIds: string[]): Task<Map<string, EloMap>> {
 		return fromPb(
 			this.pb.collection('player_ratings').getFullList<{ steamId: string; elo: unknown }>({
 				filter: steamIds
@@ -58,88 +63,100 @@ export class CompareService extends Service {
 				fields: 'steamId,elo'
 			}),
 			'Could not load ratings'
-		).map((rows) => rows.map((row) => ({ steamId: row.steamId, elo: toEloMap(row.elo) })));
+		).map((rows) => new Map(rows.map((row) => [row.steamId, toEloMap(row.elo)])));
 	}
 
-	private load(
-		userId: string,
-		them: string,
-		linkedIds: string[],
-		selected: string[]
-	): Task<Compare> {
-		const { playerPage, performance, headToHead, users } = this.services;
-		const theirPerformance = (page: PlayerPage): Task<PlayerPerformance> =>
-			page.performance
-				? okAsync(page.performance)
-				: performance
-						.ofProfile(page.profileId)
-						.orElse(() => okAsync(summarizePerformance([])));
+	/** Decided, counted index rows (hidden matches left out) matching `identity`. */
+	private rows(identity: string): Task<CompareRow[]> {
+		return ResultAsync.combine([
+			fromPb(
+				this.pb.collection('lobby_player_index').getFullList<CompareRow>({
+					// `counts` = finished and not Skirmish
+					filter: `(${identity}) && counts = true && session_id > 0 && (outcome = 0 || outcome = 1)`,
+					fields: COMPARE_ROW_FIELDS,
+					batch: 1000
+				}),
+				'Could not load matches'
+			),
+			this.services.hiddenMatches.lobbyIds()
+		]).map(([rows, hiddenIds]) => rows.filter((row) => !hiddenIds.has(row.lobby)));
+	}
+
+	private load(userId: string, them: string, linkedIds: string[]): Task<Compare> {
+		const { playerPage, headToHead, users } = this.services;
+		const myRows = this.rows(
+			linkedIds.map((steamId) => this.pb.filter('steam_id = {:steamId}', { steamId })).join(' || ')
+		);
 		return ResultAsync.combine([
 			users.steamAccounts(userId),
 			playerPage.get(them),
 			this.profiles(linkedIds),
-			this.elo(selected),
-			performance.ofSteamIds(selected)
-		]).andThen(([linked, page, profiles, elo, myPerformance]) => {
+			this.elo(linkedIds),
+			myRows
+		]).andThen(([linked, page, profiles, elo, rows]) => {
 			const isSelf =
 				linkedIds.includes(page.steamId) ||
 				[...profiles.values()].some((profile) => profile.profile_id === page.profileId);
-			const record: Task<HeadToHead> = isSelf
-				? okAsync(emptyHeadToHead(page.profileId))
-				: headToHead
-						.forUser(userId, null, [page.profileId], selected)
-						.map((byProfile) => byProfile[page.profileId] ?? emptyHeadToHead(page.profileId));
-			return ResultAsync.combine([record, theirPerformance(page)]).map(
-				([headToHeadRecord, theirPerformance]): Compare => ({
-					accounts: linked.map((account) => ({
-						...account,
-						profileId: profiles.get(account.steamId)?.profile_id ?? null,
-						selected: selected.includes(account.steamId)
-					})),
-					isSelf,
-					me: {
-						performance: myPerformance,
-						best: bestRanks(
-							selected.flatMap((steamId) => {
-								const profile = profiles.get(steamId);
-								return profile ? [{ steamId, leaderboardStats: profile.leaderboardStats }] : [];
-							})
-						),
-						elo: bestElo(elo)
-					},
-					them: {
-						steamId: page.steamId,
-						profileId: page.profileId,
-						alias: page.alias,
-						avatarUrl: page.avatarUrl || null,
-						country: page.country,
-						level: page.level,
-						leaderboardStats: page.leaderboardStats,
-						elo: page.elo,
-						performance: theirPerformance
-					},
-					headToHead: headToHeadRecord
-				})
+			const theirRows: Task<CompareRow[]> = isSelf
+				? okAsync([])
+				: this.rows(this.pb.filter('profile_id = {:id}', { id: page.profileId }));
+			const perAccount = rowsPerAccount(rows);
+			return theirRows.andThen((theirs) =>
+				all(
+					linkedIds.map((steamId): Task<CompareAccountData> => {
+						const mine = perAccount.get(steamId) ?? [];
+						const record = isSelf
+							? okAsync(emptyHeadToHead(page.profileId))
+							: headToHead.withDates(summarizeHeadToHead(page.profileId, mine, theirs));
+						return record.map((headToHeadRecord) => ({
+							steamId,
+							leaderboardStats: profiles.get(steamId)?.leaderboardStats ?? [],
+							elo: elo.get(steamId) ?? {},
+							performance: summarizePerformance(mine, { mapLimit: Infinity }),
+							headToHead: headToHeadRecord
+						}));
+					})
+				).map(
+					(mine): Compare => ({
+						accounts: linked.map((account) => ({
+							...account,
+							profileId: profiles.get(account.steamId)?.profile_id ?? null
+						})),
+						isSelf,
+						mine,
+						them: {
+							steamId: page.steamId,
+							profileId: page.profileId,
+							alias: page.alias,
+							avatarUrl: page.avatarUrl || null,
+							country: page.country,
+							level: page.level,
+							leaderboardStats: page.leaderboardStats,
+							elo: page.elo,
+							performance: page.performance ?? summarizePerformance(theirs)
+						}
+					})
+				)
 			);
 		});
 	}
 
 	/**
-	 * You against a player (Steam id or Relic profile id). `steamIds` picks which of the user's
-	 * linked accounts count (all when omitted); ids that are not theirs are dropped.
+	 * You against a player (Steam id or Relic profile id), per linked account; the page
+	 * combines the accounts the user selects, so toggling needs no new request.
 	 */
-	get(userId: string, them: string, steamIds?: string[]): Task<Compare> {
-		return this.services.users.steamIdsOf(userId).andThen((linkedIds) => {
-			const selected = (
-				steamIds?.length ? [...new Set(steamIds)].filter((id) => linkedIds.includes(id)) : linkedIds
-			).sort();
-			if (selected.length === 0) {
-				return errAsync(badRequest('Select at least one of your accounts.'));
-			}
-
-			return cached(`compare:${userId}:${selected.join(',')}:${them}`, CACHE_SECONDS, () =>
-				this.load(userId, them, linkedIds, selected)
+	get(userId: string, them: string): Task<Compare> {
+		return this.services.users
+			.steamIdsOf(userId)
+			.andThen((linkedIds) =>
+				ensure(
+					linkedIds.length > 0,
+					badRequest('Link a Steam account to compare yourself.')
+				).asyncAndThen(() =>
+					cached(`compare:v2:${userId}:${them}`, CACHE_SECONDS, () =>
+						this.load(userId, them, [...linkedIds].sort())
+					)
+				)
 			);
-		});
 	}
 }

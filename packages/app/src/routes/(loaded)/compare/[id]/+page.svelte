@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Compare from '@company-of-heroes/ui/compare';
@@ -12,15 +12,12 @@
 	const { t } = useI18n();
 	const host = useHost();
 
-	const accounts = $derived(page.url.searchParams.get('accounts') ?? '');
-
 	const result = resource(
-		() => [page.params.id, accounts] as const,
-		([id, acc]) =>
-			unwrapApi(api.compare.get({ them: id!, steamIds: acc ? acc.split(',') : undefined }))
+		() => page.params.id,
+		(id) => unwrapApi(api.compare.get({ them: id! }))
 	);
 
-	// Keeps the previous result up while a toggle refetches, so the panels do not flash.
+	// Another player's result never shows under this player's URL while it loads.
 	const compare = $derived.by(() => {
 		const current = result.current;
 		const id = page.params.id;
@@ -28,8 +25,11 @@
 			current && (current.them.steamId === id || String(current.them.profileId) === id);
 		return matches ? current : undefined;
 	});
-	const selected = $derived(
-		compare?.accounts.filter((account) => account.selected).map((account) => account.steamId) ?? []
+	// Toggling recombines in the browser; the URL only keeps the selection.
+	let selected = $derived(
+		compare
+			? Compare.selectionFromParam(compare.accounts, page.url.searchParams.get('accounts'))
+			: []
 	);
 
 	function onSelect(ids: string[]) {
@@ -37,18 +37,18 @@
 			return;
 		}
 
-		const next = ids.length === compare.accounts.length ? undefined : ids;
-		const href = host.routes.compare!(page.params.id!, next);
-		void goto(href, { keepFocus: true, noScroll: true });
+		selected = ids;
+		replaceState(
+			host.routes.compare!(page.params.id!, Compare.selectionParam(compare.accounts, ids)),
+			{}
+		);
 	}
 </script>
 
 <SetCrumbs
 	items={[
 		{ label: t('Players'), href: '/players' },
-		...(compare
-			? [{ label: compare.them.alias, href: host.routes.player(page.params.id!) }]
-			: []),
+		...(compare ? [{ label: compare.them.alias, href: host.routes.player(page.params.id!) }] : []),
 		{ label: t('Compare') }
 	]}
 />

@@ -1,9 +1,10 @@
-import type { Compare } from '@company-of-heroes/api/compare';
 import { Context } from 'runed';
+import type { CompareView } from './types';
 
 /** Read through getters, so children follow the Root's props (toggling an account keeps the same Root). */
 export type CompareContext = {
-	readonly compare: Compare;
+	/** The selected accounts already combined into one "me". */
+	readonly compare: CompareView;
 	/** Steam ids of the user's accounts that count as "me". */
 	readonly selected: string[];
 	/** Receives the full next selection. */

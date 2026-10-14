@@ -37,18 +37,6 @@ export class PerformanceService extends Service {
 		);
 	}
 
-	/** The combined record of an explicit list of Steam accounts. */
-	ofSteamIds(steamIds: string[]): Task<PlayerPerformance> {
-		const ids = [...steamIds].sort();
-		return cached(`performance:steam:${ids.join(',')}`, CACHE_SECONDS, () =>
-			ids.length === 0
-				? okAsync(summarizePerformance([]))
-				: this.rowsFor(
-						ids.map((steamId) => this.pb.filter('steam_id = {:steamId}', { steamId })).join(' || ')
-					).map(summarizePerformance)
-		);
-	}
-
 	/**
 	 * The signed-in user's record for `profileId` when it is one of their accounts (or the
 	 * account has no Steam ids linked yet). Other linked Steam accounts (a shared PC, a

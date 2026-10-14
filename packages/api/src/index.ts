@@ -222,10 +222,9 @@ export {
 
 export {
 	CompareApi,
-	type Compare,
 	type CompareAccount,
-	type CompareBestElo,
-	type CompareBestRank
+	type CompareAccountData,
+	type CompareData
 } from './compare';
 
 export { CompanionApi, readMetaVersion, type CompanionUser } from './companion';

@@ -14,38 +14,24 @@ export type CompareAccount = {
 	name: string | null;
 	avatarUrl: string | null;
 	profileId: number | null;
-	selected: boolean;
 };
 
-export type CompareBestRank = {
-	leaderboardId: number;
-	rank: number;
-	ranklevel: number;
-	wins: number;
-	losses: number;
-	/** The account that holds it. */
+/** One linked account's own numbers; the page combines the selected ones. */
+export type CompareAccountData = {
 	steamId: string;
+	leaderboardStats: LeaderboardStat[];
+	elo: PlayerEloMap;
+	/** Every map (no top 8), so combined accounts rank maps correctly. */
+	performance: PlayerPerformance;
+	headToHead: HeadToHead;
 };
 
-export type CompareBestElo = {
-	/** EloMap match key: '0'..'4' (see getMatchTypeIdFromLeaderboardId). */
-	matchKey: string;
-	/** '0'..'3' */
-	raceKey: string;
-	rating: number;
-	steamId: string;
-};
-
-export type Compare = {
+export type CompareData = {
 	/** Every linked account, for the toggles. */
 	accounts: CompareAccount[];
-	/** True when `them` is one of the user's own accounts; `me` and `headToHead` may then be empty. */
+	/** True when `them` is one of the user's own accounts; `mine` then has no head to head. */
 	isSelf: boolean;
-	me: {
-		performance: PlayerPerformance;
-		best: CompareBestRank[];
-		elo: CompareBestElo[];
-	};
+	mine: CompareAccountData[];
 	them: {
 		steamId: string;
 		profileId: number;
@@ -57,7 +43,6 @@ export type Compare = {
 		elo: PlayerEloMap;
 		performance: PlayerPerformance;
 	};
-	headToHead: HeadToHead;
 };
 
 const leaderboardStatSchema = z.object({
@@ -87,32 +72,19 @@ const compareSchema = z.object({
 			steamId: z.string(),
 			name: z.string().nullable(),
 			avatarUrl: z.string().nullable(),
-			profileId: z.number().nullable(),
-			selected: z.boolean()
+			profileId: z.number().nullable()
 		})
 	),
 	isSelf: z.boolean(),
-	me: z.object({
-		performance: performanceSchema,
-		best: z.array(
-			z.object({
-				leaderboardId: z.number(),
-				rank: z.number(),
-				ranklevel: z.number(),
-				wins: z.number(),
-				losses: z.number(),
-				steamId: z.string()
-			})
-		),
-		elo: z.array(
-			z.object({
-				matchKey: z.string(),
-				raceKey: z.string(),
-				rating: z.number(),
-				steamId: z.string()
-			})
-		)
-	}),
+	mine: z.array(
+		z.object({
+			steamId: z.string(),
+			leaderboardStats: z.array(leaderboardStatSchema),
+			elo: eloMapSchema,
+			performance: performanceSchema,
+			headToHead: headToHeadSchema
+		})
+	),
 	them: z.object({
 		steamId: z.string(),
 		profileId: z.number(),
@@ -123,19 +95,15 @@ const compareSchema = z.object({
 		leaderboardStats: z.array(leaderboardStatSchema),
 		elo: eloMapSchema,
 		performance: performanceSchema
-	}),
-	headToHead: headToHeadSchema
-}) satisfies z.ZodType<Compare, unknown>;
+	})
+}) satisfies z.ZodType<CompareData, unknown>;
 
 export class CompareApi {
 	constructor(private deps: ApiDeps) {}
 
-	get(options: { them: string | number; steamIds?: string[] }): ResultAsync<Compare, ApiError> {
+	/** You against a player, per linked account (the page combines the selected ones). */
+	get(options: { them: string | number }): ResultAsync<CompareData, ApiError> {
 		const params = new URLSearchParams({ them: String(options.them) });
-		if (options.steamIds?.length) {
-			params.set('steamIds', options.steamIds.join(','));
-		}
-
 		return ResultAsync.fromPromise(
 			sendV1<unknown>(this.deps, `/compare?${params}`, { timeoutMs: 30_000 }),
 			() => apiError(500, 'Failed to load comparison.')
@@ -145,7 +113,7 @@ export class CompareApi {
 				return err(apiError(500, 'Failed to load comparison.'));
 			}
 
-			return ok<Compare, ApiError>(parsed.data);
+			return ok<CompareData, ApiError>(parsed.data);
 		});
 	}
 }

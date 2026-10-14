@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Compare } from '@company-of-heroes/api/compare';
+	import type { CompareView } from './types';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { factionIcon, tableHeadRow } from '@company-of-heroes/ui/variants';
@@ -22,7 +22,7 @@
 		class?: string;
 	};
 
-	type Performance = Compare['me']['performance'];
+	type Performance = CompareView['me']['performance'];
 
 	type Ladder = {
 		rank: number | null;

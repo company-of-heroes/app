@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Compare from '@company-of-heroes/ui/compare';
@@ -12,17 +12,19 @@
 	const host = useHost();
 
 	const compare = $derived(data.compare);
+	// Toggling recombines in the browser; the URL only keeps the selection shareable.
+	let selected = $derived(
+		Compare.selectionFromParam(compare.accounts, page.url.searchParams.get('accounts'))
+	);
 
 	function onSelect(ids: string[]) {
-		if (!host.routes.compare) {
-			return;
+		selected = ids;
+		if (host.routes.compare) {
+			replaceState(
+				host.routes.compare(page.params.id ?? '', Compare.selectionParam(compare.accounts, ids)),
+				{}
+			);
 		}
-
-		const next = ids.length === compare.accounts.length ? undefined : ids;
-		void goto(host.routes.compare(page.params.id ?? '', next), {
-			keepFocus: true,
-			noScroll: true
-		});
 	}
 </script>
 
@@ -40,7 +42,7 @@
 		<Button href={host.routes.player(compare.them.steamId)}>{t('Back to profile')}</Button>
 	</div>
 {:else}
-	<Compare.Root {compare} selected={data.selected} {onSelect}>
+	<Compare.Root {compare} {selected} {onSelect}>
 		<div class="-mb-px">
 			<Compare.Header />
 			<Compare.Accounts />

@@ -10,16 +10,6 @@ export const load: PageServerLoad = async ({ locals, params, url, setHeaders }) 
 		redirect(303, loginRedirectHref(url.pathname + url.search, locals.locale));
 	}
 
-	const accounts = url.searchParams.get('accounts')?.split(',').filter(Boolean);
-	const compare = await unwrapAsync(
-		locals.services.compare.get(locals.user.id, params.id, accounts)
-	);
 	setHeaders({ 'cache-control': 'private, no-store' });
-
-	return {
-		compare,
-		selected: compare.accounts
-			.filter((account) => account.selected)
-			.map((account) => account.steamId)
-	};
+	return { compare: await unwrapAsync(locals.services.compare.get(locals.user.id, params.id)) };
 };

@@ -53,9 +53,13 @@ const isRankedMode = (matchtypeId: number) => matchtypeId >= 1 && matchtypeId <=
  * the last 10 results. Totals, maps, factions and form are ranked games only (Basic
  * Matches against friends would skew them); the per-mode table keeps every mode. A
  * session counts once, even when the user played it on two linked accounts (first
- * row by id wins, as before).
+ * row by id wins, as before). `mapLimit` keeps more maps (per-account summaries that are
+ * combined later).
  */
-export function summarizePerformance(rows: PerformanceRow[]): PlayerPerformance {
+export function summarizePerformance(
+	rows: PerformanceRow[],
+	{ mapLimit = MAP_LIMIT }: { mapLimit?: number } = {}
+): PlayerPerformance {
 	const decided = rows.filter(
 		(row) => row.session_id > 0 && (row.outcome === 0 || row.outcome === 1)
 	);
@@ -110,7 +114,7 @@ export function summarizePerformance(rows: PerformanceRow[]): PlayerPerformance 
 		byMap: tally(ranked, (row) => row.map || 'Unknown')
 			.map(([map, count]) => ({ map, ...count }))
 			.sort(byGames)
-			.slice(0, MAP_LIMIT),
+			.slice(0, mapLimit),
 		byFaction: tally(ranked, (row) =>
 			row.race_id !== null && row.race_id >= 0 && row.race_id <= 3 ? row.race_id : null
 		)

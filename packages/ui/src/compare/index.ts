@@ -17,10 +17,11 @@ export {
 	CompareSkeleton as Skeleton,
 	CompareTable as Table
 };
+export { combineCompare, selectionFromParam, selectionParam } from './combine';
 export { createCompare, useCompare, type CompareContext } from './context';
+export type { CompareBestElo, CompareBestRank, CompareView } from './types';
 export type {
-	Compare,
 	CompareAccount,
-	CompareBestElo,
-	CompareBestRank
+	CompareAccountData,
+	CompareData
 } from '@company-of-heroes/api/compare';
