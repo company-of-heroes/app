@@ -35,7 +35,8 @@ const config = {
 				'/wiki/buildings/[slug]',
 				'/wiki/commanders/[slug]',
 				'/wiki/weapons/[slug]',
-				'/wiki/maps/[slug]'
+				'/wiki/maps/[slug]',
+				'/compare/[id]'
 			]
 		}
 	},
