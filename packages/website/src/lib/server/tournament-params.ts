@@ -37,7 +37,8 @@ export const tournamentInput = z.object({
 		.url({ protocol: /^https$/ })
 		.max(500)
 		.nullable()
-		.optional()
+		.optional(),
+	hidden: z.boolean().optional()
 });
 
 export const tournamentUpdate = tournamentInput.partial().extend({

@@ -19,6 +19,8 @@ Check `.changeset/` before writing a new file. If this session (or an unreleased
 
 Write a new `.changeset/<adjective>-<noun>.md` (do not run interactive `pnpm changeset`). List every affected `packages/*` name and the semver bump.
 
+Deploys follow these bumps: the website, Cloudflare workers and PocketBase only ship when the Version Packages PR raises their version. The website also deploys on a `ui` / `api` / `i18n` / `game-data` / `shared-assets` bump; `api-gateway`, `jobs-worker`, `smurf-worker` and `pocketbase` only on their own. A package left out of the changeset is not deployed.
+
 | Bump | Use for |
 |------|---------|
 | `patch` | bugfixes, small enhancements |

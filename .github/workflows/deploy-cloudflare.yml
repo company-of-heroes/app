@@ -35,60 +35,61 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      # The website bundles the shared packages, POLICY.md (/privacy) and images from
-      # shared-assets and the app's map folder, so those paths deploy it too.
-      - name: Detect changed packages
-        id: filter
-        if: github.event_name == 'push'
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            website:
-              - 'packages/website/**'
-              - 'packages/ui/**'
-              - 'packages/api/**'
-              - 'packages/i18n/**'
-              - 'packages/game-data/**'
-              - 'packages/shared-assets/**'
-              - 'packages/app/src/lib/files/maps/**'
-              - 'POLICY.md'
-              - 'pnpm-lock.yaml'
-            api-gateway:
-              - 'packages/api-gateway/**'
-            jobs-worker:
-              - 'packages/jobs-worker/**'
-            smurf-worker:
-              - 'packages/smurf-worker/**'
-
+      # Deploys follow changesets: a target only ships when the Version Packages PR
+      # bumped its version. The website bundles ui, api, i18n, game-data and
+      # shared-assets, so a bump of any of those deploys it too.
       - name: Resolve deploy targets
         id: targets
         env:
           EVENT: ${{ github.event_name }}
           TARGET: ${{ inputs.target }}
-          CHANGED: ${{ steps.filter.outputs.changes }}
+          BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          # CHANGED is the JSON list of matched filters, e.g. ["website","jobs-worker"].
+          if [ "$EVENT" = "push" ]; then
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              git fetch --no-tags --depth=2 origin "$GITHUB_SHA"
+              BEFORE=$(git rev-parse HEAD^)
+            else
+              git fetch --no-tags --depth=1 origin "$BEFORE"
+            fi
+          fi
+
+          bumped() {
+            local file="packages/$1/package.json"
+            local old new
+            old=$(git show "$BEFORE:$file" 2>/dev/null | jq -r '.version // empty' || true)
+            new=$(jq -r '.version // empty' "$file")
+            [ -n "$new" ] && [ "$old" != "$new" ]
+          }
           wanted() {
             if [ "$EVENT" = "workflow_dispatch" ]; then
               [ "$TARGET" = "all" ] || [ "$TARGET" = "$1" ]
-            else
-              [[ "$CHANGED" == *"\"$1\""* ]]
+              return
             fi
+
+            local package
+            for package in "${@:2}"; do
+              if bumped "$package"; then
+                return 0
+              fi
+            done
+            return 1
           }
           website=false
-          if wanted website; then
+          if wanted website website ui api i18n game-data shared-assets; then
             website=true
           fi
 
           workers=""
           for worker in api-gateway jobs-worker smurf-worker; do
-            if wanted "$worker"; then
+            if wanted "$worker" "$worker"; then
               workers="${workers:+$workers,}\"$worker\""
             fi
           done
           echo "website=$website" >> "$GITHUB_OUTPUT"
           echo "workers=[$workers]" >> "$GITHUB_OUTPUT"
+          echo "website=$website workers=[$workers]"
 
   # api-gateway and jobs-worker bind to the website, so it deploys first.
   website:
