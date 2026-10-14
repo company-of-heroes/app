@@ -50,6 +50,8 @@ export function provideAppHost(): HostContext {
 		breadcrumbs: (steps, actions) => breadcrumbs.setTrail(steps, actions ?? null),
 		routes: {
 			player: (id) => `/players/${id}`,
+			compare: (id, steamIds) =>
+				`/compare/${id}` + (steamIds?.length ? `?accounts=${steamIds.join(',')}` : ''),
 			match: (lobbyId) => `/history/${lobbyId}`,
 			accountProfile: (steamId) => `/account/profile?steamId=${steamId}`,
 			login: () => '/account',

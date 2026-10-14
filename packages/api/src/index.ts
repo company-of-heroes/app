@@ -220,6 +220,14 @@ export {
 	type HeadToHeadMode
 } from './head-to-head';
 
+export {
+	CompareApi,
+	type Compare,
+	type CompareAccount,
+	type CompareBestElo,
+	type CompareBestRank
+} from './compare';
+
 export { CompanionApi, readMetaVersion, type CompanionUser } from './companion';
 
 export {

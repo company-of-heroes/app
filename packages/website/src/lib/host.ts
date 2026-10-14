@@ -195,6 +195,8 @@ export function provideWebsiteHost(): HostContext {
 		href: (path) => href(path),
 		routes: {
 			player: (id) => href(`/players/${id}`),
+			compare: (id, steamIds) =>
+				href(`/compare/${id}`) + (steamIds?.length ? `?accounts=${steamIds.join(',')}` : ''),
 			match: (lobbyId) => href(`/replays/${lobbyId}`),
 			accountProfile: (steamId) => href(`/account/profile?steamId=${steamId}`),
 			login: () => loginRedirectHref(`${page.url.pathname}${page.url.search}`, currentLocale()),

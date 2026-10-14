@@ -52,6 +52,7 @@
 		"./format/types": "./src/format/types.ts",
 		"./format/labels": "./src/format/labels.ts",
 		"./format/match-type": "./src/format/match-type.ts",
+		"./compare": "./src/compare/index.ts",
 		"./head-to-head": "./src/head-to-head/index.ts",
 		"./head-to-head/types": "./src/head-to-head/types.ts",
 		"./leaderboard": "./src/leaderboard/index.ts",

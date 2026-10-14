@@ -2473,5 +2473,16 @@
 	"Unlock automatically: rank 20 on two 1v1/2v2 ladders": "자동 잠금 해제: 1v1/2v2 래더 두 곳에서 20랭크",
 	"Automatic: rank 20 on two 1v1/2v2 ladders": "자동: 1v1/2v2 래더 두 곳에서 20랭크",
 	"You vs {alias}": "나 vs {alias}",
-	"No games yet": "아직 경기 없음"
+	"No games yet": "아직 경기 없음",
+	"{count} accounts": "계정 {count}개",
+	"Accounts": "계정",
+	"Win rate (games)": "승률 (게임 수)",
+	"Recent form": "최근 전적",
+	"Compare": "비교",
+	"Full comparison": "전체 비교",
+	"This is you": "본인입니다",
+	"You cannot compare yourself with your own account.": "자신의 계정과는 비교할 수 없습니다.",
+	"Back to profile": "프로필로 돌아가기",
+	"Select at least one of your accounts.": "계정을 하나 이상 선택하세요.",
+	"Could not load the comparison.": "비교를 불러오지 못했습니다."
 }

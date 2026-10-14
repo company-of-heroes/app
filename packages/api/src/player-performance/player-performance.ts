@@ -46,7 +46,7 @@ const CACHE_TTL_MS = 60_000;
 const CACHE_VERSION = 6;
 const performanceCache = new Map<string, { at: number; value: PlayerPerformance }>();
 
-const performanceSchema: z.ZodType<PlayerPerformance> = z
+export const performanceSchema: z.ZodType<PlayerPerformance> = z
 	.object({
 		matchCount: z.number(),
 		wins: z.number(),
