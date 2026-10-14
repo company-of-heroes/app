@@ -2475,5 +2475,16 @@
 	"Unlock automatically: rank 20 on two 1v1/2v2 ladders": "Desbloquear automáticamente: rango 20 en dos clasificaciones 1v1/2v2",
 	"Automatic: rank 20 on two 1v1/2v2 ladders": "Automática: rango 20 en dos clasificaciones 1v1/2v2",
 	"You vs {alias}": "Tú vs {alias}",
-	"No games yet": "Aún sin partidas"
+	"No games yet": "Aún sin partidas",
+	"{count} accounts": "{count} cuentas",
+	"Accounts": "Cuentas",
+	"Win rate (games)": "Tasa de victorias (partidas)",
+	"Recent form": "Forma reciente",
+	"Compare": "Comparar",
+	"Full comparison": "Comparación completa",
+	"This is you": "Eres tú",
+	"You cannot compare yourself with your own account.": "No puedes compararte con tu propia cuenta.",
+	"Back to profile": "Volver al perfil",
+	"Select at least one of your accounts.": "Selecciona al menos una de tus cuentas.",
+	"Could not load the comparison.": "No se pudo cargar la comparación."
 }

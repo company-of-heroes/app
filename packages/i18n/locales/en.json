@@ -2475,5 +2475,16 @@
 	"Unlock automatically: rank 20 on two 1v1/2v2 ladders": "Unlock automatically: rank 20 on two 1v1/2v2 ladders",
 	"Automatic: rank 20 on two 1v1/2v2 ladders": "Automatic: rank 20 on two 1v1/2v2 ladders",
 	"You vs {alias}": "You vs {alias}",
-	"No games yet": "No games yet"
+	"No games yet": "No games yet",
+	"{count} accounts": "{count} accounts",
+	"Accounts": "Accounts",
+	"Win rate (games)": "Win rate (games)",
+	"Recent form": "Recent form",
+	"Compare": "Compare",
+	"Full comparison": "Full comparison",
+	"This is you": "This is you",
+	"You cannot compare yourself with your own account.": "You cannot compare yourself with your own account.",
+	"Back to profile": "Back to profile",
+	"Select at least one of your accounts.": "Select at least one of your accounts.",
+	"Could not load the comparison.": "Could not load the comparison."
 }
