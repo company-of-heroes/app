@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.16.1
+
+- feat; staff and hosts can hide a tournament from the public; its players can still open it
+
 ## 0.16.0
 
 - feat; wiki maps: every built-in map (classic and Operations) with victory, fuel, munition and strategic points, territory sectors and starting positions on the loading-screen map

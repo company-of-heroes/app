@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.2.3
+
+- feat; staff and hosts can hide a tournament from the public; its players can still open it
+
 ## 0.2.2
 
 - feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup

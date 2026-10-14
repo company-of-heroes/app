@@ -1,5 +1,9 @@
 # @company-of-heroes/api
 
+## 0.9.0
+
+- feat; staff and hosts can hide a tournament from the public; its players can still open it
+
 ## 0.8.0
 
 - feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup
