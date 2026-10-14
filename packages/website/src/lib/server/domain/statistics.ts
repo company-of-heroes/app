@@ -291,12 +291,26 @@ function mapOfFile(file: string): string {
 	return (file.split(/[\\/]/).pop() ?? '').trim().toLowerCase();
 }
 
-function uploadMode(upload: UploadRow): StatisticsMode {
+/** `2p_semois` → 2: the player slots in the map's file name, `null` for maps without one. */
+function slotsOfMap(map: string): number | null {
+	const slots = /^(\d)p_/.exec(map)?.[1];
+	return slots ? Number(slots) : null;
+}
+
+/**
+ * A ranked game's ladder follows from its map (automatch fills every slot); the summary's
+ * player count is only a fallback, as it leaves out players without a name or seen as AI.
+ */
+function uploadMode(upload: UploadRow, map: string): StatisticsMode {
 	if (upload.ai) {
 		return 'skirmish';
 	}
 
-	return upload.isRanked ? (HUMANS_PER_RANKED_MODE[upload.races.length] ?? 'basic') : 'basic';
+	if (!upload.isRanked) {
+		return 'basic';
+	}
+
+	return HUMANS_PER_RANKED_MODE[slotsOfMap(map) ?? upload.races.length] ?? 'basic';
 }
 
 /** Where a counted upload goes: its replay summary is added to this day, mode and map. */
@@ -354,7 +368,7 @@ function uploadMatches(
 		remember(map, time, names);
 		const date = new Date(time);
 		const day = date.toISOString().slice(0, 10);
-		const mode = uploadMode(upload);
+		const mode = uploadMode(upload, map);
 		kept.set(upload.id, { day, mode, map });
 		matches.push({
 			lobby: upload.id,

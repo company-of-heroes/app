@@ -242,7 +242,7 @@ export class StatisticsService extends Service {
 			return okAsync(memo.data);
 		}
 
-		return cached('statistics:data:v7', CACHE_SECONDS, () => this.buildData()).map((data) => {
+		return cached('statistics:data:v8', CACHE_SECONDS, () => this.buildData()).map((data) => {
 			memo = { at: Date.now(), data };
 			return data;
 		});
