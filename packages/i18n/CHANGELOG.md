@@ -1,5 +1,10 @@
 # @company-of-heroes/i18n
 
+## 0.2.2
+
+- feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup
+- feat; compare yourself with any player, across all or selected of your accounts
+
 ## 0.2.1
 
 - enhance; player profile and dashboard headers use the new hero layout with a stat strip, like the tournament pages; player labels (Staff, Streamer, …) use the shared badge style everywhere; admin label and notification lists use the regular tables

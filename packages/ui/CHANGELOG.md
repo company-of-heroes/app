@@ -1,5 +1,11 @@
 # @company-of-heroes/ui
 
+## 0.14.0
+
+- feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup
+- enhance; reward tooltips show the ribbon larger and in colour
+- feat; compare yourself with any player, across all or selected of your accounts
+
 ## 0.13.0
 
 - fix; wiki shows the guns of HMG and mortar teams, Tank Busters, Assault Grenadiers, the Crocodile, Calliope, Hetzer and halftracks, and links research weapons (BAR, 76mm, APCR, Ranger bazookas) to their units

@@ -1,5 +1,15 @@
 # @company-of-heroes/website
 
+## 1.16.0
+
+- feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup
+- enhance; home page shows running tournaments and tournaments open for sign-up at the very top
+- feat; compare yourself with any player, across all or selected of your accounts
+- feat; linux support (appimage + deb) for the companion app and replay manager, with steam proton game detection and fair play
+- fix; send a verification email when signing up with email and password
+- improvement; statistics filtered on a map load from ready-made snapshots instead of being recounted on every click
+- fix; wiki rewards page loads much faster when a player is shown
+
 ## 1.15.0
 
 - fix; wiki shows the guns of HMG and mortar teams, Tank Busters, Assault Grenadiers, the Crocodile, Calliope, Hetzer and halftracks, and links research weapons (BAR, 76mm, APCR, Ranger bazookas) to their units

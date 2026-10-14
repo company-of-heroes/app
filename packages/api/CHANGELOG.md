@@ -1,5 +1,11 @@
 # @company-of-heroes/api
 
+## 0.8.0
+
+- feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup
+- feat; compare yourself with any player, across all or selected of your accounts
+- fix; send a verification email when signing up with email and password
+
 ## 0.7.0
 
 - feat; staff and tournament hosts can drag players to change the seeding, and drag players onto each other in a running bracket to swap them (unplayed matches only)

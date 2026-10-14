@@ -1,3 +1,11 @@
+### v0.73.0
+
+- feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup
+- feat; compare yourself with any player, across all or selected of your accounts
+- feat; linux support (appimage + deb) for the companion app and replay manager, with steam proton game detection and fair play
+- fix; send a verification email when signing up with email and password
+- fix; going back from a match or replay keeps the history page you came from
+
 ### v0.72.0
 
 - fix; wiki shows the guns of HMG and mortar teams, Tank Busters, Assault Grenadiers, the Crocodile, Calliope, Hetzer and halftracks, and links research weapons (BAR, 76mm, APCR, Ranger bazookas) to their units

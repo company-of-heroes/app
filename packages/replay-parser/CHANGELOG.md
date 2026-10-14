@@ -1,5 +1,9 @@
 # @company-of-heroes/replay-parser
 
+## 1.2.0
+
+- feat; linux support (appimage + deb) for the companion app and replay manager, with steam proton game detection and fair play
+
 ## 1.1.2
 
 - enhance; every hover hint now uses the styled tooltip instead of the plain browser tooltip
