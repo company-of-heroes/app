@@ -15,14 +15,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		unwrapAsync(locals.services.rewards.catalogView()),
 		STEAM_ID.test(steamId)
 			? Promise.all([
-					unwrapAsync(locals.services.playerPage.get(steamId)),
+					unwrapAsync(locals.services.players.alias(steamId)),
 					unwrapAsync(locals.services.rewards.forPlayer(steamId, locals.user?.id ?? null))
 				])
-					.then(([page, playerRewards]) => ({
-						steamId,
-						name: page.alias,
-						rewards: playerRewards
-					}))
+					.then(([alias, playerRewards]) =>
+						alias ? { steamId, name: alias, rewards: playerRewards } : null
+					)
 					.catch(() => null)
 			: null
 	]);

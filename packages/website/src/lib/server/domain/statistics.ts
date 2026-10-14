@@ -719,3 +719,55 @@ export function summarizeStatistics(
 		STATISTICS_MODES.map((mode) => [mode, finish(buckets[mode])])
 	) as StatisticsByMode;
 }
+
+/** Statistics of one map in the modes it was played in, without the map list. */
+export type MapStatistics = Partial<Record<StatisticsMode, Omit<CommunityStatistics, 'maps'>>>;
+
+/**
+ * {@link summarizeStatistics} of every map at once, in one pass: map → the modes where it was
+ * played in `range`. Put on top of the unfiltered result (see {@link withMap}) it is the same.
+ */
+export function summarizeMaps(data: StatisticsData, range: DayRange): Record<string, MapStatistics> {
+	const inRange = (day: string) =>
+		!((range.from && day < range.from) || (range.to && day > range.to));
+	const buckets = new Map<string, Partial<Record<StatisticsMode, Bucket>>>();
+	for (const match of data.matches) {
+		if (!match.map || !inRange(match.day)) {
+			continue;
+		}
+
+		const modes = buckets.get(match.map) ?? {};
+		addMatch((modes[match.mode] ??= emptyBucket()), match);
+		buckets.set(match.map, modes);
+	}
+
+	for (const [key, tally] of Object.entries(data.replays)) {
+		const [day, mode, ...rest] = key.split('|') as [string, StatisticsMode, ...string[]];
+		const bucket = buckets.get(rest.join('|'))?.[mode];
+		if (bucket && inRange(day)) {
+			mergeTally(bucket, tally);
+		}
+	}
+
+	return Object.fromEntries(
+		[...buckets].map(([map, modes]) => [
+			map,
+			Object.fromEntries(
+				Object.entries(modes).map(([mode, bucket]) => {
+					const { maps: _, ...statistics } = finish(bucket);
+					return [mode, statistics];
+				})
+			)
+		])
+	);
+}
+
+/** The unfiltered statistics with one map's own numbers in the modes where it was played. */
+export function withMap(all: StatisticsByMode, map: MapStatistics | undefined): StatisticsByMode {
+	return Object.fromEntries(
+		STATISTICS_MODES.map((mode) => {
+			const own = map?.[mode];
+			return [mode, own ? { ...own, maps: all[mode].maps } : all[mode]];
+		})
+	) as StatisticsByMode;
+}

@@ -19,6 +19,7 @@
 		type RewardCondition
 	} from './metrics';
 	import RewardIcon from './reward-icon.svelte';
+	import { ribbonTipHtml } from './ribbon';
 	import type { PlayerRewards, RewardView } from './types';
 
 	/** Locked rewards of the owner carry the current value per condition. */
@@ -121,7 +122,9 @@
 						percent: Math.floor((level.progress?.overall ?? 0) * 100)
 					})
 				: '';
+		const ribbon = ribbons.find((item) => item.key === level.ribbon);
 		return `<span class="block max-w-64">${[
+			ribbonTipHtml(ribbon),
 			`<span class="block font-semibold text-white">${escapeHtml(level.title)}</span>`,
 			level.description
 				? `<span class="text-secondary-300 mt-0.5 block">${escapeHtml(level.description)}</span>`
@@ -255,18 +258,19 @@
 </div>
 
 {#if sections.length > 0}
-	<!-- Cards close themselves; the last row sits a pixel over the footer's top border. -->
-	<div class="-mb-px">
+	<!-- Each section after the first draws its own top line, so a short last row still closes. -->
+	<div>
 		{#each sections as section (factionKey(section.raceId))}
-			<section>
+			<section class="border-secondary-800 not-first:border-t">
 				<div class={cn(flushHeader, 'flex items-baseline justify-between gap-3')}>
 					<h2 class={flushHeaderTitle}>{factionLabel(section.raceId)}</h2>
 					<p class="text-secondary-500 text-xs">
 						{t('{count} rewards', { count: section.entries.flatMap(rewardsOf).length })}
 					</p>
 				</div>
-				<!-- Cards draw their right and bottom line; the wrapper clips the right edge. -->
-				<div class="overflow-hidden">
+				<!-- Cards draw their right and bottom line; the wrapper clips the right edge and sits a
+				pixel over the next section's top line (or the footer's). -->
+				<div class="-mb-px overflow-hidden">
 					<ul class="-mr-px grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
 						{#each section.entries as entry (entry.key)}
 							<li class="border-secondary-800 flex min-w-0 flex-col gap-2 border-r border-b p-4">

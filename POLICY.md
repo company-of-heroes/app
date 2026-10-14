@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date:** October 11, 2026
+**Effective date:** October 14, 2026
 
 This Privacy Policy explains how **Code IT** (“we”, “us”) collects, uses, shares, and protects information when you use **Company of Heroes Companion** (also called the FKNOOBS App), the website at [https://coh1stats.com](https://coh1stats.com), and the API at [https://api.coh1stats.com](https://api.coh1stats.com) (together, the “Service”).
 
@@ -84,9 +84,9 @@ The **Streamer** badge is also granted automatically. While you are live on a co
 
 Fair play checks are **on by default** and can be turned off in Settings. While they are enabled, during a match the app may:
 
-- ask Company of Heroes to save its own screenshot (the same Print Screen file it writes under My Games) **only while the game is in the foreground**, then upload that image for review and analysis. If the game does not write a file, we capture the Company of Heroes window instead. These images can include other players’ in-game names and units. We do not capture the Windows desktop, the clipboard, the taskbar, or other applications;
+- ask Company of Heroes to save its own screenshot (the same Print Screen file it writes under My Games) **only while the game is in the foreground**, then upload that image for review and analysis. If the game does not write a file, we capture the Company of Heroes window instead. These images can include other players’ in-game names and units. We do not capture the desktop, the clipboard, the taskbar, or other applications;
 - check running process names against a denylist and report a match (process name and process id);
-- inspect modules loaded into the Company of Heroes process and report **unknown** DLLs (module name and full path, plus process id) that are not under Windows system folders, the game install folder, Steam, common GPU vendor paths, or a staff-maintained allowlist. We do not upload the full list of system modules;
+- inspect modules loaded into the Company of Heroes process and report **unknown** DLLs (module name and full path, plus process id) that are not under Windows system folders, the game install folder, Steam, common GPU vendor paths, or a staff-maintained allowlist. On Linux, where the game runs through Steam Proton, the same check also reports unknown native libraries (`.so` files) loaded into the game, and skips the Wine/Proton system folders, the Steam runtime and your distribution's system libraries. We do not upload the full list of system modules;
 - open all-chat in Company of Heroes and type a short local message (visible to other players in that match) saying the player is supervised by coh1stats.com and is not using cheats, **only if you turn on** the all-chat announce setting (off by default). We do not upload that message; it can still appear in replays other people save;
 - store reports and a staff-maintained list of flagged Steam IDs.
 

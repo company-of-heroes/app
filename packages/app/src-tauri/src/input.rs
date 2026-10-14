@@ -112,7 +112,14 @@ pub(crate) fn pressed_modifiers() -> HashSet<TriggerModifier> {
         pressed
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "linux")]
+    {
+        crate::linux::x11::connection()
+            .map(|x11| x11.pressed_modifiers())
+            .unwrap_or_default()
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "linux")))]
     {
         HashSet::new()
     }
@@ -177,6 +184,11 @@ pub async fn send_keys(keys: Vec<String>, action: Option<String>) -> Result<(), 
             return send_sequence_scancode(&keys);
         }
 
+        #[cfg(target_os = "linux")]
+        if direction == Direction::Click && crate::linux::x11::connection().is_some() {
+            return send_sequence_xtest(&keys);
+        }
+
         send_action_keys(&keys, direction, true)
     })
     .await
@@ -184,10 +196,10 @@ pub async fn send_keys(keys: Vec<String>, action: Option<String>) -> Result<(), 
 }
 
 /// Hold per key in a sequence; same as chat typing, which DirectInput reads reliably.
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 const SEQUENCE_KEY_HOLD_US: u64 = 1000;
 /// Gap between keys so DirectInput sees each down/up pair (R R R is not one long press).
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 const SEQUENCE_KEY_GAP_US: u64 = 4000;
 
 /// Types a key sequence (R R R Tab R) as scancodes. Enigo's virtual-key clicks needed
@@ -236,32 +248,32 @@ pub fn shortcut_modifiers_match(trigger: String) -> Result<bool, String> {
     Ok(modifiers_match_trigger(&trigger))
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 const CHAT_MAX_CHARS: usize = 80;
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 const CHAT_OPEN_DELAY_MS: u64 = 8;
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 const CHAT_KEY_HOLD_US: u64 = 1000;
 /// A 40-char dump lost the second half; 20 is the largest single poll that survived.
 #[cfg(target_os = "windows")]
 const CHAT_CHUNK_CHARS: usize = 20;
 #[cfg(target_os = "windows")]
 const CHAT_CHUNK_DRAIN_MS: u64 = 5;
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 const CHAT_SEND_DELAY_MS: u64 = 3;
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 const CHAT_NOT_FOCUSED: &str = "Company of Heroes is not focused";
 
 /// Opens Company of Heroes all-chat (Shift+Enter), types ASCII text, and sends it.
 #[command]
 pub async fn send_game_chat(message: String) -> Result<(), String> {
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(any(target_os = "windows", target_os = "linux")))]
     {
         let _ = message;
-        Err("Game chat is only supported on Windows".into())
+        Err("Game chat is only supported on Windows and Linux".into())
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
     {
         tokio::task::spawn_blocking(move || send_game_chat_sync(&message))
             .await
@@ -270,6 +282,7 @@ pub async fn send_game_chat(message: String) -> Result<(), String> {
 }
 
 /// Blocks physical keyboard/mouse for `duration_ms` (default 1000), capped at 2s total.
+/// No-op on Linux: an X11 grab would also swallow the XTest keys chat injection sends.
 #[command]
 pub fn lock_game_input(duration_ms: Option<u64>) -> Result<(), String> {
     #[cfg(not(target_os = "windows"))]
@@ -297,8 +310,8 @@ pub fn unlock_game_input() -> Result<(), String> {
     Ok(())
 }
 
-#[cfg(target_os = "windows")]
-fn send_game_chat_sync(message: &str) -> Result<(), String> {
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+fn validate_chat_message(message: &str) -> Result<usize, String> {
     let char_count = message.chars().count();
     if char_count == 0 || char_count > CHAT_MAX_CHARS {
         return Err("Chat message must be 1-80 characters".into());
@@ -309,6 +322,119 @@ fn send_game_chat_sync(message: &str) -> Result<(), String> {
     {
         return Err("Chat message must be ASCII".into());
     }
+    Ok(char_count)
+}
+
+/// Same flow as Windows (Shift+Enter, US scancodes, Enter) through XTest. Wine reads
+/// X key events, so there is no DirectInput burst limit and keys go one at a time.
+#[cfg(target_os = "linux")]
+fn send_game_chat_sync(message: &str) -> Result<(), String> {
+    use crate::linux::keys::{scan_to_keycode, KEYCODE_ENTER, KEYCODE_ESCAPE, KEYCODE_SHIFT_L};
+
+    let char_count = validate_chat_message(message)?;
+    let x11 = crate::linux::x11::require()?;
+    if !x11.is_coh_foreground() {
+        return Err(CHAT_NOT_FOCUSED.into());
+    }
+
+    println!("[ANTI-CHEAT] sending all-chat ({} chars)", char_count);
+
+    let hold = time::Duration::from_micros(CHAT_KEY_HOLD_US);
+    let click = |keycode: u8| -> Result<(), String> {
+        x11.fake_key(keycode, true)?;
+        x11.flush()?;
+        thread::sleep(hold);
+        x11.fake_key(keycode, false)?;
+        x11.flush()
+    };
+
+    release_chat_modifiers()?;
+    x11.fake_key(KEYCODE_SHIFT_L, true)?;
+    x11.fake_key(KEYCODE_ENTER, true)?;
+    x11.flush()?;
+    thread::sleep(hold);
+    x11.fake_key(KEYCODE_ENTER, false)?;
+    x11.fake_key(KEYCODE_SHIFT_L, false)?;
+    x11.flush()?;
+    thread::sleep(time::Duration::from_millis(CHAT_OPEN_DELAY_MS));
+
+    if !x11.is_coh_foreground() {
+        let _ = click(KEYCODE_ESCAPE);
+        return Err(CHAT_NOT_FOCUSED.into());
+    }
+
+    let mut shift_down = false;
+    for c in message.chars() {
+        let (scan, need_shift) = match map_ascii_key(c) {
+            Ok(mapped) => mapped,
+            Err(error) => {
+                let _ = click(KEYCODE_ESCAPE);
+                return Err(error);
+            }
+        };
+        if need_shift != shift_down {
+            x11.fake_key(KEYCODE_SHIFT_L, need_shift)?;
+            shift_down = need_shift;
+        }
+        click(scan_to_keycode(scan))?;
+        thread::sleep(hold);
+    }
+
+    if shift_down {
+        x11.fake_key(KEYCODE_SHIFT_L, false)?;
+    }
+
+    thread::sleep(time::Duration::from_millis(CHAT_SEND_DELAY_MS));
+    click(KEYCODE_ENTER)?;
+
+    println!("[ANTI-CHEAT] all-chat sent");
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn release_chat_modifiers() -> Result<(), String> {
+    use crate::linux::keys::{KEYCODE_ALT_L, KEYCODE_CONTROL_L, KEYCODE_SHIFT_L};
+
+    let x11 = crate::linux::x11::require()?;
+    for keycode in [KEYCODE_SHIFT_L, KEYCODE_CONTROL_L, KEYCODE_ALT_L] {
+        x11.fake_key(keycode, false)?;
+    }
+    x11.flush()
+}
+
+/// Key sequences (R R R Tab R) through XTest with the same hold / gap as the Windows path.
+#[cfg(target_os = "linux")]
+fn send_sequence_xtest(keys: &[String]) -> Result<(), String> {
+    let keycodes = keys
+        .iter()
+        .map(|key| {
+            token_to_vk(key)
+                .and_then(crate::linux::keys::vk_to_keycode)
+                .ok_or_else(|| format!("Unsupported key: {}", key))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let x11 = crate::linux::x11::require()?;
+
+    release_chat_modifiers()?;
+
+    for (index, keycode) in keycodes.into_iter().enumerate() {
+        if index > 0 {
+            thread::sleep(time::Duration::from_micros(SEQUENCE_KEY_GAP_US));
+        }
+
+        x11.fake_key(keycode, true)?;
+        x11.flush()?;
+        thread::sleep(time::Duration::from_micros(SEQUENCE_KEY_HOLD_US));
+        x11.fake_key(keycode, false)?;
+        x11.flush()?;
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn send_game_chat_sync(message: &str) -> Result<(), String> {
+    let char_count = validate_chat_message(message)?;
     if !is_company_of_heroes_foreground() {
         return Err(CHAT_NOT_FOCUSED.into());
     }
@@ -401,8 +527,7 @@ fn type_ascii_and_send(message: &str) -> Result<(), String> {
     send_inputs(&[vk_input(VK_RETURN, false, false)])
 }
 
-#[cfg(target_os = "windows")]
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 fn map_ascii_key(c: char) -> Result<(u16, bool), String> {
     // DirectInput uses US QWERTY scancodes. VkKeyScanW follows the OS layout,
     // so `[` is AltGr+8 on German and types `8` unless we pin US scans.
@@ -460,7 +585,7 @@ fn map_ascii_key(c: char) -> Result<(u16, bool), String> {
     })
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 fn us_letter_scan(c: char) -> u16 {
     match c {
         'a' => 0x1E,
@@ -749,6 +874,49 @@ fn token_to_vk(token: &str) -> Option<u32> {
     }
 }
 
+enum NumpadKey {
+    Digit(u8),
+    Multiply,
+    Add,
+    Subtract,
+    Decimal,
+    Divide,
+}
+
+/// Enigo only has numpad variants on Windows / macOS; on Linux they are X keysyms.
+#[cfg(not(target_os = "linux"))]
+fn numpad_key(key: NumpadKey) -> Key {
+    match key {
+        NumpadKey::Digit(0) => Key::Numpad0,
+        NumpadKey::Digit(1) => Key::Numpad1,
+        NumpadKey::Digit(2) => Key::Numpad2,
+        NumpadKey::Digit(3) => Key::Numpad3,
+        NumpadKey::Digit(4) => Key::Numpad4,
+        NumpadKey::Digit(5) => Key::Numpad5,
+        NumpadKey::Digit(6) => Key::Numpad6,
+        NumpadKey::Digit(7) => Key::Numpad7,
+        NumpadKey::Digit(8) => Key::Numpad8,
+        NumpadKey::Digit(_) => Key::Numpad9,
+        NumpadKey::Multiply => Key::Multiply,
+        NumpadKey::Add => Key::Add,
+        NumpadKey::Subtract => Key::Subtract,
+        NumpadKey::Decimal => Key::Decimal,
+        NumpadKey::Divide => Key::Divide,
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn numpad_key(key: NumpadKey) -> Key {
+    Key::Other(match key {
+        NumpadKey::Digit(digit) => 0xffb0 + u32::from(digit.min(9)),
+        NumpadKey::Multiply => 0xffaa,
+        NumpadKey::Add => 0xffab,
+        NumpadKey::Subtract => 0xffad,
+        NumpadKey::Decimal => 0xffae,
+        NumpadKey::Divide => 0xffaf,
+    })
+}
+
 fn parse_key(k: &str) -> Option<Key> {
     match k.to_lowercase().as_str() {
         "backspace" => Some(Key::Backspace),
@@ -765,21 +933,21 @@ fn parse_key(k: &str) -> Option<Key> {
         "right" | "arrowright" => Some(Key::RightArrow),
         "down" | "arrowdown" => Some(Key::DownArrow),
         "delete" | "del" => Some(Key::Delete),
-        "numpad0" | "num0" => Some(Key::Numpad0),
-        "numpad1" | "num1" => Some(Key::Numpad1),
-        "numpad2" | "num2" => Some(Key::Numpad2),
-        "numpad3" | "num3" => Some(Key::Numpad3),
-        "numpad4" | "num4" => Some(Key::Numpad4),
-        "numpad5" | "num5" => Some(Key::Numpad5),
-        "numpad6" | "num6" => Some(Key::Numpad6),
-        "numpad7" | "num7" => Some(Key::Numpad7),
-        "numpad8" | "num8" => Some(Key::Numpad8),
-        "numpad9" | "num9" => Some(Key::Numpad9),
-        "numpadmultiply" | "nummultiply" => Some(Key::Multiply),
-        "numpadadd" | "numadd" | "numpadplus" | "numplus" => Some(Key::Add),
-        "numpadsubtract" | "numsubtract" => Some(Key::Subtract),
-        "numpaddecimal" | "numdecimal" => Some(Key::Decimal),
-        "numpaddivide" | "numdivide" => Some(Key::Divide),
+        "numpad0" | "num0" => Some(numpad_key(NumpadKey::Digit(0))),
+        "numpad1" | "num1" => Some(numpad_key(NumpadKey::Digit(1))),
+        "numpad2" | "num2" => Some(numpad_key(NumpadKey::Digit(2))),
+        "numpad3" | "num3" => Some(numpad_key(NumpadKey::Digit(3))),
+        "numpad4" | "num4" => Some(numpad_key(NumpadKey::Digit(4))),
+        "numpad5" | "num5" => Some(numpad_key(NumpadKey::Digit(5))),
+        "numpad6" | "num6" => Some(numpad_key(NumpadKey::Digit(6))),
+        "numpad7" | "num7" => Some(numpad_key(NumpadKey::Digit(7))),
+        "numpad8" | "num8" => Some(numpad_key(NumpadKey::Digit(8))),
+        "numpad9" | "num9" => Some(numpad_key(NumpadKey::Digit(9))),
+        "numpadmultiply" | "nummultiply" => Some(numpad_key(NumpadKey::Multiply)),
+        "numpadadd" | "numadd" | "numpadplus" | "numplus" => Some(numpad_key(NumpadKey::Add)),
+        "numpadsubtract" | "numsubtract" => Some(numpad_key(NumpadKey::Subtract)),
+        "numpaddecimal" | "numdecimal" => Some(numpad_key(NumpadKey::Decimal)),
+        "numpaddivide" | "numdivide" => Some(numpad_key(NumpadKey::Divide)),
         "numpadenter" | "numenter" => Some(Key::Return),
         "command" | "meta" | "windows" | "win" => Some(Key::Meta),
         "option" | "alt" => Some(Key::Alt),

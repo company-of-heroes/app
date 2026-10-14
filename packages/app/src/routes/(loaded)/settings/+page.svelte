@@ -10,10 +10,13 @@
 		defaultWarningsLogDir,
 		detectGameDir,
 		detectWarningsLog,
+		platformInfo,
 		validateGameDir,
 		validateWarningsLog,
-		type PathValidation
+		type PathValidation,
+		type PlatformInfo
 	} from '$core/config/paths';
+	import { Alert } from '$lib/components/ui/alert';
 	import dayjs from '$lib/dayjs';
 	import ImportIcon from 'phosphor-svelte/lib/DownloadSimpleIcon';
 	import ExportIcon from 'phosphor-svelte/lib/ExportIcon';
@@ -40,6 +43,8 @@
 	let isDetecting = $state(false);
 	let expectedLogDir = $state('');
 	let expectedGameDir = $state('');
+	let platform = $state<PlatformInfo | null>(null);
+	const missingX11 = $derived(platform?.os === 'linux' && !platform.x11Available);
 
 	$effect(() => {
 		settings.paths.backupDir().then((dir) => {
@@ -116,6 +121,13 @@
 
 	onMount(() => {
 		void detectPaths();
+		platformInfo()
+			.then((info) => {
+				platform = info;
+			})
+			.catch(() => {
+				// best effort; only drives the Linux notice
+			});
 	});
 
 	const backupNow = async () => {
@@ -133,6 +145,14 @@
 		}
 	};
 </script>
+
+{#if missingX11}
+	<Alert variant="warning" size="sm" class="m-4">
+		{t(
+			'Game input, focus detection, fair play screenshots and chat need X11 or XWayland, which this Linux session does not provide.'
+		)}
+	</Alert>
+{/if}
 
 <Form.Root>
 	<Form.Group label={t('Language')} description={t('Choose the language used in the app.')}>

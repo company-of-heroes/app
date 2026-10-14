@@ -31,8 +31,33 @@ pub fn get_steam_install_path() -> Option<String> {
         })
     }
 
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    return linux_steam_roots()
+        .into_iter()
+        .find(|root| root.join("steamapps").is_dir())
+        .map(|root| root.to_string_lossy().into_owned());
+
+    #[cfg(not(any(windows, target_os = "linux")))]
     None
+}
+
+/// Native, Flatpak and Snap Steam installs.
+#[cfg(target_os = "linux")]
+pub fn linux_steam_roots() -> Vec<std::path::PathBuf> {
+    let Some(home) = std::env::var_os("HOME").map(std::path::PathBuf::from) else {
+        return Vec::new();
+    };
+
+    [
+        ".steam/steam",
+        ".steam/root",
+        ".local/share/Steam",
+        ".var/app/com.valvesoftware.Steam/.local/share/Steam",
+        "snap/steam/common/.local/share/Steam",
+    ]
+    .iter()
+    .map(|relative| home.join(relative))
+    .collect()
 }
 
 #[cfg(windows)]

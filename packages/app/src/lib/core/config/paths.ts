@@ -1,6 +1,14 @@
 import { dev } from '$app/environment';
 import { invoke } from '@tauri-apps/api/core';
-import { basename, dirname, documentDir, homeDir, join, appConfigDir } from '@tauri-apps/api/path';
+import {
+	basename,
+	dirname,
+	documentDir,
+	homeDir,
+	join,
+	appConfigDir,
+	sep
+} from '@tauri-apps/api/path';
 import { exists, readTextFile } from '@tauri-apps/plugin-fs';
 import { t } from '$lib/i18n';
 
@@ -20,13 +28,22 @@ export const BACKUP_ROOT_NAME = 'FKnoobs CoH';
 
 export type PathValidation = { valid: boolean; reason?: string };
 
+/** `exists` that reports a path outside the fs scope as missing instead of throwing. */
+async function pathExists(path: string): Promise<boolean> {
+	try {
+		return await exists(path);
+	} catch {
+		return false;
+	}
+}
+
 /** Validates a Company of Heroes `warnings.log` path. */
 export async function validateWarningsLog(path: string): Promise<PathValidation> {
 	if (!path || path.trim() === '') {
 		return { valid: false, reason: t('No warnings.log selected') };
 	}
 
-	if (!(await exists(path))) {
+	if (!(await pathExists(path))) {
 		return { valid: false, reason: t('File does not exist') };
 	}
 
@@ -51,36 +68,131 @@ export async function validateGameDir(path: string): Promise<PathValidation> {
 		return { valid: false, reason: t('No installation folder selected') };
 	}
 
-	if (!(await exists(path))) {
+	if (!(await pathExists(path))) {
 		return { valid: false, reason: t('Folder does not exist') };
 	}
 
-	if (!(await exists(await join(path, GAME_EXE_NAME)))) {
+	if (!(await pathExists(await join(path, GAME_EXE_NAME)))) {
 		return { valid: false, reason: t('RelicCOH.exe not found in this folder') };
 	}
 
 	return { valid: true };
 }
 
+/** CoH1 Steam app id; Proton keeps its Wine prefix under `compatdata/<appid>`. */
+export const COH_STEAM_APP_ID = '228200';
+
+/** True on Windows. Linux players run CoH through Steam Proton. */
+export function isWindows(): boolean {
+	return sep() === '\\';
+}
+
+export type PlatformInfo = {
+	os: string;
+	/** Linux: an X server (X11 or XWayland) for game input, focus and capture. */
+	x11Available: boolean;
+	wayland: boolean;
+	appImage: boolean;
+};
+
+export function platformInfo(): Promise<PlatformInfo> {
+	return invoke<PlatformInfo>('get_platform_info');
+}
+
+/** Steam installs that Linux distributions and packaging formats use. */
+async function linuxSteamRoots(): Promise<string[]> {
+	const home = await homeDir();
+
+	return Promise.all(
+		[
+			['.steam', 'steam'],
+			['.steam', 'root'],
+			['.local', 'share', 'Steam'],
+			['.var', 'app', 'com.valvesoftware.Steam', '.local', 'share', 'Steam'],
+			['snap', 'steam', 'common', '.local', 'share', 'Steam']
+		].map((parts) => join(home, ...parts))
+	);
+}
+
+/** Documents folders of the CoH Proton prefix in every Steam library that has one. */
+async function protonDocumentsDirs(): Promise<string[]> {
+	const dirs: string[] = [];
+
+	for (const library of await collectSteamLibraries()) {
+		const docs = await join(
+			library,
+			'steamapps',
+			'compatdata',
+			COH_STEAM_APP_ID,
+			'pfx',
+			'drive_c',
+			'users',
+			'steamuser',
+			'Documents'
+		);
+
+		if (await pathExists(docs)) {
+			dirs.push(docs);
+		}
+	}
+
+	return dirs;
+}
+
+/** Documents folder that holds `My Games` (the Proton prefix on Linux). */
+async function cohDocumentsRoot(): Promise<string> {
+	if (!isWindows()) {
+		const [proton] = await protonDocumentsDirs();
+		if (proton) {
+			return proton;
+		}
+	}
+
+	return documentDir();
+}
+
 /** Default warnings.log path under Documents (may not exist yet). */
 export async function defaultWarningsLogPath(): Promise<string> {
-	return join(await documentDir(), 'My Games', COH_CONFIG_FOLDER, WARNINGS_LOG_NAME);
+	return join(await cohDocumentsRoot(), 'My Games', COH_CONFIG_FOLDER, WARNINGS_LOG_NAME);
 }
 
 /** Folder that should contain warnings.log. */
 export async function defaultWarningsLogDir(): Promise<string> {
-	return join(await documentDir(), 'My Games', COH_CONFIG_FOLDER);
+	return join(await cohDocumentsRoot(), 'My Games', COH_CONFIG_FOLDER);
 }
 
 /** Typical Steam install path, used as a hint when detection fails. */
 export async function defaultGameDirPath(): Promise<string> {
+	if (!isWindows()) {
+		return join(
+			await homeDir(),
+			'.local',
+			'share',
+			'Steam',
+			'steamapps',
+			'common',
+			COH_GAME_FOLDER
+		);
+	}
+
 	return join('C:', 'Program Files (x86)', 'Steam', 'steamapps', 'common', COH_GAME_FOLDER);
 }
 
 async function warningsLogCandidates(): Promise<string[]> {
-	const docs = await documentDir();
 	const folders = [COH_CONFIG_FOLDER, COH_LEGACY_FOLDER];
 	const candidates: string[] = [];
+
+	if (!isWindows()) {
+		for (const docs of await protonDocumentsDirs()) {
+			for (const folder of folders) {
+				candidates.push(await join(docs, 'My Games', folder, WARNINGS_LOG_NAME));
+			}
+		}
+
+		return candidates;
+	}
+
+	const docs = await documentDir();
 
 	for (const folder of folders) {
 		candidates.push(await join(docs, 'My Games', folder, WARNINGS_LOG_NAME));
@@ -111,8 +223,11 @@ function parseLibraryFolders(content: string): string[] {
 }
 
 function enqueueSteamRoot(queue: string[], queued: Set<string>, raw: string) {
-	const normalized = raw.replace(/\//g, '\\').replace(/\\+$/, '');
-	const key = normalized.toLowerCase();
+	const windows = isWindows();
+	const normalized = windows
+		? raw.replace(/\//g, '\\').replace(/\\+$/, '')
+		: raw.replace(/\/+$/, '');
+	const key = windows ? normalized.toLowerCase() : normalized;
 
 	if (!normalized || queued.has(key)) {
 		return;
@@ -136,10 +251,20 @@ async function collectSteamLibraries(): Promise<string[]> {
 		// registry lookup is best effort
 	}
 
-	enqueueSteamRoot(queue, queued, 'C:\\Program Files (x86)\\Steam');
-	enqueueSteamRoot(queue, queued, 'C:\\Program Files\\Steam');
-	enqueueSteamRoot(queue, queued, 'C:\\Steam');
-	enqueueSteamRoot(queue, queued, 'C:\\SteamLibrary');
+	if (isWindows()) {
+		enqueueSteamRoot(queue, queued, 'C:\\Program Files (x86)\\Steam');
+		enqueueSteamRoot(queue, queued, 'C:\\Program Files\\Steam');
+		enqueueSteamRoot(queue, queued, 'C:\\Steam');
+		enqueueSteamRoot(queue, queued, 'C:\\SteamLibrary');
+	} else {
+		try {
+			for (const root of await linuxSteamRoots()) {
+				enqueueSteamRoot(queue, queued, root);
+			}
+		} catch {
+			// homeDir is best effort
+		}
+	}
 
 	const libraries: string[] = [];
 
@@ -147,7 +272,7 @@ async function collectSteamLibraries(): Promise<string[]> {
 		const root = queue[i];
 		const steamapps = await join(root, 'steamapps');
 
-		if (!(await exists(steamapps))) {
+		if (!(await pathExists(steamapps))) {
 			continue;
 		}
 
@@ -160,7 +285,7 @@ async function collectSteamLibraries(): Promise<string[]> {
 			try {
 				const vdfPath = await join(root, ...parts);
 
-				if (!(await exists(vdfPath))) {
+				if (!(await pathExists(vdfPath))) {
 					continue;
 				}
 
@@ -228,7 +353,7 @@ export class Paths {
 			}
 		}
 
-		return join(await documentDir(), 'My Games', 'Company of Heroes Relaunch');
+		return defaultWarningsLogDir();
 	}
 
 	async cohPlaybackDir(): Promise<string> {
@@ -251,17 +376,7 @@ export class Paths {
 	async cohInstallationDir(): Promise<string> {
 		const { gameDir } = this.#getCohPaths();
 
-		return (
-			gameDir ||
-			join(
-				'C:',
-				'Program Files (x86)',
-				'Steam',
-				'steamapps',
-				'common',
-				'Company of Heroes Relaunch'
-			)
-		);
+		return gameDir || defaultGameDirPath();
 	}
 
 	async documentDir(): Promise<string> {

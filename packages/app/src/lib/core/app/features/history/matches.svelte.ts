@@ -140,7 +140,9 @@ export class Matches {
 		this.sort = state.sort;
 		this.sortDir = state.sortDir;
 		this.page = state.page;
-		this.#debouncedFilters.setImmediately($state.snapshot(this.filters));
+		const filters = $state.snapshot(this.filters);
+		this.#pageFiltersKey = JSON.stringify(filters);
+		this.#debouncedFilters.setImmediately(filters);
 	}
 
 	public capture(): {
@@ -210,6 +212,8 @@ export class Matches {
 	#resultsByKey = $state<Record<string, ListResult<MatchExpanded>>>({});
 	#loadedResultKey = $state<string | null>(null);
 	#awaitingScopeFetch = $state(false);
+	/** Filters the current `page` belongs to; hydrating sets it so the reset watcher keeps the page. */
+	#pageFiltersKey = JSON.stringify(EMPTY_FILTERS);
 
 	public resultKey = $derived.by(() => md5(JSON.stringify({ ...this.query, page: this.page })));
 
@@ -265,9 +269,15 @@ export class Matches {
 	constructor() {
 		this.#debouncedFilters = new Debounced(() => $state.snapshot(this.filters), FILTER_DEBOUNCE_MS);
 
+		// Compare by value: hydrating (back / URL) swaps in an equal filters object, which must keep the page.
 		watch(
-			() => $state.snapshot(this.#debouncedFilters.current),
-			() => {
+			() => JSON.stringify($state.snapshot(this.#debouncedFilters.current)),
+			(key) => {
+				if (key === this.#pageFiltersKey) {
+					return;
+				}
+
+				this.#pageFiltersKey = key;
 				this.page = 1;
 			}
 		);

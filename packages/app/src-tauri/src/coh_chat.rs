@@ -225,4 +225,9 @@ pub fn start_listener(app: &AppHandle) {
 
     #[cfg(target_os = "windows")]
     run_input_hook_thread();
+
+    #[cfg(target_os = "linux")]
+    if crate::linux::x11::connection().is_some() {
+        crate::linux::listener::spawn(app.clone());
+    }
 }

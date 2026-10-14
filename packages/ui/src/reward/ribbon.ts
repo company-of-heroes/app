@@ -1,3 +1,4 @@
+import { escapeHtml } from '../attachments/tooltip.svelte';
 import type { RewardView } from './types';
 
 /** Service ribbons from `shared-assets/ribbons` (see `scripts/generate-ribbons.mjs` there). */
@@ -39,6 +40,13 @@ export type RibbonManifestEntry = {
 	series?: string;
 	level?: number;
 };
+
+/** The ribbon at 1.5× and always in colour, for the top of a reward tooltip. */
+export function ribbonTipHtml(ribbon: Ribbon | null | undefined): string {
+	return ribbon
+		? `<img src="${escapeHtml(ribbon.url)}" alt="" width="105" height="30" class="mb-2 block h-[30px] w-[105px] rounded-[2px] shadow-[0_1px_2px_rgb(0_0_0/0.6)]">`
+		: '';
+}
 
 const fileName = (path: string) =>
 	path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1);

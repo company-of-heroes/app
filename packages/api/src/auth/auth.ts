@@ -114,6 +114,8 @@ export class AuthApi {
 			),
 			toRegisterError
 		)
+			// The account exists either way: a failed send can be retried from the account page.
+			.andThen(() => this.requestVerification(trimmedEmail).orElse(() => okAsync(false)))
 			.andThen(() =>
 				ResultAsync.fromPromise(
 					this.deps.pocketbase.collection('users').authWithPassword(trimmedEmail, password),

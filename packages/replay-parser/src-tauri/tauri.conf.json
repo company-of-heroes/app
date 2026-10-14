@@ -54,6 +54,12 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
+		"category": "Game",
+		"linux": {
+			"appimage": {
+				"bundleMediaFramework": false
+			}
+		},
 		"windows": {
 			"wix": {
 				"upgradeCode": "7d4a2c51-9b3e-4f6a-8c21-5e0b3f9a6d17"

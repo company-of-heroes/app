@@ -97,7 +97,7 @@ jobs:
     name: Desktop release
     needs: tag
     if: needs.tag.outputs.should-release == 'true'
-    uses: ./.github/workflows/windows-release.yml
+    uses: ./.github/workflows/desktop-release.yml
     secrets: inherit
     permissions:
       contents: write

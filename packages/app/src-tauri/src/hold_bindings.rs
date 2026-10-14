@@ -74,6 +74,16 @@ fn queue_input(job: InputJob) {
 
 #[tauri::command]
 pub fn sync_hold_bindings(enabled: bool, bindings: Vec<HoldBindingInput>) -> Result<(), String> {
+    let result = apply_hold_bindings(enabled, bindings);
+
+    // The X11 listener grabs trigger keys, so it has to re-read the bindings.
+    #[cfg(target_os = "linux")]
+    crate::linux::listener::refresh();
+
+    result
+}
+
+fn apply_hold_bindings(enabled: bool, bindings: Vec<HoldBindingInput>) -> Result<(), String> {
     ensure_input_worker();
 
     let mut state = STATE.lock().map_err(|e| e.to_string())?;
@@ -122,7 +132,7 @@ fn release_active_holds(state: &mut HoldBindingState) -> Result<(), String> {
     Ok(())
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 pub fn handle_key(vk: u32, is_key_up: bool, is_repeat: bool) -> bool {
     ensure_input_worker();
 
@@ -166,9 +176,26 @@ pub fn handle_key(vk: u32, is_key_up: bool, is_repeat: bool) -> bool {
     false
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
 pub fn handle_key(_vk: u32, _is_key_up: bool, _is_repeat: bool) -> bool {
     false
+}
+
+/// Trigger keys and their modifiers while hold bindings are enabled.
+#[cfg(target_os = "linux")]
+pub fn trigger_keys() -> Vec<(u32, HashSet<TriggerModifier>)> {
+    let Ok(state) = STATE.lock() else {
+        return Vec::new();
+    };
+    if !state.enabled {
+        return Vec::new();
+    }
+
+    state
+        .bindings
+        .iter()
+        .map(|binding| (binding.trigger_vk, binding.required_modifiers.clone()))
+        .collect()
 }
 
 fn find_binding<'a>(

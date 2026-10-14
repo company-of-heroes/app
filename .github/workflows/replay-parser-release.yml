@@ -10,7 +10,7 @@ on:
   workflow_call:
 
 # Not github.workflow: in a workflow_call that is the caller's name ("Release"),
-# which would share a group with the parent and deadlock (see windows-release.yml).
+# which would share a group with the parent and deadlock (see desktop-release.yml).
 concurrency:
   group: replay-parser-release-${{ github.ref }}
   cancel-in-progress: false
@@ -19,11 +19,66 @@ permissions:
   contents: write
 
 jobs:
-  publish:
-    runs-on: windows-latest
+  # One draft prerelease up front, so the Windows and Linux builds never race to
+  # create it. `finalize` publishes it once every asset is uploaded.
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.release.outputs.release-id }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Create draft release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r '.version' packages/replay-parser/src-tauri/tauri.conf.json)
+          TAG="replay-parser-v${VERSION}"
+          # A published release is final: never add a new build to it (e.g. a manual
+          # run before the version was bumped). A draft is a retry of this workflow.
+          if [ "$(gh release view "$TAG" --json isDraft -q .isDraft 2>/dev/null)" = "false" ]; then
+            echo "::error::$TAG is already published. Bump the version (changesets) before releasing."
+            exit 1
+          fi
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            # Prerelease: the companion app's updater reads releases/latest, so this
+            # release must never become "latest".
+            gh release create "$TAG" --draft --prerelease --target "$GITHUB_SHA"               --title "Replay Manager v${VERSION}"               --notes 'Company of Heroes - Replay Manager for your local playback folder.'
+          fi
+          {
+            echo "release-id=$(gh release view "$TAG" --json databaseId -q .databaseId)"
+            echo "tag=$TAG"
+            echo "version=$VERSION"
+          } >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: --bundles nsis,msi
+          - platform: ubuntu-22.04
+            args: --bundles appimage,deb
+    runs-on: ${{ matrix.platform }}
+    env:
+      HAS_LINUX_GPG: ${{ secrets.LINUX_GPG_PRIVATE_KEY != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev             patchelf libdbus-1-dev libssl-dev
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
@@ -46,12 +101,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Authenticode via Azure Artifact Signing, same account and secrets as the companion app
-      # (windows-release.yml). Inert until AZURE_CLIENT_ID is set.
+      # (desktop-release.yml). Inert until AZURE_CLIENT_ID is set.
       # Secrets: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
       # Variables: AZURE_SIGNING_ENDPOINT, AZURE_SIGNING_ACCOUNT
       # Optional variable: AZURE_SIGNING_PROFILE (defaults to coh1stats)
       - name: Enable Windows Authenticode signing
         id: codesign
+        if: runner.os == 'Windows'
         shell: pwsh
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -131,9 +187,26 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Published as a prerelease: the companion app's updater reads
-      # releases/latest/latest.json, so this release must never become "latest".
-      - name: Build and publish
+      # Same signing as the companion app (desktop-release.yml).
+      - name: Enable AppImage GPG signing
+        id: gpg
+        if: runner.os == 'Linux' && env.HAS_LINUX_GPG == 'true'
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          KEY_ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/ { print $5; exit }')
+          gpg --armor --export "$KEY_ID" > "$RUNNER_TEMP/coh1stats-linux.asc"
+          {
+            echo "SIGN=1"
+            echo "SIGN_KEY=$KEY_ID"
+            echo "APPIMAGETOOL_SIGN_PASSPHRASE=$GPG_PASSPHRASE"
+            echo "APPIMAGETOOL_FORCE_SIGN=1"
+          } >> "$GITHUB_ENV"
+
+      - name: Build and upload
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -148,36 +221,17 @@ jobs:
         with:
           projectPath: packages/replay-parser
           tauriScript: pnpm tauri
-          args: --bundles nsis,msi${{ steps.codesign.outputs.args }}
-          tagName: replay-parser-v__VERSION__
-          releaseName: Replay Manager v__VERSION__
-          releaseBody: Company of Heroes - Replay Manager for your local playback folder.
-          releaseDraft: ${{ github.event_name == 'workflow_dispatch' }}
-          prerelease: true
-          includeUpdaterJson: true
-          updaterJsonPreferNsis: true
+          args: ${{ matrix.args }}${{ steps.codesign.outputs.args }}
+          releaseId: ${{ needs.create-release.outputs.release-id }}
+          # Written once by `finalize`, so the two platforms cannot overwrite each other.
+          includeUpdaterJson: false
 
-      # The app's updater reads a fixed URL. Version releases are prereleases (never "latest",
-      # that is the companion app's), so copy this release's latest.json to the fixed
-      # replay-manager-latest release. Skipped for manual (draft) runs.
-      - name: Publish update manifest
-        if: github.event_name != 'workflow_dispatch'
-        shell: pwsh
+      - name: Upload GPG public key
+        if: steps.gpg.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $version = (Get-Content 'packages/replay-parser/src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json).version
-          $manifest = Join-Path $env:RUNNER_TEMP 'manifest'
-          gh release download "replay-parser-v$version" --repo $env:GITHUB_REPOSITORY --pattern latest.json --dir $manifest --clobber
-          if ($LASTEXITCODE -ne 0) {
-            throw "latest.json not found on release replay-parser-v$version."
-          }
-          gh release view replay-manager-latest --repo $env:GITHUB_REPOSITORY *> $null
-          if ($LASTEXITCODE -ne 0) {
-            gh release create replay-manager-latest --repo $env:GITHUB_REPOSITORY --prerelease --title 'Replay Manager updates' --notes 'Update manifest for the Replay Manager. Do not delete; installed apps read latest.json from here.'
-          }
-          gh release upload replay-manager-latest (Join-Path $manifest 'latest.json') --repo $env:GITHUB_REPOSITORY --clobber
-          Write-Host "Published update manifest for Replay Manager $version"
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" "$RUNNER_TEMP/coh1stats-linux.asc" --clobber
 
       # Checks what users get: the published installers, and the app exe inside the MSI.
       # The loose target/release exe is not what ships, so it is not checked.
@@ -210,3 +264,42 @@ jobs:
             throw 'No app executable found inside the MSI.'
           }
           Assert-Signed $appExe.FullName
+
+  # latest.json (Windows + Linux updater targets) and SHA256SUMS, then publish.
+  # The app's updater reads a fixed URL. Version releases are prereleases (never
+  # "latest", that is the companion app's), so latest.json is also copied to the
+  # fixed replay-manager-latest release. Manual runs stay a draft.
+  finalize:
+    needs: [create-release, publish]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.create-release.outputs.tag }}
+      VERSION: ${{ needs.create-release.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Write updater manifest and checksums
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --dir "$RUNNER_TEMP/assets"
+          node scripts/release-manifest.mjs --dir "$RUNNER_TEMP/assets" --out "$RUNNER_TEMP/out"             --tag "$TAG" --version "$VERSION"
+          gh release upload "$TAG" "$RUNNER_TEMP/out/latest.json" "$RUNNER_TEMP/out/SHA256SUMS" --clobber
+
+      - name: Publish release and update manifest
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          gh release edit "$TAG" --draft=false --prerelease
+          if ! gh release view replay-manager-latest >/dev/null 2>&1; then
+            gh release create replay-manager-latest --prerelease --title 'Replay Manager updates'               --notes 'Update manifest for the Replay Manager. Do not delete; installed apps read latest.json from here.'
+          fi
+          gh release upload replay-manager-latest "$RUNNER_TEMP/out/latest.json" --clobber
+          echo "Published update manifest for Replay Manager $VERSION"

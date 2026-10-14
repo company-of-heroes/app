@@ -22,9 +22,50 @@ impl ProcessTable {
 
     fn with_processes<T>(&self, read: impl FnOnce(&System) -> T) -> Result<T, String> {
         let mut system = self.0.lock().map_err(|error| error.to_string())?;
-        system.refresh_processes_specifics(ProcessRefreshKind::new());
+        system.refresh_processes_specifics(refresh_kind());
         Ok(read(&system))
     }
+}
+
+/// Linux also needs the command line: Wine processes are matched on their exe path.
+fn refresh_kind() -> ProcessRefreshKind {
+    #[cfg(target_os = "linux")]
+    return ProcessRefreshKind::new().with_cmd(sysinfo::UpdateKind::OnlyIfNotSet);
+
+    #[cfg(not(target_os = "linux"))]
+    ProcessRefreshKind::new()
+}
+
+/// Name match, plus on Linux the Windows exe in the Wine command line
+/// (`C:\...\RelicCOH.exe`), since the kernel name can be `wine64-preloader`.
+pub(crate) fn process_matches(process: &sysinfo::Process, search_name: &str) -> bool {
+    // On Linux sysinfo also lists every thread, which carries the process name.
+    if process.thread_kind().is_some() {
+        return false;
+    }
+
+    if process_name_matches(process.name(), search_name) {
+        return true;
+    }
+
+    #[cfg(target_os = "linux")]
+    if let Some(first) = process.cmd().first() {
+        let exe = first.rsplit(['/', '\\']).next().unwrap_or(first);
+        return process_name_matches(exe, search_name);
+    }
+
+    false
+}
+
+/// Pid of the first running process that matches `search_name`.
+pub(crate) fn find_pid(search_name: &str) -> Option<u32> {
+    let mut system = System::new();
+    system.refresh_processes_specifics(refresh_kind());
+    system
+        .processes()
+        .iter()
+        .find(|(_, process)| process_matches(process, search_name))
+        .map(|(pid, _)| pid.as_u32())
 }
 
 pub(crate) fn process_name_matches(proc_name: &str, search_name: &str) -> bool {
@@ -50,7 +91,7 @@ pub async fn is_running(
             system
                 .processes()
                 .values()
-                .any(|process| process_name_matches(process.name(), &process_name))
+                .any(|process| process_matches(process, &process_name))
         })
     })
     .await
@@ -93,7 +134,7 @@ fn find_denylisted_processes_sync(
             .filter(|(_pid, process)| {
                 searches
                     .iter()
-                    .any(|search| process_name_matches(process.name(), search))
+                    .any(|search| process_matches(process, search))
             })
             .map(|(pid, process)| DenylistedProcess {
                 name: process.name().to_string(),

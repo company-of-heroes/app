@@ -46,3 +46,7 @@ export async function appDataDir(): Promise<string> {
 export async function homeDir(): Promise<string> {
 	return 'C:/Users/test';
 }
+
+export function sep(): string {
+	return '\\';
+}

@@ -9,7 +9,11 @@ import type {
 	RewardView
 } from '@company-of-heroes/ui/reward/types';
 import { cached, uncache } from '../cache';
-import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
+import {
+	profileFromPersonalStat,
+	type LeaderboardStat,
+	type RelicPersonalStat
+} from '../domain/relic-matches';
 import { steamIdsOf } from '../domain/users';
 import { all, fromPb, sequence, type Task } from '../result';
 import { Service } from './service';
@@ -55,6 +59,9 @@ type Unlock = { reward: string; unlockedAt: string };
 type Checked = { reward: Reward; created: boolean; seenBefore: boolean };
 
 type Metric = (condition: RewardCondition) => Task<number>;
+
+/** Fetched at most once per evaluation, however many conditions use it. */
+type Shared = { ladder: () => Task<LeaderboardStat[]> };
 
 const OWNER_FIELDS = 'id,steamIds,reputation,avatar,created';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -315,13 +322,8 @@ export class RewardsService extends Service {
 		);
 	}
 
-	/**
-	 * Highest Relic ladder rank (1–20) on the automatch ladders, optionally for one faction
-	 * and/or mode. Uses the highest rank ever reached, so a later drop does not matter.
-	 * Relic being unreachable counts as 0, so the other rewards still evaluate.
-	 */
-	private rankReached(owner: Owner, condition: RewardCondition): Task<number> {
-		const { raceId, matchtypeId } = condition.filter ?? {};
+	/** Relic ladder stats of every Steam ID; Relic being unreachable counts as none. */
+	private ladderStats(owner: Owner): Task<LeaderboardStat[]> {
 		return all(
 			owner.steamIds.map((steamId) =>
 				this.relic
@@ -338,8 +340,18 @@ export class RewardsService extends Service {
 						return okAsync([]);
 					})
 			)
-		).map((perSteamId) =>
-			perSteamId.flat().reduce((best, stat) => {
+		).map((perSteamId) => perSteamId.flat());
+	}
+
+	/**
+	 * Highest Relic ladder rank (1–20) on the automatch ladders, optionally for one faction
+	 * and/or mode. Uses the highest rank ever reached, so a later drop does not matter.
+	 * Relic being unreachable counts as 0, so the other rewards still evaluate.
+	 */
+	private rankReached(condition: RewardCondition, shared: Shared): Task<number> {
+		const { raceId, matchtypeId } = condition.filter ?? {};
+		return shared.ladder().map((stats) =>
+			stats.reduce((best, stat) => {
 				const ladder = automatchLadder(stat.leaderboard_id);
 				if (
 					!ladder ||
@@ -452,7 +464,7 @@ export class RewardsService extends Service {
 		);
 	}
 
-	private measure(owner: Owner, condition: RewardCondition): Task<number> {
+	private measure(owner: Owner, condition: RewardCondition, shared: Shared): Task<number> {
 		const own = this.pb.filter('user = {:userId} && deleted = false', { userId: owner.id });
 		const replies = `${own} && parent != ""`;
 		switch (condition.metric) {
@@ -470,7 +482,7 @@ export class RewardsService extends Service {
 			case 'elo_reached':
 				return this.eloReached(owner, condition);
 			case 'rank_reached':
-				return this.rankReached(owner, condition);
+				return this.rankReached(condition, shared);
 			case 'hours_played':
 				return this.hoursPlayed(owner);
 			case 'matches_recorded':
@@ -535,11 +547,13 @@ export class RewardsService extends Service {
 	/** Measures each distinct metric + filter once per owner. */
 	private metrics(owner: Owner): Metric {
 		const memo = new Map<string, Task<number>>();
+		let ladder: Task<LeaderboardStat[]> | undefined;
+		const shared: Shared = { ladder: () => (ladder ??= this.ladderStats(owner)) };
 		return (condition) => {
 			const key = `${condition.metric}:${JSON.stringify(condition.filter ?? {})}`;
 			let task = memo.get(key);
 			if (!task) {
-				task = this.measure(owner, condition);
+				task = this.measure(owner, condition, shared);
 				memo.set(key, task);
 			}
 

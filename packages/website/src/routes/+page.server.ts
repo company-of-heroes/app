@@ -27,8 +27,11 @@ function section<T>(items: Task<T[]>): Promise<SectionResult<T>> {
 	);
 }
 
-/** Stream each section so client nav to `/` is not blocked on Twitch / match APIs. */
-export const load: PageServerLoad = ({ locals }) => {
+/**
+ * Stream each section so client nav to `/` is not blocked on Twitch / match APIs. Tournaments are
+ * awaited: they sit at the top of the page, so streaming them in would push everything down.
+ */
+export const load: PageServerLoad = async ({ locals }) => {
 	const liveLobbies = locals.services.liveLobbies.list();
 	const memberUploads = locals.services.memberReplays.list(
 		memberQueryFromReplaysQuery(recentMemberQuery(), HOME_RECENT_MEMBER_UPLOADS),
@@ -59,7 +62,7 @@ export const load: PageServerLoad = ({ locals }) => {
 		),
 		streams: locals.services.twitch.listStreams().unwrapOr([]),
 		// Public lists only (no staff drafts), so the home page looks the same for everyone.
-		tournaments: ResultAsync.combine([
+		tournaments: await ResultAsync.combine([
 			locals.services.tournaments.list('active', null),
 			locals.services.tournaments.list('upcoming', null)
 		]).match(

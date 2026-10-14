@@ -115,7 +115,7 @@ export function crumbsFromPath(pathname: string, extra: Crumb[]): Crumb[] {
 		parts[0] === 'replays'
 			? parts[1] === 'upload'
 				? '/history?tab=member'
-				: '/history?tab=replays'
+				: rememberedHistoryListHref('/history?tab=replays')
 			: parts[0] === 'history'
 				? rememberedHistoryListHref()
 				: `/${parts[0]}`;

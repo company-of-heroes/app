@@ -1,5 +1,6 @@
 use serde::Serialize;
 use std::path::{Path, PathBuf};
+#[cfg(windows)]
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
@@ -7,6 +8,7 @@ const MAX_WIDTH: u32 = 1920;
 const JPEG_QUALITY: u8 = 70;
 const MIN_WINDOW_WIDTH: u32 = 400;
 const MIN_WINDOW_HEIGHT: u32 = 300;
+#[cfg(windows)]
 const CAPTURE_TIMEOUT: Duration = Duration::from_secs(4);
 const PRINT_SCREEN_WAIT: Duration = Duration::from_secs(6);
 
@@ -25,13 +27,13 @@ pub async fn capture_game_window(
     screenshots_dir: Option<String>,
     keep_screenshot: Option<bool>,
 ) -> Result<GameWindowCapture, String> {
-    #[cfg(not(windows))]
+    #[cfg(not(any(windows, target_os = "linux")))]
     {
         let _ = (screenshots_dir, keep_screenshot);
-        Err("Game window capture is only supported on Windows".into())
+        Err("Game window capture is only supported on Windows and Linux".into())
     }
 
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "linux"))]
     {
         let keep = keep_screenshot.unwrap_or(false);
         tokio::task::spawn_blocking(move || capture_game_window_sync(screenshots_dir, keep))
@@ -45,7 +47,8 @@ fn capture_game_window_sync(
     screenshots_dir: Option<String>,
     keep_screenshot: bool,
 ) -> Result<GameWindowCapture, String> {
-    let coh_pid = relic_coh_pid().ok_or_else(|| "Company of Heroes is not running".to_string())?;
+    let coh_pid = crate::process_check::find_pid("RelicCOH.exe")
+        .ok_or_else(|| "Company of Heroes is not running".to_string())?;
     ensure_coh_foreground(coh_pid)?;
 
     if let Some(dir) = screenshots_dir.filter(|value| !value.trim().is_empty()) {
@@ -65,7 +68,89 @@ fn capture_game_window_sync(
     encode_jpeg(rgba)
 }
 
-#[cfg(windows)]
+/// Linux: the game's own Print Screen shot first (Proton renders through
+/// DXVK/Vulkan, which X11 cannot always read back), then an X11 window grab.
+#[cfg(target_os = "linux")]
+fn capture_game_window_sync(
+    screenshots_dir: Option<String>,
+    keep_screenshot: bool,
+) -> Result<GameWindowCapture, String> {
+    let x11 = crate::linux::x11::require()?;
+    let coh_pid = crate::process_check::find_pid("RelicCOH.exe")
+        .ok_or_else(|| "Company of Heroes is not running".to_string())?;
+    let window = x11
+        .find_game_window(Some(coh_pid), MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT)
+        .ok_or_else(|| "Company of Heroes window not found".to_string())?;
+    let is_foreground = || {
+        x11.active_window()
+            .is_some_and(|active| active == window || x11.window_pid(active) == Some(coh_pid))
+            || x11.is_coh_foreground()
+    };
+    if !is_foreground() {
+        return Err("Company of Heroes is not in the foreground".into());
+    }
+
+    if let Some(dir) = screenshots_dir.filter(|value| !value.trim().is_empty()) {
+        if let Ok(rgba) = capture_via_game_screenshot(&x11, &dir, keep_screenshot) {
+            if !is_blank_frame(&rgba) {
+                return encode_jpeg(rgba);
+            }
+        }
+    }
+
+    let rgba = x11.capture_window(window)?;
+    if is_blank_frame(&rgba) {
+        return Err("Company of Heroes capture was blank".into());
+    }
+    if !is_foreground() {
+        return Err("Company of Heroes is not in the foreground".into());
+    }
+    encode_jpeg(rgba)
+}
+
+/// Sends Print Screen to the game (Wine passes it on) and waits for the file it writes.
+#[cfg(target_os = "linux")]
+fn capture_via_game_screenshot(
+    x11: &crate::linux::x11::X11,
+    screenshots_dir: &str,
+    keep_screenshot: bool,
+) -> Result<image::RgbaImage, String> {
+    use crate::linux::keys::KEYCODE_PRINT;
+
+    let dir = resolve_screenshots_dir(screenshots_dir);
+    std::fs::create_dir_all(&dir).map_err(|error| error.to_string())?;
+    let before: std::collections::HashSet<PathBuf> =
+        list_screenshot_files(&dir).into_iter().collect();
+
+    x11.fake_key(KEYCODE_PRINT, true)?;
+    x11.flush()?;
+    std::thread::sleep(Duration::from_millis(30));
+    x11.fake_key(KEYCODE_PRINT, false)?;
+    x11.flush()?;
+
+    let deadline = Instant::now() + PRINT_SCREEN_WAIT;
+    while Instant::now() < deadline {
+        if let Some(path) = list_screenshot_files(&dir)
+            .into_iter()
+            .find(|path| !before.contains(path))
+        {
+            // The game may still be writing the file.
+            std::thread::sleep(Duration::from_millis(150));
+            let image = image::open(&path)
+                .map_err(|error| error.to_string())?
+                .to_rgba8();
+            if !keep_screenshot {
+                let _ = std::fs::remove_file(&path);
+            }
+            return Ok(image);
+        }
+        std::thread::sleep(Duration::from_millis(100));
+    }
+
+    Err("Company of Heroes did not write a screenshot".into())
+}
+
+#[cfg(any(windows, target_os = "linux"))]
 fn encode_jpeg(rgba: image::RgbaImage) -> Result<GameWindowCapture, String> {
     use base64::{engine::general_purpose::STANDARD, Engine as _};
     use image::codecs::jpeg::JpegEncoder;
@@ -316,7 +401,7 @@ fn close_new_snipping(before: &[u32]) {
     }
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 fn resolve_screenshots_dir(preferred: &str) -> PathBuf {
     let path = PathBuf::from(preferred.trim());
     if path.is_dir() {
@@ -336,7 +421,7 @@ fn resolve_screenshots_dir(preferred: &str) -> PathBuf {
     path
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 fn list_screenshot_files(dir: &Path) -> Vec<PathBuf> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
@@ -524,7 +609,7 @@ fn pick_coh_window(coh_pid: u32) -> Result<windows_capture::window::Window, Stri
 
 /// GDI/engine blank frames are uniformly black. Real CoH shots still have
 /// HUD/minimap variance even when the map itself is dark.
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "linux"))]
 fn is_blank_frame(image: &image::RgbaImage) -> bool {
     const STEP: usize = 16;
     let mut count = 0u64;
@@ -552,23 +637,6 @@ fn is_blank_frame(image: &image::RgbaImage) -> bool {
     let mean = sum as f64 / count as f64;
     let variance = (sum_sq as f64 / count as f64) - mean * mean;
     dark * 100 / count >= 98 && variance < 80.0
-}
-
-#[cfg(windows)]
-fn relic_coh_pid() -> Option<u32> {
-    use sysinfo::System;
-
-    let mut system = System::new_all();
-    system.refresh_processes();
-
-    system.processes().iter().find_map(|(pid, process)| {
-        let name = process.name().to_lowercase();
-        if name == "reliccoh.exe" || name == "reliccoh" {
-            Some(pid.as_u32())
-        } else {
-            None
-        }
-    })
 }
 
 #[cfg(windows)]

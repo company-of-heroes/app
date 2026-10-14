@@ -22,6 +22,6 @@ export const actions: Actions = {
 			return failFrom({ ...result.error, message: locals.t(result.error.message) }, { email });
 		}
 
-		redirect(303, localizeHref('/', locals.locale));
+		redirect(303, localizeHref('/account?sent=verification', locals.locale));
 	}
 };

@@ -20,18 +20,68 @@ permissions:
   contents: write
 
 jobs:
+  # One draft release up front, so the Windows and Linux builds never race to
+  # create it. It is published by `finalize` once every asset is uploaded.
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.release.outputs.release-id }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Create draft release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r '.version' packages/app/src-tauri/tauri.conf.json)
+          TAG="v${VERSION}"
+          # A published release is final: never add a new build to it (e.g. a manual
+          # run before the version was bumped). A draft is a retry of this workflow.
+          if [ "$(gh release view "$TAG" --json isDraft -q .isDraft 2>/dev/null)" = "false" ]; then
+            echo "::error::$TAG is already published. Bump the version (changesets) before releasing."
+            exit 1
+          fi
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "$TAG" \
+              --notes 'See the changelog in the app or on GitHub.'
+          fi
+          {
+            echo "release-id=$(gh release view "$TAG" --json databaseId -q .databaseId)"
+            echo "tag=$TAG"
+            echo "version=$VERSION"
+          } >> "$GITHUB_OUTPUT"
+
   publish:
+    needs: create-release
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: windows-latest
             args: --bundles nsis,msi
-            updaterJsonPreferNsis: true
+          # Oldest supported Ubuntu: the AppImage links against its glibc, so it
+          # runs on every distro that is at least this new.
+          - platform: ubuntu-22.04
+            args: --bundles appimage,deb
     runs-on: ${{ matrix.platform }}
+    env:
+      HAS_LINUX_GPG: ${{ secrets.LINUX_GPG_PRIVATE_KEY != '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+            patchelf libxdo-dev libdbus-1-dev libssl-dev             gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
@@ -59,7 +109,7 @@ jobs:
       # Optional variable: AZURE_SIGNING_PROFILE (defaults to coh1stats)
       - name: Enable Windows Authenticode signing
         id: codesign
-        if: matrix.platform == 'windows-latest'
+        if: runner.os == 'Windows'
         shell: pwsh
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -147,7 +197,28 @@ jobs:
           $envFile = "PUBLIC_PB_URL=$pbUrl`nPUBLIC_SITE_URL=$siteUrl`n"
           [System.IO.File]::WriteAllText((Join-Path $pwd 'packages/app/.env.production'), $envFile)
 
-      - name: Build and publish
+      # Linux has no Authenticode: updates are verified with the Tauri updater key,
+      # and the AppImage gets an embedded GPG signature once these secrets are set.
+      # Secrets: LINUX_GPG_PRIVATE_KEY (armored), optional LINUX_GPG_PASSPHRASE
+      - name: Enable AppImage GPG signing
+        id: gpg
+        if: runner.os == 'Linux' && env.HAS_LINUX_GPG == 'true'
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          KEY_ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/ { print $5; exit }')
+          gpg --armor --export "$KEY_ID" > "$RUNNER_TEMP/coh1stats-linux.asc"
+          {
+            echo "SIGN=1"
+            echo "SIGN_KEY=$KEY_ID"
+            echo "APPIMAGETOOL_SIGN_PASSPHRASE=$GPG_PASSPHRASE"
+            echo "APPIMAGETOOL_FORCE_SIGN=1"
+          } >> "$GITHUB_ENV"
+
+      - name: Build and upload
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -162,9 +233,44 @@ jobs:
           projectPath: packages/app
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}${{ steps.codesign.outputs.args }}
-          tagName: v__VERSION__
-          releaseName: v__VERSION__
-          releaseBody: See the changelog in the app or on GitHub.
-          releaseDraft: ${{ github.event_name == 'workflow_dispatch' }}
-          includeUpdaterJson: true
-          updaterJsonPreferNsis: ${{ matrix.updaterJsonPreferNsis }}
+          releaseId: ${{ needs.create-release.outputs.release-id }}
+          # Written once by `finalize`, so the two platforms cannot overwrite each other.
+          includeUpdaterJson: false
+
+      - name: Upload GPG public key
+        if: steps.gpg.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" "$RUNNER_TEMP/coh1stats-linux.asc" --clobber
+
+  # latest.json (Windows + Linux updater targets) and SHA256SUMS over every
+  # installer, then publish. Manual runs stay a draft.
+  finalize:
+    needs: [create-release, publish]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.create-release.outputs.tag }}
+      VERSION: ${{ needs.create-release.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Write updater manifest and checksums
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --dir "$RUNNER_TEMP/assets"
+          node scripts/release-manifest.mjs --dir "$RUNNER_TEMP/assets" --out "$RUNNER_TEMP/out" \
+            --tag "$TAG" --version "$VERSION"
+          gh release upload "$TAG" "$RUNNER_TEMP/out/latest.json" "$RUNNER_TEMP/out/SHA256SUMS" --clobber
+
+      - name: Publish release
+        if: github.event_name != 'workflow_dispatch'
+        run: gh release edit "$TAG" --draft=false --latest

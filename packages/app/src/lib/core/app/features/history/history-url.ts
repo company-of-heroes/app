@@ -77,9 +77,9 @@ export function rememberHistoryListHref(href: string) {
 	}
 }
 
-export function rememberedHistoryListHref(): string {
+export function rememberedHistoryListHref(fallback = '/history'): string {
 	if (typeof sessionStorage === 'undefined') {
-		return '/history';
+		return fallback;
 	}
 
 	try {
@@ -91,7 +91,7 @@ export function rememberedHistoryListHref(): string {
 		// Private mode.
 	}
 
-	return '/history';
+	return fallback;
 }
 
 export type HistoryListQueryState = {

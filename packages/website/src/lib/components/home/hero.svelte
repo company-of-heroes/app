@@ -3,11 +3,14 @@
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import {
 		latestDownload,
+		linuxDownload,
 		loadReplayManagerDownload,
-		replayManagerDownload
+		replayManagerDownload,
+		replayManagerLinuxDownload
 	} from '$lib/site/download.svelte';
 	import { cn } from '$lib/utils/cn';
-	import DownloadSimpleIcon from 'phosphor-svelte/lib/DownloadSimpleIcon';
+	import WindowsLogoIcon from 'phosphor-svelte/lib/WindowsLogoIcon';
+	import LinuxLogoIcon from 'phosphor-svelte/lib/LinuxLogoIcon';
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
 	import { useI18n } from '$lib/i18n';
 	import { onMount } from 'svelte';
@@ -22,6 +25,7 @@
 				'Runs next to the game: live lobby scouting, automatic match history, stream overlays and fair play. Needs an account.'
 			),
 			download: latestDownload,
+			linux: linuxDownload,
 			label: t('Download companion'),
 			variant: 'primary' as const
 		},
@@ -32,6 +36,7 @@
 				'Lightweight offline tool to browse, search, rename and delete the replays in your playback folder. No account, nothing uploaded.'
 			),
 			download: replayManagerDownload,
+			linux: replayManagerLinuxDownload,
 			label: t('Download Replay Manager'),
 			variant: 'secondary' as const
 		}
@@ -74,15 +79,21 @@
 					<p class="font-medium text-white">{item.title}</p>
 					<p class="text-secondary-400 mt-1 text-sm leading-relaxed">{item.description}</p>
 				</div>
-				<Button
-					href={item.download.url}
-					download={item.download.fileName}
-					variant={item.variant}
-					class="mt-auto self-start"
-				>
-					<DownloadSimpleIcon size={18} weight="duotone" />
-					{item.label}
-				</Button>
+				<div class="mt-auto flex flex-wrap items-center gap-2">
+					<Button href={item.download.url} download={item.download.fileName} variant={item.variant}>
+						<WindowsLogoIcon size={18} weight="duotone" />
+						{item.label}
+					</Button>
+					<Button
+						href={item.linux.url}
+						download={item.linux.fileName}
+						variant="secondary"
+						title={t('For Company of Heroes on Linux through Steam Proton')}
+					>
+						<LinuxLogoIcon size={18} weight="duotone" />
+						{t('Linux (AppImage)')}
+					</Button>
+				</div>
 			</div>
 		{/each}
 	</div>

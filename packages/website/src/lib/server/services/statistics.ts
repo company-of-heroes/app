@@ -10,10 +10,13 @@ import { cached } from '../cache';
 import { fromPb, pbMaybe, sequence, type Task } from '../result';
 import {
 	buildStatistics,
+	summarizeMaps,
 	summarizeStatistics,
 	tallyUploads,
+	withMap,
 	type DayRange,
 	type KeptUploads,
+	type MapStatistics,
 	type StatisticsData,
 	type StatisticsRow,
 	type UploadRow
@@ -294,16 +297,16 @@ export class StatisticsService extends Service {
 	}
 
 	/**
-	 * Scheduled: rebuilds the statistics and stores every preset period and the headline
-	 * totals as snapshots, so no visitor waits for a rebuild.
+	 * Scheduled: rebuilds the statistics and stores every preset period (unfiltered and per
+	 * map) and the headline totals as snapshots, so no visitor waits for a rebuild.
 	 */
 	refreshSnapshots(): Task<{ processed: number; more: boolean }> {
 		return ResultAsync.combine([this.buildData(), this.countTotals()]).andThen(([data, totals]) => {
 			memo = { at: Date.now(), data };
 			const entries: [string, unknown][] = [
-				...STATISTICS_PERIODS.map((period): [string, unknown] => [
-					`period:${period}`,
-					summarizeStatistics(data, periodDays(period))
+				...STATISTICS_PERIODS.flatMap((period): [string, unknown][] => [
+					[`period:${period}`, summarizeStatistics(data, periodDays(period))],
+					[`period:${period}:maps`, summarizeMaps(data, periodDays(period))]
 				]),
 				['totals', totals]
 			];
@@ -316,7 +319,7 @@ export class StatisticsService extends Service {
 
 	/**
 	 * Statistics of every mode in a preset period or a custom range of days, optionally on one
-	 * map (see `summarizeStatistics`). Presets without a map come from the snapshots.
+	 * map (see `summarizeStatistics`). Presets come from the snapshots, with or without a map.
 	 */
 	get(range: StatisticsRange, map: string | null = null): Task<StatisticsByMode> {
 		const summarize = (days: DayRange) =>
@@ -329,13 +332,15 @@ export class StatisticsService extends Service {
 			cached(`statistics:period:v8:${range.period}:${map ?? ''}`, CACHE_SECONDS, () =>
 				summarize(periodDays(range.period))
 			);
-		if (map) {
-			return live();
+		const all = this.snapshot<StatisticsByMode>(`period:${range.period}`);
+		if (!map) {
+			return all.andThen((stats) => (stats ? okAsync(stats) : live()));
 		}
 
-		return this.snapshot<StatisticsByMode>(`period:${range.period}`).andThen((stats) =>
-			stats ? okAsync(stats) : live()
-		);
+		return ResultAsync.combine([
+			all,
+			this.snapshot<Record<string, MapStatistics>>(`period:${range.period}:maps`)
+		]).andThen(([stats, maps]) => (stats && maps ? okAsync(withMap(stats, maps[map])) : live()));
 	}
 
 	private countLobbies(filter: string): Task<number> {

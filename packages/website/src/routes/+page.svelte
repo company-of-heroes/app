@@ -60,6 +60,7 @@
 </svelte:head>
 
 <main>
+	<HomeTournaments {...data.tournaments} />
 	<Hero />
 	{#await data.statistics}
 		<HomeStatistics statistics={null} loading />
@@ -69,9 +70,6 @@
 		<HomeStatistics statistics={null} />
 	{/await}
 	<HomePlayerSearch />
-	{#await data.tournaments then tournaments}
-		<HomeTournaments {...tournaments} />
-	{/await}
 	{#await data.topReplays}
 		<TopReplays matches={[]} loading />
 	{:then topReplays}

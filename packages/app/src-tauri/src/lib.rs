@@ -9,6 +9,8 @@ mod coh_chat;
 mod global_shortcuts;
 mod hold_bindings;
 mod input;
+#[cfg(target_os = "linux")]
+mod linux;
 mod migrations;
 mod module_check;
 mod process_check;
@@ -48,6 +50,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_oauth::init())
@@ -73,6 +76,7 @@ pub fn run() {
             hold_bindings::sync_hold_bindings,
             browser_login::complete_browser_login,
             window::get_active_window_title,
+            window::get_platform_info,
             steam::get_steam_install_path
         ])
         .on_menu_event(|app, event| match event.id().as_ref() {

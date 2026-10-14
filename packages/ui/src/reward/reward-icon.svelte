@@ -8,6 +8,7 @@
 	import { tryUseHost } from '../host/host.context';
 	import { tooltipPanel } from '../variants';
 	import { formatRewardCondition } from './metrics';
+	import { ribbonTipHtml } from './ribbon';
 	import type { RewardView } from './types';
 
 	type Props = {
@@ -61,6 +62,7 @@
 	const content = $derived(
 		[
 			`<span class="${cn(tooltipPanel, 'max-w-64 font-normal')}">`,
+			ribbonTipHtml(ribbon),
 			`<span class="block font-semibold text-white">${escape(reward.title)}</span>`,
 			reward.description
 				? `<span class="text-secondary-300 mt-0.5 block">${escape(reward.description)}</span>`

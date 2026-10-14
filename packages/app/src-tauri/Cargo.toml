@@ -62,8 +62,14 @@ image = { version = "0.25", default-features = false, features = ["jpeg"] }
 base64 = "0.22"
 windows-capture = "2"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+x11rb = { version = "0.13", features = ["xinput", "xkb", "xtest"] }
+image = { version = "0.25", default-features = false, features = ["jpeg"] }
+base64 = "0.22"
+
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-persisted-scope = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-updater = "2"

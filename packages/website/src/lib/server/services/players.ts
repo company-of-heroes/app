@@ -286,6 +286,37 @@ export class PlayersService extends Service {
 			});
 	}
 
+	/** A Steam id's name: the stored one, else Relic's; null when neither knows the player. */
+	alias(steamId: string): Task<string | null> {
+		return cached(`players:alias:${steamId}`, 3600, () =>
+			fromPb(
+				this.pb.collection('player_ratings').getList<{ alias: string }>(1, 1, {
+					filter: this.pb.filter('steamId = {:steamId}', { steamId }),
+					fields: 'alias',
+					skipTotal: true
+				}),
+				'Could not load player'
+			).andThen((page) => {
+				const stored = page.items[0]?.alias;
+				if (stored) {
+					return okAsync<string | null>(stored);
+				}
+
+				return this.relic
+					.get<RelicPersonalStat>(
+						personalStat(
+							`profile_names=${encodeURIComponent(JSON.stringify([`/steam/${steamId}`]))}`
+						)
+					)
+					.map(
+						(data) =>
+							uniqueMembers(data).find((member) => member.name === `/steam/${steamId}`)?.alias ||
+							null
+					);
+			})
+		);
+	}
+
 	/** The first page of `searchPage`. */
 	search(query: string, requireMatches: boolean): Task<PlayerSearchItem[]> {
 		return this.searchPage(query, requireMatches).map(({ items }) => items);

@@ -22,6 +22,9 @@ export const linuxDownload = $state<LatestDownload>(emptyDownload());
 export const replayManagerDownload = $state<LatestDownload>(
 	emptyDownload(REPLAY_MANAGER_RELEASES_URL)
 );
+export const replayManagerLinuxDownload = $state<LatestDownload>(
+	emptyDownload(REPLAY_MANAGER_RELEASES_URL)
+);
 
 type ReleaseAsset = {
 	name?: string;
@@ -96,9 +99,11 @@ export async function loadReplayManagerDownload(): Promise<void> {
 			(item) => !item.draft && REPLAY_MANAGER_TAG.test(item.tag_name ?? '')
 		);
 		applyAsset(replayManagerDownload, pickInstaller(release?.assets ?? []));
+		applyAsset(replayManagerLinuxDownload, pickAsset(release?.assets ?? [], /\.AppImage$/i));
 	} catch (error) {
 		console.warn('[website] failed to resolve the Replay Manager download:', error);
 	} finally {
 		replayManagerDownload.loading = false;
+		replayManagerLinuxDownload.loading = false;
 	}
 }

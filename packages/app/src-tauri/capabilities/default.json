@@ -150,6 +150,24 @@
 		"fs:allow-watch",
 		"fs:scope-document-recursive",
 		"fs:scope-appdata-recursive",
+		"fs:scope-appconfig-recursive",
+		{
+			"identifier": "fs:scope",
+			"allow": [
+				{
+					"path": "$HOME/.steam/**"
+				},
+				{
+					"path": "$HOME/.local/share/Steam/**"
+				},
+				{
+					"path": "$HOME/.var/app/com.valvesoftware.Steam/**"
+				},
+				{
+					"path": "$HOME/snap/steam/**"
+				}
+			]
+		},
 		"fs:allow-copy-file",
 		{
 			"identifier": "fs:allow-exists",
