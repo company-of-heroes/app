@@ -2,8 +2,8 @@ import type { ApiDeps } from './deps';
 import { AntiCheatApi } from './anti-cheat/anti-cheat';
 import { AuthApi } from './auth/auth';
 import { CompanionApi } from './companion/companion';
-import { DocsApi } from './docs/docs';
 import { CompareApi } from './compare/compare';
+import { DocsApi } from './docs/docs';
 import { HeadToHeadApi } from './head-to-head/head-to-head';
 import { HiddenMatchesApi } from './hidden-matches/hidden-matches';
 import { LabelsApi } from './labels/labels';
@@ -28,9 +28,9 @@ export type Api = {
 	antiCheat: AntiCheatApi;
 	auth: AuthApi;
 	companion: CompanionApi;
+	compare: CompareApi;
 	docs: DocsApi;
 	headToHead: HeadToHeadApi;
-	compare: CompareApi;
 	hiddenMatches: HiddenMatchesApi;
 	labels: LabelsApi;
 	leaderboards: LeaderboardsApi;
@@ -56,9 +56,9 @@ export function createApi(deps: ApiDeps): Api {
 		antiCheat: new AntiCheatApi(deps),
 		auth: new AuthApi(deps),
 		companion: new CompanionApi(deps),
+		compare: new CompareApi(deps),
 		docs: new DocsApi(deps),
 		headToHead: new HeadToHeadApi(deps),
-		compare: new CompareApi(deps),
 		hiddenMatches: new HiddenMatchesApi(deps),
 		labels: new LabelsApi(deps),
 		leaderboards: new LeaderboardsApi(deps),

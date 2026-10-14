@@ -3,8 +3,11 @@ import { z } from 'zod';
 import type { LeaderboardStat, PlayerEloMap } from '@company-of-heroes/ui/player/types';
 import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
-import type { HeadToHead } from '../head-to-head/head-to-head';
-import type { PlayerPerformance } from '../player-performance/player-performance';
+import { headToHeadSchema, type HeadToHead } from '../head-to-head/head-to-head';
+import {
+	performanceSchema,
+	type PlayerPerformance
+} from '../player-performance/player-performance';
 
 export type CompareAccount = {
 	steamId: string;
@@ -56,55 +59,6 @@ export type Compare = {
 	};
 	headToHead: HeadToHead;
 };
-
-const performanceSchema = z
-	.object({
-		matchCount: z.number(),
-		wins: z.number(),
-		losses: z.number(),
-		recentMatches: z.array(z.any()),
-		byMap: z.array(z.any()),
-		byFaction: z.array(z.any()),
-		byMode: z.array(z.any())
-	})
-	.passthrough() as unknown as z.ZodType<PlayerPerformance>;
-
-const headToHeadSchema = z.object({
-	profileId: z.number(),
-	matchCount: z.number(),
-	wins: z.number(),
-	losses: z.number(),
-	lastSessionId: z.number().nullable(),
-	byMatchup: z.array(
-		z.object({
-			raceId: z.number(),
-			theirRaceId: z.number(),
-			wins: z.number(),
-			losses: z.number()
-		})
-	),
-	byMode: z.array(
-		z.object({
-			matchtypeId: z.number(),
-			wins: z.number(),
-			losses: z.number()
-		})
-	),
-	games: z
-		.array(
-			z.object({
-				lobbyId: z.string(),
-				sessionId: z.number(),
-				won: z.boolean(),
-				raceId: z.number().nullable(),
-				theirRaceId: z.number().nullable(),
-				matchtypeId: z.number().nullable(),
-				map: z.string(),
-				createdAt: z.string().nullable()
-			})
-		)
-		.default([])
-}) satisfies z.ZodType<HeadToHead, unknown>;
 
 const leaderboardStatSchema = z.object({
 	leaderboard_id: z.number(),

@@ -66,7 +66,7 @@ const gameSchema = z.object({
 	createdAt: z.string().nullable()
 });
 
-const headToHeadSchema: z.ZodType<HeadToHead> = z.object({
+export const headToHeadSchema: z.ZodType<HeadToHead> = z.object({
 	profileId: z.number(),
 	matchCount: z.number(),
 	wins: z.number(),
