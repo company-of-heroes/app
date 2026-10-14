@@ -12,19 +12,11 @@
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import WarningIcon from 'phosphor-svelte/lib/WarningIcon';
 	import { formatDate } from '../format/date';
-	import {
-		getModeLabel,
-		getRaceLabel,
-		getRatioColor,
-		getRatioValue,
-		normalizeMapName,
-		winrate
-	} from '../format/player-format';
+	import { getRatioColor, getRatioValue, normalizeMapName, winrate } from '../format/player-format';
 	import type { HeadToHead } from '../head-to-head/types';
 	import { useHost } from '../host/host.context';
 	import LeaderboardStatPill from '../leaderboard/leaderboard-stat-pill.svelte';
 	import LikeButton from '../comment/like-button.svelte';
-	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import { CopyButton } from '../ui/copy-button';
 	import { Skeleton } from '../ui/skeleton';
@@ -38,6 +30,7 @@
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerLinks from './player-links.svelte';
 	import RewardIcons from '../reward/reward-icons.svelte';
+	import MatchResultBadge from './match-result-badge.svelte';
 	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import { isStreamingLink } from './profile';
 	import SmurfAlert from './smurf-alert.svelte';
@@ -218,21 +211,7 @@
 				<PlayerFact label={t('Recent')} icon={ClockCounterClockwiseIcon}>
 					<span class="inline-flex min-w-0 items-center gap-1 overflow-x-auto">
 						{#each recentMatches as match (match.id || match.sessionId)}
-							{@const href = match.id ? host.routes.match(match.id) : null}
-							{@const title = `${match.outcome === 1 ? t('Win') : t('Loss')}${match.raceId != null ? ` · ${getRaceLabel(match.raceId)}` : ''}${match.matchtypeId != null ? ` · ${getModeLabel(match.matchtypeId)}` : ''}`}
-							{#if href}
-								<a {href} class={cn(interactive, 'group inline-flex shrink-0')} {title}>
-									<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
-										{match.outcome === 1 ? 'W' : 'L'}
-									</Badge>
-								</a>
-							{:else}
-								<span class="inline-flex shrink-0" {title}>
-									<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
-										{match.outcome === 1 ? 'W' : 'L'}
-									</Badge>
-								</span>
-							{/if}
+							<MatchResultBadge {match} />
 						{/each}
 					</span>
 				</PlayerFact>

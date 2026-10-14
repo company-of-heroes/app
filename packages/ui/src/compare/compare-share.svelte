@@ -1,15 +1,12 @@
 <script lang="ts">
-	import { cn } from '@company-of-heroes/ui/cn';
-	import { winrate } from '../format/player-format';
+	import { getRatioColor, winrate } from '../format/player-format';
 
 	type Props = {
 		/** Left out or without games: shows `—`. */
 		record: { wins: number; losses: number } | undefined;
-		/** The better side of a mirrored row. */
-		better?: boolean;
 	};
 
-	let { record, better = false }: Props = $props();
+	let { record }: Props = $props();
 
 	const games = $derived(record ? record.wins + record.losses : 0);
 </script>
@@ -19,7 +16,7 @@
 	{#if !record || games === 0}
 		<span class="text-secondary-500">—</span>
 	{:else}
-		<span class={cn('font-medium', better ? 'text-primary' : 'text-white')}>
+		<span class="font-medium" style:color={getRatioColor(record.wins, record.losses)}>
 			{winrate(record.wins, record.losses)}
 		</span>
 		<span class="text-secondary-400 text-xs">({games})</span>

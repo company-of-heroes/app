@@ -6,7 +6,7 @@
 	import { useHost } from '../host/host.context';
 	import CompareShare from './compare-share.svelte';
 	import { useCompare } from './context';
-	import { betterSide, mirroredRow, winShare } from './format';
+	import { mirroredRow } from './format';
 
 	type Props = {
 		class?: string;
@@ -23,7 +23,7 @@
 			const theirs = context.compare.them.performance.byFaction.find(
 				(row) => row.raceId === raceId
 			);
-			return { raceId, mine, theirs, better: betterSide(winShare(mine), winShare(theirs)) };
+			return { raceId, mine, theirs };
 		})
 	);
 </script>
@@ -38,12 +38,12 @@
 	<div class="-mb-px">
 		{#each rows as row (row.raceId)}
 			<div class={cn(mirroredRow, 'border-secondary-800 border-b py-2')}>
-				<CompareShare record={row.mine} better={row.better === 'me'} />
+				<CompareShare record={row.mine} />
 				<div class="flex min-w-0 items-center justify-center gap-2">
 					<img src={host.resolve.factionFlagByRace(row.raceId)} alt="" class={factionIcon} />
 					<span class="min-w-0 truncate text-white">{getRaceLabel(row.raceId)}</span>
 				</div>
-				<CompareShare record={row.theirs} better={row.better === 'them'} />
+				<CompareShare record={row.theirs} />
 			</div>
 		{/each}
 	</div>

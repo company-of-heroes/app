@@ -1,6 +1,7 @@
 import PlayerLabels from './player-labels.svelte';
 import PlayerLikeCount from './player-like-count.svelte';
 import PlayerLinks from './player-links.svelte';
+import MatchResultBadge from './match-result-badge.svelte';
 import SmurfAlert from './smurf-alert.svelte';
 import SteamBanAlert from './steam-ban-alert.svelte';
 import PlayerFact from './player-fact.svelte';
@@ -23,6 +24,7 @@ import TwitchLogo from './twitch-logo.svelte';
 import YoutubeLogo from './youtube-logo.svelte';
 
 export {
+	MatchResultBadge,
 	PlayerLabels,
 	PlayerLikeCount,
 	PlayerLinks,

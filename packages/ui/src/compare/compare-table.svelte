@@ -5,18 +5,19 @@
 	import { factionIcon, tableHeadRow } from '@company-of-heroes/ui/variants';
 	import { escapeHtml, tooltip } from '../attachments/tooltip.svelte';
 	import {
+		getEloColor,
+		getEloTextShadow,
 		getMatchTypeIdFromLeaderboardId,
-		getModeLabel,
 		getRaceFromLeaderboardId,
-		getRaceLabel,
-		getStoredEloForLeaderboard
+		getStoredEloForLeaderboard,
+		isEliteElo
 	} from '../format/player-format';
 	import { getLeaderboardTypeLabel } from '../format/ranks';
 	import { useHost } from '../host/host.context';
-	import { Badge } from '../ui/badge';
+	import MatchResultBadge from '../player/match-result-badge.svelte';
 	import CompareShare from './compare-share.svelte';
 	import { useCompare } from './context';
-	import { accountName, betterSide, mirroredRow, winShare, type CompareSide } from './format';
+	import { accountName, mirroredRow } from './format';
 
 	type Props = {
 		class?: string;
@@ -92,32 +93,16 @@
 				theirs: theirLadder(leaderboardId)
 			}));
 	});
-
-	const myShare = $derived(winShare(compare.me.performance));
-	const theirShare = $derived(winShare(compare.them.performance));
-	const shareBetter = $derived(betterSide(myShare, theirShare));
-
-	function recentTitle(match: Performance['recentMatches'][number]) {
-		return [
-			match.outcome === 1 ? t('Win') : t('Loss'),
-			match.raceId != null ? getRaceLabel(match.raceId) : null,
-			match.matchtypeId != null ? getModeLabel(match.matchtypeId) : null
-		]
-			.filter(Boolean)
-			.join(' · ');
-	}
 </script>
 
-{#snippet ladderCell(ladder: Ladder, side: CompareSide, other: Ladder)}
-	{@const rankBetter = betterSide(ladder.rank, other.rank, false) === side}
-	{@const eloBetter = betterSide(ladder.elo, other.elo) === side}
+{#snippet ladderCell(ladder: Ladder)}
 	<div class="flex min-w-0 flex-wrap items-baseline justify-center gap-x-1.5 tabular-nums">
 		{#if ladder.rank == null && ladder.elo == null}
 			<span class="text-secondary-500">—</span>
 		{:else}
 			{#if ladder.rank != null}
 				<span
-					class={cn('font-medium', rankBetter ? 'text-primary' : 'text-white')}
+					class="font-semibold text-white"
 					{@attach tooltip(ladder.rankHolder ? escapeHtml(ladder.rankHolder) : null)}
 				>
 					#{ladder.rank}
@@ -128,7 +113,9 @@
 			{/if}
 			{#if ladder.elo != null}
 				<span
-					class={eloBetter ? 'text-primary' : 'text-secondary-200'}
+					class={isEliteElo(ladder.elo) ? 'font-bold tracking-wide' : 'font-medium'}
+					style:color={getEloColor(ladder.elo)}
+					style:text-shadow={getEloTextShadow(ladder.elo)}
 					{@attach tooltip(ladder.eloHolder ? escapeHtml(ladder.eloHolder) : null)}
 				>
 					{ladder.elo}
@@ -143,9 +130,7 @@
 	{@const recent = performance.recentMatches.slice(0, 10)}
 	<div class="flex min-w-0 flex-wrap justify-center gap-1">
 		{#each recent as match (match.id || match.sessionId)}
-			<Badge variant={match.outcome === 1 ? 'success' : 'destructive'} title={recentTitle(match)}>
-				{match.outcome === 1 ? t('W') : t('L')}
-			</Badge>
+			<MatchResultBadge {match} />
 		{:else}
 			<span class="text-secondary-500">—</span>
 		{/each}
@@ -162,7 +147,7 @@
 	<div class="-mb-px">
 		{#each ladders as ladder (ladder.leaderboardId)}
 			<div class={cn(mirroredRow, 'border-secondary-800 border-b py-2')}>
-				{@render ladderCell(ladder.mine, 'me', ladder.theirs)}
+				{@render ladderCell(ladder.mine)}
 				<div class="flex min-w-0 items-center justify-center gap-2">
 					<img
 						src={host.resolve.factionFlagByLeaderboard(ladder.leaderboardId)}
@@ -173,13 +158,13 @@
 						{getLeaderboardTypeLabel(ladder.leaderboardId)}
 					</span>
 				</div>
-				{@render ladderCell(ladder.theirs, 'them', ladder.mine)}
+				{@render ladderCell(ladder.theirs)}
 			</div>
 		{/each}
 		<div class={cn(mirroredRow, 'border-secondary-800 border-b py-2')}>
-			<CompareShare record={compare.me.performance} better={shareBetter === 'me'} />
+			<CompareShare record={compare.me.performance} />
 			<span class="text-secondary-300 truncate text-center">{t('Win rate (games)')}</span>
-			<CompareShare record={compare.them.performance} better={shareBetter === 'them'} />
+			<CompareShare record={compare.them.performance} />
 		</div>
 		<div class={cn(mirroredRow, 'border-secondary-800 border-b py-2')}>
 			{@render formCell(compare.me.performance)}

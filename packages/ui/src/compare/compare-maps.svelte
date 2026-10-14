@@ -6,7 +6,7 @@
 	import MapImage from '../ui/map-image.svelte';
 	import CompareShare from './compare-share.svelte';
 	import { useCompare } from './context';
-	import { betterSide, mirroredRow, winShare } from './format';
+	import { mirroredRow } from './format';
 
 	type Props = {
 		class?: string;
@@ -26,8 +26,7 @@
 			})
 			.map((row) => ({
 				...row,
-				games: row.mine.wins + row.mine.losses + row.theirs.wins + row.theirs.losses,
-				better: betterSide(winShare(row.mine), winShare(row.theirs))
+				games: row.mine.wins + row.mine.losses + row.theirs.wins + row.theirs.losses
 			}))
 			.sort((a, b) => b.games - a.games);
 	});
@@ -44,12 +43,12 @@
 		<div class="-mb-px">
 			{#each rows as row (row.map)}
 				<div class={cn(mirroredRow, 'border-secondary-800 border-b py-2')}>
-					<CompareShare record={row.mine} better={row.better === 'me'} />
+					<CompareShare record={row.mine} />
 					<div class="flex min-w-0 items-center justify-center gap-2">
 						<MapImage map={row.map} alt={normalizeMapName(row.map)} class="w-8" />
 						<span class="min-w-0 truncate text-white">{normalizeMapName(row.map)}</span>
 					</div>
-					<CompareShare record={row.theirs} better={row.better === 'them'} />
+					<CompareShare record={row.theirs} />
 				</div>
 			{/each}
 		</div>
