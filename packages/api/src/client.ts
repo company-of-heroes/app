@@ -3,6 +3,7 @@ import { AntiCheatApi } from './anti-cheat/anti-cheat';
 import { AuthApi } from './auth/auth';
 import { CompanionApi } from './companion/companion';
 import { DocsApi } from './docs/docs';
+import { CompareApi } from './compare/compare';
 import { HeadToHeadApi } from './head-to-head/head-to-head';
 import { HiddenMatchesApi } from './hidden-matches/hidden-matches';
 import { LabelsApi } from './labels/labels';
@@ -29,6 +30,7 @@ export type Api = {
 	companion: CompanionApi;
 	docs: DocsApi;
 	headToHead: HeadToHeadApi;
+	compare: CompareApi;
 	hiddenMatches: HiddenMatchesApi;
 	labels: LabelsApi;
 	leaderboards: LeaderboardsApi;
@@ -56,6 +58,7 @@ export function createApi(deps: ApiDeps): Api {
 		companion: new CompanionApi(deps),
 		docs: new DocsApi(deps),
 		headToHead: new HeadToHeadApi(deps),
+		compare: new CompareApi(deps),
 		hiddenMatches: new HiddenMatchesApi(deps),
 		labels: new LabelsApi(deps),
 		leaderboards: new LeaderboardsApi(deps),
