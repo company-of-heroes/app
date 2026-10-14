@@ -2487,5 +2487,7 @@
 	"You cannot compare yourself with your own account.": "You cannot compare yourself with your own account.",
 	"Back to profile": "Back to profile",
 	"Link a Steam account to compare yourself.": "Link a Steam account to compare yourself.",
-	"Could not load the comparison.": "Could not load the comparison."
+	"Could not load the comparison.": "Could not load the comparison.",
+	"Hide from the public": "Hide from the public",
+	"A hidden tournament is left out of the tournament lists, hall of fame and trophies. Staff, the host and its players can still open it.": "A hidden tournament is left out of the tournament lists, hall of fame and trophies. Staff, the host and its players can still open it."
 }

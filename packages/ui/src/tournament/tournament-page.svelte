@@ -705,7 +705,11 @@
 			{/if}
 			<div class="flex min-w-0 flex-col gap-2">
 				<div class="flex flex-wrap items-center gap-2">
-					<TournamentStatus status={tournament.status} deleted={!!tournament.deletedAt} />
+					<TournamentStatus
+						status={tournament.status}
+						deleted={!!tournament.deletedAt}
+						hidden={tournament.hidden}
+					/>
 					<span class={cn(tableHeadText, 'text-primary')}>{t('Tournament')}</span>
 					{#if current.host}
 						<span class="text-secondary-300 flex items-center gap-1 text-xs">

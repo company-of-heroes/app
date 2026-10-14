@@ -51,6 +51,7 @@
 	let players = $state<string[]>([]);
 	let medal = $state<string | null>(initial?.medal ?? null);
 	let streamUrl = $state(initial?.streamUrl ?? '');
+	let hidden = $state(initial?.hidden ?? false);
 	let banner = $state<File | null>(null);
 	let clearBanner = $state(false);
 	let logo = $state<File | null>(null);
@@ -85,7 +86,8 @@
 			maxParticipants: maxParticipants ? Number(maxParticipants) : null,
 			mapPool,
 			medal,
-			streamUrl: streamUrl.trim() || null
+			streamUrl: streamUrl.trim() || null,
+			hidden
 		};
 	}
 
@@ -125,7 +127,7 @@
 				? await host.api.tournaments.update(
 						tournament.id,
 						tournament.status === 'completed'
-							? { medal: data.medal }
+							? { medal: data.medal, hidden: data.hidden }
 							: started
 								? {
 										name: data.name,
@@ -133,7 +135,8 @@
 										rules: data.rules,
 										mapPool: data.mapPool,
 										medal: data.medal,
-										streamUrl: data.streamUrl
+										streamUrl: data.streamUrl,
+										hidden: data.hidden
 									}
 								: { ...data, ...(status ? { status } : {}) },
 						images
@@ -322,6 +325,15 @@
 			bind:value={streamUrl}
 			disabled={saving || tournament?.status === 'completed'}
 		/>
+	</Form.Group>
+
+	<Form.Group
+		label={t('Visibility')}
+		description={t(
+			'A hidden tournament is left out of the tournament lists, hall of fame and trophies. Staff, the host and its players can still open it.'
+		)}
+	>
+		<Checkbox bind:checked={hidden} disabled={saving} label={t('Hide from the public')} />
 	</Form.Group>
 
 	<Form.Group

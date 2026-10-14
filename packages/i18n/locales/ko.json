@@ -2487,5 +2487,7 @@
 	"You cannot compare yourself with your own account.": "자신의 계정과는 비교할 수 없습니다.",
 	"Back to profile": "프로필로 돌아가기",
 	"Link a Steam account to compare yourself.": "자신과 비교하려면 Steam 계정을 연결하세요.",
-	"Could not load the comparison.": "비교를 불러오지 못했습니다."
+	"Could not load the comparison.": "비교를 불러오지 못했습니다.",
+	"Hide from the public": "공개 목록에서 숨기기",
+	"A hidden tournament is left out of the tournament lists, hall of fame and trophies. Staff, the host and its players can still open it.": "숨긴 토너먼트는 토너먼트 목록, 명예의 전당, 트로피에 표시되지 않습니다. 스태프, 호스트, 참가 선수는 계속 열 수 있습니다."
 }

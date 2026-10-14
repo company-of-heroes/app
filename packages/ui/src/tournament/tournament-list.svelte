@@ -95,6 +95,7 @@
 										<TournamentStatus
 											status={tournament.status}
 											deleted={!!tournament.deletedAt}
+											hidden={tournament.hidden}
 											class="shrink-0"
 										/>
 										{#if tournament.status === 'in_progress' && tournament.liveCount > 0}

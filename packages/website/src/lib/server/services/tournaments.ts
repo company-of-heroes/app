@@ -113,6 +113,8 @@ type TournamentRecord = {
 	autoClosedAt: string;
 	deletedAt: string;
 	deletedBy: string;
+	/** Kept out of public lists and pages; staff, the host and the players still open it. */
+	hidden: boolean;
 	/** The staff member or community host who created it. */
 	createdBy: string;
 	collectionName: string;
@@ -268,6 +270,7 @@ function toTournament(
 		...resolved,
 		participantCount,
 		deletedAt: orNull(record.deletedAt),
+		hidden: Boolean(record.hidden),
 		created: record.created
 	};
 }
@@ -564,7 +567,7 @@ export class TournamentsService extends Service {
 		const either = (list: TournamentStatus[]) =>
 			list.map((status) => `status = "${status}"`).join(' || ');
 		const managed = scope === 'upcoming' ? ['draft' as const, ...statuses[scope]] : statuses[scope];
-		const visible = `(${either(statuses[scope])}) && deletedAt = ""`;
+		const visible = `(${either(statuses[scope])}) && deletedAt = "" && hidden = false`;
 		const filter = staff
 			? either(managed)
 			: viewer?.role === 'host'
@@ -618,7 +621,7 @@ export class TournamentsService extends Service {
 		return fromPb(
 			this.tournaments.getList<TournamentRecord>(1, 50, {
 				filter: this.pb.filter(
-					'status = "completed" && deletedAt = "" && winner.steamId = {:steamId}',
+					'status = "completed" && deletedAt = "" && hidden = false && winner.steamId = {:steamId}',
 					{ steamId }
 				),
 				sort: '-startsAt,-created',
@@ -670,7 +673,7 @@ export class TournamentsService extends Service {
 		return this.record(idOrSlug, true).andThen((record) =>
 			canManageTournament(user, record)
 				? okAsync(record.id)
-				: isHidden(record)
+				: isHidden(record) || record.hidden
 					? errAsync(notFound('Tournament not found.'))
 					: errAsync(forbidden('Only staff or the host of this tournament can do that.'))
 		);
@@ -678,7 +681,7 @@ export class TournamentsService extends Service {
 
 	/**
 	 * `true`: drafts and deleted tournaments included (internal calls, checked actions); a viewer
-	 * sees the hidden ones they run.
+	 * sees the hidden ones they run, and the players of a hidden (`hidden`) one still open it.
 	 */
 	private record(idOrSlug: string, access: Access): Task<TournamentRecord> {
 		return pbMaybe(
@@ -686,14 +689,39 @@ export class TournamentsService extends Service {
 				this.pb.filter('id = {:value} || slug = {:value}', { value: idOrSlug })
 			),
 			'Could not load the tournament'
-		).andThen((record) =>
-			record &&
-			(!isHidden(record) ||
-				access === true ||
-				(typeof access === 'object' && canManageTournament(access, record)))
-				? okAsync(record)
-				: errAsync(notFound('Tournament not found.'))
-		);
+		).andThen((record) => {
+			const missing = errAsync(notFound('Tournament not found.'));
+			if (!record) {
+				return missing;
+			}
+
+			const manager =
+				access === true || (typeof access === 'object' && canManageTournament(access, record));
+			if (manager || (!isHidden(record) && !record.hidden)) {
+				return okAsync(record);
+			}
+
+			if (isHidden(record) || !access || typeof access !== 'object') {
+				return missing;
+			}
+
+			return this.isPlayer(record.id, access.id).andThen((player) =>
+				player ? okAsync(record) : missing
+			);
+		});
+	}
+
+	private isPlayer(tournamentId: string, userId: string): Task<boolean> {
+		return pbMaybe(
+			this.participants.getFirstListItem(
+				this.pb.filter('tournament = {:tournamentId} && user = {:userId}', {
+					tournamentId,
+					userId
+				}),
+				{ fields: 'id' }
+			),
+			'Could not load the tournament'
+		).map(Boolean);
 	}
 
 	private participantRecords(tournamentId: string): Task<ParticipantRecord[]> {
@@ -820,7 +848,7 @@ export class TournamentsService extends Service {
 	finished(): Task<{ tournament: Tournament; finishedAt: string }[]> {
 		return fromPb(
 			this.tournaments.getFullList<TournamentRecord & { updated: string; completedAt: string }>({
-				filter: 'status = "completed" && deletedAt = ""',
+				filter: 'status = "completed" && deletedAt = "" && hidden = false',
 				sort: '-updated'
 			}),
 			'Could not load tournaments'
@@ -1114,7 +1142,8 @@ export class TournamentsService extends Service {
 					)
 					.andThen(() =>
 						ensure(
-							record.status !== 'completed' || Object.keys(input).every((key) => key === 'medal'),
+							record.status !== 'completed' ||
+								Object.keys(input).every((key) => key === 'medal' || key === 'hidden'),
 							badRequest('The tournament is already finished.')
 						)
 					)

@@ -2487,5 +2487,7 @@
 	"You cannot compare yourself with your own account.": "No puedes compararte con tu propia cuenta.",
 	"Back to profile": "Volver al perfil",
 	"Link a Steam account to compare yourself.": "Vincula una cuenta de Steam para compararte.",
-	"Could not load the comparison.": "No se pudo cargar la comparación."
+	"Could not load the comparison.": "No se pudo cargar la comparación.",
+	"Hide from the public": "Ocultar al público",
+	"A hidden tournament is left out of the tournament lists, hall of fame and trophies. Staff, the host and its players can still open it.": "Un torneo oculto no aparece en las listas de torneos, el salón de la fama ni los trofeos. El staff, el anfitrión y sus jugadores pueden seguir abriéndolo."
 }

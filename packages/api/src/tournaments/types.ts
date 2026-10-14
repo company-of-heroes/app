@@ -59,6 +59,8 @@ export type Tournament = {
 	participantCount: number;
 	/** Soft-deleted: hidden from the public, staff and the host still see it. */
 	deletedAt: string | null;
+	/** Kept out of public lists and pages; staff, the host and the players still see it. */
+	hidden: boolean;
 	created: string;
 };
 
@@ -501,6 +503,8 @@ export type TournamentInput = {
 	medal?: string | null;
 	/** Cast / stream link (https), or null. */
 	streamUrl?: string | null;
+	/** Hidden from the public (see `Tournament.hidden`). */
+	hidden?: boolean;
 };
 
 export const TOURNAMENT_BANNER_MAX_BYTES = 5 * 1024 * 1024;
