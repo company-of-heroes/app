@@ -158,8 +158,9 @@ export function provideAppHost(): HostContext {
 					}));
 				},
 				searchPage: (query, page) => unwrapApi(api.players.searchPage(query, page)),
-				headToHead: (profileIds) =>
-					getHeadToHead(profileIds, app.game.profile?.relic.profile_id ?? null),
+				// All linked accounts, like the website: the running game's account alone misses
+				// games played on the others.
+				headToHead: (profileIds) => getHeadToHead(profileIds, null),
 				// `/match-history` rows are community list rows already (as `api.replays.getHistory` reads them).
 				headToHeadMatches: (lobbyIds) => unwrapApi(api.matches.getHistoryRowsByIds(lobbyIds))
 			},
