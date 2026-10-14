@@ -1,5 +1,10 @@
 # @company-of-heroes/website
 
+## 1.17.0
+
+- feat; staff and hosts can hide a tournament from the public; its players can still open it
+- fix; statistics no longer list uploaded ranked replays under the wrong mode (e.g. 4-player maps under 1v1)
+
 ## 1.16.0
 
 - feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup
