@@ -1,5 +1,9 @@
 # @company-of-heroes/website
 
+## 1.17.1
+
+- fix; hiding a tournament from the public is now saved
+
 ## 1.17.0
 
 - feat; staff and hosts can hide a tournament from the public; its players can still open it
