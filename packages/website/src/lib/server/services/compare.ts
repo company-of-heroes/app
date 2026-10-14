@@ -59,62 +59,60 @@ export class CompareService extends Service {
 		).map((rows) => rows.map((row) => ({ steamId: row.steamId, elo: toEloMap(row.elo) })));
 	}
 
-	private load(userId: string, them: string, steamIds?: string[]): Task<Compare> {
-		const { users, playerPage, performance, headToHead } = this.services;
-		return users.steamAccounts(userId).andThen((linked) => {
-			const linkedIds = linked.map((account) => account.steamId);
-			const selected = steamIds?.length
-				? [...new Set(steamIds)].filter((id) => linkedIds.includes(id))
-				: linkedIds;
-			if (selected.length === 0) {
-				return errAsync(badRequest('Select at least one of your accounts.'));
-			}
-
-			return ResultAsync.combine([
-				playerPage.get(them),
-				this.profiles(selected),
-				this.elo(selected),
-				performance.ofSteamIds(selected)
-			]).andThen(([page, profiles, elo, myPerformance]) => {
-				const isSelf = linkedIds.includes(page.steamId);
-				const record: Task<HeadToHead> = isSelf
-					? okAsync(emptyHeadToHead(page.profileId))
-					: headToHead
-							.forUser(userId, null, [page.profileId], selected)
-							.map((byProfile) => byProfile[page.profileId] ?? emptyHeadToHead(page.profileId));
-				return ResultAsync.combine([record, performance.ofProfile(page.profileId)]).map(
-					([headToHeadRecord, theirPerformance]): Compare => ({
-						accounts: linked.map((account) => ({
-							...account,
-							profileId: profiles.get(account.steamId)?.profile_id ?? null,
-							selected: selected.includes(account.steamId)
-						})),
-						isSelf,
-						me: {
-							performance: myPerformance,
-							best: bestRanks(
-								[...profiles].map(([steamId, profile]) => ({
-									steamId,
-									leaderboardStats: profile.leaderboardStats
-								}))
-							),
-							elo: bestElo(elo)
-						},
-						them: {
-							steamId: page.steamId,
-							profileId: page.profileId,
-							alias: page.alias,
-							avatarUrl: page.avatarUrl || null,
-							country: page.country,
-							level: page.level,
-							leaderboardStats: page.leaderboardStats,
-							elo: page.elo,
-							performance: theirPerformance
-						},
-						headToHead: headToHeadRecord
-					})
-				);
-			});
+	private load(
+		userId: string,
+		them: string,
+		linked: { steamId: string; name: string | null; avatarUrl: string | null }[],
+		selected: string[]
+	): Task<Compare> {
+		const { playerPage, performance, headToHead } = this.services;
+		const linkedIds = linked.map((account) => account.steamId);
+		return ResultAsync.combine([
+			playerPage.get(them),
+			this.profiles(linkedIds),
+			this.elo(selected),
+			performance.ofSteamIds(selected)
+		]).andThen(([page, profiles, elo, myPerformance]) => {
+			const isSelf =
+				linkedIds.includes(page.steamId) ||
+				[...profiles.values()].some((profile) => profile.profile_id === page.profileId);
+			const record: Task<HeadToHead> = isSelf
+				? okAsync(emptyHeadToHead(page.profileId))
+				: headToHead
+						.forUser(userId, null, [page.profileId], selected)
+						.map((byProfile) => byProfile[page.profileId] ?? emptyHeadToHead(page.profileId));
+			return ResultAsync.combine([record, performance.ofProfile(page.profileId)]).map(
+				([headToHeadRecord, theirPerformance]): Compare => ({
+					accounts: linked.map((account) => ({
+						...account,
+						profileId: profiles.get(account.steamId)?.profile_id ?? null,
+						selected: selected.includes(account.steamId)
+					})),
+					isSelf,
+					me: {
+						performance: myPerformance,
+						best: bestRanks(
+							selected.flatMap((steamId) => {
+								const profile = profiles.get(steamId);
+								return profile ? [{ steamId, leaderboardStats: profile.leaderboardStats }] : [];
+							})
+						),
+						elo: bestElo(elo)
+					},
+					them: {
+						steamId: page.steamId,
+						profileId: page.profileId,
+						alias: page.alias,
+						avatarUrl: page.avatarUrl || null,
+						country: page.country,
+						level: page.level,
+						leaderboardStats: page.leaderboardStats,
+						elo: page.elo,
+						performance: theirPerformance
+					},
+					headToHead: headToHeadRecord
+				})
+			);
 		});
 	}
 
@@ -123,9 +121,18 @@ export class CompareService extends Service {
 	 * linked accounts count (all when omitted); ids that are not theirs are dropped.
 	 */
 	get(userId: string, them: string, steamIds?: string[]): Task<Compare> {
-		const key = [...(steamIds ?? [])].sort().join(',') || 'all';
-		return cached(`compare:${userId}:${key}:${them}`, CACHE_SECONDS, () =>
-			this.load(userId, them, steamIds)
-		);
+		return this.services.users.steamAccounts(userId).andThen((linked) => {
+			const linkedIds = linked.map((account) => account.steamId);
+			const selected = (
+				steamIds?.length ? [...new Set(steamIds)].filter((id) => linkedIds.includes(id)) : linkedIds
+			).sort();
+			if (selected.length === 0) {
+				return errAsync(badRequest('Select at least one of your accounts.'));
+			}
+
+			return cached(`compare:${userId}:${selected.join(',')}:${them}`, CACHE_SECONDS, () =>
+				this.load(userId, them, linked, selected)
+			);
+		});
 	}
 }

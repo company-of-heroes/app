@@ -64,6 +64,20 @@ export class HeadToHeadService extends Service {
 			'User not found'
 		).andThen((user) => {
 			const steamIds = Array.isArray(user.steamIds) ? user.steamIds.map(String) : [];
+			if (subset) {
+				const chosen = [...new Set(subset)].filter((id) => steamIds.includes(id)).sort();
+				return okAsync<Identity | null>(
+					chosen.length === 0
+						? null
+						: {
+								key: `steam:${chosen.join(',')}`,
+								filter: chosen
+									.map((steamId) => this.pb.filter('steam_id = {:steamId}', { steamId }))
+									.join(' || ')
+							}
+				);
+			}
+
 			const owned = me ? this.services.performance.ownsProfile(me, steamIds) : okAsync(false);
 			return owned.map((profileIsMine): Identity | null => {
 				if (me && profileIsMine) {
