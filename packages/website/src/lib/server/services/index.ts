@@ -4,6 +4,7 @@ import { RelicClient } from '../clients/relic';
 import { SteamClient } from '../clients/steam';
 import { createAdminPocketBase } from '../pb';
 import { AuthService } from './auth';
+import { CompareService } from './compare';
 import { CompatService } from './compat';
 import { DevSeedService } from './dev-seed';
 import { DevTournamentSimService } from './dev-tournament-sim';
@@ -112,6 +113,10 @@ export class Services {
 
 	get auth() {
 		return this.#get('auth', AuthService);
+	}
+
+	get compare() {
+		return this.#get('compare', CompareService);
 	}
 
 	get compat() {

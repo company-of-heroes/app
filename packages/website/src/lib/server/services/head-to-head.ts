@@ -58,7 +58,7 @@ export class HeadToHeadService extends Service {
 	 * The user's own rows: the `me` profile when it is provably theirs, otherwise all their
 	 * linked Steam accounts. `null` when they have neither.
 	 */
-	private identityFor(userId: string, me: number | null): Task<Identity | null> {
+	private identityFor(userId: string, me: number | null, subset?: string[]): Task<Identity | null> {
 		return fromPb(
 			this.pb.collection('users').getOne<{ steamIds: unknown }>(userId, { fields: 'steamIds' }),
 			'User not found'
@@ -84,14 +84,18 @@ export class HeadToHeadService extends Service {
 		});
 	}
 
-	/** The signed-in user's record against each of `profileIds` (at most 16), keyed by profile id. */
+	/**
+	 * The signed-in user's record against each of `profileIds` (at most 16), keyed by profile id.
+	 * `steamIds` limits "me" to those of the user's linked accounts.
+	 */
 	forUser(
 		userId: string,
 		me: number | null,
-		profileIds: number[]
+		profileIds: number[],
+		steamIds?: string[]
 	): Task<Record<number, HeadToHead>> {
 		const targets = [...new Set(profileIds)].filter((id) => id > 0).slice(0, TARGET_LIMIT);
-		return this.identityFor(userId, me).andThen((identity) => {
+		return this.identityFor(userId, me, steamIds).andThen((identity) => {
 			if (!identity) {
 				return okAsync(Object.fromEntries(targets.map((id) => [id, emptyHeadToHead(id)])));
 			}
