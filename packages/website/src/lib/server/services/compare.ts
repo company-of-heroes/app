@@ -3,6 +3,7 @@ import { cached } from '../cache';
 import { badRequest } from '../errors';
 import { all, chunk, fromPb, type Task } from '../result';
 import { bestElo, bestRanks, type Compare } from '../domain/compare';
+import { summarizePerformance, type PlayerPerformance } from '../domain/performance';
 import { emptyHeadToHead, type HeadToHead } from '../domain/head-to-head';
 import { toEloMap, type EloMap } from '../domain/ratings';
 import {
@@ -10,6 +11,7 @@ import {
 	type RelicPersonalStat,
 	type RelicProfile
 } from '../domain/relic-matches';
+import type { PlayerPage } from './player-page';
 import { Service } from './service';
 
 const CACHE_SECONDS = 45;
@@ -62,17 +64,23 @@ export class CompareService extends Service {
 	private load(
 		userId: string,
 		them: string,
-		linked: { steamId: string; name: string | null; avatarUrl: string | null }[],
+		linkedIds: string[],
 		selected: string[]
 	): Task<Compare> {
-		const { playerPage, performance, headToHead } = this.services;
-		const linkedIds = linked.map((account) => account.steamId);
+		const { playerPage, performance, headToHead, users } = this.services;
+		const theirPerformance = (page: PlayerPage): Task<PlayerPerformance> =>
+			page.performance
+				? okAsync(page.performance)
+				: performance
+						.ofProfile(page.profileId)
+						.orElse(() => okAsync(summarizePerformance([])));
 		return ResultAsync.combine([
+			users.steamAccounts(userId),
 			playerPage.get(them),
 			this.profiles(linkedIds),
 			this.elo(selected),
 			performance.ofSteamIds(selected)
-		]).andThen(([page, profiles, elo, myPerformance]) => {
+		]).andThen(([linked, page, profiles, elo, myPerformance]) => {
 			const isSelf =
 				linkedIds.includes(page.steamId) ||
 				[...profiles.values()].some((profile) => profile.profile_id === page.profileId);
@@ -81,7 +89,7 @@ export class CompareService extends Service {
 				: headToHead
 						.forUser(userId, null, [page.profileId], selected)
 						.map((byProfile) => byProfile[page.profileId] ?? emptyHeadToHead(page.profileId));
-			return ResultAsync.combine([record, performance.ofProfile(page.profileId)]).map(
+			return ResultAsync.combine([record, theirPerformance(page)]).map(
 				([headToHeadRecord, theirPerformance]): Compare => ({
 					accounts: linked.map((account) => ({
 						...account,
@@ -121,8 +129,7 @@ export class CompareService extends Service {
 	 * linked accounts count (all when omitted); ids that are not theirs are dropped.
 	 */
 	get(userId: string, them: string, steamIds?: string[]): Task<Compare> {
-		return this.services.users.steamAccounts(userId).andThen((linked) => {
-			const linkedIds = linked.map((account) => account.steamId);
+		return this.services.users.steamIdsOf(userId).andThen((linkedIds) => {
 			const selected = (
 				steamIds?.length ? [...new Set(steamIds)].filter((id) => linkedIds.includes(id)) : linkedIds
 			).sort();
@@ -131,7 +138,7 @@ export class CompareService extends Service {
 			}
 
 			return cached(`compare:${userId}:${selected.join(',')}:${them}`, CACHE_SECONDS, () =>
-				this.load(userId, them, linked, selected)
+				this.load(userId, them, linkedIds, selected)
 			);
 		});
 	}

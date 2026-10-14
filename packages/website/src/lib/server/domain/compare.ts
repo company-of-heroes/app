@@ -22,7 +22,7 @@ export type CompareBestRank = {
 };
 
 export type CompareBestElo = {
-	/** '1'..'7' */
+	/** EloMap match key: '0'..'4' (see getMatchTypeIdFromLeaderboardId). */
 	matchKey: string;
 	/** '0'..'3' */
 	raceKey: string;

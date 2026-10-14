@@ -41,7 +41,7 @@
 	<div class="flex min-w-0 flex-1 items-center gap-3">
 		{@render avatar(mine?.avatarUrl)}
 		<div class="min-w-0">
-			<div class="truncate text-lg font-semibold text-white">{t('You')}</div>
+			<h1 class="truncate text-lg font-semibold text-white">{t('You')}</h1>
 			{#if selectedCount > 1}
 				<div class="text-secondary-400 text-sm tabular-nums">
 					{t('{count} accounts', { count: selectedCount })}

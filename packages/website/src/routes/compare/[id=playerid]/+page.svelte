@@ -14,8 +14,12 @@
 	const compare = $derived(data.compare);
 
 	function onSelect(ids: string[]) {
+		if (!host.routes.compare) {
+			return;
+		}
+
 		const next = ids.length === compare.accounts.length ? undefined : ids;
-		void goto(host.routes.compare?.(page.params.id ?? '', next) ?? '', {
+		void goto(host.routes.compare(page.params.id ?? '', next), {
 			keepFocus: true,
 			noScroll: true
 		});
@@ -23,7 +27,7 @@
 </script>
 
 <svelte:head>
-	<title>{t('Compare')} · {compare.them.alias}</title>
+	<title>{compare.them.alias} · {t('Compare')} | {t('Company of Heroes 1 Stats')}</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 

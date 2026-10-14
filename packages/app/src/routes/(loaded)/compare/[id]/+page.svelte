@@ -39,7 +39,7 @@
 
 		const next = ids.length === compare.accounts.length ? undefined : ids;
 		const href = host.routes.compare!(page.params.id!, next);
-		void goto(href, { replaceState: true, keepFocus: true, noScroll: true });
+		void goto(href, { keepFocus: true, noScroll: true });
 	}
 </script>
 
@@ -47,7 +47,7 @@
 	items={[
 		{ label: t('Players'), href: '/players' },
 		...(compare
-			? [{ label: compare.them.alias, href: `/players/${page.params.id}` }]
+			? [{ label: compare.them.alias, href: host.routes.player(page.params.id!) }]
 			: []),
 		{ label: t('Compare') }
 	]}
@@ -67,14 +67,12 @@
 	</div>
 {:else if compare}
 	<Compare.Root {compare} {selected} {onSelect}>
-		<div class="-mb-px">
-			<Compare.Header />
-			<Compare.Accounts />
-			<Compare.HeadToHead />
-			<Compare.Table />
-			<Compare.Factions />
-			<Compare.Maps />
-		</div>
+		<Compare.Header />
+		<Compare.Accounts />
+		<Compare.HeadToHead />
+		<Compare.Table />
+		<Compare.Factions />
+		<Compare.Maps />
 	</Compare.Root>
 {:else}
 	<Compare.Skeleton />
