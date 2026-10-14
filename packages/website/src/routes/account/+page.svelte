@@ -5,6 +5,7 @@
 	import { Input } from '@company-of-heroes/ui/input';
 	import { fileInput } from '@company-of-heroes/ui/variants';
 	import { canRequestEmailChange, isPlaceholderEmail } from '@company-of-heroes/api';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import {
 		requestEmailChange,
@@ -66,10 +67,11 @@
 	);
 </script>
 
-<svelte:head>
-	<title>{t('Account')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta name="description" content={t('Update your display name, avatar, email, and password.')} />
-</svelte:head>
+<Seo
+	title={t('Account')}
+	description={t('Update your display name, avatar, email, and password.')}
+	noindex
+/>
 
 <div class="border-secondary-800 border-b">
 	<div class="px-4 py-3">

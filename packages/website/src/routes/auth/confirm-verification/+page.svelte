@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '@company-of-heroes/ui/button';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -7,9 +8,7 @@
 	const { t } = useI18n();
 </script>
 
-<svelte:head>
-	<title>{t('Verify email')} | {t('Company of Heroes 1 Stats')}</title>
-</svelte:head>
+<Seo title={t('Verify email')} noindex />
 
 <div class="border-secondary-800 border-b">
 	<div class="px-4 py-3">

@@ -3,6 +3,7 @@
 	import { RegisterForm } from '@company-of-heroes/ui/auth';
 	import { cn } from '$lib/utils/cn';
 	import { interactive } from '$lib/utils/variants';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import type { ActionData } from './$types';
@@ -31,15 +32,13 @@
 	};
 </script>
 
-<svelte:head>
-	<title>{t('Create account')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta
-		name="description"
-		content={t(
-			'Create a Company of Heroes Companion account to use on coh1stats.com and the desktop app.'
-		)}
-	/>
-</svelte:head>
+<Seo
+	title={t('Create account')}
+	description={t(
+		'Create a Company of Heroes Companion account to use on coh1stats.com and the desktop app.'
+	)}
+	noindex
+/>
 
 <div class="border-secondary-800 border-b">
 	<div class="px-4 py-3">

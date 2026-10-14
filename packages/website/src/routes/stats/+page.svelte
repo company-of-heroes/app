@@ -8,8 +8,8 @@
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
 	import { ToggleGroup } from '@company-of-heroes/ui/toggle-group';
 	import { flushHeader, flushHeaderTitle, interactive } from '@company-of-heroes/ui/variants';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { currentLocale, href, unlocalizedPath, useI18n } from '$lib/i18n';
-	import { SITE_URL } from '$lib/site/urls';
 	import { cn } from '$lib/utils/cn';
 	import type { StatisticsByMode } from '@company-of-heroes/ui/statistics/types';
 	import type { Snippet } from 'svelte';
@@ -117,17 +117,13 @@
 	</section>
 {/snippet}
 
-<svelte:head>
-	<title>{t('Stats')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta
-		name="description"
-		content={t(
-			'Which maps are played and which factions win in Company of Heroes, from community automatch, Basic Matches and skirmishes.'
-		)}
-	/>
-	<meta property="og:url" content="{SITE_URL}{href('/stats')}" />
-	<meta property="og:title" content={t('CoH Statistics')} />
-</svelte:head>
+<Seo
+	title={t('Stats')}
+	ogTitle={t('CoH Statistics')}
+	description={t(
+		'Which maps are played and which factions win in Company of Heroes, from community automatch, Basic Matches and skirmishes.'
+	)}
+/>
 
 <div class="border-secondary-800 border-b px-4 py-6">
 	<h1 class="font-heading text-3xl font-bold text-white">{t('Stats')}</h1>

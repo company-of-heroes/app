@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { DocsUnitPage } from '@company-of-heroes/ui/docs';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
-	import { SITE_URL } from '$lib/site/urls';
+	import { breadcrumbList } from '$lib/site/seo';
+	import { getActionIcon } from '$lib/utils/media/action-icons';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -9,15 +11,21 @@
 
 	const page = $derived(data.page);
 	const description = $derived(page.unit.help ?? page.unit.extra ?? '');
+	const image = $derived(page.unit.icon ? getActionIcon(page.unit.icon) : undefined);
+	const jsonLd = $derived(
+		breadcrumbList([
+			{ name: t('Wiki'), href: href('/wiki') },
+			{ name: page.unit.name, href: href(`/wiki/units/${page.unit.slug}`) }
+		])
+	);
 </script>
 
-<svelte:head>
-	<title>{page.unit.name} | {t('Wiki')} | {t('Company of Heroes 1 Stats')}</title>
-	{#if description}
-		<meta name="description" content={description} />
-	{/if}
-	<meta property="og:url" content="{SITE_URL}{href(`/wiki/units/${page.unit.slug}`)}" />
-	<meta property="og:title" content={page.unit.name} />
-</svelte:head>
+<Seo
+	title="{page.unit.name} | {t('Wiki')}"
+	ogTitle={page.unit.name}
+	description={description || undefined}
+	{image}
+	{jsonLd}
+/>
 
 <DocsUnitPage {page} />

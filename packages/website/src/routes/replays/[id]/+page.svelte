@@ -11,6 +11,7 @@
 	} from '$lib/replays';
 	import { matchModeLabel } from '@company-of-heroes/ui/replay';
 	import { resolveFallbackSrc, resolveMapSrc } from '$lib/utils/resolvers';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -62,37 +63,28 @@
 	}
 </script>
 
-{#snippet metaTags(match: Match)}
-	{@const title = `${pageTitle(match)} — ${t('CoH replay')}`}
-	{@const description = metaDescription(match)}
-	{@const url = `${SITE_URL}${href(`/replays/${match.id}`)}`}
-	<title>{pageTitle(match)} | {t('Community replay')}</title>
-	<meta name="description" content={description} />
-	<link rel="canonical" href={url} />
-	<meta property="og:type" content="video.other" />
-	<meta property="og:url" content={url} />
-	<meta property="og:title" content={title} />
-	<meta property="og:description" content={description} />
-	<meta property="og:image" content={metaImage(match)} />
-	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content={title} />
-	<meta name="twitter:description" content={description} />
-	<meta name="twitter:image" content={metaImage(match)} />
+{#snippet seo(match: Match)}
+	<Seo
+		title="{pageTitle(match)} | {t('Community replay')}"
+		suffix={false}
+		ogTitle="{pageTitle(match)} — {t('CoH replay')}"
+		description={metaDescription(match)}
+		type="video.other"
+		image={metaImage(match)}
+	/>
 {/snippet}
 
-<svelte:head>
-	{#if data.meta}
-		{@render metaTags(data.meta)}
-	{:else}
-		{#await data.match}
-			<title>{t('Loading replay')} | {t('Company of Heroes 1 Stats')}</title>
-		{:then match}
-			{@render metaTags(match)}
-		{:catch}
-			<title>{t('Could not load replay')} | {t('Company of Heroes 1 Stats')}</title>
-		{/await}
-	{/if}
-</svelte:head>
+{#if data.meta}
+	{@render seo(data.meta)}
+{:else}
+	{#await data.match}
+		<Seo title={t('Loading replay')} />
+	{:then match}
+		{@render seo(match)}
+	{:catch}
+		<Seo title={t('Could not load replay')} noindex />
+	{/await}
+{/if}
 
 {#await data.match}
 	<ReplayPageSkeleton />

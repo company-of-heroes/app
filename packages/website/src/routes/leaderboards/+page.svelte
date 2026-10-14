@@ -14,8 +14,8 @@
 	} from '$lib/leaderboards';
 	import { getRaceLabel } from '$lib/utils/player/format';
 	import { getFactionFlagByRace } from '$lib/utils/media/ranks';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
-	import { SITE_URL } from '$lib/site/urls';
 	import { cn } from '$lib/utils/cn';
 	import { controlBase, tabTrigger, factionIcon } from '$lib/utils/variants';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
@@ -81,15 +81,11 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{t('Leaderboards')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta
-		name="description"
-		content={t('Relic Company of Heroes leaderboards by mode and faction, with companion ELO.')}
-	/>
-	<meta property="og:url" content="{SITE_URL}{href('/leaderboards')}" />
-	<meta property="og:title" content={t('CoH Leaderboards')} />
-</svelte:head>
+<Seo
+	title={t('Leaderboards')}
+	ogTitle={t('CoH Leaderboards')}
+	description={t('Relic Company of Heroes leaderboards by mode and faction, with companion ELO.')}
+/>
 
 <div class="border-secondary-800 border-b px-4 py-3">
 	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">

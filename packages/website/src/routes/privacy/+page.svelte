@@ -3,10 +3,10 @@
 	import { cn } from '$lib/utils/cn';
 	import { interactive } from '$lib/utils/variants';
 	import { SITE_URL } from '$lib/site/urls';
-	import { href, useI18n } from '$lib/i18n';
+	import Seo from '$lib/components/seo/seo.svelte';
+	import { useI18n } from '$lib/i18n';
 
 	const { t } = useI18n();
-	const canonical = $derived(`${SITE_URL}${href('/privacy')}`);
 
 	const linkClass = cn(
 		interactive,
@@ -23,17 +23,13 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{t('Privacy Policy')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta
-		name="description"
-		content={t(
-			'How Company of Heroes Companion and coh1stats.com collect, use, and share data — including match stats, player pages, and fair play checks.'
-		)}
-	/>
-	<meta property="og:url" content={canonical} />
-	<meta property="og:title" content={t('Privacy Policy — Company of Heroes Companion')} />
-</svelte:head>
+<Seo
+	title={t('Privacy Policy')}
+	ogTitle={t('Privacy Policy — Company of Heroes Companion')}
+	description={t(
+		'How Company of Heroes Companion and coh1stats.com collect, use, and share data — including match stats, player pages, and fair play checks.'
+	)}
+/>
 
 {#snippet inline(spans: InlineSpan[])}
 	{#each spans as span, spanIndex (`${span.type}-${spanIndex}-${span.type === 'link' ? span.href : span.text}`)}

@@ -616,6 +616,18 @@ export class TournamentsService extends Service {
 		});
 	}
 
+	/** Public tournament pages (slug and last change), for the sitemap. */
+	sitemapEntries(): Task<{ slug: string; updated: string }[]> {
+		return fromPb(
+			this.tournaments.getFullList<{ slug: string; updated: string }>({
+				filter: 'status != "draft" && deletedAt = "" && hidden = false',
+				sort: '-startsAt,-created',
+				fields: 'slug,updated'
+			}),
+			'Could not load tournaments'
+		);
+	}
+
 	/** Finished tournaments the player with this Steam id won, newest first. */
 	wonBy(steamId: string): Task<Tournament[]> {
 		return fromPb(

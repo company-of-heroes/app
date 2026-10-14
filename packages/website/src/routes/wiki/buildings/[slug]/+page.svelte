@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { DocsBuildingPage } from '@company-of-heroes/ui/docs';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
-	import { SITE_URL } from '$lib/site/urls';
+	import { breadcrumbList } from '$lib/site/seo';
+	import { getActionIcon } from '$lib/utils/media/action-icons';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -9,15 +11,21 @@
 
 	const page = $derived(data.page);
 	const description = $derived(page.building.help ?? '');
+	const image = $derived(page.building.icon ? getActionIcon(page.building.icon) : undefined);
+	const jsonLd = $derived(
+		breadcrumbList([
+			{ name: t('Wiki'), href: href('/wiki') },
+			{ name: page.building.name, href: href(`/wiki/buildings/${page.building.slug}`) }
+		])
+	);
 </script>
 
-<svelte:head>
-	<title>{page.building.name} | {t('Wiki')} | {t('Company of Heroes 1 Stats')}</title>
-	{#if description}
-		<meta name="description" content={description} />
-	{/if}
-	<meta property="og:url" content="{SITE_URL}{href(`/wiki/buildings/${page.building.slug}`)}" />
-	<meta property="og:title" content={page.building.name} />
-</svelte:head>
+<Seo
+	title="{page.building.name} | {t('Wiki')}"
+	ogTitle={page.building.name}
+	description={description || undefined}
+	{image}
+	{jsonLd}
+/>
 
 <DocsBuildingPage {page} />

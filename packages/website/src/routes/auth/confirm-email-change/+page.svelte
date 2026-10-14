@@ -2,6 +2,7 @@
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Form from '@company-of-heroes/ui/form';
 	import { Input } from '@company-of-heroes/ui/input';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import { confirmEmailChange } from '$lib/remote/account.remote';
 	import type { PageData } from './$types';
@@ -11,9 +12,7 @@
 	const issue = $derived(confirmEmailChange.fields.allIssues()?.[0]?.message);
 </script>
 
-<svelte:head>
-	<title>{t('Confirm new email')} | {t('Company of Heroes 1 Stats')}</title>
-</svelte:head>
+<Seo title={t('Confirm new email')} noindex />
 
 <div class="border-secondary-800 border-b">
 	<div class="px-4 py-3">

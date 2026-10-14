@@ -22,6 +22,7 @@
 		type ReplaysListTab,
 		type ReplaysQuery
 	} from '$lib/replays';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
 	import { meSteamIds } from '$lib/auth/user';
 	import { SITE_URL } from '$lib/site/urls';
@@ -122,17 +123,14 @@
 	</Button>
 {/snippet}
 
-<svelte:head>
-	<title>{t('Replays')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta
-		name="description"
-		content={t(
-			'Browse community Company of Heroes replays and member uploads. Filter by ranked, mode, map, and player, then open overview, chat, and timeline.'
-		)}
-	/>
-	<meta property="og:url" content={canonical} />
-	<meta property="og:title" content={t('CoH community replays')} />
-</svelte:head>
+<Seo
+	title={t('Replays')}
+	ogTitle={t('CoH community replays')}
+	description={t(
+		'Browse community Company of Heroes replays and member uploads. Filter by ranked, mode, map, and player, then open overview, chat, and timeline.'
+	)}
+	url={canonical}
+/>
 
 <div class="flex min-h-0 flex-1 flex-col">
 	<div>

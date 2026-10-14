@@ -5,6 +5,7 @@
 	import { Button } from '@company-of-heroes/ui/button';
 	import { cn } from '$lib/utils/cn';
 	import { interactive } from '$lib/utils/variants';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import DesktopIcon from 'phosphor-svelte/lib/DesktopIcon';
 	import type { SubmitFunction } from '@sveltejs/kit';
@@ -62,13 +63,11 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{t('Log in')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta
-		name="description"
-		content={t('Log in to your Company of Heroes Companion account on coh1stats.com.')}
-	/>
-</svelte:head>
+<Seo
+	title={t('Log in')}
+	description={t('Log in to your Company of Heroes Companion account on coh1stats.com.')}
+	noindex
+/>
 
 <div class="border-secondary-800 border-b">
 	<div class="px-4 py-3">

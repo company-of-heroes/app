@@ -3,6 +3,7 @@
 	import { useHost } from '@company-of-heroes/ui/host';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 
 	const { t } = useI18n();
@@ -10,13 +11,11 @@
 	const steamId = $derived(host.api.profile.steamId());
 </script>
 
-<svelte:head>
-	<title>{t('Update profile')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta
-		name="description"
-		content={t('Customize your public player profile bio, links, and background.')}
-	/>
-</svelte:head>
+<Seo
+	title={t('Update profile')}
+	description={t('Customize your public player profile bio, links, and background.')}
+	noindex
+/>
 
 <div class="border-secondary-800 border-b">
 	<div class="px-4 py-3">

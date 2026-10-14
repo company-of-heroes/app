@@ -14,6 +14,7 @@
 	} from '@company-of-heroes/ui/variants';
 	import type { TournamentMatch } from '@company-of-heroes/api/tournaments';
 	import type { SimActionName, SimStep } from '$lib/server/services/dev-tournament-sim';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import ArrowSquareOutIcon from 'phosphor-svelte/lib/ArrowSquareOutIcon';
 	import ArrowUUpLeftIcon from 'phosphor-svelte/lib/ArrowUUpLeftIcon';
@@ -176,10 +177,7 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{t('Tournament simulator')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta name="robots" content="noindex" />
-</svelte:head>
+<Seo title={t('Tournament simulator')} noindex />
 
 <div class={flushHeader}>
 	<h1 class={flushSectionTitle}>{t('Tournament simulator')}</h1>

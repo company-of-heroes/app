@@ -57,6 +57,8 @@ type RelicLeaderboard = {
 };
 
 const TOP_WITH_AVATARS = 3;
+/** 1v1 and 2v2 ladders, the player pages worth listing in the sitemap. */
+const SITEMAP_BOARDS = [4, 5, 6, 7, 8, 9, 10, 11];
 /** Relic's ladder moves slowly; one fetch per board per data center every few minutes. */
 const CACHE_SECONDS = 300;
 
@@ -132,5 +134,19 @@ export class LeaderboardService extends Service {
 		}
 
 		return cached(`leaderboard:${leaderboardId}`, CACHE_SECONDS, () => this.load(leaderboardId));
+	}
+
+	/** Steam ids of every player on the 1v1 and 2v2 ladders, for the sitemap. */
+	sitemapSteamIds(): Task<string[]> {
+		return cached('sitemap:players', 3600, () =>
+			ResultAsync.combine(SITEMAP_BOARDS.map((id) => this.get(id))).map((boards) => [
+				...new Set(
+					boards
+						.flatMap((board) => board.stats)
+						.map((stat) => steamIdFromRelicName(stat.profile.name))
+						.filter(isValidSteamId)
+				)
+			])
+		);
 	}
 }

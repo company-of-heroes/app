@@ -1,5 +1,4 @@
 import { SITE_URL } from '$lib/site/urls';
-import type { SitemapReplay } from '$lib/server/services/replays';
 import type { RequestHandler } from './$types';
 
 export const prerender = false;
@@ -12,8 +11,11 @@ const PAGES: { path: string; changefreq: string }[] = [
 	{ path: '/leaderboards', changefreq: 'hourly' },
 	{ path: '/stats', changefreq: 'daily' },
 	{ path: '/replays', changefreq: 'hourly' },
+	{ path: '/tournaments', changefreq: 'daily' },
+	{ path: '/tournaments/hall-of-fame', changefreq: 'weekly' },
 	{ path: '/wiki', changefreq: 'weekly' },
 	{ path: '/wiki/weapons', changefreq: 'weekly' },
+	{ path: '/wiki/rewards', changefreq: 'monthly' },
 	{ path: '/privacy', changefreq: 'monthly' }
 ];
 
@@ -41,17 +43,24 @@ function entry(loc: string, path: string, extra: string): string {
 	return `<url><loc>${loc}</loc>${extra}${alternates(path)}</url>`;
 }
 
-function lastmod(replay: SitemapReplay): string {
-	const date = new Date(replay.createdAt.replace(' ', 'T'));
+function lastmod(value: string): string {
+	const date = new Date(value.replace(' ', 'T'));
 	return Number.isNaN(date.getTime())
 		? ''
 		: `<lastmod>${date.toISOString().slice(0, 10)}</lastmod>`;
 }
 
-/** Static pages in every locale, docs pages and the newest public replays (English URL with alternates). */
+/**
+ * Static pages in every locale, docs pages, public tournaments, ladder players and the
+ * newest public replays (English URL with alternates).
+ */
 export const GET: RequestHandler = async ({ locals }) => {
-	const replays = await locals.services.replays.sitemapEntries().unwrapOr([]);
-	const docs = await locals.services.docs.paths().unwrapOr([]);
+	const [replays, docs, tournaments, players] = await Promise.all([
+		locals.services.replays.sitemapEntries().unwrapOr([]),
+		locals.services.docs.paths().unwrapOr([]),
+		locals.services.tournaments.sitemapEntries().unwrapOr([]),
+		locals.services.leaderboard.sitemapSteamIds().unwrapOr([])
+	]);
 	const urls = [
 		...PAGES.flatMap(({ path, changefreq }) =>
 			[undefined, ...LOCALES].map((locale) =>
@@ -59,9 +68,17 @@ export const GET: RequestHandler = async ({ locals }) => {
 			)
 		),
 		...docs.map((path) => entry(localeUrl(path), path, '<changefreq>monthly</changefreq>')),
+		...tournaments.map((tournament) => {
+			const path = `/tournaments/${encodeURIComponent(tournament.slug)}`;
+			return entry(localeUrl(path), path, lastmod(tournament.updated));
+		}),
+		...players.map((steamId) => {
+			const path = `/players/${steamId}`;
+			return entry(localeUrl(path), path, '<changefreq>daily</changefreq>');
+		}),
 		...replays.map((replay) => {
 			const path = `/replays/${encodeURIComponent(replay.id)}`;
-			return entry(localeUrl(path), path, lastmod(replay));
+			return entry(localeUrl(path), path, lastmod(replay.createdAt));
 		})
 	];
 	const body = `<?xml version="1.0" encoding="UTF-8"?>

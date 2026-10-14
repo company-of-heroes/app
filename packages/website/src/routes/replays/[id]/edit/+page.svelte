@@ -4,6 +4,7 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import ArrowLeftIcon from 'phosphor-svelte/lib/ArrowLeftIcon';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -15,9 +16,7 @@
 	const memberReplaysHref = $derived(href('/replays?tab=member'));
 </script>
 
-<svelte:head>
-	<title>{t('Edit replay')} | {t('Company of Heroes 1 Stats')}</title>
-</svelte:head>
+<Seo title={t('Edit replay')} noindex />
 
 <div class="border-secondary-800 border">
 	<div class="border-secondary-800 flex items-center gap-3 border-b px-4 py-3">

@@ -11,33 +11,60 @@
 	import { uploadReplayPath } from '$lib/replays';
 	import { getPlayerReplays } from '$lib/remote/replays.remote';
 	import { SITE_URL } from '$lib/site/urls';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import type { PageData } from './$types';
+
+	type Player = NonNullable<PageData['meta']>;
 
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
 	let currentTab = $state('stats');
 	const mySteamIds = $derived(meSteamIds(page.data.user));
 	const uploadHref = $derived(href(uploadReplayPath(!!page.data.user)));
+
+	function profileJsonLd(player: Player) {
+		const url = `${SITE_URL}${href(`/players/${player.steamId}`)}`;
+		return {
+			'@context': 'https://schema.org',
+			'@type': 'ProfilePage',
+			url,
+			name: player.alias,
+			mainEntity: {
+				'@type': 'Person',
+				name: player.alias,
+				identifier: player.steamId,
+				image: player.avatarUrl || undefined,
+				url
+			}
+		};
+	}
 </script>
 
-<svelte:head>
+{#snippet seo(player: Player)}
+	<Seo
+		title={player.alias}
+		ogTitle="{player.alias} — {t('CoH player stats')}"
+		description={t(
+			'Company of Heroes stats for {alias}: ranks, community performance, and recent matches.',
+			{ alias: player.alias }
+		)}
+		type="profile"
+		image={player.avatarUrl || undefined}
+		jsonLd={profileJsonLd(player)}
+	/>
+{/snippet}
+
+{#if data.meta}
+	{@render seo(data.meta)}
+{:else}
 	{#await data.player}
-		<title>{t('Loading player')} | {t('Company of Heroes 1 Stats')}</title>
+		<Seo title={t('Loading player')} />
 	{:then player}
-		<title>{player.alias} | {t('Company of Heroes 1 Stats')}</title>
-		<meta
-			name="description"
-			content={t(
-				'Company of Heroes stats for {alias}: ranks, community performance, and recent matches.',
-				{ alias: player.alias }
-			)}
-		/>
-		<meta property="og:url" content="{SITE_URL}{href(`/players/${player.steamId}`)}" />
-		<meta property="og:title" content="{player.alias} — {t('CoH player stats')}" />
+		{@render seo(player)}
 	{/await}
-</svelte:head>
+{/if}
 
 {#await data.player}
 	<PlayerProfileSkeleton />

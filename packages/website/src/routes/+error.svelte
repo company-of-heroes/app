@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ErrorState from '$lib/components/ui/error-state.svelte';
 	import { page } from '$app/state';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 
 	const { t } = useI18n();
@@ -25,8 +26,6 @@
 	);
 </script>
 
-<svelte:head>
-	<title>{title} | {t('Company of Heroes 1 Stats')}</title>
-</svelte:head>
+<Seo {title} noindex />
 
 <ErrorState {title} {message} href={href('/')} linkLabel={t('Back to home')} />

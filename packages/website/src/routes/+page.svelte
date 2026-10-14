@@ -10,13 +10,15 @@
 	import DonationSection from '$lib/components/home/donation-section.svelte';
 	import TopReplays from '$lib/components/replay/top-replays.svelte';
 	import { SITE_URL } from '$lib/site/urls';
+	import { organization } from '$lib/site/seo';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
 
-	const title = $derived(t('Company of Heroes 1 Stats'));
+	const title = $derived(`COH1 Stats - ${t('Company of Heroes 1 Statistics')}`);
 	const description = $derived(
 		t(
 			'Company of Heroes 1 player stats, Relic leaderboards, community replays, live companion lobbies, and Twitch streams. Free desktop companion for scouting and fair play.'
@@ -24,14 +26,15 @@
 	);
 	const canonical = $derived(`${SITE_URL}${href('/')}`);
 	const searchUrl = $derived(`${SITE_URL}${href('/players')}?q={search_term_string}`);
-	const jsonLd = $derived(
-		JSON.stringify({
+	const jsonLd = $derived([
+		{
 			'@context': 'https://schema.org',
 			'@type': 'WebSite',
-			name: 'coh1stats',
-			alternateName: title,
+			name: 'COH1 Stats',
+			alternateName: t('Company of Heroes 1 Statistics'),
 			url: canonical,
 			description,
+			publisher: organization,
 			potentialAction: {
 				'@type': 'SearchAction',
 				target: {
@@ -40,24 +43,12 @@
 				},
 				'query-input': 'required name=search_term_string'
 			}
-		})
-	);
+		},
+		{ '@context': 'https://schema.org', ...organization }
+	]);
 </script>
 
-<svelte:head>
-	<title>{title} | coh1stats.com</title>
-	<meta name="description" content={description} />
-	<meta property="og:type" content="website" />
-	<meta property="og:url" content={canonical} />
-	<meta property="og:title" content={title} />
-	<meta property="og:description" content={description} />
-	<meta property="og:image" content="{SITE_URL}/og-image.png" />
-	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content={title} />
-	<meta name="twitter:description" content={description} />
-	<meta name="twitter:image" content="{SITE_URL}/og-image.png" />
-	{@html `<script type="application/ld+json">${jsonLd}</script>`}
-</svelte:head>
+<Seo {title} suffix={false} {description} {jsonLd} />
 
 <main>
 	<HomeTournaments {...data.tournaments} />

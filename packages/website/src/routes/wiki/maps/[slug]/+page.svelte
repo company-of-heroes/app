@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { DocsMapPage } from '@company-of-heroes/ui/docs';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
-	import { SITE_URL } from '$lib/site/urls';
+	import { breadcrumbList } from '$lib/site/seo';
 	import { getWikiMapImage } from '$lib/utils/media/wiki-maps';
 	import type { PageData } from './$types';
 
@@ -10,18 +11,21 @@
 
 	const map = $derived(data.page.map);
 	const image = $derived(getWikiMapImage(map.slug, 'full'));
+	const jsonLd = $derived(
+		breadcrumbList([
+			{ name: t('Wiki'), href: href('/wiki') },
+			{ name: t('Maps'), href: href('/wiki/maps') },
+			{ name: map.name, href: href(`/wiki/maps/${map.slug}`) }
+		])
+	);
 </script>
 
-<svelte:head>
-	<title>{map.name} | {t('Maps')} | {t('Wiki')} | {t('Company of Heroes 1 Stats')}</title>
-	{#if map.description}
-		<meta name="description" content={map.description} />
-	{/if}
-	<meta property="og:url" content="{SITE_URL}{href(`/wiki/maps/${map.slug}`)}" />
-	<meta property="og:title" content={map.name} />
-	{#if image}
-		<meta property="og:image" content="{SITE_URL}{image}" />
-	{/if}
-</svelte:head>
+<Seo
+	title="{map.name} | {t('Maps')} | {t('Wiki')}"
+	ogTitle={map.name}
+	description={map.description || undefined}
+	image={image || undefined}
+	{jsonLd}
+/>
 
 <DocsMapPage page={data.page} image={getWikiMapImage} />

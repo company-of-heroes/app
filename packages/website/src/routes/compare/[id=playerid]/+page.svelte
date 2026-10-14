@@ -4,6 +4,7 @@
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Compare from '@company-of-heroes/ui/compare';
 	import { useHost } from '@company-of-heroes/ui/host';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -28,10 +29,7 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{compare.them.alias} · {t('Compare')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta name="robots" content="noindex" />
-</svelte:head>
+<Seo title="{compare.them.alias} · {t('Compare')}" noindex />
 
 {#if compare.isSelf}
 	<div class="border-secondary-800 -mb-px flex flex-col items-start gap-3 border-b px-4 py-6">

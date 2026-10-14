@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { TournamentForm } from '@company-of-heroes/ui/tournament';
 	import { flushHeader, flushSectionTitle } from '@company-of-heroes/ui/variants';
+	import Seo from '$lib/components/seo/seo.svelte';
 	import { useI18n } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -8,10 +9,7 @@
 	const { t } = useI18n();
 </script>
 
-<svelte:head>
-	<title>{t('Edit tournament')} | {t('Company of Heroes 1 Stats')}</title>
-	<meta name="robots" content="noindex" />
-</svelte:head>
+<Seo title={t('Edit tournament')} noindex />
 
 <div class={flushHeader}>
 	<h1 class={flushSectionTitle}>{t('Edit tournament')}: {data.tournament.name}</h1>
