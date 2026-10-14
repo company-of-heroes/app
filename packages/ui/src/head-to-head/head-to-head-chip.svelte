@@ -2,8 +2,10 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
+	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRightIcon';
 	import { getRatioColor } from '../format/player-format';
 	import { Popover } from '../ui/popover';
+	import { useHost } from '../host/host.context';
 	import HeadToHeadBreakdown from './head-to-head-breakdown.svelte';
 	import type { HeadToHead } from './types';
 
@@ -15,6 +17,7 @@
 
 	let { record, alias, class: className }: Props = $props();
 	const { t } = useI18n();
+	const host = useHost();
 </script>
 
 {#if record.matchCount > 0}
@@ -47,5 +50,17 @@
 			</span>
 		</div>
 		<HeadToHeadBreakdown {record} />
+		{#if host.routes.compare}
+			<a
+				href={host.routes.compare(record.profileId)}
+				class={cn(
+					interactive,
+					'border-secondary-800 text-secondary-200 flex items-center justify-between border-t px-4 py-3 text-sm hover:text-white'
+				)}
+			>
+				{t('Full comparison')}
+				<ArrowRightIcon size={14} weight="bold" />
+			</a>
+		{/if}
 	</Popover>
 {/if}

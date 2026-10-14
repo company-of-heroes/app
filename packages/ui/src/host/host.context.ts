@@ -98,6 +98,8 @@ export type HostRoutes = {
 	player: (idOrSteamId: string | number) => string;
 	/** Detail page of a saved match / replay, by lobby id. */
 	match: (lobbyId: string) => string;
+	/** Compare page of the signed-in user vs this player; hosts without accounts omit it. */
+	compare?: (idOrSteamId: string | number, steamIds?: string[]) => string;
 	accountProfile: (steamId: string) => string;
 	/** Login page that returns to the current page afterwards. */
 	login: () => string;

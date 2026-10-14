@@ -75,6 +75,7 @@
 		{factsLoading}
 		headToHead={showHeadToHead ? (headToHead.current ?? null) : null}
 		headToHeadLoading={showHeadToHead && headToHead.loading}
+		showCompare={showHeadToHead}
 		onHeadToHead={() => (tab = 'head-to-head')}
 	/>
 	<TournamentTrophies steamId={player.steamId} tournaments={player.tournaments} />

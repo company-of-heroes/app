@@ -7,6 +7,7 @@
 	import IdentificationCardIcon from 'phosphor-svelte/lib/IdentificationCardIcon';
 	import MapTrifoldIcon from 'phosphor-svelte/lib/MapTrifoldIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
+	import ScalesIcon from 'phosphor-svelte/lib/ScalesIcon';
 	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import WarningIcon from 'phosphor-svelte/lib/WarningIcon';
@@ -54,6 +55,8 @@
 		/** Signed-in user's record against this player; `null` hides the fact. */
 		headToHead?: HeadToHead | null;
 		headToHeadLoading?: boolean;
+		/** Shows the Compare button (signed in, not this player). */
+		showCompare?: boolean;
 		/** Opens the head-to-head tab. */
 		onHeadToHead?: () => void;
 	};
@@ -66,6 +69,7 @@
 		factsLoading = false,
 		headToHead = null,
 		headToHeadLoading = false,
+		showCompare = false,
 		onHeadToHead
 	}: Props = $props();
 	const { t } = useI18n();
@@ -162,6 +166,17 @@
 			/>
 		{/snippet}
 		{#snippet actions()}
+			{#if showCompare && host.routes.compare}
+				<Button
+					href={host.routes.compare(player.profileId)}
+					variant="secondary"
+					size="sm"
+					class="shrink-0 bg-gray-950/60 backdrop-blur-sm"
+				>
+					<ScalesIcon size={16} />
+					{t('Compare')}
+				</Button>
+			{/if}
 			{@render actionsSnippet?.()}
 			{#if isSelf}
 				<Button
