@@ -1,3 +1,7 @@
+### v0.73.2
+
+- fix; keybinding sequences fired too fast in a row and missed commands in game
+
 ### v0.73.1
 
 - fix; "continue anonymously" on the setup screen did nothing
