@@ -5,6 +5,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Alert } from '$lib/components/ui/alert';
 	import { FileSelection } from '$lib/components/ui/input';
+	import { Modal } from '$lib/components/ui/modal';
 	import { Toaster, toast } from '$lib/components/ui/toasts';
 	import { surfacePanel } from '$lib/components/ui/variants';
 	import AccountSignIn from '$lib/components/account/account-sign-in.svelte';
@@ -340,3 +341,4 @@
 </div>
 
 <Toaster />
+<Modal />
