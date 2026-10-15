@@ -195,12 +195,13 @@ pub async fn send_keys(keys: Vec<String>, action: Option<String>) -> Result<(), 
     .map_err(|e| e.to_string())?
 }
 
-/// Hold per key in a sequence; same as chat typing, which DirectInput reads reliably.
+/// Hold per key in a sequence. 1ms (like chat typing) fired too fast for in-game
+/// commands; the old enigo path used 50ms per key, ~30ms in total stays reliable.
 #[cfg(any(target_os = "windows", target_os = "linux"))]
-const SEQUENCE_KEY_HOLD_US: u64 = 1000;
+const SEQUENCE_KEY_HOLD_US: u64 = 10_000;
 /// Gap between keys so DirectInput sees each down/up pair (R R R is not one long press).
 #[cfg(any(target_os = "windows", target_os = "linux"))]
-const SEQUENCE_KEY_GAP_US: u64 = 4000;
+const SEQUENCE_KEY_GAP_US: u64 = 20_000;
 
 /// Types a key sequence (R R R Tab R) as scancodes. Enigo's virtual-key clicks needed
 /// 50ms per key and still lost keys in long sequences; DirectInput reads scancodes.
