@@ -1,3 +1,7 @@
+### v0.73.1
+
+- fix; "continue anonymously" on the setup screen did nothing
+
 ### v0.73.0
 
 - feat; head to head record against lobby opponents and on player profiles, with the games behind each matchup
