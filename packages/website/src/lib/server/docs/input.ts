@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { DOCS_NOTE_MAX, DOCS_REPORT_MAX } from '../services/docs';
 
 export const saveDocsNoteSchema = z.object({
-	kind: z.enum(['unit', 'building', 'commander', 'weapon', 'map']),
+	kind: z.enum(['unit', 'building', 'commander', 'weapon', 'map', 'upgrade']),
 	slug: z.string().regex(/^[a-z0-9-]{1,120}$/),
 	body: z.string().max(DOCS_NOTE_MAX)
 });

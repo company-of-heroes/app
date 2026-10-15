@@ -33,7 +33,10 @@
 	{/if}
 {:then data}
 	{#if data}
-		{@render children(data)}
+		<!-- One block in the app's flex <main>: otherwise blocks with overflow-hidden (the docs header) shrink and clip. -->
+		<div>
+			{@render children(data)}
+		</div>
 	{:else}
 		<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
 			{t('Not found')}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge';
+	import { escapeHtml, tooltip } from '@company-of-heroes/ui/tooltip';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dropdown from '$lib/components/ui/dropdown';
 	import { app } from '$core/app/context';
@@ -119,7 +120,11 @@
 							<CheckIcon class="size-4" weight="bold" />
 						{/if}
 					</span>
-					<Badge hex={labelHex(label.color)}>{label.name}</Badge>
+					<Badge
+						hex={labelHex(label.color)}
+						{@attach tooltip(label.tooltip?.trim() ? escapeHtml(label.tooltip.trim()) : null)}
+						>{label.name}</Badge
+					>
 				</Dropdown.Item>
 			{/each}
 		{/if}

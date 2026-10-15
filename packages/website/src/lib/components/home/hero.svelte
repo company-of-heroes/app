@@ -1,21 +1,45 @@
 <script lang="ts">
 	import { Button } from '@company-of-heroes/ui/button';
+	import { Popover } from '@company-of-heroes/ui/popover';
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import {
 		latestDownload,
+		linuxDebDownload,
 		linuxDownload,
 		loadReplayManagerDownload,
 		replayManagerDownload,
-		replayManagerLinuxDownload
+		replayManagerLinuxDebDownload,
+		replayManagerLinuxDownload,
+		type LatestDownload
 	} from '$lib/site/download.svelte';
 	import { cn } from '$lib/utils/cn';
+	import { interactive } from '$lib/utils/variants';
 	import WindowsLogoIcon from 'phosphor-svelte/lib/WindowsLogoIcon';
 	import LinuxLogoIcon from 'phosphor-svelte/lib/LinuxLogoIcon';
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
+	import DownloadSimpleIcon from 'phosphor-svelte/lib/DownloadSimpleIcon';
 	import { useI18n } from '$lib/i18n';
 	import { onMount } from 'svelte';
 
 	const { t } = useI18n();
+
+	/** Linux packages per release; the user picks one from the popover. */
+	function linuxPackages(appImage: LatestDownload, deb: LatestDownload) {
+		return [
+			{
+				key: 'appimage',
+				name: t('AppImage'),
+				hint: t('Runs on any distribution, no install needed'),
+				download: appImage
+			},
+			{
+				key: 'deb',
+				name: t('Debian / Ubuntu (.deb)'),
+				hint: t('Installs through apt or your package manager'),
+				download: deb
+			}
+		];
+	}
 
 	const downloads = $derived([
 		{
@@ -25,7 +49,7 @@
 				'Runs next to the game: live lobby scouting, automatic match history, stream overlays and fair play. Needs an account.'
 			),
 			download: latestDownload,
-			linux: linuxDownload,
+			linux: linuxPackages(linuxDownload, linuxDebDownload),
 			label: t('Download companion'),
 			variant: 'primary' as const
 		},
@@ -36,7 +60,7 @@
 				'Lightweight offline tool to browse, search, rename and delete the replays in your playback folder. No account, nothing uploaded.'
 			),
 			download: replayManagerDownload,
-			linux: replayManagerLinuxDownload,
+			linux: linuxPackages(replayManagerLinuxDownload, replayManagerLinuxDebDownload),
 			label: t('Download Replay Manager'),
 			variant: 'secondary' as const
 		}
@@ -84,15 +108,34 @@
 						<WindowsLogoIcon size={18} weight="duotone" />
 						{item.label}
 					</Button>
-					<Button
-						href={item.linux.url}
-						download={item.linux.fileName}
-						variant="secondary"
-						title={t('For Company of Heroes on Linux through Steam Proton')}
-					>
-						<LinuxLogoIcon size={18} weight="duotone" />
-						{t('Linux (AppImage)')}
-					</Button>
+					<Popover side="bottom" align="start" contentClass="w-72 max-w-[calc(100vw-2rem)] p-0">
+						{#snippet trigger({ props })}
+							<Button
+								{...props}
+								variant="secondary"
+								title={t('For Company of Heroes on Linux through Steam Proton')}
+							>
+								<LinuxLogoIcon size={18} weight="duotone" />
+								{t('Linux')}
+							</Button>
+						{/snippet}
+						{#each item.linux as pkg (pkg.key)}
+							<a
+								href={pkg.download.url}
+								download={pkg.download.fileName}
+								class={cn(
+									interactive,
+									'border-secondary-800 hover:bg-secondary-950/50 flex items-start gap-3 border-b px-4 py-3 last:border-b-0'
+								)}
+							>
+								<DownloadSimpleIcon class="text-primary mt-0.5 size-5 shrink-0" weight="duotone" />
+								<span class="min-w-0">
+									<span class="block font-medium text-white">{pkg.name}</span>
+									<span class="text-secondary-400 text-sm">{pkg.hint}</span>
+								</span>
+							</a>
+						{/each}
+					</Popover>
 				</div>
 			</div>
 		{/each}

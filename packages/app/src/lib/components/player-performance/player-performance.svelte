@@ -119,6 +119,7 @@
 		includeSkirmish={dev}
 		emptyPerformanceMessage={emptyMessage}
 		trackedLobbyRatingsLabel={eloSummary}
+		bind:eloExpanded
 	>
 		{#snippet eloContent()}
 			{#if profileId}

@@ -14,7 +14,7 @@
 	import * as Form from '../ui/form';
 	import { Checkbox, Input, Select } from '../ui/input';
 	import { FORMAT_LABELS, fromLocalInput, toLocalInput } from './format';
-	import TournamentImageField from './tournament-image-field.svelte';
+	import { ImageField } from '../ui/image-field';
 	import TournamentMapPoolField from './tournament-map-pool-field.svelte';
 	import TournamentMedalField from './tournament-medal-field.svelte';
 	import TournamentPlayersField from './tournament-players-field.svelte';
@@ -344,7 +344,7 @@
 		<div class="flex flex-wrap items-start gap-3">
 			<div class="flex flex-col gap-1">
 				<span class="text-secondary-400 text-xs">{t('Logo')}</span>
-				<TournamentImageField
+				<ImageField
 					id="tournament-logo"
 					shape="square"
 					currentUrl={tournament?.logoUrl ?? null}
@@ -357,7 +357,7 @@
 			</div>
 			<div class="flex min-w-0 flex-1 flex-col gap-1">
 				<span class="text-secondary-400 text-xs">{t('Banner')}</span>
-				<TournamentImageField
+				<ImageField
 					id="tournament-banner"
 					shape="wide"
 					currentUrl={tournament?.bannerUrl ?? null}

@@ -1,4 +1,5 @@
 import { SITE_URL } from '$lib/site/urls';
+import type { GuideSitemapEntry } from '$lib/server/services/guides';
 import type { RequestHandler } from './$types';
 
 export const prerender = false;
@@ -13,6 +14,7 @@ const PAGES: { path: string; changefreq: string }[] = [
 	{ path: '/replays', changefreq: 'hourly' },
 	{ path: '/tournaments', changefreq: 'daily' },
 	{ path: '/tournaments/hall-of-fame', changefreq: 'weekly' },
+	{ path: '/guides', changefreq: 'daily' },
 	{ path: '/wiki', changefreq: 'weekly' },
 	{ path: '/wiki/weapons', changefreq: 'weekly' },
 	{ path: '/wiki/rewards', changefreq: 'monthly' },
@@ -43,6 +45,18 @@ function entry(loc: string, path: string, extra: string): string {
 	return `<url><loc>${loc}</loc>${extra}${alternates(path)}</url>`;
 }
 
+/** A guide: its own locale's URL with only the translations it really has. */
+function guideEntry(guide: GuideSitemapEntry): string {
+	const locale = (code: string) => (code === 'en' ? undefined : code);
+	const links = guide.alternates
+		.map(
+			(alternate) =>
+				`<xhtml:link rel="alternate" hreflang="${alternate.locale}" href="${localeUrl(alternate.path, locale(alternate.locale))}" />`
+		)
+		.join('');
+	return `<url><loc>${localeUrl(guide.path, locale(guide.language))}</loc>${lastmod(guide.lastmod)}<changefreq>weekly</changefreq>${links}</url>`;
+}
+
 function lastmod(value: string): string {
 	const date = new Date(value.replace(' ', 'T'));
 	return Number.isNaN(date.getTime())
@@ -51,15 +65,18 @@ function lastmod(value: string): string {
 }
 
 /**
- * Static pages in every locale, docs pages, public tournaments, ladder players and the
- * newest public replays (English URL with alternates).
+ * Static pages in every locale, docs pages, guide categories (every locale) and guides (their
+ * own language plus real translations), public tournaments, ladder players and the newest
+ * public replays (English URL with alternates).
  */
 export const GET: RequestHandler = async ({ locals }) => {
-	const [replays, docs, tournaments, players] = await Promise.all([
+	const [replays, docs, tournaments, players, guideCategories, guides] = await Promise.all([
 		locals.services.replays.sitemapEntries().unwrapOr([]),
 		locals.services.docs.paths().unwrapOr([]),
 		locals.services.tournaments.sitemapEntries().unwrapOr([]),
-		locals.services.leaderboard.sitemapSteamIds().unwrapOr([])
+		locals.services.leaderboard.sitemapSteamIds().unwrapOr([]),
+		locals.services.guides.categoryPaths().unwrapOr([]),
+		locals.services.guides.sitemapEntries().unwrapOr([])
 	]);
 	const urls = [
 		...PAGES.flatMap(({ path, changefreq }) =>
@@ -68,6 +85,12 @@ export const GET: RequestHandler = async ({ locals }) => {
 			)
 		),
 		...docs.map((path) => entry(localeUrl(path), path, '<changefreq>monthly</changefreq>')),
+		...guideCategories.flatMap((path) =>
+			[undefined, ...LOCALES].map((locale) =>
+				entry(localeUrl(path, locale), path, '<changefreq>weekly</changefreq>')
+			)
+		),
+		...guides.map(guideEntry),
 		...tournaments.map((tournament) => {
 			const path = `/tournaments/${encodeURIComponent(tournament.slug)}`;
 			return entry(localeUrl(path), path, lastmod(tournament.updated));

@@ -1,3 +1,4 @@
+import { IMAGE_TYPES } from '../upload-file';
 import type { TournamentMap } from './maps';
 
 export const TOURNAMENT_FORMATS = ['single_elim', 'double_elim', 'round_robin'] as const;
@@ -509,7 +510,7 @@ export type TournamentInput = {
 
 export const TOURNAMENT_BANNER_MAX_BYTES = 5 * 1024 * 1024;
 export const TOURNAMENT_LOGO_MAX_BYTES = 2 * 1024 * 1024;
-export const TOURNAMENT_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const TOURNAMENT_IMAGE_TYPES = IMAGE_TYPES;
 
 /** New images to upload, or `clear*` to remove the current one; left out keeps it. */
 export type TournamentImages = {

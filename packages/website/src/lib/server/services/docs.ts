@@ -10,6 +10,7 @@ import {
 	type GameDocs,
 	type MapPage,
 	type UnitPage,
+	type UpgradePage,
 	type WeaponPage
 } from '@company-of-heroes/game-data';
 import { cached, uncache } from '../cache';
@@ -44,7 +45,8 @@ export class DocsService extends Service {
 			building: docs.buildings,
 			commander: docs.commanders,
 			weapon: docs.weapons,
-			map: docs.maps
+			map: docs.maps,
+			upgrade: docs.upgrades
 		};
 		return items[kind].has(slug);
 	}
@@ -102,6 +104,10 @@ export class DocsService extends Service {
 
 	map(slug: string): Task<WithNote<MapPage>> {
 		return this.page('map', slug, (docs) => docs.mapPage(slug));
+	}
+
+	upgrade(slug: string): Task<WithNote<UpgradePage>> {
+		return this.page('upgrade', slug, (docs) => docs.upgradePage(slug));
 	}
 
 	private noteRecord(kind: DocKind, slug: string): Task<NoteRecord | null> {

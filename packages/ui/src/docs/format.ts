@@ -10,18 +10,12 @@ const KIND_PATH: Record<DocKind, string> = {
 	building: 'buildings',
 	commander: 'commanders',
 	weapon: 'weapons',
-	map: 'maps'
+	map: 'maps',
+	upgrade: 'upgrades'
 };
 
-/**
- * Docs page path of an item. Upgrades that add a weapon go to that weapon's page; other upgrades and
- * abilities have no page (null).
- */
-export function docsPath(ref: Pick<DocRef, 'kind' | 'slug' | 'weapon'>): string | null {
-	if (ref.kind === 'upgrade' && ref.weapon) {
-		return `/wiki/weapons/${ref.weapon}`;
-	}
-
+/** Docs page path of an item; abilities have no page (null). */
+export function docsPath(ref: Pick<DocRef, 'kind' | 'slug'>): string | null {
 	return ref.kind in KIND_PATH ? `/wiki/${KIND_PATH[ref.kind as DocKind]}/${ref.slug}` : null;
 }
 

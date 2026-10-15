@@ -3,7 +3,7 @@ import { sendV1, type ApiDeps } from '../deps';
 import type { ApiError } from '../errors';
 import { fromPbPromise, pbOptions } from '../pb';
 
-export type DocsKind = 'unit' | 'building' | 'commander' | 'weapon' | 'map';
+export type DocsKind = 'unit' | 'building' | 'commander' | 'weapon' | 'map' | 'upgrade';
 
 export type DocsTip = { body: string; updated: string };
 

@@ -55,6 +55,25 @@ export function isStaffUser(user: AuthUserPublic | null | undefined): boolean {
 	return user?.role === 'admin' || user?.role === 'moderator';
 }
 
+export function isAdminUser(user: AuthUserPublic | null | undefined): boolean {
+	return user?.role === 'admin';
+}
+
+/** Staff, or an editor: may write guides (editors manage only their own). */
+export function isEditorUser(user: AuthUserPublic | null | undefined): boolean {
+	return isStaffUser(user) || user?.role === 'editor';
+}
+
+/** Staff edit every guide; an editor only the ones they wrote. */
+export function canEditGuide(
+	user: AuthUserPublic | null | undefined,
+	guide: { author?: string | null }
+): boolean {
+	return (
+		isStaffUser(user) || (user?.role === 'editor' && !!guide.author && guide.author === user.id)
+	);
+}
+
 /** Staff, or a community host: may create tournaments (hosts only run their own). */
 export function canHostTournaments(user: AuthUserPublic | null | undefined): boolean {
 	return isStaffUser(user) || user?.role === 'host';

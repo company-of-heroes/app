@@ -3,6 +3,9 @@ import { apiError, type ApiError } from './errors';
 
 export type UploadImageKind = 'jpeg' | 'png' | 'webp' | 'gif' | 'bmp';
 
+/** MIME types of the images users may upload (covers, logos, inline guide images). */
+export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 export type ToUploadFileOptions = {
 	maxBytes: number;
 	allowed: readonly UploadImageKind[];

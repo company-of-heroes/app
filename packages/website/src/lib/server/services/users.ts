@@ -1,7 +1,7 @@
 import { errAsync, okAsync } from 'neverthrow';
 import { uncache } from '../cache';
 import { mergedProfile, steamIdsOf, type UserRow } from '../domain/users';
-import { conflict, notFound } from '../errors';
+import { badRequest, conflict, forbidden, notFound } from '../errors';
 import { fromPb, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
@@ -344,6 +344,43 @@ export class UsersService extends Service {
 		)
 			.andThen((rows) => sequence(rows, (row) => this.dismissConflict(row.id)))
 			.map(() => undefined);
+	}
+
+	/**
+	 * Admins: give a user the editor or host role, or take it away (`null`). Staff roles are
+	 * never changed here, and admins cannot change their own.
+	 */
+	setRole(
+		userId: string,
+		role: 'editor' | 'host' | null,
+		actor: { id: string }
+	): Task<{ id: string; role: string }> {
+		return pbMaybe(
+			this.pb
+				.collection('users')
+				.getOne<{ id: string; role: string }>(userId, { fields: 'id,role' }),
+			'Could not load the user'
+		)
+			.andThen((user) => (user ? okAsync(user) : errAsync(notFound('User not found.'))))
+			.andThen((user) =>
+				user.id === actor.id
+					? errAsync(badRequest('You cannot change your own role.'))
+					: user.role === 'admin' || user.role === 'moderator'
+						? errAsync(forbidden('Staff roles are managed in PocketBase.'))
+						: okAsync(user)
+			)
+			.andThen((user) =>
+				fromPb(
+					this.pb
+						.collection('users')
+						.update<{
+							id: string;
+							role: string;
+						}>(user.id, { role: role ?? '' }, { fields: 'id,role' }),
+					'Could not save the role'
+				)
+			)
+			.map((user) => ({ id: user.id, role: user.role ?? '' }));
 	}
 
 	private merge(keeper: UserRow, users: UserRow[]): Task<MergeResult> {

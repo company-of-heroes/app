@@ -25,6 +25,7 @@
 		"./reputation": "./src/reputation/index.ts",
 		"./rewards": "./src/rewards/index.ts",
 		"./docs": "./src/docs/index.ts",
+		"./guides": "./src/guides/index.ts",
 		"./player-performance": "./src/player-performance/index.ts",
 		"./head-to-head": "./src/head-to-head/index.ts",
 		"./compare": "./src/compare/index.ts",

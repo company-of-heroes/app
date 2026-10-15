@@ -8,5 +8,6 @@ export {
 	type CompanionUserDebug,
 	type SteamConflict,
 	type SteamConflictAccount,
+	type AssignableRole,
 	type UserRole
 } from './auth';

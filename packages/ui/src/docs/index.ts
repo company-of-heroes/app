@@ -4,6 +4,7 @@ import DocsMapList from './docs-map-list.svelte';
 import DocsMapPage from './docs-map-page.svelte';
 import DocsOverview from './docs-overview.svelte';
 import DocsUnitPage from './docs-unit-page.svelte';
+import DocsUpgradePage from './docs-upgrade-page.svelte';
 import DocsWeaponList from './docs-weapon-list.svelte';
 import DocsWeaponPage from './docs-weapon-page.svelte';
 
@@ -14,6 +15,7 @@ export {
 	DocsMapPage,
 	DocsOverview,
 	DocsUnitPage,
+	DocsUpgradePage,
 	DocsWeaponList,
 	DocsWeaponPage
 };

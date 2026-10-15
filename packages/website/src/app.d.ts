@@ -5,6 +5,7 @@ import type { AppLocale, TranslateFn } from '@company-of-heroes/i18n';
 import type PocketBase from 'pocketbase';
 import type { Api } from '@company-of-heroes/api';
 import type { Services } from '$lib/server/services';
+import type { PageSeo } from '$lib/site/guide-seo';
 
 declare module '*.md?raw' {
 	const content: string;
@@ -31,6 +32,8 @@ declare global {
 		}
 		interface PageData {
 			locale: AppLocale;
+			/** Set by pages that own their canonical / hreflang tags (guides); the layout then skips them. */
+			seo?: PageSeo;
 		}
 		/** Cloudflare bindings (wrangler.toml); absent in plain `vite dev`. */
 		interface Platform {

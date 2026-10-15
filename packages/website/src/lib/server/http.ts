@@ -2,7 +2,13 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { err, ok, ResultAsync, type Result } from 'neverthrow';
 import type { z } from 'zod';
-import { canHostTournaments, isStaffUser, type AuthUserPublic } from '$lib/auth/user';
+import {
+	canHostTournaments,
+	isAdminUser,
+	isEditorUser,
+	isStaffUser,
+	type AuthUserPublic
+} from '$lib/auth/user';
 import { badRequest, forbidden, unauthorized, type AppError } from './errors';
 import type { Task } from './result';
 import { parse } from './validate';
@@ -69,6 +75,20 @@ export function requireUser(event: RequestEvent): Result<AuthUserPublic, AppErro
 export function requireStaff(event: RequestEvent): Result<AuthUserPublic, AppError> {
 	return requireUser(event).andThen((user) =>
 		isStaffUser(user) ? ok(user) : err(forbidden('Only staff can do that.'))
+	);
+}
+
+/** Admins only. */
+export function requireAdmin(event: RequestEvent): Result<AuthUserPublic, AppError> {
+	return requireUser(event).andThen((user) =>
+		isAdminUser(user) ? ok(user) : err(forbidden('Only admins can do that.'))
+	);
+}
+
+/** Staff and editors: may write guides (an editor manages only their own). */
+export function requireEditor(event: RequestEvent): Result<AuthUserPublic, AppError> {
+	return requireUser(event).andThen((user) =>
+		isEditorUser(user) ? ok(user) : err(forbidden('Only editors and staff can do that.'))
 	);
 }
 

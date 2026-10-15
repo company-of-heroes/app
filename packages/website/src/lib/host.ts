@@ -6,6 +6,7 @@ import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
 import {
 	authDisplayName,
 	canHostTournaments,
+	isEditorUser,
 	isStaffUser,
 	loginRedirectHref,
 	meSteamIds
@@ -13,7 +14,7 @@ import {
 import { toast } from '@company-of-heroes/ui/toasts';
 import { currentLocale, href, unlocalizedPath } from '$lib/i18n';
 import { rememberReplaysListHref, rememberedReplaysListHref } from '$lib/replays';
-import { RELEASE_PAGE_URL, SITE_URL } from '$lib/site/urls';
+import { API_URL, RELEASE_PAGE_URL, SITE_URL } from '$lib/site/urls';
 import { confirmation, modal } from '@company-of-heroes/ui/modal';
 import { NotificationDetail, type HostNotification } from '@company-of-heroes/ui/notifications';
 import {
@@ -28,6 +29,22 @@ import {
 } from '$lib/replays/downloads';
 import { getHiddenMatch, hideMatch, unhideMatch } from '$lib/remote/hidden-matches.remote';
 import { reportDocsIssue, saveDocsNote } from '$lib/remote/docs.remote';
+import {
+	createGuide,
+	createGuideCategory,
+	deleteGuide,
+	deleteGuideCategory,
+	fetchGuide,
+	guideNav,
+	listGuideCategories,
+	listGuides,
+	myGuides,
+	resolveGuides,
+	searchGuideTranslations,
+	updateGuide,
+	updateGuideCategory,
+	uploadGuideImage
+} from '$lib/remote/guides.remote';
 import {
 	createTournament,
 	createTournamentMap,
@@ -215,6 +232,11 @@ export function provideWebsiteHost(): HostContext {
 			downloadApp: () => RELEASE_PAGE_URL,
 			tournamentHallOfFame: () => href('/tournaments/hall-of-fame'),
 			wikiMap: (slug) => href(`/wiki/maps/${slug}`),
+			guides: () => href('/guides'),
+			guide: (path) => href(path),
+			guideIn: (path, language) => href(path, language),
+			guidesManage: () => href('/guides/manage'),
+			guideEdit: (id) => href(`/guides/manage/${id}`),
 			tournamentSimulator: dev
 				? (slug) => href(slug ? `/tournaments/simulate?slug=${slug}` : '/tournaments/simulate')
 				: undefined
@@ -245,6 +267,7 @@ export function provideWebsiteHost(): HostContext {
 			actionIcon: getActionIcon,
 			medals: getMedals,
 			ribbons: getRibbons,
+			filesOrigin: () => new URL(API_URL).origin,
 			userAvatar: (user, options) =>
 				user.avatarUrl ? withFileThumb(user.avatarUrl, options?.thumb) : undefined
 		},
@@ -261,7 +284,8 @@ export function provideWebsiteHost(): HostContext {
 					avatarUrl: user.avatarUrl,
 					steamIds: meSteamIds(user),
 					isStaff: isStaffUser(user),
-					canHost: canHostTournaments(user)
+					canHost: canHostTournaments(user),
+					canEdit: isEditorUser(user)
 				};
 			},
 			isSelf: (steamId) => meSteamIds(page.data.user).includes(steamId),
@@ -451,6 +475,24 @@ export function provideWebsiteHost(): HostContext {
 			},
 			staff: {
 				getCompanionUser: (steamId) => getCompanionUser(steamId)
+			},
+			guides: {
+				nav: (language, categoryId) =>
+					withMessage(guideNav({ language, categoryId: categoryId ?? undefined })),
+				list: (query) => withMessage(listGuides(query)),
+				resolve: (path, language, page) => withMessage(resolveGuides({ path, language, page })),
+				get: (id) => withMessage(fetchGuide(id)),
+				mine: () => withMessage(myGuides()),
+				create: (language) => withMessage(createGuide({ language })),
+				update: (id, input, images = {}) => withMessage(updateGuide({ id, input, images })),
+				uploadImage: (id, file) => withMessage(uploadGuideImage({ id, file })),
+				remove: (id) => withMessage(deleteGuide(id)),
+				categories: () => withMessage(listGuideCategories()),
+				createCategory: (input) => withMessage(createGuideCategory(input)),
+				updateCategory: (id, input) => withMessage(updateGuideCategory({ id, input })),
+				deleteCategory: (id) => withMessage(deleteGuideCategory(id)),
+				searchTranslations: (language, query) =>
+					withMessage(searchGuideTranslations({ language, q: query }))
 			},
 			// No realtime on the website: the bell polls `unreadCount`.
 			notifications: {

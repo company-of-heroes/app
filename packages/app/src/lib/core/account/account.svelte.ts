@@ -907,6 +907,11 @@ export class AccountService {
 		return this.isStaff || this.#user?.role === UsersRoleOptions.host;
 	}
 
+	/** Staff or an editor: may write guides (editors manage only their own). */
+	get canEditGuides(): boolean {
+		return this.isStaff || this.#user?.role === UsersRoleOptions.editor;
+	}
+
 	get isAdmin(): boolean {
 		return this.#user?.role === UsersRoleOptions.admin;
 	}

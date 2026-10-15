@@ -31,10 +31,13 @@ const config = {
 				'/leaderboards/profile/[profileId]',
 				'/tournaments/[slug]',
 				'/tournaments/[slug]/edit',
+				'/guides/[...path]',
+				'/guides/manage/[id]',
 				'/wiki/units/[slug]',
 				'/wiki/buildings/[slug]',
 				'/wiki/commanders/[slug]',
 				'/wiki/weapons/[slug]',
+				'/wiki/upgrades/[slug]',
 				'/wiki/maps/[slug]',
 				'/compare/[id]'
 			]

@@ -36,13 +36,16 @@
 	const host = useHost();
 	const popover = useDocsPopover();
 
-	/** The weapon an entry adds or fires: an upgrade's weapon (also via its abilities), or an ability's. */
-	function weaponOf(entry: Props['entries'][number]): string | undefined {
+	/**
+	 * Where the title links: an upgrade to its own page; an ability that fires one weapon to that
+	 * weapon's page. Other abilities have no page.
+	 */
+	function titlePath(entry: Props['entries'][number]): string | undefined {
 		if ('weaponRefs' in entry) {
-			return entry.weapon;
+			return `/wiki/upgrades/${entry.slug}`;
 		}
 
-		return entry.weapons?.length === 1 ? entry.weapons[0] : undefined;
+		return entry.weapons?.length === 1 ? `/wiki/weapons/${entry.weapons[0]}` : undefined;
 	}
 
 	/** Hover handlers that open the stats popover of an upgrade (its weapon block). */
@@ -63,15 +66,15 @@ a bottom line and the list overlaps its panel's closing line by 1px: no missing 
 when two lists sit side by side. -->
 <ul class="-mb-px">
 	{#each entries as entry (entry.slug)}
-		{@const weapon = weaponOf(entry)}
+		{@const path = titlePath(entry)}
 		<li class="border-secondary-800 flex gap-3 border-b px-4 py-2.5">
 			<DocsIcon icon={entry.icon} name={entry.name} class="size-10" />
 			<div class="min-w-0 flex-1">
 				<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-					{#if weapon}
-						<!-- An upgrade that adds a weapon: the title links to the weapon, hover shows its stats. -->
+					{#if path}
+						<!-- Upgrades link to their page (hover shows the stats); single-weapon abilities to the weapon. -->
 						<a
-							href={host.href(`/wiki/weapons/${weapon}`)}
+							href={host.href(path)}
 							class={cn(
 								interactive,
 								'hover:text-primary decoration-secondary-600 leading-tight font-semibold text-white underline underline-offset-4 transition-colors'
@@ -97,8 +100,8 @@ when two lists sit side by side. -->
 						{/if}
 					</div>
 				</div>
-				{#if !weapon && 'weaponRefs' in entry && entry.weaponRefs.length}
-					<!-- An upgrade that unlocks several things: its weapons as separate links. -->
+				{#if 'weaponRefs' in entry && entry.weaponRefs.length}
+					<!-- The weapons an upgrade adds, as links to their pages. -->
 					<p class="text-secondary-400 mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm">
 						{t('Weapons')}:
 						{#each entry.weaponRefs as ref, index (ref.slug)}

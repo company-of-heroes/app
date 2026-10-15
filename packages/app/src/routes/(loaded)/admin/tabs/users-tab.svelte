@@ -7,7 +7,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { CopyButton } from '@company-of-heroes/ui/copy-button';
 	import * as Form from '$lib/components/ui/form';
-	import { Input } from '$lib/components/ui/input';
+	import { Input, Select } from '$lib/components/ui/input';
 	import * as User from '$lib/components/user';
 	import { app } from '$core/app/context';
 	import { pocketbase } from '$core/pocketbase';
@@ -22,8 +22,8 @@
 	import { interactive } from '$lib/components/ui/variants';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { PlayerProfileLink } from '@company-of-heroes/ui/player';
-	import type { SteamConflict, SteamConflictAccount } from '@company-of-heroes/api';
-	import { api } from '$core/api';
+	import type { AssignableRole, SteamConflict, SteamConflictAccount } from '@company-of-heroes/api';
+	import { api, unwrapApi } from '$core/api';
 
 	const { t } = useI18n();
 
@@ -56,8 +56,43 @@
 			return t('Tournament host');
 		}
 
+		if (role === UsersRoleOptions.editor) {
+			return t('Editor');
+		}
+
 		return '';
 	};
+
+	const isStaffRole = (role: UsersResponse['role']) =>
+		role === UsersRoleOptions.admin || role === UsersRoleOptions.moderator;
+	const roleItems = $derived([
+		{ value: '', label: t('No role') },
+		{ value: UsersRoleOptions.editor, label: t('Editor') },
+		{ value: UsersRoleOptions.host, label: t('Tournament host') }
+	]);
+	let roleBusyId = $state<string | null>(null);
+
+	/** Admins hand out the editor and host roles; staff roles stay in PocketBase. */
+	async function setRole(row: UsersResponse, value: string) {
+		const role: AssignableRole | null =
+			value === UsersRoleOptions.editor || value === UsersRoleOptions.host ? value : null;
+		if ((row.role ?? '') === (role ?? '')) {
+			return;
+		}
+
+		roleBusyId = row.id;
+		try {
+			const saved = await unwrapApi(api.auth.setUserRole(row.id, role));
+			searchResults = searchResults.map((user) =>
+				user.id === row.id ? { ...user, role: saved.role as UsersResponse['role'] } : user
+			);
+			app.toast.success(t('Role saved.'));
+		} catch (error) {
+			app.toast.error(error instanceof Error ? error.message : t('Could not save the role.'));
+		} finally {
+			roleBusyId = null;
+		}
+	}
 
 	const profileSteamId = (user: UsersResponse) => {
 		if (!Array.isArray(user.steamIds)) {
@@ -318,10 +353,24 @@
 			</User.Root>
 		{/snippet}
 		{#snippet cell_role({ row }: { row: UsersResponse })}
-			{#if roleLabel(row.role)}
+			{#if isStaffRole(row.role)}
 				<Badge variant="primary">{roleLabel(row.role)}</Badge>
+			{:else if row.id === app.account.userId}
+				{#if roleLabel(row.role)}
+					<Badge variant="primary">{roleLabel(row.role)}</Badge>
+				{:else}
+					<span class="text-secondary-500">—</span>
+				{/if}
 			{:else}
-				<span class="text-secondary-500">—</span>
+				<Select
+					type="single"
+					size="sm"
+					items={roleItems}
+					value={row.role ?? ''}
+					onValueChange={(value: string) => setRole(row, value)}
+					disabled={roleBusyId === row.id}
+					aria-label={t('Role')}
+				/>
 			{/if}
 		{/snippet}
 		{#snippet cell_reputation({ row }: { row: UsersResponse })}

@@ -10,6 +10,7 @@ import { account } from '$core/account';
 import { api, unwrapApi } from '$core/api';
 import { app } from '$core/app/context';
 import { SITE_URL } from '$core/site/urls';
+import { PUBLIC_PB_URL } from '$env/static/public';
 import { findCompanionUserBySteamId, readMetaVersion } from '$core/pocketbase/companion-user';
 import { getHeadToHead } from '$core/pocketbase/head-to-head';
 import { findHiddenMatch, hideMatch, unhideMatch } from '$core/pocketbase/hidden-matches';
@@ -65,7 +66,12 @@ export function provideAppHost(): HostContext {
 			tournamentNew: () => '/tournaments/new',
 			tournamentEdit: (slug) => `/tournaments/${slug}/edit`,
 			tournamentHallOfFame: () => '/tournaments/hall-of-fame',
-			wikiMap: (slug) => `/wiki/maps/${slug}`
+			wikiMap: (slug) => `/wiki/maps/${slug}`,
+			guides: () => '/guides',
+			guide: (path) => path,
+			guideIn: (path, language) => `${path}?lang=${language}`,
+			guidesManage: () => '/guides/manage',
+			guideEdit: (id) => `/guides/manage/${id}`
 		},
 		url: {
 			param: (name) => page.url.searchParams.get(name),
@@ -95,6 +101,7 @@ export function provideAppHost(): HostContext {
 			actionIcon: getActionIcon,
 			medals: getMedals,
 			ribbons: getRibbons,
+			filesOrigin: () => new URL(PUBLIC_PB_URL || 'https://api.coh1stats.com').origin,
 			userAvatar: (user, options) =>
 				user.avatarUrl
 					? withFileThumb(user.avatarUrl, options?.thumb)
@@ -112,7 +119,8 @@ export function provideAppHost(): HostContext {
 					avatarUrl: userAvatarSrc(account.user),
 					steamIds: account.user.steamIds,
 					isStaff: account.isStaff,
-					canHost: account.canHostTournaments
+					canHost: account.canHostTournaments,
+					canEdit: account.canEditGuides
 				};
 			},
 			isSelfAlias: isMeReplayAlias,
@@ -435,6 +443,23 @@ export function provideAppHost(): HostContext {
 						appVersion: readMetaVersion(user.meta)
 					};
 				}
+			},
+			guides: {
+				nav: (language, categoryId) => unwrapApi(api.guides.nav(language, categoryId)),
+				list: (query) => unwrapApi(api.guides.list(query)),
+				resolve: (path, language, page) => unwrapApi(api.guides.resolve(path, language, page)),
+				get: (id) => unwrapApi(api.guides.get(id)),
+				mine: () => unwrapApi(api.guides.mine()),
+				create: (language) => unwrapApi(api.guides.create(language)),
+				update: (id, input, images) => unwrapApi(api.guides.update(id, input, images)),
+				uploadImage: (id, file) => unwrapApi(api.guides.uploadImage(id, file)),
+				remove: (id) => unwrapApi(api.guides.remove(id)),
+				categories: () => unwrapApi(api.guides.categories()),
+				createCategory: (input) => unwrapApi(api.guides.createCategory(input)),
+				updateCategory: (id, input) => unwrapApi(api.guides.updateCategory(id, input)),
+				deleteCategory: (id) => unwrapApi(api.guides.deleteCategory(id)),
+				searchTranslations: (language, query) =>
+					unwrapApi(api.guides.searchTranslations(language, query))
 			},
 			// Backed by the realtime inbox service (toasts + Windows notifications live there).
 			notifications: {

@@ -20,6 +20,21 @@ import type { Ribbon } from '../reward/ribbon';
 import type { HostNotification } from '../notifications/types';
 import type { HeadToHead } from '../head-to-head/types';
 import type {
+	Guide,
+	GuideCategory,
+	GuideCategoryInput,
+	GuideCategoryTree,
+	GuideCategoryUpdate,
+	GuideImages,
+	GuideInput,
+	GuideLanguage,
+	GuideList,
+	GuideListQuery,
+	GuideNav,
+	GuideResolution,
+	GuideSummary
+} from '../guide/types';
+import type {
 	HallOfFame,
 	MyTournamentHostRequest,
 	MyTournaments,
@@ -60,6 +75,8 @@ export type HostUser = {
 	isStaff: boolean;
 	/** Staff or a community host: may create tournaments (hosts run only their own). */
 	canHost: boolean;
+	/** Staff or an editor: may write guides (editors manage only their own). */
+	canEdit: boolean;
 };
 
 /** A comment thread lives on a saved lobby or a member replay. */
@@ -130,6 +147,14 @@ export type HostRoutes = {
 	wikiMap?: (slug: string) => string;
 	/** Dev-only tournament simulator (website in dev mode); hosts without it hide the links. */
 	tournamentSimulator?: (slug?: string) => string;
+	guides: () => string;
+	/** A guide or category page by its unlocalized path (`/guides/wehrmacht/1v1/heavy-t1`). */
+	guide: (path: string) => string;
+	/** A guide in another language than the viewer's (a translation link). */
+	guideIn: (path: string, language: GuideLanguage) => string;
+	/** The editor's own guides. */
+	guidesManage: () => string;
+	guideEdit: (id: string) => string;
 };
 
 /** Parsed-replay roster entry as sent to rating previews / uploads. */
@@ -199,6 +224,8 @@ export type HostResolvers = {
 	medals: () => Medal[];
 	/** Reward ribbons from `shared-assets/ribbons`, in file order. Hosts without them return []. */
 	ribbons: () => Ribbon[];
+	/** Origin of PocketBase file urls (`https://api.coh1stats.com`); guide images may come from it. */
+	filesOrigin: () => string;
 	/** Avatar for a comment author / mention; hosts may add a generated fallback. */
 	userAvatar: (
 		user: { id: string; avatarUrl?: string },
@@ -456,6 +483,32 @@ export type HostApi = {
 		/** Staff: everyone with the host role. */
 		hosts: () => Promise<TournamentHost[]>;
 		revokeHost: (userId: string) => Promise<void>;
+	};
+	/** Guides; every call rejects with a user-facing message. Editor and staff checks happen on the server. */
+	guides: {
+		/** The category tree and the published guides directly under `categoryId`. */
+		nav: (language: GuideLanguage, categoryId?: string | null) => Promise<GuideNav>;
+		list: (query: GuideListQuery) => Promise<GuideList>;
+		/** What `/guides/<path>` shows in a language, or where its guide moved to. */
+		resolve: (path: string, language: GuideLanguage, page?: number) => Promise<GuideResolution>;
+		/** By id; drafts for whoever may edit them. */
+		get: (id: string) => Promise<Guide>;
+		/** Editors: their guides; staff: every guide. */
+		mine: () => Promise<GuideSummary[]>;
+		/** Starts an empty draft. */
+		create: (language: GuideLanguage) => Promise<Guide>;
+		update: (id: string, input: GuideInput, images?: GuideImages) => Promise<Guide>;
+		/** An inline image; the url goes into the body. */
+		uploadImage: (id: string, file: File) => Promise<{ name: string; url: string }>;
+		remove: (id: string) => Promise<void>;
+		categories: () => Promise<GuideCategoryTree[]>;
+		/** Editors and staff add a category (top-level, or under a top-level one). */
+		createCategory: (input: GuideCategoryInput) => Promise<GuideCategory>;
+		/** Staff only. */
+		updateCategory: (id: string, input: GuideCategoryUpdate) => Promise<GuideCategory>;
+		deleteCategory: (id: string) => Promise<void>;
+		/** Published guides in other languages, by title. */
+		searchTranslations: (language: GuideLanguage, query: string) => Promise<GuideSummary[]>;
 	};
 	/** The signed-in user's notifications (bell). */
 	notifications: {

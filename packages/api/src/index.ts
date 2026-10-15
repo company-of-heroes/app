@@ -50,6 +50,7 @@ export {
 	type CompanionUserDebug,
 	type SteamConflict,
 	type SteamConflictAccount,
+	type AssignableRole,
 	type UserRole
 } from './auth';
 
@@ -80,6 +81,7 @@ export {
 } from './leaderboards';
 
 export * from './tournaments';
+export * from './guides';
 
 export { TwitchApi, type LiveStream } from './twitch';
 export {
@@ -232,6 +234,7 @@ export { CompanionApi, readMetaVersion, type CompanionUser } from './companion';
 export {
 	toUploadFile,
 	cloneUploadFile,
+	IMAGE_TYPES,
 	type ToUploadFileOptions,
 	type UploadImageKind
 } from './upload-file';

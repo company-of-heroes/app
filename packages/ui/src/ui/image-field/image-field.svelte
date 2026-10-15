@@ -1,23 +1,26 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { TOURNAMENT_IMAGE_TYPES } from '@company-of-heroes/api/tournaments';
-	import { useHost } from '../host/host.context';
-	import { Button } from '../ui/button';
-	import { FileDropzone } from '../ui/input';
+	import { IMAGE_TYPES } from '@company-of-heroes/api';
+	import { useHost } from '../../host/host.context';
+	import { Button } from '../button';
+	import { FileDropzone } from '../input';
 	import ImageSquareIcon from 'phosphor-svelte/lib/ImageSquareIcon';
 	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
-	import { tooltip } from '../attachments';
+	import { tooltip } from '../../attachments';
 
 	type Props = {
 		id: string;
 		/** Current stored image, or null. */
 		currentUrl: string | null;
 		maxBytes: number;
+		/** i18n key shown when the file is too large. */
 		tooBigMessage: string;
-		/** Logo: square preview; banner: wide preview. */
-		shape: 'square' | 'wide';
+		/** Logo: square; banner: 4:1; cover: 1.91:1 (Open Graph), full width. */
+		shape: 'square' | 'wide' | 'cover';
+		/** Accepted MIME types; JPEG, PNG and WebP by default. */
+		accept?: string[];
 		file: File | null;
 		clear: boolean;
 		disabled?: boolean;
@@ -29,6 +32,7 @@
 		maxBytes,
 		tooBigMessage,
 		shape,
+		accept: acceptTypes = IMAGE_TYPES,
 		file = $bindable(),
 		clear = $bindable(),
 		disabled = false
@@ -49,7 +53,7 @@
 	});
 
 	function accept(next: File): boolean {
-		if (!TOURNAMENT_IMAGE_TYPES.includes(next.type)) {
+		if (!acceptTypes.includes(next.type)) {
 			host.notify.error(t('Use a JPEG, PNG or WebP image.'));
 			return false;
 		}
@@ -63,17 +67,26 @@
 	}
 </script>
 
-<div class={cn('relative', shape === 'square' ? 'w-28' : 'w-full max-w-md')}>
+<div
+	class={cn(
+		'relative',
+		shape === 'square' && 'w-28',
+		shape === 'wide' && 'w-full max-w-md',
+		shape === 'cover' && 'w-full'
+	)}
+>
 	<FileDropzone
 		{id}
 		{disabled}
-		accept={TOURNAMENT_IMAGE_TYPES.join(',')}
+		accept={acceptTypes.join(',')}
 		acceptFile={accept}
 		fileName={file?.name ?? (shown ? t('Current image') : null)}
 		zoneClass={cn(
-			'relative overflow-hidden p-0 border-dashed',
+			'relative overflow-hidden p-0 border-dashed min-h-0',
 			shown && 'border-solid',
-			shape === 'square' ? 'aspect-square min-h-0' : 'aspect-[4/1] min-h-0'
+			shape === 'square' && 'aspect-square',
+			shape === 'wide' && 'aspect-[4/1]',
+			shape === 'cover' && 'aspect-[1.91/1]'
 		)}
 		onFileChange={(next) => {
 			file = next;
@@ -107,7 +120,7 @@
 			>
 				<UploadSimpleIcon size={20} class="text-secondary-200" />
 				<span id="{id}-hint" class="text-sm">{t('Change image')}</span>
-				{#if shape === 'wide'}
+				{#if shape !== 'square'}
 					<span class="text-secondary-400 max-w-full truncate text-xs font-normal">{fileName}</span>
 				{/if}
 			</div>

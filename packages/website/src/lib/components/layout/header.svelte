@@ -24,6 +24,7 @@
 		{ href: '/replays', label: t('Replays') },
 		{ href: '/stats', label: t('Stats') },
 		{ href: '/tournaments', label: t('Tournaments') },
+		{ href: '/guides', label: t('Guides') },
 		{ href: '/wiki', label: t('Wiki') }
 	]);
 
@@ -66,6 +67,10 @@
 
 		if (path === '/tournaments') {
 			return current.startsWith('/tournaments');
+		}
+
+		if (path === '/guides') {
+			return current.startsWith('/guides');
 		}
 
 		return false;

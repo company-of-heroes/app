@@ -20,7 +20,10 @@ const AVATAR_UPLOAD = {
 	invalidTypeMessage: 'Avatar must be an image file.'
 };
 
-export type UserRole = 'admin' | 'moderator' | 'host';
+export type UserRole = 'admin' | 'moderator' | 'host' | 'editor';
+
+/** Roles admins hand out from the users admin page (staff roles are set in PocketBase). */
+export type AssignableRole = 'editor' | 'host';
 
 export type AuthUser = RecordModel & {
 	email: string;
@@ -102,27 +105,29 @@ export class AuthApi {
 
 	register(email: string, password: string): ResultAsync<AuthUser, ApiError> {
 		const trimmedEmail = email.trim();
-		return ResultAsync.fromPromise(
-			this.deps.pocketbase.collection('users').create(
-				{
-					id: generateUniqueId(),
-					email: trimmedEmail,
-					password,
-					passwordConfirm: password
-				},
-				pbOptions(this.deps)
-			),
-			toRegisterError
-		)
-			// The account exists either way: a failed send can be retried from the account page.
-			.andThen(() => this.requestVerification(trimmedEmail).orElse(() => okAsync(false)))
-			.andThen(() =>
-				ResultAsync.fromPromise(
-					this.deps.pocketbase.collection('users').authWithPassword(trimmedEmail, password),
-					toRegisterError
-				)
+		return (
+			ResultAsync.fromPromise(
+				this.deps.pocketbase.collection('users').create(
+					{
+						id: generateUniqueId(),
+						email: trimmedEmail,
+						password,
+						passwordConfirm: password
+					},
+					pbOptions(this.deps)
+				),
+				toRegisterError
 			)
-			.map((auth) => auth.record as AuthUser);
+				// The account exists either way: a failed send can be retried from the account page.
+				.andThen(() => this.requestVerification(trimmedEmail).orElse(() => okAsync(false)))
+				.andThen(() =>
+					ResultAsync.fromPromise(
+						this.deps.pocketbase.collection('users').authWithPassword(trimmedEmail, password),
+						toRegisterError
+					)
+				)
+				.map((auth) => auth.record as AuthUser)
+		);
 	}
 
 	logout(): Result<void, ApiError> {
@@ -319,6 +324,20 @@ export class AuthApi {
 			sendV1(this.deps, `/users/steam-conflicts/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 			'Could not dismiss the Steam conflict.'
 		).map(() => undefined);
+	}
+
+	/** Admins: gives a user the editor or host role, or takes it away (`null`). */
+	setUserRole(
+		userId: string,
+		role: AssignableRole | null
+	): ResultAsync<{ id: string; role: string }, ApiError> {
+		return fromPbPromise(
+			sendV1<{ id: string; role: string }>(this.deps, `/users/${encodeURIComponent(userId)}/role`, {
+				method: 'PATCH',
+				body: { role }
+			}),
+			'Could not save the role.'
+		);
 	}
 
 	/** Admins: merges `userIds` into `keeperId` (the keeper keeps its own role). */

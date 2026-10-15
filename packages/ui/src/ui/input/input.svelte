@@ -42,6 +42,12 @@
 	const controlSize = $derived(
 		size === 'sm' ? 'h-8 text-sm' : size === 'lg' ? 'h-14 text-lg' : 'h-8 text-base'
 	);
+	/**
+	 * Adorned controls are a `flex-1` wrapper: in a column (a stacked form field) the flex basis
+	 * beats `h-8` and the wrapper shrinks to the bare input. A min height keeps it as tall as a
+	 * plain input.
+	 */
+	const adornedMinHeight = $derived(size === 'lg' ? 'min-h-14' : 'min-h-8');
 	const controlPad = $derived(size === 'sm' ? 'px-3' : size === 'lg' ? 'px-5' : 'px-3');
 	const adornedText = $derived(size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-lg' : 'text-base');
 	const adornedSidePad = $derived(size === 'sm' ? 'px-2' : 'px-3');
@@ -142,7 +148,9 @@
 {:else if type === 'number'}
 	<div
 		class={cn(
-			hasAdornments ? cn(adornedControl, adornedControlDisabled, controlSize) : 'relative w-full',
+			hasAdornments
+				? cn(adornedControl, adornedControlDisabled, controlSize, adornedMinHeight)
+				: 'relative w-full',
 			'min-w-0 flex-1',
 			className
 		)}
@@ -199,7 +207,16 @@
 		</div>
 	</div>
 {:else if hasAdornments}
-	<div class={cn(adornedControl, adornedControlDisabled, controlSize, 'min-w-0 flex-1', className)}>
+	<div
+		class={cn(
+			adornedControl,
+			adornedControlDisabled,
+			controlSize,
+			adornedMinHeight,
+			'min-w-0 flex-1',
+			className
+		)}
+	>
 		{#if leading}
 			<span class={cn(adornedLeading, adornedSidePad, 'pointer-events-none')}>
 				{@render leading()}

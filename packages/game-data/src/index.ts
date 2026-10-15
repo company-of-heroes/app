@@ -5,17 +5,19 @@ import type {
 	DocAbility,
 	DocBuilding,
 	DocCommander,
+	DocKind,
+	DocMap,
+	DocMapRow,
 	DocMeta,
 	DocRef,
 	DocRequirements,
-	DocWeaponRow,
-	DocsOverview,
+	DocSearchEntry,
 	DocUnit,
 	DocUpgrade,
 	DocUpgradeEntry,
 	DocWeapon,
-	DocMap,
-	DocMapRow,
+	DocWeaponRow,
+	DocsOverview,
 	Faction,
 	MapPage,
 	MapPointCount,
@@ -23,6 +25,7 @@ import type {
 	StockMaps,
 	UnitCallIn,
 	UnitPage,
+	UpgradePage,
 	WeaponPage
 } from './types';
 import { FACTIONS } from './factions';
@@ -74,6 +77,8 @@ export class GameDocs {
 	readonly buildings: Map<string, DocBuilding>;
 	readonly commanders: Map<string, DocCommander>;
 	readonly upgrades: Map<string, DocUpgrade>;
+	/** Upgrades with a page: named ones that are not a doctrine pick itself. */
+	readonly listedUpgrades: DocUpgrade[];
 	readonly abilities: Map<string, DocAbility>;
 	readonly weapons: Map<string, DocWeapon>;
 	readonly maps: Map<string, DocMap>;
@@ -102,6 +107,12 @@ export class GameDocs {
 		this.abilities = bySlug(data.abilities);
 		this.listedUnits = [...this.units.values()].filter(
 			(unit) => !(unit.callIn && this.abilities.get(unit.callIn)?.reward)
+		);
+		const doctrinePicks = new Set(
+			[...this.commanders.values()].map((commander) => commander.unlock).filter(defined)
+		);
+		this.listedUpgrades = [...this.upgrades.values()].filter(
+			(upgrade) => upgrade.name && !doctrinePicks.has(upgrade.slug)
 		);
 		// Weapons have no icon of their own in the game files: use the upgrade that adds the weapon,
 		// else the first unit or building that carries it.
@@ -806,12 +817,78 @@ export class GameDocs {
 		return { map, pointTypes: this.mapPointTypes, counts, income: this.mapIncome(counts) };
 	}
 
+	upgradePage(slug: string): UpgradePage | undefined {
+		const upgrade = this.upgrades.get(slug);
+		if (!upgrade) {
+			return undefined;
+		}
+
+		const faction = upgrade.factions[0];
+		const entry = this.upgradeEntry(upgrade, faction);
+		const tier = this.tierOf(slug);
+		const commander = tier && this.commanderRef(tier.commander.slug);
+		const refs = <T>(slugs: string[] | undefined, ref: (slug: string) => T | undefined): T[] =>
+			(slugs ?? []).map(ref).filter(defined);
+		return {
+			upgrade: entry,
+			researchedAt: [...this.buildings.values()]
+				.filter((building) => building.research?.includes(slug))
+				.map((building) => this.buildingRef(building.slug))
+				.filter(defined)
+				.filter(firstOfName),
+			availableOn: this.listedUnits
+				.filter((unit) => unit.upgrades?.includes(slug))
+				.map((unit) => this.unitRef(unit.slug))
+				.filter(defined)
+				.filter(firstOfName),
+			appliesTo: entry.appliesToRefs,
+			unlocks: {
+				units: refs(upgrade.unlocks?.units, (item) => this.unitRef(item)),
+				buildings: refs(upgrade.unlocks?.buildings, (item) => this.buildingRef(item)).filter(
+					firstOfName
+				),
+				abilities: refs(upgrade.unlocks?.abilities, (item) => {
+					const ability = this.abilities.get(item);
+					return ability && this.abilityRef(ability);
+				}),
+				upgrades: refs(upgrade.unlocks?.upgrades, (item) => {
+					const other = this.upgrades.get(item);
+					return other && this.upgradeRef(other, faction);
+				})
+			},
+			commanderTier: tier && commander ? { commander, branch: tier.branch, tier: tier.tier } : null,
+			...this.requirementRefs(upgrade, faction)
+		};
+	}
+
+	/** Every wiki page by name, for searching (the guide editor's wiki-link picker). */
+	searchIndex(): DocSearchEntry[] {
+		const entry = (
+			kind: DocKind,
+			item: { slug: string; name: string; icon?: string },
+			faction?: Faction
+		): DocSearchEntry => ({ kind, slug: item.slug, name: item.name, faction, icon: item.icon });
+		return [
+			...this.listedUnits.map((unit) => entry('unit', unit, unit.faction)),
+			...[...this.buildings.values()]
+				.filter(firstOfName)
+				.map((building) => entry('building', building, building.faction)),
+			...[...this.commanders.values()].map((commander) =>
+				entry('commander', commander, commander.faction)
+			),
+			...this.listedUpgrades.map((upgrade) => entry('upgrade', upgrade, upgrade.factions[0])),
+			...this.weaponList().map((weapon) => entry('weapon', weapon, weapon.faction)),
+			...[...this.maps.values()].map((map) => entry('map', map))
+		];
+	}
+
 	/** Every page path, for the sitemap. */
 	paths(): string[] {
 		return [
 			...this.listedUnits.map((unit) => `/wiki/units/${unit.slug}`),
 			...[...this.buildings.keys()].map((slug) => `/wiki/buildings/${slug}`),
 			...[...this.commanders.keys()].map((slug) => `/wiki/commanders/${slug}`),
+			...this.listedUpgrades.map((upgrade) => `/wiki/upgrades/${upgrade.slug}`),
 			...this.weaponList().map((ref) => `/wiki/weapons/${ref.slug}`),
 			'/wiki/maps',
 			...[...this.maps.keys()].map((slug) => `/wiki/maps/${slug}`)

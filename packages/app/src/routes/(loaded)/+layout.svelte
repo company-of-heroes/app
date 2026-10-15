@@ -26,6 +26,7 @@
 	import BroadcastIcon from 'phosphor-svelte/lib/BroadcastIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import BookOpenIcon from 'phosphor-svelte/lib/BookOpenIcon';
+	import ArticleIcon from 'phosphor-svelte/lib/ArticleIcon';
 	import logo64 from '@assets/logo/logo-64.webp';
 	import logo128 from '@assets/logo/logo-128.webp';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
@@ -169,6 +170,10 @@
 				<Nav.Link href="/tournaments">
 					<TrophyIcon size={28} weight="duotone" />
 					{t('Tournaments')}
+				</Nav.Link>
+				<Nav.Link href="/guides">
+					<ArticleIcon size={28} weight="duotone" />
+					{t('Guides')}
 				</Nav.Link>
 				<Nav.Link href="/wiki">
 					<BookOpenIcon size={28} weight="duotone" />

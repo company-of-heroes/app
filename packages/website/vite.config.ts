@@ -1,6 +1,8 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const websiteRoot = fileURLToPath(new URL('.', import.meta.url));
@@ -11,6 +13,35 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
  * new files there and `import.meta.glob` results (action icons, timeline art) stayed stale until a
  * restart. Once watched, Vite's own glob handling picks up added and removed files.
  */
+/**
+ * Every `phosphor-svelte/lib/<Icon>` the website and the shared UI import. Each icon is its own
+ * module, and Vite's startup scan misses some of them; one found at runtime makes Vite re-bundle
+ * and reload the page, so the first client-side visit to e.g. the wiki fails or reloads. Listing
+ * them in `optimizeDeps.include` bundles them all up front.
+ */
+function phosphorIcons(): string[] {
+	const icons = new Set<string>();
+	const walk = (dir: string) => {
+		for (const entry of readdirSync(dir, { withFileTypes: true })) {
+			if (entry.name === 'node_modules' || entry.name.startsWith('.')) {
+				continue;
+			}
+
+			const path = join(dir, entry.name);
+			if (entry.isDirectory()) {
+				walk(path);
+			} else if (/\.(svelte|ts)$/.test(entry.name)) {
+				for (const match of readFileSync(path, 'utf8').matchAll(/phosphor-svelte\/lib\/(\w+)/g)) {
+					icons.add(`phosphor-svelte/lib/${match[1]}`);
+				}
+			}
+		}
+	};
+	walk(fileURLToPath(new URL('./src', import.meta.url)));
+	walk(fileURLToPath(new URL('../ui/src', import.meta.url)));
+	return [...icons].sort();
+}
+
 function sharedAssetsWatchPlugin(): Plugin {
 	return {
 		name: 'shared-assets-watch',
@@ -23,7 +54,7 @@ function sharedAssetsWatchPlugin(): Plugin {
 export default defineConfig({
 	plugins: [sharedAssetsWatchPlugin(), sveltekit(), tailwindcss()],
 	optimizeDeps: {
-		include: ['@fknoobs/replay-parser']
+		include: ['@fknoobs/replay-parser', ...phosphorIcons()]
 	},
 	worker: {
 		format: 'es'

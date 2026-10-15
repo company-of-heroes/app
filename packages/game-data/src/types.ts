@@ -2,7 +2,7 @@
 
 export type Faction = 'allies' | 'allies_commonwealth' | 'axis' | 'axis_panzer_elite';
 
-export type DocKind = 'unit' | 'building' | 'commander' | 'weapon' | 'map';
+export type DocKind = 'unit' | 'building' | 'commander' | 'weapon' | 'map' | 'upgrade';
 
 export type DocCost = {
 	manpower?: number;
@@ -248,11 +248,11 @@ export type DocMeta = {
 
 /** A link to another documented item with what a list row needs. */
 export type DocRef = {
-	kind: DocKind | 'ability' | 'upgrade';
+	kind: DocKind | 'ability';
 	slug: string;
 	/** Replay objectId (doctrine id for commanders); opens the stats popover. */
 	id?: number;
-	/** Upgrades that add a weapon: that weapon's slug, so the upgrade links to the weapon page. */
+	/** Upgrades that add a weapon: that weapon's slug (a secondary link on the upgrade's page and rows). */
 	weapon?: string;
 	name: string;
 	icon?: string;
@@ -348,6 +348,30 @@ export type WeaponPage = {
 	upgradeFor: { upgrade: DocRef; units: DocRef[] }[];
 	/** Abilities that fire it, with the units and buildings that have the ability. */
 	firedBy: { ability: DocRef; units: DocRef[] }[];
+};
+
+export type UpgradePage = {
+	upgrade: DocUpgradeEntry;
+	/** Buildings that research it (one per name). */
+	researchedAt: DocRef[];
+	/** Units that buy it themselves. */
+	availableOn: DocRef[];
+	/** Units it changes without being bought on them (the BAR research → Riflemen). */
+	appliesTo: DocRef[];
+	unlocks: { units: DocRef[]; buildings: DocRef[]; abilities: DocRef[]; upgrades: DocRef[] };
+	/** The doctrine tier this upgrade is, when it is one. */
+	commanderTier: { commander: DocRef; branch: number; tier: number } | null;
+	requires: DocRef[];
+	requiresBuildings: DocRef[][];
+};
+
+/** One wiki page in the search index (the guide editor's wiki-link picker). */
+export type DocSearchEntry = {
+	kind: DocKind;
+	slug: string;
+	name: string;
+	faction?: Faction;
+	icon?: string;
 };
 
 export type FactionOverview = {

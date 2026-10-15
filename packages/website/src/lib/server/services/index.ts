@@ -9,6 +9,7 @@ import { CompatService } from './compat';
 import { DevSeedService } from './dev-seed';
 import { DevTournamentSimService } from './dev-tournament-sim';
 import { DocsService } from './docs';
+import { GuidesService } from './guides';
 import { HeadToHeadService } from './head-to-head';
 import { HiddenMatchesService } from './hidden-matches';
 import { LabelAutoService } from './label-auto';
@@ -141,6 +142,10 @@ export class Services {
 
 	get labelAuto() {
 		return this.#get('labelAuto', LabelAutoService);
+	}
+
+	get guides() {
+		return this.#get('guides', GuidesService);
 	}
 
 	get leaderboard() {

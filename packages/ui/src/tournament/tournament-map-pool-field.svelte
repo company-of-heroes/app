@@ -21,7 +21,7 @@
 	import { Button } from '../ui/button';
 	import { Input, Selection } from '../ui/input';
 	import { Label } from '../ui/label';
-	import TournamentImageField from './tournament-image-field.svelte';
+	import { ImageField } from '../ui/image-field';
 	import TournamentMapThumb from './tournament-map-thumb.svelte';
 	import type { TournamentMap } from './types';
 
@@ -236,7 +236,7 @@
 				</div>
 				<div class="flex flex-col gap-2">
 					<span class="text-secondary-300 text-sm font-medium">{t('Map icon')}</span>
-					<TournamentImageField
+					<ImageField
 						id="tournament-map-icon"
 						shape="square"
 						currentUrl={null}

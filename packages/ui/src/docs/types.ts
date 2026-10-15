@@ -4,6 +4,7 @@ import type {
 	DocKind,
 	MapPage,
 	UnitPage,
+	UpgradePage,
 	WeaponPage
 } from '@company-of-heroes/game-data/types';
 
@@ -17,6 +18,7 @@ export type DocsBuildingPageData = WithNote<BuildingPage>;
 export type DocsCommanderPageData = WithNote<CommanderPage>;
 export type DocsWeaponPageData = WithNote<WeaponPage>;
 export type DocsMapPageData = WithNote<MapPage>;
+export type DocsUpgradePageData = WithNote<UpgradePage>;
 
 /**
  * Map images from `packages/shared-assets/maps` (the host bundles them): the map picture (the

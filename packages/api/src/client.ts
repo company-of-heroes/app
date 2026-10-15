@@ -4,6 +4,7 @@ import { AuthApi } from './auth/auth';
 import { CompanionApi } from './companion/companion';
 import { CompareApi } from './compare/compare';
 import { DocsApi } from './docs/docs';
+import { GuidesApi } from './guides/guides';
 import { HeadToHeadApi } from './head-to-head/head-to-head';
 import { HiddenMatchesApi } from './hidden-matches/hidden-matches';
 import { LabelsApi } from './labels/labels';
@@ -30,6 +31,7 @@ export type Api = {
 	companion: CompanionApi;
 	compare: CompareApi;
 	docs: DocsApi;
+	guides: GuidesApi;
 	headToHead: HeadToHeadApi;
 	hiddenMatches: HiddenMatchesApi;
 	labels: LabelsApi;
@@ -58,6 +60,7 @@ export function createApi(deps: ApiDeps): Api {
 		companion: new CompanionApi(deps),
 		compare: new CompareApi(deps),
 		docs: new DocsApi(deps),
+		guides: new GuidesApi(deps),
 		headToHead: new HeadToHeadApi(deps),
 		hiddenMatches: new HiddenMatchesApi(deps),
 		labels: new LabelsApi(deps),

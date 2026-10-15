@@ -290,3 +290,18 @@ export const markdownProse = cn(
 	'prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-blockquote:my-1',
 	'[&>*:first-child]:mt-0 [&>*:last-child]:mb-0'
 );
+
+/** Article body of a guide: the markdown prose at reading size, with figures and anchor headings. */
+export const guideProse = cn(
+	'prose text-secondary-200 max-w-none min-w-0 break-words',
+	'prose-headings:font-heading prose-headings:text-white prose-headings:scroll-mt-24',
+	'prose-h2:mt-10 prose-h2:mb-3 prose-h2:text-2xl prose-h3:mt-8 prose-h3:mb-2 prose-h3:text-xl',
+	'prose-p:leading-relaxed prose-strong:text-white prose-li:marker:text-secondary-400',
+	'prose-a:text-primary prose-a:decoration-secondary-600 prose-a:underline prose-a:underline-offset-4 hover:prose-a:decoration-primary',
+	'prose-code:bg-secondary-800 prose-code:text-primary prose-code:rounded prose-code:px-1 prose-code:py-0.5',
+	'prose-code:before:content-none prose-code:after:content-none',
+	'prose-pre:bg-secondary-900 prose-pre:border-secondary-800 prose-pre:border',
+	'prose-blockquote:border-secondary-700 prose-blockquote:text-secondary-300',
+	'prose-img:border-secondary-800 prose-img:rounded-md prose-img:border prose-figcaption:text-secondary-400',
+	'prose-hr:border-secondary-800 prose-th:text-white'
+);

@@ -29,5 +29,6 @@ export const wiki = {
 	building: (slug: string) => page('building', slug, (docs) => docs.buildingPage(slug)),
 	commander: (slug: string) => page('commander', slug, (docs) => docs.commanderPage(slug)),
 	weapon: (slug: string) => page('weapon', slug, (docs) => docs.weaponPage(slug)),
-	map: (slug: string) => page('map', slug, (docs) => docs.mapPage(slug))
+	map: (slug: string) => page('map', slug, (docs) => docs.mapPage(slug)),
+	upgrade: (slug: string) => page('upgrade', slug, (docs) => docs.upgradePage(slug))
 };

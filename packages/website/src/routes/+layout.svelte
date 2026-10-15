@@ -47,16 +47,19 @@
 </script>
 
 <svelte:head>
-	<link rel="canonical" href={canonical} />
-	{#each locales as locale (locale)}
-		<link rel="alternate" hreflang={locale} href={localizedUrl(locale)} />
-	{/each}
-	<link rel="alternate" hreflang="x-default" href={localizedUrl('en')} />
+	<!-- Pages that exist only in some languages (guides) set these themselves through `<Seo>`. -->
+	{#if !page.data.seo}
+		<link rel="canonical" href={canonical} />
+		{#each locales as locale (locale)}
+			<link rel="alternate" hreflang={locale} href={localizedUrl(locale)} />
+		{/each}
+		<link rel="alternate" hreflang="x-default" href={localizedUrl('en')} />
+		<meta property="og:locale" content={OG_LOCALES[locale]} />
+		{#each locales.filter((other) => other !== locale) as other (other)}
+			<meta property="og:locale:alternate" content={OG_LOCALES[other]} />
+		{/each}
+	{/if}
 	<meta property="og:site_name" content="COH1 Stats" />
-	<meta property="og:locale" content={OG_LOCALES[locale]} />
-	{#each locales.filter((other) => other !== locale) as other (other)}
-		<meta property="og:locale:alternate" content={OG_LOCALES[other]} />
-	{/each}
 </svelte:head>
 
 <I18nBoot {locale}>
@@ -75,7 +78,9 @@
 		</div>
 		<div class={pageShell}>
 			<Header />
-			<div class="flex-1">
+			<!-- A column, so a page can grow its last block to the footer (`flex-1`), e.g. the guides
+			sidebar line running down to the bottom. -->
+			<div class="flex flex-1 flex-col">
 				{@render children()}
 			</div>
 			<Footer />

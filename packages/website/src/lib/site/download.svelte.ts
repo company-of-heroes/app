@@ -19,10 +19,14 @@ function emptyDownload(url = RELEASE_PAGE_URL): LatestDownload {
 
 export const latestDownload = $state<LatestDownload>(emptyDownload());
 export const linuxDownload = $state<LatestDownload>(emptyDownload());
+export const linuxDebDownload = $state<LatestDownload>(emptyDownload());
 export const replayManagerDownload = $state<LatestDownload>(
 	emptyDownload(REPLAY_MANAGER_RELEASES_URL)
 );
 export const replayManagerLinuxDownload = $state<LatestDownload>(
+	emptyDownload(REPLAY_MANAGER_RELEASES_URL)
+);
+export const replayManagerLinuxDebDownload = $state<LatestDownload>(
 	emptyDownload(REPLAY_MANAGER_RELEASES_URL)
 );
 
@@ -59,11 +63,13 @@ export async function loadLatestDownload(): Promise<void> {
 		const assets = release.assets ?? [];
 		applyAsset(latestDownload, pickInstaller(assets));
 		applyAsset(linuxDownload, pickAsset(assets, /\.AppImage$/i));
+		applyAsset(linuxDebDownload, pickAsset(assets, /\.deb$/i));
 	} catch (error) {
 		console.warn('[website] failed to resolve latest downloads:', error);
 	} finally {
 		latestDownload.loading = false;
 		linuxDownload.loading = false;
+		linuxDebDownload.loading = false;
 	}
 }
 
@@ -100,10 +106,12 @@ export async function loadReplayManagerDownload(): Promise<void> {
 		);
 		applyAsset(replayManagerDownload, pickInstaller(release?.assets ?? []));
 		applyAsset(replayManagerLinuxDownload, pickAsset(release?.assets ?? [], /\.AppImage$/i));
+		applyAsset(replayManagerLinuxDebDownload, pickAsset(release?.assets ?? [], /\.deb$/i));
 	} catch (error) {
 		console.warn('[website] failed to resolve the Replay Manager download:', error);
 	} finally {
 		replayManagerDownload.loading = false;
 		replayManagerLinuxDownload.loading = false;
+		replayManagerLinuxDebDownload.loading = false;
 	}
 }

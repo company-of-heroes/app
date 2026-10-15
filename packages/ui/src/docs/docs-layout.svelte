@@ -18,20 +18,24 @@
 <!-- The /stats top grid: a wide main column and a 28rem column of small panels. Every panel
 closes with its own bottom line, so the shorter column ends in a line too; the grid sits 1px over
 whatever follows (the site footer's top border) so the longer column does not get a double line. -->
-<div
-	class={cn(
-		'divide-secondary-800 -mb-px grid',
-		side && 'lg:grid-cols-[minmax(0,1fr)_28rem] lg:divide-x'
-	)}
->
-	<div class="[&>*]:border-secondary-800 min-w-0 [&>*]:border-b">
-		{@render main()}
+<!-- Columns follow the panel's own width (container query), not the window: the app's sidebar
+takes 300px of it. -->
+<div class="@container -mb-px">
+	<div
+		class={cn(
+			'divide-secondary-800 grid',
+			side && '@5xl:grid-cols-[minmax(0,1fr)_28rem] @5xl:divide-x'
+		)}
+	>
+		<div class="[&>*]:border-secondary-800 min-w-0 [&>*]:border-b">
+			{@render main()}
+		</div>
+		{#if side}
+			<aside class="[&>*]:border-secondary-800 min-w-0 [&>*]:border-b">
+				{@render side()}
+			</aside>
+		{/if}
 	</div>
-	{#if side}
-		<aside class="[&>*]:border-secondary-800 min-w-0 [&>*]:border-b">
-			{@render side()}
-		</aside>
-	{/if}
 </div>
 
 <StatisticsInfoPopover {popover} />
