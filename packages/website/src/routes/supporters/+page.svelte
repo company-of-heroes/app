@@ -16,7 +16,7 @@
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
 
-	const signedIn = $derived(!!data.status);
+	const signedIn = $derived(data.signedIn);
 
 	async function subscribe() {
 		if (!signedIn) {
@@ -24,14 +24,19 @@
 			return;
 		}
 
-		if (page.url.searchParams.has('checkout')) {
-			// Back from the login: drop the flag so a reload does not reopen the checkout.
-			const url = new URL(page.url);
-			url.searchParams.delete('checkout');
-			replaceState(url, page.state);
+		let checkout;
+		try {
+			checkout = await startSupporterCheckout();
+		} finally {
+			// Back from the login: drop the flag so a reload does not reopen the checkout. Only
+			// after an await: on arrival this runs from onMount, before the router is ready.
+			if (page.url.searchParams.has('checkout')) {
+				const url = new URL(page.url);
+				url.searchParams.delete('checkout');
+				replaceState(url, page.state);
+			}
 		}
 
-		const checkout = await startSupporterCheckout();
 		await openCheckout(checkout, `${page.url.origin}${href('/supporters')}?welcome=1`);
 	}
 

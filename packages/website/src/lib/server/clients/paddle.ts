@@ -130,7 +130,9 @@ const subscriptionData = z.looseObject({
 	customer_id: z.string().nullish(),
 	custom_data: customData,
 	current_billing_period: z.looseObject({ starts_at: z.string(), ends_at: z.string() }).nullish(),
-	canceled_at: z.string().nullish()
+	canceled_at: z.string().nullish(),
+	/** Cancel at period end: status stays `active` and this says when it stops. */
+	scheduled_change: z.looseObject({ action: z.string(), effective_at: z.string() }).nullish()
 });
 
 const transactionData = z.looseObject({

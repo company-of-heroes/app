@@ -4,6 +4,7 @@
 	import { flushHeader, flushHeaderTitle, tableHeadText } from '@company-of-heroes/ui/variants';
 	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
 	import { onMount } from 'svelte';
+	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
@@ -44,6 +45,10 @@
 	let busy = $state(false);
 	const current = $derived(polled ?? status);
 	const active = $derived(current?.active ?? false);
+	// Cancelled at period end: still a supporter until then.
+	const endsAt = $derived(
+		current?.endsAt ? formatDate(current.endsAt, host.locale(), 'date', { timeZone: 'UTC' }) : null
+	);
 
 	// The webhook may land a few seconds after the redirect: ask up to 5 times, 2 s apart.
 	onMount(() => {
@@ -130,6 +135,9 @@
 			<div class="flex flex-wrap items-center gap-2">
 				{#if active}
 					<Badge variant="success">{t('You are a supporter')}</Badge>
+					{#if endsAt}
+						<span class="text-secondary-400 text-sm">{t('Ends on {date}', { date: endsAt })}</span>
+					{/if}
 					<Button variant="secondary" loading={busy} onclick={() => run(onmanage)}>
 						{t('Manage subscription')}
 					</Button>

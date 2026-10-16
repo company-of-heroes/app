@@ -16,7 +16,8 @@ import {
 	type PaddleTransaction
 } from '../clients/paddle';
 import { avatarOf } from '../clients/steam';
-import { internal, notFound, upstream } from '../errors';
+import { cached, uncache } from '../cache';
+import { conflict, internal, notFound, upstream } from '../errors';
 import { cardFactions, cardRecord, cardRibbons } from '../domain/player-card';
 import { isValidSteamId } from '../domain/ratings';
 import { steamIdsOf } from '../domain/users';
@@ -46,6 +47,7 @@ type SubscriptionRow = {
 	status: SubscriptionStatus;
 	currentPeriodEnd: string;
 	canceledAt: string;
+	cancelAt: string;
 	paddleUpdatedAt: string;
 };
 
@@ -53,6 +55,13 @@ type HandleResult = { userId: string | null };
 
 /** Statuses that keep the medal while the paid period runs (`past_due` while Paddle retries a card). */
 const PAYING: readonly string[] = ['active', 'past_due'];
+
+/** PocketBase filter for paying rows; `{:now}` is bound by the caller. */
+const PAYING_FILTER = `(${PAYING.map((status) => `status = '${status}'`).join(' || ')}) && currentPeriodEnd > {:now}`;
+
+/** Public supporters page cache key; dropped when a webhook or a hide toggle changes it. */
+const LIST_KEY = 'supporters';
+const LIST_TTL_SECONDS = 300;
 
 /** Lapsed subscriptions re-evaluated per `expire` run. */
 const EXPIRE_BATCH = 50;
@@ -157,11 +166,12 @@ export class SubscriptionsService extends Service {
 			since: payments.since,
 			months: payments.months,
 			currentPeriodEnd: iso(row?.currentPeriodEnd),
+			endsAt: iso(row?.cancelAt),
 			hidden: Boolean(user?.supporterHidden)
 		}));
 	}
 
-	/** What Paddle.js needs to open the checkout for this account. */
+	/** What Paddle.js needs to open the checkout for this account; 409 while it already supports. */
 	checkout(userId: string): Task<SupporterCheckout> {
 		const priceId = publicEnv.PUBLIC_PADDLE_PRICE_ID ?? '';
 		const clientToken = publicEnv.PUBLIC_PADDLE_CLIENT_TOKEN ?? '';
@@ -169,19 +179,25 @@ export class SubscriptionsService extends Service {
 			return errAsync(upstream('Supporter checkout is not configured'));
 		}
 
-		return fromPb(
-			this.pb.collection('users').getOne<{ email?: string }>(userId, { fields: 'email' }),
-			'Could not load account'
-		).map((user) => {
-			const email = (user.email ?? '').trim();
-			return {
-				priceId,
-				clientToken,
-				environment: paddleEnv(privateEnv.PADDLE_ENV),
-				customData: { userId },
-				email: email && !email.toLowerCase().endsWith(PLACEHOLDER_EMAIL) ? email : null
-			};
-		});
+		return this.byUser(userId)
+			.andThen((row) =>
+				isActive(row)
+					? errAsync(conflict(this.locals.t('You are already a supporter.')))
+					: fromPb(
+							this.pb.collection('users').getOne<{ email?: string }>(userId, { fields: 'email' }),
+							'Could not load account'
+						)
+			)
+			.map((user) => {
+				const email = (user.email ?? '').trim();
+				return {
+					priceId,
+					clientToken,
+					environment: paddleEnv(privateEnv.PADDLE_ENV),
+					customData: { userId },
+					email: email && !email.toLowerCase().endsWith(PLACEHOLDER_EMAIL) ? email : null
+				};
+			});
 	}
 
 	/** Paddle customer portal link (cancel, change card); 404 without a subscription. */
@@ -200,7 +216,9 @@ export class SubscriptionsService extends Service {
 		return fromPb(
 			this.pb.collection('users').update(userId, { supporterHidden: hidden }),
 			'Could not save'
-		).andThen(() => this.status(userId));
+		)
+			.andThen(() => uncache(LIST_KEY))
+			.andThen(() => this.status(userId));
 	}
 
 	/**
@@ -208,6 +226,10 @@ export class SubscriptionsService extends Service {
 	 * left out. `current` are active subscribers; `former` have paid before and are not active.
 	 */
 	list(): Task<SupportersList> {
+		return cached(LIST_KEY, LIST_TTL_SECONDS, () => this.loadList());
+	}
+
+	private loadList(): Task<SupportersList> {
 		return ResultAsync.combine([
 			fromPb(
 				this.payments.getFullList<{ user: string; paidAt: string }>({
@@ -218,10 +240,7 @@ export class SubscriptionsService extends Service {
 			),
 			fromPb(
 				this.subscriptions.getFullList<{ user: string }>({
-					filter: this.pb.filter(
-						"(status = 'active' || status = 'past_due') && currentPeriodEnd > {:now}",
-						{ now: pbDate(Date.now()) }
-					),
+					filter: this.pb.filter(PAYING_FILTER, { now: pbDate(Date.now()) }),
 					fields: 'user'
 				}),
 				'Could not load subscriptions'
@@ -355,16 +374,18 @@ export class SubscriptionsService extends Service {
 
 	/** Applies one verified webhook event; `userId` is the account to re-evaluate, if any. */
 	handleWebhook(event: PaddleEvent): Task<HandleResult> {
-		if (event.kind === 'subscription') {
-			return this.applySubscription(event, event.data, true);
+		const applied =
+			event.kind === 'subscription'
+				? this.applySubscription(event, event.data, true)
+				: event.kind === 'transaction'
+					? this.applyTransaction(event, event.data)
+					: null;
+		if (!applied) {
+			console.warn('[paddle] ignored event', event.type, event.id);
+			return okAsync({ userId: null });
 		}
 
-		if (event.kind === 'transaction') {
-			return this.applyTransaction(event, event.data);
-		}
-
-		console.warn('[paddle] ignored event', event.type, event.id);
-		return okAsync({ userId: null });
+		return applied.andThen((result) => uncache(LIST_KEY).map(() => result));
 	}
 
 	/**
@@ -419,7 +440,9 @@ export class SubscriptionsService extends Service {
 			...(data.current_billing_period
 				? { currentPeriodEnd: data.current_billing_period.ends_at }
 				: {}),
-			canceledAt: data.canceled_at ?? ''
+			canceledAt: data.canceled_at ?? '',
+			// A resumed subscription has no scheduled change any more, which clears it.
+			cancelAt: data.scheduled_change?.action === 'cancel' ? data.scheduled_change.effective_at : ''
 		};
 		return this.bySubscriptionId(data.id).andThen((stored) =>
 			this.resolveUser(event, data, stored).andThen((userId): Task<HandleResult> => {
@@ -530,10 +553,7 @@ export class SubscriptionsService extends Service {
 	private supporterSteamIds(): Task<Set<string>> {
 		return fromPb(
 			this.subscriptions.getFullList<{ user: string }>({
-				filter: this.pb.filter(
-					"(status = 'active' || status = 'past_due') && currentPeriodEnd > {:now}",
-					{ now: pbDate(Date.now()) }
-				),
+				filter: this.pb.filter(PAYING_FILTER, { now: pbDate(Date.now()) }),
 				fields: 'user'
 			}),
 			'Could not load subscriptions'

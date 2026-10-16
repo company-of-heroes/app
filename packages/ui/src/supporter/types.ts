@@ -12,6 +12,8 @@ export type SupporterStatus = {
 	months: number;
 	/** End of the current paid period (ISO), or null. */
 	currentPeriodEnd: string | null;
+	/** When a subscription cancelled at period end stops (ISO), or null while it renews. */
+	endsAt: string | null;
 	/** Hidden from the public supporters page (the medal stays). */
 	hidden: boolean;
 };

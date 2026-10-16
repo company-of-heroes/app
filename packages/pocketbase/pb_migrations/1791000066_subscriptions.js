@@ -1,8 +1,9 @@
 /// <reference path="../pb_data/types.d.ts" />
 
 // Paddle supporter subscriptions. Both collections are written only by the website's webhook
-// (superuser); no API rules, so clients never read them directly. `users.supporterHidden`
-// hides a supporter from the public supporters page. Schema only.
+// (superuser); no API rules, so clients never read them directly. `subscriptions.cancelAt` is
+// when a subscription cancelled at period end stops (Paddle `scheduled_change`).
+// `users.supporterHidden` hides a supporter from the public supporters page. Schema only.
 
 const idField = (prefix) => ({
 	autogeneratePattern: '[a-z0-9]{15}',
@@ -142,11 +143,18 @@ migrate(
 						},
 						dateField('subscriptions', 'currentPeriodEnd', false),
 						dateField('subscriptions', 'canceledAt', false),
+						dateField('subscriptions', 'cancelAt', false),
 						dateField('subscriptions', 'paddleUpdatedAt', false),
 						...autodates('subscriptions')
 					]
 				})
 			);
+		} else {
+			const subscriptions = app.findCollectionByNameOrId('subscriptions');
+			if (!subscriptions.fields.getByName('cancelAt')) {
+				subscriptions.fields.add(new Field(dateField('subscriptions', 'cancelAt', false)));
+				app.save(subscriptions);
+			}
 		}
 
 		if (!hasCollection(app, 'subscription_payments')) {

@@ -8,8 +8,9 @@ import { handle } from '$lib/server/http';
  * Paddle Billing notifications. No user auth: the `Paddle-Signature` is the only gate (401
  * when it fails). A signed event we cannot use (unknown type or account, unexpected shape)
  * answers 200 so Paddle stops retrying; a PocketBase failure answers 500 so it retries.
+ * Labels and rewards are re-evaluated after the answer (Paddle times out after ~5 s).
  */
-export const POST = handle(({ request, locals }) =>
+export const POST = handle(({ request, locals, platform }) =>
 	ResultAsync.fromPromise(request.text(), () => badRequest('Could not read body')).andThen(
 		(rawBody) =>
 			ResultAsync.fromSafePromise(
@@ -44,19 +45,36 @@ export const POST = handle(({ request, locals }) =>
 
 				return locals.services.subscriptions
 					.handleWebhook(event)
-					.andThen(({ userId }) =>
-						// Labels and rewards follow at once; if that fails the job picks the user up.
-						userId
-							? locals.services.rewards.evaluateNow(userId).orElse((error) => {
-									console.warn('[paddle] could not evaluate, queued', userId, error);
-									return locals.services.rewards.markDirty([{ id: userId }]).map(() => 0);
-								})
-							: okAsync(0)
-					)
-					.map(() => ({ ok: true }))
 					.orElse((error) => {
 						console.error('[paddle] could not process webhook', event.type, event.id, error);
 						return errAsync(internal('Could not process webhook'));
+					})
+					.andThen(({ userId }) => {
+						if (!userId) {
+							return okAsync({ ok: true });
+						}
+
+						// Labels and rewards follow at once; if that fails the job picks the user up.
+						const evaluate = Promise.resolve(
+							locals.services.rewards
+								.evaluateNow(userId)
+								.orElse((error) => {
+									console.warn('[paddle] could not evaluate, queued', userId, error);
+									return locals.services.rewards.markDirty([{ id: userId }]).map(() => 0);
+								})
+								.mapErr((error) => {
+									console.error('[paddle] could not queue evaluation', userId, error);
+									return error;
+								})
+						).then(() => undefined);
+						const context = platform?.context;
+						if (context) {
+							context.waitUntil(evaluate);
+							return okAsync({ ok: true });
+						}
+
+						// No platform (vite dev): finish before answering.
+						return ResultAsync.fromSafePromise(evaluate).map(() => ({ ok: true }));
 					});
 			})
 	)

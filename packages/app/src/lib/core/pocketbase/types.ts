@@ -686,6 +686,7 @@ export type SubscriptionPaymentsRecord = {
 };
 
 export type SubscriptionsRecord = {
+	cancelAt?: IsoDateString;
 	canceledAt?: IsoDateString;
 	created: IsoAutoDateString;
 	currentPeriodEnd?: IsoDateString;

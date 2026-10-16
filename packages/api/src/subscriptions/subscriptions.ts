@@ -12,6 +12,7 @@ const statusSchema = z.object({
 	since: z.string().nullable(),
 	months: z.number(),
 	currentPeriodEnd: z.string().nullable(),
+	endsAt: z.string().nullable(),
 	hidden: z.boolean()
 });
 

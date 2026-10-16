@@ -9,6 +9,8 @@ const CARD_MAX_AGE = 3600;
 const MISSING_MAX_AGE = 300;
 /** The generic image after a failure: retried soon. */
 const FALLBACK_MAX_AGE = 60;
+/** The card worker gets this long before the fallback PNG is served. */
+const RENDER_TIMEOUT_MS = 8000;
 
 let fallbackBytes: Uint8Array | null = null;
 
@@ -46,7 +48,9 @@ async function render(event: RequestEvent, card: PlayerCardData): Promise<Uint8A
 		const response = await renderer.fetch('https://card-worker/render', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify(card)
+			body: JSON.stringify(card),
+			// A hung renderer falls back to the static PNG.
+			signal: AbortSignal.timeout(RENDER_TIMEOUT_MS)
 		});
 		if (!response.ok || response.headers.get('content-type') !== 'image/png') {
 			console.error('[card] renderer answered', response.status, await response.text());

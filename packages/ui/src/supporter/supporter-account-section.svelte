@@ -27,12 +27,9 @@
 	let managing = $state(false);
 	let saving = $state(false);
 
+	// Cancelled at period end, Paddle keeps the subscription `active` (medal included) until
+	// `endsAt`; then it turns `canceled` and the section offers to subscribe again.
 	const periodEnd = $derived(parseDate(status.currentPeriodEnd));
-	// A canceled subscription is not `active`, but keeps the medal until the paid period ends.
-	const ending = $derived(
-		status.status === 'canceled' && !!periodEnd && periodEnd.getTime() > Date.now()
-	);
-	const running = $derived(status.active || ending);
 	const date = (value: string | null) =>
 		formatDate(value, host.locale(), 'date', { timeZone: 'UTC' });
 	const months = $derived(
@@ -42,11 +39,11 @@
 		[
 			status.since ? t('Supporter since {date}', { date: date(status.since) }) : null,
 			months,
-			periodEnd
-				? ending
-					? t('Ends on {date}', { date: date(status.currentPeriodEnd) })
-					: t('Next payment on {date}', { date: date(status.currentPeriodEnd) })
-				: null
+			status.endsAt
+				? t('Ends on {date}', { date: date(status.endsAt) })
+				: periodEnd
+					? t('Next payment on {date}', { date: date(status.currentPeriodEnd) })
+					: null
 		]
 			.filter(Boolean)
 			.join(' · ')
@@ -93,7 +90,7 @@
 		<HeartIcon size={14} weight="fill" class="text-primary shrink-0" />
 		<p class={flushHeaderTitle}>{t('Supporter')}</p>
 	</div>
-	{#if running}
+	{#if status.active}
 		<div
 			class="border-secondary-800 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3"
 		>
