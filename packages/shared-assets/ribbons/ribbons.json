@@ -6,15 +6,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#6b4226",
-			"#c8642a",
-			"#f4f1e8",
-			"#c8642a",
-			"#f4f1e8",
-			"#c8642a",
-			"#6b4226"
-		],
+		"stripes": ["#6b4226", "#c8642a", "#f4f1e8", "#c8642a", "#f4f1e8", "#c8642a", "#6b4226"],
 		"device": null
 	},
 	{
@@ -94,15 +86,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#c23b3b",
-			"#f4f1e8",
-			"#c23b3b",
-			"#f4f1e8",
-			"#c23b3b",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#c23b3b", "#f4f1e8", "#c23b3b", "#f4f1e8", "#c23b3b", "#24406b"],
 		"device": null
 	},
 	{
@@ -201,11 +185,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#b8924a",
-			"#24406b",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#24406b", "#b8924a"],
 		"device": null
 	},
 	{
@@ -237,15 +217,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#2f5a34",
-			"#56622e",
-			"#2f5a34",
-			"#24406b",
-			"#2f5a34",
-			"#56622e",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#56622e", "#2f5a34", "#24406b", "#2f5a34", "#56622e", "#2f5a34"],
 		"device": {
 			"kind": "oak",
 			"metal": "bronze",
@@ -281,15 +253,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#c8642a",
-			"#2f5a34",
-			"#f4f1e8",
-			"#2f5a34",
-			"#f4f1e8",
-			"#2f5a34",
-			"#c8642a"
-		],
+		"stripes": ["#c8642a", "#2f5a34", "#f4f1e8", "#2f5a34", "#f4f1e8", "#2f5a34", "#c8642a"],
 		"device": null
 	},
 	{
@@ -299,13 +263,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#56622e",
-			"#3f6fb0",
-			"#2f5a34",
-			"#3f6fb0",
-			"#56622e"
-		],
+		"stripes": ["#56622e", "#3f6fb0", "#2f5a34", "#3f6fb0", "#56622e"],
 		"device": {
 			"kind": "arrowhead",
 			"metal": "bronze",
@@ -367,11 +325,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#e0b23a",
-			"#c8642a",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#c8642a", "#e0b23a"],
 		"device": null
 	},
 	{
@@ -401,15 +355,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#6b4226",
-			"#24406b",
-			"#b8924a",
-			"#f4f1e8",
-			"#b8924a",
-			"#24406b",
-			"#6b4226"
-		],
+		"stripes": ["#6b4226", "#24406b", "#b8924a", "#f4f1e8", "#b8924a", "#24406b", "#6b4226"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -469,13 +415,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#c8642a",
-			"#24406b",
-			"#7fb0d8",
-			"#24406b",
-			"#c8642a"
-		],
+		"stripes": ["#c8642a", "#24406b", "#7fb0d8", "#24406b", "#c8642a"],
 		"device": null
 	},
 	{
@@ -531,11 +471,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#34452c",
-			"#d9b43a",
-			"#1c1c1c"
-		],
+		"stripes": ["#34452c", "#d9b43a", "#1c1c1c"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -549,11 +485,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#f4f1e8",
-			"#a9adb1",
-			"#34452c"
-		],
+		"stripes": ["#f4f1e8", "#a9adb1", "#34452c"],
 		"device": null
 	},
 	{
@@ -563,15 +495,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#1c1c1c",
-			"#f4f1e8",
-			"#5d6450",
-			"#e6dfcc",
-			"#5d6450",
-			"#f4f1e8",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#f4f1e8", "#5d6450", "#e6dfcc", "#5d6450", "#f4f1e8", "#1c1c1c"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -585,13 +509,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#1c1c1c",
-			"#f4f1e8",
-			"#6b4226",
-			"#f4f1e8",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#f4f1e8", "#6b4226", "#f4f1e8", "#1c1c1c"],
 		"device": null
 	},
 	{
@@ -601,15 +519,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#5d6450",
-			"#a9adb1",
-			"#5d6450",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#5d6450", "#a9adb1", "#5d6450", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -623,15 +533,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#1c1c1c",
-			"#f4f1e8",
-			"#5d6450",
-			"#d9b43a",
-			"#5d6450",
-			"#f4f1e8",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#f4f1e8", "#5d6450", "#d9b43a", "#5d6450", "#f4f1e8", "#1c1c1c"],
 		"device": {
 			"kind": "swords",
 			"metal": "silver",
@@ -645,15 +547,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#5d6450",
-			"#34452c",
-			"#5d6450",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#5d6450", "#34452c", "#5d6450", "#1c1c1c", "#f4f1e8"],
 		"device": null
 	},
 	{
@@ -663,13 +557,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#a9adb1",
-			"#e6dfcc",
-			"#a9adb1",
-			"#e6dfcc",
-			"#a9adb1"
-		],
+		"stripes": ["#a9adb1", "#e6dfcc", "#a9adb1", "#e6dfcc", "#a9adb1"],
 		"device": null
 	},
 	{
@@ -679,11 +567,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -697,13 +581,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#6b4226",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#6b4226", "#1c1c1c", "#f4f1e8"],
 		"device": null
 	},
 	{
@@ -713,13 +591,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#5d6450",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#5d6450", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -733,11 +605,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#34452c",
-			"#5d6450",
-			"#34452c"
-		],
+		"stripes": ["#34452c", "#5d6450", "#34452c"],
 		"device": null
 	},
 	{
@@ -747,11 +615,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#e6dfcc",
-			"#1c1c1c",
-			"#e6dfcc"
-		],
+		"stripes": ["#e6dfcc", "#1c1c1c", "#e6dfcc"],
 		"device": null
 	},
 	{
@@ -761,11 +625,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#5d6450",
-			"#6b4226",
-			"#a9adb1"
-		],
+		"stripes": ["#5d6450", "#6b4226", "#a9adb1"],
 		"device": null
 	},
 	{
@@ -775,15 +635,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#5d6450",
-			"#6b4226",
-			"#5d6450",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#5d6450", "#6b4226", "#5d6450", "#1c1c1c", "#f4f1e8"],
 		"device": null
 	},
 	{
@@ -817,13 +669,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#d9b43a",
-			"#1c1c1c",
-			"#a9adb1",
-			"#1c1c1c",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#1c1c1c", "#a9adb1", "#1c1c1c", "#d9b43a"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -837,11 +683,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#5d6450",
-			"#a9adb1",
-			"#4d545c"
-		],
+		"stripes": ["#5d6450", "#a9adb1", "#4d545c"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -855,13 +697,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#1c1c1c",
-			"#f4f1e8",
-			"#5d6450",
-			"#f4f1e8",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#f4f1e8", "#5d6450", "#f4f1e8", "#1c1c1c"],
 		"device": null
 	},
 	{
@@ -871,15 +707,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#5d6450",
-			"#d9b43a",
-			"#5d6450",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#5d6450", "#d9b43a", "#5d6450", "#1c1c1c", "#f4f1e8"],
 		"device": null
 	},
 	{
@@ -889,11 +717,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#5d6450",
-			"#f4f1e8",
-			"#6b4226"
-		],
+		"stripes": ["#5d6450", "#f4f1e8", "#6b4226"],
 		"device": null
 	},
 	{
@@ -931,13 +755,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#1c1c1c",
-			"#f4f1e8",
-			"#34452c",
-			"#f4f1e8",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#f4f1e8", "#34452c", "#f4f1e8", "#1c1c1c"],
 		"device": {
 			"kind": "swords",
 			"metal": "silver",
@@ -951,15 +769,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#6b4226",
-			"#d9b43a",
-			"#6b4226",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#6b4226", "#d9b43a", "#6b4226", "#1c1c1c", "#f4f1e8"],
 		"device": null
 	},
 	{
@@ -969,13 +779,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#5d6450",
-			"#e6dfcc",
-			"#a9adb1",
-			"#e6dfcc",
-			"#5d6450"
-		],
+		"stripes": ["#5d6450", "#e6dfcc", "#a9adb1", "#e6dfcc", "#5d6450"],
 		"device": null
 	},
 	{
@@ -985,13 +789,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#cfb07a",
-			"#1c1c1c",
-			"#7fb0d8",
-			"#1c1c1c",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#1c1c1c", "#7fb0d8", "#1c1c1c", "#cfb07a"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -1005,13 +803,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#1c1c1c",
-			"#f4f1e8",
-			"#2f5a34",
-			"#f4f1e8",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#f4f1e8", "#2f5a34", "#f4f1e8", "#1c1c1c"],
 		"device": null
 	},
 	{
@@ -1021,13 +813,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#24406b",
-			"#1c1c1c",
-			"#8f2232",
-			"#1c1c1c",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#1c1c1c", "#8f2232", "#1c1c1c", "#24406b"],
 		"device": null
 	},
 	{
@@ -1037,15 +823,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#c23b3b",
-			"#b8924a",
-			"#c23b3b",
-			"#b8924a",
-			"#c23b3b",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#c23b3b", "#b8924a", "#c23b3b", "#b8924a", "#c23b3b", "#24406b"],
 		"device": null
 	},
 	{
@@ -1055,13 +833,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#cfb07a",
-			"#e0b23a",
-			"#2f5a34",
-			"#e0b23a",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#e0b23a", "#2f5a34", "#e0b23a", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -1071,11 +843,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#cfb07a",
-			"#f4f1e8",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#f4f1e8", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -1135,11 +903,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#e0b23a",
-			"#7fb0d8",
-			"#cfb07a"
-		],
+		"stripes": ["#e0b23a", "#7fb0d8", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -1149,13 +913,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#2f5a34",
-			"#8f2232",
-			"#e0b23a",
-			"#8f2232",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#8f2232", "#e0b23a", "#8f2232", "#2f5a34"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -1169,13 +927,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#cfb07a",
-			"#7fb0d8",
-			"#1c1c1c",
-			"#7fb0d8",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#7fb0d8", "#1c1c1c", "#7fb0d8", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -1211,15 +963,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#e0b23a",
-			"#8f2232",
-			"#cfb07a",
-			"#7fb0d8",
-			"#cfb07a",
-			"#8f2232",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#8f2232", "#cfb07a", "#7fb0d8", "#cfb07a", "#8f2232", "#e0b23a"],
 		"device": null
 	},
 	{
@@ -1229,13 +973,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#b8924a",
-			"#1c1c1c",
-			"#24406b",
-			"#1c1c1c",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#1c1c1c", "#24406b", "#1c1c1c", "#b8924a"],
 		"device": null
 	},
 	{
@@ -1245,13 +983,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#2f5a34",
-			"#24406b",
-			"#e0b23a",
-			"#24406b",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#24406b", "#e0b23a", "#24406b", "#2f5a34"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -1265,13 +997,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#b8924a",
-			"#8f2232",
-			"#6b2d5c",
-			"#8f2232",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#8f2232", "#6b2d5c", "#8f2232", "#b8924a"],
 		"device": null
 	},
 	{
@@ -1281,15 +1007,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#6b2d5c",
-			"#b8924a",
-			"#8f2232",
-			"#2f5a34",
-			"#8f2232",
-			"#b8924a",
-			"#6b2d5c"
-		],
+		"stripes": ["#6b2d5c", "#b8924a", "#8f2232", "#2f5a34", "#8f2232", "#b8924a", "#6b2d5c"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -1303,13 +1021,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#cfb07a",
-			"#f4f1e8",
-			"#c23b3b",
-			"#f4f1e8",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#f4f1e8", "#c23b3b", "#f4f1e8", "#cfb07a"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -1348,13 +1060,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#2f5a34",
-			"#c23b3b",
-			"#e0b23a",
-			"#c23b3b",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#c23b3b", "#e0b23a", "#c23b3b", "#2f5a34"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -1394,11 +1100,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#2f5a34",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#2f5a34", "#7fb0d8"],
 		"device": null
 	},
 	{
@@ -1408,15 +1110,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#b8924a",
-			"#2f5a34",
-			"#8f2232",
-			"#7fb0d8",
-			"#8f2232",
-			"#2f5a34",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#2f5a34", "#8f2232", "#7fb0d8", "#8f2232", "#2f5a34", "#b8924a"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -1430,13 +1124,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#24406b",
-			"#e0b23a",
-			"#2f5a34",
-			"#e0b23a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#e0b23a", "#2f5a34", "#e0b23a", "#24406b"],
 		"device": null
 	},
 	{
@@ -1446,15 +1134,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#b8924a",
-			"#2f5a34",
-			"#7fb0d8",
-			"#2f5a34",
-			"#7fb0d8",
-			"#2f5a34",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#2f5a34", "#7fb0d8", "#2f5a34", "#7fb0d8", "#2f5a34", "#b8924a"],
 		"device": null
 	},
 	{
@@ -1464,11 +1144,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#a9adb1"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#a9adb1"],
 		"device": null
 	},
 	{
@@ -1478,11 +1154,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#5d6450",
-			"#5e1d2a",
-			"#24406b"
-		],
+		"stripes": ["#5d6450", "#5e1d2a", "#24406b"],
 		"device": {
 			"kind": "tank",
 			"metal": "gold",
@@ -1496,11 +1168,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#4d545c",
-			"#f4f1e8",
-			"#4d545c"
-		],
+		"stripes": ["#4d545c", "#f4f1e8", "#4d545c"],
 		"device": null
 	},
 	{
@@ -1534,11 +1202,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#1c1c1c",
-			"#cf7792",
-			"#5d6450"
-		],
+		"stripes": ["#1c1c1c", "#cf7792", "#5d6450"],
 		"device": null
 	},
 	{
@@ -1548,13 +1212,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#5d6450",
-			"#4d545c",
-			"#5d6450",
-			"#4d545c",
-			"#5d6450"
-		],
+		"stripes": ["#5d6450", "#4d545c", "#5d6450", "#4d545c", "#5d6450"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -1568,15 +1226,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "piped",
-		"stripes": [
-			"#cf7792",
-			"#1c1c1c",
-			"#cf7792",
-			"#1c1c1c",
-			"#cf7792",
-			"#1c1c1c",
-			"#cf7792"
-		],
+		"stripes": ["#cf7792", "#1c1c1c", "#cf7792", "#1c1c1c", "#cf7792", "#1c1c1c", "#cf7792"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -1682,15 +1332,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "piped",
-		"stripes": [
-			"#a9adb1",
-			"#1c1c1c",
-			"#a9adb1",
-			"#1c1c1c",
-			"#a9adb1",
-			"#1c1c1c",
-			"#a9adb1"
-		],
+		"stripes": ["#a9adb1", "#1c1c1c", "#a9adb1", "#1c1c1c", "#a9adb1", "#1c1c1c", "#a9adb1"],
 		"device": {
 			"kind": "tank",
 			"metal": "gold",
@@ -1704,13 +1346,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#1c1c1c",
-			"#5d6450",
-			"#1c1c1c",
-			"#5d6450",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#5d6450", "#1c1c1c", "#5d6450", "#1c1c1c"],
 		"device": null
 	},
 	{
@@ -1720,11 +1356,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#24406b",
-			"#f4f1e8",
-			"#a9adb1"
-		],
+		"stripes": ["#24406b", "#f4f1e8", "#a9adb1"],
 		"device": null
 	},
 	{
@@ -1816,11 +1448,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#f4f1e8",
-			"#24406b",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#24406b", "#f4f1e8"],
 		"device": null
 	},
 	{
@@ -1954,15 +1582,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#6b2d5c",
-			"#b8924a",
-			"#6b2d5c",
-			"#7fb0d8",
-			"#6b2d5c",
-			"#b8924a",
-			"#6b2d5c"
-		],
+		"stripes": ["#6b2d5c", "#b8924a", "#6b2d5c", "#7fb0d8", "#6b2d5c", "#b8924a", "#6b2d5c"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -2000,15 +1620,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#c23b3b",
-			"#1c1c1c",
-			"#c23b3b",
-			"#2f5a34",
-			"#c23b3b",
-			"#1c1c1c",
-			"#c23b3b"
-		],
+		"stripes": ["#c23b3b", "#1c1c1c", "#c23b3b", "#2f5a34", "#c23b3b", "#1c1c1c", "#c23b3b"],
 		"device": null
 	},
 	{
@@ -2108,13 +1720,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "striped",
-		"stripes": [
-			"#b8924a",
-			"#c23b3b",
-			"#b8924a",
-			"#c23b3b",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#c23b3b", "#b8924a", "#c23b3b", "#b8924a"],
 		"device": null
 	},
 	{
@@ -2124,15 +1730,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#c8642a",
-			"#e0b23a",
-			"#7fb0d8",
-			"#b8924a",
-			"#7fb0d8",
-			"#e0b23a",
-			"#c8642a"
-		],
+		"stripes": ["#c8642a", "#e0b23a", "#7fb0d8", "#b8924a", "#7fb0d8", "#e0b23a", "#c8642a"],
 		"device": null
 	},
 	{
@@ -2166,11 +1764,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#e0b23a",
-			"#c23b3b",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#c23b3b", "#e0b23a"],
 		"device": null
 	},
 	{
@@ -2208,15 +1802,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#6b4226",
-			"#56622e",
-			"#8f2232",
-			"#56622e",
-			"#8f2232",
-			"#56622e",
-			"#6b4226"
-		],
+		"stripes": ["#6b4226", "#56622e", "#8f2232", "#56622e", "#8f2232", "#56622e", "#6b4226"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -2296,15 +1882,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#56622e",
-			"#1c1c1c",
-			"#e0b23a",
-			"#1c1c1c",
-			"#e0b23a",
-			"#1c1c1c",
-			"#56622e"
-		],
+		"stripes": ["#56622e", "#1c1c1c", "#e0b23a", "#1c1c1c", "#e0b23a", "#1c1c1c", "#56622e"],
 		"device": null
 	},
 	{
@@ -2314,13 +1892,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#8f2232",
-			"#56622e",
-			"#8f2232",
-			"#56622e",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#56622e", "#8f2232", "#56622e", "#8f2232"],
 		"device": null
 	},
 	{
@@ -2330,11 +1902,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#6b4226",
-			"#3f6fb0",
-			"#6b4226"
-		],
+		"stripes": ["#6b4226", "#3f6fb0", "#6b4226"],
 		"device": null
 	},
 	{
@@ -2344,11 +1912,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#c8642a",
-			"#c23b3b",
-			"#c8642a"
-		],
+		"stripes": ["#c8642a", "#c23b3b", "#c8642a"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -2362,11 +1926,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#24406b",
-			"#7fb0d8",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#7fb0d8", "#24406b"],
 		"device": null
 	},
 	{
@@ -2376,13 +1936,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#1c1c1c",
-			"#56622e",
-			"#2f5a34",
-			"#56622e",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#56622e", "#2f5a34", "#56622e", "#1c1c1c"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -2442,13 +1996,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#7fb0d8",
-			"#b8924a",
-			"#7fb0d8",
-			"#b8924a",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#b8924a", "#7fb0d8", "#b8924a", "#7fb0d8"],
 		"device": null
 	},
 	{
@@ -2738,15 +2286,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#3f6fb0",
-			"#56622e",
-			"#3f6fb0",
-			"#2f5a34",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#3f6fb0", "#56622e", "#3f6fb0", "#2f5a34", "#e0b23a"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -2762,15 +2302,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#3f6fb0",
-			"#56622e",
-			"#3f6fb0",
-			"#2f5a34",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#3f6fb0", "#56622e", "#3f6fb0", "#2f5a34", "#e0b23a"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -2786,15 +2318,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#3f6fb0",
-			"#56622e",
-			"#3f6fb0",
-			"#2f5a34",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#3f6fb0", "#56622e", "#3f6fb0", "#2f5a34", "#e0b23a"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -2810,15 +2334,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#3f6fb0",
-			"#56622e",
-			"#3f6fb0",
-			"#2f5a34",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#3f6fb0", "#56622e", "#3f6fb0", "#2f5a34", "#e0b23a"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -2834,15 +2350,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#3f6fb0",
-			"#56622e",
-			"#3f6fb0",
-			"#2f5a34",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#3f6fb0", "#56622e", "#3f6fb0", "#2f5a34", "#e0b23a"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -2858,11 +2366,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#34452c",
-			"#f4f1e8",
-			"#34452c"
-		],
+		"stripes": ["#34452c", "#f4f1e8", "#34452c"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -2878,11 +2382,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#34452c",
-			"#f4f1e8",
-			"#34452c"
-		],
+		"stripes": ["#34452c", "#f4f1e8", "#34452c"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -2898,11 +2398,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#34452c",
-			"#f4f1e8",
-			"#34452c"
-		],
+		"stripes": ["#34452c", "#f4f1e8", "#34452c"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -2918,11 +2414,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#34452c",
-			"#f4f1e8",
-			"#34452c"
-		],
+		"stripes": ["#34452c", "#f4f1e8", "#34452c"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -2938,11 +2430,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#34452c",
-			"#f4f1e8",
-			"#34452c"
-		],
+		"stripes": ["#34452c", "#f4f1e8", "#34452c"],
 		"device": {
 			"kind": "pip",
 			"metal": "gold",
@@ -2958,15 +2446,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#e6dfcc",
-			"#f4f1e8",
-			"#6b4226",
-			"#34452c",
-			"#6b4226",
-			"#f4f1e8",
-			"#e6dfcc"
-		],
+		"stripes": ["#e6dfcc", "#f4f1e8", "#6b4226", "#34452c", "#6b4226", "#f4f1e8", "#e6dfcc"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -2982,15 +2462,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#e6dfcc",
-			"#f4f1e8",
-			"#6b4226",
-			"#34452c",
-			"#6b4226",
-			"#f4f1e8",
-			"#e6dfcc"
-		],
+		"stripes": ["#e6dfcc", "#f4f1e8", "#6b4226", "#34452c", "#6b4226", "#f4f1e8", "#e6dfcc"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -3006,15 +2478,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#e6dfcc",
-			"#f4f1e8",
-			"#6b4226",
-			"#34452c",
-			"#6b4226",
-			"#f4f1e8",
-			"#e6dfcc"
-		],
+		"stripes": ["#e6dfcc", "#f4f1e8", "#6b4226", "#34452c", "#6b4226", "#f4f1e8", "#e6dfcc"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -3030,15 +2494,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#e6dfcc",
-			"#f4f1e8",
-			"#6b4226",
-			"#34452c",
-			"#6b4226",
-			"#f4f1e8",
-			"#e6dfcc"
-		],
+		"stripes": ["#e6dfcc", "#f4f1e8", "#6b4226", "#34452c", "#6b4226", "#f4f1e8", "#e6dfcc"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -3054,15 +2510,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#e6dfcc",
-			"#f4f1e8",
-			"#6b4226",
-			"#34452c",
-			"#6b4226",
-			"#f4f1e8",
-			"#e6dfcc"
-		],
+		"stripes": ["#e6dfcc", "#f4f1e8", "#6b4226", "#34452c", "#6b4226", "#f4f1e8", "#e6dfcc"],
 		"device": {
 			"kind": "pip",
 			"metal": "gold",
@@ -3078,13 +2526,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#34452c",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#34452c", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -3100,13 +2542,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#34452c",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#34452c", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -3122,13 +2558,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#34452c",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#34452c", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -3144,13 +2574,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#34452c",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#34452c", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -3166,13 +2590,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#34452c",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#34452c", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "pip",
 			"metal": "gold",
@@ -3188,11 +2606,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#6b2d5c",
-			"#c23b3b",
-			"#7fb0d8"
-		],
+		"stripes": ["#6b2d5c", "#c23b3b", "#7fb0d8"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -3208,11 +2622,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#6b2d5c",
-			"#c23b3b",
-			"#7fb0d8"
-		],
+		"stripes": ["#6b2d5c", "#c23b3b", "#7fb0d8"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -3228,11 +2638,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#6b2d5c",
-			"#c23b3b",
-			"#7fb0d8"
-		],
+		"stripes": ["#6b2d5c", "#c23b3b", "#7fb0d8"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -3248,11 +2654,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#6b2d5c",
-			"#c23b3b",
-			"#7fb0d8"
-		],
+		"stripes": ["#6b2d5c", "#c23b3b", "#7fb0d8"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -3268,11 +2670,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#6b2d5c",
-			"#c23b3b",
-			"#7fb0d8"
-		],
+		"stripes": ["#6b2d5c", "#c23b3b", "#7fb0d8"],
 		"device": {
 			"kind": "rosette",
 			"metal": "gold",
@@ -3288,11 +2686,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#8f2232",
-			"#f4f1e8",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#f4f1e8", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -3308,11 +2702,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#8f2232",
-			"#f4f1e8",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#f4f1e8", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -3328,11 +2718,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#8f2232",
-			"#f4f1e8",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#f4f1e8", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -3348,11 +2734,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#8f2232",
-			"#f4f1e8",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#f4f1e8", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -3368,11 +2750,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#8f2232",
-			"#f4f1e8",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#f4f1e8", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "gold",
@@ -3388,11 +2766,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#b8924a",
-			"#6b2d5c",
-			"#24406b"
-		],
+		"stripes": ["#b8924a", "#6b2d5c", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -3408,11 +2782,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#b8924a",
-			"#6b2d5c",
-			"#24406b"
-		],
+		"stripes": ["#b8924a", "#6b2d5c", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -3428,11 +2798,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#b8924a",
-			"#6b2d5c",
-			"#24406b"
-		],
+		"stripes": ["#b8924a", "#6b2d5c", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -3448,11 +2814,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#b8924a",
-			"#6b2d5c",
-			"#24406b"
-		],
+		"stripes": ["#b8924a", "#6b2d5c", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -3468,11 +2830,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#b8924a",
-			"#6b2d5c",
-			"#24406b"
-		],
+		"stripes": ["#b8924a", "#6b2d5c", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "gold",
@@ -3488,15 +2846,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#4d545c",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#4d545c"
-		],
+		"stripes": ["#4d545c", "#cf7792", "#f4f1e8", "#cf7792", "#f4f1e8", "#cf7792", "#4d545c"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -3512,15 +2862,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#4d545c",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#4d545c"
-		],
+		"stripes": ["#4d545c", "#cf7792", "#f4f1e8", "#cf7792", "#f4f1e8", "#cf7792", "#4d545c"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -3536,15 +2878,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#4d545c",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#4d545c"
-		],
+		"stripes": ["#4d545c", "#cf7792", "#f4f1e8", "#cf7792", "#f4f1e8", "#cf7792", "#4d545c"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -3560,15 +2894,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#4d545c",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#4d545c"
-		],
+		"stripes": ["#4d545c", "#cf7792", "#f4f1e8", "#cf7792", "#f4f1e8", "#cf7792", "#4d545c"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -3584,15 +2910,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#4d545c",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#4d545c"
-		],
+		"stripes": ["#4d545c", "#cf7792", "#f4f1e8", "#cf7792", "#f4f1e8", "#cf7792", "#4d545c"],
 		"device": {
 			"kind": "pip",
 			"metal": "gold",
@@ -3888,13 +3206,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#3f6fb0",
-			"#1c1c1c",
-			"#3f6fb0",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#3f6fb0", "#1c1c1c", "#3f6fb0", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -3910,13 +3222,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#3f6fb0",
-			"#1c1c1c",
-			"#3f6fb0",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#3f6fb0", "#1c1c1c", "#3f6fb0", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -3932,13 +3238,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#3f6fb0",
-			"#1c1c1c",
-			"#3f6fb0",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#3f6fb0", "#1c1c1c", "#3f6fb0", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -3954,13 +3254,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#3f6fb0",
-			"#1c1c1c",
-			"#3f6fb0",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#3f6fb0", "#1c1c1c", "#3f6fb0", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -3976,13 +3270,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#3f6fb0",
-			"#1c1c1c",
-			"#3f6fb0",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#3f6fb0", "#1c1c1c", "#3f6fb0", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -3998,11 +3286,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#6b2d5c"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#6b2d5c"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -4018,11 +3302,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#6b2d5c"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#6b2d5c"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -4038,11 +3318,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#6b2d5c"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#6b2d5c"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -4058,11 +3334,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#6b2d5c"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#6b2d5c"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -4078,11 +3350,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#e0b23a",
-			"#2f5a34",
-			"#6b2d5c"
-		],
+		"stripes": ["#e0b23a", "#2f5a34", "#6b2d5c"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -4098,11 +3366,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#56622e",
-			"#7fb0d8",
-			"#56622e"
-		],
+		"stripes": ["#56622e", "#7fb0d8", "#56622e"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -4118,11 +3382,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#56622e",
-			"#7fb0d8",
-			"#56622e"
-		],
+		"stripes": ["#56622e", "#7fb0d8", "#56622e"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -4138,11 +3398,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#56622e",
-			"#7fb0d8",
-			"#56622e"
-		],
+		"stripes": ["#56622e", "#7fb0d8", "#56622e"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -4158,11 +3414,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#56622e",
-			"#7fb0d8",
-			"#56622e"
-		],
+		"stripes": ["#56622e", "#7fb0d8", "#56622e"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -4178,11 +3430,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#56622e",
-			"#7fb0d8",
-			"#56622e"
-		],
+		"stripes": ["#56622e", "#7fb0d8", "#56622e"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -4198,13 +3446,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#56622e",
-			"#3f6fb0",
-			"#c23b3b",
-			"#3f6fb0",
-			"#56622e"
-		],
+		"stripes": ["#56622e", "#3f6fb0", "#c23b3b", "#3f6fb0", "#56622e"],
 		"device": null
 	},
 	{
@@ -4234,15 +3476,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "striped",
-		"stripes": [
-			"#e0b23a",
-			"#7fb0d8",
-			"#f4f1e8",
-			"#7fb0d8",
-			"#f4f1e8",
-			"#7fb0d8",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#7fb0d8", "#f4f1e8", "#7fb0d8", "#f4f1e8", "#7fb0d8", "#e0b23a"],
 		"device": null
 	},
 	{
@@ -4300,15 +3534,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#b8924a",
-			"#3f6fb0",
-			"#f4f1e8",
-			"#3f6fb0",
-			"#f4f1e8",
-			"#3f6fb0",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#3f6fb0", "#f4f1e8", "#3f6fb0", "#f4f1e8", "#3f6fb0", "#b8924a"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -4437,15 +3663,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#2f5a34",
-			"#c8642a",
-			"#b8924a",
-			"#c8642a",
-			"#b8924a",
-			"#c8642a",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#c8642a", "#b8924a", "#c8642a", "#b8924a", "#c8642a", "#2f5a34"],
 		"device": {
 			"kind": "oak",
 			"metal": "bronze",
@@ -4529,15 +3747,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#c8642a",
-			"#c23b3b",
-			"#c8642a",
-			"#24406b",
-			"#c8642a",
-			"#c23b3b",
-			"#c8642a"
-		],
+		"stripes": ["#c8642a", "#c23b3b", "#c8642a", "#24406b", "#c8642a", "#c23b3b", "#c8642a"],
 		"device": null
 	},
 	{
@@ -4568,11 +3778,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "bands",
-		"stripes": [
-			"#3f6fb0",
-			"#56622e",
-			"#3f6fb0"
-		],
+		"stripes": ["#3f6fb0", "#56622e", "#3f6fb0"],
 		"device": null
 	},
 	{
@@ -4608,11 +3814,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#56622e",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#56622e", "#24406b"],
 		"device": null
 	},
 	{
@@ -4731,13 +3933,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#d9b43a",
-			"#34452c",
-			"#5d6450",
-			"#34452c",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#34452c", "#5d6450", "#34452c", "#d9b43a"],
 		"device": null
 	},
 	{
@@ -4767,11 +3963,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#34452c",
-			"#5d6450",
-			"#1c1c1c"
-		],
+		"stripes": ["#34452c", "#5d6450", "#1c1c1c"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -4785,13 +3977,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#1c1c1c",
-			"#d9b43a",
-			"#f4f1e8",
-			"#d9b43a",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#d9b43a", "#f4f1e8", "#d9b43a", "#1c1c1c"],
 		"device": {
 			"kind": "oak",
 			"metal": "gold",
@@ -4805,15 +3991,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#5d6450",
-			"#4d545c",
-			"#5d6450",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#5d6450", "#4d545c", "#5d6450", "#1c1c1c", "#f4f1e8"],
 		"device": null
 	},
 	{
@@ -4823,13 +4001,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#a9adb1",
-			"#d9b43a",
-			"#a9adb1",
-			"#d9b43a",
-			"#a9adb1"
-		],
+		"stripes": ["#a9adb1", "#d9b43a", "#a9adb1", "#d9b43a", "#a9adb1"],
 		"device": null
 	},
 	{
@@ -4839,13 +4011,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#d9b43a",
-			"#e6dfcc",
-			"#d9b43a",
-			"#e6dfcc",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#e6dfcc", "#d9b43a", "#e6dfcc", "#d9b43a"],
 		"device": null
 	},
 	{
@@ -4855,15 +4021,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#6b4226",
-			"#34452c",
-			"#a9adb1",
-			"#34452c",
-			"#a9adb1",
-			"#34452c",
-			"#6b4226"
-		],
+		"stripes": ["#6b4226", "#34452c", "#a9adb1", "#34452c", "#a9adb1", "#34452c", "#6b4226"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -4877,15 +4035,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#f4f1e8",
-			"#1c1c1c",
-			"#34452c",
-			"#4d545c",
-			"#34452c",
-			"#1c1c1c",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#1c1c1c", "#34452c", "#4d545c", "#34452c", "#1c1c1c", "#f4f1e8"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -4899,15 +4049,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#1c1c1c",
-			"#f4f1e8",
-			"#5d6450",
-			"#34452c",
-			"#5d6450",
-			"#f4f1e8",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#f4f1e8", "#5d6450", "#34452c", "#5d6450", "#f4f1e8", "#1c1c1c"],
 		"device": null
 	},
 	{
@@ -4917,13 +4059,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#4d545c",
-			"#a9adb1",
-			"#6b4226",
-			"#a9adb1",
-			"#4d545c"
-		],
+		"stripes": ["#4d545c", "#a9adb1", "#6b4226", "#a9adb1", "#4d545c"],
 		"device": null
 	},
 	{
@@ -4933,11 +4069,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#e6dfcc",
-			"#6b4226",
-			"#1c1c1c"
-		],
+		"stripes": ["#e6dfcc", "#6b4226", "#1c1c1c"],
 		"device": null
 	},
 	{
@@ -4971,13 +4103,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#5d6450",
-			"#a9adb1",
-			"#5d6450",
-			"#a9adb1",
-			"#5d6450"
-		],
+		"stripes": ["#5d6450", "#a9adb1", "#5d6450", "#a9adb1", "#5d6450"],
 		"device": null
 	},
 	{
@@ -4987,11 +4113,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#6b4226",
-			"#d9b43a",
-			"#a9adb1"
-		],
+		"stripes": ["#6b4226", "#d9b43a", "#a9adb1"],
 		"device": {
 			"kind": "swords",
 			"metal": "silver",
@@ -5005,11 +4127,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#d9b43a",
-			"#a9adb1",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#a9adb1", "#d9b43a"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -5023,11 +4141,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#d9b43a",
-			"#f4f1e8",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#f4f1e8", "#d9b43a"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -5041,13 +4155,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#e6dfcc",
-			"#d9b43a",
-			"#6b4226",
-			"#d9b43a",
-			"#e6dfcc"
-		],
+		"stripes": ["#e6dfcc", "#d9b43a", "#6b4226", "#d9b43a", "#e6dfcc"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -5061,11 +4169,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#a9adb1",
-			"#d9b43a",
-			"#a9adb1"
-		],
+		"stripes": ["#a9adb1", "#d9b43a", "#a9adb1"],
 		"device": {
 			"kind": "swords",
 			"metal": "silver",
@@ -5079,13 +4183,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#5d6450",
-			"#1c1c1c",
-			"#e6dfcc",
-			"#1c1c1c",
-			"#5d6450"
-		],
+		"stripes": ["#5d6450", "#1c1c1c", "#e6dfcc", "#1c1c1c", "#5d6450"],
 		"device": {
 			"kind": "swords",
 			"metal": "silver",
@@ -5099,15 +4197,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "fieldgrey",
-		"stripes": [
-			"#1c1c1c",
-			"#f4f1e8",
-			"#34452c",
-			"#6b4226",
-			"#34452c",
-			"#f4f1e8",
-			"#1c1c1c"
-		],
+		"stripes": ["#1c1c1c", "#f4f1e8", "#34452c", "#6b4226", "#34452c", "#f4f1e8", "#1c1c1c"],
 		"device": {
 			"kind": "swords",
 			"metal": "gold",
@@ -5121,11 +4211,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#d9b43a",
-			"#5d6450",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#5d6450", "#d9b43a"],
 		"device": null
 	},
 	{
@@ -5135,11 +4221,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#4d545c",
-			"#d9b43a",
-			"#4d545c"
-		],
+		"stripes": ["#4d545c", "#d9b43a", "#4d545c"],
 		"device": null
 	},
 	{
@@ -5149,11 +4231,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "split",
-		"stripes": [
-			"#f4f1e8",
-			"#e6dfcc",
-			"#1c1c1c"
-		],
+		"stripes": ["#f4f1e8", "#e6dfcc", "#1c1c1c"],
 		"device": null
 	},
 	{
@@ -5163,13 +4241,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#34452c",
-			"#e6dfcc",
-			"#34452c",
-			"#e6dfcc",
-			"#34452c"
-		],
+		"stripes": ["#34452c", "#e6dfcc", "#34452c", "#e6dfcc", "#34452c"],
 		"device": null
 	},
 	{
@@ -5179,13 +4251,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#cfb07a",
-			"#6b2d5c",
-			"#2f5a34",
-			"#6b2d5c",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#6b2d5c", "#2f5a34", "#6b2d5c", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -5195,11 +4261,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#2f5a34",
-			"#b8924a",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#b8924a", "#2f5a34"],
 		"device": null
 	},
 	{
@@ -5229,13 +4291,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#cfb07a",
-			"#f4f1e8",
-			"#2f5a34",
-			"#f4f1e8",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#f4f1e8", "#2f5a34", "#f4f1e8", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -5245,11 +4301,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#24406b",
-			"#8f2232",
-			"#6b2d5c"
-		],
+		"stripes": ["#24406b", "#8f2232", "#6b2d5c"],
 		"device": null
 	},
 	{
@@ -5259,11 +4311,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#1c1c1c",
-			"#c23b3b",
-			"#2f5a34"
-		],
+		"stripes": ["#1c1c1c", "#c23b3b", "#2f5a34"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -5277,13 +4325,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#b8924a",
-			"#1c1c1c",
-			"#e0b23a",
-			"#1c1c1c",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#1c1c1c", "#e0b23a", "#1c1c1c", "#b8924a"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -5297,11 +4339,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#6b2d5c",
-			"#24406b",
-			"#6b2d5c"
-		],
+		"stripes": ["#6b2d5c", "#24406b", "#6b2d5c"],
 		"device": null
 	},
 	{
@@ -5311,15 +4349,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#24406b",
-			"#2f5a34",
-			"#b8924a",
-			"#1c1c1c",
-			"#b8924a",
-			"#2f5a34",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#2f5a34", "#b8924a", "#1c1c1c", "#b8924a", "#2f5a34", "#24406b"],
 		"device": null
 	},
 	{
@@ -5329,13 +4359,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#24406b",
-			"#2f5a34",
-			"#8f2232",
-			"#2f5a34",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#2f5a34", "#8f2232", "#2f5a34", "#24406b"],
 		"device": null
 	},
 	{
@@ -5345,13 +4369,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#cfb07a",
-			"#7fb0d8",
-			"#cfb07a",
-			"#7fb0d8",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#7fb0d8", "#cfb07a", "#7fb0d8", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -5383,13 +4401,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#cfb07a",
-			"#7fb0d8",
-			"#8f2232",
-			"#7fb0d8",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#7fb0d8", "#8f2232", "#7fb0d8", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -5473,11 +4485,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#8f2232",
-			"#2f5a34",
-			"#6b2d5c"
-		],
+		"stripes": ["#8f2232", "#2f5a34", "#6b2d5c"],
 		"device": null
 	},
 	{
@@ -5487,13 +4495,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#2f5a34",
-			"#8f2232",
-			"#1c1c1c",
-			"#8f2232",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#8f2232", "#1c1c1c", "#8f2232", "#2f5a34"],
 		"device": null
 	},
 	{
@@ -5525,13 +4527,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#cfb07a",
-			"#b8924a",
-			"#2f5a34",
-			"#b8924a",
-			"#cfb07a"
-		],
+		"stripes": ["#cfb07a", "#b8924a", "#2f5a34", "#b8924a", "#cfb07a"],
 		"device": null
 	},
 	{
@@ -5541,11 +4537,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#e0b23a",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#e0b23a", "#8f2232"],
 		"device": {
 			"kind": "oak",
 			"metal": "bronze",
@@ -5559,11 +4551,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#f4f1e8",
-			"#e0b23a",
-			"#f4f1e8"
-		],
+		"stripes": ["#f4f1e8", "#e0b23a", "#f4f1e8"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -5577,11 +4565,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "split",
-		"stripes": [
-			"#e0b23a",
-			"#24406b",
-			"#8f2232"
-		],
+		"stripes": ["#e0b23a", "#24406b", "#8f2232"],
 		"device": null
 	},
 	{
@@ -5591,15 +4575,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#b8924a",
-			"#6b2d5c",
-			"#e0b23a",
-			"#f4f1e8",
-			"#e0b23a",
-			"#6b2d5c",
-			"#b8924a"
-		],
+		"stripes": ["#b8924a", "#6b2d5c", "#e0b23a", "#f4f1e8", "#e0b23a", "#6b2d5c", "#b8924a"],
 		"device": null
 	},
 	{
@@ -5609,11 +4585,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#2f5a34",
-			"#1c1c1c",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#1c1c1c", "#2f5a34"],
 		"device": {
 			"kind": "oak",
 			"metal": "bronze",
@@ -5671,13 +4643,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#a9adb1",
-			"#cf7792",
-			"#a9adb1",
-			"#cf7792",
-			"#a9adb1"
-		],
+		"stripes": ["#a9adb1", "#cf7792", "#a9adb1", "#cf7792", "#a9adb1"],
 		"device": {
 			"kind": "tank",
 			"metal": "gold",
@@ -5691,13 +4657,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#5e1d2a",
-			"#cf7792",
-			"#5e1d2a",
-			"#cf7792",
-			"#5e1d2a"
-		],
+		"stripes": ["#5e1d2a", "#cf7792", "#5e1d2a", "#cf7792", "#5e1d2a"],
 		"device": {
 			"kind": "oak",
 			"metal": "silver",
@@ -5751,15 +4711,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "piped",
-		"stripes": [
-			"#cf7792",
-			"#4d545c",
-			"#cf7792",
-			"#4d545c",
-			"#cf7792",
-			"#4d545c",
-			"#cf7792"
-		],
+		"stripes": ["#cf7792", "#4d545c", "#cf7792", "#4d545c", "#cf7792", "#4d545c", "#cf7792"],
 		"device": null
 	},
 	{
@@ -5815,15 +4767,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#5d6450",
-			"#1c1c1c",
-			"#24406b",
-			"#1c1c1c",
-			"#24406b",
-			"#1c1c1c",
-			"#5d6450"
-		],
+		"stripes": ["#5d6450", "#1c1c1c", "#24406b", "#1c1c1c", "#24406b", "#1c1c1c", "#5d6450"],
 		"device": null
 	},
 	{
@@ -5861,11 +4805,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#5d6450",
-			"#5e1d2a",
-			"#5d6450"
-		],
+		"stripes": ["#5d6450", "#5e1d2a", "#5d6450"],
 		"device": null
 	},
 	{
@@ -5875,11 +4815,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#cf7792",
-			"#5d6450",
-			"#4d545c"
-		],
+		"stripes": ["#cf7792", "#5d6450", "#4d545c"],
 		"device": {
 			"kind": "swords",
 			"metal": "silver",
@@ -5893,15 +4829,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#4d545c", "#1c1c1c", "#4d545c", "#1c1c1c", "#4d545c", "#24406b"],
 		"device": null
 	},
 	{
@@ -5935,11 +4863,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#cf7792",
-			"#a9adb1",
-			"#cf7792"
-		],
+		"stripes": ["#cf7792", "#a9adb1", "#cf7792"],
 		"device": {
 			"kind": "tank",
 			"metal": "silver",
@@ -6021,11 +4945,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#f4f1e8",
-			"#5d6450",
-			"#a9adb1"
-		],
+		"stripes": ["#f4f1e8", "#5d6450", "#a9adb1"],
 		"device": null
 	},
 	{
@@ -6035,15 +4955,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "edged",
-		"stripes": [
-			"#a9adb1",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#f4f1e8",
-			"#cf7792",
-			"#a9adb1"
-		],
+		"stripes": ["#a9adb1", "#cf7792", "#f4f1e8", "#cf7792", "#f4f1e8", "#cf7792", "#a9adb1"],
 		"device": null
 	},
 	{
@@ -6053,13 +4965,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#5e1d2a",
-			"#5d6450",
-			"#5e1d2a",
-			"#5d6450",
-			"#5e1d2a"
-		],
+		"stripes": ["#5e1d2a", "#5d6450", "#5e1d2a", "#5d6450", "#5e1d2a"],
 		"device": {
 			"kind": "tank",
 			"metal": "gold",
@@ -6073,13 +4979,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#5d6450",
-			"#24406b",
-			"#5d6450",
-			"#24406b",
-			"#5d6450"
-		],
+		"stripes": ["#5d6450", "#24406b", "#5d6450", "#24406b", "#5d6450"],
 		"device": null
 	},
 	{
@@ -6137,11 +5037,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#7fb0d8",
-			"#e0b23a",
-			"#56622e"
-		],
+		"stripes": ["#7fb0d8", "#e0b23a", "#56622e"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -6155,11 +5051,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#e0b23a",
-			"#7fb0d8",
-			"#6b2d5c"
-		],
+		"stripes": ["#e0b23a", "#7fb0d8", "#6b2d5c"],
 		"device": {
 			"kind": "rosette",
 			"metal": "gold",
@@ -6215,11 +5107,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#3f6fb0",
-			"#56622e",
-			"#6b4226"
-		],
+		"stripes": ["#3f6fb0", "#56622e", "#6b4226"],
 		"device": null
 	},
 	{
@@ -6229,15 +5117,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#3f6fb0",
-			"#8f2232",
-			"#3f6fb0",
-			"#8f2232",
-			"#3f6fb0",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#3f6fb0", "#8f2232", "#3f6fb0", "#8f2232", "#3f6fb0", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -6251,13 +5131,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#2f5a34",
-			"#b8924a",
-			"#24406b",
-			"#b8924a",
-			"#2f5a34"
-		],
+		"stripes": ["#2f5a34", "#b8924a", "#24406b", "#b8924a", "#2f5a34"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -6291,15 +5165,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#6b2d5c",
-			"#24406b",
-			"#56622e",
-			"#24406b",
-			"#56622e",
-			"#24406b",
-			"#6b2d5c"
-		],
+		"stripes": ["#6b2d5c", "#24406b", "#56622e", "#24406b", "#56622e", "#24406b", "#6b2d5c"],
 		"device": null
 	},
 	{
@@ -6355,11 +5221,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#56622e",
-			"#6b4226",
-			"#c8642a"
-		],
+		"stripes": ["#56622e", "#6b4226", "#c8642a"],
 		"device": null
 	},
 	{
@@ -6369,11 +5231,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#56622e",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#56622e", "#24406b"],
 		"device": null
 	},
 	{
@@ -6383,13 +5241,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#6b2d5c",
-			"#7fb0d8",
-			"#6b2d5c",
-			"#7fb0d8",
-			"#6b2d5c"
-		],
+		"stripes": ["#6b2d5c", "#7fb0d8", "#6b2d5c", "#7fb0d8", "#6b2d5c"],
 		"device": null
 	},
 	{
@@ -6421,11 +5273,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#2f5a34",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#2f5a34", "#7fb0d8"],
 		"device": null
 	},
 	{
@@ -6435,15 +5283,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "striped",
-		"stripes": [
-			"#8f2232",
-			"#c23b3b",
-			"#24406b",
-			"#c23b3b",
-			"#24406b",
-			"#c23b3b",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#c23b3b", "#24406b", "#c23b3b", "#24406b", "#c23b3b", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -6457,11 +5297,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#c23b3b",
-			"#6b4226",
-			"#2f5a34"
-		],
+		"stripes": ["#c23b3b", "#6b4226", "#2f5a34"],
 		"device": null
 	},
 	{
@@ -6471,15 +5307,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#6b4226",
-			"#6b2d5c",
-			"#6b4226",
-			"#6b2d5c",
-			"#6b4226",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#6b4226", "#6b2d5c", "#6b4226", "#6b2d5c", "#6b4226", "#24406b"],
 		"device": null
 	},
 	{
@@ -6561,15 +5389,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#6b2d5c",
-			"#8f2232",
-			"#e0b23a",
-			"#8f2232",
-			"#e0b23a",
-			"#8f2232",
-			"#6b2d5c"
-		],
+		"stripes": ["#6b2d5c", "#8f2232", "#e0b23a", "#8f2232", "#e0b23a", "#8f2232", "#6b2d5c"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -6633,15 +5453,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#2f5a34", "#6b4226", "#2f5a34", "#6b4226", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -6657,15 +5469,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#2f5a34", "#6b4226", "#2f5a34", "#6b4226", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -6681,15 +5485,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#2f5a34", "#6b4226", "#2f5a34", "#6b4226", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -6705,15 +5501,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#2f5a34", "#6b4226", "#2f5a34", "#6b4226", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -6729,15 +5517,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#2f5a34",
-			"#6b4226",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#2f5a34", "#6b4226", "#2f5a34", "#6b4226", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -6753,15 +5533,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#56622e", "#f4f1e8", "#56622e", "#f4f1e8", "#56622e", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -6777,15 +5549,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#56622e", "#f4f1e8", "#56622e", "#f4f1e8", "#56622e", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -6801,15 +5565,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#56622e", "#f4f1e8", "#56622e", "#f4f1e8", "#56622e", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -6825,15 +5581,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#56622e", "#f4f1e8", "#56622e", "#f4f1e8", "#56622e", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -6849,15 +5597,7 @@
 		"faction": "americans",
 		"raceId": 0,
 		"pattern": "edged",
-		"stripes": [
-			"#7fb0d8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#f4f1e8",
-			"#56622e",
-			"#7fb0d8"
-		],
+		"stripes": ["#7fb0d8", "#56622e", "#f4f1e8", "#56622e", "#f4f1e8", "#56622e", "#7fb0d8"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -7013,15 +5753,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#d9b43a",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#4d545c", "#1c1c1c", "#4d545c", "#1c1c1c", "#4d545c", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -7037,15 +5769,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#d9b43a",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#4d545c", "#1c1c1c", "#4d545c", "#1c1c1c", "#4d545c", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -7061,15 +5785,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#d9b43a",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#4d545c", "#1c1c1c", "#4d545c", "#1c1c1c", "#4d545c", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -7085,15 +5801,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#d9b43a",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#4d545c", "#1c1c1c", "#4d545c", "#1c1c1c", "#4d545c", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -7109,15 +5817,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "edged",
-		"stripes": [
-			"#d9b43a",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#1c1c1c",
-			"#4d545c",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#4d545c", "#1c1c1c", "#4d545c", "#1c1c1c", "#4d545c", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "gold",
@@ -7133,15 +5833,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#d9b43a",
-			"#6b4226",
-			"#4d545c",
-			"#34452c",
-			"#4d545c",
-			"#6b4226",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#6b4226", "#4d545c", "#34452c", "#4d545c", "#6b4226", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -7157,15 +5849,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#d9b43a",
-			"#6b4226",
-			"#4d545c",
-			"#34452c",
-			"#4d545c",
-			"#6b4226",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#6b4226", "#4d545c", "#34452c", "#4d545c", "#6b4226", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -7181,15 +5865,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#d9b43a",
-			"#6b4226",
-			"#4d545c",
-			"#34452c",
-			"#4d545c",
-			"#6b4226",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#6b4226", "#4d545c", "#34452c", "#4d545c", "#6b4226", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -7205,15 +5881,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#d9b43a",
-			"#6b4226",
-			"#4d545c",
-			"#34452c",
-			"#4d545c",
-			"#6b4226",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#6b4226", "#4d545c", "#34452c", "#4d545c", "#6b4226", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -7229,15 +5897,7 @@
 		"faction": "wehrmacht",
 		"raceId": 1,
 		"pattern": "bands",
-		"stripes": [
-			"#d9b43a",
-			"#6b4226",
-			"#4d545c",
-			"#34452c",
-			"#4d545c",
-			"#6b4226",
-			"#d9b43a"
-		],
+		"stripes": ["#d9b43a", "#6b4226", "#4d545c", "#34452c", "#4d545c", "#6b4226", "#d9b43a"],
 		"device": {
 			"kind": "pip",
 			"metal": "gold",
@@ -7383,13 +6043,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#24406b",
-			"#b8924a",
-			"#6b2d5c",
-			"#b8924a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#b8924a", "#6b2d5c", "#b8924a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -7405,13 +6059,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#24406b",
-			"#b8924a",
-			"#6b2d5c",
-			"#b8924a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#b8924a", "#6b2d5c", "#b8924a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -7427,13 +6075,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#24406b",
-			"#b8924a",
-			"#6b2d5c",
-			"#b8924a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#b8924a", "#6b2d5c", "#b8924a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -7449,13 +6091,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#24406b",
-			"#b8924a",
-			"#6b2d5c",
-			"#b8924a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#b8924a", "#6b2d5c", "#b8924a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -7471,13 +6107,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "theatre",
-		"stripes": [
-			"#24406b",
-			"#b8924a",
-			"#6b2d5c",
-			"#b8924a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#b8924a", "#6b2d5c", "#b8924a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "gold",
@@ -7493,15 +6123,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#cfb07a", "#e0b23a", "#cfb07a", "#e0b23a", "#cfb07a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -7517,15 +6139,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#cfb07a", "#e0b23a", "#cfb07a", "#e0b23a", "#cfb07a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -7541,15 +6155,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#cfb07a", "#e0b23a", "#cfb07a", "#e0b23a", "#cfb07a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -7565,15 +6171,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#cfb07a", "#e0b23a", "#cfb07a", "#e0b23a", "#cfb07a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -7589,15 +6187,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "edged",
-		"stripes": [
-			"#24406b",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#e0b23a",
-			"#cfb07a",
-			"#24406b"
-		],
+		"stripes": ["#24406b", "#cfb07a", "#e0b23a", "#cfb07a", "#e0b23a", "#cfb07a", "#24406b"],
 		"device": {
 			"kind": "rosette",
 			"metal": "gold",
@@ -7613,13 +6203,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#e0b23a",
-			"#7fb0d8",
-			"#e0b23a",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#e0b23a", "#7fb0d8", "#e0b23a", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -7635,13 +6219,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#e0b23a",
-			"#7fb0d8",
-			"#e0b23a",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#e0b23a", "#7fb0d8", "#e0b23a", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "bronze",
@@ -7657,13 +6235,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#e0b23a",
-			"#7fb0d8",
-			"#e0b23a",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#e0b23a", "#7fb0d8", "#e0b23a", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -7679,13 +6251,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#e0b23a",
-			"#7fb0d8",
-			"#e0b23a",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#e0b23a", "#7fb0d8", "#e0b23a", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "silver",
@@ -7701,13 +6267,7 @@
 		"faction": "british",
 		"raceId": 2,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#e0b23a",
-			"#7fb0d8",
-			"#e0b23a",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#e0b23a", "#7fb0d8", "#e0b23a", "#8f2232"],
 		"device": {
 			"kind": "rosette",
 			"metal": "gold",
@@ -7873,11 +6433,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#24406b",
-			"#cf7792",
-			"#5e1d2a"
-		],
+		"stripes": ["#24406b", "#cf7792", "#5e1d2a"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -7893,11 +6449,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#24406b",
-			"#cf7792",
-			"#5e1d2a"
-		],
+		"stripes": ["#24406b", "#cf7792", "#5e1d2a"],
 		"device": {
 			"kind": "pip",
 			"metal": "bronze",
@@ -7913,11 +6465,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#24406b",
-			"#cf7792",
-			"#5e1d2a"
-		],
+		"stripes": ["#24406b", "#cf7792", "#5e1d2a"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -7933,11 +6481,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#24406b",
-			"#cf7792",
-			"#5e1d2a"
-		],
+		"stripes": ["#24406b", "#cf7792", "#5e1d2a"],
 		"device": {
 			"kind": "pip",
 			"metal": "silver",
@@ -7953,11 +6497,7 @@
 		"faction": "panzer_elite",
 		"raceId": 3,
 		"pattern": "split",
-		"stripes": [
-			"#24406b",
-			"#cf7792",
-			"#5e1d2a"
-		],
+		"stripes": ["#24406b", "#cf7792", "#5e1d2a"],
 		"device": {
 			"kind": "pip",
 			"metal": "gold",
@@ -8123,11 +6663,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#8f2232"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -8143,11 +6679,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#8f2232"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -8163,11 +6695,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#8f2232"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -8183,11 +6711,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#8f2232"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -8203,11 +6727,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#7fb0d8",
-			"#6b4226",
-			"#8f2232"
-		],
+		"stripes": ["#7fb0d8", "#6b4226", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -8223,15 +6743,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#3f6fb0",
-			"#c23b3b",
-			"#2f5a34",
-			"#f4f1e8",
-			"#2f5a34",
-			"#c23b3b",
-			"#3f6fb0"
-		],
+		"stripes": ["#3f6fb0", "#c23b3b", "#2f5a34", "#f4f1e8", "#2f5a34", "#c23b3b", "#3f6fb0"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -8247,15 +6759,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#3f6fb0",
-			"#c23b3b",
-			"#2f5a34",
-			"#f4f1e8",
-			"#2f5a34",
-			"#c23b3b",
-			"#3f6fb0"
-		],
+		"stripes": ["#3f6fb0", "#c23b3b", "#2f5a34", "#f4f1e8", "#2f5a34", "#c23b3b", "#3f6fb0"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -8271,15 +6775,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#3f6fb0",
-			"#c23b3b",
-			"#2f5a34",
-			"#f4f1e8",
-			"#2f5a34",
-			"#c23b3b",
-			"#3f6fb0"
-		],
+		"stripes": ["#3f6fb0", "#c23b3b", "#2f5a34", "#f4f1e8", "#2f5a34", "#c23b3b", "#3f6fb0"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -8295,15 +6791,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#3f6fb0",
-			"#c23b3b",
-			"#2f5a34",
-			"#f4f1e8",
-			"#2f5a34",
-			"#c23b3b",
-			"#3f6fb0"
-		],
+		"stripes": ["#3f6fb0", "#c23b3b", "#2f5a34", "#f4f1e8", "#2f5a34", "#c23b3b", "#3f6fb0"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -8319,15 +6807,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#3f6fb0",
-			"#c23b3b",
-			"#2f5a34",
-			"#f4f1e8",
-			"#2f5a34",
-			"#c23b3b",
-			"#3f6fb0"
-		],
+		"stripes": ["#3f6fb0", "#c23b3b", "#2f5a34", "#f4f1e8", "#2f5a34", "#c23b3b", "#3f6fb0"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -8343,13 +6823,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#6b2d5c",
-			"#56622e",
-			"#6b2d5c",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#6b2d5c", "#56622e", "#6b2d5c", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -8365,13 +6839,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#6b2d5c",
-			"#56622e",
-			"#6b2d5c",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#6b2d5c", "#56622e", "#6b2d5c", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -8387,13 +6855,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#6b2d5c",
-			"#56622e",
-			"#6b2d5c",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#6b2d5c", "#56622e", "#6b2d5c", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -8409,13 +6871,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#6b2d5c",
-			"#56622e",
-			"#6b2d5c",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#6b2d5c", "#56622e", "#6b2d5c", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -8431,13 +6887,7 @@
 		"faction": "global",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#8f2232",
-			"#6b2d5c",
-			"#56622e",
-			"#6b2d5c",
-			"#8f2232"
-		],
+		"stripes": ["#8f2232", "#6b2d5c", "#56622e", "#6b2d5c", "#8f2232"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -8453,13 +6903,7 @@
 		"faction": "supporter",
 		"raceId": null,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#6e1f2e",
-			"#e0b23a",
-			"#efe6cf",
-			"#e0b23a",
-			"#6e1f2e"
-		],
+		"stripes": ["#6e1f2e", "#e0b23a", "#efe6cf", "#e0b23a", "#6e1f2e"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -8475,13 +6919,7 @@
 		"faction": "supporter",
 		"raceId": null,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#6e1f2e",
-			"#e0b23a",
-			"#efe6cf",
-			"#e0b23a",
-			"#6e1f2e"
-		],
+		"stripes": ["#6e1f2e", "#e0b23a", "#efe6cf", "#e0b23a", "#6e1f2e"],
 		"device": {
 			"kind": "star",
 			"metal": "bronze",
@@ -8497,13 +6935,7 @@
 		"faction": "supporter",
 		"raceId": null,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#6e1f2e",
-			"#e0b23a",
-			"#efe6cf",
-			"#e0b23a",
-			"#6e1f2e"
-		],
+		"stripes": ["#6e1f2e", "#e0b23a", "#efe6cf", "#e0b23a", "#6e1f2e"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -8519,13 +6951,7 @@
 		"faction": "supporter",
 		"raceId": null,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#6e1f2e",
-			"#e0b23a",
-			"#efe6cf",
-			"#e0b23a",
-			"#6e1f2e"
-		],
+		"stripes": ["#6e1f2e", "#e0b23a", "#efe6cf", "#e0b23a", "#6e1f2e"],
 		"device": {
 			"kind": "star",
 			"metal": "silver",
@@ -8541,13 +6967,7 @@
 		"faction": "supporter",
 		"raceId": null,
 		"pattern": "pinstripes",
-		"stripes": [
-			"#6e1f2e",
-			"#e0b23a",
-			"#efe6cf",
-			"#e0b23a",
-			"#6e1f2e"
-		],
+		"stripes": ["#6e1f2e", "#e0b23a", "#efe6cf", "#e0b23a", "#6e1f2e"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -8563,13 +6983,7 @@
 		"faction": "supporter",
 		"raceId": null,
 		"pattern": "bands",
-		"stripes": [
-			"#e0b23a",
-			"#6e1f2e",
-			"#efe6cf",
-			"#6e1f2e",
-			"#e0b23a"
-		],
+		"stripes": ["#e0b23a", "#6e1f2e", "#efe6cf", "#6e1f2e", "#e0b23a"],
 		"device": {
 			"kind": "star",
 			"metal": "gold",
@@ -8583,11 +6997,7 @@
 		"faction": "supporter",
 		"raceId": null,
 		"pattern": "edged",
-		"stripes": [
-			"#efe6cf",
-			"#6e1f2e",
-			"#efe6cf"
-		],
+		"stripes": ["#efe6cf", "#6e1f2e", "#efe6cf"],
 		"device": null
 	},
 	{
@@ -8597,11 +7007,7 @@
 		"faction": "supporter",
 		"raceId": null,
 		"pattern": "split",
-		"stripes": [
-			"#6e1f2e",
-			"#e0b23a",
-			"#efe6cf"
-		],
+		"stripes": ["#6e1f2e", "#e0b23a", "#efe6cf"],
 		"device": {
 			"kind": "oak",
 			"metal": "gold",

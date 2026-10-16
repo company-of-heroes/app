@@ -365,9 +365,9 @@ function ribbonPicker(existing) {
 			if (!series) {
 				const candidates = [
 					...new Set(
-						pool.filter((entry) => entry.series && entry.raceId === want.raceId).map(
-							(entry) => entry.series
-						)
+						pool
+							.filter((entry) => entry.series && entry.raceId === want.raceId)
+							.map((entry) => entry.series)
 					)
 				];
 				series = candidates.find((name) =>
