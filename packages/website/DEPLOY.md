@@ -54,13 +54,12 @@ Until domains are moved, the old Worker keeps serving production traffic.
 
 | Target                  | Deploys when these change                                                                                            |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `coh1stats-card-worker` | `packages/card-worker`, `ui`, `shared-assets`                                                                        |
 | `coh1stats-website`     | `packages/website`, `ui`, `api`, `i18n`, `game-data`, `shared-assets`, app map images, `POLICY.md`, `pnpm-lock.yaml` |
 | `coh1stats-api-gateway` | `packages/api-gateway` (incl. the built `overlay-default/`)                                                          |
 | `coh1stats-jobs-worker` | `packages/jobs-worker`                                                                                               |
 | `fknoobs-smurf-worker`  | `packages/smurf-worker`                                                                                              |
 
-The card worker deploys first (the website binds it as `CARD_RENDERER`), then the website; the other workers follow (they bind to the website). Run the workflow manually (**Actions → Deploy Cloudflare → Run workflow**) to deploy one target or all of them.
+The website deploys first; the other workers follow (they bind to the website). Run the workflow manually (**Actions → Deploy Cloudflare → Run workflow**) to deploy one target or all of them.
 
 Repository secrets:
 
@@ -115,14 +114,14 @@ PocketBase must have `STEAM_API_KEY` configured for the player card endpoint.
 
 The €5/month supporter subscription runs on [Paddle Billing](https://www.paddle.com/billing). Before its first release:
 
-1. **PocketBase first**: apply migrations `1791000066_subscriptions.js` and `1791000067_supporter_label.js` on production **before** the website release that uses them. Without them `/supporters` shows empty lists and every webhook answers 500 (Paddle retries).
+1. **PocketBase first**: apply migrations `1791000066_subscriptions.js`, `1791000067_supporter_label.js` and `1791000068_rename_supporter_reward.js` on production **before** the website release that uses them. Without them `/supporters` shows empty lists and every webhook answers 500 (Paddle retries).
 2. **Rewards**: seed the supporter rewards once:
 
    ```bash
    pnpm --filter @company-of-heroes/pocketbase seed:rewards --url https://api.coh1stats.com --production
    ```
 
-3. **Card worker**: `coh1stats-card-worker` (`packages/card-worker`) renders the player card PNG. CI deploys it before the website; without it the card falls back to a static image.
+3. **Player card PNG**: the supporter's own browser draws `/card/{steamId}` to a 1200×630 PNG (html-to-image) and uploads it (`POST /api/v1/players/{steamId}/card.png`, at most 10 a minute per account via `CARD_LIMITER`). It is stored in the `OVERLAYS` R2 bucket (`coh1stats-overlays`) under `cards/{steamId}.png`; `GET` serves it, or a static fallback image until the first upload. No extra Worker or secret is needed.
 4. **Environment** on `coh1stats-website`:
 
    | Variable                     | Where                     | Purpose                                                       |
