@@ -30,6 +30,6 @@
 		class={cn('inline-flex shrink-0', className)}
 		{@attach tooltip(t('Supporter'))}
 	>
-		<img src={medalUrl} alt="" width={size} height={size} class="object-contain" />
+		<img src={medalUrl} alt="" width={Math.round((size * 64) / 116)} height={size} />
 	</span>
 {/if}
