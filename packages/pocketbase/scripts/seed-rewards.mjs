@@ -225,7 +225,7 @@ const REWARDS = [
 		{ metric: 'comments_created', threshold: 50 }
 	]),
 	one(GLOBAL, 'Debater', 'Reply to 25 comments.', [{ metric: 'replies_created', threshold: 25 }]),
-	one(GLOBAL, 'Supporter', 'Give 50 upvotes.', [{ metric: 'votes_cast', threshold: 50 }]),
+	one(GLOBAL, 'Cheerleader', 'Give 50 upvotes.', [{ metric: 'votes_cast', threshold: 50 }]),
 	one(GLOBAL, 'Well Spoken', 'Receive 25 upvotes on your comments.', [
 		{ metric: 'comment_upvotes_received', threshold: 25 }
 	]),
