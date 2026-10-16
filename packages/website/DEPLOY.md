@@ -121,7 +121,7 @@ The €5/month supporter subscription runs on [Paddle Billing](https://www.paddl
    pnpm --filter @company-of-heroes/pocketbase seed:rewards --url https://api.coh1stats.com --production
    ```
 
-3. **Player card PNG**: the supporter's own browser draws `/card/{steamId}` to a 1200×630 PNG (html-to-image) and uploads it (`POST /api/v1/players/{steamId}/card.png`, at most 10 a minute per account via `CARD_LIMITER`). It is stored in the `OVERLAYS` R2 bucket (`coh1stats-overlays`) under `cards/{steamId}.png`; `GET` serves it, or a static fallback image until the first upload. No extra Worker or secret is needed.
+3. **Player card PNG**: the supporter's own browser draws `/card/{steamId}` to a 1200×630 PNG (html-to-image) and uploads it (`POST /api/v1/players/{steamId}/card.png`, at most 10 a minute per account via `CARD_LIMITER`). It is stored in the `OVERLAYS` R2 bucket (`coh1stats-overlays`) under `cards/{steamId}.png`; `GET` serves it, or a static fallback image until the first upload. No extra Worker or secret is needed. An upload or removal purges only the edge cache of that data centre; others may show the old card for up to an hour. Staff remove a card with `DELETE /api/v1/players/{steamId}/card.png` (signed in as staff; 204); each object's metadata records the uploading `userId`.
 4. **Environment** on `coh1stats-website`:
 
    | Variable                     | Where                     | Purpose                                                       |
