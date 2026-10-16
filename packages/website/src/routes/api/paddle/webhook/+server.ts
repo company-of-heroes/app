@@ -33,7 +33,12 @@ export const POST = handle(({ request, locals }) =>
 
 				const event = parsePaddleEvent(body);
 				if (!event) {
-					console.warn('[paddle] ignored signed webhook with an unexpected payload');
+					const fields = (body ?? {}) as { event_type?: unknown; event_id?: unknown };
+					console.warn(
+						'[paddle] ignored signed webhook with an unexpected payload',
+						fields.event_type,
+						fields.event_id
+					);
 					return okAsync({ ok: true });
 				}
 

@@ -139,13 +139,20 @@ export class SubscriptionsService extends Service {
 		return okAsync({ userId: null });
 	}
 
-	/** The account an event belongs to: `custom_data.userId` when it exists, else the stored row's. */
+	/**
+	 * The account an event belongs to. A stored row for the subscription is its owner;
+	 * `custom_data.userId` (checkout) is used only for a subscription we have no row for.
+	 */
 	private resolveUser(
 		event: PaddleEvent,
 		data: { custom_data?: Record<string, unknown> | null },
 		stored: SubscriptionRow | null
 	): Task<string | null> {
-		const userId = customUserId(data) ?? stored?.user ?? null;
+		if (stored) {
+			return okAsync(stored.user);
+		}
+
+		const userId = customUserId(data);
 		if (!userId) {
 			console.warn('[paddle] no account on event', event.type, event.id);
 			return okAsync(null);
@@ -164,10 +171,11 @@ export class SubscriptionsService extends Service {
 	}
 
 	/**
-	 * Upserts the account's row from a `subscription.*` event. An event not newer than the
-	 * stored `paddleUpdatedAt` is skipped (redelivery or out of order). The account's row of
-	 * another Paddle subscription is replaced only by a newer event that does not turn a
-	 * paying row into a non-paying one (a second checkout being cancelled).
+	 * Upserts the row of a `subscription.*` event. An event not newer than the stored
+	 * `paddleUpdatedAt` is skipped (redelivery or out of order); the stored owner is never
+	 * changed. A new subscription for an account whose row is still paying never replaces
+	 * that row (anyone can check out with someone's id); its payments still count for the
+	 * account. A row that is no longer paying is replaced by a newer subscription.
 	 */
 	private applySubscription(
 		event: PaddleEvent,
@@ -175,25 +183,24 @@ export class SubscriptionsService extends Service {
 		retry: boolean
 	): Task<HandleResult> {
 		const occurredAt = time(event.occurredAt);
-		const status = mapStatus(data.status);
+		const values = {
+			paddleSubscriptionId: data.id,
+			status: mapStatus(data.status),
+			paddleUpdatedAt: new Date(occurredAt).toISOString(),
+			...(data.customer_id ? { paddleCustomerId: data.customer_id } : {}),
+			...(data.current_billing_period
+				? { currentPeriodEnd: data.current_billing_period.ends_at }
+				: {}),
+			canceledAt: data.canceled_at ?? ''
+		};
 		return this.bySubscriptionId(data.id).andThen((stored) =>
 			this.resolveUser(event, data, stored).andThen((userId): Task<HandleResult> => {
 				if (!userId) {
 					return okAsync({ userId: null });
 				}
 
-				const values = {
-					user: userId,
-					paddleSubscriptionId: data.id,
-					status,
-					paddleUpdatedAt: new Date(occurredAt).toISOString(),
-					...(data.customer_id ? { paddleCustomerId: data.customer_id } : {}),
-					...(data.current_billing_period
-						? { currentPeriodEnd: data.current_billing_period.ends_at }
-						: {}),
-					canceledAt: data.canceled_at ?? ''
-				};
 				if (stored) {
+					// Read-then-write: two deliveries at once can race; the next event corrects the row.
 					if (occurredAt <= time(stored.paddleUpdatedAt)) {
 						console.info('[paddle] skipped stale event', event.type, event.id);
 						return okAsync({ userId });
@@ -207,10 +214,14 @@ export class SubscriptionsService extends Service {
 
 				return this.byUser(userId).andThen((other): Task<HandleResult> => {
 					if (other) {
-						const newer = occurredAt > time(other.paddleUpdatedAt);
-						const demotes = isActive(other) && !PAYING.includes(status);
-						if (!newer || demotes) {
-							console.info('[paddle] kept the other subscription of the account', event.id);
+						if (isActive(other) || occurredAt <= time(other.paddleUpdatedAt)) {
+							console.warn(
+								'[paddle] kept the current subscription of the account',
+								event.type,
+								event.id,
+								data.id,
+								userId
+							);
 							return okAsync({ userId });
 						}
 
@@ -226,7 +237,7 @@ export class SubscriptionsService extends Service {
 
 					return fromPb(
 						this.subscriptions
-							.create(values)
+							.create({ user: userId, ...values })
 							.then(() => 'created' as const)
 							.catch((error) => {
 								if (retry && isUniqueCollision(error)) {
