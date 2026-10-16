@@ -47,6 +47,17 @@ name = "FILE_MINUTE"
 namespace_id = "1004"
 simple = { limit = 40, period = 60 }
 
+# Supporter card PNG renders on a cache miss (src/routes/api/v1/players/[id]/card.png).
+[[ratelimits]]
+name = "CARD_LIMITER"
+namespace_id = "1005"
+simple = { limit = 10, period = 60 }
+
+# Renders the supporter card PNG (packages/card-worker); deploy it before the website.
+[[services]]
+binding = "CARD_RENDERER"
+service = "coh1stats-card-worker"
+
 # Published OBS overlays ({userId}/…), served by the api-gateway.
 [[r2_buckets]]
 binding = "OVERLAYS"
