@@ -24,6 +24,7 @@ import { MatchesService } from './matches';
 import { MemberReplaysService } from './member-replays';
 import { NotificationsService } from './notifications';
 import { OverlaysService, type OverlayBucket } from './overlays';
+import { PlayerCardsService } from './player-cards';
 import { PerformanceService } from './performance';
 import { PlayerInfoService } from './player-info';
 import { PlayerPageService } from './player-page';
@@ -193,6 +194,10 @@ export class Services {
 
 	get overlays() {
 		return this.#get('overlays', OverlaysService);
+	}
+
+	get playerCards() {
+		return this.#get('playerCards', PlayerCardsService);
 	}
 
 	get performance() {

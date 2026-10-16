@@ -312,10 +312,10 @@ export class SubscriptionsService extends Service {
 	}
 
 	/**
-	 * The supporter player card of a Steam ID; null unless exactly one account lists it and
-	 * that account is an active supporter (a shared Steam ID gets no card, like the medal).
+	 * The account behind a Steam ID's player card; null unless exactly one account lists it
+	 * and that account is an active supporter (a shared Steam ID gets no card, like the medal).
 	 */
-	card(steamId: string): Task<PlayerCardData | null> {
+	cardOwner(steamId: string): Task<string | null> {
 		if (!isValidSteamId(steamId)) {
 			return okAsync(null);
 		}
@@ -333,35 +333,44 @@ export class SubscriptionsService extends Service {
 				return okAsync(null);
 			}
 
-			return ResultAsync.combine([
-				this.byUser(account.id),
-				this.paymentSummary(account.id)
-			]).andThen(([row, payments]) => {
-				if (!isActive(row)) {
-					return okAsync(null);
-				}
+			return this.byUser(account.id).map((row) => (isActive(row) ? account.id : null));
+		});
+	}
 
-				return ResultAsync.combine([
-					this.services.playerPage.get(steamId),
-					this.services.rewards.forPlayer(steamId, null)
-				]).map(([page, rewards]): PlayerCardData => {
-					const record = cardRecord(page.leaderboardStats);
-					return {
-						steamId,
-						alias: page.alias,
-						avatarUrl: page.avatarUrl || null,
-						country: page.country,
-						labels: page.labels ?? [],
-						factions: cardFactions(page.leaderboardStats, page.elo),
-						winRate: record.winRate,
-						matches: record.matches,
-						ribbons: cardRibbons(rewards.rewards, ribbonManifest as RibbonManifestEntry[]),
-						supporterMonths: payments.months,
-						supporterSince: payments.since ?? ''
-					};
-				});
+	/** The supporter player card of a Steam ID and its account; null without a card. */
+	ownedCard(steamId: string): Task<{ userId: string; card: PlayerCardData } | null> {
+		return this.cardOwner(steamId).andThen((userId) => {
+			if (!userId) {
+				return okAsync(null);
+			}
+
+			return ResultAsync.combine([
+				this.paymentSummary(userId),
+				this.services.playerPage.get(steamId),
+				this.services.rewards.forPlayer(steamId, null)
+			]).map(([payments, page, rewards]) => {
+				const record = cardRecord(page.leaderboardStats);
+				const card: PlayerCardData = {
+					steamId,
+					alias: page.alias,
+					avatarUrl: page.avatarUrl || null,
+					country: page.country,
+					labels: page.labels ?? [],
+					factions: cardFactions(page.leaderboardStats, page.elo),
+					winRate: record.winRate,
+					matches: record.matches,
+					ribbons: cardRibbons(rewards.rewards, ribbonManifest as RibbonManifestEntry[]),
+					supporterMonths: payments.months,
+					supporterSince: payments.since ?? ''
+				};
+				return { userId, card };
 			});
 		});
+	}
+
+	/** The supporter player card of a Steam ID; null without a card (see `cardOwner`). */
+	card(steamId: string): Task<PlayerCardData | null> {
+		return this.ownedCard(steamId).map((owned) => owned?.card ?? null);
 	}
 
 	isActive(userId: string): Task<boolean> {
