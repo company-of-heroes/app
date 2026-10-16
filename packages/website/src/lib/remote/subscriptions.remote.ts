@@ -1,5 +1,6 @@
 import { command, getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
+import { z } from 'zod';
 import { unwrapAsync } from '$lib/errors/unwrap';
 
 function signedIn() {
@@ -27,4 +28,10 @@ export const startSupporterCheckout = command(() => {
 export const openSupporterPortal = command(() => {
 	const { services, user } = signedIn();
 	return unwrapAsync(services.subscriptions.portal(user.id));
+});
+
+/** Shows or hides the signed-in user on the supporters page (the medal stays). */
+export const setSupporterHidden = command(z.boolean(), (hidden) => {
+	const { services, user } = signedIn();
+	return unwrapAsync(services.subscriptions.setHidden(user.id, hidden));
 });

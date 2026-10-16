@@ -47,6 +47,10 @@ export function provideAppHost(): HostContext {
 		locale: () => getI18n().getLocale(),
 		openExternal: (url) =>
 			void openUrl(url).catch(() => app.toast.error(t('Could not open the link.'))),
+		openSupporters: (options) =>
+			void openUrl(`${SITE_URL}/supporters${options?.checkout ? '?checkout=1' : ''}`).catch(() =>
+				app.toast.error(t('Could not open the link.'))
+			),
 		href: (path) => path,
 		breadcrumbs: (steps, actions) => breadcrumbs.setTrail(steps, actions ?? null),
 		routes: {

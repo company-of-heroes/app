@@ -2768,5 +2768,9 @@
 	"Former supporters will be remembered here.": "이전 후원자는 여기에 기록됩니다.",
 	"1 month": "1개월",
 	"{count} months": "{count}개월",
-	"Support coh1stats for €5 a month: a medal, ribbons and a player card. See the current supporters and the hall of fame.": "월 €5로 coh1stats를 후원하세요: 메달, 리본, 플레이어 카드. 현재 후원자와 명예의 전당을 확인하세요."
+	"Support coh1stats for €5 a month: a medal, ribbons and a player card. See the current supporters and the hall of fame.": "월 €5로 coh1stats를 후원하세요: 메달, 리본, 플레이어 카드. 현재 후원자와 명예의 전당을 확인하세요.",
+	"Next payment on {date}": "다음 결제일 {date}",
+	"Ends on {date}": "{date}에 종료",
+	"Hide me from the supporters page": "후원자 페이지에서 나를 숨기기",
+	"Your medal stays visible.": "메달은 계속 표시됩니다."
 }

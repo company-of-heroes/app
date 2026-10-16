@@ -3,6 +3,7 @@
 	import { Button } from '@company-of-heroes/ui/button';
 	import * as Form from '@company-of-heroes/ui/form';
 	import { Input } from '@company-of-heroes/ui/input';
+	import { SupporterAccountSection } from '@company-of-heroes/ui/supporter';
 	import { fileInput } from '@company-of-heroes/ui/variants';
 	import { canRequestEmailChange, isPlaceholderEmail } from '@company-of-heroes/api';
 	import Seo from '$lib/components/seo/seo.svelte';
@@ -14,6 +15,7 @@
 		updatePassword,
 		updateProfile
 	} from '$lib/remote/account.remote';
+	import { openSupporterPortal, setSupporterHidden } from '$lib/remote/subscriptions.remote';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -55,6 +57,11 @@
 
 		return null;
 	});
+
+	async function manageSupporter() {
+		const { url } = await openSupporterPortal();
+		window.location.assign(url);
+	}
 
 	const profileIssue = $derived(updateProfile.fields.allIssues()?.[0]?.message);
 	const verificationIssue = $derived(requestVerification.fields.allIssues()?.[0]?.message);
@@ -277,3 +284,11 @@
 		{/snippet}
 	</Form.Group>
 </form>
+
+<SupporterAccountSection
+	status={data.supporter}
+	onmanage={manageSupporter}
+	onhidden={async (hidden) => {
+		await setSupporterHidden(hidden);
+	}}
+/>

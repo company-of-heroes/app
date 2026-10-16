@@ -213,6 +213,8 @@ export function provideWebsiteHost(): HostContext {
 
 	return provideHost({
 		locale: () => currentLocale(),
+		openSupporters: (options) =>
+			void goto(href(`/supporters${options?.checkout ? '?checkout=1' : ''}`)),
 		href: (path) => href(path),
 		routes: {
 			player: (id) => href(`/players/${id}`),
