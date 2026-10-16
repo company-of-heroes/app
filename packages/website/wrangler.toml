@@ -16,6 +16,15 @@ invocation_logs = true
 # STEAM_API_KEY, AUTH_HANDOFF_SECRET, TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET,
 # YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, AUTH_TOKEN_SECRET (PocketBase's /api/_auth/token,
 # same value there), SMURF_SERVICE_TOKEN (the smurf worker's own token, same value there)
+# Paddle secrets: PADDLE_API_KEY (customer portal sessions), PADDLE_WEBHOOK_SECRET (the
+# notification destination's secret key; verifies POST /api/paddle/webhook).
+
+# Paddle Billing (supporter subscription). Sandbox defaults: set PADDLE_ENV = "production" and
+# the live client-side token and price id before taking real payments.
+[vars]
+PADDLE_ENV = "sandbox"
+PUBLIC_PADDLE_CLIENT_TOKEN = ""
+PUBLIC_PADDLE_PRICE_ID = ""
 
 # Replay download limits per IP (src/lib/server/downloads.ts); namespace ids are account-unique.
 [[ratelimits]]

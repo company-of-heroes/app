@@ -1,4 +1,3 @@
-import { ClientResponseError } from 'pocketbase';
 import { okAsync } from 'neverthrow';
 import { parseRewardConditions } from '@company-of-heroes/api/rewards';
 import type { RewardCondition } from '@company-of-heroes/ui/reward/metrics';
@@ -6,7 +5,7 @@ import { cached } from '../cache';
 import { RELIC_BASE, type RelicResult } from '../clients/relic';
 import { isValidSteamId, steamIdFromRelicName } from '../domain/ratings';
 import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
-import { chunk, fromPb, pbMaybe, sequence, type Task } from '../result';
+import { chunk, fromPb, isUniqueCollision, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
 /** Automatch 1v1 (4–7) and 2v2 (8–11), one ladder per faction. */
@@ -85,16 +84,6 @@ function ladderRows(data: RelicLadderPage): LadderRow[] {
 			}
 		];
 	});
-}
-
-/** A create rejected by a unique index: another run (or the rewards job) was first. */
-function isUniqueCollision(error: unknown): boolean {
-	if (!(error instanceof ClientResponseError) || error.status !== 400) {
-		return false;
-	}
-
-	const data = (error.response?.data ?? {}) as Record<string, { code?: string } | undefined>;
-	return Object.values(data).some((field) => field?.code === 'validation_not_unique');
 }
 
 /** Rank 20 now or ever, on two of the 1v1/2v2 ladders. */

@@ -93,6 +93,7 @@
 		"./reward/types": "./src/reward/types.ts",
 		"./statistics": "./src/statistics/index.ts",
 		"./statistics/types": "./src/statistics/types.ts",
+		"./supporter/types": "./src/supporter/types.ts",
 		"./twitch": "./src/twitch/index.ts",
 		"./twitch/types": "./src/twitch/types.ts"
 	},
