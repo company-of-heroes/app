@@ -29,7 +29,7 @@ import {
 } from '$lib/utils/game';
 import { flagImageUrl } from '$lib/utils/leaderboard-resolvers';
 import { getActionIcon } from '$lib/utils/action-icons';
-import { getMedals } from '$lib/utils/medals';
+import { getMedals, getSupporterMedal } from '$lib/utils/medals';
 import { getRibbons } from '$lib/utils/ribbons';
 import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 import { isStreamerLive } from '$core/pocketbase/live-streamers-cache.svelte';
@@ -101,6 +101,7 @@ export function provideAppHost(): HostContext {
 			actionIcon: getActionIcon,
 			medals: getMedals,
 			ribbons: getRibbons,
+			supporterMedal: getSupporterMedal,
 			filesOrigin: () => new URL(PUBLIC_PB_URL || 'https://api.coh1stats.com').origin,
 			userAvatar: (user, options) =>
 				user.avatarUrl

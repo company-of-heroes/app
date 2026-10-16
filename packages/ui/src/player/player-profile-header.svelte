@@ -33,7 +33,7 @@
 	import PlayerLinks from './player-links.svelte';
 	import RewardIcons from '../reward/reward-icons.svelte';
 	import MatchResultStrip from './match-result-strip.svelte';
-	import PlayerStreamerIcon from './player-streamer-icon.svelte';
+	import PlayerNameIcons from './player-name-icons.svelte';
 	import { isStreamingLink } from './profile';
 	import SmurfAlert from './smurf-alert.svelte';
 	import SteamBanAlert from './steam-ban-alert.svelte';
@@ -143,7 +143,7 @@
 		{/snippet}
 		{#snippet kicker()}
 			<CountryFlag country={player.country} class="h-4" />
-			<PlayerStreamerIcon labels={player.labels} steamId={player.steamId} size={20} />
+			<PlayerNameIcons labels={player.labels} steamId={player.steamId} size={22} />
 			<PlayerLabels labels={player.labels} class="shrink-0" />
 			<span class="text-secondary-300 text-xs">
 				{t('Level {level}', { level: player.level })}

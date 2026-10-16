@@ -231,6 +231,8 @@ export type HostResolvers = {
 	medals: () => Medal[];
 	/** Reward ribbons from `shared-assets/ribbons`, in file order. Hosts without them return []. */
 	ribbons: () => Ribbon[];
+	/** Supporter medal from shared-assets/supporter. */
+	supporterMedal: () => string;
 	/** Origin of PocketBase file urls (`https://api.coh1stats.com`); guide images may come from it. */
 	filesOrigin: () => string;
 	/** Avatar for a comment author / mention; hosts may add a generated fallback. */

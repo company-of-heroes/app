@@ -43,7 +43,7 @@
 		PlayerLinks,
 		PlayerProfileLink,
 		playerPreviewId,
-		PlayerStreamerIcon
+		PlayerNameIcons
 	} from '@company-of-heroes/ui/player';
 	import { Badge, LiveBadge, PendingBadge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
@@ -440,7 +440,7 @@
 						/>
 					{/if}
 					<Player.LikeCount steamId={profile.steam.steamid} class="shrink-0" />
-					<PlayerStreamerIcon
+					<PlayerNameIcons
 						labels={labelsForSteamId(profile.steam.steamid)}
 						steamId={profile.steam.steamid}
 						size={20}

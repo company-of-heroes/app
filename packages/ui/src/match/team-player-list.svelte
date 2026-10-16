@@ -6,7 +6,7 @@
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import RankIcon from '../player/rank-icon.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import type { TeamSkillPlayer } from './team-player-skills.svelte';
 
 	type Props = {
@@ -81,7 +81,7 @@
 			{/if}
 			<CountryFlag country={player.country} />
 			<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
-			<PlayerStreamerIcon steamId={player.steamId} />
+			<PlayerNameIcons steamId={player.steamId} />
 			{#if player.href}
 				<PlayerProfileLink
 					href={player.href}

@@ -28,7 +28,7 @@
 	import { cn } from '$lib/utils';
 	import dayjs from '$lib/dayjs';
 	import { useI18n } from '$lib/i18n';
-	import { PlayerProfileLink, PlayerStreamerIcon } from '@company-of-heroes/ui/player';
+	import { PlayerProfileLink, PlayerNameIcons } from '@company-of-heroes/ui/player';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 
 	const { t } = useI18n();
@@ -336,7 +336,7 @@
 {#snippet cell_player({ row }: { row: ReportRow })}
 	{#if accusedSteamId(row)}
 		<span class="inline-flex min-w-0 items-center gap-1.5">
-			<PlayerStreamerIcon steamId={accusedSteamId(row)} />
+			<PlayerNameIcons steamId={accusedSteamId(row)} />
 			<PlayerProfileLink
 				href="/players/{accusedSteamId(row)}"
 				class={cn(

@@ -11,3 +11,12 @@ const urls = import.meta.glob<string>('../../../../../shared-assets/medals/*.svg
 const medals = medalsFrom(manifest as MedalManifestEntry[], urls);
 
 export const getMedals = () => medals;
+
+/** Supporter medal; same `no-inline` glob trick as above, from `shared-assets/supporter`. */
+const supporterUrls = import.meta.glob<string>('../../../../../shared-assets/supporter/medal.svg', {
+	eager: true,
+	query: '?no-inline',
+	import: 'default'
+});
+
+export const getSupporterMedal = () => Object.values(supporterUrls)[0] ?? '';

@@ -131,7 +131,7 @@ import {
 } from '$lib/remote/match-social.remote';
 import { getFactionFlagByLeaderboardId } from '$lib/utils/media/ranks';
 import { getActionIcon } from '$lib/utils/media/action-icons';
-import { getMedals } from '$lib/utils/media/medals';
+import { getMedals, getSupporterMedal } from '$lib/utils/media/medals';
 import { getRibbons } from '$lib/utils/media/ribbons';
 import {
 	flagImageUrl,
@@ -274,6 +274,7 @@ export function provideWebsiteHost(): HostContext {
 			actionIcon: getActionIcon,
 			medals: getMedals,
 			ribbons: getRibbons,
+			supporterMedal: getSupporterMedal,
 			filesOrigin: () => new URL(API_URL).origin,
 			userAvatar: (user, options) =>
 				user.avatarUrl ? withFileThumb(user.avatarUrl, options?.thumb) : undefined

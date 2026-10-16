@@ -5,7 +5,7 @@
 	import { useHost, type CommentTarget } from '../host/host.context';
 	import PlayerLabels from '../player/player-labels.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import { interactive, markdownProse, mePlayerText } from '../variants';
@@ -757,7 +757,7 @@
 			{/if}
 			<div class="min-w-0 flex-1">
 				<div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-					<PlayerStreamerIcon steamId={comment.user.steamIds?.[0]} />
+					<PlayerNameIcons steamId={comment.user.steamIds?.[0]} />
 					{#if href}
 						{@const steamId = comment.user.steamIds?.[0]}
 						{#if steamId}

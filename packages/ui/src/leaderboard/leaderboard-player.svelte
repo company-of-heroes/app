@@ -5,7 +5,7 @@
 	import { useHost } from '../host/host.context';
 	import type { LeaderboardStatRow } from '../format/types';
 	import PlayerLabels from '../player/player-labels.svelte';
-	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import PlayerClaimButton from '../player/player-claim-button.svelte';
@@ -33,7 +33,7 @@
 		<CountryFlag country={stat.profile.country} class="h-3.5" />
 		{#if !compact}
 			<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
-			<PlayerStreamerIcon labels={stat.profile.labels} {steamId} />
+			<PlayerNameIcons labels={stat.profile.labels} {steamId} />
 		{/if}
 		<span class="truncate">{stat.profile.alias}</span>
 		{#if !compact}

@@ -18,7 +18,7 @@
 	import { normalizeMapName } from '../format/player-format';
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
 	import { Badge, LiveBadge } from '../ui/badge';
 	import { Button } from '../ui/button';
@@ -500,7 +500,7 @@
 						''}
 					<List.Title>{t('Submitted by')}</List.Title>
 					<List.Value class="inline-flex min-w-0 items-center gap-1.5">
-						<PlayerStreamerIcon steamId={submittedBy.steamId} />
+						<PlayerNameIcons steamId={submittedBy.steamId} />
 						{#if submittedByHref && previewId}
 							<PlayerProfileLink
 								href={submittedByHref}

@@ -53,6 +53,7 @@ export function provideLocalHost(): HostContext {
 			actionIcon,
 			medals: () => [],
 			ribbons: () => [],
+			supporterMedal: () => '',
 			userAvatar: () => undefined
 		},
 		auth: {

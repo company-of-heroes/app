@@ -6,7 +6,7 @@
 	import { app } from '$core/app/context';
 	import { Button } from '$lib/components/ui/button';
 	import { CopyButton } from '@company-of-heroes/ui/copy-button';
-	import { PlayerStatsTable, PlayerStreamerIcon } from '@company-of-heroes/ui/player';
+	import { PlayerStatsTable, PlayerNameIcons } from '@company-of-heroes/ui/player';
 	import { MatchHistory } from '../match-history';
 	import { relic } from '$lib/relic';
 	import { getPlayerRating } from '$core/pocketbase/player-ratings';
@@ -27,7 +27,7 @@
 		<div class="py-2">
 			<div class="flex min-w-0 items-center gap-2.5">
 				<Profile.Flag class="relative -ms-0.5" />
-				<PlayerStreamerIcon
+				<PlayerNameIcons
 					labels={labelsForSteamId(app.game.profile.steam.steamid)}
 					steamId={app.game.profile.steam.steamid}
 					size={24}
