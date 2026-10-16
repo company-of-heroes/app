@@ -64,7 +64,7 @@
 	async function load() {
 		try {
 			const [catalog] = await Promise.all([listUserLabels(), loadPlayerLabels([steamId])]);
-			labels = catalog;
+			labels = catalog.filter((label) => !label.system);
 		} catch (error) {
 			console.error('[PLAYER]: label editor load failed:', error);
 			app.toast.error(t('Could not load player labels.'));

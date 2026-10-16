@@ -49,6 +49,8 @@ export const Collections = {
 	Replays: 'replays',
 	ReputationTypes: 'reputation_types',
 	SmurfWatch: 'smurf_watch',
+	SubscriptionPayments: 'subscription_payments',
+	Subscriptions: 'subscriptions',
 	UserLabels: 'user_labels',
 	UserOverlays: 'user_overlays',
 	UserReputation: 'user_reputation',
@@ -594,6 +596,15 @@ export type ReputationTypesRecord = {
 	updated: IsoAutoDateString;
 };
 
+export const SubscriptionsStatusOptions = {
+	active: 'active',
+	past_due: 'past_due',
+	paused: 'paused',
+	canceled: 'canceled'
+} as const;
+export type SubscriptionsStatusOptions =
+	(typeof SubscriptionsStatusOptions)[keyof typeof SubscriptionsStatusOptions];
+
 export const SmurfWatchStatusOptions = {
 	pending_screening: 'pending_screening',
 	watching: 'watching',
@@ -663,14 +674,41 @@ export type SmurfWatchRecord<Tmain_candidates = unknown, Tsignals = unknown> = {
 	watching_since?: IsoDateString;
 };
 
+export type SubscriptionPaymentsRecord = {
+	amount?: number;
+	created: IsoAutoDateString;
+	currency?: string;
+	id: string;
+	paddleTransactionId: string;
+	paidAt: IsoDateString;
+	updated: IsoAutoDateString;
+	user: RecordIdString;
+};
+
+export type SubscriptionsRecord = {
+	cancelAt?: IsoDateString;
+	canceledAt?: IsoDateString;
+	created: IsoAutoDateString;
+	currentPeriodEnd?: IsoDateString;
+	id: string;
+	paddleCustomerId?: string;
+	paddleSubscriptionId: string;
+	paddleUpdatedAt?: IsoDateString;
+	status: SubscriptionsStatusOptions;
+	updated: IsoAutoDateString;
+	user: RecordIdString;
+};
+
 export type UserLabelsRecord = {
 	autoRank20?: boolean;
 	color: string;
 	conditions?: null | unknown;
 	created: IsoAutoDateString;
 	id: string;
+	key?: string;
 	name: string;
 	sort?: number;
+	system?: boolean;
 	tooltip?: string;
 	updated: IsoAutoDateString;
 };
@@ -722,6 +760,7 @@ export type UsersRecord<Tmeta = unknown, TsteamIds = unknown> = {
 	reputation?: number;
 	role?: UsersRoleOptions;
 	steamIds?: null | TsteamIds;
+	supporterHidden?: boolean;
 	tokenKey: string;
 	updated: IsoAutoDateString;
 	verified?: boolean;
@@ -838,6 +877,10 @@ export type SmurfWatchResponse<
 	Tsignals = unknown,
 	Texpand = unknown
 > = Required<SmurfWatchRecord<Tmain_candidates, Tsignals>> & BaseSystemFields<Texpand>;
+export type SubscriptionPaymentsResponse<Texpand = unknown> = Required<SubscriptionPaymentsRecord> &
+	BaseSystemFields<Texpand>;
+export type SubscriptionsResponse<Texpand = unknown> = Required<SubscriptionsRecord> &
+	BaseSystemFields<Texpand>;
 export type UserLabelsResponse<Texpand = unknown> = Required<UserLabelsRecord> &
 	BaseSystemFields<Texpand>;
 export type UserOverlaysResponse<Texpand = unknown> = Required<UserOverlaysRecord> &
@@ -898,6 +941,8 @@ export type CollectionRecords = {
 	replays: ReplaysRecord;
 	reputation_types: ReputationTypesRecord;
 	smurf_watch: SmurfWatchRecord;
+	subscription_payments: SubscriptionPaymentsRecord;
+	subscriptions: SubscriptionsRecord;
 	user_labels: UserLabelsRecord;
 	user_overlays: UserOverlaysRecord;
 	user_reputation: UserReputationRecord;
@@ -950,6 +995,8 @@ export type CollectionResponses = {
 	replays: ReplaysResponse;
 	reputation_types: ReputationTypesResponse;
 	smurf_watch: SmurfWatchResponse;
+	subscription_payments: SubscriptionPaymentsResponse;
+	subscriptions: SubscriptionsResponse;
 	user_labels: UserLabelsResponse;
 	user_overlays: UserOverlaysResponse;
 	user_reputation: UserReputationResponse;

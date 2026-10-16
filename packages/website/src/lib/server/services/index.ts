@@ -1,5 +1,6 @@
 import type PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
+import { PaddleClient, paddleEnv } from '../clients/paddle';
 import { RelicClient } from '../clients/relic';
 import { SteamClient } from '../clients/steam';
 import { createAdminPocketBase } from '../pb';
@@ -39,6 +40,7 @@ import { SocialService } from './social';
 import { SocialCompatService } from './social-compat';
 import { StatisticsService } from './statistics';
 import { StreamingService } from './streaming';
+import { SubscriptionsService } from './subscriptions';
 import { TournamentGamesService } from './tournament-games';
 import { TournamentNoticesService } from './tournament-notices';
 import { TournamentHostsService } from './tournament-hosts';
@@ -57,6 +59,7 @@ export class Clients {
 	#pb?: PocketBase;
 	#relic?: RelicClient;
 	#steam?: SteamClient;
+	#paddle?: PaddleClient;
 
 	constructor(
 		readonly fetch: Fetch,
@@ -74,6 +77,14 @@ export class Clients {
 
 	get steam(): SteamClient {
 		return (this.#steam ??= new SteamClient(this.fetch, env.STEAM_API_KEY ?? ''));
+	}
+
+	get paddle(): PaddleClient {
+		return (this.#paddle ??= new PaddleClient(
+			this.fetch,
+			env.PADDLE_API_KEY ?? '',
+			paddleEnv(env.PADDLE_ENV)
+		));
 	}
 
 	/** For PocketBase files: the api-gateway lets the website's own fetches past its per-IP download limit. */
@@ -246,6 +257,10 @@ export class Services {
 
 	get streaming() {
 		return this.#get('streaming', StreamingService);
+	}
+
+	get subscriptions() {
+		return this.#get('subscriptions', SubscriptionsService);
 	}
 
 	get tournamentGames() {

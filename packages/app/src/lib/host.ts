@@ -29,7 +29,7 @@ import {
 } from '$lib/utils/game';
 import { flagImageUrl } from '$lib/utils/leaderboard-resolvers';
 import { getActionIcon } from '$lib/utils/action-icons';
-import { getMedals } from '$lib/utils/medals';
+import { getMedals, getSupporterMedal } from '$lib/utils/medals';
 import { getRibbons } from '$lib/utils/ribbons';
 import { labelsForSteamId, preloadPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 import { isStreamerLive } from '$core/pocketbase/live-streamers-cache.svelte';
@@ -47,6 +47,10 @@ export function provideAppHost(): HostContext {
 		locale: () => getI18n().getLocale(),
 		openExternal: (url) =>
 			void openUrl(url).catch(() => app.toast.error(t('Could not open the link.'))),
+		openSupporters: (options) =>
+			void openUrl(`${SITE_URL}/supporters${options?.checkout ? '?checkout=1' : ''}`).catch(() =>
+				app.toast.error(t('Could not open the link.'))
+			),
 		href: (path) => path,
 		breadcrumbs: (steps, actions) => breadcrumbs.setTrail(steps, actions ?? null),
 		routes: {
@@ -55,6 +59,7 @@ export function provideAppHost(): HostContext {
 				`/compare/${id}` + (steamIds?.length ? `?accounts=${steamIds.join(',')}` : ''),
 			match: (lobbyId) => `/history/${lobbyId}`,
 			accountProfile: (steamId) => `/account/profile?steamId=${steamId}`,
+			playerCardUrl: (steamId) => `${SITE_URL}/card/${steamId}`,
 			login: () => '/account',
 			memberReplays: () => '/history',
 			memberReplay: (id) => `/replays/${id}`,
@@ -101,6 +106,7 @@ export function provideAppHost(): HostContext {
 			actionIcon: getActionIcon,
 			medals: getMedals,
 			ribbons: getRibbons,
+			supporterMedal: getSupporterMedal,
 			filesOrigin: () => new URL(PUBLIC_PB_URL || 'https://api.coh1stats.com').origin,
 			userAvatar: (user, options) =>
 				user.avatarUrl

@@ -354,3 +354,27 @@ while (manifest.length < COUNT) {
 
 fs.writeFileSync(path.join(OUT, 'medals.json'), `${JSON.stringify(manifest, null, '\t')}\n`);
 console.log(`Wrote ${manifest.length} medals to ${OUT}`);
+
+// Supporter medal (R11): separate from the picker set, own fixed seed, written after the loop so the 100 above stay byte-identical.
+state = 20261016;
+const SUPPORTER_OUT = path.join(OUT, '..', 'supporter');
+const supporterSpec = {
+	metal: 'gold',
+	shape: 'star',
+	enamel: 'red',
+	emblem: 'star',
+	ribbon: 'vcut',
+	suspension: 'ring',
+	title: 'Supporter',
+	stripes: [
+		{ color: '#8f2232', x: 12, width: 10 },
+		{ color: '#e0b23a', x: 22, width: 4 },
+		{ color: '#f4f1e8', x: 26, width: 12 },
+		{ color: '#e0b23a', x: 38, width: 4 },
+		{ color: '#8f2232', x: 42, width: 10 }
+	],
+	emblemSvg: EMBLEMS.star()
+};
+fs.mkdirSync(SUPPORTER_OUT, { recursive: true });
+fs.writeFileSync(path.join(SUPPORTER_OUT, 'medal.svg'), medal(0, supporterSpec).svg);
+console.log(`Wrote supporter medal to ${SUPPORTER_OUT}`);

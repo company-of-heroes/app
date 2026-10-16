@@ -119,6 +119,11 @@ export type HostRoutes = {
 	/** Compare page of the signed-in user vs this player; hosts without accounts omit it. */
 	compare?: (idOrSteamId: string | number, steamIds?: string[]) => string;
 	accountProfile: (steamId: string) => string;
+	/**
+	 * Supporter player card page of a Steam ID: a site link on the website, the absolute
+	 * website URL in the app (opened in the browser). Offline hosts return ''.
+	 */
+	playerCardUrl: (steamId: string) => string;
 	/** Login page that returns to `next` (default: the current page) afterwards. */
 	login: (next?: string) => string;
 	/**
@@ -231,6 +236,8 @@ export type HostResolvers = {
 	medals: () => Medal[];
 	/** Reward ribbons from `shared-assets/ribbons`, in file order. Hosts without them return []. */
 	ribbons: () => Ribbon[];
+	/** Supporter medal from shared-assets/supporter. */
+	supporterMedal: () => string;
 	/** Origin of PocketBase file urls (`https://api.coh1stats.com`); guide images may come from it. */
 	filesOrigin: () => string;
 	/** Avatar for a comment author / mention; hosts may add a generated fallback. */
@@ -548,6 +555,11 @@ export type HostContext = {
 	 * Hosts without it let the link open itself.
 	 */
 	openExternal?: (url: string) => void;
+	/**
+	 * Opens the supporters page, with the checkout when `checkout` is set. The website navigates
+	 * there; the app opens it in the browser. Hosts without it hide the call to action.
+	 */
+	openSupporters?: (options?: { checkout?: boolean }) => void;
 	/** Localize an internal path (website adds the locale prefix; the app returns it as is). */
 	href: (path: string) => string;
 	/**

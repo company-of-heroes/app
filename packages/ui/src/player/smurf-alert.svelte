@@ -15,7 +15,7 @@
 	import BinocularsIcon from 'phosphor-svelte/lib/BinocularsIcon';
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from './player-profile-link.svelte';
-	import PlayerStreamerIcon from './player-streamer-icon.svelte';
+	import PlayerNameIcons from './player-name-icons.svelte';
 
 	type Props = {
 		smurf: PlayerSmurf;
@@ -62,7 +62,7 @@
 			{#if lenderAvatar}
 				<img src={lenderAvatar} alt="" class="block size-4 shrink-0 rounded-sm object-cover" />
 			{/if}
-			<PlayerStreamerIcon steamId={smurf.lenderSteamId} size={14} />
+			<PlayerNameIcons steamId={smurf.lenderSteamId} size={14} />
 			<span class="leading-none">{smurf.lenderAlias}</span>
 			<ArrowRightIcon class="shrink-0" size={12} weight="bold" />
 		</PlayerProfileLink>

@@ -24,7 +24,9 @@ export const REWARD_METRICS = [
 	'account_age_days',
 	'hours_streamed',
 	'fair_play_matches',
-	'overlay_published'
+	'overlay_published',
+	'supporter_active',
+	'supporter_months'
 ] as const;
 
 export type RewardMetric = (typeof REWARD_METRICS)[number];
@@ -135,7 +137,9 @@ export const REWARD_METRIC_CATALOG: Record<RewardMetric, RewardMetricInfo> = {
 	account_age_days: { label: 'Account age (days)', filters: [], unit: 'Days' },
 	hours_streamed: { label: 'Hours streamed', filters: [], unit: 'Hours' },
 	fair_play_matches: { label: 'Fair play matches', filters: [] },
-	overlay_published: { label: 'Overlay published', filters: [], boolean: true }
+	overlay_published: { label: 'Overlay published', filters: [], boolean: true },
+	supporter_active: { label: 'Supporter (active)', filters: [], boolean: true },
+	supporter_months: { label: 'Supporter months', filters: [], unit: 'Months' }
 };
 
 export const REWARD_RACE_IDS = [0, 1, 2, 3] as const;

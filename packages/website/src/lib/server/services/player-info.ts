@@ -8,6 +8,8 @@ export type PlayerLabel = {
 	color: string;
 	sort: number;
 	tooltip?: string;
+	key?: string;
+	system?: boolean;
 };
 
 /** Chunk size for `steamId = a || steamId = b ...` filters (PocketBase caps expressions per filter). */
@@ -39,13 +41,21 @@ export class PlayerInfoService extends Service {
 		type Row = {
 			steamId: string;
 			expand?: {
-				label?: { id: string; name: string; color: string; sort: number; tooltip?: string };
+				label?: {
+					id: string;
+					name: string;
+					color: string;
+					sort: number;
+					tooltip?: string;
+					key?: string;
+					system?: boolean;
+				};
 			};
 		};
 		return this.bySteamIds<Row>('player_label_assignments', steamIds, {
 			expand: 'label',
 			fields:
-				'steamId,expand.label.id,expand.label.name,expand.label.color,expand.label.sort,expand.label.tooltip'
+				'steamId,expand.label.id,expand.label.name,expand.label.color,expand.label.sort,expand.label.tooltip,expand.label.key,expand.label.system'
 		}).map((rows) => {
 			const result = new Map<string, PlayerLabel[]>();
 			for (const row of rows) {
@@ -60,7 +70,9 @@ export class PlayerInfoService extends Service {
 					name: label.name ?? '',
 					color: label.color || '#F8C630',
 					sort: Number(label.sort ?? 0),
-					...(label.tooltip ? { tooltip: label.tooltip } : {})
+					...(label.tooltip ? { tooltip: label.tooltip } : {}),
+					...(label.key ? { key: label.key } : {}),
+					...(label.system ? { system: true } : {})
 				});
 				result.set(row.steamId, list);
 			}
@@ -75,6 +87,16 @@ export class PlayerInfoService extends Service {
 		return this.bySteamIds<{ steamId: string; likeCount: number }>('player_vote_scores', steamIds, {
 			fields: 'steamId,likeCount'
 		}).map((rows) => new Map(rows.map((row) => [row.steamId, Number(row.likeCount) || 0])));
+	}
+
+	/** Last known alias per Steam id from the stored rating rows. */
+	aliases(steamIds: string[]): Task<Map<string, string>> {
+		return this.bySteamIds<{ steamId: string; alias?: string }>('player_ratings', steamIds, {
+			fields: 'steamId,alias'
+		}).map(
+			(rows) =>
+				new Map(rows.filter((row) => row.alias).map((row) => [row.steamId, String(row.alias)]))
+		);
 	}
 
 	/** Stored rating rows: Relic profile id and ELO per Steam id. */

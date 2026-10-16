@@ -7,8 +7,11 @@
 	import { flushHeader, flushHeaderDescription } from '$lib/components/ui/variants';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { Alert } from '$lib/components/ui/alert';
+	import { SupporterAccountSection, type SupporterStatus } from '@company-of-heroes/ui/supporter';
+	import { api, unwrapApi } from '$core/api';
 	import ImageCropper from '$lib/components/modals/image-cropper.svelte';
 	import { readFile } from '@tauri-apps/plugin-fs';
+	import { onMount } from 'svelte';
 	import { useI18n } from '$lib/i18n';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import ImageIcon from 'phosphor-svelte/lib/ImageIcon';
@@ -34,6 +37,15 @@
 	const isSessionLogin = $derived(app.account.isSessionLogin);
 	/** The main Steam ID carries the account rewards, like the wiki and the website. */
 	const rewardsSteamId = $derived(app.features.auth.user.steamIds?.[0] ?? null);
+
+	let supporter = $state.raw<SupporterStatus | null>(null);
+
+	// A failed load just leaves the section out; the rest of the page works without it.
+	onMount(() => {
+		void api.subscriptions.me().then((result) => {
+			supporter = result.isOk() ? result.value : null;
+		});
+	});
 
 	const selectAvatar = async () => {
 		const path = await open({
@@ -296,3 +308,16 @@
 		{/snippet}
 	</Form.Group>
 </Form.Root>
+
+{#if supporter}
+	<SupporterAccountSection
+		status={supporter}
+		onmanage={async () => {
+			const { url } = await unwrapApi(api.subscriptions.portal());
+			await openUrl(url);
+		}}
+		onhidden={async (hidden) => {
+			supporter = await unwrapApi(api.subscriptions.setHidden(hidden));
+		}}
+	/>
+{/if}

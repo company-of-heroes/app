@@ -1,10 +1,10 @@
 # Privacy Policy
 
-**Effective date:** October 15, 2026
+**Effective date:** October 16, 2026
 
 This Privacy Policy explains how **Code IT** (“we”, “us”) collects, uses, shares, and protects information when you use **Company of Heroes Companion** (also called the FKNOOBS App), the website at [https://coh1stats.com](https://coh1stats.com), and the API at [https://api.coh1stats.com](https://api.coh1stats.com) (together, the “Service”).
 
-We do **not** store or use sensitive personal data. We do not ask for your real name, phone number, home address, payment details, government ID, or anything similar.
+We do **not** store or use sensitive personal data. We do not ask for your real name, phone number, home address, government ID, or anything similar. If you become a supporter, payment is handled entirely by Paddle (see section 2g); we never receive or store your card or other payment details. If you have set your own email address, we pass it to Paddle when you open the checkout (see section 2g).
 
 The only personal contact detail we might store is an **email address**, and only if you replace the default generated address with a real one. New accounts get a random `@fknoobs.com` email that is not yours. We do not use email for marketing.
 
@@ -110,6 +110,12 @@ The separate **Replay Manager** desktop app works entirely on your device. It re
 
 We keep basic operational data such as app version, authentication/session tokens, and request logs needed to run and secure the Service.
 
+### g) Supporter subscription
+
+You can support the Service with a paid monthly **supporter subscription**. **Paddle** (paddle.com) is the payment processor and merchant of record for these subscriptions: Paddle collects and handles your payment details, issues invoices and takes care of VAT. We never receive or store card data. If you have set your own email address on your account, we pass it to Paddle when you open the checkout so it can send your receipts; the generated `@fknoobs.com` address is never sent. We store only what we need to run the subscription: your Paddle customer, subscription and transaction IDs, the subscription status, the end of the current billing period (and, after you cancel, the date it ends), payment dates, amounts and currency, and your setting to hide yourself from the supporters page.
+
+While your subscription is active, a **supporter medal** and a **Supporter** label are shown next to your name on the website and in the desktop app, and that is always public. The website also has a public **supporters page** and a public **player card** (a shareable page and PNG image) for active supporters, showing your name, the number of months you have supported and the date you became a supporter ("supporter since"). You can hide yourself from the supporters page in your account settings; your medal, Supporter label and player card stay visible while your subscription is active. To draw names written in non-Latin scripts on the player card image, our servers fetch the needed font from Google Fonts; only the characters to render are requested, and no visitor data is sent to Google.
+
 ## 3. How we use information
 
 We use information to:
@@ -124,6 +130,7 @@ We use information to:
 - hide match results from public listings when staff need to (for example during a tournament), including by lobby-name word list;
 - run tournaments: show who signed up, seed players by their rating, fill in match scores from the tournament games players started, hide those games until the tournament ends, and remind players and staff of deadlines;
 - show staff-assigned public badges next to Relic player names in the desktop app and on the website, and grant the Streamer badge after 12 hours of Company of Heroes streaming, and show that badge in green while you are streaming (based on the streaming reports the desktop app sends, which are public only as "this Steam ID is streaming right now");
+- run supporter subscriptions: activate and remove the medal and label, count supporter months, show the supporters page and player card, and keep payment records;
 - debug, maintain, and improve the Service;
 - comply with legal obligations.
 
@@ -146,6 +153,8 @@ We share information with:
 - **Twitch** — if you connect Twitch, and to list public Company of Heroes streams on the website;
 - **Google (YouTube)** — if you connect YouTube, to sign you in (via our website OAuth exchange) and so the app can read and post to your YouTube Live chat on your device;
 - **ElevenLabs** — if you use TTS with your own API key;
+- **Paddle** — payment processor and merchant of record if you subscribe as a supporter: it handles your payment details, invoices and VAT, receives your email address if you have set your own, and tells us the subscription and payment status;
+- **Google (Google Fonts)** — our servers fetch fonts to render non-Latin names in player card images; no visitor data is sent;
 - **Cloudflare** — to host and deliver the website;
 - staff moderators who review fair play reports, who can hide match results from public listings (including by lobby-name word list), who can hide fair-play screenshots from player views while still reviewing them, who can attach public badges to Relic/Steam player identities, and who can see comments marked as deleted together with the reason a moderator entered;
 

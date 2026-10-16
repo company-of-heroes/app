@@ -45,6 +45,16 @@ export function pbMaybe<T>(promise: Promise<T>, fallback?: string): Task<T | nul
 	);
 }
 
+/** A create rejected by a unique index: another request or job wrote the same key first. */
+export function isUniqueCollision(error: unknown): boolean {
+	if (!(error instanceof ClientResponseError) || error.status !== 400) {
+		return false;
+	}
+
+	const data = (error.response?.data ?? {}) as Record<string, { code?: string } | undefined>;
+	return Object.values(data).some((field) => field?.code === 'validation_not_unique');
+}
+
 /** Any other promise (fetch, crypto, R2); a rejection becomes a logged 500 or 502. */
 export function fromAsync<T>(promise: Promise<T>, fallback: string, status = 500): Task<T> {
 	return ResultAsync.fromPromise(promise, (error) => {

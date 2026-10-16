@@ -1,9 +1,9 @@
 import { ClientResponseError, type RecordModel } from 'pocketbase';
 import type { RewardCondition } from '@company-of-heroes/ui/reward/metrics';
-import { okAsync, ResultAsync } from 'neverthrow';
+import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { mapLimit } from '../concurrency';
 import type { ApiDeps } from '../deps';
-import type { ApiError } from '../errors';
+import { apiError, type ApiError } from '../errors';
 import { PlayersApi } from '../players/players';
 import { escapePocketBaseString, fromPbPromise, pbOptions, recordId } from '../pb';
 
@@ -12,6 +12,10 @@ export type UserLabel = RecordModel & {
 	color: string;
 	sort?: number;
 	tooltip?: string;
+	/** Stable identifier of a system label, e.g. `supporter`. */
+	key?: string;
+	/** Managed by the product: cannot be deleted or assigned by hand. */
+	system?: boolean;
 	/** Granted automatically for rank 20 on two 1v1/2v2 ladders. */
 	autoRank20?: boolean;
 	/** Reward conditions: granted to every linked Steam ID that meets all of them. */
@@ -25,6 +29,18 @@ export type PlayerLabelAssignment = RecordModel & {
 	label: string;
 	expand?: { label?: UserLabel };
 };
+
+/** The editable fields of a label; `system`, `key` and (on system labels) `conditions` are not. */
+export type UserLabelInput = {
+	name?: string;
+	color?: string;
+	tooltip?: string;
+	sort?: number;
+	autoRank20?: boolean;
+	conditions?: RewardCondition[] | null;
+};
+
+const SYSTEM_LABEL_MESSAGE = 'This label is managed by the product.';
 
 export const DEFAULT_LABEL_HEX = '#FEC766';
 
@@ -135,7 +151,72 @@ export class LabelsApi {
 		return this.listAssignmentsForSteamIds(steamIds).map(labelsBySteamId);
 	}
 
+	/** `system` and `key` are never taken from the caller. */
+	createUserLabel(data: UserLabelInput): ResultAsync<UserLabel, ApiError> {
+		const { name, color, tooltip, sort, autoRank20, conditions } = data;
+		return fromPbPromise(
+			this.deps.pocketbase
+				.collection('user_labels')
+				.create<UserLabel>(
+					{ name, color, tooltip, sort, autoRank20, conditions },
+					pbOptions(this.deps)
+				),
+			'Failed to create label.'
+		);
+	}
+
+	/** On a system label only name, colour, tooltip and sort change; the rest is dropped. */
+	updateUserLabel(id: string, data: UserLabelInput): ResultAsync<UserLabel, ApiError> {
+		return this.getUserLabel(id, 'Failed to update label.').andThen((label) => {
+			const { name, color, tooltip, sort, autoRank20, conditions } = data;
+			const patch = label.system
+				? { name, color, tooltip, sort }
+				: { name, color, tooltip, sort, autoRank20, conditions };
+			return fromPbPromise(
+				this.deps.pocketbase
+					.collection('user_labels')
+					.update<UserLabel>(id, patch, pbOptions(this.deps)),
+				'Failed to update label.'
+			);
+		});
+	}
+
+	/** A system label cannot be deleted. */
+	deleteUserLabel(id: string): ResultAsync<void, ApiError> {
+		return this.getUserLabel(id, 'Failed to delete label.')
+			.andThen((label) =>
+				label.system
+					? errAsync(apiError(403, SYSTEM_LABEL_MESSAGE))
+					: fromPbPromise(
+							this.deps.pocketbase.collection('user_labels').delete(id, pbOptions(this.deps)),
+							'Failed to delete label.'
+						)
+			)
+			.map(() => undefined);
+	}
+
+	private getUserLabel(id: string, message: string): ResultAsync<UserLabel, ApiError> {
+		return fromPbPromise(
+			this.deps.pocketbase
+				.collection('user_labels')
+				.getOne<UserLabel>(id, pbOptions(this.deps, { fields: 'id,system' })),
+			message
+		);
+	}
+
+	/** A system label cannot be assigned by hand. */
 	assign(data: {
+		steamId: string;
+		profileId: number;
+		alias?: string;
+		labelId: string;
+	}): ResultAsync<PlayerLabelAssignment, ApiError> {
+		return this.getUserLabel(data.labelId, 'Failed to assign label.').andThen((label) =>
+			label.system ? errAsync(apiError(403, SYSTEM_LABEL_MESSAGE)) : this.createAssignment(data)
+		);
+	}
+
+	private createAssignment(data: {
 		steamId: string;
 		profileId: number;
 		alias?: string;

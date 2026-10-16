@@ -5,6 +5,10 @@ export type PlayerLabel = {
 	sort?: number;
 	/** Shown on hover; empty shows none. */
 	tooltip?: string;
+	/** Stable identifier of a system label, e.g. `supporter`. */
+	key?: string | null;
+	/** Managed by the product: cannot be deleted or assigned by hand. */
+	system?: boolean;
 };
 
 export type PlayerEloSlot = {

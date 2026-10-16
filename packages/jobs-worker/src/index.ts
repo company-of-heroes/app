@@ -19,6 +19,8 @@ const JOBS: { name: string; every: number; offset: number; budgetMs?: number }[]
 	{ name: 'rewards-evaluate', every: 1, offset: 0, budgetMs: 30_000 },
 	// Auto labels from the 1v1/2v2 ladders (cached by the leaderboard pages).
 	{ name: 'label-auto', every: 30, offset: 25 },
+	// Hourly safety net for supporter labels: lapsed periods no webhook announced, unlinked IDs.
+	{ name: 'subscriptions-expire', every: 60, offset: 7 },
 	// Every minute, in parallel with the rest; picks up lobbies an earlier result-fill stored.
 	{ name: 'tournament-sync', every: 1, offset: 0 },
 	// Staff hear about tournament matches past their deadline.

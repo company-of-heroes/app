@@ -167,6 +167,7 @@ export {
 	sortUserLabels,
 	labelsBySteamId,
 	type UserLabel,
+	type UserLabelInput,
 	type PlayerLabelAssignment
 } from './labels';
 
@@ -240,3 +241,12 @@ export {
 	type ToUploadFileOptions,
 	type UploadImageKind
 } from './upload-file';
+
+export {
+	isPaddlePortalUrl,
+	SubscriptionsApi,
+	type SupporterCheckout,
+	type SupporterEntry,
+	type SupporterStatus,
+	type SupportersList
+} from './subscriptions';

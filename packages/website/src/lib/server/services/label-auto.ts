@@ -1,12 +1,12 @@
-import { ClientResponseError } from 'pocketbase';
 import { okAsync } from 'neverthrow';
 import { parseRewardConditions } from '@company-of-heroes/api/rewards';
+import { isLiveLabel } from '@company-of-heroes/ui/format/labels';
 import type { RewardCondition } from '@company-of-heroes/ui/reward/metrics';
-import { cached } from '../cache';
+import { cached, uncache } from '../cache';
 import { RELIC_BASE, type RelicResult } from '../clients/relic';
 import { isValidSteamId, steamIdFromRelicName } from '../domain/ratings';
 import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
-import { chunk, fromPb, pbMaybe, sequence, type Task } from '../result';
+import { chunk, fromPb, isUniqueCollision, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
 /** Automatch 1v1 (4–7) and 2v2 (8–11), one ladder per faction. */
@@ -32,6 +32,8 @@ const URLS_PER_CALL = 40;
  * the first run after a new label gets near it; the rest follow on the next run (`more`).
  */
 const GRANT_PER_RUN = 500;
+/** Live-label assignments removed per `removeLiveExcept` run; the rest follow on the next run. */
+const REMOVE_PER_RUN = 100;
 
 type Candidate = { steamId: string; profileId: number; alias: string };
 
@@ -87,16 +89,6 @@ function ladderRows(data: RelicLadderPage): LadderRow[] {
 	});
 }
 
-/** A create rejected by a unique index: another run (or the rewards job) was first. */
-function isUniqueCollision(error: unknown): boolean {
-	if (!(error instanceof ClientResponseError) || error.status !== 400) {
-		return false;
-	}
-
-	const data = (error.response?.data ?? {}) as Record<string, { code?: string } | undefined>;
-	return Object.values(data).some((field) => field?.code === 'validation_not_unique');
-}
-
 /** Rank 20 now or ever, on two of the 1v1/2v2 ladders. */
 function qualifies(stats: LadderStat[]): boolean {
 	const ladders = new Set(
@@ -115,9 +107,11 @@ function qualifies(stats: LadderStat[]): boolean {
  * Labels staff marked `autoRank20` (Veteran) go to every Steam ID with rank 20 (now or ever)
  * on two of the 1v1/2v2 ladders, in any mix of mode and faction. The job reads every ranked
  * player on those ladders; linked accounts are also checked on their personal stats (rewards
- * evaluate). An assignment is never taken back; when staff remove one by hand, a
- * `player_label_revocations` row keeps it from coming back. Labels with reward conditions
- * are checked by the `rewards-evaluate` job and assigned through `grantTo`.
+ * evaluate). An assignment is never taken back, except a live label (conditions with
+ * `supporter_active`), which `removeFrom` / `removeLiveExcept` take back once the account's
+ * subscription ends; when staff remove one by hand, a `player_label_revocations` row keeps
+ * it from coming back. Labels with reward conditions are checked by the `rewards-evaluate`
+ * job and assigned through `grantTo`.
  */
 export class LabelAutoService extends Service {
 	private autoLabelIds(): Task<string[]> {
@@ -414,5 +408,80 @@ export class LabelAutoService extends Service {
 		return this.candidate(steamId).andThen((candidate) =>
 			candidate ? this.grant(labelIds, [candidate]).map(({ granted }) => granted) : okAsync(0)
 		);
+	}
+
+	/** Deletes assignments one by one (a failure is logged and skipped); returns how many went. */
+	private remove(rows: { id: string; steamId: string }[]): Task<number> {
+		return sequence(rows, (row) =>
+			fromPb(
+				this.pb
+					.collection('player_label_assignments')
+					.delete(row.id)
+					.catch((error) => {
+						console.error('[labels] could not remove', row.id, row.steamId, error);
+						return false;
+					}),
+				'Could not remove label'
+			)
+		).andThen((removed) =>
+			// The player page caches its labels.
+			sequence([...new Set(rows.map((row) => row.steamId))], (steamId) =>
+				uncache(`player:${steamId}`)
+			).map(() => removed.filter(Boolean).length)
+		);
+	}
+
+	/** Takes live labels whose conditions stopped holding back from one Steam ID; returns how many. */
+	removeFrom(steamId: string, labelIds: string[]): Task<number> {
+		if (labelIds.length === 0) {
+			return okAsync(0);
+		}
+
+		const labels = labelIds.map((id) => this.pb.filter('label = {:id}', { id })).join(' || ');
+		return fromPb(
+			this.pb.collection('player_label_assignments').getFullList<{ id: string; steamId: string }>({
+				filter: `${this.pb.filter('steamId = {:steamId}', { steamId })} && (${labels})`,
+				fields: 'id,steamId'
+			}),
+			'Could not load labels'
+		).andThen((rows) => this.remove(rows));
+	}
+
+	/**
+	 * Job step: removes live-label assignments on Steam IDs outside `keep` (the non-shared
+	 * Steam IDs of active supporters), at most `REMOVE_PER_RUN`. Covers a Steam ID unlinked
+	 * from a supporter's account and a subscription whose end no webhook announced. A live
+	 * label staff assigned by hand to a non-supporter is removed too (live by design). The
+	 * assignments are read before `keep` is loaded, so one a new supporter's webhook created
+	 * meanwhile is never seen with a stale `keep`; any failed read removes nothing.
+	 */
+	removeLiveExcept(keep: () => Task<Set<string>>): Task<{ processed: number; more: boolean }> {
+		return this.conditionalLabels().andThen((labels) => {
+			const live = labels.filter((label) => isLiveLabel(label.conditions));
+			if (live.length === 0) {
+				return okAsync({ processed: 0, more: false });
+			}
+
+			return fromPb(
+				this.pb
+					.collection('player_label_assignments')
+					.getFullList<{ id: string; steamId: string }>({
+						filter: live
+							.map((label) => this.pb.filter('label = {:id}', { id: label.id }))
+							.join(' || '),
+						fields: 'id,steamId'
+					}),
+				'Could not load labels'
+			).andThen((rows) =>
+				keep().andThen((supporters) => {
+					const stale = rows.filter((row) => !supporters.has(row.steamId));
+					const batch = stale.slice(0, REMOVE_PER_RUN);
+					return this.remove(batch).map((processed) => ({
+						processed,
+						more: stale.length > batch.length
+					}));
+				})
+			);
+		});
 	}
 }

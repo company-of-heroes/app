@@ -22,6 +22,7 @@ import { ReputationApi } from './reputation/reputation';
 import { RewardsApi } from './rewards/rewards';
 import { SmurfWatchApi } from './smurf-watch/smurf-watch';
 import { StreamingApi } from './streaming/streaming';
+import { SubscriptionsApi } from './subscriptions/subscriptions';
 import { TournamentsApi } from './tournaments/tournaments';
 import { TwitchApi } from './twitch/twitch';
 
@@ -49,6 +50,7 @@ export type Api = {
 	rewards: RewardsApi;
 	smurfWatch: SmurfWatchApi;
 	streaming: StreamingApi;
+	subscriptions: SubscriptionsApi;
 	tournaments: TournamentsApi;
 	twitch: TwitchApi;
 };
@@ -78,6 +80,7 @@ export function createApi(deps: ApiDeps): Api {
 		rewards: new RewardsApi(deps),
 		smurfWatch: new SmurfWatchApi(deps),
 		streaming: new StreamingApi(deps),
+		subscriptions: new SubscriptionsApi(deps),
 		tournaments: new TournamentsApi(deps),
 		twitch: new TwitchApi(deps)
 	};

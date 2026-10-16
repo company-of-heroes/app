@@ -3,7 +3,7 @@
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import { useHost } from '../host/host.context';
 	import PlayerLabels from './player-labels.svelte';
-	import PlayerStreamerIcon from './player-streamer-icon.svelte';
+	import PlayerNameIcons from './player-name-icons.svelte';
 
 	type Props = {
 		/** An account: avatar, name and, with a Steam ID, its player profile and labels. */
@@ -49,7 +49,7 @@
 		<span class={cn('font-medium text-white', plain && 'truncate')}>{user.name}</span>
 	{/if}
 	{#if !plain}
-		<PlayerStreamerIcon steamId={user.steamId} />
+		<PlayerNameIcons steamId={user.steamId} />
 		<PlayerLabels {labels} />
 	{/if}
 </span>

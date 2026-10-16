@@ -21,6 +21,7 @@
 			<div class="flex items-stretch sm:hidden">
 				<LocaleSwitcher side="top" />
 			</div>
+			<a href={href('/supporters')} class={cn(interactive, footerLink)}>{t('Supporters')}</a>
 			<a href={href('/privacy')} class={cn(interactive, footerLink)}>{t('Privacy')}</a>
 			<a
 				href={GITHUB_URL}

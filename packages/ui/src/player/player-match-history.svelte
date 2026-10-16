@@ -30,7 +30,7 @@
 	import { formatStreak, streakClass } from '../format/ranks';
 	import type { MatchHistoryPlayer, PlayerPageData, TransformedMatch } from './types';
 	import PlayerLabels from './player-labels.svelte';
-	import PlayerStreamerIcon from './player-streamer-icon.svelte';
+	import PlayerNameIcons from './player-name-icons.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
 	import { useHost } from '../host/host.context';
@@ -146,7 +146,7 @@
 			class="ring-secondary-800 h-5 w-5 rounded-full object-cover ring-4"
 		/>
 		<PlayerLikeCount likeCount={matchPlayer.likeCount} class="shrink-0" />
-		<PlayerStreamerIcon labels={matchPlayer.labels} steamId={matchPlayer.steamId} />
+		<PlayerNameIcons labels={matchPlayer.labels} steamId={matchPlayer.steamId} />
 		{#if matchPlayer.steamId}
 			<PlayerProfileLink
 				href={host.routes.player(matchPlayer.steamId)}

@@ -1,9 +1,16 @@
+import type { RewardCondition, RewardMetric } from '../reward/metrics';
 import type { PlayerLabel } from './types';
 
 export const DEFAULT_LABEL_HEX = '#FEC766';
 
 /** Label granted automatically after 12 hours of streaming Company of Heroes. */
 export const STREAMER_LABEL_NAME = 'Streamer';
+
+/** `key` of the system label held by active supporters. */
+export const SUPPORTER_LABEL_KEY = 'supporter';
+
+/** Metrics that make a label live: the label is removed again once the condition stops holding. */
+export const SUPPORTER_METRICS: readonly RewardMetric[] = ['supporter_active', 'supporter_months'];
 
 const TOKEN_HEX: Record<string, string> = {
 	primary: '#FEC766',
@@ -44,4 +51,13 @@ export function sortPlayerLabels(labels: PlayerLabel[]): PlayerLabel[] {
 
 export function isStreamer(labels: PlayerLabel[] | null | undefined): boolean {
 	return (labels ?? []).some((label) => label.name === STREAMER_LABEL_NAME);
+}
+
+export function isSupporter(labels: PlayerLabel[] | null | undefined): boolean {
+	return (labels ?? []).some((label) => label.key === SUPPORTER_LABEL_KEY);
+}
+
+/** A label tied to an active subscription: it is taken back when the subscription ends. */
+export function isLiveLabel(conditions: readonly Pick<RewardCondition, 'metric'>[]): boolean {
+	return conditions.some((condition) => condition.metric === 'supporter_active');
 }

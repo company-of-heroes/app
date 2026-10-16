@@ -7,8 +7,6 @@
 	import { PlayerLabels as LabelBadges } from '@company-of-heroes/ui/player';
 	import PlayerLabelEditor from '$lib/components/player/player-label-editor.svelte';
 	import { app } from '$core/app/context';
-	import { pocketbase } from '$core/pocketbase';
-	import { fetch } from '$core/http/fetch';
 	import {
 		DEFAULT_LABEL_HEX,
 		labelColorSwatches,
@@ -16,13 +14,15 @@
 		labelsBySteamId,
 		listAssignmentsForSteamIds,
 		listUserLabels,
+		createUserLabel,
+		updateUserLabel,
+		deleteUserLabel,
 		type UserLabel
 	} from '$core/pocketbase/user-labels';
 	import {
 		refreshAllPlayerLabels,
 		setLabelsForSteamId
 	} from '$core/pocketbase/player-label-cache.svelte';
-	import type { Create, Update } from '$core/pocketbase/types';
 	import { relic } from '$lib/relic';
 	import { steam } from '$core/steam';
 	import { cn, isProfileId, isSteamId } from '$lib/utils';
@@ -59,6 +59,7 @@
 	let isSaving = $state(false);
 	let deletingId = $state<string | null>(null);
 	let editingId = $state<string | null>(null);
+	let editingSystem = $state(false);
 	let nameField: HTMLInputElement | undefined;
 	const previewName = $derived(name.trim());
 	const conditionsValid = $derived(
@@ -108,6 +109,7 @@
 		conditions.reset();
 		editingSort = 0;
 		editingId = null;
+		editingSystem = false;
 	}
 
 	function nextSort() {
@@ -148,6 +150,7 @@
 
 	const startEdit = (label: UserLabel) => {
 		editingId = label.id;
+		editingSystem = label.system ?? false;
 		name = label.name;
 		hex = labelHex(label.color);
 		tooltip = label.tooltip ?? '';
@@ -168,26 +171,24 @@
 		isSaving = true;
 		try {
 			if (editingId) {
-				const data: Update<'user_labels'> = {
+				await updateUserLabel(editingId, {
 					name: trimmed,
 					color: labelHex(hex),
 					tooltip: tooltip.trim(),
 					autoRank20,
 					conditions: unlock,
 					sort: editingSort
-				};
-				await pocketbase.collection('user_labels').update(editingId, data, { fetch });
+				});
 				app.toast.success(t('Label updated.'));
 			} else {
-				const data: Create<'user_labels'> = {
+				await createUserLabel({
 					name: trimmed,
 					color: labelHex(hex),
 					tooltip: tooltip.trim(),
 					autoRank20,
 					conditions: unlock,
 					sort: nextSort()
-				};
-				await pocketbase.collection('user_labels').create(data, { fetch });
+				});
 				app.toast.success(t('Label created.'));
 			}
 
@@ -213,7 +214,7 @@
 
 		deletingId = label.id;
 		try {
-			await pocketbase.collection('user_labels').delete(label.id, { fetch });
+			await deleteUserLabel(label.id);
 			if (editingId === label.id) {
 				resetForm();
 			}
@@ -392,16 +393,20 @@
 	layout="stacked"
 	wide
 	label={t('Unlock conditions')}
-	description={t(
-		'Like rewards: every linked Steam ID that meets all conditions gets this label. Checked with the rewards, never taken back. Leave empty to only hand it out yourself.'
-	)}
+	description={editingSystem
+		? t('Managed by supporter subscriptions')
+		: t(
+				'Like rewards: every linked Steam ID that meets all conditions gets this label. Checked with the rewards, never taken back. Leave empty to only hand it out yourself.'
+			)}
 >
-	<Reward.ConditionsField
-		editor={conditions}
-		maps={mapItems}
-		idPrefix="label-condition"
-		invalid={!conditionsValid}
-	/>
+	<fieldset class="contents" disabled={editingSystem}>
+		<Reward.ConditionsField
+			editor={conditions}
+			maps={mapItems}
+			idPrefix="label-condition"
+			invalid={!conditionsValid}
+		/>
+	</fieldset>
 </Form.Group>
 
 <section>
@@ -442,16 +447,18 @@
 				<PencilSimpleIcon size={16} />
 				{t('Edit')}
 			</Button>
-			<Button
-				type="button"
-				size="sm"
-				variant="destructive"
-				loading={deletingId === row.id}
-				onclick={() => removeLabel(row)}
-				aria-label={t('Delete')}
-			>
-				<TrashIcon size={16} />
-			</Button>
+			{#if !row.system}
+				<Button
+					type="button"
+					size="sm"
+					variant="destructive"
+					loading={deletingId === row.id}
+					onclick={() => removeLabel(row)}
+					aria-label={t('Delete')}
+				>
+					<TrashIcon size={16} />
+				</Button>
+			{/if}
 		</div>
 	{/snippet}
 	<DataTable

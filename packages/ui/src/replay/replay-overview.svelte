@@ -32,7 +32,7 @@
 	import MinusIcon from 'phosphor-svelte/lib/MinusIcon';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
 	import { liveLobbyPlayerHref, liveLobbyPlayerLabel } from '../live-lobby/links';
 	import { communityPlayerHref } from './links';
@@ -370,7 +370,7 @@
 						<PlayerLikeCount likeCount={likeCountForSteamId(steamId)} class="shrink-0" />
 					{/if}
 					{#if !cpu}
-						<PlayerStreamerIcon {steamId} />
+						<PlayerNameIcons {steamId} />
 					{/if}
 					{#if href}
 						{@const previewId = playerPreviewId({ steamId, profileId })}
@@ -476,7 +476,7 @@
 						<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 					{/if}
 					{#if !cpu}
-						<PlayerStreamerIcon steamId={player.steamId} />
+						<PlayerNameIcons steamId={player.steamId} />
 					{/if}
 					{#if href}
 						{@const previewId = playerPreviewId({

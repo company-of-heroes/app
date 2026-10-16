@@ -6,7 +6,7 @@
 	import {
 		PlayerProfileLink,
 		playerPreviewId,
-		PlayerStreamerIcon
+		PlayerNameIcons
 	} from '@company-of-heroes/ui/player';
 	import { labelsForSteamId } from '$core/pocketbase/player-label-cache.svelte';
 	import { cn } from '$lib/utils';
@@ -31,7 +31,7 @@
 
 <span class={cn('inline-flex min-w-0 items-center gap-1.5', className)}>
 	<PlayerLikeCount class="shrink-0" />
-	<PlayerStreamerIcon labels={labelsForSteamId(player.steamId)} steamId={player.steamId} />
+	<PlayerNameIcons labels={labelsForSteamId(player.steamId)} steamId={player.steamId} />
 	{#if previewId}
 		<PlayerProfileLink
 			{...restProps}

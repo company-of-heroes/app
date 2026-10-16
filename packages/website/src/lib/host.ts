@@ -131,7 +131,7 @@ import {
 } from '$lib/remote/match-social.remote';
 import { getFactionFlagByLeaderboardId } from '$lib/utils/media/ranks';
 import { getActionIcon } from '$lib/utils/media/action-icons';
-import { getMedals } from '$lib/utils/media/medals';
+import { getMedals, getSupporterMedal } from '$lib/utils/media/medals';
 import { getRibbons } from '$lib/utils/media/ribbons';
 import {
 	flagImageUrl,
@@ -213,6 +213,8 @@ export function provideWebsiteHost(): HostContext {
 
 	return provideHost({
 		locale: () => currentLocale(),
+		openSupporters: (options) =>
+			void goto(href(`/supporters${options?.checkout ? '?checkout=1' : ''}`)),
 		href: (path) => href(path),
 		routes: {
 			player: (id) => href(`/players/${id}`),
@@ -220,6 +222,7 @@ export function provideWebsiteHost(): HostContext {
 				href(`/compare/${id}`) + (steamIds?.length ? `?accounts=${steamIds.join(',')}` : ''),
 			match: (lobbyId) => href(`/replays/${lobbyId}`),
 			accountProfile: (steamId) => href(`/account/profile?steamId=${steamId}`),
+			playerCardUrl: (steamId) => href(`/card/${steamId}`),
 			login: (next) =>
 				loginRedirectHref(next ?? `${page.url.pathname}${page.url.search}`, currentLocale()),
 			steamLogin: () =>
@@ -274,6 +277,7 @@ export function provideWebsiteHost(): HostContext {
 			actionIcon: getActionIcon,
 			medals: getMedals,
 			ribbons: getRibbons,
+			supporterMedal: getSupporterMedal,
 			filesOrigin: () => new URL(API_URL).origin,
 			userAvatar: (user, options) =>
 				user.avatarUrl ? withFileThumb(user.avatarUrl, options?.thumb) : undefined

@@ -18,4 +18,6 @@ export type PlayerLabel = {
 	color: string;
 	sort?: number;
 	tooltip?: string;
+	key?: string | null;
+	system?: boolean;
 };

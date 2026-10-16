@@ -52,14 +52,15 @@ Until domains are moved, the old Worker keeps serving production traffic.
 
 [`.github/workflows/deploy-cloudflare.yml`](../../.github/workflows/deploy-cloudflare.yml) deploys on every push to `master`, only what changed:
 
-| Target | Deploys when these change |
-| --- | --- |
-| `coh1stats-website` | `packages/website`, `ui`, `api`, `i18n`, `game-data`, `shared-assets`, app map images, `POLICY.md`, `pnpm-lock.yaml` |
-| `coh1stats-api-gateway` | `packages/api-gateway` (incl. the built `overlay-default/`) |
-| `coh1stats-jobs-worker` | `packages/jobs-worker` |
-| `fknoobs-smurf-worker` | `packages/smurf-worker` |
+| Target                  | Deploys when these change                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `coh1stats-card-worker` | `packages/card-worker`, `ui`, `shared-assets`                                                                        |
+| `coh1stats-website`     | `packages/website`, `ui`, `api`, `i18n`, `game-data`, `shared-assets`, app map images, `POLICY.md`, `pnpm-lock.yaml` |
+| `coh1stats-api-gateway` | `packages/api-gateway` (incl. the built `overlay-default/`)                                                          |
+| `coh1stats-jobs-worker` | `packages/jobs-worker`                                                                                               |
+| `fknoobs-smurf-worker`  | `packages/smurf-worker`                                                                                              |
 
-The website deploys first; the workers follow (they bind to it). Run the workflow manually (**Actions → Deploy Cloudflare → Run workflow**) to deploy one target or all of them.
+The card worker deploys first (the website binds it as `CARD_RENDERER`), then the website; the other workers follow (they bind to the website). Run the workflow manually (**Actions → Deploy Cloudflare → Run workflow**) to deploy one target or all of them.
 
 Repository secrets:
 
@@ -86,13 +87,13 @@ pnpm --filter @company-of-heroes/website preview
 
 ## Environment variables
 
-| Variable                 | Where                                                   | Purpose                                                                                             |
-| ------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `PUBLIC_API_URL`         | `.env` / Cloudflare Worker vars                         | PocketBase API base URL (default: `https://api.coh1stats.com`)                                      |
-| `REPLAY_PROXY_SECRET`    | PocketBase `.env` and Cloudflare Worker vars (optional) | Shared secret so the website can fetch replay files without sharing one IP quota with every visitor |
-| `YOUTUBE_CLIENT_ID`      | Cloudflare Worker secrets                               | Google OAuth web client for desktop YouTube connect (Streaming)                                     |
-| `YOUTUBE_CLIENT_SECRET`  | Cloudflare Worker secrets                               | Google OAuth client secret (never ship in the desktop app)                                          |
-| `AUTH_HANDOFF_SECRET`    | Cloudflare Worker secrets                               | Signs Steam login handoff codes and YouTube OAuth state / token handoff                             |
+| Variable                | Where                                                   | Purpose                                                                                             |
+| ----------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `PUBLIC_API_URL`        | `.env` / Cloudflare Worker vars                         | PocketBase API base URL (default: `https://api.coh1stats.com`)                                      |
+| `REPLAY_PROXY_SECRET`   | PocketBase `.env` and Cloudflare Worker vars (optional) | Shared secret so the website can fetch replay files without sharing one IP quota with every visitor |
+| `YOUTUBE_CLIENT_ID`     | Cloudflare Worker secrets                               | Google OAuth web client for desktop YouTube connect (Streaming)                                     |
+| `YOUTUBE_CLIENT_SECRET` | Cloudflare Worker secrets                               | Google OAuth client secret (never ship in the desktop app)                                          |
+| `AUTH_HANDOFF_SECRET`   | Cloudflare Worker secrets                               | Signs Steam login handoff codes and YouTube OAuth state / token handoff                             |
 
 For local player card API testing, create `packages/website/.env`:
 
@@ -109,3 +110,31 @@ Google Cloud Console: create a **Web application** OAuth client. Authorized redi
 - `http://127.0.0.1:5174/api/v1/streaming/youtube/callback` (local website)
 
 PocketBase must have `STEAM_API_KEY` configured for the player card endpoint.
+
+## Supporter subscription
+
+The €5/month supporter subscription runs on [Paddle Billing](https://www.paddle.com/billing). Before its first release:
+
+1. **PocketBase first**: apply migrations `1791000066_subscriptions.js` and `1791000067_supporter_label.js` on production **before** the website release that uses them. Without them `/supporters` shows empty lists and every webhook answers 500 (Paddle retries).
+2. **Rewards**: seed the supporter rewards once:
+
+   ```bash
+   pnpm --filter @company-of-heroes/pocketbase seed:rewards --url https://api.coh1stats.com --production
+   ```
+
+3. **Card worker**: `coh1stats-card-worker` (`packages/card-worker`) renders the player card PNG. CI deploys it before the website; without it the card falls back to a static image.
+4. **Environment** on `coh1stats-website`:
+
+   | Variable                     | Where                     | Purpose                                                       |
+   | ---------------------------- | ------------------------- | ------------------------------------------------------------- |
+   | `PADDLE_ENV`                 | `wrangler.toml` `[vars]`  | `sandbox` or `production`                                     |
+   | `PUBLIC_PADDLE_CLIENT_TOKEN` | `wrangler.toml` `[vars]`  | Paddle.js client-side token                                   |
+   | `PUBLIC_PADDLE_PRICE_ID`     | `wrangler.toml` `[vars]`  | The €5/month price (`pri_…`)                                  |
+   | `PADDLE_API_KEY`             | Cloudflare Worker secrets | Server API key (customer portal sessions)                     |
+   | `PADDLE_WEBHOOK_SECRET`      | Cloudflare Worker secrets | Secret key of the notification destination; verifies webhooks |
+
+   `[vars]` in `wrangler.toml` overwrite the dashboard vars on **every** deploy. To go live, commit `PADDLE_ENV = "production"` and the live client token and price id in `wrangler.toml`; editing them in the dashboard is undone by the next deploy. Secrets are not touched by a deploy.
+
+5. **Paddle dashboard** (sandbox and live each have their own):
+   - **Notifications** → new destination `https://coh1stats.com/api/paddle/webhook` with the events `subscription.*` (created, updated, activated, canceled, past_due, paused, resumed, trialing) and `transaction.completed`; its secret key is `PADDLE_WEBHOOK_SECRET`.
+   - **Checkout** → **Website approval**: approve `coh1stats.com`, or the checkout does not open.

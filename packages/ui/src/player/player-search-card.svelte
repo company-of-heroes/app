@@ -10,7 +10,7 @@
 	import * as List from '../ui/list';
 	import type { LeaderboardStat, PlayerLabel, PlayerSearchResult } from './types';
 	import PlayerLabels from './player-labels.svelte';
-	import PlayerStreamerIcon from './player-streamer-icon.svelte';
+	import PlayerNameIcons from './player-name-icons.svelte';
 	import PlayerLikeCount from './player-like-count.svelte';
 	import PlayerProfileLink from './player-profile-link.svelte';
 	import PlayerStatsTable from './player-stats-table.svelte';
@@ -83,7 +83,7 @@
 			>
 				<CountryFlag country={player.country} class="h-5" />
 				<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
-				<PlayerStreamerIcon {labels} steamId={player.steamId} size={18} />
+				<PlayerNameIcons {labels} steamId={player.steamId} size={18} />
 				<span class="font-heading truncate text-xl font-bold text-white">{player.alias}</span>
 				<PlayerLabels {labels} class="shrink-0" />
 			</PlayerProfileLink>

@@ -37,11 +37,17 @@ declare global {
 		}
 		/** Cloudflare bindings (wrangler.toml); absent in plain `vite dev`. */
 		interface Platform {
+			/** Workers Cache API (`caches.default`). */
+			caches?: { default: Cache };
+			context?: { waitUntil(promise: Promise<unknown>): void };
 			env?: {
 				DOWNLOAD_BURST?: RateLimiter;
 				DOWNLOAD_MINUTE?: RateLimiter;
 				FILE_BURST?: RateLimiter;
 				FILE_MINUTE?: RateLimiter;
+				CARD_LIMITER?: RateLimiter;
+				/** packages/card-worker: POST card data, get the PNG. */
+				CARD_RENDERER?: { fetch(input: string | Request, init?: RequestInit): Promise<Response> };
 				OVERLAYS?: import('$lib/server/services/overlays').OverlayBucket;
 			};
 		}

@@ -1,3 +1,11 @@
+import {
+	getRaceFromLeaderboardId,
+	getStoredEloForLeaderboard
+} from '@company-of-heroes/ui/format/player-format';
+import type { LeaderboardStat, PlayerEloMap } from '@company-of-heroes/ui/player/types';
+import type { RibbonManifestEntry } from '@company-of-heroes/ui/reward';
+import type { RewardView } from '@company-of-heroes/ui/reward/types';
+import type { PlayerCardFaction, PlayerCardRibbon } from '@company-of-heroes/ui/supporter/types';
 import { isRankedLeaderboard } from './ratings';
 
 /** The compact ladder summary of the (older) player card endpoint. */
@@ -53,4 +61,99 @@ export function cardStats(stats: Stat[]) {
 			losses: stat.losses ?? 0,
 			streak: stat.streak ?? 0
 		}));
+}
+
+/** The four armies, in race order (0 US, 1 Wehrmacht, 2 British, 3 Panzer Elite). */
+const RACES = [0, 1, 2, 3];
+/** Ribbons on the supporter card. */
+const CARD_RIBBONS = 5;
+
+type RibbonInfo = { title: string; series: string | null; level: number | null };
+
+/** Best ranked ladder (highest rank level, then best position) and best stored ELO per army. */
+export function cardFactions(
+	stats: LeaderboardStat[],
+	elo: PlayerEloMap | undefined
+): PlayerCardFaction[] {
+	return RACES.map((raceId) => {
+		const ladders = stats.filter(
+			(stat) =>
+				isRankedLeaderboard(stat.leaderboard_id) &&
+				getRaceFromLeaderboardId(stat.leaderboard_id) === raceId
+		);
+		const ranked = ladders
+			.filter((stat) => stat.rank > 0 && stat.ranklevel > 0)
+			.sort((a, b) => b.ranklevel - a.ranklevel || a.rank - b.rank)[0];
+		const ratings = ladders.flatMap((stat) => {
+			const rating = getStoredEloForLeaderboard(elo, stat.leaderboard_id);
+			return rating === null ? [] : [rating];
+		});
+		return {
+			raceId,
+			elo: ratings.length > 0 ? Math.round(Math.max(...ratings)) : null,
+			rank: ranked?.rank ?? null,
+			rankLevel: ranked?.ranklevel ?? null,
+			leaderboardId: ranked?.leaderboard_id ?? null
+		};
+	});
+}
+
+/** Ranked games and win rate across every ranked ladder. */
+export function cardRecord(stats: LeaderboardStat[]): { matches: number; winRate: number | null } {
+	let wins = 0;
+	let losses = 0;
+	for (const stat of stats) {
+		if (isRankedLeaderboard(stat.leaderboard_id)) {
+			wins += stat.wins ?? 0;
+			losses += stat.losses ?? 0;
+		}
+	}
+
+	const matches = wins + losses;
+	return { matches, winRate: matches > 0 ? wins / matches : null };
+}
+
+/**
+ * The latest unlocked ribbons, newest first; a ranked series shows only its highest level,
+ * like the ribbon rack on the profile.
+ */
+export function cardRibbons(
+	rewards: RewardView[],
+	manifest: RibbonManifestEntry[]
+): PlayerCardRibbon[] {
+	const byKey = new Map<string, RibbonInfo>(
+		manifest.map((entry) => [
+			entry.file.replace(/\.svg$/, ''),
+			{ title: entry.title, series: entry.series ?? null, level: entry.level ?? null }
+		])
+	);
+	const unlocked = rewards
+		.filter((reward) => reward.unlockedAt && reward.ribbon && byKey.has(reward.ribbon))
+		.sort((a, b) => Date.parse(b.unlockedAt ?? '') - Date.parse(a.unlockedAt ?? ''));
+	const best = new Map<string, number>();
+	for (const reward of unlocked) {
+		const info = byKey.get(reward.ribbon ?? '');
+		if (info?.series && info.level) {
+			best.set(info.series, Math.max(best.get(info.series) ?? 0, info.level));
+		}
+	}
+
+	const seen = new Set<string>();
+	const ribbons: PlayerCardRibbon[] = [];
+	for (const reward of unlocked) {
+		const key = reward.ribbon ?? '';
+		const info = byKey.get(key);
+		if (!info || seen.has(key)) {
+			continue;
+		}
+
+		if (info.series && info.level !== best.get(info.series)) {
+			continue;
+		}
+
+		seen.add(key);
+		ribbons.push({ key, title: info.title });
+	}
+
+	return ribbons.slice(0, CARD_RIBBONS);
 }

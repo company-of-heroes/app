@@ -268,6 +268,30 @@ const REWARDS = [
 		{ metric: 'overlay_published', threshold: 1 }
 	]),
 
+	// Supporter subscription: fixed ribbons (the supporter set is never handed out automatically).
+	...[
+		[1, '1 month', 'ribbon-401'],
+		[3, '3 months', 'ribbon-402'],
+		[6, '6 months', 'ribbon-403'],
+		[12, '12 months', 'ribbon-404'],
+		[24, '24 months', 'ribbon-405']
+	].map(([months, label, ribbon]) =>
+		one(
+			GLOBAL,
+			`Supporter — ${label}`,
+			`Supported coh1stats for ${label}.`,
+			[{ metric: 'supporter_months', threshold: months }],
+			{ ribbonKey: ribbon }
+		)
+	),
+	one(
+		GLOBAL,
+		'Founding Supporter',
+		'Supported coh1stats from the early days.',
+		[{ metric: 'supporter_months', threshold: 1 }],
+		{ ribbonKey: 'ribbon-406' }
+	),
+
 	one(
 		GLOBAL,
 		'Untouchable',
@@ -326,8 +350,10 @@ function ribbonPicker(existing) {
 		}
 	}
 
+	// The supporter set is reserved for the supporter rewards, which name their ribbon.
+	const pool = RIBBONS.filter((entry) => entry.faction !== 'supporter');
 	const slot = (series, level) =>
-		RIBBONS.find((item) => item.series === series && item.level === level);
+		pool.find((item) => item.series === series && item.level === level);
 	return (want) => {
 		if (want.series) {
 			let series = seriesFor.get(want.series);
@@ -339,13 +365,13 @@ function ribbonPicker(existing) {
 			if (!series) {
 				const candidates = [
 					...new Set(
-						RIBBONS.filter((entry) => entry.series && entry.raceId === want.raceId).map(
-							(entry) => entry.series
-						)
+						pool
+							.filter((entry) => entry.series && entry.raceId === want.raceId)
+							.map((entry) => entry.series)
 					)
 				];
 				series = candidates.find((name) =>
-					RIBBONS.filter((entry) => entry.series === name).every((entry) => !taken.has(key(entry)))
+					pool.filter((entry) => entry.series === name).every((entry) => !taken.has(key(entry)))
 				);
 				if (!series) {
 					return '';
@@ -359,7 +385,7 @@ function ribbonPicker(existing) {
 			return key(entry);
 		}
 
-		const entry = RIBBONS.find(
+		const entry = pool.find(
 			(item) => !item.series && item.raceId === want.raceId && !taken.has(key(item))
 		);
 		if (!entry) {
@@ -419,12 +445,14 @@ async function main() {
 	let skipped = 0;
 	for (const reward of REWARDS) {
 		const conditions = conditionsKey(reward.conditions);
-		if (titles.has(reward.title.toLowerCase()) || conditionSets.has(conditions)) {
+		// Rewards with a fixed ribbon (Founding Supporter) share conditions with another reward, so only the title counts.
+		const duplicate = reward.ribbonKey ? false : conditionSets.has(conditions);
+		if (titles.has(reward.title.toLowerCase()) || duplicate) {
 			skipped++;
 			continue;
 		}
 
-		const ribbon = pickRibbon(reward.ribbon);
+		const ribbon = reward.ribbonKey ?? pickRibbon(reward.ribbon);
 		if (!ribbon) {
 			throw new Error(`No free ribbon left for "${reward.title}".`);
 		}

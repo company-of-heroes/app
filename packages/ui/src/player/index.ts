@@ -21,7 +21,9 @@ import PlayerProfileSkeleton from './player-profile-skeleton.svelte';
 import PlayerSearchCard from './player-search-card.svelte';
 import PlayerSearchResults from './player-search-results.svelte';
 import PlayerProfileLink from './player-profile-link.svelte';
+import PlayerNameIcons from './player-name-icons.svelte';
 import PlayerStreamerIcon from './player-streamer-icon.svelte';
+import PlayerSupporterMedal from './player-supporter-medal.svelte';
 import StreamerBadgeProgress from './streamer-badge-progress.svelte';
 import RankIcon from './rank-icon.svelte';
 import TwitchLogo from './twitch-logo.svelte';
@@ -52,7 +54,9 @@ export {
 	PlayerSearchCard,
 	PlayerSearchResults,
 	PlayerProfileLink,
+	PlayerNameIcons,
 	PlayerStreamerIcon,
+	PlayerSupporterMedal,
 	StreamerBadgeProgress,
 	TwitchLogo,
 	YoutubeLogo
