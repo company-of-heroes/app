@@ -23,13 +23,13 @@
 			key: 'medal',
 			icon: MedalIcon,
 			title: t('Supporter medal'),
-			text: t('A medal next to your name on every player page, leaderboard and match.')
+			text: t('A medal next to your name across coh1stats.')
 		},
 		{
 			key: 'ribbons',
 			icon: MedalMilitaryIcon,
 			title: t('Supporter ribbons'),
-			text: t('Ribbons that unlock with every month you keep supporting. They stay with you.')
+			text: t('Ribbons that unlock as your supporter months add up. They stay with you.')
 		},
 		{
 			key: 'card',

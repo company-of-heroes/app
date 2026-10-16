@@ -17,6 +17,8 @@
 		status: SupporterStatus | null;
 		/** Back from the checkout: thank the user and wait for the payment to land. */
 		welcome?: boolean;
+		/** Open the checkout on arrival (back from the login). */
+		autoSubscribe?: boolean;
 		/** Become a supporter: the host signs the user in first, or opens the checkout. */
 		onsubscribe: () => void | Promise<void>;
 		/** Open the customer portal. */
@@ -25,7 +27,15 @@
 		loadStatus: () => Promise<SupporterStatus>;
 	};
 
-	let { list, status, welcome = false, onsubscribe, onmanage, loadStatus }: Props = $props();
+	let {
+		list,
+		status,
+		welcome = false,
+		autoSubscribe = false,
+		onsubscribe,
+		onmanage,
+		loadStatus
+	}: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
@@ -37,6 +47,10 @@
 
 	// The webhook may land a few seconds after the redirect: ask up to 5 times, 2 s apart.
 	onMount(() => {
+		if (autoSubscribe && status && !status.active) {
+			void run(onsubscribe);
+		}
+
 		if (!welcome || !status || status.active) {
 			return;
 		}
@@ -69,12 +83,22 @@
 		};
 	});
 
+	/** Error (or a SvelteKit HttpError from a remote command, which has `body.message`) to text. */
+	function errorMessage(error: unknown): string | null {
+		if (error instanceof Error) {
+			return error.message;
+		}
+
+		const message = (error as { body?: { message?: unknown } } | null)?.body?.message;
+		return typeof message === 'string' && message ? message : null;
+	}
+
 	async function run(action: () => void | Promise<void>) {
 		busy = true;
 		try {
 			await action();
 		} catch (error) {
-			host.notify.error(error instanceof Error ? error.message : t('Something went wrong'));
+			host.notify.error(errorMessage(error) ?? t('Something went wrong'));
 		} finally {
 			busy = false;
 		}
@@ -98,9 +122,7 @@
 				{t('Supporters')}
 			</h1>
 			<p class="text-secondary-400 max-w-2xl text-sm">
-				{t(
-					'coh1stats is built and paid for by one person. Supporters keep the servers running and get a few things in return.'
-				)}
+				{t('Support coh1stats and get a few things in return.')}
 			</p>
 		</div>
 		<div class="flex shrink-0 flex-col gap-3 sm:items-end">
@@ -147,7 +169,7 @@
 		<span class="text-secondary-500 text-xs tabular-nums">{list.current.length}</span>
 	{/if}
 </div>
-<SupporterList entries={list.current} empty={t('No supporters yet. Be the first!')} />
+<SupporterList medal entries={list.current} empty={t('No supporters yet. Be the first!')} />
 
 <div class={cn(flushHeader, 'flex items-center gap-2')}>
 	<p class={flushHeaderTitle}>{t('Hall of fame')}</p>

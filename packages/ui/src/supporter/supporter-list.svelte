@@ -10,11 +10,13 @@
 		entries: SupporterEntry[];
 		/** Shown when there are no entries. */
 		empty: string;
+		/** Show the medal: only for accounts that are supporters right now. */
+		medal?: boolean;
 		/** The last list before the footer: its closing line overlaps the footer's own border. */
 		last?: boolean;
 	};
 
-	let { entries, empty, last = false }: Props = $props();
+	let { entries, empty, medal = false, last = false }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 </script>
@@ -23,7 +25,9 @@
 <ul class={cn(last && '-mb-px')}>
 	{#each entries as entry (entry.steamId)}
 		<li class="border-secondary-800 flex items-center gap-3 border-b px-4 py-2.5">
-			<PlayerSupporterMedal force size={20} />
+			{#if medal}
+				<PlayerSupporterMedal force size={20} />
+			{/if}
 			{#if entry.avatarUrl}
 				<img
 					src={host.resolve.avatarUrl(entry.avatarUrl, { thumb: '100x100' })}

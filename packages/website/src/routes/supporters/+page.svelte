@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { SupportersPage } from '@company-of-heroes/ui/supporter';
-	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import Seo from '$lib/components/seo/seo.svelte';
 	import { currentLocale, href, useI18n } from '$lib/i18n';
@@ -25,6 +24,13 @@
 			return;
 		}
 
+		if (page.url.searchParams.has('checkout')) {
+			// Back from the login: drop the flag so a reload does not reopen the checkout.
+			const url = new URL(page.url);
+			url.searchParams.delete('checkout');
+			replaceState(url, page.state);
+		}
+
 		const checkout = await startSupporterCheckout();
 		await openCheckout(checkout, `${page.url.origin}${href('/supporters')}?welcome=1`);
 	}
@@ -33,13 +39,6 @@
 		const { url } = await openSupporterPortal();
 		window.location.assign(url);
 	}
-
-	// Back from the login with `?checkout=1`: open the checkout straight away.
-	onMount(() => {
-		if (data.checkout && data.status && !data.status.active) {
-			void subscribe().catch((error) => console.error('[supporters] checkout failed', error));
-		}
-	});
 </script>
 
 <Seo
@@ -53,6 +52,7 @@
 	list={data.list}
 	status={data.status}
 	welcome={data.welcome}
+	autoSubscribe={data.checkout}
 	onsubscribe={subscribe}
 	onmanage={manage}
 	loadStatus={() => getSupporterStatus()}
