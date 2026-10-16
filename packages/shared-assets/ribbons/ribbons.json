@@ -8445,5 +8445,167 @@
 		},
 		"series": "global-6",
 		"level": 5
+	},
+	{
+		"id": "r401",
+		"file": "ribbon-401.svg",
+		"title": "Supporter I",
+		"faction": "supporter",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#6e1f2e",
+			"#e0b23a",
+			"#efe6cf",
+			"#e0b23a",
+			"#6e1f2e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 1
+		},
+		"series": "supporter",
+		"level": 1
+	},
+	{
+		"id": "r402",
+		"file": "ribbon-402.svg",
+		"title": "Supporter II",
+		"faction": "supporter",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#6e1f2e",
+			"#e0b23a",
+			"#efe6cf",
+			"#e0b23a",
+			"#6e1f2e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "bronze",
+			"count": 2
+		},
+		"series": "supporter",
+		"level": 2
+	},
+	{
+		"id": "r403",
+		"file": "ribbon-403.svg",
+		"title": "Supporter III",
+		"faction": "supporter",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#6e1f2e",
+			"#e0b23a",
+			"#efe6cf",
+			"#e0b23a",
+			"#6e1f2e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 3
+		},
+		"series": "supporter",
+		"level": 3
+	},
+	{
+		"id": "r404",
+		"file": "ribbon-404.svg",
+		"title": "Supporter IV",
+		"faction": "supporter",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#6e1f2e",
+			"#e0b23a",
+			"#efe6cf",
+			"#e0b23a",
+			"#6e1f2e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "silver",
+			"count": 4
+		},
+		"series": "supporter",
+		"level": 4
+	},
+	{
+		"id": "r405",
+		"file": "ribbon-405.svg",
+		"title": "Supporter V",
+		"faction": "supporter",
+		"raceId": null,
+		"pattern": "pinstripes",
+		"stripes": [
+			"#6e1f2e",
+			"#e0b23a",
+			"#efe6cf",
+			"#e0b23a",
+			"#6e1f2e"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 5
+		},
+		"series": "supporter",
+		"level": 5
+	},
+	{
+		"id": "r406",
+		"file": "ribbon-406.svg",
+		"title": "Founding Supporter",
+		"faction": "supporter",
+		"raceId": null,
+		"pattern": "bands",
+		"stripes": [
+			"#e0b23a",
+			"#6e1f2e",
+			"#efe6cf",
+			"#6e1f2e",
+			"#e0b23a"
+		],
+		"device": {
+			"kind": "star",
+			"metal": "gold",
+			"count": 1
+		}
+	},
+	{
+		"id": "r407",
+		"file": "ribbon-407.svg",
+		"title": "Supporter Service",
+		"faction": "supporter",
+		"raceId": null,
+		"pattern": "edged",
+		"stripes": [
+			"#efe6cf",
+			"#6e1f2e",
+			"#efe6cf"
+		],
+		"device": null
+	},
+	{
+		"id": "r408",
+		"file": "ribbon-408.svg",
+		"title": "Supporter Honour",
+		"faction": "supporter",
+		"raceId": null,
+		"pattern": "split",
+		"stripes": [
+			"#6e1f2e",
+			"#e0b23a",
+			"#efe6cf"
+		],
+		"device": {
+			"kind": "oak",
+			"metal": "gold",
+			"count": 1
+		}
 	}
 ]

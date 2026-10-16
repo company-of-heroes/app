@@ -16,6 +16,7 @@ const SERIES_PER_FACTION = 3;
 const EXTRA_PER_FACTION = 25;
 const EXTRA_SERIES_PER_FACTION = 3;
 const LEVELS = 5;
+const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 const LEVEL_METALS = ['bronze', 'bronze', 'silver', 'silver', 'gold'];
 const WIDTH = 70;
 const HEIGHT = 20;
@@ -54,7 +55,9 @@ const COLORS = {
 	forest: '#34452c',
 	slate: '#4d545c',
 	rose: '#cf7792',
-	bordeaux: '#5e1d2a'
+	bordeaux: '#5e1d2a',
+	burgundy: '#6e1f2e',
+	cream: '#efe6cf'
 };
 
 /** A colour from `pool` that differs from `previous` (neighbouring stripes never share a colour). */
@@ -596,6 +599,66 @@ function batch(singles, seriesCount, firstSeries) {
 // Later batches are appended, so ribbons already stored on rewards keep their file names.
 batch(PER_FACTION, SERIES_PER_FACTION, 1);
 batch(EXTRA_PER_FACTION, EXTRA_SERIES_PER_FACTION, SERIES_PER_FACTION + 1);
+
+// Supporter ribbons come last and are built without the RNG, so ribbons 001 to 400 stay as they were.
+const SUPPORTER = {
+	raceId: null,
+	key: 'supporter',
+	edge: [
+		['burgundy', 2.4],
+		['gold', 0.8]
+	]
+};
+const supporterSpecs = [
+	...Array.from({ length: LEVELS }, (_, i) => ({
+		title: `Supporter ${ROMAN[i]}`,
+		pattern: 'pinstripes',
+		stripes: [
+			['burgundy', 10],
+			['gold', 0.6],
+			['cream', 1.2],
+			['gold', 0.6],
+			['burgundy', 10]
+		],
+		device: { kind: 'star', metal: LEVEL_METALS[i], count: i + 1 },
+		extra: { series: 'supporter', level: i + 1 }
+	})),
+	{
+		title: 'Founding Supporter',
+		pattern: 'bands',
+		stripes: [
+			['gold', 3],
+			['burgundy', 4],
+			['cream', 2],
+			['burgundy', 4],
+			['gold', 3]
+		],
+		device: { kind: 'star', metal: 'gold', count: 1 }
+	},
+	{
+		title: 'Supporter Service',
+		pattern: 'edged',
+		stripes: [
+			['cream', 1.4],
+			['burgundy', 12],
+			['cream', 1.4]
+		],
+		device: null
+	},
+	{
+		title: 'Supporter Honour',
+		pattern: 'split',
+		stripes: [
+			['burgundy', 14],
+			['gold', 1.2],
+			['cream', 14]
+		],
+		device: { kind: 'oak', metal: 'gold', count: 1 }
+	}
+];
+for (const { extra, stripes, ...spec } of supporterSpecs) {
+	write(SUPPORTER, { ...spec, stripes: layout(stripes, SUPPORTER) }, extra);
+}
 
 fs.writeFileSync(path.join(OUT, 'ribbons.json'), `${JSON.stringify(manifest, null, '\t')}\n`);
 console.log(`Wrote ${manifest.length} ribbons to ${OUT}`);
