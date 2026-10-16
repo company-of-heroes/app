@@ -112,7 +112,7 @@ PocketBase must have `STEAM_API_KEY` configured for the player card endpoint.
 
 ## Supporter subscription
 
-The €5/month supporter subscription runs on [Paddle Billing](https://www.paddle.com/billing). Before its first release:
+The €4.99/month supporter subscription runs on [Paddle Billing](https://www.paddle.com/billing). Before its first release:
 
 1. **PocketBase first**: apply migrations `1791000066_subscriptions.js`, `1791000067_supporter_label.js` and `1791000068_rename_supporter_reward.js` on production **before** the website release that uses them. Without them `/supporters` shows empty lists and every webhook answers 500 (Paddle retries).
 2. **Rewards**: seed the supporter rewards once:
@@ -128,7 +128,7 @@ The €5/month supporter subscription runs on [Paddle Billing](https://www.paddl
    | ---------------------------- | ------------------------- | ------------------------------------------------------------- |
    | `PADDLE_ENV`                 | `wrangler.toml` `[vars]`  | `sandbox` or `production`                                     |
    | `PUBLIC_PADDLE_CLIENT_TOKEN` | `wrangler.toml` `[vars]`  | Paddle.js client-side token                                   |
-   | `PUBLIC_PADDLE_PRICE_ID`     | `wrangler.toml` `[vars]`  | The €5/month price (`pri_…`)                                  |
+   | `PUBLIC_PADDLE_PRICE_ID`     | `wrangler.toml` `[vars]`  | The €4.99/month price (`pri_…`)                               |
    | `PADDLE_API_KEY`             | Cloudflare Worker secrets | Server API key (customer portal sessions)                     |
    | `PADDLE_WEBHOOK_SECRET`      | Cloudflare Worker secrets | Secret key of the notification destination; verifies webhooks |
 

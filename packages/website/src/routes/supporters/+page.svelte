@@ -49,7 +49,7 @@
 <Seo
 	title={t('Supporters')}
 	description={t(
-		'Support coh1stats for €5 a month: a medal, ribbons and a player card. See the current supporters and the hall of fame.'
+		'Support coh1stats for €4.99 a month: a medal, ribbons and a player card. See the current supporters and the hall of fame.'
 	)}
 />
 

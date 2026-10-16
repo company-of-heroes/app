@@ -9,11 +9,14 @@
 	import MobileNav from '$lib/components/layout/mobile-nav.svelte';
 	import { cn } from '$lib/utils/cn';
 	import { Button } from '@company-of-heroes/ui/button';
-	import { rememberedReplaysListHref, uploadReplayPath } from '$lib/replays';
+	import { rememberedReplaysListHref } from '$lib/replays';
 	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
+	import SupporterDialogHost from '$lib/components/layout/supporter-dialog-host.svelte';
+	import { supporterDialog } from '$lib/supporter-dialog.svelte';
+	import { useIsSupporter } from '$lib/supporter-status.svelte';
 	import { interactive } from '$lib/utils/variants';
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
-	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
+	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
 	import { tooltip } from '@company-of-heroes/ui/attachments';
 
 	const { t } = useI18n();
@@ -29,7 +32,8 @@
 	]);
 
 	let replaysListHref = $state('/replays');
-	const uploadHref = $derived(href(uploadReplayPath(!!page.data.user)));
+	const supporter = useIsSupporter();
+	const supporterLabel = $derived(supporter.current ? t('Supporter') : t('Become a supporter'));
 
 	afterNavigate(() => {
 		replaysListHref = rememberedReplaysListHref();
@@ -119,15 +123,15 @@
 		</div>
 		<div class="border-secondary-800 hidden h-full items-center border-r px-3 sm:flex">
 			<Button
-				href={uploadHref}
 				variant="primary"
 				size="sm"
 				class="px-3"
-				aria-label={t('Upload replay')}
-				{@attach tooltip(t('Upload replay'))}
+				aria-label={supporterLabel}
+				{@attach tooltip(supporterLabel)}
+				onclick={() => (supporterDialog.open = true)}
 			>
-				<UploadSimpleIcon class="size-4" />
-				<span class="hidden lg:inline">{t('Upload replay')}</span>
+				<HeartIcon class="size-4" weight="fill" />
+				<span class="hidden lg:inline">{supporterLabel}</span>
 			</Button>
 		</div>
 		<div class="border-secondary-800 hidden h-full items-stretch border-r sm:flex">
@@ -139,3 +143,5 @@
 		<MobileNav />
 	</div>
 </header>
+
+<SupporterDialogHost />
