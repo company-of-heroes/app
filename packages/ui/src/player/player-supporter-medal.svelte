@@ -11,10 +11,12 @@
 		labels?: PlayerLabel[] | null;
 		steamId?: string | null;
 		size?: number;
+		/** Show the medal without checking labels (lists that already know they are supporters). */
+		force?: boolean;
 		class?: string;
 	};
 
-	let { labels, steamId, size = 16, class: className }: Props = $props();
+	let { labels, steamId, size = 16, force = false, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = tryUseHost();
 	const resolved = $derived(
@@ -23,7 +25,7 @@
 	const medalUrl = $derived(host?.resolve.supporterMedal() ?? '');
 </script>
 
-{#if medalUrl && isSupporter(resolved)}
+{#if medalUrl && (force || isSupporter(resolved))}
 	<span
 		role="img"
 		aria-label={t('Supporter')}
