@@ -8,6 +8,8 @@ export type PlayerLabel = {
 	color: string;
 	sort: number;
 	tooltip?: string;
+	key?: string;
+	system?: boolean;
 };
 
 /** Chunk size for `steamId = a || steamId = b ...` filters (PocketBase caps expressions per filter). */
@@ -39,13 +41,21 @@ export class PlayerInfoService extends Service {
 		type Row = {
 			steamId: string;
 			expand?: {
-				label?: { id: string; name: string; color: string; sort: number; tooltip?: string };
+				label?: {
+					id: string;
+					name: string;
+					color: string;
+					sort: number;
+					tooltip?: string;
+					key?: string;
+					system?: boolean;
+				};
 			};
 		};
 		return this.bySteamIds<Row>('player_label_assignments', steamIds, {
 			expand: 'label',
 			fields:
-				'steamId,expand.label.id,expand.label.name,expand.label.color,expand.label.sort,expand.label.tooltip'
+				'steamId,expand.label.id,expand.label.name,expand.label.color,expand.label.sort,expand.label.tooltip,expand.label.key,expand.label.system'
 		}).map((rows) => {
 			const result = new Map<string, PlayerLabel[]>();
 			for (const row of rows) {
@@ -60,7 +70,9 @@ export class PlayerInfoService extends Service {
 					name: label.name ?? '',
 					color: label.color || '#F8C630',
 					sort: Number(label.sort ?? 0),
-					...(label.tooltip ? { tooltip: label.tooltip } : {})
+					...(label.tooltip ? { tooltip: label.tooltip } : {}),
+					...(label.key ? { key: label.key } : {}),
+					...(label.system ? { system: true } : {})
 				});
 				result.set(row.steamId, list);
 			}

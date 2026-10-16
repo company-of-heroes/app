@@ -768,6 +768,10 @@ export class RewardsService extends Service {
 					'user_overlays',
 					this.pb.filter('user = {:userId}', { userId: owner.id })
 				).map((count) => (count > 0 ? 1 : 0));
+			case 'supporter_active':
+			case 'supporter_months':
+				// The supporter subscriptions task fills these in.
+				return okAsync(0);
 			case 'reputation':
 				return okAsync(owner.reputation);
 			case 'comments_created':

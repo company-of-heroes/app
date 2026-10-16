@@ -12,6 +12,10 @@ export type UserLabel = RecordModel & {
 	color: string;
 	sort?: number;
 	tooltip?: string;
+	/** Stable identifier of a system label, e.g. `supporter`. */
+	key?: string;
+	/** Managed by the product: cannot be deleted or assigned by hand. */
+	system?: boolean;
 	/** Granted automatically for rank 20 on two 1v1/2v2 ladders. */
 	autoRank20?: boolean;
 	/** Reward conditions: granted to every linked Steam ID that meets all of them. */
