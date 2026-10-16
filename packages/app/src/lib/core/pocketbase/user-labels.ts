@@ -6,6 +6,7 @@ import {
 	sortUserLabels as sortUserLabelsApi,
 	labelsBySteamId as labelsBySteamIdApi,
 	type UserLabel as ApiUserLabel,
+	type UserLabelInput,
 	type PlayerLabelAssignment as ApiPlayerLabelAssignment
 } from '@company-of-heroes/api';
 import type { PlayerLabelAssignmentsResponse, UserLabelsResponse } from './types';
@@ -60,4 +61,16 @@ export async function assignPlayerLabel(data: {
 
 export async function unassignPlayerLabel(assignmentId: string): Promise<void> {
 	await unwrapApi(api.labels.unassign(assignmentId));
+}
+
+export async function createUserLabel(data: UserLabelInput): Promise<void> {
+	await unwrapApi(api.labels.createUserLabel(data));
+}
+
+export async function updateUserLabel(id: string, data: UserLabelInput): Promise<void> {
+	await unwrapApi(api.labels.updateUserLabel(id, data));
+}
+
+export async function deleteUserLabel(id: string): Promise<void> {
+	await unwrapApi(api.labels.deleteUserLabel(id));
 }

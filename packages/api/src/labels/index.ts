@@ -6,5 +6,6 @@ export {
 	sortUserLabels,
 	labelsBySteamId,
 	type UserLabel,
+	type UserLabelInput,
 	type PlayerLabelAssignment
 } from './labels';

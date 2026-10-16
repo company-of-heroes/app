@@ -2733,5 +2733,6 @@
 	"Two against two": "2대2",
 	"Three against three": "3대3",
 	"Four against four": "4대4",
-	"Rank level {level}": "랭크 레벨 {level}"
+	"Rank level {level}": "랭크 레벨 {level}",
+	"Managed by supporter subscriptions": "후원 구독으로 관리됨"
 }
