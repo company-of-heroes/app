@@ -9,6 +9,7 @@
 	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
 	import { app } from '$core/app/context';
 	import { api, unwrapApi } from '$core/api';
+	import { refreshPlayerLabels } from '$core/pocketbase/player-label-cache.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { useI18n } from '$lib/i18n';
 
@@ -36,6 +37,15 @@
 
 			void api.subscriptions.me().then((result) => {
 				status = result.isOk() ? result.value : null;
+				// Labels are cached for the session: a subscription that started or ended since
+				// then would keep the medal wrong next to this account's names.
+				if (
+					status &&
+					steamId &&
+					status.active !== isSupporter(host.api.labels.forSteamId(steamId))
+				) {
+					refreshPlayerLabels(app.features.auth.user.steamIds ?? []);
+				}
 			});
 		}
 	);
