@@ -131,7 +131,7 @@
 			</p>
 		</div>
 		<div class="flex shrink-0 flex-col gap-3 sm:items-end">
-			<p class="font-heading text-3xl font-bold text-white">{t('€5 / month')}</p>
+			<p class="font-heading text-3xl font-bold text-white">{t('€4.99 / month')}</p>
 			<div class="flex flex-wrap items-center gap-2">
 				{#if active}
 					<Badge variant="success">{t('You are a supporter')}</Badge>

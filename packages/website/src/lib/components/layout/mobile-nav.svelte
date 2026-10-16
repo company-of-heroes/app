@@ -6,7 +6,7 @@
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import { cn } from '$lib/utils/cn';
 	import { Button } from '@company-of-heroes/ui/button';
-	import { rememberedReplaysListHref, uploadReplayPath } from '$lib/replays';
+	import { rememberedReplaysListHref } from '$lib/replays';
 	import {
 		currentLocale,
 		href,
@@ -18,10 +18,12 @@
 		type AppLocale
 	} from '$lib/i18n';
 	import { interactive } from '$lib/utils/variants';
+	import { supporterDialog } from '$lib/supporter-dialog.svelte';
+	import { useIsSupporter } from '$lib/supporter-status.svelte';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
+	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
 	import ListIcon from 'phosphor-svelte/lib/ListIcon';
-	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 
 	const { t } = useI18n();
@@ -29,7 +31,7 @@
 	let open = $state(false);
 	let replaysListHref = $state('/replays');
 	const locale = $derived(currentLocale());
-	const uploadHref = $derived(href(uploadReplayPath(!!page.data.user)));
+	const supporter = useIsSupporter();
 
 	const navLinks = $derived([
 		{ href: '/leaderboards', label: t('Leaderboards') },
@@ -133,13 +135,15 @@
 			<nav class="flex flex-1 flex-col overflow-y-auto">
 				<div class="border-secondary-800 border-b px-4 py-3">
 					<Button
-						href={uploadHref}
 						variant="primary"
 						class="w-full justify-center"
-						onclick={() => (open = false)}
+						onclick={() => {
+							open = false;
+							supporterDialog.open = true;
+						}}
 					>
-						<UploadSimpleIcon class="size-4" />
-						{t('Upload replay')}
+						<HeartIcon class="size-4" weight="fill" />
+						{supporter.current ? t('Supporter') : t('Become a supporter')}
 					</Button>
 				</div>
 				{#each navLinks as link (link.href)}
