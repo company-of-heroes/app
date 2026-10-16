@@ -335,7 +335,7 @@
 
 {#snippet cell_player({ row }: { row: ReportRow })}
 	{#if accusedSteamId(row)}
-		<span class="inline-flex min-w-0 items-center gap-1.5">
+		<span class="inline-flex min-w-0 items-center gap-2">
 			<PlayerNameIcons steamId={accusedSteamId(row)} />
 			<PlayerProfileLink
 				href="/players/{accusedSteamId(row)}"

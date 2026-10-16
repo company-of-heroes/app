@@ -29,7 +29,7 @@
 	);
 </script>
 
-<span class={cn('inline-flex min-w-0 items-center gap-1.5', className)}>
+<span class={cn('inline-flex min-w-0 items-center gap-2', className)}>
 	<PlayerLikeCount class="shrink-0" />
 	<PlayerNameIcons labels={labelsForSteamId(player.steamId)} steamId={player.steamId} />
 	{#if previewId}

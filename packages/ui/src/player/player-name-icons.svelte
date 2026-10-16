@@ -23,8 +23,12 @@
 	const showStreamer = $derived(isStreamer(resolved));
 </script>
 
+<!--
+	Rows give the icons the same flex gap as everything else (gap-2); the extra mx-0.5 keeps them
+	visibly apart from the name on either side, so names read the same before or after them.
+-->
 {#if showMedal || showStreamer}
-	<span class={cn('inline-flex items-center gap-1', className)}>
+	<span class={cn('mx-0.5 inline-flex shrink-0 items-center gap-1', className)}>
 		<PlayerSupporterMedal labels={resolved ?? []} {steamId} {size} />
 		<PlayerStreamerIcon labels={resolved ?? []} {steamId} {size} />
 	</span>
