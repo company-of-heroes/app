@@ -3,6 +3,7 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import { useHost } from '../host/host.context';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { useCompare } from './context';
 
 	type Props = {
@@ -54,6 +55,7 @@
 		href={host.routes.player(them.profileId)}
 		class={cn(interactive, 'group flex min-w-0 flex-1 items-center justify-end gap-3')}
 	>
+		<PlayerNameIcons steamId={them.steamId} />
 		<span class="min-w-0 truncate text-lg font-semibold text-white group-hover:underline">
 			{them.alias}
 		</span>

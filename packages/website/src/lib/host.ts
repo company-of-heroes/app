@@ -1,3 +1,4 @@
+import { onMount } from 'svelte';
 import { dev } from '$app/environment';
 import { afterNavigate, goto, invalidateAll, replaceState } from '$app/navigation';
 import { page } from '$app/state';
@@ -201,8 +202,37 @@ function openNotification(notification: HostNotification) {
 	modal.open();
 }
 
+/**
+ * Keeps remote query handles referenced, at most `limit` (least recently used go first).
+ * SvelteKit evicts a query once its handle is garbage collected, and reading `.current` does
+ * not pin it: a handle dropped right after the read can be collected before the response
+ * arrives, and the value it showed then never updates.
+ */
+function heldQueries<T>(create: (key: string) => T, limit: number): (key: string) => T {
+	const held = new Map<string, T>();
+	return (key) => {
+		const handle = held.get(key) ?? create(key);
+		held.delete(key);
+		held.set(key, handle);
+		if (held.size > limit) {
+			// Safe to drop: a row that still shows it reads through the host again and gets a new one.
+			held.delete(held.keys().next().value as string);
+		}
+
+		return handle;
+	};
+}
+
 /** Website wiring for shared `@company-of-heroes/ui` components. Call once in the root layout. */
 export function provideWebsiteHost(): HostContext {
+	const playerLabels = heldQueries((steamId) => getPlayerLabels(steamId), 500);
+	const liveStreamers = heldQueries(() => getLiveStreamerIds(), 1);
+	// Held handles never refetch on their own; who is streaming changes while a visitor stays.
+	onMount(() => {
+		const timer = setInterval(() => void liveStreamers('').refresh(), 2 * 60_000);
+		return () => clearInterval(timer);
+	});
+
 	// Replay detail pages link back to the list (with its filters) the visitor came from.
 	afterNavigate(({ from }) => {
 		const path = from?.url?.pathname;
@@ -406,7 +436,7 @@ export function provideWebsiteHost(): HostContext {
 				save: (input) => saveProfileCustomization(input)
 			},
 			labels: {
-				forSteamId: (steamId) => getPlayerLabels(steamId).current ?? []
+				forSteamId: (steamId) => playerLabels(steamId).current ?? []
 			},
 			docs: {
 				saveNote: (kind, slug, body) => saveDocsNote({ kind, slug, body }),
@@ -418,7 +448,7 @@ export function provideWebsiteHost(): HostContext {
 					})
 			},
 			streaming: {
-				isLive: (steamId) => (getLiveStreamerIds().current ?? []).includes(steamId)
+				isLive: (steamId) => (liveStreamers('').current ?? []).includes(steamId)
 			},
 			rewards: {
 				forPlayer: (steamId) => getPlayerRewards(steamId)

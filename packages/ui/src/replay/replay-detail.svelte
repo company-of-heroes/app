@@ -499,7 +499,7 @@
 						playerPreviewId({ steamId: submittedBy.steamId, profileId: submittedBy.profileId }) ??
 						''}
 					<List.Title>{t('Submitted by')}</List.Title>
-					<List.Value class="inline-flex min-w-0 items-center gap-1.5">
+					<List.Value class="inline-flex min-w-0 items-center gap-2">
 						<PlayerNameIcons steamId={submittedBy.steamId} />
 						{#if submittedByHref && previewId}
 							<PlayerProfileLink

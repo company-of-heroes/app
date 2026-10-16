@@ -25,7 +25,7 @@
 	const steamId = $derived(steamIdOf(stat));
 </script>
 
-<div class={cn('flex min-w-0 items-center gap-3', className)}>
+<div class={cn('flex min-w-0 items-center gap-3 overflow-hidden', className)}>
 	<PlayerProfileLink
 		href={host.routes.player(stat.profile.profile_id)}
 		class={cn(interactive, 'hover:text-primary flex min-w-0 items-center gap-2 font-medium')}
@@ -35,9 +35,14 @@
 			<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
 			<PlayerNameIcons labels={stat.profile.labels} {steamId} />
 		{/if}
-		<span class="truncate">{stat.profile.alias}</span>
-		{#if !compact}
-			<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
+		{#if compact}
+			<span class="truncate">{stat.profile.alias}</span>
+		{:else}
+			<!-- The name wins: the labels only get what is left and end in an ellipsis. -->
+			<span class="grid min-w-0 grid-cols-[minmax(0,max-content)_minmax(0,1fr)] items-center">
+				<span class="truncate">{stat.profile.alias}</span>
+				<PlayerLabels labels={stat.profile.labels} truncate class="ms-2" />
+			</span>
 		{/if}
 	</PlayerProfileLink>
 	{#if !compact && stat.profile.claimed === false}

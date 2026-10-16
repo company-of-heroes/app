@@ -5,8 +5,10 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import { useHost } from '../host/host.context';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import type { LeaderboardStatRow } from '../format/types';
 	import { useLeaderboard } from './context';
+	import { steamIdOf } from './highlights';
 
 	type Props = {
 		stat: LeaderboardStatRow;
@@ -34,6 +36,7 @@
 	>
 		<span class="text-secondary-500 w-8 shrink-0 tabular-nums">#{stat.rank}</span>
 		<CountryFlag country={stat.profile.country} />
+		<PlayerNameIcons labels={stat.profile.labels} steamId={steamIdOf(stat)} />
 		<span class="min-w-0 flex-1 truncate font-medium">{stat.profile.alias}</span>
 		{@render trailing()}
 	</button>

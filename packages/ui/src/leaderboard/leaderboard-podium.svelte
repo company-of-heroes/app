@@ -7,8 +7,10 @@
 	import CrownIcon from 'phosphor-svelte/lib/CrownIcon';
 	import { useHost } from '../host/host.context';
 	import PlayerLabels from '../player/player-labels.svelte';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import { useLeaderboard } from './context';
+	import { steamIdOf } from './highlights';
 	import { leaderboardRowId } from './leaderboard-state.svelte';
 	import LeaderboardChange from './leaderboard-change.svelte';
 	import LeaderboardElo from './leaderboard-elo.svelte';
@@ -98,17 +100,21 @@
 					class="absolute -right-3 -bottom-2 size-auto h-8 drop-shadow"
 				/>
 			</div>
-			<div class="flex w-full min-w-0 items-center justify-center gap-2">
+			<div class="flex w-full min-w-0 items-center justify-center gap-2 overflow-hidden">
 				<CountryFlag country={stat.profile.country} class="h-4" />
-				<span
-					class={cn(
-						'font-heading group-hover:text-primary truncate font-bold transition-colors',
-						first ? 'text-primary text-2xl' : 'text-xl text-white'
-					)}
-				>
-					{stat.profile.alias}
+				<PlayerNameIcons labels={stat.profile.labels} steamId={steamIdOf(stat)} size={20} />
+				<!-- The name wins: the labels only get what is left and end in an ellipsis. -->
+				<span class="grid min-w-0 grid-cols-[minmax(0,max-content)_minmax(0,1fr)] items-center">
+					<span
+						class={cn(
+							'font-heading group-hover:text-primary truncate font-bold transition-colors',
+							first ? 'text-primary text-2xl' : 'text-xl text-white'
+						)}
+					>
+						{stat.profile.alias}
+					</span>
+					<PlayerLabels labels={stat.profile.labels} truncate class="ms-2" />
 				</span>
-				<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
 			</div>
 			<div class="flex items-center gap-2 text-sm">
 				<LeaderboardElo elo={leaderboard.elo(stat)} />
