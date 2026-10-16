@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { flushHeader, flushHeaderTitle, overlayBackdrop } from '@company-of-heroes/ui/variants';
+	import {
+		flushHeader,
+		flushHeaderTitle,
+		overlayBackdrop,
+		surfaceModal
+	} from '@company-of-heroes/ui/variants';
 	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 	import { formatDate } from '../format/date';
@@ -69,7 +74,10 @@
 	<Dialog.Portal>
 		<Dialog.Overlay class={cn(overlayBackdrop, 'fixed inset-0 z-50')} />
 		<Dialog.Content
-			class="absolute top-0 left-1/2 z-50 mx-auto mt-12 flex max-h-[calc(100vh-6rem)] w-[720px] max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col overflow-hidden"
+			class={cn(
+				'absolute top-0 left-1/2 z-50 mx-auto mt-12 flex max-h-[calc(100vh-6rem)] w-[720px] max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col overflow-hidden outline-hidden',
+				surfaceModal
+			)}
 		>
 			<div class={cn(flushHeader, 'flex items-center justify-between gap-4')}>
 				<Dialog.Title class={cn(flushHeaderTitle, 'flex items-center gap-2')}>
@@ -92,8 +100,9 @@
 							<p class="text-secondary-400 text-sm">{t('Ends on {date}', { date: endDate })}</p>
 						{/if}
 					</div>
-					<div class="flex flex-wrap items-center gap-2">
+					<div class="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:items-center">
 						<Button
+							class="w-full justify-center sm:w-auto"
 							variant="ghost"
 							href={supportersHref}
 							onclick={() => {
@@ -104,11 +113,16 @@
 							{t('See the supporters')}
 						</Button>
 						{#if active}
-							<Button variant="secondary" loading={busy} onclick={() => run(onmanage)}>
+							<Button
+								class="w-full sm:w-auto"
+								variant="secondary"
+								loading={busy}
+								onclick={() => run(onmanage)}
+							>
 								{t('Manage subscription')}
 							</Button>
 						{:else}
-							<Button loading={busy} onclick={() => run(onsubscribe)}>
+							<Button class="w-full sm:w-auto" loading={busy} onclick={() => run(onsubscribe)}>
 								<HeartIcon size={16} weight="fill" />
 								{t('Become a supporter')}
 							</Button>

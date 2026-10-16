@@ -16,9 +16,6 @@
 
 	const signedIn = $derived(!!page.data.user);
 	const known = useIsSupporter();
-	let endsAt = $state<string | null>(null);
-	let confirmedActive = $state(false);
-	const active = $derived(known.current || confirmedActive);
 
 	// The end date is only needed in the dialog: ask for it when the dialog opens, never per page view.
 	watch(
@@ -30,8 +27,8 @@
 
 			getSupporterStatus()
 				.then((status) => {
-					confirmedActive = status.active;
-					endsAt = status.endsAt ?? null;
+					supporterDialog.active = status.active;
+					supporterDialog.endsAt = status.endsAt ?? null;
 				})
 				.catch(() => {
 					// The dialog still works without the end date.
@@ -60,8 +57,8 @@
 
 <SupporterDialog
 	bind:open={supporterDialog.open}
-	{active}
-	{endsAt}
+	active={known.current}
+	endsAt={supporterDialog.endsAt}
 	supportersHref={href('/supporters')}
 	onsubscribe={subscribe}
 	onmanage={manage}

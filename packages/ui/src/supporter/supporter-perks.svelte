@@ -40,7 +40,7 @@
 		{
 			key: 'page',
 			icon: UsersThreeIcon,
-			title: t('Your name on this page'),
+			title: t('Your name on the supporters page'),
 			text: t('Listed under current supporters, and in the hall of fame when you stop.')
 		}
 	]);

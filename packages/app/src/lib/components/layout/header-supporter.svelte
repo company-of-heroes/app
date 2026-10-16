@@ -3,7 +3,7 @@
 	import type { SupporterStatus } from '@company-of-heroes/ui/supporter/types';
 	import { isSupporter } from '@company-of-heroes/ui/format/labels';
 	import { useHost } from '@company-of-heroes/ui/host';
-	import { tooltip } from '@company-of-heroes/ui/attachments';
+	import { tooltip } from '$lib/attachments';
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import { watch } from 'runed';
 	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
@@ -20,9 +20,9 @@
 
 	// The main Steam ID carries the account rewards; its labels are already cached app-wide.
 	const steamId = $derived(app.features.auth.user.steamIds?.[0] ?? null);
+	// The fetched status is the truth; the label can lag behind a lapsed subscription.
 	const active = $derived(
-		(status?.active ?? false) ||
-			(steamId ? isSupporter(host.api.labels.forSteamId(steamId)) : false)
+		status ? status.active : steamId ? isSupporter(host.api.labels.forSteamId(steamId)) : false
 	);
 	const label = $derived(active ? t('Supporter') : t('Become a supporter'));
 
