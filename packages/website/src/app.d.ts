@@ -46,8 +46,6 @@ declare global {
 				FILE_BURST?: RateLimiter;
 				FILE_MINUTE?: RateLimiter;
 				CARD_LIMITER?: RateLimiter;
-				/** packages/card-worker: POST card data, get the PNG. */
-				CARD_RENDERER?: { fetch(input: string | Request, init?: RequestInit): Promise<Response> };
 				OVERLAYS?: import('$lib/server/services/overlays').OverlayBucket;
 			};
 		}

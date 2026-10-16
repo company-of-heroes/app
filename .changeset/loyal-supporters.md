@@ -7,7 +7,6 @@
 '@company-of-heroes/pocketbase': minor
 '@company-of-heroes/shared-assets': minor
 '@company-of-heroes/jobs-worker': minor
-'@company-of-heroes/card-worker': minor
 '@company-of-heroes/replay-parser': patch
 ---
 
