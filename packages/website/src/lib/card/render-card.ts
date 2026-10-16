@@ -17,14 +17,17 @@ function imagesReady(node: HTMLElement): Promise<unknown> {
 async function draw(node: HTMLElement): Promise<Blob> {
 	const [{ toBlob }] = await Promise.all([import('html-to-image'), document.fonts.ready]);
 	await imagesReady(node);
-	const blob = await toBlob(node, {
+	const options = {
 		width: CARD_LAYOUT_WIDTH,
 		height: CARD_LAYOUT_HEIGHT,
 		// Scaled up into an exact 1200×630 canvas, whatever the screen's pixel ratio.
 		canvasWidth: CARD_WIDTH,
 		canvasHeight: CARD_HEIGHT,
 		pixelRatio: 1
-	});
+	};
+	// WebKit leaves the inlined images out of the first rasterisation; the second has them.
+	await toBlob(node, options);
+	const blob = await toBlob(node, options);
 	if (!blob) {
 		throw new Error('The card could not be drawn');
 	}
@@ -45,11 +48,14 @@ export function renderCardPng(node: HTMLElement): Promise<Blob> {
 	return Promise.race([draw(node), timeout]).finally(() => clearTimeout(timer));
 }
 
-/** Stores the owner's card PNG; the server checks the owner, the size and the data. */
-export async function uploadCardPng(steamId: string, png: Blob): Promise<void> {
+/**
+ * Stores the owner's card PNG with the hash of the card data it was drawn from (the card
+ * page's `image.hash`); the server checks the owner and the image.
+ */
+export async function uploadCardPng(steamId: string, png: Blob, hash: string): Promise<void> {
 	const response = await fetch(`/api/v1/players/${steamId}/card.png`, {
 		method: 'POST',
-		headers: { 'content-type': 'image/png' },
+		headers: { 'content-type': 'image/png', 'x-card-hash': hash },
 		body: png
 	});
 	if (!response.ok) {

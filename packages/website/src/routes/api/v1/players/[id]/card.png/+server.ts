@@ -3,8 +3,8 @@ import { errAsync, okAsync } from 'neverthrow';
 import fallbackPng from '$lib/server/card/fallback.png?inline';
 import { CARD_MAX_BYTES, readCapped } from '$lib/server/domain/card-png';
 import { badRequest, rateLimited } from '$lib/server/errors';
-import { handle, requireUser } from '$lib/server/http';
-import { fromAsync } from '$lib/server/result';
+import { handle, requireStaff, requireUser } from '$lib/server/http';
+import { fromAsync, type Task } from '$lib/server/result';
 import type { RequestHandler } from './$types';
 
 /** A stored card is kept this long (edge cache and browsers). */
@@ -26,6 +26,7 @@ function fallback(): Response {
 	return new Response(fallbackBytes.slice(), {
 		headers: {
 			'content-type': 'image/png',
+			'x-content-type-options': 'nosniff',
 			'cache-control': `public, max-age=${FALLBACK_MAX_AGE}`
 		}
 	});
@@ -85,15 +86,29 @@ export const GET: RequestHandler = async ({ url, platform, params, locals }) => 
 			headers: {
 				'content-type': 'image/png',
 				'content-length': String(image.value.size),
+				// Owner-uploaded bytes: never sniffed or run as anything but an image.
+				'x-content-type-options': 'nosniff',
+				'content-security-policy': "default-src 'none'; sandbox",
 				'cache-control': `public, max-age=${CARD_MAX_AGE}`
 			}
 		})
 	);
 };
 
+/** Drops this data centre's cached copy of the card (other colos keep theirs up to an hour). */
+function purge(platform: App.Platform | undefined, url: URL): Task<void> {
+	const cache = platform?.caches?.default;
+	if (!cache) {
+		return okAsync(undefined);
+	}
+
+	return fromAsync(cache.delete(cacheKey(url)), 'Could not purge the card').map(() => undefined);
+}
+
 /**
  * The owner uploads the PNG their browser drew of their card (body: `image/png`, 1200×630,
- * at most 1 MB). Rate-limited per account; drops this colo's cached copy afterwards.
+ * at most 1 MB; `x-card-hash`: the hash of the card data it was drawn from, from the card
+ * page). Rate-limited per account; drops this colo's cached copy afterwards.
  */
 export const POST: RequestHandler = handle((event) => {
 	const { request, platform, params, locals, url } = event;
@@ -111,22 +126,37 @@ export const POST: RequestHandler = handle((event) => {
 						: errAsync(rateLimited('Too many card uploads. Try again in a minute.', 60))
 			);
 		})
-		.andThen((user) => locals.services.playerCards.authorize(user.id, params.id ?? ''))
-		.andThen(() =>
+		.andThen((user) =>
+			locals.services.playerCards.authorize(user.id, params.id ?? '').map(() => user)
+		)
+		.andThen((user) =>
+			// Only `image/png`: a non-simple type forces the CORS preflight that keeps cookie
+			// POSTs from other sites out (the API allows `*` without credentials). Do not loosen.
 			request.headers.get('content-type')?.split(';')[0].trim() === 'image/png'
-				? fromAsync(readCapped(request, CARD_MAX_BYTES), 'Could not read the card', 400)
+				? fromAsync(readCapped(request, CARD_MAX_BYTES), 'Could not read the card', 400).map(
+						(png) => ({ user, png })
+					)
 				: errAsync(badRequest('The card must be a PNG image.'))
 		)
-		.andThen((png) =>
-			png ? okAsync(png) : errAsync(badRequest('The card image is larger than 1 MB.'))
+		.andThen(({ user, png }) =>
+			png
+				? locals.services.playerCards.upload(
+						user.id,
+						params.id ?? '',
+						png,
+						request.headers.get('x-card-hash') ?? ''
+					)
+				: errAsync(badRequest('The card image is larger than 1 MB.'))
 		)
-		.andThen((png) => locals.services.playerCards.upload(params.id ?? '', png))
-		.andThen((stored) => {
-			const cache = platform?.caches?.default;
-			if (!cache) {
-				return okAsync(stored);
-			}
-
-			return fromAsync(cache.delete(cacheKey(url)), 'Could not purge the card').map(() => stored);
-		});
+		.andThen((stored) => purge(platform, url).map(() => stored));
 });
+
+/** Staff remove a stored card PNG (e.g. an abusive upload); the fallback image shows instead. */
+export const DELETE: RequestHandler = handle((event) =>
+	requireStaff(event)
+		.asyncAndThen((staff) =>
+			event.locals.services.playerCards.remove(staff.id, event.params.id ?? '')
+		)
+		.andThen(() => purge(event.platform, event.url))
+		.map(() => new Response(null, { status: 204 }))
+);

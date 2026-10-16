@@ -18,6 +18,7 @@
 	import DownloadSimpleIcon from 'phosphor-svelte/lib/DownloadSimpleIcon';
 	import UserIcon from 'phosphor-svelte/lib/UserIcon';
 	import type { PageData } from './$types';
+	import CardShareCopy from './card-share-copy.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
@@ -89,7 +90,7 @@
 		}
 
 		untrack(draw)
-			.then((png) => uploadCardPng(steamId, png))
+			.then((png) => uploadCardPng(steamId, png, image.hash))
 			.catch((error) => console.error('[card] could not update the PNG', error));
 	});
 </script>
@@ -125,10 +126,7 @@
 			style:width="{CARD_LAYOUT_WIDTH}px"
 			style:height="{CARD_LAYOUT_HEIGHT}px"
 		>
-			<PlayerCard
-				{card}
-				class="flex h-full flex-col [&>*]:shrink-0 [&>header]:shrink [&>header]:grow"
-			/>
+			<CardShareCopy {card} />
 		</div>
 	</div>
 {/if}
