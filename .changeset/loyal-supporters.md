@@ -8,7 +8,7 @@
 '@company-of-heroes/shared-assets': minor
 '@company-of-heroes/jobs-worker': minor
 '@company-of-heroes/card-worker': minor
-'@company-of-heroes/replay-parser': minor
+'@company-of-heroes/replay-parser': patch
 ---
 
 feat; supporter subscription with medal, supporter ribbons, player card and supporters page
