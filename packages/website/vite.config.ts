@@ -42,47 +42,6 @@ function phosphorIcons(): string[] {
 	return [...icons].sort();
 }
 
-/**
- * `import wasm from '<pkg>/<file>.wasm?module'` gives a compiled `WebAssembly.Module` (Workers
- * may not compile wasm from bytes at runtime). The build leaves the import to wrangler, whose
- * bundler compiles `.wasm` imports; `vite dev` runs in Node and compiles the file itself.
- */
-function wasmModulePlugin(): Plugin {
-	const PREFIX = '\0wasm-module:';
-	let serve = false;
-	return {
-		name: 'wasm-module',
-		enforce: 'pre',
-		configResolved(config) {
-			serve = config.command === 'serve';
-		},
-		async resolveId(source, importer) {
-			if (!source.endsWith('.wasm?module')) {
-				return null;
-			}
-
-			const specifier = source.slice(0, -'?module'.length);
-			if (!serve) {
-				return { id: specifier, external: true };
-			}
-
-			const resolved = await this.resolve(specifier, importer, { skipSelf: true });
-			return resolved ? PREFIX + resolved.id : null;
-		},
-		load(id) {
-			if (!id.startsWith(PREFIX)) {
-				return null;
-			}
-
-			const path = JSON.stringify(id.slice(PREFIX.length));
-			return [
-				`import { readFileSync } from 'node:fs';`,
-				`export default new WebAssembly.Module(readFileSync(${path}));`
-			].join('\n');
-		}
-	};
-}
-
 function sharedAssetsWatchPlugin(): Plugin {
 	return {
 		name: 'shared-assets-watch',
@@ -93,7 +52,7 @@ function sharedAssetsWatchPlugin(): Plugin {
 }
 
 export default defineConfig({
-	plugins: [wasmModulePlugin(), sharedAssetsWatchPlugin(), sveltekit(), tailwindcss()],
+	plugins: [sharedAssetsWatchPlugin(), sveltekit(), tailwindcss()],
 	optimizeDeps: {
 		include: ['@fknoobs/replay-parser', ...phosphorIcons()]
 	},

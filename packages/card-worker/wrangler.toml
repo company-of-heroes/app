@@ -1,0 +1,24 @@
+# Renders the supporter player card PNG (satori + resvg). Internal only: no public URL; the
+# website calls it through its CARD_RENDERER service binding with the card data as JSON.
+# Kept out of the website Worker so the ~1 MB of wasm does not weigh on every website request.
+name = "coh1stats-card-worker"
+main = "src/index.ts"
+compatibility_date = "2025-07-10"
+workers_dev = false
+preview_urls = false
+
+# Ribbons, medal and faction flags come from shared-assets through src/generated/assets.ts
+# (checked in; `pnpm generate` rewrites it after ribbons are added).
+[[rules]]
+type = "Text"
+globs = ["**/*.svg"]
+fallthrough = true
+
+[[rules]]
+type = "Data"
+globs = ["**/*.woff", "**/*.png"]
+fallthrough = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true

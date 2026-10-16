@@ -13,6 +13,7 @@ on:
         options:
           - all
           - website
+          - card-worker
           - api-gateway
           - jobs-worker
           - smurf-worker
@@ -30,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       website: ${{ steps.targets.outputs.website }}
+      card-worker: ${{ steps.targets.outputs.card-worker }}
       workers: ${{ steps.targets.outputs.workers }}
     steps:
       - name: Checkout repository
@@ -81,6 +83,12 @@ jobs:
             website=true
           fi
 
+          # The card worker draws ui labels/factions and shared-assets ribbons into the PNG.
+          card_worker=false
+          if wanted card-worker card-worker ui shared-assets; then
+            card_worker=true
+          fi
+
           workers=""
           for worker in api-gateway jobs-worker smurf-worker; do
             if wanted "$worker" "$worker"; then
@@ -88,13 +96,45 @@ jobs:
             fi
           done
           echo "website=$website" >> "$GITHUB_OUTPUT"
+          echo "card-worker=$card_worker" >> "$GITHUB_OUTPUT"
           echo "workers=[$workers]" >> "$GITHUB_OUTPUT"
-          echo "website=$website workers=[$workers]"
+          echo "website=$website card-worker=$card_worker workers=[$workers]"
+
+  # The website binds the card worker (CARD_RENDERER), so it deploys before the website.
+  card-worker:
+    needs: changes
+    if: needs.changes.outputs.card-worker == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter "@company-of-heroes/card-worker"
+
+      - name: Deploy card-worker
+        working-directory: packages/card-worker
+        run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   # api-gateway and jobs-worker bind to the website, so it deploys first.
   website:
-    needs: changes
-    if: needs.changes.outputs.website == 'true'
+    needs: [changes, card-worker]
+    # Run after the card worker, also when it was skipped (but not when it failed).
+    if: >-
+      !cancelled() && needs.changes.result == 'success' && needs.card-worker.result != 'failure' &&
+      needs.changes.outputs.website == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

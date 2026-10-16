@@ -1,18 +1,15 @@
 import { initWasm, Resvg } from '@resvg/resvg-wasm';
 import satori, { init as initSatori, type Font } from 'satori/standalone';
-import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm?module';
-import yogaWasm from 'satori/yoga.wasm?module';
-import nunitoRegular from '@fontsource/nunito-sans/files/nunito-sans-latin-400-normal.woff?inline';
-import nunitoBold from '@fontsource/nunito-sans/files/nunito-sans-latin-800-normal.woff?inline';
-import usFlag from '../../../../../shared-assets/factions/us.png?inline';
-import wmFlag from '../../../../../shared-assets/factions/wm.png?inline';
-import cwFlag from '../../../../../shared-assets/factions/cw.png?inline';
-import peFlag from '../../../../../shared-assets/factions/pe.png?inline';
-import medalSvg from '../../../../../shared-assets/supporter/medal.svg?raw';
+import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm';
+import yogaWasm from 'satori/yoga.wasm';
+import nunitoRegular from '@fontsource/nunito-sans/files/nunito-sans-latin-400-normal.woff';
+import nunitoBold from '@fontsource/nunito-sans/files/nunito-sans-latin-800-normal.woff';
 import { labelHex, sortPlayerLabels } from '@company-of-heroes/ui/format/labels';
 import { getRaceLabel } from '@company-of-heroes/ui/format/player-format';
 import { LEADERBOARD_MODES } from '@company-of-heroes/ui/leaderboard/modes';
 import type { PlayerCardData, PlayerCardFaction } from '@company-of-heroes/ui/supporter/types';
+import { FLAGS, MEDAL_SVG, RIBBONS } from './generated/assets';
+import { loadAdditionalAsset } from './fonts';
 
 /** Open Graph size. */
 export const CARD_WIDTH = 1200;
@@ -29,14 +26,6 @@ const COLOR = {
 	primary: '#fec766'
 };
 
-const FLAGS: Record<number, string> = { 0: usFlag, 1: wmFlag, 2: cwFlag, 3: peFlag };
-
-/** Ribbon SVGs load on demand: one module each, so only the five on a card are read. */
-const ribbonSvgs = import.meta.glob<string>('../../../../../shared-assets/ribbons/*.svg', {
-	query: '?raw',
-	import: 'default'
-});
-
 type Node = { type: string; props: Record<string, unknown> & { children?: unknown } };
 
 function h(type: string, style: Record<string, unknown>, children?: unknown, extra = {}): Node {
@@ -52,19 +41,6 @@ function img(
 	return { type: 'img', props: { src, width, height, style: { width, height, ...style } } };
 }
 
-/** Wasm and fonts are set up once per isolate. */
-let ready: Promise<Font[]> | null = null;
-
-function dataUrlBytes(url: string): ArrayBuffer {
-	const binary = atob(url.slice(url.indexOf(',') + 1));
-	const bytes = new Uint8Array(binary.length);
-	for (let i = 0; i < binary.length; i++) {
-		bytes[i] = binary.charCodeAt(i);
-	}
-
-	return bytes.buffer;
-}
-
 function base64(bytes: Uint8Array): string {
 	let binary = '';
 	for (let i = 0; i < bytes.length; i += 0x8000) {
@@ -78,27 +54,67 @@ function svgDataUrl(svg: string): string {
 	return `data:image/svg+xml;base64,${base64(new TextEncoder().encode(svg))}`;
 }
 
-function setup(): Promise<Font[]> {
-	ready ??= Promise.all([initWasm(resvgWasm), initSatori(yogaWasm)])
-		.then((): Font[] => [
-			{ name: 'Nunito Sans', data: dataUrlBytes(nunitoRegular), weight: 400, style: 'normal' },
-			{ name: 'Nunito Sans', data: dataUrlBytes(nunitoBold), weight: 800, style: 'normal' }
+const FONTS: Font[] = [
+	{ name: 'Nunito Sans', data: nunitoRegular, weight: 400, style: 'normal' },
+	{ name: 'Nunito Sans', data: nunitoBold, weight: 800, style: 'normal' }
+];
+
+/**
+ * Each wasm module is set up once per isolate, on its own: a failed attempt is retried on
+ * the next request, and a module that did initialize is never initialized twice (resvg
+ * throws "Already initialized" then, which would wedge the isolate).
+ */
+let resvgReady: Promise<void> | null = null;
+let yogaReady: Promise<void> | null = null;
+
+function once(init: () => Promise<void>, reset: () => void): Promise<void> {
+	return init().catch((error: unknown) => {
+		if (error instanceof Error && /already initialized/i.test(error.message)) {
+			return;
+		}
+
+		reset();
+		throw error;
+	});
+}
+
+function setup(): Promise<unknown> {
+	resvgReady ??= once(
+		() => initWasm(resvgWasm),
+		() => {
+			resvgReady = null;
+		}
+	);
+	yogaReady ??= once(
+		() => initSatori(yogaWasm),
+		() => {
+			yogaReady = null;
+		}
+	);
+	return Promise.all([resvgReady, yogaReady]);
+}
+
+/** Faction flags as data URLs, built on first use. */
+let flagUrls: Record<number, string> | null = null;
+
+function flagUrl(raceId: number): string {
+	flagUrls ??= Object.fromEntries(
+		Object.entries(FLAGS).map(([race, png]) => [
+			race,
+			`data:image/png;base64,${base64(new Uint8Array(png))}`
 		])
-		.catch((error) => {
-			ready = null;
-			throw error;
-		});
-	return ready;
+	);
+	return flagUrls[raceId] ?? '';
 }
 
 /** The Steam avatar as a data URL; null when it is missing or does not load in time. */
-async function loadAvatar(url: string | null, fetcher: typeof fetch): Promise<string | null> {
+async function loadAvatar(url: string | null): Promise<string | null> {
 	if (!url) {
 		return null;
 	}
 
 	try {
-		const response = await fetcher(url, { signal: AbortSignal.timeout(4000) });
+		const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
 		const type = response.headers.get('content-type') ?? '';
 		if (!response.ok || !/^image\/(jpeg|png)/.test(type)) {
 			return null;
@@ -110,14 +126,8 @@ async function loadAvatar(url: string | null, fetcher: typeof fetch): Promise<st
 	}
 }
 
-async function loadRibbons(keys: string[]): Promise<string[]> {
-	const svgs = await Promise.all(
-		keys.map((key) => {
-			const load = Object.entries(ribbonSvgs).find(([path]) => path.endsWith(`/${key}.svg`))?.[1];
-			return load ? load().catch(() => null) : Promise.resolve(null);
-		})
-	);
-	return svgs.flatMap((svg) => (svg ? [svgDataUrl(svg)] : []));
+function ribbonUrls(keys: string[]): string[] {
+	return keys.flatMap((key) => (RIBBONS[key] ? [svgDataUrl(RIBBONS[key])] : []));
 }
 
 function modeLabel(leaderboardId: number | null): string | null {
@@ -179,7 +189,7 @@ function factionNode(faction: PlayerCardFaction, last: boolean): Node {
 		},
 		[
 			h('div', { display: 'flex', alignItems: 'center', gap: 12 }, [
-				img(FLAGS[faction.raceId], 40, 24, { borderRadius: 3 }),
+				img(flagUrl(faction.raceId), 40, 24, { borderRadius: 3 }),
 				h('div', { color: COLOR.soft, fontSize: 22 }, getRaceLabel(faction.raceId))
 			]),
 			h(
@@ -234,7 +244,7 @@ function cardNode(data: PlayerCardData, avatar: string | null, ribbons: string[]
 				avatarNode(data.alias, avatar),
 				h('div', { display: 'flex', flexDirection: 'column', flex: 1, gap: 14, minWidth: 0 }, [
 					h('div', { display: 'flex', alignItems: 'center', gap: 12 }, [
-						img(svgDataUrl(medalSvg), 22, 40),
+						img(svgDataUrl(MEDAL_SVG), 22, 40),
 						h(
 							'div',
 							{ color: COLOR.primary, fontSize: 24, fontWeight: 800, letterSpacing: 1 },
@@ -320,19 +330,14 @@ function cardNode(data: PlayerCardData, avatar: string | null, ribbons: string[]
 }
 
 /** The supporter card as a 1200×630 PNG (satori lays it out, resvg rasterizes it). */
-export async function renderCardPng(
-	data: PlayerCardData,
-	options: { fetch: typeof fetch }
-): Promise<Uint8Array> {
-	const [fonts, avatar, ribbons] = await Promise.all([
-		setup(),
-		loadAvatar(data.avatarUrl, options.fetch),
-		loadRibbons(data.ribbons.map((ribbon) => ribbon.key))
-	]);
+export async function renderCardPng(data: PlayerCardData): Promise<Uint8Array> {
+	const [, avatar] = await Promise.all([setup(), loadAvatar(data.avatarUrl)]);
+	const ribbons = ribbonUrls(data.ribbons.map((ribbon) => ribbon.key));
 	const svg = await satori(cardNode(data, avatar, ribbons), {
 		width: CARD_WIDTH,
 		height: CARD_HEIGHT,
-		fonts
+		fonts: FONTS,
+		loadAdditionalAsset
 	});
 	const resvg = new Resvg(svg, { fitTo: { mode: 'original' } });
 	try {
