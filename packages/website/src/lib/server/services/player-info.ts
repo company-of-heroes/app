@@ -89,6 +89,16 @@ export class PlayerInfoService extends Service {
 		}).map((rows) => new Map(rows.map((row) => [row.steamId, Number(row.likeCount) || 0])));
 	}
 
+	/** Last known alias per Steam id from the stored rating rows. */
+	aliases(steamIds: string[]): Task<Map<string, string>> {
+		return this.bySteamIds<{ steamId: string; alias?: string }>('player_ratings', steamIds, {
+			fields: 'steamId,alias'
+		}).map(
+			(rows) =>
+				new Map(rows.filter((row) => row.alias).map((row) => [row.steamId, String(row.alias)]))
+		);
+	}
+
 	/** Stored rating rows: Relic profile id and ELO per Steam id. */
 	ratings(steamIds: string[]): Task<Map<string, { profileId: number; elo: EloMap }>> {
 		return this.bySteamIds<{ steamId: string; profileId: number; elo: unknown }>(

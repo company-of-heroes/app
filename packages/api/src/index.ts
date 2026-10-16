@@ -240,3 +240,11 @@ export {
 	type ToUploadFileOptions,
 	type UploadImageKind
 } from './upload-file';
+
+export {
+	SubscriptionsApi,
+	type SupporterCheckout,
+	type SupporterEntry,
+	type SupporterStatus,
+	type SupportersList
+} from './subscriptions';

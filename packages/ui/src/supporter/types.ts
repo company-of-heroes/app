@@ -13,3 +13,21 @@ export type SupporterStatus = {
 	/** Hidden from the public supporters page (the medal stays). */
 	hidden: boolean;
 };
+
+/** One account on the public supporters page (its main Steam ID). */
+export type SupporterEntry = {
+	steamId: string;
+	alias: string;
+	avatarUrl: string | null;
+	/** Paid months. */
+	months: number;
+	/** First payment (ISO). */
+	since: string;
+};
+
+export type SupportersList = {
+	/** Active subscribers: most months first, then earliest. */
+	current: SupporterEntry[];
+	/** Accounts that paid before and are not active now. */
+	former: SupporterEntry[];
+};

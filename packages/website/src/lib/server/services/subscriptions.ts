@@ -1,12 +1,35 @@
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
-import type { SupporterStatus } from '@company-of-heroes/ui/supporter/types';
-import type { PaddleEvent, PaddleSubscription, PaddleTransaction } from '../clients/paddle';
-import { internal } from '../errors';
+import type {
+	SupporterEntry,
+	SupporterStatus,
+	SupportersList
+} from '@company-of-heroes/ui/supporter/types';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
+import {
+	paddleEnv,
+	type PaddleEvent,
+	type PaddleSubscription,
+	type PaddleTransaction
+} from '../clients/paddle';
+import { avatarOf } from '../clients/steam';
+import { internal, notFound, upstream } from '../errors';
 import { steamIdsOf } from '../domain/users';
 import { chunk, fromPb, isUniqueCollision, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
-export type { SupporterStatus };
+export type { SupporterEntry, SupporterStatus, SupportersList };
+
+export type SupporterCheckout = {
+	priceId: string;
+	clientToken: string;
+	environment: 'sandbox' | 'production';
+	customData: { userId: string };
+	email: string | null;
+};
+
+/** The generated sign-up address; not a real inbox, so Paddle is not given it. */
+const PLACEHOLDER_EMAIL = '@fknoobs.com';
 
 type SubscriptionStatus = 'active' | 'past_due' | 'paused' | 'canceled';
 
@@ -131,6 +154,137 @@ export class SubscriptionsService extends Service {
 			currentPeriodEnd: iso(row?.currentPeriodEnd),
 			hidden: Boolean(user?.supporterHidden)
 		}));
+	}
+
+	/** What Paddle.js needs to open the checkout for this account. */
+	checkout(userId: string): Task<SupporterCheckout> {
+		const priceId = publicEnv.PUBLIC_PADDLE_PRICE_ID ?? '';
+		const clientToken = publicEnv.PUBLIC_PADDLE_CLIENT_TOKEN ?? '';
+		if (!priceId || !clientToken) {
+			return errAsync(upstream('Supporter checkout is not configured'));
+		}
+
+		return fromPb(
+			this.pb.collection('users').getOne<{ email?: string }>(userId, { fields: 'email' }),
+			'Could not load account'
+		).map((user) => {
+			const email = (user.email ?? '').trim();
+			return {
+				priceId,
+				clientToken,
+				environment: paddleEnv(privateEnv.PADDLE_ENV),
+				customData: { userId },
+				email: email && !email.toLowerCase().endsWith(PLACEHOLDER_EMAIL) ? email : null
+			};
+		});
+	}
+
+	/** Paddle customer portal link (cancel, change card); 404 without a subscription. */
+	portal(userId: string): Task<{ url: string }> {
+		return this.byUser(userId).andThen((row) =>
+			row && row.paddleCustomerId
+				? this.services.clients.paddle
+						.portalUrl(row.paddleCustomerId, row.paddleSubscriptionId)
+						.map((url) => ({ url }))
+				: errAsync(notFound('No subscription'))
+		);
+	}
+
+	/** Shows or hides the account on the public supporters page (the medal stays). */
+	setHidden(userId: string, hidden: boolean): Task<SupporterStatus> {
+		return fromPb(
+			this.pb.collection('users').update(userId, { supporterHidden: hidden }),
+			'Could not save'
+		).andThen(() => this.status(userId));
+	}
+
+	/**
+	 * The public supporters page: one entry per account (its main Steam ID), hidden accounts
+	 * left out. `current` are active subscribers; `former` have paid before and are not active.
+	 */
+	list(): Task<SupportersList> {
+		return ResultAsync.combine([
+			fromPb(
+				this.payments.getFullList<{ user: string; paidAt: string }>({
+					fields: 'user,paidAt',
+					sort: 'paidAt'
+				}),
+				'Could not load payments'
+			),
+			fromPb(
+				this.subscriptions.getFullList<{ user: string }>({
+					filter: this.pb.filter(
+						"(status = 'active' || status = 'past_due') && currentPeriodEnd > {:now}",
+						{ now: pbDate(Date.now()) }
+					),
+					fields: 'user'
+				}),
+				'Could not load subscriptions'
+			)
+		]).andThen(([payments, active]) => {
+			const paid = new Map<string, { months: number; since: string }>();
+			for (const payment of payments) {
+				const stats = paid.get(payment.user);
+				if (stats) {
+					stats.months += 1;
+				} else {
+					paid.set(payment.user, { months: 1, since: iso(payment.paidAt) ?? '' });
+				}
+			}
+
+			const current = new Set(active.map((row) => row.user));
+			const userIds = [...new Set([...paid.keys(), ...current])];
+			return sequence(chunk(userIds, STEAM_CHUNK), (part) =>
+				fromPb(
+					this.pb.collection('users').getFullList<{
+						id: string;
+						steamIds?: unknown;
+						supporterHidden?: boolean;
+					}>({
+						filter: part.map((id) => this.pb.filter('id = {:id}', { id })).join(' || '),
+						fields: 'id,steamIds,supporterHidden'
+					}),
+					'Could not load accounts'
+				)
+			).andThen((pages) => {
+				const accounts = pages
+					.flat()
+					.filter((user) => !user.supporterHidden)
+					.flatMap((user) => {
+						const steamId = steamIdsOf(user)[0];
+						return steamId ? [{ id: user.id, steamId }] : [];
+					});
+				const steamIds = accounts.map((account) => account.steamId);
+				return ResultAsync.combine([
+					this.services.playerInfo.aliases(steamIds),
+					this.steam.playerSummaries(steamIds)
+				]).map(([aliases, summaries]) => {
+					const byMonths = (a: SupporterEntry, b: SupporterEntry) =>
+						b.months - a.months || a.since.localeCompare(b.since);
+					const entries = accounts.map((account) => {
+						const stats = paid.get(account.id);
+						const entry: SupporterEntry = {
+							steamId: account.steamId,
+							alias: aliases.get(account.steamId) || account.steamId,
+							avatarUrl: avatarOf(summaries.get(account.steamId)) || null,
+							months: stats?.months ?? 0,
+							since: stats?.since ?? ''
+						};
+						return { entry, active: current.has(account.id), paid: Boolean(stats) };
+					});
+					return {
+						current: entries
+							.filter((item) => item.active)
+							.map((item) => item.entry)
+							.sort(byMonths),
+						former: entries
+							.filter((item) => !item.active && item.paid)
+							.map((item) => item.entry)
+							.sort(byMonths)
+					};
+				});
+			});
+		});
 	}
 
 	isActive(userId: string): Task<boolean> {
