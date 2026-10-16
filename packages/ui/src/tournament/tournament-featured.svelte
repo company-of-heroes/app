@@ -7,6 +7,7 @@
 	import StarIcon from 'phosphor-svelte/lib/StarIcon';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
@@ -69,6 +70,7 @@
 	>
 		{#if entry}
 			<CountryFlag country={entry.country} class="h-4" />
+			<PlayerNameIcons steamId={entry.steamId} />
 			<PlayerProfileLink
 				href={host.routes.player(entry.profileId)}
 				class={cn(

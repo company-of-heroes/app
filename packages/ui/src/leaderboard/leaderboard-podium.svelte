@@ -7,8 +7,10 @@
 	import CrownIcon from 'phosphor-svelte/lib/CrownIcon';
 	import { useHost } from '../host/host.context';
 	import PlayerLabels from '../player/player-labels.svelte';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import { useLeaderboard } from './context';
+	import { steamIdOf } from './highlights';
 	import { leaderboardRowId } from './leaderboard-state.svelte';
 	import LeaderboardChange from './leaderboard-change.svelte';
 	import LeaderboardElo from './leaderboard-elo.svelte';
@@ -100,6 +102,7 @@
 			</div>
 			<div class="flex w-full min-w-0 items-center justify-center gap-2">
 				<CountryFlag country={stat.profile.country} class="h-4" />
+				<PlayerNameIcons labels={stat.profile.labels} steamId={steamIdOf(stat)} size={20} />
 				<span
 					class={cn(
 						'font-heading group-hover:text-primary truncate font-bold transition-colors',

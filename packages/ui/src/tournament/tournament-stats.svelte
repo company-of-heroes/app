@@ -15,6 +15,7 @@
 	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
 	import { getRaceLabel, normalizeMapName } from '../format/player-format';
 	import { useHost } from '../host/host.context';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { formatDurationSeconds } from '../replay/utils';
 	import { Button } from '../ui/button';
 	import MapImage from '../ui/map-image.svelte';
@@ -83,6 +84,7 @@
 	{#if player}
 		<span class={cn('inline-flex min-w-0 items-center gap-2', className)}>
 			<CountryFlag country={player.country} class="h-4" />
+			<PlayerNameIcons steamId={player.steamId} />
 			<a
 				href={host.routes.player(player.profileId)}
 				class={cn(interactive, 'hover:text-primary truncate')}

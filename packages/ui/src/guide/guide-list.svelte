@@ -7,6 +7,7 @@
 	import { escapeHtml, tooltip } from '../attachments';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { Badge } from '../ui/badge';
 	import type { GuideSummary } from './types';
 
@@ -73,7 +74,10 @@
 							<div
 								class="text-secondary-500 mt-auto flex flex-wrap items-center gap-x-3 pt-2 text-xs"
 							>
-								<span class="text-secondary-300 font-medium">{guide.author.name}</span>
+								<span class="text-secondary-300 inline-flex items-center gap-2 font-medium">
+									<PlayerNameIcons steamId={guide.author.steamId} size={14} />
+									{guide.author.name}
+								</span>
 								{#if guide.publishedAt}
 									<time datetime={guide.publishedAt}>
 										{formatDate(guide.publishedAt, host.locale())}

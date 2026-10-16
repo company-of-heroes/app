@@ -11,6 +11,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { getEloColor, getEloTextShadow, isEliteElo } from '../format/player-format';
 	import { useHost } from '../host/host.context';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import TournamentDragItem, { type DragItem } from './tournament-drag-item.svelte';
@@ -180,6 +181,7 @@
 												)}
 											>
 												<CountryFlag country={participant.country} class="h-4" />
+												<PlayerNameIcons steamId={participant.steamId} />
 												<span class="truncate">{participant.alias}</span>
 											</span>
 											{#if isYou}

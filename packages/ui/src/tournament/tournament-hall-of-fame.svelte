@@ -13,6 +13,7 @@
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
+	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { Button } from '../ui/button';
 	import { Skeleton } from '../ui/skeleton';
 	import { FORMAT_LABELS, parseTournamentDate } from './format';
@@ -41,6 +42,7 @@
 {#snippet player(alias: string, country: string, steamId: string, className = '')}
 	<span class={cn('inline-flex min-w-0 items-center gap-2', className)}>
 		<CountryFlag {country} class="h-4" />
+		<PlayerNameIcons {steamId} />
 		<a href={host.routes.player(steamId)} class={cn(interactive, 'hover:text-primary truncate')}>
 			{alias}
 		</a>
