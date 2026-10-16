@@ -1,3 +1,4 @@
+import { onMount } from 'svelte';
 import { dev } from '$app/environment';
 import { afterNavigate, goto, invalidateAll, replaceState } from '$app/navigation';
 import { page } from '$app/state';
@@ -214,6 +215,7 @@ function heldQueries<T>(create: (key: string) => T, limit: number): (key: string
 		held.delete(key);
 		held.set(key, handle);
 		if (held.size > limit) {
+			// Safe to drop: a row that still shows it reads through the host again and gets a new one.
 			held.delete(held.keys().next().value as string);
 		}
 
@@ -225,6 +227,11 @@ function heldQueries<T>(create: (key: string) => T, limit: number): (key: string
 export function provideWebsiteHost(): HostContext {
 	const playerLabels = heldQueries((steamId) => getPlayerLabels(steamId), 500);
 	const liveStreamers = heldQueries(() => getLiveStreamerIds(), 1);
+	// Held handles never refetch on their own; who is streaming changes while a visitor stays.
+	onMount(() => {
+		const timer = setInterval(() => void liveStreamers('').refresh(), 2 * 60_000);
+		return () => clearInterval(timer);
+	});
 
 	// Replay detail pages link back to the list (with its filters) the visitor came from.
 	afterNavigate(({ from }) => {
