@@ -23,6 +23,7 @@
 		"bits-ui": "^2.19.2",
 		"clsx": "^2.1.1",
 		"fflate": "^0.8.3",
+		"html-to-image": "1.11.13",
 		"layerchart": "2.0.0-next.43",
 		"neverthrow": "^8.2.0",
 		"phosphor-svelte": "^3.1.0",

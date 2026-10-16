@@ -52,21 +52,25 @@
 	}
 </script>
 
-<!-- The supporter player card: the same content as the PNG, as HTML. -->
+<!-- The supporter player card; the website draws its PNG from this markup. Sizes follow the
+card's own width (container queries), so a fixed-size copy looks the same on any screen. -->
 <article
-	class={cn('border-secondary-800 border-t-primary border border-t-4 bg-gray-950', className)}
+	class={cn(
+		'border-secondary-800 border-t-primary @container border border-t-4 bg-gray-950',
+		className
+	)}
 >
-	<header class="flex items-center gap-5 p-5 sm:gap-8 sm:p-8">
+	<header class="flex items-center gap-5 p-5 @xl:gap-8 @xl:p-8">
 		{#if avatar}
 			<img
 				src={avatar}
 				alt={card.alias}
-				class="border-primary size-20 shrink-0 rounded-md border-2 object-cover sm:size-32"
+				class="border-primary size-20 shrink-0 rounded-md border-2 object-cover @xl:size-32"
 			/>
 		{:else}
 			<span
 				aria-hidden="true"
-				class="border-primary text-primary bg-secondary-950 flex size-20 shrink-0 items-center justify-center rounded-md border-2 text-4xl font-extrabold sm:size-32 sm:text-6xl"
+				class="border-primary text-primary bg-secondary-950 flex size-20 shrink-0 items-center justify-center rounded-md border-2 text-4xl font-extrabold @xl:size-32 @xl:text-6xl"
 			>
 				{initial}
 			</span>
@@ -78,7 +82,7 @@
 				{/if}
 				{months}
 			</p>
-			<h1 class="flex min-w-0 items-center gap-3 text-3xl leading-tight sm:text-5xl">
+			<h1 class="flex min-w-0 items-center gap-3 text-3xl leading-tight @xl:text-5xl">
 				<span class="truncate">{card.alias}</span>
 				<CountryFlag country={card.country} class="h-5" />
 			</h1>
@@ -86,10 +90,10 @@
 		</div>
 	</header>
 	<div class="border-secondary-800 -mb-px overflow-hidden border-t">
-		<ul class="-mr-px grid grid-cols-2 sm:grid-cols-4">
+		<ul class="-mr-px grid grid-cols-2 @xl:grid-cols-4">
 			{#each card.factions as faction (faction.raceId)}
 				{@const mode = modeLabel(faction.leaderboardId)}
-				<li class="border-secondary-800 flex min-w-0 flex-col gap-2 border-r border-b p-4 sm:p-5">
+				<li class="border-secondary-800 flex min-w-0 flex-col gap-2 border-r border-b p-4 @xl:p-5">
 					<span class="text-secondary-300 flex items-center gap-2 text-sm">
 						<img
 							src={host.resolve.factionFlagByRace(faction.raceId)}
@@ -132,7 +136,7 @@
 		</ul>
 	</div>
 	<footer
-		class="border-secondary-800 flex flex-wrap items-center justify-between gap-4 border-t p-5 sm:px-8"
+		class="border-secondary-800 flex flex-wrap items-center justify-between gap-4 border-t p-5 @xl:px-8"
 	>
 		<div class="flex flex-col gap-1">
 			<p class="text-lg font-bold text-white">

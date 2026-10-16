@@ -4,14 +4,21 @@ import { chunk, fromAsync, fromPb, sequence, type Task } from '../result';
 import { Service } from './service';
 import { contentTypeOf, readOverlayBundle } from '../domain/overlay';
 
-/** The part of Cloudflare's R2 binding this service uses. */
+/** An R2 object's metadata. */
+export type StoredObject = { customMetadata?: Record<string, string> };
+
+/** The part of Cloudflare's R2 binding the website uses (overlays and player cards). */
 export type OverlayBucket = {
 	put(
 		key: string,
 		value: Uint8Array,
-		options?: { httpMetadata?: { contentType?: string } }
+		options?: {
+			httpMetadata?: { contentType?: string };
+			customMetadata?: Record<string, string>;
+		}
 	): Promise<unknown>;
-	head(key: string): Promise<unknown | null>;
+	head(key: string): Promise<StoredObject | null>;
+	get(key: string): Promise<(StoredObject & { body: ReadableStream; size: number }) | null>;
 	list(options: {
 		prefix: string;
 		cursor?: string;
