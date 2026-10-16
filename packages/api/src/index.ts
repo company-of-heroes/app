@@ -243,6 +243,7 @@ export {
 } from './upload-file';
 
 export {
+	isPaddlePortalUrl,
 	SubscriptionsApi,
 	type SupporterCheckout,
 	type SupporterEntry,

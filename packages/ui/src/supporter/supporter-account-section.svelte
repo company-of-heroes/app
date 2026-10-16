@@ -42,9 +42,11 @@
 		[
 			status.since ? t('Supporter since {date}', { date: date(status.since) }) : null,
 			months,
-			ending
-				? t('Ends on {date}', { date: date(status.currentPeriodEnd) })
-				: t('Next payment on {date}', { date: date(status.currentPeriodEnd) })
+			periodEnd
+				? ending
+					? t('Ends on {date}', { date: date(status.currentPeriodEnd) })
+					: t('Next payment on {date}', { date: date(status.currentPeriodEnd) })
+				: null
 		]
 			.filter(Boolean)
 			.join(' · ')
@@ -91,7 +93,7 @@
 		<HeartIcon size={14} weight="fill" class="text-primary shrink-0" />
 		<p class={flushHeaderTitle}>{t('Supporter')}</p>
 	</div>
-	{#if running && periodEnd}
+	{#if running}
 		<div
 			class="border-secondary-800 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3"
 		>

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fromPbPromise, requireAuth } from '../pb';
+import { isPaddlePortalUrl } from './portal-url';
 import type { SupporterCheckout, SupporterStatus, SupportersList } from './types';
 
 const statusSchema = z.object({
@@ -22,7 +23,9 @@ const checkoutSchema = z.object({
 	email: z.string().nullable()
 });
 
-const portalSchema = z.object({ url: z.string() });
+const portalSchema = z.object({
+	url: z.string().refine(isPaddlePortalUrl, 'Not a Paddle portal link')
+});
 
 const entrySchema = z.object({
 	steamId: z.string(),

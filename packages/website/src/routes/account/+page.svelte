@@ -285,10 +285,12 @@
 	</Form.Group>
 </form>
 
-<SupporterAccountSection
-	status={data.supporter}
-	onmanage={manageSupporter}
-	onhidden={async (hidden) => {
-		await setSupporterHidden(hidden);
-	}}
-/>
+{#if data.supporter}
+	<SupporterAccountSection
+		status={data.supporter}
+		onmanage={manageSupporter}
+		onhidden={async (hidden) => {
+			await setSupporterHidden(hidden);
+		}}
+	/>
+{/if}

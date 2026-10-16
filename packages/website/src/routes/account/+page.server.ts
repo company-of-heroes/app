@@ -12,7 +12,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	const [steamAccounts, supporter] = await Promise.all([
 		unwrapAsync(locals.services.users.steamAccounts(locals.user.id)),
-		unwrapAsync(locals.services.subscriptions.status(locals.user.id))
+		// Best effort: the account page works without the supporter section.
+		unwrapAsync(locals.services.subscriptions.status(locals.user.id)).catch((error) => {
+			console.error('supporter status failed', error);
+			return null;
+		})
 	]);
 	return {
 		user: locals.user,
