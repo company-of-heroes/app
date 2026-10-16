@@ -39,6 +39,7 @@
 	import BriefcaseIcon from 'phosphor-svelte/lib/BriefcaseIcon';
 	import { NotificationBell } from '@company-of-heroes/ui/notifications';
 	import HeaderSteamPlayers from '$lib/components/layout/header-steam-players.svelte';
+	import HeaderSupporter from '$lib/components/layout/header-supporter.svelte';
 	import AccountMenu from '$lib/components/account/account-menu.svelte';
 	import { provideAppHost } from '$lib/host';
 	import { useI18n } from '$lib/i18n';
@@ -298,6 +299,7 @@
 					<div class="flex items-center gap-3">
 						{@render breadcrumbs.actions?.()}
 						<HeaderSteamPlayers />
+						<HeaderSupporter />
 					</div>
 				</header>
 				{@render children()}
