@@ -1,9 +1,12 @@
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
+import type { RibbonManifestEntry } from '@company-of-heroes/ui/reward';
 import type {
+	PlayerCardData,
 	SupporterEntry,
 	SupporterStatus,
 	SupportersList
 } from '@company-of-heroes/ui/supporter/types';
+import ribbonManifest from '../../../../../shared-assets/ribbons/ribbons.json';
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import {
@@ -14,11 +17,13 @@ import {
 } from '../clients/paddle';
 import { avatarOf } from '../clients/steam';
 import { internal, notFound, upstream } from '../errors';
+import { cardFactions, cardRecord, cardRibbons } from '../domain/player-card';
+import { isValidSteamId } from '../domain/ratings';
 import { steamIdsOf } from '../domain/users';
 import { chunk, fromPb, isUniqueCollision, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
-export type { SupporterEntry, SupporterStatus, SupportersList };
+export type { PlayerCardData, SupporterEntry, SupporterStatus, SupportersList };
 
 export type SupporterCheckout = {
 	priceId: string;
@@ -281,6 +286,59 @@ export class SubscriptionsService extends Service {
 							.filter((item) => !item.active && item.paid)
 							.map((item) => item.entry)
 							.sort(byMonths)
+					};
+				});
+			});
+		});
+	}
+
+	/**
+	 * The supporter player card of a Steam ID; null unless exactly one account lists it and
+	 * that account is an active supporter (a shared Steam ID gets no card, like the medal).
+	 */
+	card(steamId: string): Task<PlayerCardData | null> {
+		if (!isValidSteamId(steamId)) {
+			return okAsync(null);
+		}
+
+		return fromPb(
+			this.pb.collection('users').getList<{ id: string }>(1, 2, {
+				filter: this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }),
+				fields: 'id',
+				skipTotal: true
+			}),
+			'Could not load accounts'
+		).andThen((accounts) => {
+			const account = accounts.items.length === 1 ? accounts.items[0] : null;
+			if (!account) {
+				return okAsync(null);
+			}
+
+			return ResultAsync.combine([
+				this.byUser(account.id),
+				this.paymentSummary(account.id)
+			]).andThen(([row, payments]) => {
+				if (!isActive(row)) {
+					return okAsync(null);
+				}
+
+				return ResultAsync.combine([
+					this.services.playerPage.get(steamId),
+					this.services.rewards.forPlayer(steamId, null)
+				]).map(([page, rewards]): PlayerCardData => {
+					const record = cardRecord(page.leaderboardStats);
+					return {
+						steamId,
+						alias: page.alias,
+						avatarUrl: page.avatarUrl || null,
+						country: page.country,
+						labels: page.labels ?? [],
+						factions: cardFactions(page.leaderboardStats, page.elo),
+						winRate: record.winRate,
+						matches: record.matches,
+						ribbons: cardRibbons(rewards.rewards, ribbonManifest as RibbonManifestEntry[]),
+						supporterMonths: payments.months,
+						supporterSince: payments.since ?? ''
 					};
 				});
 			});

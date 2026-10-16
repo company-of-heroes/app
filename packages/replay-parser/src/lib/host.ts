@@ -21,6 +21,7 @@ export function provideLocalHost(): HostContext {
 			player: () => '/',
 			match: replayHref,
 			accountProfile: () => '/',
+			playerCardUrl: () => '',
 			login: () => '/',
 			memberReplays: () => '/',
 			memberReplay: replayHref,

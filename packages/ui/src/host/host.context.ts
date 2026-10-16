@@ -119,6 +119,11 @@ export type HostRoutes = {
 	/** Compare page of the signed-in user vs this player; hosts without accounts omit it. */
 	compare?: (idOrSteamId: string | number, steamIds?: string[]) => string;
 	accountProfile: (steamId: string) => string;
+	/**
+	 * Supporter player card page of a Steam ID: a site link on the website, the absolute
+	 * website URL in the app (opened in the browser). Offline hosts return ''.
+	 */
+	playerCardUrl: (steamId: string) => string;
 	/** Login page that returns to `next` (default: the current page) afterwards. */
 	login: (next?: string) => string;
 	/**

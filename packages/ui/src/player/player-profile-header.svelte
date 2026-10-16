@@ -5,6 +5,7 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive, statLosses, statWins } from '@company-of-heroes/ui/variants';
 	import ClockCounterClockwiseIcon from 'phosphor-svelte/lib/ClockCounterClockwiseIcon';
+	import IdentificationBadgeIcon from 'phosphor-svelte/lib/IdentificationBadgeIcon';
 	import IdentificationCardIcon from 'phosphor-svelte/lib/IdentificationCardIcon';
 	import MapTrifoldIcon from 'phosphor-svelte/lib/MapTrifoldIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
@@ -13,6 +14,7 @@
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import WarningIcon from 'phosphor-svelte/lib/WarningIcon';
 	import { formatDate } from '../format/date';
+	import { isSupporter } from '../format/labels';
 	import { getRatioColor, getRatioValue, normalizeMapName, winrate } from '../format/player-format';
 	import type { HeadToHead } from '../head-to-head/types';
 	import { useHost } from '../host/host.context';
@@ -71,6 +73,10 @@
 	const host = useHost();
 
 	const isSelf = $derived(host.auth.isSelf(player.steamId, player.profileId));
+	/** The supporter's own card page (website link, or the website in the browser from the app). */
+	const playerCardUrl = $derived(
+		isSelf && isSupporter(player.labels) ? host.routes.playerCardUrl(player.steamId) : ''
+	);
 	/** No account linked this Steam id yet (rewards are loaded per linked account). */
 	const unclaimed = $derived(player.rewards?.linked === false);
 	const joinedSince = $derived(
@@ -115,6 +121,14 @@
 	const otherLinks = $derived(
 		(player.customization?.links ?? []).filter((link) => !isStreamingLink(link))
 	);
+
+	/** The app hands the website link to the browser. */
+	function openPlayerCard(event: MouseEvent) {
+		if (host.openExternal && /^https?:/.test(playerCardUrl)) {
+			event.preventDefault();
+			host.openExternal(playerCardUrl);
+		}
+	}
 </script>
 
 {#snippet headToHeadValue(record: HeadToHead)}
@@ -184,6 +198,18 @@
 				>
 					<PencilSimpleIcon size={16} />
 					{t('Update profile')}
+				</Button>
+			{/if}
+			{#if playerCardUrl}
+				<Button
+					href={playerCardUrl}
+					variant="secondary"
+					size="sm"
+					class="shrink-0 bg-gray-950/60 backdrop-blur-sm"
+					onclick={openPlayerCard}
+				>
+					<IdentificationBadgeIcon size={16} />
+					{t('Player card')}
 				</Button>
 			{/if}
 		{/snippet}

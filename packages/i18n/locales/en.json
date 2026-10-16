@@ -2734,5 +2734,16 @@
 	"Three against three": "Three against three",
 	"Four against four": "Four against four",
 	"Rank level {level}": "Rank level {level}",
-	"Managed by supporter subscriptions": "Managed by supporter subscriptions"
+	"Managed by supporter subscriptions": "Managed by supporter subscriptions",
+	"Player card": "Player card",
+	"Download PNG": "Download PNG",
+	"Supporter for 1 month": "Supporter for 1 month",
+	"Supporter for {count} months": "Supporter for {count} months",
+	"Supporter since {date}": "Supporter since {date}",
+	"{count} ranked games": "{count} ranked games",
+	"{rate}% win rate": "{rate}% win rate",
+	"No ranked games": "No ranked games",
+	"No ladder rank": "No ladder rank",
+	"{alias} — Player card": "{alias} — Player card",
+	"Company of Heroes supporter card of {alias}: best ELO and rank per army.": "Company of Heroes supporter card of {alias}: best ELO and rank per army."
 }

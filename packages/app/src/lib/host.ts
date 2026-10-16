@@ -55,6 +55,7 @@ export function provideAppHost(): HostContext {
 				`/compare/${id}` + (steamIds?.length ? `?accounts=${steamIds.join(',')}` : ''),
 			match: (lobbyId) => `/history/${lobbyId}`,
 			accountProfile: (steamId) => `/account/profile?steamId=${steamId}`,
+			playerCardUrl: (steamId) => `${SITE_URL}/card/${steamId}`,
 			login: () => '/account',
 			memberReplays: () => '/history',
 			memberReplay: (id) => `/replays/${id}`,
