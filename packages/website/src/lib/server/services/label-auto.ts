@@ -450,9 +450,12 @@ export class LabelAutoService extends Service {
 	/**
 	 * Job step: removes live-label assignments on Steam IDs outside `keep` (the non-shared
 	 * Steam IDs of active supporters), at most `REMOVE_PER_RUN`. Covers a Steam ID unlinked
-	 * from a supporter's account and a subscription whose end no webhook announced.
+	 * from a supporter's account and a subscription whose end no webhook announced. A live
+	 * label staff assigned by hand to a non-supporter is removed too (live by design). The
+	 * assignments are read before `keep` is loaded, so one a new supporter's webhook created
+	 * meanwhile is never seen with a stale `keep`; any failed read removes nothing.
 	 */
-	removeLiveExcept(keep: Set<string>): Task<{ processed: number; more: boolean }> {
+	removeLiveExcept(keep: () => Task<Set<string>>): Task<{ processed: number; more: boolean }> {
 		return this.conditionalLabels().andThen((labels) => {
 			const live = labels.filter((label) => isLiveLabel(label.conditions));
 			if (live.length === 0) {
@@ -469,14 +472,16 @@ export class LabelAutoService extends Service {
 						fields: 'id,steamId'
 					}),
 				'Could not load labels'
-			).andThen((rows) => {
-				const stale = rows.filter((row) => !keep.has(row.steamId));
-				const batch = stale.slice(0, REMOVE_PER_RUN);
-				return this.remove(batch).map((processed) => ({
-					processed,
-					more: stale.length > batch.length
-				}));
-			});
+			).andThen((rows) =>
+				keep().andThen((supporters) => {
+					const stale = rows.filter((row) => !supporters.has(row.steamId));
+					const batch = stale.slice(0, REMOVE_PER_RUN);
+					return this.remove(batch).map((processed) => ({
+						processed,
+						more: stale.length > batch.length
+					}));
+				})
+			);
 		});
 	}
 }

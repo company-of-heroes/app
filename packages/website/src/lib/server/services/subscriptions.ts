@@ -394,8 +394,8 @@ export class SubscriptionsService extends Service {
 				).map((done) => done.filter(Boolean).length)
 			)
 			.andThen((evaluated) =>
-				this.supporterSteamIds()
-					.andThen((keep) => this.services.labelAuto.removeLiveExcept(keep))
+				this.services.labelAuto
+					.removeLiveExcept(() => this.supporterSteamIds())
 					.map((removed) => ({
 						processed: evaluated + removed.processed,
 						more: removed.more
