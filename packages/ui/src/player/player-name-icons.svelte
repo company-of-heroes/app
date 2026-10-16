@@ -26,9 +26,12 @@
 <!--
 	Rows give the icons the same flex gap as everything else (gap-2); the extra mx-0.5 keeps them
 	visibly apart from the name on either side, so names read the same before or after them.
+	At the start or end of a row the margin drops, so edges stay aligned.
 -->
 {#if showMedal || showStreamer}
-	<span class={cn('mx-0.5 inline-flex shrink-0 items-center gap-1', className)}>
+	<span
+		class={cn('mx-0.5 inline-flex shrink-0 items-center gap-1 first:ms-0 last:me-0', className)}
+	>
 		<PlayerSupporterMedal labels={resolved ?? []} {steamId} {size} />
 		<PlayerStreamerIcon labels={resolved ?? []} {steamId} {size} />
 	</span>
