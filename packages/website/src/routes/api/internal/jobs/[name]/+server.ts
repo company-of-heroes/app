@@ -52,6 +52,8 @@ const JOBS: Record<
 	'rewards-evaluate': (services) => services.rewards.evaluateDue(),
 	// Auto labels (Veteran): rank 20 on two 1v1/2v2 ladders, read from the ladders.
 	'label-auto': (services) => services.labelAuto.run(),
+	// Supporter labels off lapsed subscriptions and Steam IDs unlinked from a supporter.
+	'subscriptions-expire': (services) => services.subscriptions.expire(),
 	// Tournament matches: scores from the Relic results of started tournament games.
 	'tournament-sync': (services) => services.tournaments.sync(),
 	// Tournament matches past their deadline (one notice to staff each), the players'

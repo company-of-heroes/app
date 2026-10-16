@@ -45,7 +45,13 @@ export const POST = handle(({ request, locals }) =>
 				return locals.services.subscriptions
 					.handleWebhook(event)
 					.andThen(({ userId }) =>
-						userId ? locals.services.rewards.markDirty([{ id: userId }]) : okAsync(undefined)
+						// Labels and rewards follow at once; if that fails the job picks the user up.
+						userId
+							? locals.services.rewards.evaluateNow(userId).orElse((error) => {
+									console.warn('[paddle] could not evaluate, queued', userId, error);
+									return locals.services.rewards.markDirty([{ id: userId }]).map(() => 0);
+								})
+							: okAsync(0)
 					)
 					.map(() => ({ ok: true }))
 					.orElse((error) => {

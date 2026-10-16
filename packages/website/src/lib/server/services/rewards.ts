@@ -1,5 +1,6 @@
 import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { parseRewardConditions, rewardImageUrl } from '@company-of-heroes/api/rewards';
+import { isLiveLabel, SUPPORTER_METRICS } from '@company-of-heroes/ui/format/labels';
 import { isAccountReward, type RewardCondition } from '@company-of-heroes/ui/reward/metrics';
 import type {
 	PlayerRewards,
@@ -172,12 +173,28 @@ function hasLinks(raw: unknown): boolean {
 
 /**
  * Account rewards only show on the main Steam ID (the first on the account); the others hide
- * them. Account labels are only assigned to the main one, for the same reason. A Steam ID
- * another account lists too shows none: they would be one user's on another's profile.
+ * them. Account labels are only assigned to the main one, for the same reason (supporter
+ * labels excepted, see `labelShownOn`). A Steam ID another account lists too shows none:
+ * they would be one user's on another's profile.
  */
 function shownOn(owner: Owner, steamId: string): (reward: Pick<Reward, 'parsed'>) => boolean {
 	const main = owner.steamIds[0] === steamId && !owner.shared.has(steamId);
 	return (reward) => main || !isAccountReward(reward.parsed);
+}
+
+/**
+ * Labels as `shownOn`, except supporter labels (account metrics only, at least one supporter
+ * metric): those go on every Steam ID of the account that no other account lists, so the
+ * medal shows on all of a supporter's IDs. Rewards keep `shownOn`.
+ */
+function labelShownOn(owner: Owner, steamId: string): (label: ConditionalLabel) => boolean {
+	const shown = shownOn(owner, steamId);
+	const own = owner.steamIds.includes(steamId) && !owner.shared.has(steamId);
+	return (label) =>
+		shown({ parsed: label.conditions }) ||
+		(own &&
+			isAccountReward(label.conditions) &&
+			label.conditions.some((condition) => SUPPORTER_METRICS.includes(condition.metric)));
 }
 
 /** The owner limited to one Steam ID: match metrics count that ID, account metrics stay shared. */
@@ -194,7 +211,8 @@ function forSteamId(owner: Owner, steamId: string): Owner {
  * user's Steam IDs and notifies. Editing a reward makes everyone due. Account rewards
  * unlock on every Steam ID but only show on the main one, so changing it keeps them; a
  * Steam ID another account lists too gets none. Match metrics count each Relic session once.
- * Labels with conditions are evaluated the same way and assigned like a staff label.
+ * Labels with conditions are evaluated the same way and assigned like a staff label; live
+ * (supporter) labels are the one exception to never-take-back.
  */
 export class RewardsService extends Service {
 	private get unlocks() {
@@ -769,9 +787,9 @@ export class RewardsService extends Service {
 					this.pb.filter('user = {:userId}', { userId: owner.id })
 				).map((count) => (count > 0 ? 1 : 0));
 			case 'supporter_active':
+				return this.services.subscriptions.isActive(owner.id).map((active) => (active ? 1 : 0));
 			case 'supporter_months':
-				// The supporter subscriptions task fills these in.
-				return okAsync(0);
+				return this.services.subscriptions.months(owner.id);
 			case 'reputation':
 				return okAsync(owner.reputation);
 			case 'comments_created':
@@ -1013,17 +1031,22 @@ export class RewardsService extends Service {
 		).map(() => undefined);
 	}
 
-	/** Assigns every conditional label one Steam ID now meets; never taken back. */
+	/**
+	 * Assigns every conditional label one Steam ID now meets; never taken back, except live
+	 * labels (`isLiveLabel`): those are checked even when assigned and removed once they no
+	 * longer hold, or once they no longer belong on this Steam ID (another account lists it).
+	 * A live label whose progress failed is kept. Staff revocations still block granting.
+	 */
 	private evaluateLabels(
 		owner: Owner,
 		steamId: string,
 		labels: ConditionalLabel[],
 		metric: Metric
 	): Task<number> {
-		const candidates = labels.filter((label) =>
-			shownOn(owner, steamId)({ parsed: label.conditions })
-		);
-		if (candidates.length === 0) {
+		const shown = labelShownOn(owner, steamId);
+		const candidates = labels.filter(shown);
+		const live = labels.filter((label) => isLiveLabel(label.conditions));
+		if (candidates.length === 0 && live.length === 0) {
 			return okAsync(0);
 		}
 
@@ -1032,15 +1055,28 @@ export class RewardsService extends Service {
 			.andThen((have) =>
 				all(
 					candidates
-						.filter((label) => !have.has(label.id))
+						.filter((label) => !have.has(label.id) || isLiveLabel(label.conditions))
 						.map((label) =>
-							this.progressOrSkip(label.id, label.conditions, metric).map((progress) =>
-								progress && progress.overall >= 1 ? [label.id] : []
-							)
+							this.progressOrSkip(label.id, label.conditions, metric).map((progress) => ({
+								id: label.id,
+								met: progress ? progress.overall >= 1 : null
+							}))
 						)
-				)
+				).andThen((checked) => {
+					const grant = checked
+						.filter((label) => label.met === true && !have.has(label.id))
+						.map((label) => label.id);
+					const remove = [
+						...checked.filter((label) => label.met === false && have.has(label.id)),
+						...live.filter((label) => have.has(label.id) && !shown(label))
+					].map((label) => label.id);
+					return this.services.labelAuto
+						.grantTo(steamId, grant)
+						.andThen((granted) =>
+							this.services.labelAuto.removeFrom(steamId, remove).map(() => granted)
+						);
+				})
 			)
-			.andThen((met) => this.services.labelAuto.grantTo(steamId, met.flat()))
 			.orElse((error) => {
 				console.warn('[rewards] conditional labels failed', steamId, error);
 				return okAsync(0);
@@ -1167,6 +1203,19 @@ export class RewardsService extends Service {
 			this.pb.collection('users').update(userId, { rewardsCheckedAt: checkedAt }),
 			'Could not save rewards check'
 		).map(() => undefined);
+	}
+
+	/**
+	 * Evaluates one user right away instead of queueing them (a subscription that starts or
+	 * ends should show at once); returns how many unlocks were announced.
+	 */
+	evaluateNow(userId: string): Task<number> {
+		const checkedAt = pbDate(new Date());
+		return this.freshCatalog().andThen((catalog) =>
+			this.evaluate(userId, catalog).andThen((fresh) =>
+				this.setCheckedAt(userId, checkedAt).map(() => fresh)
+			)
+		);
 	}
 
 	/**

@@ -2,7 +2,8 @@ import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import type { SupporterStatus } from '@company-of-heroes/ui/supporter/types';
 import type { PaddleEvent, PaddleSubscription, PaddleTransaction } from '../clients/paddle';
 import { internal } from '../errors';
-import { fromPb, isUniqueCollision, pbMaybe, type Task } from '../result';
+import { steamIdsOf } from '../domain/users';
+import { chunk, fromPb, isUniqueCollision, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
 export type { SupporterStatus };
@@ -25,12 +26,27 @@ type HandleResult = { userId: string | null };
 /** Statuses that keep the medal while the paid period runs (`past_due` while Paddle retries a card). */
 const PAYING: readonly string[] = ['active', 'past_due'];
 
+/** Lapsed subscriptions re-evaluated per `expire` run. */
+const EXPIRE_BATCH = 50;
+/**
+ * Periods that ended this long ago are still re-evaluated (the job runs hourly); older ones
+ * were handled by an earlier run, or `removeLiveExcept` still catches their labels.
+ */
+const EXPIRE_WINDOW_MS = 90 * 60 * 1000;
+/** Steam IDs per `steamIds ~` filter (PocketBase caps expressions per filter). */
+const STEAM_CHUNK = 50;
+
 /** PocketBase ids: 15 lowercase letters and digits. */
 const USER_ID = /^[a-z0-9]{15}$/;
 
 /** A PocketBase (`2026-10-16 12:00:00.000Z`) or ISO date as ms; 0 when empty. */
 function time(value: string | null | undefined): number {
 	return value ? Date.parse(value.replace(' ', 'T')) || 0 : 0;
+}
+
+/** PocketBase's stored date format, so it compares as a string. */
+function pbDate(ms: number): string {
+	return new Date(ms).toISOString().replace('T', ' ');
 }
 
 function iso(value: string | null | undefined): string | null {
@@ -296,5 +312,94 @@ export class SubscriptionsService extends Service {
 				).map(() => ({ userId }));
 			})
 		);
+	}
+
+	/** Steam IDs of active supporters that no other account lists; they keep live labels. */
+	private supporterSteamIds(): Task<Set<string>> {
+		return fromPb(
+			this.subscriptions.getFullList<{ user: string }>({
+				filter: this.pb.filter(
+					"(status = 'active' || status = 'past_due') && currentPeriodEnd > {:now}",
+					{ now: pbDate(Date.now()) }
+				),
+				fields: 'user'
+			}),
+			'Could not load subscriptions'
+		).andThen((rows) => {
+			const users = [...new Set(rows.map((row) => row.user))];
+			return sequence(chunk(users, STEAM_CHUNK), (part) =>
+				fromPb(
+					this.pb.collection('users').getFullList<{ steamIds?: unknown }>({
+						filter: part.map((id) => this.pb.filter('id = {:id}', { id })).join(' || '),
+						fields: 'steamIds'
+					}),
+					'Could not load accounts'
+				)
+			).andThen((pages) => {
+				const steamIds = [...new Set(pages.flat().flatMap(steamIdsOf))];
+				// Every account listing one of them, supporters included: listed twice means shared.
+				return sequence(chunk(steamIds, STEAM_CHUNK), (part) =>
+					fromPb(
+						this.pb.collection('users').getFullList<{ steamIds?: unknown }>({
+							filter: part
+								.map((steamId) =>
+									this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` })
+								)
+								.join(' || '),
+							fields: 'steamIds'
+						}),
+						'Could not load accounts'
+					)
+				).map((listings) => {
+					const accounts = new Map<string, number>();
+					for (const steamId of listings.flat().flatMap(steamIdsOf)) {
+						accounts.set(steamId, (accounts.get(steamId) ?? 0) + 1);
+					}
+
+					return new Set(steamIds.filter((steamId) => accounts.get(steamId) === 1));
+				});
+			});
+		});
+	}
+
+	/**
+	 * Job: re-evaluates accounts whose paid period just ran out without a webhook saying so
+	 * (still `active`/`past_due`), at most `EXPIRE_BATCH`, then removes live labels from every
+	 * Steam ID that is not an active supporter's (lapsed, unlinked or shared). `more` comes
+	 * from the removals only: the lapsed page would list the same accounts again.
+	 */
+	expire(): Task<{ processed: number; more: boolean }> {
+		const now = Date.now();
+		return fromPb(
+			this.subscriptions.getList<{ user: string }>(1, EXPIRE_BATCH, {
+				filter: this.pb.filter(
+					"(status = 'active' || status = 'past_due') && currentPeriodEnd != '' && currentPeriodEnd <= {:now} && currentPeriodEnd > {:since}",
+					{ now: pbDate(now), since: pbDate(now - EXPIRE_WINDOW_MS) }
+				),
+				sort: 'currentPeriodEnd',
+				fields: 'user',
+				skipTotal: true
+			}),
+			'Could not load subscriptions'
+		)
+			.andThen((page) =>
+				sequence(page.items, (row) =>
+					this.services.rewards
+						.evaluateNow(row.user)
+						.map(() => true)
+						.orElse((error) => {
+							console.warn('[subscriptions] could not re-evaluate', row.user, error);
+							return okAsync(false);
+						})
+				).map((done) => done.filter(Boolean).length)
+			)
+			.andThen((evaluated) =>
+				this.supporterSteamIds()
+					.andThen((keep) => this.services.labelAuto.removeLiveExcept(keep))
+					.map((removed) => ({
+						processed: evaluated + removed.processed,
+						more: removed.more
+					}))
+			);
 	}
 }
