@@ -37,6 +37,7 @@ export const Collections = {
 	NotificationReads: 'notification_reads',
 	Notifications: 'notifications',
 	PlayerLabelAssignments: 'player_label_assignments',
+	PlayerLabelRevocations: 'player_label_revocations',
 	PlayerLikes: 'player_likes',
 	PlayerRatings: 'player_ratings',
 	PlayerVoteScores: 'player_vote_scores',
@@ -432,6 +433,14 @@ export type PlayerLabelAssignmentsRecord = {
 	updated: IsoAutoDateString;
 };
 
+export type PlayerLabelRevocationsRecord = {
+	created: IsoAutoDateString;
+	id: string;
+	label: RecordIdString;
+	steamId: string;
+	updated: IsoAutoDateString;
+};
+
 export type PlayerLikesRecord = {
 	created: IsoAutoDateString;
 	id: string;
@@ -657,6 +666,7 @@ export type SmurfWatchRecord<Tmain_candidates = unknown, Tsignals = unknown> = {
 export type UserLabelsRecord = {
 	autoRank20?: boolean;
 	color: string;
+	conditions?: null | unknown;
 	created: IsoAutoDateString;
 	id: string;
 	name: string;
@@ -786,6 +796,8 @@ export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRec
 	BaseSystemFields<Texpand>;
 export type PlayerLabelAssignmentsResponse<Texpand = unknown> =
 	Required<PlayerLabelAssignmentsRecord> & BaseSystemFields<Texpand>;
+export type PlayerLabelRevocationsResponse<Texpand = unknown> =
+	Required<PlayerLabelRevocationsRecord> & BaseSystemFields<Texpand>;
 export type PlayerLikesResponse<Texpand = unknown> = Required<PlayerLikesRecord> &
 	BaseSystemFields<Texpand>;
 export type PlayerRatingsResponse<Telo = unknown, Texpand = unknown> = Required<
@@ -873,6 +885,7 @@ export type CollectionRecords = {
 	notification_reads: NotificationReadsRecord;
 	notifications: NotificationsRecord;
 	player_label_assignments: PlayerLabelAssignmentsRecord;
+	player_label_revocations: PlayerLabelRevocationsRecord;
 	player_likes: PlayerLikesRecord;
 	player_ratings: PlayerRatingsRecord;
 	player_vote_scores: PlayerVoteScoresRecord;
@@ -924,6 +937,7 @@ export type CollectionResponses = {
 	notification_reads: NotificationReadsResponse;
 	notifications: NotificationsResponse;
 	player_label_assignments: PlayerLabelAssignmentsResponse;
+	player_label_revocations: PlayerLabelRevocationsResponse;
 	player_likes: PlayerLikesResponse;
 	player_ratings: PlayerRatingsResponse;
 	player_vote_scores: PlayerVoteScoresResponse;

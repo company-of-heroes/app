@@ -6,7 +6,7 @@ import type { CommunityMatchDetail } from '@company-of-heroes/ui/replay';
 import {
 	authDisplayName,
 	canHostTournaments,
-	isEditorUser,
+	canPublishGuides,
 	isStaffUser,
 	loginRedirectHref,
 	meSteamIds
@@ -34,11 +34,13 @@ import {
 	createGuideCategory,
 	deleteGuide,
 	deleteGuideCategory,
+	discardGuideRevision,
 	fetchGuide,
 	guideNav,
 	listGuideCategories,
 	listGuides,
 	myGuides,
+	requestGuideReview,
 	resolveGuides,
 	searchGuideTranslations,
 	updateGuide,
@@ -48,6 +50,7 @@ import {
 import {
 	createTournament,
 	createTournamentMap,
+	createTournamentMedal,
 	addTournamentPlayer,
 	deleteTournament,
 	discardTournamentBracket,
@@ -83,6 +86,7 @@ import {
 	fetchTournament,
 	joinTournament,
 	listTournamentMaps,
+	listTournamentMedals,
 	listUsedTournamentMedals,
 	listTournaments,
 	listTournamentsWonBy,
@@ -216,10 +220,13 @@ export function provideWebsiteHost(): HostContext {
 				href(`/compare/${id}`) + (steamIds?.length ? `?accounts=${steamIds.join(',')}` : ''),
 			match: (lobbyId) => href(`/replays/${lobbyId}`),
 			accountProfile: (steamId) => href(`/account/profile?steamId=${steamId}`),
-			login: () => loginRedirectHref(`${page.url.pathname}${page.url.search}`, currentLocale()),
+			login: (next) =>
+				loginRedirectHref(next ?? `${page.url.pathname}${page.url.search}`, currentLocale()),
 			steamLogin: () =>
 				`/auth/steam/start?${new URLSearchParams({ redirect: `${page.url.pathname}${page.url.search}` })}`,
-			memberReplays: () => href('/replays?tab=member'),
+			steamClaim: () =>
+				`/auth/steam/start?${new URLSearchParams({ claim: '1', redirect: `${page.url.pathname}${page.url.search}` })}`,
+			memberReplays: () => href('/replays'),
 			memberReplay: (id) => href(`/replays/${id}`),
 			publishReplay: (lobbyId) => href(`/replays/upload?fromMatch=${lobbyId}`),
 			replayList: () => href(rememberedReplaysListHref()),
@@ -285,7 +292,7 @@ export function provideWebsiteHost(): HostContext {
 					steamIds: meSteamIds(user),
 					isStaff: isStaffUser(user),
 					canHost: canHostTournaments(user),
-					canEdit: isEditorUser(user)
+					canPublish: canPublishGuides(user)
 				};
 			},
 			isSelf: (steamId) => meSteamIds(page.data.user).includes(steamId),
@@ -421,6 +428,8 @@ export function provideWebsiteHost(): HostContext {
 				listMaps: () => withMessage(listTournamentMaps()),
 				usedMedals: () => withMessage(listUsedTournamentMedals()),
 				createMap: (name, icon) => withMessage(createTournamentMap({ name, icon })),
+				listMedals: () => withMessage(listTournamentMedals()),
+				createMedal: (name, image) => withMessage(createTournamentMedal({ name, image })),
 				register: (id, steamId, acceptRules) =>
 					withMessage(joinTournament({ id, steamId, acceptRules })),
 				acceptRules: (id) => withMessage(acceptTournamentRules(id)),
@@ -486,6 +495,8 @@ export function provideWebsiteHost(): HostContext {
 				create: (language) => withMessage(createGuide({ language })),
 				update: (id, input, images = {}) => withMessage(updateGuide({ id, input, images })),
 				uploadImage: (id, file) => withMessage(uploadGuideImage({ id, file })),
+				requestReview: (id) => withMessage(requestGuideReview(id)),
+				discardRevision: (id) => withMessage(discardGuideRevision(id)),
 				remove: (id) => withMessage(deleteGuide(id)),
 				categories: () => withMessage(listGuideCategories()),
 				createCategory: (input) => withMessage(createGuideCategory(input)),

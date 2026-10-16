@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { RankIcon } from '@company-of-heroes/ui/player';
 	import { isStreamingLink } from '@company-of-heroes/api';
 	import { api, unwrapApi } from '$core/api';
 	import * as Reward from '@company-of-heroes/ui/reward';
@@ -10,12 +11,7 @@
 	import { PlayerPerformance } from '$lib/components/player-performance';
 	import { relic, relicLeaderboardFingerprint } from '$lib/relic';
 	import { steam } from '$core/steam';
-	import {
-		cn,
-		getFactionFlagFromRace,
-		getRankImageByLeaderboardId,
-		normalizeMapName
-	} from '$lib/utils';
+	import { cn, getFactionFlagFromRace, normalizeMapName } from '$lib/utils';
 	import { getFactionFlagFromLeaderboardId } from '$lib/utils/game';
 	import { interactive, statLosses, statWins, factionIcon } from '$lib/components/ui/variants';
 	import * as Tabs from '$lib/components/ui/tabs';
@@ -40,6 +36,7 @@
 	import { dropdownItemIcon } from '@company-of-heroes/ui/variants';
 	import * as Player from '$lib/components/player';
 	import {
+		MatchResultStrip,
 		PlayerFact,
 		PlayerFacts,
 		PlayerHero,
@@ -64,10 +61,8 @@
 	import {
 		emptyPlayerPerformance,
 		getPlayerPerformance,
-		invalidatePlayerPerformanceCache,
-		type PerformanceRecentMatch
+		invalidatePlayerPerformanceCache
 	} from '$core/pocketbase/player-performance';
-	import { MATCH_TYPES } from '$core/game/lobby';
 	import {
 		buildRankedModeRows,
 		getEloColor,
@@ -80,7 +75,6 @@
 		pickFeaturedMode,
 		pickMainFaction
 	} from '$lib/components/leaderboard/leaderboard-utils';
-	import { tooltip } from '$lib/attachments';
 	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
@@ -283,9 +277,10 @@
 		() => [steamId, statsGeneration] as const,
 		async ([id]) => (id ? getPlayerRating(id) : null)
 	);
-	// Own rewards for the shown Steam ID (unlocked + progress); refetched after a match result.
+	// Own rewards for the shown Steam ID (unlocked + progress); refetched after a match result
+	// and when the main account changes (only the main Steam ID carries the account rewards).
 	const rewards = resource(
-		() => [steamId, statsGeneration] as const,
+		() => [steamId, mainSteamId, linkedSteamIds.join(','), statsGeneration] as const,
 		async ([id]) => (id ? unwrapApi(api.rewards.forPlayer(id)).catch(() => null) : null)
 	);
 	const playerElo = $derived(
@@ -403,27 +398,6 @@
 	function openTab(tab: string) {
 		activeTab = tab;
 		panelExpanded = true;
-	}
-
-	function modeLabel(matchtypeId: number): string {
-		return (
-			MATCH_TYPES[matchtypeId as keyof typeof MATCH_TYPES] ?? t('Mode {id}', { id: matchtypeId })
-		);
-	}
-
-	function recentMatchLabel(match: PerformanceRecentMatch): string {
-		const faction = match.raceId != null ? getRaceLabel(match.raceId) : t('Unknown');
-		const mode = match.matchtypeId != null ? modeLabel(match.matchtypeId) : t('Unknown');
-		return `${faction} · ${mode}`;
-	}
-
-	function recentMatchTooltip(match: PerformanceRecentMatch): string {
-		const mode = match.matchtypeId != null ? modeLabel(match.matchtypeId) : t('Unknown');
-		if (match.raceId == null) {
-			return mode;
-		}
-
-		return `<span class="inline-flex items-center gap-1.5 leading-none"><span class="inline-flex p-[3px]"><img src="${getFactionFlagFromRace(match.raceId)}" alt="" class="${factionIcon}" /></span>${mode}</span>`;
 	}
 
 	function winratePercent(wins: number, losses: number): string {
@@ -583,13 +557,11 @@
 							</span>
 						{/if}
 						{#if featuredMode.stat.ranklevel > 0}
-							<img
-								src={getRankImageByLeaderboardId(
-									featuredMode.stat.leaderboard_id,
-									featuredMode.stat.ranklevel
-								)}
-								alt={t('Rank {level}', { level: featuredMode.stat.ranklevel })}
-								class="h-6 w-auto shrink-0"
+							<RankIcon
+								level={featuredMode.stat.ranklevel}
+								leaderboardId={featuredMode.stat.leaderboard_id}
+								position={featuredMode.stat.rank}
+								class="size-auto h-6"
 							/>
 							<span class="text-secondary-200 text-sm">{featuredMode.stat.ranklevel}</span>
 						{/if}
@@ -660,13 +632,10 @@
 							? t('#{rank}', { rank: featuredMode.stat.highestrank })
 							: null}
 					>
-						<img
-							src={getRankImageByLeaderboardId(
-								featuredMode.stat.leaderboard_id,
-								featuredMode.stat.highestranklevel
-							)}
-							alt={t('Rank {level}', { level: featuredMode.stat.highestranklevel })}
-							class="h-6 w-auto shrink-0"
+						<RankIcon
+							level={featuredMode.stat.highestranklevel}
+							leaderboardId={featuredMode.stat.leaderboard_id}
+							class="size-auto h-6"
 						/>
 						<span>{featuredMode.stat.highestranklevel}</span>
 					</PlayerFact>
@@ -700,22 +669,7 @@
 
 				{#if formMatches.length > 0}
 					<PlayerFact label={t('Recent')} icon={ClockCounterClockwiseIcon}>
-						<span class="inline-flex min-w-0 items-center gap-1 overflow-x-auto">
-							{#each formMatches as match (match.id || match.sessionId)}
-								<a
-									href={resolve('/(loaded)/history/[id]', { id: match.id })}
-									class={cn(interactive, 'group inline-flex shrink-0')}
-									aria-label="{match.outcome === 1 ? t('Win') : t('Loss')} — {recentMatchLabel(
-										match
-									)}"
-									{@attach tooltip(recentMatchTooltip(match))}
-								>
-									<Badge variant={match.outcome === 1 ? 'success' : 'destructive'}>
-										{match.outcome === 1 ? t('W') : t('L')}
-									</Badge>
-								</a>
-							{/each}
-						</span>
+						<MatchResultStrip matches={formMatches} />
 					</PlayerFact>
 				{/if}
 			</PlayerFacts>

@@ -1,6 +1,6 @@
-import { handle, requireEditor } from '$lib/server/http';
+import { handle, requireUser } from '$lib/server/http';
 
-/** Editors: their guides; staff: every guide. */
+/** Their own guides; staff: every guide. */
 export const GET = handle((event) =>
-	requireEditor(event).asyncAndThen((user) => event.locals.services.guides.mine(user))
+	requireUser(event).asyncAndThen((user) => event.locals.services.guides.mine(user))
 );

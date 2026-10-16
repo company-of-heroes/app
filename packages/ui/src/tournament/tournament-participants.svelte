@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { tableHeadRow } from '@company-of-heroes/ui/variants';
@@ -8,7 +9,6 @@
 	import DotsSixVerticalIcon from 'phosphor-svelte/lib/DotsSixVerticalIcon';
 	import UserMinusIcon from 'phosphor-svelte/lib/UserMinusIcon';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { countryDisplayName } from '../format/country';
 	import { getEloColor, getEloTextShadow, isEliteElo } from '../format/player-format';
 	import { useHost } from '../host/host.context';
 	import { Badge } from '../ui/badge';
@@ -18,7 +18,7 @@
 	import TournamentParticipantStats from './tournament-participant-stats.svelte';
 	import type { TournamentParticipant } from './types';
 	import { useTournament } from './context';
-	import { escapeHtml, tooltip } from '../attachments';
+	import { tooltip } from '../attachments';
 
 	type Props = {
 		/** Staff, before the start: drag or move players up and down; `onReorder` gets the new order. */
@@ -132,8 +132,6 @@
 						{@const number = showPlacement ? participant.placement : participant.seed}
 						{@const isYou = participant.user === host.auth.user?.id}
 						{@const out = participant.status !== 'registered'}
-						{@const flagUrl = host.resolve.flagImageUrl(participant.country)}
-						{@const countryName = countryDisplayName(participant.country, host.locale())}
 						{@const open = expanded.has(participant.id)}
 						<TournamentDragItem
 							id={participant.id}
@@ -181,16 +179,7 @@
 													out && 'text-secondary-500 line-through'
 												)}
 											>
-												{#if flagUrl}
-													<img
-														loading="lazy"
-														decoding="async"
-														class="h-4 w-auto shrink-0 rounded-xs"
-														src={flagUrl}
-														alt={countryName ?? participant.country}
-														{@attach tooltip(escapeHtml(countryName ?? ''))}
-													/>
-												{/if}
+												<CountryFlag country={participant.country} class="h-4" />
 												<span class="truncate">{participant.alias}</span>
 											</span>
 											{#if isYou}

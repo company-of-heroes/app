@@ -2,7 +2,7 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import LockIcon from 'phosphor-svelte/lib/LockIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
-	import { tooltip } from '../attachments/tooltip.svelte';
+	import { escapeHtml, tooltip } from '../attachments/tooltip.svelte';
 	import { cn } from '../cn';
 	import { formatDate } from '../format/date';
 	import { tryUseHost } from '../host/host.context';
@@ -29,50 +29,53 @@
 			: null
 	);
 
-	function escape(value: string): string {
-		return value
-			.replaceAll('&', '&amp;')
-			.replaceAll('<', '&lt;')
-			.replaceAll('>', '&gt;')
-			.replaceAll('"', '&quot;');
-	}
-
-	function status(): string {
+	/**
+	 * Unlock date, or for a locked reward "Locked" plus the owner's progress per condition. Without
+	 * progress (a visitor, or an account the viewer does not own) it is just "Locked".
+	 */
+	const statusLines = $derived.by((): string[] => {
 		if (reward.unlockedAt) {
-			return formatDate(reward.unlockedAt, host?.locale() ?? 'en');
+			return [formatDate(reward.unlockedAt, host?.locale() ?? 'en', 'date', { timeZone: 'UTC' })];
 		}
 
 		if (!locked) {
-			return '';
+			return [];
 		}
 
-		const lockedLabel = t('Locked · {percent}%', {
-			percent: Math.floor((reward.progress?.overall ?? 0) * 100)
-		});
-		const conditions = reward.progress?.conditions ?? [];
+		if (!reward.progress) {
+			return [t('Locked')];
+		}
+
 		return [
-			lockedLabel,
-			...conditions.map(
+			t('Locked · {percent}%', { percent: Math.floor(reward.progress.overall * 100) }),
+			...reward.progress.conditions.map(
 				(condition) =>
 					`${formatRewardCondition(condition, t)}: ${Math.min(condition.value, condition.threshold)} / ${condition.threshold}`
 			)
-		].join('<br>');
-	}
+		];
+	});
 
 	const content = $derived(
 		[
 			`<span class="${cn(tooltipPanel, 'max-w-64 font-normal')}">`,
 			ribbonTipHtml(ribbon),
-			`<span class="block font-semibold text-white">${escape(reward.title)}</span>`,
+			`<span class="block font-semibold text-white">${escapeHtml(reward.title)}</span>`,
 			reward.description
-				? `<span class="text-secondary-300 mt-0.5 block">${escape(reward.description)}</span>`
+				? `<span class="text-secondary-300 mt-0.5 block">${escapeHtml(reward.description)}</span>`
 				: '',
-			status() ? `<span class="text-secondary-500 mt-1.5 block text-xs">${status()}</span>` : '',
+			statusLines.length > 0
+				? `<span class="text-secondary-500 mt-1.5 block text-xs">${statusLines.map(escapeHtml).join('<br>')}</span>`
+				: '',
 			'</span>'
 		].join('')
 	);
+	const label = $derived(
+		statusLines.length > 0 ? `${reward.title} (${statusLines[0]})` : reward.title
+	);
 </script>
 
+<!-- Focusable so keyboard users get the tooltip (tippy also opens on focus). -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <span
 	{@attach tooltip(content, { content, delay: [100, null] })}
 	class={cn(
@@ -84,8 +87,9 @@
 		locked && 'shadow-none',
 		className
 	)}
-	aria-label={locked ? `${reward.title} (${t('Locked')})` : reward.title}
+	aria-label={label}
 	role="img"
+	tabindex="0"
 >
 	{#if ribbon}
 		<img

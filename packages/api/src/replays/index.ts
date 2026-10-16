@@ -21,6 +21,8 @@ export {
 	type MemberReplayUploadInput,
 	type MemberReplayUpdateInput,
 	type MemberReplayUploader,
+	type ReplayDiscover,
+	type ReplayDiscoverThemeId,
 	type MemberReplayRosterPlayer,
 	memberReplayRosterForEdit,
 	type PublishFromMatchInput,

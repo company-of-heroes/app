@@ -1,5 +1,4 @@
-import { ClientResponseError } from 'pocketbase';
-import { okAsync, ResultAsync } from 'neverthrow';
+import { errAsync, okAsync, ResultAsync } from 'neverthrow';
 import { parseRewardConditions, rewardImageUrl } from '@company-of-heroes/api/rewards';
 import { isAccountReward, type RewardCondition } from '@company-of-heroes/ui/reward/metrics';
 import type {
@@ -15,12 +14,19 @@ import {
 	type RelicPersonalStat
 } from '../domain/relic-matches';
 import { steamIdsOf } from '../domain/users';
-import { all, fromPb, sequence, type Task } from '../result';
+import { all, chunk, fromPb, sequence, type Task } from '../result';
+import type { ConditionalLabel } from './label-auto';
 import { Service } from './service';
 
 /** Users per job run: each evaluation makes one query per distinct metric. */
-const BATCH = 10;
+const BATCH = 5;
+/** A run stops starting new users after this, so it stays clear of the worker limits. */
+const BUDGET_MS = 20_000;
+/** A user whose evaluation failed is retried after this, behind the users already due (`retryAt`). */
+const RETRY_MS = 15 * 60 * 1000;
 const CACHE_SECONDS = 60;
+/** PocketBase's batch API limit (`settings.batch.maxRequests`). */
+const PB_BATCH = 50;
 
 type RewardRow = {
 	id: string;
@@ -44,6 +50,8 @@ type Owner = {
 	reputation: number;
 	hasAvatar: boolean;
 	created: string;
+	/** Steam IDs another account lists too: they get no account rewards or labels. */
+	shared: Set<string>;
 };
 
 type OwnerRow = {
@@ -56,15 +64,29 @@ type OwnerRow = {
 
 type Unlock = { reward: string; unlockedAt: string };
 
-type Checked = { reward: Reward; created: boolean; seenBefore: boolean };
+type DueUser = { id: string; rewardsCheckedAt: string };
+
+/** What one job run evaluates against, loaded once and uncached. */
+type Catalog = { rewards: Reward[]; labels: ConditionalLabel[] };
 
 type Metric = (condition: RewardCondition) => Task<number>;
 
+/** A counted `lobby_player_index` row; duplicate lobbies of one Relic match share `session_id`. */
+type SessionRow = { session_id: number; lobby: string };
+
+type StreakRow = { session_id: number; outcome: number | null; profile_id: number };
+
 /** Fetched at most once per evaluation, however many conditions use it. */
-type Shared = { ladder: () => Task<LeaderboardStat[]> };
+type Shared = {
+	ladder: () => Task<LeaderboardStat[]>;
+	/** Sessions the owner has more than one counted row in; usually none. */
+	duplicates: () => Task<number[]>;
+};
 
 const OWNER_FIELDS = 'id,steamIds,reputation,avatar,created';
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Lobby ids per filter, so the query string stays well under URL limits. */
+const ID_CHUNK = 50;
 
 function toOwner(row: OwnerRow): Owner {
 	return {
@@ -72,8 +94,26 @@ function toOwner(row: OwnerRow): Owner {
 		steamIds: steamIdsOf(row),
 		reputation: Number(row.reputation) || 0,
 		hasAvatar: Boolean(row.avatar),
-		created: row.created ?? ''
+		created: row.created ?? '',
+		shared: new Set()
 	};
+}
+
+/** Rows beyond the first of each session: a Relic match recorded in several lobbies. */
+function extraRows(rows: SessionRow[]): number {
+	return rows.length - new Set(rows.map((row) => row.session_id)).size;
+}
+
+/** The lobbies of each session that has more than one. */
+function duplicateLobbies(rows: SessionRow[]): { session: number; lobbies: string[] }[] {
+	const bySession = new Map<number, Set<string>>();
+	for (const row of rows) {
+		bySession.set(row.session_id, (bySession.get(row.session_id) ?? new Set()).add(row.lobby));
+	}
+
+	return [...bySession]
+		.filter(([, lobbies]) => lobbies.size > 1)
+		.map(([session, lobbies]) => ({ session, lobbies: [...lobbies] }));
 }
 
 /** Relic automatch ladders 4–19: four per mode (1v1 to 4v4), in race order US, Wehrmacht, British, Panzer Elite. */
@@ -90,11 +130,24 @@ function pbDate(date: Date): string {
 	return date.toISOString().replace('T', ' ');
 }
 
-function longestWinStreak(rows: { outcome: number }[]): number {
+/**
+ * `rewardsCheckedAt` after a failed evaluation: due again after `RETRY_MS`, sorted with the
+ * users last checked a day ago, so behind never-checked and stale ones. Never before the
+ * catalog `version` the run used: the due query treats anything older as stale, so after a
+ * reward edit a failing user would be due (and first) on every run and fill each batch.
+ * Within a day of an edit it therefore waits for the daily re-check.
+ */
+function retryAt(version: string): string {
+	const retry = pbDate(new Date(Date.now() - DAY_MS + RETRY_MS));
+	return version > retry ? version : retry;
+}
+
+/** Longest run of wins over the sessions in match order (Relic session ids only go up). */
+function longestWinStreak(won: Map<number, boolean>): number {
 	let best = 0;
 	let current = 0;
-	for (const row of rows) {
-		current = row.outcome === 1 ? current + 1 : 0;
+	for (const session of [...won.keys()].sort((a, b) => a - b)) {
+		current = won.get(session) ? current + 1 : 0;
 		best = Math.max(best, current);
 	}
 	return best;
@@ -117,9 +170,13 @@ function hasLinks(raw: unknown): boolean {
 	return false;
 }
 
-/** Account rewards only show on the main Steam ID (the first on the account); the others hide them. */
-function shownOn(owner: Owner, steamId: string): (reward: Reward) => boolean {
-	const main = owner.steamIds[0] === steamId;
+/**
+ * Account rewards only show on the main Steam ID (the first on the account); the others hide
+ * them. Account labels are only assigned to the main one, for the same reason. A Steam ID
+ * another account lists too shows none: they would be one user's on another's profile.
+ */
+function shownOn(owner: Owner, steamId: string): (reward: Pick<Reward, 'parsed'>) => boolean {
+	const main = owner.steamIds[0] === steamId && !owner.shared.has(steamId);
 	return (reward) => main || !isAccountReward(reward.parsed);
 }
 
@@ -135,25 +192,36 @@ function forSteamId(owner: Owner, steamId: string): Owner {
  * on the account. Progress is computed on request. Events only mark a user as due
  * (`users.rewardsCheckedAt` cleared); the `rewards-evaluate` job unlocks all of the
  * user's Steam IDs and notifies. Editing a reward makes everyone due. Account rewards
- * unlock on every Steam ID but only show on the main one, so changing it keeps them.
+ * unlock on every Steam ID but only show on the main one, so changing it keeps them; a
+ * Steam ID another account lists too gets none. Match metrics count each Relic session once.
+ * Labels with conditions are evaluated the same way and assigned like a staff label.
  */
 export class RewardsService extends Service {
 	private get unlocks() {
 		return this.pb.collection('steam_rewards');
 	}
 
-	/** Enabled rewards with valid conditions. */
-	private catalog(): Task<Reward[]> {
-		return cached('rewards:catalog', CACHE_SECONDS, () =>
-			fromPb(
-				this.pb.collection('rewards').getFullList<RewardRow>({
-					filter: 'enabled = true',
-					sort: 'sort,title',
-					fields:
-						'id,collectionId,collectionName,title,description,image,ribbon,conditions,secret,sort,updated'
-				}),
-				'Could not load rewards'
-			)
+	private catalogRows(): Task<RewardRow[]> {
+		return fromPb(
+			this.pb.collection('rewards').getFullList<RewardRow>({
+				filter: 'enabled = true',
+				sort: 'sort,title',
+				fields:
+					'id,collectionId,collectionName,title,description,image,ribbon,conditions,secret,sort,updated'
+			}),
+			'Could not load rewards'
+		);
+	}
+
+	/**
+	 * Enabled rewards with valid conditions. `fresh` skips the cache: the job compares the
+	 * catalog with `catalogVersion`, which is never cached either.
+	 */
+	private catalog({ fresh = false } = {}): Task<Reward[]> {
+		return (
+			fresh
+				? this.catalogRows()
+				: cached('rewards:catalog', CACHE_SECONDS, () => this.catalogRows())
 		).map((rows) =>
 			rows.flatMap((row) => {
 				const parsed = parseRewardConditions(row.conditions);
@@ -167,8 +235,8 @@ export class RewardsService extends Service {
 		);
 	}
 
-	/** Newest edit of any reward: users checked before it are due again. */
-	private catalogVersion(): Task<string> {
+	/** Newest edit of any reward or conditional label: users checked before it are due again. */
+	private catalogVersion(labels: ConditionalLabel[]): Task<string> {
 		return fromPb(
 			this.pb.collection('rewards').getList<{ updated: string }>(1, 1, {
 				sort: '-updated',
@@ -176,27 +244,73 @@ export class RewardsService extends Service {
 				skipTotal: true
 			}),
 			'Could not load rewards'
-		).map((page) => page.items[0]?.updated ?? '');
+		).map((page) =>
+			[page.items[0]?.updated ?? '', ...labels.map((label) => label.updated)].reduce(
+				(newest, updated) => (updated > newest ? updated : newest),
+				''
+			)
+		);
+	}
+
+	/**
+	 * Rewards and conditional labels as they are now. The labels' cache is dropped first,
+	 * or users checked within its TTL after a label edit would count as checked against it.
+	 */
+	private freshCatalog(): Task<Catalog> {
+		return ResultAsync.combine([
+			this.catalog({ fresh: true }),
+			uncache('labels:conditional').andThen(() => this.services.labelAuto.conditionalLabels())
+		]).map(([rewards, labels]) => ({ rewards, labels }));
 	}
 
 	private owner(userId: string): Task<Owner> {
 		return fromPb(
 			this.pb.collection('users').getOne<OwnerRow>(userId, { fields: OWNER_FIELDS }),
 			'User not found'
-		).map(toOwner);
+		)
+			.map(toOwner)
+			.andThen((owner) => this.withShared(owner));
 	}
 
-	/** The account a Steam id belongs to, or null when nobody linked it. */
+	/** Marks the owner's Steam IDs that another account lists too, in one query. */
+	private withShared(owner: Owner): Task<Owner> {
+		if (owner.steamIds.length === 0) {
+			return okAsync(owner);
+		}
+
+		const listed = owner.steamIds
+			.map((steamId) => this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }))
+			.join(' || ');
+		return fromPb(
+			this.pb.collection('users').getFullList<{ steamIds?: unknown }>({
+				filter: `${this.pb.filter('id != {:userId}', { userId: owner.id })} && (${listed})`,
+				fields: 'steamIds'
+			}),
+			'Could not load users'
+		).map((others) => {
+			const elsewhere = new Set(others.flatMap(steamIdsOf));
+			return { ...owner, shared: new Set(owner.steamIds.filter((id) => elsewhere.has(id))) };
+		});
+	}
+
+	/** The account a Steam id belongs to (the last to sign in when several list it), or null. */
 	private ownerOf(steamId: string): Task<Owner | null> {
 		return fromPb(
-			this.pb.collection('users').getList<OwnerRow>(1, 1, {
+			this.pb.collection('users').getList<OwnerRow>(1, 2, {
 				filter: this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }),
 				sort: '-lastLogin',
 				fields: OWNER_FIELDS,
 				skipTotal: true
 			}),
 			'Could not load users'
-		).map((page) => (page.items[0] ? toOwner(page.items[0]) : null));
+		).map((page) =>
+			page.items[0]
+				? {
+						...toOwner(page.items[0]),
+						shared: new Set(page.items.length > 1 ? [steamId] : [])
+					}
+				: null
+		);
 	}
 
 	private unlocked(steamId: string): Task<Unlock[]> {
@@ -210,8 +324,8 @@ export class RewardsService extends Service {
 	}
 
 	/**
-	 * Unlocks from before rewards were per Steam ID. Only read so a Steam ID that earns
-	 * one again keeps its original date and the user is not notified twice.
+	 * Unlocks from before rewards were per Steam ID. The main Steam ID keeps them whatever
+	 * its progress; another Steam ID that earns one gets the original date. Neither notifies.
 	 */
 	private legacyUnlocks(userId: string): Task<Map<string, string>> {
 		return fromPb(
@@ -232,12 +346,19 @@ export class RewardsService extends Service {
 
 	/** The owner's finished, counted match rows (same base as performance stats) plus the condition's filters. */
 	private matchFilter(owner: Owner, condition: RewardCondition, extra: string[] = []): string {
-		const { raceId, matchtypeId, ranked, map, minMinutes, maxMinutes, pro, minAvgElo } =
-			condition.filter ?? {};
-		const parts = [
+		return [
 			`(${owner.steamIds.map((steamId) => this.pb.filter('steam_id = {:steamId}', { steamId })).join(' || ')})`,
 			'counts = true && session_id > 0 && (outcome = 0 || outcome = 1)',
 			...extra,
+			...this.conditionFilters(condition)
+		].join(' && ');
+	}
+
+	/** The condition's own filters on `lobby_player_index`. */
+	private conditionFilters(condition: RewardCondition): string[] {
+		const { raceId, matchtypeId, ranked, map, minMinutes, maxMinutes, pro, minAvgElo } =
+			condition.filter ?? {};
+		const parts = [
 			raceId !== undefined ? this.pb.filter('race_id = {:raceId}', { raceId }) : '',
 			matchtypeId !== undefined
 				? this.pb.filter('matchtype_id = {:matchtypeId}', { matchtypeId })
@@ -255,32 +376,130 @@ export class RewardsService extends Service {
 			pro ? 'lobby.isPro = true' : '',
 			minAvgElo !== undefined ? this.pb.filter('lobby.avgElo >= {:minAvgElo}', { minAvgElo }) : ''
 		];
-		return parts.filter(Boolean).join(' && ');
+		return parts.filter(Boolean);
 	}
 
-	private matchCount(owner: Owner, condition: RewardCondition, extra: string[] = []): Task<number> {
+	/**
+	 * Sessions the owner has more than one counted row in: a Relic match recorded in two
+	 * lobbies until the lobby-merge job runs. One query on the `player_duplicate_sessions`
+	 * view, which only groups this owner's rows.
+	 */
+	private duplicateSessions(owner: Owner): Task<number[]> {
+		if (owner.steamIds.length === 0) {
+			return okAsync([]);
+		}
+
+		return fromPb(
+			this.pb.collection('player_duplicate_sessions').getFullList<{ session_id: number }>({
+				filter: owner.steamIds
+					.map((steamId) => this.pb.filter('steam_id = {:steamId}', { steamId }))
+					.join(' || '),
+				fields: 'session_id'
+			}),
+			'Could not load matches'
+		).map((rows) => [...new Set(rows.map((row) => row.session_id))]);
+	}
+
+	/** The owner's counted rows in duplicated sessions that match the filter; no request without any. */
+	private duplicateRows(
+		owner: Owner,
+		condition: RewardCondition,
+		shared: Shared,
+		extra: string[] = []
+	): Task<SessionRow[]> {
+		return shared.duplicates().andThen((sessions) =>
+			sequence(chunk(sessions, ID_CHUNK), (ids) =>
+				fromPb(
+					this.pb.collection('lobby_player_index').getFullList<SessionRow>({
+						filter: this.matchFilter(owner, condition, [
+							`(${ids.map((session) => this.pb.filter('session_id = {:session}', { session })).join(' || ')})`,
+							...extra
+						]),
+						fields: 'session_id,lobby'
+					}),
+					'Could not load matches'
+				)
+			).map((pages) => pages.flat())
+		);
+	}
+
+	/**
+	 * Counted matches for the filter, each Relic session once: a count query, minus the extra
+	 * rows of duplicated sessions (only loaded when the owner has any).
+	 */
+	private matchCount(
+		owner: Owner,
+		condition: RewardCondition,
+		shared: Shared,
+		extra: string[] = []
+	): Task<number> {
 		if (owner.steamIds.length === 0) {
 			return okAsync(0);
 		}
 
-		return this.count('lobby_player_index', this.matchFilter(owner, condition, extra));
+		return ResultAsync.combine([
+			this.count('lobby_player_index', this.matchFilter(owner, condition, extra)),
+			this.duplicateRows(owner, condition, shared, extra)
+		]).map(([rows, duplicates]) => rows - extraRows(duplicates));
 	}
 
-	/** Longest run of wins, in match order (Relic session ids only go up). */
+	/**
+	 * Sessions of finished matches whose result never arrived (Relic lookup failed): no Steam
+	 * ID, outcome, faction or mode on the row, so found by profile id. Skirmish (AI) games stay
+	 * out; with a faction or mode filter nobody can tell whether the match qualified.
+	 */
+	private unresolvedSessions(profileIds: number[], condition: RewardCondition): Task<number[]> {
+		const { raceId, matchtypeId } = condition.filter ?? {};
+		if (profileIds.length === 0 || raceId !== undefined || matchtypeId !== undefined) {
+			return okAsync([]);
+		}
+
+		return fromPb(
+			this.pb.collection('lobby_player_index').getFullList<{ session_id: number }>({
+				filter: [
+					`(${profileIds.map((profileId) => this.pb.filter('profile_id = {:profileId}', { profileId })).join(' || ')})`,
+					"session_id > 0 && lobby.needsResult = true && lobby.hasFailed = true && lobby.title != 'Skirmish'",
+					...this.conditionFilters(condition)
+				].join(' && '),
+				fields: 'session_id',
+				batch: 1000
+			}),
+			'Could not load matches'
+		).map((rows) => rows.map((row) => row.session_id));
+	}
+
+	/** Longest run of wins; a match without a result breaks it like a loss. */
 	private winStreak(owner: Owner, condition: RewardCondition): Task<number> {
 		if (owner.steamIds.length === 0) {
 			return okAsync(0);
 		}
 
 		return fromPb(
-			this.pb.collection('lobby_player_index').getFullList<{ outcome: number }>({
+			this.pb.collection('lobby_player_index').getFullList<StreakRow>({
 				filter: this.matchFilter(owner, condition),
 				sort: 'session_id',
-				fields: 'outcome',
+				fields: 'session_id,outcome,profile_id',
 				batch: 1000
 			}),
 			'Could not load matches'
-		).map(longestWinStreak);
+		).andThen((rows) => {
+			const won = new Map<number, boolean>();
+			for (const row of rows) {
+				won.set(row.session_id, won.get(row.session_id) === true || row.outcome === 1);
+			}
+
+			const profileIds = [...new Set(rows.map((row) => row.profile_id).filter(Boolean))];
+			return this.unresolvedSessions(profileIds, condition).map((sessions) => {
+				// A duplicate lobby of the session that did get a result decides it.
+				for (const session of sessions) {
+					if (!won.has(session)) {
+						won.set(session, false);
+					}
+				}
+
+				return longestWinStreak(won);
+			});
+		});
 	}
 
 	/** Highest current rating over the owner's Steam ids, optionally for one mode and/or faction. */
@@ -370,12 +589,17 @@ export class RewardsService extends Service {
 		);
 	}
 
-	private hoursPlayed(owner: Owner): Task<number> {
+	/**
+	 * The `player_play_time` view sums every counted row, so a match recorded in two lobbies
+	 * counts twice: the extra lobbies' durations are taken off again (each session keeps its
+	 * longest). Only duplicated sessions need their rows and durations loaded.
+	 */
+	private hoursPlayed(owner: Owner, condition: RewardCondition, shared: Shared): Task<number> {
 		if (owner.steamIds.length === 0) {
 			return okAsync(0);
 		}
 
-		return fromPb(
+		const viewSeconds = fromPb(
 			this.pb.collection('player_play_time').getFullList<{ seconds: number }>({
 				filter: owner.steamIds
 					.map((steamId) => this.pb.filter('id = {:steamId}', { steamId }))
@@ -383,9 +607,39 @@ export class RewardsService extends Service {
 				fields: 'seconds'
 			}),
 			'Could not load play time'
-		).map((rows) =>
-			Math.floor(rows.reduce((sum, row) => sum + (Number(row.seconds) || 0), 0) / 3600)
-		);
+		).map((rows) => rows.reduce((sum, row) => sum + (Number(row.seconds) || 0), 0));
+		return ResultAsync.combine([
+			viewSeconds,
+			this.duplicateRows(owner, { ...condition, filter: undefined }, shared).andThen((rows) =>
+				this.doubleCounted(rows)
+			)
+		]).map(([seconds, extra]) => Math.floor(Math.max(0, seconds - extra) / 3600));
+	}
+
+	/** Seconds the view counts more than once: per duplicated session, all but its longest lobby. */
+	private doubleCounted(rows: SessionRow[]): Task<number> {
+		const duplicates = duplicateLobbies(rows);
+		if (duplicates.length === 0) {
+			return okAsync(0);
+		}
+
+		return sequence(chunk([...new Set(duplicates.flatMap((d) => d.lobbies))], ID_CHUNK), (ids) =>
+			fromPb(
+				this.pb.collection('lobbies').getFullList<{ id: string; durationSeconds: number }>({
+					filter: ids.map((id) => this.pb.filter('id = {:id}', { id })).join(' || '),
+					fields: 'id,durationSeconds'
+				}),
+				'Could not load matches'
+			)
+		).map((pages) => {
+			const duration = new Map(
+				pages.flat().map((lobby) => [lobby.id, Number(lobby.durationSeconds) || 0])
+			);
+			return duplicates.reduce((sum, { lobbies }) => {
+				const seconds = lobbies.map((id) => duration.get(id) ?? 0);
+				return sum + seconds.reduce((a, b) => a + b, 0) - Math.max(...seconds);
+			}, 0);
+		});
 	}
 
 	private votesCast(owner: Owner): Task<number> {
@@ -469,12 +723,12 @@ export class RewardsService extends Service {
 		const replies = `${own} && parent != ""`;
 		switch (condition.metric) {
 			case 'matches_played':
-				return this.matchCount(owner, condition);
+				return this.matchCount(owner, condition, shared);
 			case 'wins':
-				return this.matchCount(owner, condition, ['outcome = 1']);
+				return this.matchCount(owner, condition, shared, ['outcome = 1']);
 			case 'upset_wins':
 				// In 1v1 the lobby average above your own pre-match rating means the opponent was higher.
-				return this.matchCount(owner, condition, [
+				return this.matchCount(owner, condition, shared, [
 					'matchtype_id = 1 && outcome = 1 && elo > 0 && lobby.avgElo > elo'
 				]);
 			case 'win_streak':
@@ -484,7 +738,7 @@ export class RewardsService extends Service {
 			case 'rank_reached':
 				return this.rankReached(condition, shared);
 			case 'hours_played':
-				return this.hoursPlayed(owner);
+				return this.hoursPlayed(owner, condition, shared);
 			case 'matches_recorded':
 				return this.count(
 					'lobbies',
@@ -548,7 +802,11 @@ export class RewardsService extends Service {
 	private metrics(owner: Owner): Metric {
 		const memo = new Map<string, Task<number>>();
 		let ladder: Task<LeaderboardStat[]> | undefined;
-		const shared: Shared = { ladder: () => (ladder ??= this.ladderStats(owner)) };
+		let duplicates: Task<number[]> | undefined;
+		const shared: Shared = {
+			ladder: () => (ladder ??= this.ladderStats(owner)),
+			duplicates: () => (duplicates ??= this.duplicateSessions(owner))
+		};
 		return (condition) => {
 			const key = `${condition.metric}:${JSON.stringify(condition.filter ?? {})}`;
 			let task = memo.get(key);
@@ -561,9 +819,24 @@ export class RewardsService extends Service {
 		};
 	}
 
-	private progress(reward: Reward, metric: Metric): Task<RewardProgress> {
+	/**
+	 * One reward's or label's progress; null when a metric failed (a filter PocketBase
+	 * rejects, a timeout), so the others still evaluate.
+	 */
+	private progressOrSkip(
+		id: string,
+		conditions: RewardCondition[],
+		metric: Metric
+	): Task<RewardProgress | null> {
+		return this.progress(conditions, metric).orElse((error) => {
+			console.warn('[rewards] progress failed, skipped', id, error);
+			return okAsync(null);
+		});
+	}
+
+	private progress(conditions: RewardCondition[], metric: Metric): Task<RewardProgress> {
 		return all(
-			reward.parsed.map((condition) =>
+			conditions.map((condition) =>
 				metric(condition).map((value): RewardConditionProgress => ({ ...condition, value }))
 			)
 		).map((conditions) => ({
@@ -603,7 +876,9 @@ export class RewardsService extends Service {
 						const unlockedAt = when.get(reward.id) ?? null;
 						return unlockedAt
 							? okAsync(this.view(reward, unlockedAt))
-							: this.progress(reward, metric).map((progress) => this.view(reward, null, progress));
+							: this.progressOrSkip(reward.id, reward.parsed, metric).map((progress) =>
+									this.view(reward, null, progress ?? undefined)
+								);
 					})
 				).map((rewards) => ({ owned: true, linked: true, rewards }));
 			}
@@ -658,34 +933,58 @@ export class RewardsService extends Service {
 		});
 	}
 
-	/** Queues users for the next `rewards-evaluate` run (skips ones already queued). */
-	markDirty(users: { id: string; rewardsCheckedAt?: string }[]): Task<void> {
-		return sequence(
-			users.filter((user) => user.id && user.rewardsCheckedAt !== ''),
-			(user) =>
-				fromPb(
-					this.pb.collection('users').update(user.id, { rewardsCheckedAt: null }),
-					'Could not queue rewards'
-				)
+	/**
+	 * Queues users for the next `rewards-evaluate` run. Always writes: a value the caller
+	 * read earlier may be stale, and a run that claimed the user may already have read the
+	 * data that just changed.
+	 */
+	markDirty(users: { id: string }[]): Task<void> {
+		return sequence([...new Set(users.map((user) => user.id).filter(Boolean))], (userId) =>
+			fromPb(
+				this.pb.collection('users').update(userId, { rewardsCheckedAt: null }),
+				'Could not queue rewards'
+			)
 		).map(() => undefined);
 	}
 
-	/** Creates the unlock; false when another run already did. */
-	private unlock(steamId: string, rewardId: string, unlockedAt: string): Task<boolean> {
+	private hasUnlock(steamId: string, rewardId: string): Task<boolean> {
 		return fromPb(
-			this.unlocks
-				.create({ steamId, reward: rewardId, unlockedAt })
-				.then(() => true)
-				.catch((error) => {
-					// The unique (steamId, reward) index makes a repeat unlock a no-op.
-					if (error instanceof ClientResponseError && error.status === 400) {
-						return false;
-					}
-
-					throw error;
+			this.unlocks.getList(1, 1, {
+				filter: this.pb.filter('steamId = {:steamId} && reward = {:rewardId}', {
+					steamId,
+					rewardId
 				}),
+				fields: 'id',
+				skipTotal: true
+			}),
+			'Could not load rewards'
+		).map((page) => page.items.length > 0);
+	}
+
+	/**
+	 * Creates the unlock; false when another run already did. `pendingNotify` unlocks are
+	 * announced by `notifyPending`, which retries until it succeeds.
+	 */
+	private unlock(
+		steamId: string,
+		rewardId: string,
+		unlockedAt: string,
+		pendingNotify: boolean
+	): Task<boolean> {
+		return fromPb(
+			this.unlocks.create({ steamId, reward: rewardId, unlockedAt, pendingNotify }),
 			'Could not unlock reward'
-		);
+		)
+			.map(() => true)
+			.orElse((error) =>
+				// The unique (steamId, reward) index rejects a repeat unlock with a 400, as does
+				// any other invalid value: only an existing row means "already unlocked".
+				error.status === 400
+					? this.hasUnlock(steamId, rewardId).andThen((exists) =>
+							exists ? okAsync(false) : errAsync(error)
+						)
+					: errAsync(error)
+			);
 	}
 
 	/** One notification per run, so a first (retroactive) evaluation does not flood the user. */
@@ -710,121 +1009,289 @@ export class RewardsService extends Service {
 		).map(() => undefined);
 	}
 
-	/** Unlocks every reward one Steam ID now qualifies for. */
+	/** Assigns every conditional label one Steam ID now meets; never taken back. */
+	private evaluateLabels(
+		owner: Owner,
+		steamId: string,
+		labels: ConditionalLabel[],
+		metric: Metric
+	): Task<number> {
+		const candidates = labels.filter((label) =>
+			shownOn(owner, steamId)({ parsed: label.conditions })
+		);
+		if (candidates.length === 0) {
+			return okAsync(0);
+		}
+
+		return this.services.labelAuto
+			.assignedTo(steamId)
+			.andThen((have) =>
+				all(
+					candidates
+						.filter((label) => !have.has(label.id))
+						.map((label) =>
+							this.progressOrSkip(label.id, label.conditions, metric).map((progress) =>
+								progress && progress.overall >= 1 ? [label.id] : []
+							)
+						)
+				)
+			)
+			.andThen((met) => this.services.labelAuto.grantTo(steamId, met.flat()))
+			.orElse((error) => {
+				console.warn('[rewards] conditional labels failed', steamId, error);
+				return okAsync(0);
+			});
+	}
+
+	/**
+	 * Unlocks every reward and assigns every label one Steam ID now qualifies for. The main
+	 * Steam ID also gets the user's legacy (per-account) unlocks, whatever its progress.
+	 */
 	private evaluateSteamId(
 		owner: Owner,
 		steamId: string,
-		catalog: Reward[],
+		catalog: Catalog,
 		legacy: Map<string, string>
-	): Task<Checked[]> {
+	): Task<void> {
+		const metric = this.metrics(forSteamId(owner, steamId));
+		const main = owner.steamIds[0] === steamId;
+		// Another account lists this Steam ID too: its account rewards would not be this user's.
+		const shared = owner.shared.has(steamId);
 		return this.unlocked(steamId).andThen((unlocks) => {
 			const have = new Set(unlocks.map((unlock) => unlock.reward));
-			const metric = this.metrics(forSteamId(owner, steamId));
+			const missing = catalog.rewards.filter(
+				(reward) => !have.has(reward.id) && !(shared && isAccountReward(reward.parsed))
+			);
+			const carried = main ? missing.filter((reward) => legacy.has(reward.id)) : [];
 			return all(
-				catalog
-					.filter((reward) => !have.has(reward.id))
-					.map((reward) => this.progress(reward, metric).map((progress) => ({ reward, progress })))
-			)
-				.andThen((checked) =>
-					sequence(
-						checked.filter(({ progress }) => progress.overall >= 1),
-						({ reward }) => {
-							const earlier = legacy.get(reward.id);
-							return this.unlock(steamId, reward.id, earlier ?? new Date().toISOString()).map(
-								(created): Checked => ({ reward, created, seenBefore: earlier !== undefined })
-							);
-						}
+				missing
+					.filter((reward) => !carried.includes(reward))
+					.map((reward) =>
+						this.progressOrSkip(reward.id, reward.parsed, metric).map((progress) =>
+							progress && progress.overall >= 1 ? [reward] : []
+						)
 					)
+			)
+				.andThen((earned) =>
+					sequence([...carried, ...earned.flat()], (reward) => {
+						// A legacy unlock keeps its date and was announced back then.
+						const earlier = legacy.get(reward.id);
+						return this.unlock(
+							steamId,
+							reward.id,
+							earlier ?? new Date().toISOString(),
+							earlier === undefined
+						);
+					})
 				)
-				.andThen((results) =>
-					results.some(({ created }) => created)
-						? uncache(`rewards:player:${steamId}`).map(() => results)
-						: okAsync(results)
-				);
+				.andThen((created) =>
+					created.some(Boolean) ? uncache(`rewards:player:${steamId}`) : okAsync(undefined)
+				)
+				.andThen(() => this.evaluateLabels(owner, steamId, catalog.labels, metric))
+				.map(() => undefined);
 		});
 	}
 
-	/** Unlocks every reward the user's Steam IDs now qualify for; returns how many were new. */
-	evaluate(userId: string): Task<number> {
-		return ResultAsync.combine([
-			this.catalog(),
-			this.owner(userId),
-			this.legacyUnlocks(userId)
-		]).andThen(([catalog, owner, legacy]) =>
-			sequence(owner.steamIds, (steamId) => this.evaluateSteamId(owner, steamId, catalog, legacy))
-				.andThen((perSteamId) => {
-					// Notify each reward once, even when several Steam IDs unlocked it in this run.
-					const fresh = [
-						...new Map(
-							perSteamId
-								.flat()
-								.filter(({ created, seenBefore }) => created && !seenBefore)
-								.map(({ reward }) => [reward.id, reward])
-						).values()
-					];
-					return this.notify(userId, fresh).map(() => fresh.length);
-				})
-				.andThen((fresh) =>
-					// Auto labels on the highest rank ever; the ladders only show the current one.
-					this.services.labelAuto
-						.grantForSteamIds(owner.steamIds)
-						.orElse((error) => {
-							console.warn('[rewards] auto labels failed', userId, error);
-							return okAsync(0);
-						})
-						.map(() => fresh)
+	/**
+	 * Announces the unlocks of every Steam ID that were not announced yet, each reward once.
+	 * They stay pending until the notification is sent, so a failed run retries it. At least
+	 * once, not exactly once: clearing first would lose the notification when sending fails,
+	 * and PocketBase has no conditional update to let only one of two runs clear a row. Two
+	 * runs only evaluate one user together when both pass `claim`'s re-read.
+	 */
+	private notifyPending(userId: string, steamIds: string[], rewards: Reward[]): Task<number> {
+		if (steamIds.length === 0) {
+			return okAsync(0);
+		}
+
+		const ofSteamIds = steamIds
+			.map((steamId) => this.pb.filter('steamId = {:steamId}', { steamId }))
+			.join(' || ');
+		return fromPb(
+			this.unlocks.getFullList<{ id: string; reward: string }>({
+				filter: `pendingNotify = true && (${ofSteamIds})`,
+				fields: 'id,reward'
+			}),
+			'Could not load rewards'
+		).andThen((pending) => {
+			// A reward disabled since it unlocked is cleared without a notification.
+			const byId = new Map(rewards.map((reward) => [reward.id, reward]));
+			const fresh = [
+				...new Map(
+					pending.flatMap((row) => {
+						const reward = byId.get(row.reward);
+						return reward ? [[reward.id, reward] as const] : [];
+					})
+				).values()
+			];
+			return this.notify(userId, fresh)
+				.andThen(() =>
+					sequence(chunk(pending, PB_BATCH), (rows) => {
+						const batch = this.pb.createBatch();
+						for (const row of rows) {
+							batch.collection('steam_rewards').update(row.id, { pendingNotify: false });
+						}
+
+						return fromPb(batch.send(), 'Could not save rewards');
+					})
 				)
-				.andThen((fresh) =>
-					fromPb(
-						this.pb
-							.collection('users')
-							.update(userId, { rewardsCheckedAt: new Date().toISOString() }),
-						'Could not save rewards check'
-					).map(() => fresh)
-				)
+				.map(() => fresh.length);
+		});
+	}
+
+	/** Unlocks every reward the user's Steam IDs now qualify for; returns how many were announced. */
+	private evaluate(userId: string, catalog: Catalog): Task<number> {
+		return ResultAsync.combine([this.owner(userId), this.legacyUnlocks(userId)]).andThen(
+			([owner, legacy]) =>
+				sequence(owner.steamIds, (steamId) => this.evaluateSteamId(owner, steamId, catalog, legacy))
+					.andThen(() => this.notifyPending(userId, owner.steamIds, catalog.rewards))
+					.andThen((fresh) =>
+						// Auto labels on the highest rank ever; the ladders only show the current one.
+						this.services.labelAuto
+							.grantForSteamIds(owner.steamIds)
+							.orElse((error) => {
+								console.warn('[rewards] auto labels failed', userId, error);
+								return okAsync(0);
+							})
+							.map(() => fresh)
+					)
 		);
+	}
+
+	private setCheckedAt(userId: string, checkedAt: string): Task<void> {
+		return fromPb(
+			this.pb.collection('users').update(userId, { rewardsCheckedAt: checkedAt }),
+			'Could not save rewards check'
+		).map(() => undefined);
+	}
+
+	/**
+	 * Evaluates one claimed user. A failure backs off (`retryAt`). Never fails, so one user
+	 * cannot stop the run or hold the front of the queue.
+	 */
+	private evaluateClaimed(userId: string, catalog: Catalog, version: string): Task<number> {
+		return this.evaluate(userId, catalog).orElse((error) => {
+			console.warn('[rewards] evaluate failed', userId, error);
+			return this.setCheckedAt(userId, retryAt(version))
+				.map(() => 0)
+				.orElse((error) => {
+					console.warn('[rewards] could not save rewards check', userId, error);
+					return okAsync(0);
+				});
+		});
+	}
+
+	/** The users due for evaluation (see `evaluateDue`), oldest first. */
+	private dueUsers(version: string): Task<DueUser[]> {
+		const dayAgo = pbDate(new Date(Date.now() - DAY_MS));
+		const staleBefore = version > dayAgo ? version : dayAgo;
+		return fromPb(
+			this.pb.collection('users').getList<DueUser>(1, BATCH, {
+				filter: this.pb.filter('rewardsCheckedAt = "" || rewardsCheckedAt < {:staleBefore}', {
+					staleBefore
+				}),
+				sort: 'rewardsCheckedAt',
+				fields: 'id,rewardsCheckedAt',
+				skipTotal: true
+			}),
+			'Could not load users'
+		).map((page) => page.items);
+	}
+
+	/**
+	 * Claims the whole page in one batch before evaluating any of it (`rewardsCheckedAt` =
+	 * the run's start), then keeps the users that still carry this run's claim: one an
+	 * overlapping run claimed since, or a `markDirty` queued again, is left to the next run.
+	 * Two runs that list the same users and both re-read before the other's claim can still
+	 * both evaluate one; the window is a few requests wide. A claimed user is not due again
+	 * for a day, so a run that dies mid-evaluation (Worker limit, deploy) leaves it until the
+	 * daily re-check or its next `markDirty`. A shorter claim would need a second write on
+	 * success, which would overwrite a `markDirty` made during the evaluation.
+	 */
+	private claim(users: DueUser[], claimedAt: string): Task<string[]> {
+		if (users.length === 0) {
+			return okAsync([]);
+		}
+
+		const batch = this.pb.createBatch();
+		for (const user of users) {
+			batch.collection('users').update(user.id, { rewardsCheckedAt: claimedAt });
+		}
+
+		const ofUsers = users.map((user) => this.pb.filter('id = {:id}', { id: user.id })).join(' || ');
+		return fromPb(batch.send(), 'Could not claim users')
+			.andThen(() =>
+				fromPb(
+					this.pb.collection('users').getFullList<{ id: string }>({
+						filter: `(${ofUsers}) && ${this.pb.filter('rewardsCheckedAt = {:claimedAt}', { claimedAt })}`,
+						fields: 'id'
+					}),
+					'Could not load users'
+				)
+			)
+			.map((rows) => {
+				const kept = new Set(rows.map((row) => row.id));
+				return users.map((user) => user.id).filter((id) => kept.has(id));
+			});
+	}
+
+	/** Gives users this run claimed but had no time for their old place in the queue back. */
+	private release(users: DueUser[]): Task<void> {
+		if (users.length === 0) {
+			return okAsync(undefined);
+		}
+
+		const batch = this.pb.createBatch();
+		for (const user of users) {
+			batch
+				.collection('users')
+				.update(user.id, { rewardsCheckedAt: user.rewardsCheckedAt || null });
+		}
+
+		return fromPb(batch.send(), 'Could not release users')
+			.map(() => undefined)
+			.orElse((error) => {
+				console.warn('[rewards] could not release users', error);
+				return okAsync(undefined);
+			});
 	}
 
 	/**
 	 * Job: evaluates users that are queued, never checked, checked before the last reward
 	 * edit, or not checked for a day — oldest first. The daily re-check covers time-based
 	 * metrics (account age) and data written without a hook (fair play captures, profile
-	 * edits). Also the retroactive backfill for existing users.
+	 * edits, ratings from the harvest, play time). Also the retroactive backfill for existing
+	 * users. Stops starting users once `BUDGET_MS` is spent and releases the rest.
 	 */
 	evaluateDue(): Task<{ processed: number; more: boolean }> {
-		return ResultAsync.combine([this.catalog(), this.catalogVersion()]).andThen(
-			([catalog, version]) => {
-				if (catalog.length === 0) {
-					return okAsync({ processed: 0, more: false });
-				}
-
-				const dayAgo = pbDate(new Date(Date.now() - DAY_MS));
-				const staleBefore = version > dayAgo ? version : dayAgo;
-				return fromPb(
-					this.pb.collection('users').getList<{ id: string }>(1, BATCH, {
-						filter: this.pb.filter('rewardsCheckedAt = "" || rewardsCheckedAt < {:staleBefore}', {
-							staleBefore
-						}),
-						sort: 'rewardsCheckedAt',
-						fields: 'id',
-						skipTotal: true
-					}),
-					'Could not load users'
-				).andThen((page) =>
-					sequence(page.items, (user) =>
-						this.evaluate(user.id).orElse((error) => {
-							// Mark it checked anyway, or one broken user would block the queue; its next event retries.
-							console.warn('[rewards] evaluate failed', user.id, error);
-							return fromPb(
-								this.pb
-									.collection('users')
-									.update(user.id, { rewardsCheckedAt: new Date().toISOString() }),
-								'Could not save rewards check'
-							).map(() => 0);
-						})
-					).map(() => ({ processed: page.items.length, more: page.items.length === BATCH }))
-				);
+		const started = Date.now();
+		const claimedAt = pbDate(new Date(started));
+		return this.freshCatalog().andThen((catalog) => {
+			if (catalog.rewards.length === 0 && catalog.labels.length === 0) {
+				return okAsync({ processed: 0, more: false });
 			}
-		);
+
+			return this.catalogVersion(catalog.labels).andThen((version) =>
+				this.dueUsers(version).andThen((page) =>
+					this.claim(page, claimedAt)
+						.andThen((claimed) =>
+							sequence(claimed, (userId) =>
+								Date.now() - started > BUDGET_MS
+									? okAsync(null)
+									: this.evaluateClaimed(userId, catalog, version).map(() => userId)
+							).andThen((done) => {
+								const left = claimed.filter((userId) => !done.includes(userId));
+								return this.release(page.filter((user) => left.includes(user.id))).map(
+									() => done.filter(Boolean).length
+								);
+							})
+						)
+						.map((processed) => ({
+							processed,
+							more: page.length === BATCH || processed < page.length
+						}))
+				)
+			);
+		});
 	}
 }

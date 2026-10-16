@@ -2,6 +2,7 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { GUIDE_LANGUAGES } from '@company-of-heroes/api/guides';
 	import ArrowSquareOutIcon from 'phosphor-svelte/lib/ArrowSquareOutIcon';
+	import PaperPlaneTiltIcon from 'phosphor-svelte/lib/PaperPlaneTilt';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
 	import { Badge } from '../ui/badge';
@@ -22,10 +23,13 @@
 		label: GUIDE_LANGUAGE_NAMES[value]
 	}));
 	const published = $derived(editor.status === 'published');
-	const canPublish = $derived(
-		Boolean(editor.title.trim() && editor.body.trim() && editor.categoryId)
-	);
+	const ready = $derived(Boolean(editor.title.trim() && editor.body.trim() && editor.categoryId));
+	/** Everyone else writes drafts; staff or an editor publishes them. */
+	const publisher = $derived(host.auth.user?.canPublish ?? false);
 	const viewHref = $derived(editor.guide.path ? host.routes.guide(editor.guide.path) : null);
+	const busy = $derived(editor.saving || editor.deleting || editor.reviewing);
+	/** A draft, or changes to a published guide, that staff have not been asked about yet. */
+	const canSend = $derived(!editor.inReview && (!published || editor.hasRevision || editor.dirty));
 
 	async function remove() {
 		if (await editor.remove()) {
@@ -35,11 +39,18 @@
 </script>
 
 <section>
-	<div class={`${flushHeader} flex items-center justify-between gap-3`}>
+	<div class={`${flushHeader} flex flex-wrap items-center justify-between gap-3`}>
 		<h2 class={flushHeaderTitle}>{t('Publish')}</h2>
-		<Badge variant={published ? 'success' : 'warning'}
-			>{t(GUIDE_STATUS_LABELS[editor.status])}</Badge
-		>
+		<div class="flex flex-wrap gap-1.5">
+			<Badge variant={published ? 'success' : 'warning'}
+				>{t(GUIDE_STATUS_LABELS[editor.status])}</Badge
+			>
+			{#if editor.inReview}
+				<Badge variant="info">{t('In review')}</Badge>
+			{:else if editor.hasRevision}
+				<Badge variant="warning">{t('Unpublished changes')}</Badge>
+			{/if}
+		</div>
 	</div>
 	<div class="flex flex-col gap-3 px-4 py-3">
 		<div class="flex flex-col gap-1.5">
@@ -74,7 +85,23 @@
 				<dd class="text-secondary-200">{editor.guide.author.name}</dd>
 			</div>
 		</dl>
-		{#if !canPublish}
+		{#if !publisher}
+			<p class="text-secondary-500 text-xs">
+				{#if editor.inReview}
+					{t(
+						'Waiting for staff review. You can keep editing; staff see your latest saved version.'
+					)}
+				{:else if published}
+					{t('Changes to a published guide go live once staff review and publish them.')}
+				{:else}
+					{t('Send your draft for review when it is ready; staff publish it.')}
+				{/if}
+			</p>
+		{:else if editor.hasRevision}
+			<p class="text-secondary-500 text-xs">
+				{t('These changes are not live yet. Publish them, or discard them to keep the live guide.')}
+			</p>
+		{:else if !published && !ready}
 			<p class="text-secondary-500 text-xs">
 				{t('A title, some text and a category are needed before publishing.')}
 			</p>
@@ -85,17 +112,41 @@
 				variant={published ? 'primary' : 'secondary'}
 				size="sm"
 				loading={editor.saving}
-				disabled={editor.deleting}
+				disabled={editor.deleting || editor.reviewing}
 				onclick={() => editor.save()}
 			>
 				{published ? t('Save changes') : t('Save draft')}
 			</Button>
-			{#if published}
+			{#if !publisher}
+				{#if canSend}
+					<Button
+						type="button"
+						variant="primary"
+						size="sm"
+						loading={editor.reviewing}
+						disabled={!ready || editor.saving || editor.deleting}
+						onclick={() => editor.requestReview()}
+					>
+						<PaperPlaneTiltIcon size={14} />
+						{t('Send for review')}
+					</Button>
+				{/if}
+			{:else if published && editor.hasRevision}
+				<Button
+					type="button"
+					variant="primary"
+					size="sm"
+					disabled={!ready || busy}
+					onclick={() => editor.save('published')}
+				>
+					{t('Publish changes')}
+				</Button>
+			{:else if published}
 				<Button
 					type="button"
 					variant="secondary"
 					size="sm"
-					disabled={editor.saving || editor.deleting}
+					disabled={busy}
 					onclick={() => editor.save('draft')}
 				>
 					{t('Unpublish')}
@@ -105,10 +156,22 @@
 					type="button"
 					variant="primary"
 					size="sm"
-					disabled={!canPublish || editor.saving || editor.deleting}
+					disabled={!ready || busy}
 					onclick={() => editor.save('published')}
 				>
 					{t('Publish')}
+				</Button>
+			{/if}
+			{#if editor.hasRevision}
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					loading={editor.reviewing}
+					disabled={editor.saving || editor.deleting}
+					onclick={() => editor.discardRevision()}
+				>
+					{t('Discard changes')}
 				</Button>
 			{/if}
 			{#if viewHref}
@@ -119,16 +182,18 @@
 			{/if}
 		</div>
 	</div>
-	<div class="border-secondary-800 flex justify-end border-t px-4 py-2">
-		<Button
-			type="button"
-			variant="destructive"
-			size="sm"
-			loading={editor.deleting}
-			disabled={editor.saving}
-			onclick={remove}
-		>
-			{t('Delete guide')}
-		</Button>
-	</div>
+	{#if publisher || !published}
+		<div class="border-secondary-800 flex justify-end border-t px-4 py-2">
+			<Button
+				type="button"
+				variant="destructive"
+				size="sm"
+				loading={editor.deleting}
+				disabled={editor.saving || editor.reviewing}
+				onclick={remove}
+			>
+				{t('Delete guide')}
+			</Button>
+		</div>
+	{/if}
 </section>

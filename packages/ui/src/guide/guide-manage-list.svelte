@@ -78,6 +78,11 @@
 							{guide.author.name}
 						</p>
 					</div>
+					{#if guide.reviewRequestedAt}
+						<Badge variant="info" class="shrink-0">{t('In review')}</Badge>
+					{:else if guide.hasRevision}
+						<Badge variant="warning" class="shrink-0">{t('Unpublished changes')}</Badge>
+					{/if}
 					<Badge variant={guide.status === 'published' ? 'success' : 'warning'} class="shrink-0">
 						{t(GUIDE_STATUS_LABELS[guide.status])}
 					</Badge>

@@ -1,33 +1,33 @@
 <script lang="ts">
 	import type { Snapshot } from './$types';
-	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
-	import * as Match from '$lib/components/match';
-	import { TeamPlayerSkillsSkeleton } from '@company-of-heroes/ui/match';
-	import { resolveTeamOutcome, toMatchView } from '$lib/components/match/match-view';
-	import { outcomeSurface } from '@company-of-heroes/ui/variants';
-	import { cn } from '$lib/utils';
-	import * as Tabs from '$lib/components/ui/tabs';
 	import { Pagination } from '$lib/components/ui/pagination';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Button } from '$lib/components/ui/button';
 	import { Sheet } from '@company-of-heroes/ui/sheet';
+	import {
+		List as ReplayList,
+		ListSkeleton as ReplayListSkeleton,
+		type CommunityMatch,
+		type HistoryMatchup
+	} from '@company-of-heroes/ui/replay';
+	import {
+		ArchiveFilterBar,
+		ReplayCardGrid,
+		ReplaysPage,
+		type ArchiveQuickFilters,
+		type ReplaysView
+	} from '@company-of-heroes/ui/replay-browse';
+	import { cn } from '$lib/utils';
 	import { app } from '$core/app/context';
-	import type { MatchExpanded } from '$core/app/database/matches';
 	import { useI18n } from '$lib/i18n';
 	import { page } from '$app/state';
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { scheduleGoto } from '$core/runtime/schedule-goto';
 	import { watch } from 'runed';
+	import { getMeSteamIds } from '$lib/utils/player-me';
 	import HistoryFilters from './history-filters.svelte';
 	import MyReplays from './my-replays.svelte';
-	import MemberReplays from './member-replays.svelte';
-	import { ReplayList, type ReplayListState } from '../replays/replay-list.svelte';
-	import { scoreClassName } from '@company-of-heroes/ui/comment';
-	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
-	import DownloadIcon from 'phosphor-svelte/lib/DownloadIcon';
-	import ChatCircleIcon from 'phosphor-svelte/lib/ChatCircleIcon';
-	import FunnelSimpleIcon from 'phosphor-svelte/lib/FunnelSimpleIcon';
-	import { Sort, type ReplaysQuery } from '@company-of-heroes/ui/replay';
+	import ReplaysDiscover from './replays-discover.svelte';
+	import CommunityGroups from './community-groups.svelte';
+	import { ReplayList as LibraryList, type ReplayListState } from '../replays/replay-list.svelte';
 	import {
 		historyListHref,
 		historyListStateFromMatches,
@@ -38,46 +38,76 @@
 		type HistoryTab
 	} from '$core/app/features/history/history-url';
 
-	const emptyMemberQuery = (): ReplaysQuery => ({
-		page: 1,
-		ranked: false,
-		pro: false,
-		matchups: [],
-		playerIds: [],
-		maps: [],
-		races: [],
-		positions: [],
-		elo: null,
-		duration: null,
-		filter: null,
-		sort: 'createdAt',
-		sortDir: 'desc'
-	});
-
 	type HistoryPageSnapshot = {
 		replayList: ReplayListState;
 		matches: ReturnType<NonNullable<typeof app.features.history>['matches']['capture']> | null;
-		memberQuery: ReplaysQuery;
 	};
 
 	const { t } = useI18n();
 	const matches = $derived(app.features.history?.matches);
-	const historyFeature = $derived(app.features.history);
 	const tab = $derived(tabFromSearch(page.url.searchParams));
-	let replayList = $state(new ReplayList());
+	let replayList = $state(new LibraryList());
 	let applyingUrl = $state(false);
 	let filtersOpen = $state(false);
-	const filtersActive = $derived(matches?.filters.filter != null);
+	const mySteamIds = $derived(getMeSteamIds());
+	const archive = $derived(tab === 'user' || tab === 'community');
+	/** Unfiltered first page of Community matches: one grid per game type. */
+	const grouped = $derived(
+		tab === 'community' &&
+			!!matches &&
+			matches.page === 1 &&
+			matches.filters.matchups.length === 0 &&
+			matches.filters.filter == null
+	);
+	const quick = $derived<ArchiveQuickFilters>({
+		matchups: (matches?.filters.matchups ?? []) as HistoryMatchup[],
+		ranked: matches?.filters.ranked ?? false,
+		pro: matches?.filters.pro ?? false
+	});
+	/** Filters the chip bar does not show. */
+	const advancedActive = $derived(
+		!!matches &&
+			(matches.filters.filter != null ||
+				matches.filters.maps.length > 0 ||
+				matches.filters.playerIds.length > 0 ||
+				matches.filters.races.length > 0 ||
+				matches.filters.positions.length > 0 ||
+				!!matches.filters.elo ||
+				!!matches.filters.duration)
+	);
+
+	const views = $derived<{ id: ReplaysView; label: string }[]>([
+		{ id: 'discover', label: t('Discover') },
+		{ id: 'community', label: t('Community matches') },
+		{ id: 'mine', label: t('My matches') },
+		{ id: 'library', label: t('My library') }
+	]);
+	const viewOfTab: Record<HistoryTab, ReplaysView> = {
+		discover: 'discover',
+		community: 'community',
+		user: 'mine',
+		replays: 'library'
+	};
+	const tabOfView: Record<ReplaysView, HistoryTab> = {
+		discover: 'discover',
+		community: 'community',
+		mine: 'user',
+		library: 'replays'
+	};
+
+	/** Chips set flat filters; an advanced filter would win on the server, so it is dropped. */
+	function applyQuick(next: ArchiveQuickFilters) {
+		if (!matches) {
+			return;
+		}
+
+		matches.filters = { ...matches.filters, ...next, filter: undefined };
+		matches.page = 1;
+	}
 
 	function catalogHref() {
 		if (!matches || (tab !== 'user' && tab !== 'community')) {
-			const params = new URLSearchParams();
-			if (tab !== 'user') {
-				params.set('tab', tab);
-			}
-
-			const search = params.toString();
-			return search ? `/history?${search}` : '/history';
+			return tab === 'discover' ? '/history' : `/history?tab=${tab}`;
 		}
 
 		return historyListHref(historyListStateFromMatches(matches), tab);
@@ -156,9 +186,7 @@
 			return;
 		}
 
-		const params = new URLSearchParams();
-		params.set('tab', next);
-		const href = `/history?${params.toString()}`;
+		const href = next === 'discover' ? '/history' : `/history?tab=${next}`;
 		rememberHistoryListHref(href);
 		void goto(href, {
 			replaceState: true,
@@ -170,269 +198,106 @@
 	export const snapshot: Snapshot<HistoryPageSnapshot> = {
 		capture: () => ({
 			replayList: replayList.capture(),
-			matches: matches?.capture() ?? null,
-			memberQuery: $state.snapshot(historyFeature?.memberQuery ?? emptyMemberQuery())
+			matches: matches?.capture() ?? null
 		}),
 		restore: (value) => {
 			replayList.restore(value.replayList);
 			matches?.restore(value.matches);
-			if (historyFeature && value.memberQuery) {
-				historyFeature.memberQuery = value.memberQuery;
-			}
 		}
 	};
-
-	const columns: ColumnDef<MatchExpanded>[] = $derived([
-		{
-			id: 'map',
-			header: t('Map'),
-			width: 'w-full',
-			class: 'flex h-full min-w-0 items-center gap-0',
-			cellClass: () => 'overflow-clip py-0 pr-0 pl-4',
-			href: (match) => `/history/${match.id}`
-		},
-		{
-			id: 'allies',
-			header: t('Allies'),
-			class: 'flex items-center px-2',
-			pad: false,
-			cellClass: (row) =>
-				cn('whitespace-nowrap', outcomeSurface(resolveTeamOutcome(toMatchView(row), 'allies'))),
-			headerCellClass: 'px-2 py-3 whitespace-nowrap'
-		},
-		{
-			id: 'axis',
-			header: t('Axis'),
-			class: 'flex items-center px-2',
-			pad: false,
-			cellClass: (row) =>
-				cn('whitespace-nowrap', outcomeSurface(resolveTeamOutcome(toMatchView(row), 'axis'))),
-			headerCellClass: 'px-2 py-3 whitespace-nowrap'
-		},
-		{
-			id: 'duration',
-			header: t('Duration'),
-			cellClass: () => 'whitespace-nowrap',
-			headerCellClass: 'whitespace-nowrap'
-		},
-		{
-			id: 'engagement',
-			header: '',
-			class: 'flex items-center justify-end gap-3 tabular-nums',
-			cellClass: () => 'whitespace-nowrap',
-			headerCellClass: 'whitespace-nowrap'
-		},
-		{
-			id: 'date',
-			header: t('Date'),
-			class: 'flex items-center',
-			headerClass: 'text-end',
-			cellClass: () => 'whitespace-nowrap',
-			headerCellClass: 'whitespace-nowrap text-end'
-		}
-	]);
 </script>
 
-{#if matches}
-	<div class="flex min-h-0 flex-1 flex-col">
-		<div class="border-secondary-800 border-b">
-			<div class="flex flex-wrap items-center justify-between gap-x-4 px-4">
-				<Tabs.Root value={tab} onValueChange={(next) => setTab(next as HistoryTab)} class="min-w-0">
-					<Tabs.List>
-						<Tabs.Trigger value="user">{t('My matches')}</Tabs.Trigger>
-						<Tabs.Trigger value="community">{t('Community matches')}</Tabs.Trigger>
-						<Tabs.Trigger value="replays">{t('Replay Manager')}</Tabs.Trigger>
-						<Tabs.Trigger value="member">{t('Shared Replays')}</Tabs.Trigger>
-					</Tabs.List>
-				</Tabs.Root>
-				{#if tab !== 'replays' && tab !== 'member' && matches.displayedResult}
+<ReplaysPage
+	{views}
+	active={viewOfTab[tab]}
+	onSelect={(view) => setTab(tabOfView[view])}
+	uploadHref="/replays/upload"
+	showTitle={false}
+>
+	{#snippet aside()}
+		{#if archive && !grouped && matches?.displayedResult}
+			<Pagination
+				bind:page={matches.page}
+				perPage={matches.perPage}
+				count={matches.displayedResult.totalItems}
+			/>
+		{/if}
+	{/snippet}
+
+	{#if tab === 'discover'}
+		<div class="min-w-0 flex-1 overflow-auto">
+			<ReplaysDiscover />
+		</div>
+	{:else if !matches}
+		<!-- Without the game's log folder there are no local matches or replays. -->
+	{:else if tab === 'replays'}
+		<MyReplays bind:list={replayList} />
+	{:else}
+		<ArchiveFilterBar
+			value={quick}
+			onChange={applyQuick}
+			sort={matches.sort}
+			sortDir={matches.sortDir}
+			onSortChange={({ sort, sortDir }) => {
+				matches.sort = sort;
+				matches.sortDir = sortDir;
+				matches.page = 1;
+			}}
+			onOpenFilters={() => (filtersOpen = true)}
+			{advancedActive}
+		/>
+		<div class="min-w-0 flex-1 overflow-auto">
+			{#if grouped}
+				<CommunityGroups {matches} />
+			{:else if matches.tableLoading}
+				{#if tab === 'community'}
+					<ReplayCardGrid matches={[]} skeletons={8} />
+				{:else}
+					<ReplayListSkeleton rowCount={matches.perPage} />
+				{/if}
+			{:else if matches.displayedResult}
+				<div
+					class={cn(matches.result.loading && 'pointer-events-none opacity-60 transition-opacity')}
+				>
+					{#if tab === 'community'}
+						{#if matches.displayedResult.items.length === 0}
+							<p class="text-secondary-400 px-4 py-10 text-center text-sm">
+								{t('No community replays found.')}
+							</p>
+						{:else}
+							<ReplayCardGrid
+								matches={matches.displayedResult.items as unknown as CommunityMatch[]}
+								meSteamIds={mySteamIds}
+								closing
+							/>
+						{/if}
+					{:else}
+						<ReplayList
+							matches={matches.displayedResult.items as unknown as CommunityMatch[]}
+							highlightedPlayers={matches.filters.playerIds}
+							meSteamIds={mySteamIds}
+							sort={matches.sort}
+							sortDir={matches.sortDir}
+							onSort={() => {}}
+							emptyMessage={t('No matches found.')}
+						/>
+					{/if}
+				</div>
+				<div class="border-secondary-800 flex border-t px-5 py-3">
 					<Pagination
-						class="ms-auto shrink-0"
+						class="ms-auto"
 						bind:page={matches.page}
 						perPage={matches.perPage}
 						count={matches.displayedResult.totalItems}
 					/>
-				{/if}
-			</div>
-			{#if tab === 'user' || tab === 'community'}
-				<div class="border-secondary-800 flex items-center justify-end gap-2 border-t px-4 py-2">
-					<Sort
-						sort={matches.sort}
-						sortDir={matches.sortDir}
-						onChange={({ sort, sortDir }) => {
-							matches.sort = sort;
-							matches.sortDir = sortDir;
-							matches.page = 1;
-						}}
-					/>
-					<Button variant="secondary" size="sm" onclick={() => (filtersOpen = true)}>
-						<span class="relative inline-flex">
-							<FunnelSimpleIcon class="size-4" />
-							{#if filtersActive}
-								<span
-									class="bg-primary absolute -end-0.5 -top-0.5 size-1.5 rounded-full"
-									aria-hidden="true"
-								></span>
-							{/if}
-						</span>
-						{t('Filters')}
-					</Button>
 				</div>
 			{/if}
 		</div>
-
-		{#snippet cell_map({ row: _row }: { row: MatchExpanded })}
-			<Match.MapImage small flush />
-			<div class="flex min-w-0 items-center gap-2 px-4">
-				<Match.MapName class="min-w-0 truncate" />
-				<Match.Title iconsOnly class="shrink-0" />
-			</div>
-		{/snippet}
-		{#snippet cell_allies({ row: _row }: { row: MatchExpanded })}
-			<Match.Players team="allies" highlightedPlayers={matches.filters.playerIds} />
-		{/snippet}
-		{#snippet cell_axis({ row: _row }: { row: MatchExpanded })}
-			<Match.Players team="axis" highlightedPlayers={matches.filters.playerIds} />
-		{/snippet}
-		{#snippet cell_duration({ row: _row }: { row: MatchExpanded })}
-			<Match.Duration class="text-secondary-400 text-sm" />
-		{/snippet}
-		{#snippet cell_engagement({ row }: { row: MatchExpanded })}
-			<span
-				class={cn(
-					'inline-flex items-center gap-1.5 text-sm tabular-nums',
-					scoreClassName(row.likeCount ?? 0, 'text-secondary-400')
-				)}
-			>
-				<CaretUpIcon size={16} weight="fill" />
-				{row.likeCount ?? 0}
-			</span>
-			<span class="text-secondary-400 inline-flex items-center gap-1.5 text-sm tabular-nums">
-				<ChatCircleIcon size={16} weight="duotone" />
-				{row.commentCount ?? 0}
-			</span>
-			<span class="text-secondary-400 inline-flex items-center gap-1.5 text-sm tabular-nums">
-				<DownloadIcon size={16} weight="duotone" />
-				{row.downloadCount ?? 0}
-			</span>
-		{/snippet}
-		{#snippet cell_date({ row: _row }: { row: MatchExpanded })}
-			{#if matches.scope === 'user'}
-				<Match.Rating />
-			{/if}
-			<Match.Date class="text-secondary-400 ms-auto text-sm" />
-		{/snippet}
-		{#snippet skeleton_map()}
-			<div class="flex h-11 items-center">
-				<Skeleton class="size-11 shrink-0 rounded-none" />
-				<div class="px-4">
-					<Skeleton class="h-4 w-36" />
-				</div>
-			</div>
-		{/snippet}
-		{#snippet skeleton_team()}
-			<div class="flex h-11 items-center">
-				<TeamPlayerSkillsSkeleton />
-			</div>
-		{/snippet}
-		{#snippet skeleton_duration()}
-			<div class="flex h-11 items-center">
-				<Skeleton class="h-4 w-14" />
-			</div>
-		{/snippet}
-		{#snippet skeleton_engagement()}
-			<div class="flex h-11 items-center justify-end gap-3">
-				<Skeleton class="h-4 w-8" />
-				<Skeleton class="h-4 w-8" />
-				<Skeleton class="h-4 w-8" />
-			</div>
-		{/snippet}
-		{#snippet skeleton_date()}
-			<div class="flex h-11 items-center justify-end">
-				<Skeleton class="h-4 w-28" />
-			</div>
-		{/snippet}
-		{#snippet matchRowWrapper({
-			row,
-			children
-		}: {
-			row: MatchExpanded;
-			children: import('svelte').Snippet;
-		})}
-			<Match.Root match={row}>
-				{@render children()}
-			</Match.Root>
-		{/snippet}
-
-		{#if tab === 'replays'}
-			<MyReplays bind:list={replayList} />
-		{:else if tab === 'member'}
-			<MemberReplays bind:query={app.features.history.memberQuery} />
-		{:else}
-			<div class="min-w-0 flex-1 overflow-auto">
-				{#if matches.tableLoading}
-					<DataTable
-						data={[]}
-						{columns}
-						rowKey={(match) => match.id}
-						loading
-						skeletonRows={matches.perPage}
-						tableLayout="auto"
-						skeletons={{
-							map: skeleton_map,
-							allies: skeleton_team,
-							axis: skeleton_team,
-							duration: skeleton_duration,
-							engagement: skeleton_engagement,
-							date: skeleton_date
-						}}
-						skeletonClasses={{
-							map: 'overflow-clip py-0 pr-0 pl-4',
-							allies: 'px-2 whitespace-nowrap',
-							axis: 'px-2 whitespace-nowrap',
-							duration: 'px-4 py-0 whitespace-nowrap',
-							engagement: 'px-4 py-0 whitespace-nowrap',
-							date: 'px-4 py-0 whitespace-nowrap text-end'
-						}}
-					/>
-				{:else if matches.displayedResult}
-					<div
-						class={cn(
-							matches.result.loading && 'pointer-events-none opacity-60 transition-opacity'
-						)}
-					>
-						<DataTable
-							data={matches.displayedResult.items}
-							{columns}
-							rowKey={(match) => match.id}
-							rowWrapper={matchRowWrapper}
-							tableLayout="auto"
-							cells={{
-								map: cell_map,
-								allies: cell_allies,
-								axis: cell_axis,
-								duration: cell_duration,
-								engagement: cell_engagement,
-								date: cell_date
-							}}
-						/>
-					</div>
-					<div class="flex px-5 py-3">
-						<Pagination
-							class="ms-auto"
-							bind:page={matches.page}
-							perPage={matches.perPage}
-							count={matches.displayedResult.totalItems}
-						/>
-					</div>
-				{/if}
-			</div>
-		{/if}
-	</div>
-
-	{#if tab === 'user' || tab === 'community'}
-		<Sheet bind:open={filtersOpen} side="left" title={t('Filters')} closeLabel={t('Close')}>
-			<HistoryFilters {matches} onApplied={() => (filtersOpen = false)} />
-		</Sheet>
 	{/if}
+</ReplaysPage>
+
+{#if archive && matches}
+	<Sheet bind:open={filtersOpen} side="left" title={t('Filters')} closeLabel={t('Close')}>
+		<HistoryFilters {matches} onApplied={() => (filtersOpen = false)} />
+	</Sheet>
 {/if}

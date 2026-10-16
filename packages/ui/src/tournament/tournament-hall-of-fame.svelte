@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
@@ -10,13 +11,12 @@
 	import ArrowLeftIcon from 'phosphor-svelte/lib/ArrowLeftIcon';
 	import CrownIcon from 'phosphor-svelte/lib/CrownIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
-	import { escapeHtml, tooltip } from '../attachments';
-	import { countryDisplayName } from '../format/country';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
 	import { Button } from '../ui/button';
 	import { Skeleton } from '../ui/skeleton';
 	import { FORMAT_LABELS, parseTournamentDate } from './format';
+	import { resolveMedal } from './medal';
 	import type { HallOfFame } from './types';
 
 	type Props = {
@@ -39,17 +39,8 @@
 </script>
 
 {#snippet player(alias: string, country: string, steamId: string, className = '')}
-	{@const flagUrl = host.resolve.flagImageUrl(country)}
-	{@const countryName = countryDisplayName(country, host.locale())}
 	<span class={cn('inline-flex min-w-0 items-center gap-2', className)}>
-		{#if flagUrl}
-			<img
-				class="h-4 w-auto shrink-0 rounded-xs"
-				src={flagUrl}
-				alt={countryName ?? country}
-				{@attach tooltip(escapeHtml(countryName ?? ''))}
-			/>
-		{/if}
+		<CountryFlag {country} class="h-4" />
 		<a href={host.routes.player(steamId)} class={cn(interactive, 'hover:text-primary truncate')}>
 			{alias}
 		</a>
@@ -100,13 +91,13 @@
 				<ul class="-mr-px grid sm:grid-cols-2 xl:grid-cols-3">
 					{#each data.tournaments as entry (entry.tournament.id)}
 						{@const tournament = entry.tournament}
-						{@const picked = medals.find((m) => m.key === tournament.medal)}
+						{@const picked = resolveMedal(tournament, medals)}
 						<li class="border-secondary-800 flex min-w-0 gap-4 border-r border-b px-4 py-4">
 							{#if picked}
 								<img
 									src={picked.url}
 									alt=""
-									class="h-20 w-auto shrink-0 drop-shadow-[0_2px_2px_rgb(0_0_0/0.6)]"
+									class="h-20 w-auto max-w-20 shrink-0 object-contain drop-shadow-[0_2px_2px_rgb(0_0_0/0.6)]"
 								/>
 							{:else if tournament.logoUrl}
 								<img

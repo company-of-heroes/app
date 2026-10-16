@@ -106,6 +106,8 @@ export type CommunityPlayer = {
 	doctrineName?: string;
 	/** Ladder stats when available on list/detail responses. */
 	stats?: LiveLobbyPlayerStats | null;
+	/** Relic country code, for the flag. */
+	country?: string | null;
 	profile: {
 		profile_id: number;
 		alias: string;
@@ -149,7 +151,11 @@ export type CommunityMatch = {
 	durationSeconds?: number | null;
 	description?: string;
 	visibility?: 'private' | 'member' | 'deleted';
+	/** Shared replays: who uploaded it. */
+	uploadedBy?: ReplayUploader | null;
 };
+
+export type ReplayUploader = { id: string; alias: string; avatarUrl?: string | null };
 
 export type CommunityMatchSubmittedBy = {
 	alias: string;
@@ -189,7 +195,7 @@ export type CommunityMatchDetail = {
 	livePlayers?: LiveLobbyPlayer[] | null;
 	filename?: string;
 	mapFilename?: string;
-	uploadedBy?: { id: string; alias: string } | null;
+	uploadedBy?: ReplayUploader | null;
 	visibility?: 'private' | 'member' | 'deleted';
 	roster?: unknown[];
 	memberReplayId?: string | null;

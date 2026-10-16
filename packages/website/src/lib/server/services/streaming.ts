@@ -187,7 +187,10 @@ export class StreamingService extends Service {
 		).map((found) => found.items.length > 0);
 	}
 
-	/** Labels the Steam id; returns false while Relic does not know it yet. */
+	/**
+	 * Labels the Steam id; returns false while Relic does not know it yet. A label staff
+	 * removed by hand (a revocation) is not given back; the badge still counts as granted.
+	 */
 	grantStreamerLabel(steamId: string): Task<boolean> {
 		return this.streamerLabelId().andThen((labelId) =>
 			this.hasLabel(labelId, steamId).andThen((labelled) => {
@@ -195,28 +198,36 @@ export class StreamingService extends Service {
 					return okAsync(true);
 				}
 
-				return this.relicProfiles([steamId]).andThen(([profile]) => {
-					if (!profile?.profile_id) {
-						return okAsync(false);
-					}
-
-					return fromPb(
-						this.pb.collection('player_label_assignments').create({
-							steamId,
-							profileId: profile.profile_id,
-							alias: profile.alias || undefined,
-							label: labelId
-						}),
-						'Could not assign the Streamer label'
-					).map(() => true);
-				});
+				return this.services.labelAuto
+					.revoked(steamId, labelId)
+					.andThen((revoked) =>
+						revoked ? okAsync(true) : this.assignStreamerLabel(labelId, steamId)
+					);
 			})
 		);
 	}
 
+	private assignStreamerLabel(labelId: string, steamId: string): Task<boolean> {
+		return this.relicProfiles([steamId]).andThen(([profile]) => {
+			if (!profile?.profile_id) {
+				return okAsync(false);
+			}
+
+			return fromPb(
+				this.pb.collection('player_label_assignments').create({
+					steamId,
+					profileId: profile.profile_id,
+					alias: profile.alias || undefined,
+					label: labelId
+				}),
+				'Could not assign the Streamer label'
+			).map(() => true);
+		});
+	}
+
 	/**
-	 * Re-labels a Steam id that already earned the badge (Relic may not have known it yet,
-	 * or staff removed the label by accident). A failure is logged, never surfaced.
+	 * Re-labels a Steam id that already earned the badge (Relic may not have known it yet;
+	 * a label staff removed stays off). A failure is logged, never surfaced.
 	 */
 	private healLabel(steamId: string): Task<boolean> {
 		return this.grantStreamerLabel(steamId).orElse((error) => {

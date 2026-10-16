@@ -68,11 +68,14 @@
 				? pageTab
 				: cn(
 						itemClass,
-						// Each option reads as a button: ghost when idle, a lighter secondary fill when selected.
-						'text-secondary-300 inline-flex shrink-0 items-center gap-2 rounded font-medium whitespace-nowrap transition-colors duration-150',
+						// Each option reads as a button: ghost when idle, a lighter secondary fill when selected
+						// that grows in from the centre (a `::before` layer behind the label).
+						'text-secondary-300 relative isolate inline-flex shrink-0 items-center gap-2 rounded font-medium whitespace-nowrap transition-colors duration-150',
 						'cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
-						'not-disabled:hover:bg-secondary-800/70 not-disabled:hover:text-white',
-						'data-[state=on]:bg-secondary-800 data-[state=on]:not-disabled:hover:bg-secondary-800 data-[state=on]:text-white'
+						'not-disabled:hover:bg-secondary-800/25 not-disabled:hover:text-white',
+						'before:bg-secondary-800 before:absolute before:inset-0 before:-z-10 before:rounded',
+						'before:scale-0 before:opacity-0 before:transition-[scale,opacity] before:duration-150 before:ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:before:transition-none',
+						'data-[state=on]:text-white data-[state=on]:before:scale-100 data-[state=on]:before:opacity-100'
 					)}
 		>
 			{#if itemContent}

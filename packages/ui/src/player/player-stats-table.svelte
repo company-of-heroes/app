@@ -1,4 +1,5 @@
 <script lang="ts">
+	import RankIcon from './rank-icon.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { tableHeadRow, tableHeadText, factionIcon } from '@company-of-heroes/ui/variants';
@@ -109,10 +110,11 @@
 						<td class="px-4 py-1.5">
 							<div class="flex h-full w-full min-w-0 items-center justify-center gap-2">
 								{#if ranked}
-									<img
-										src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
-										alt=""
-										class="size-6 shrink-0 object-contain"
+									<RankIcon
+										level={stat.ranklevel}
+										leaderboardId={stat.leaderboard_id}
+										position={stat.rank}
+										class="size-6"
 									/>
 									<span class="font-semibold tabular-nums">
 										{stat.ranklevel > 0 ? stat.ranklevel : '-'}
@@ -247,10 +249,11 @@
 				<div class="text-secondary-400 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
 					{#if ranked}
 						<span class="inline-flex items-center gap-2">
-							<img
-								src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
-								alt=""
-								class="size-6 shrink-0 object-contain"
+							<RankIcon
+								level={stat.ranklevel}
+								leaderboardId={stat.leaderboard_id}
+								position={stat.rank}
+								class="size-6"
 							/>
 							<span class="font-semibold text-white tabular-nums">
 								{stat.ranklevel > 0 ? stat.ranklevel : '-'}

@@ -83,10 +83,11 @@
 	);
 
 	// Fast header data loads apart from the slow Relic match history (rank enrichment does
-	// sequential personalstat batches), so ELO and votes no longer wait on it.
+	// sequential personalstat batches), so ELO and votes no longer wait on it. Keyed on the
+	// signed-in user too, so signing in or out swaps the owner's rewards for the public ones.
 	const header = resource(
-		() => steamId,
-		async (id) => {
+		() => [steamId, app.features.auth.userId] as const,
+		async ([id]) => {
 			if (!id) {
 				return null;
 			}

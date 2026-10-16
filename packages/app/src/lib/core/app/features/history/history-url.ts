@@ -2,17 +2,26 @@ import { playerIdsFromAst, type FilterAst } from '@company-of-heroes/ui/replay';
 import type { FilterOperator, HistorySortField } from '$core/app/database/matches';
 import type { CompareFilter, HistoryMatchup, Matches, MatchesFilterState } from './matches.svelte';
 
-export type HistoryTab = 'user' | 'community' | 'replays' | 'member';
+/** `discover` is the default; `user` / `community` are the archive, `replays` the local library. */
+export type HistoryTab = 'discover' | 'user' | 'community' | 'replays';
 
 const HISTORY_LIST_HREF_KEY = 'coh1stats.historyListHref';
 
+/** List parameters; an old link with any of them (and no tab) meant "My matches". */
+const LIST_PARAMS = ['page', 'filter', 'ranked', 'pro', 'modes', 'players', 'maps', 'sort'];
+
 export function tabFromSearch(search: URLSearchParams): HistoryTab {
 	const value = search.get('tab');
-	if (value === 'community' || value === 'replays' || value === 'member') {
+	if (value === 'user' || value === 'community' || value === 'replays') {
 		return value;
 	}
 
-	return 'user';
+	// `member` (the old Shared Replays tab) now lives on Discover.
+	if (!value && LIST_PARAMS.some((key) => search.has(key))) {
+		return 'user';
+	}
+
+	return 'discover';
 }
 
 function splitCsv(value: string | null): string[] {
@@ -126,7 +135,7 @@ export function historySearchParams(
 	tab: HistoryTab
 ): URLSearchParams {
 	const params = new URLSearchParams();
-	if (tab !== 'user') {
+	if (tab !== 'discover') {
 		params.set('tab', tab);
 	}
 

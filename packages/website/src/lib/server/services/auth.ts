@@ -87,6 +87,17 @@ export class AuthService extends Service {
 		);
 	}
 
+	/** The user a handoff code signs in (the desktop app claiming a Steam account in the browser). */
+	userFromHandoff(code: string): Task<string> {
+		return this.secrets()
+			.asyncAndThen(({ handoffSecret }) =>
+				fromAsync(readHandoffCode(code, handoffSecret), 'Invalid or expired login code.', 400)
+			)
+			.andThen((userId) =>
+				userId ? ok(userId) : err(badRequest('Invalid or expired login code.'))
+			);
+	}
+
 	/** Trades a handoff code for a session (a code may be used again within its five minutes). */
 	exchangeHandoff(code: string): Task<AuthSession> {
 		const invalid = () => badRequest('Invalid or expired login code.');
@@ -121,11 +132,13 @@ export class AuthService extends Service {
 	/**
 	 * Where to send the browser to log in with Steam, and the nonce the caller stores in
 	 * a cookie: the callback only continues in the browser that started the login.
+	 * `link`: the signed-in user claiming a Steam account (the verified id is added to them).
 	 */
 	steamStart(
 		siteOrigin: string,
 		requestedOrigin: string | null,
-		redirect: unknown
+		redirect: unknown,
+		link: string | null = null
 	): Task<{ url: string; nonce: string }> {
 		const nonce = loginNonce();
 		const origin = (requestedOrigin ?? siteOrigin).replace(/\/$/, '');
@@ -138,7 +151,7 @@ export class AuthService extends Service {
 			)
 			.asyncAndThen(({ handoffSecret }) =>
 				fromAsync(
-					createSteamState(origin, safeRedirectPath(redirect), nonce, handoffSecret),
+					createSteamState(origin, safeRedirectPath(redirect), nonce, handoffSecret, link),
 					'Could not start Steam login'
 				)
 			)
@@ -226,9 +239,20 @@ export class AuthService extends Service {
 	}
 
 	/**
-	 * Steam sent the user back: verify, find or create the account, and continue on
-	 * the site with a handoff code (the site sets its cookie when it redeems the code).
-	 * Returns the absolute URL to redirect to; failures redirect to the login page.
+	 * The account a verified Steam login continues as: the claiming user (the Steam id is
+	 * added to them, refused when another account owns it), else the Steam id's own account.
+	 */
+	private steamAccount(steamId: string, link: string | null): Task<string> {
+		return link
+			? this.services.users.linkSteamId(link, steamId).map(() => link)
+			: this.userForSteam(steamId);
+	}
+
+	/**
+	 * Steam sent the user back: verify, find or create the account (or add the Steam id to
+	 * the claiming user), and continue on the site with a handoff code (the site sets its
+	 * cookie when it redeems the code). Returns the absolute URL to redirect to; failures
+	 * redirect to the login page, or the account page for a claim.
 	 */
 	steamCallback(query: URLSearchParams, siteOrigin: string, nonce: string): Task<string> {
 		return this.secrets()
@@ -240,13 +264,14 @@ export class AuthService extends Service {
 			)
 			.andThen((state) => {
 				const origin = state?.origin ?? siteOrigin;
-				const failed = (message: string) => `${origin}/login?error=${encodeURIComponent(message)}`;
+				const failed = (message: string) =>
+					`${origin}${state?.link ? '/account' : '/login'}?error=${encodeURIComponent(message)}`;
 				if (!state || !nonce || !sameText(state.nonce, nonce)) {
 					return okAsync(failed('Invalid or expired Steam login.'));
 				}
 
 				return this.verifyWithSteam(query, siteOrigin)
-					.andThen((steamId) => this.userForSteam(steamId))
+					.andThen((steamId) => this.steamAccount(steamId, state.link))
 					.andThen((userId) => this.createHandoff(userId))
 					.map((code) => {
 						const url = new URL(`${origin}/auth/steam`);
@@ -260,7 +285,11 @@ export class AuthService extends Service {
 					.orElse((error) => {
 						console.warn('[auth] steam callback failed', error);
 						return ok(
-							failed(error.status === 400 ? error.message : 'Steam login failed. Please try again.')
+							failed(
+								error.status === 400 || error.status === 409
+									? error.message
+									: 'Steam login failed. Please try again.'
+							)
 						);
 					});
 			});

@@ -173,12 +173,17 @@ export const accentBlockLabel = cn(
 	'text-primary flex items-center gap-1.5 px-4 pt-2.5 pb-1.5'
 );
 
-/** Bold page tab (stats mode, wiki factions); the selected one (`data-state="on"`) gets the dark secondary fill. */
+/**
+ * Bold page tab (stats mode, wiki factions); the selected one (`data-state="on"`) gets the dark
+ * secondary fill, which grows in from the centre (a `::before` layer behind the label).
+ */
 export const pageTab = cn(
-	'inline-flex h-8 shrink-0 items-center gap-2 rounded-md border border-transparent px-4 font-bold whitespace-nowrap text-white transition-colors duration-150',
+	'relative isolate inline-flex h-8 shrink-0 items-center gap-2 rounded-md border border-transparent px-4 font-bold whitespace-nowrap text-white transition-colors duration-150',
 	'disabled:text-secondary-500 cursor-pointer disabled:cursor-not-allowed',
 	'not-disabled:hover:bg-secondary-950/50',
-	'data-[state=on]:border-secondary-700 data-[state=on]:bg-secondary-800 data-[state=on]:not-disabled:hover:bg-secondary-800'
+	'before:border-secondary-700 before:bg-secondary-800 before:absolute before:-inset-px before:-z-10 before:rounded-md before:border',
+	'before:scale-0 before:opacity-0 before:transition-[scale,opacity] before:duration-150 before:ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:before:transition-none',
+	'data-[state=on]:before:scale-100 data-[state=on]:before:opacity-100'
 );
 
 /**

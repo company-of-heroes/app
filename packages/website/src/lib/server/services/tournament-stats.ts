@@ -87,6 +87,7 @@ export class TournamentStatsService extends Service {
 							format: tournament.format,
 							logoUrl: tournament.logoUrl,
 							medal: tournament.medal,
+							customMedal: tournament.customMedal,
 							participantCount: tournament.participantCount,
 							startsAt: tournament.startsAt
 						},

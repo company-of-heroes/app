@@ -85,7 +85,7 @@ export class GuidesApi {
 		return fromPbPromise(sendV1<Guide>(this.deps, path(id)), 'Guide not found.');
 	}
 
-	/** Editors: their guides; staff: every guide. Newest change first. */
+	/** Their own guides; staff: every guide. Newest change first. */
 	mine(): ResultAsync<GuideSummary[], ApiError> {
 		return fromPbPromise(
 			sendV1<GuideSummary[]>(this.deps, '/guides/mine'),
@@ -119,6 +119,22 @@ export class GuidesApi {
 				body: { file }
 			}),
 			'Could not upload the image.'
+		);
+	}
+
+	/** Sends a draft, or a published guide's held changes, to staff for review. */
+	requestReview(id: string): ResultAsync<Guide, ApiError> {
+		return fromPbPromise(
+			sendV1<Guide>(this.deps, path(id, '/review'), { method: 'POST' }),
+			'Could not send the guide for review.'
+		);
+	}
+
+	/** Drops a published guide's held changes. */
+	discardRevision(id: string): ResultAsync<Guide, ApiError> {
+		return fromPbPromise(
+			sendV1<Guide>(this.deps, path(id, '/revision'), { method: 'DELETE' }),
+			'Could not discard the changes.'
 		);
 	}
 

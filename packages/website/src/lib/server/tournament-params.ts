@@ -30,7 +30,7 @@ export const tournamentInput = z.object({
 	mapPool: z.array(z.string().trim().min(1).max(120)).max(50),
 	medal: z
 		.string()
-		.regex(/^medal-\d{3}$/)
+		.regex(/^(medal-\d{3}|custom:[a-z0-9]{15})$/)
 		.nullable()
 		.optional(),
 	streamUrl: z

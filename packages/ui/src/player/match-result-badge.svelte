@@ -15,10 +15,12 @@
 			raceId: number | null;
 			matchtypeId: number | null;
 		};
+		/** Filled square that stretches to its grid cell, for `MatchResultStrip`. */
+		block?: boolean;
 		class?: string;
 	};
 
-	let { match, class: className }: Props = $props();
+	let { match, block = false, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
@@ -38,13 +40,38 @@
 	);
 </script>
 
+{#snippet result()}
+	{#if block}
+		<span
+			class={cn(
+				'flex h-5 w-full items-center justify-center rounded-sm border text-[10px] leading-none font-bold transition-colors',
+				won
+					? 'border-success/40 bg-success/15 group-hover:bg-success/30 text-green-400'
+					: 'border-destructive/40 bg-destructive/15 group-hover:bg-destructive/30 text-red-400'
+			)}
+		>
+			{won ? t('W') : t('L')}
+		</span>
+	{:else}
+		<Badge variant={won ? 'success' : 'destructive'}>{won ? t('W') : t('L')}</Badge>
+	{/if}
+{/snippet}
+
 <!-- One recent result: W/L badge with the match details on hover, linking to the match. -->
 {#if href}
-	<a {href} class={cn(interactive, 'inline-flex shrink-0', className)} {@attach tooltip(content)}>
-		<Badge variant={won ? 'success' : 'destructive'}>{won ? t('W') : t('L')}</Badge>
+	<a
+		{href}
+		class={cn(interactive, block ? 'group flex min-w-0' : 'inline-flex shrink-0', className)}
+		aria-label={won ? t('Win') : t('Loss')}
+		{@attach tooltip(content)}
+	>
+		{@render result()}
 	</a>
 {:else}
-	<span class={cn('inline-flex shrink-0', className)} {@attach tooltip(content)}>
-		<Badge variant={won ? 'success' : 'destructive'}>{won ? t('W') : t('L')}</Badge>
+	<span
+		class={cn(block ? 'flex min-w-0' : 'inline-flex shrink-0', className)}
+		{@attach tooltip(content)}
+	>
+		{@render result()}
 	</span>
 {/if}

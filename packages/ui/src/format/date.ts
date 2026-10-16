@@ -5,22 +5,38 @@ const presets: Record<DatePreset, Intl.DateTimeFormatOptions> = {
 	dateTime: { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }
 };
 
-/** Formats an ISO string, Date or unix-seconds number. Returns '—' for missing or invalid input. */
+/**
+ * Parses an ISO string, Date or unix-seconds number. PocketBase dates ("2026-10-15 12:00:00.000Z")
+ * get their space swapped for a `T`, which not every engine accepts. Null for missing or invalid input.
+ */
+export function parseDate(value: string | number | Date | null | undefined): Date | null {
+	if (value == null || value === '') {
+		return null;
+	}
+
+	const date =
+		typeof value === 'number'
+			? new Date(value * 1000)
+			: new Date(typeof value === 'string' ? value.replace(' ', 'T') : value);
+	return Number.isFinite(date.getTime()) ? date : null;
+}
+
+/**
+ * Formats an ISO string, Date or unix-seconds number. Returns '—' for missing or invalid input.
+ * Pass `timeZone: 'UTC'` for text rendered on the server and in the browser alike.
+ */
 export function formatDate(
 	value: string | number | Date | null | undefined,
 	locale: string,
-	preset: DatePreset = 'date'
+	preset: DatePreset = 'date',
+	options: Pick<Intl.DateTimeFormatOptions, 'timeZone'> = {}
 ): string {
-	if (value == null || value === '') {
+	const date = parseDate(value);
+	if (!date) {
 		return '—';
 	}
 
-	const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
-	if (!Number.isFinite(date.getTime())) {
-		return '—';
-	}
-
-	return new Intl.DateTimeFormat(locale, presets[preset]).format(date);
+	return new Intl.DateTimeFormat(locale, { ...presets[preset], ...options }).format(date);
 }
 
 export function formatRelative(unixSeconds: number, locale: string): string {

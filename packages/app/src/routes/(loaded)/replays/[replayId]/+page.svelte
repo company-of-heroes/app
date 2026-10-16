@@ -102,7 +102,7 @@
 				},
 				onDeleted: () => {
 					app.modal.close();
-					void goto('/history?tab=member');
+					void goto('/history');
 				}
 			}
 		});

@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { useI18n } from '@company-of-heroes/i18n';
 	import { useHost } from '../host/host.context';
 	import { cn } from '@company-of-heroes/ui/cn';
+	import { countryDisplayName } from '../format/country';
 	import { factionIcon, interactive, outcomeSurface } from '@company-of-heroes/ui/variants';
 	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { LiveLobbyPlayerStats } from '../live-lobby/types';
@@ -14,6 +16,9 @@
 		href?: string | null;
 		avatarUrl?: string | null;
 		country?: string | null;
+		likeCount?: number | null;
+		/** Short extra after the name, e.g. the doctrine. */
+		note?: string | null;
 	};
 
 	type Props = {
@@ -37,6 +42,7 @@
 		iconClass: string;
 	};
 
+	const { t } = useI18n();
 	const host = useHost();
 
 	let {
@@ -90,11 +96,15 @@
 		return Boolean(alias && highlightedPlayers.some((entry) => entry.toLowerCase() === alias));
 	}
 
+	/** Name, country and rank level (+ ladder position) in the chip's tooltip. */
 	function tipLabel(player: TeamSkillPlayer) {
-		const parts = [player.alias.trim() || undefined];
+		const parts = [
+			player.alias.trim() || undefined,
+			countryDisplayName(player.country, host.locale()) ?? undefined
+		];
 		const level = player.stats?.rankLevel;
 		if (level != null && level > 0) {
-			parts.push(`Lv ${level}`);
+			parts.push(t('Rank level {level}', { level }));
 		}
 
 		const rank = player.stats?.rank;

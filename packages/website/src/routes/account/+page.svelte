@@ -93,6 +93,10 @@
 	<p class="text-success border-secondary-800 border-b px-4 py-3 text-sm">{banner}</p>
 {/if}
 
+{#if data.error}
+	<p class="text-destructive border-secondary-800 border-b px-4 py-3 text-sm">{t(data.error)}</p>
+{/if}
+
 {#if data.steamAccounts.length > 0}
 	<section id="steam-accounts" class="border-secondary-800 border-b">
 		<div class="border-secondary-800 border-b px-4 py-3">

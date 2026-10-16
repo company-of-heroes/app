@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { RankIcon } from '@company-of-heroes/ui/player';
 	import type { LobbyPlayer, MatchHistoryPlayer, TransformedMatch } from '@fknoobs/app';
 	import type { Snippet } from 'svelte';
 	import dayjs from '$lib/dayjs';
-	import { cn, getRankImage, normalizeMapName } from '$lib/utils';
+	import { cn, normalizeMapName } from '$lib/utils';
 	import * as Player from '$lib/components/player';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import MapImage from '@company-of-heroes/ui/map-image';
@@ -211,11 +212,7 @@
 {#snippet cell_rank({ row }: { row: MatchHistoryPlayer })}
 	{#if (row.ranklevel ?? 0) > 0}
 		<span class="flex items-center justify-center gap-2">
-			<img
-				src={getRankImage(row.race_id, row.ranklevel ?? 0)}
-				alt=""
-				class="size-6 shrink-0 object-contain"
-			/>
+			<RankIcon level={row.ranklevel ?? 0} race={row.race_id} class="size-6" />
 			<span class="font-semibold tabular-nums">{row.ranklevel}</span>
 		</span>
 	{:else}

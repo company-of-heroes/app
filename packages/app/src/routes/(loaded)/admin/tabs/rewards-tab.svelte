@@ -13,34 +13,17 @@
 		type RewardRecord
 	} from '@company-of-heroes/api';
 	import * as Reward from '@company-of-heroes/ui/reward';
-	import { getModeLabel, getRaceLabel } from '@company-of-heroes/ui/format/player-format';
+	import { Alert } from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form';
-	import { Checkbox, FileDropzone, Input, Select, Textarea } from '$lib/components/ui/input';
+	import { Checkbox, FileDropzone, Input, Textarea } from '$lib/components/ui/input';
 	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
-	import { surfacePanel } from '$lib/components/ui/variants';
-	import { cn } from '$lib/utils';
 	import { app } from '$core/app/context';
 	import { api, unwrapApi } from '$core/api';
 	import { useI18n } from '$lib/i18n';
 	import { tooltip } from '$lib/attachments';
 
-	type ConditionRow = {
-		key: number;
-		metric: Reward.RewardMetric;
-		threshold: number | string;
-		raceId: string;
-		matchtypeId: string;
-		ranked: string;
-		map: string;
-		minMinutes: number | string;
-		maxMinutes: number | string;
-		pro: boolean;
-		minAvgElo: number | string;
-	};
-
-	const ANY = 'any';
 	const { t } = useI18n();
 
 	const columns: ColumnDef<RewardRecord>[] = [
@@ -51,25 +34,7 @@
 		{ id: 'actions', header: '', width: 'w-4/24', class: 'justify-end' }
 	];
 
-	const metricItems = Reward.REWARD_METRICS.map((metric) => ({
-		value: metric,
-		label: t(Reward.REWARD_METRIC_CATALOG[metric].label)
-	}));
-	const raceItems = [
-		{ value: ANY, label: t('Any faction') },
-		...Reward.REWARD_RACE_IDS.map((id) => ({ value: String(id), label: getRaceLabel(id) }))
-	];
-	const modeItems = [
-		{ value: ANY, label: t('Any mode') },
-		...Reward.REWARD_MATCHTYPE_IDS.map((id) => ({ value: String(id), label: getModeLabel(id) }))
-	];
-	const rankedItems = [
-		{ value: ANY, label: t('Ranked and unranked') },
-		{ value: 'true', label: t('Ranked') },
-		{ value: 'false', label: t('Unranked') }
-	];
-
-	let mapItems = $state.raw([{ value: ANY, label: t('Any map') }]);
+	let mapItems = $state.raw<{ value: string; label: string }[]>([]);
 	let rewards = $state.raw<RewardRecord[]>([]);
 	let editingId = $state<string | null>(null);
 	let title = $state('');
@@ -77,22 +42,21 @@
 	let enabled = $state(true);
 	let secret = $state(false);
 	let sort = $state<number | string>(0);
-	let conditions = $state<ConditionRow[]>([]);
+	const conditions = new Reward.RewardConditionsEditor();
 	let image = $state<File | null>(null);
 	let imagePreview = $state<string | null>(null);
 	let existingImage = $state<string | null>(null);
 	let ribbon = $state<string | null>(null);
+	/** Stored conditions of the edited reward when they are not valid, as JSON. */
+	let invalidStoredConditions = $state<string | null>(null);
 	let isSaving = $state(false);
 	let deletingId = $state<string | null>(null);
-	let nextKey = 0;
 
 	const usedRibbons = $derived(
 		rewards.flatMap((reward) => (reward.id !== editingId && reward.ribbon ? [reward.ribbon] : []))
 	);
-	const parsedConditions = $derived(conditions.map(toCondition));
+	const parsedConditions = $derived(conditions.conditions);
 	const conditionsValid = $derived(rewardConditionsSchema.safeParse(parsedConditions).success);
-	const conditionErrors = $derived(parsedConditions.map(conditionError));
-	const hasConditionErrors = $derived(conditionErrors.some(Boolean));
 	const canSave = $derived(
 		title.trim().length > 0 &&
 			conditionsValid &&
@@ -129,140 +93,6 @@
 		}
 	);
 
-	function newRow(metric: Reward.RewardMetric = 'matches_played'): ConditionRow {
-		return {
-			key: nextKey++,
-			metric,
-			threshold: 10,
-			raceId: ANY,
-			matchtypeId: ANY,
-			ranked: ANY,
-			map: ANY,
-			minMinutes: '',
-			maxMinutes: '',
-			pro: false,
-			minAvgElo: ''
-		};
-	}
-
-	function supports(row: ConditionRow, filter: Reward.RewardFilterKey) {
-		return Reward.REWARD_METRIC_CATALOG[row.metric].filters.includes(filter);
-	}
-
-	function isBoolean(row: ConditionRow) {
-		return Boolean(Reward.REWARD_METRIC_CATALOG[row.metric].boolean);
-	}
-
-	/** A filled-in number field, or undefined when left empty. */
-	function optionalNumber(value: number | string): number | undefined {
-		return value === '' || value === null ? undefined : Math.round(Number(value));
-	}
-
-	/** Some metrics only exist for a few modes (ladder rank: automatch 1v1 to 4v4). */
-	function allowsMode(row: ConditionRow, value: string) {
-		const allowed = Reward.REWARD_METRIC_CATALOG[row.metric].matchtypeIds;
-		return value === ANY || !allowed || allowed.includes(Number(value));
-	}
-
-	function modeItemsFor(row: ConditionRow) {
-		return modeItems.filter((item) => allowsMode(row, item.value));
-	}
-
-	function toCondition(row: ConditionRow): Reward.RewardCondition {
-		const filter: Reward.RewardConditionFilter = {};
-		if (supports(row, 'raceId') && row.raceId !== ANY) {
-			filter.raceId = Number(row.raceId);
-		}
-
-		if (
-			supports(row, 'matchtypeId') &&
-			row.matchtypeId !== ANY &&
-			allowsMode(row, row.matchtypeId)
-		) {
-			filter.matchtypeId = Number(row.matchtypeId);
-		}
-
-		if (supports(row, 'ranked') && row.ranked !== ANY) {
-			filter.ranked = row.ranked === 'true';
-		}
-
-		if (supports(row, 'map') && row.map !== ANY) {
-			filter.map = row.map;
-		}
-
-		if (supports(row, 'minMinutes') && optionalNumber(row.minMinutes) !== undefined) {
-			filter.minMinutes = optionalNumber(row.minMinutes);
-		}
-
-		if (supports(row, 'maxMinutes') && optionalNumber(row.maxMinutes) !== undefined) {
-			filter.maxMinutes = optionalNumber(row.maxMinutes);
-		}
-
-		if (supports(row, 'pro') && row.pro) {
-			filter.pro = true;
-		}
-
-		if (supports(row, 'minAvgElo') && optionalNumber(row.minAvgElo) !== undefined) {
-			filter.minAvgElo = optionalNumber(row.minAvgElo);
-		}
-
-		return {
-			metric: row.metric,
-			threshold: isBoolean(row) ? 1 : Math.round(Number(row.threshold)) || 0,
-			...(Object.keys(filter).length > 0 ? { filter } : {})
-		};
-	}
-
-	function toRow(condition: Reward.RewardCondition): ConditionRow {
-		const filter = condition.filter ?? {};
-		return {
-			key: nextKey++,
-			metric: condition.metric,
-			threshold: condition.threshold,
-			raceId: filter.raceId !== undefined ? String(filter.raceId) : ANY,
-			matchtypeId: filter.matchtypeId !== undefined ? String(filter.matchtypeId) : ANY,
-			ranked: filter.ranked !== undefined ? String(filter.ranked) : ANY,
-			map: filter.map ?? ANY,
-			minMinutes: filter.minMinutes ?? '',
-			maxMinutes: filter.maxMinutes ?? '',
-			pro: Boolean(filter.pro),
-			minAvgElo: filter.minAvgElo ?? ''
-		};
-	}
-
-	function hasFilters(row: ConditionRow) {
-		return Reward.REWARD_METRIC_CATALOG[row.metric].filters.length > 0;
-	}
-
-	function unitLabel(row: ConditionRow) {
-		const unit = Reward.REWARD_METRIC_CATALOG[row.metric].unit;
-		return unit ? t(unit) : null;
-	}
-
-	/** Why one condition is not valid, or null. */
-	function conditionError(condition: Reward.RewardCondition, index: number): string | null {
-		if (condition.threshold < 1) {
-			return t('The threshold must be at least 1.');
-		}
-
-		const max = Reward.REWARD_METRIC_CATALOG[condition.metric].max;
-		if (max !== undefined && condition.threshold > max) {
-			return t('The threshold can be at most {max}.', { max });
-		}
-
-		const { minMinutes, maxMinutes } = condition.filter ?? {};
-		if (minMinutes !== undefined && maxMinutes !== undefined && minMinutes > maxMinutes) {
-			return t('The minimum duration must be below the maximum.');
-		}
-
-		const key = Reward.rewardConditionKey(condition);
-		if (parsedConditions.findIndex((other) => Reward.rewardConditionKey(other) === key) < index) {
-			return t('This condition is the same as an earlier one.');
-		}
-
-		return null;
-	}
-
 	function setPreview(url: string | null) {
 		if (imagePreview) {
 			URL.revokeObjectURL(imagePreview);
@@ -278,10 +108,11 @@
 		enabled = true;
 		secret = false;
 		sort = rewards.reduce((max, reward) => Math.max(max, reward.sort ?? 0), -1) + 1;
-		conditions = [newRow()];
+		conditions.reset();
 		image = null;
 		existingImage = null;
 		ribbon = null;
+		invalidStoredConditions = null;
 		setPreview(null);
 	}
 
@@ -300,10 +131,7 @@
 	async function loadMaps() {
 		try {
 			const maps = await unwrapApi(api.replays.getMaps());
-			mapItems = [
-				{ value: ANY, label: t('Any map') },
-				...maps.map((map) => ({ value: map.map, label: map.name || map.map }))
-			];
+			mapItems = maps.map((map) => ({ value: map.map, label: map.name || map.map }));
 		} catch (error) {
 			console.error('[ADMIN]: reward maps load failed:', error);
 		}
@@ -316,15 +144,25 @@
 		enabled = reward.enabled !== false;
 		secret = Boolean(reward.secret);
 		sort = reward.sort ?? 0;
-		conditions = (reward.conditions ?? []).map(toRow);
-		if (conditions.length === 0) {
-			conditions = [newRow()];
+		conditions.load(reward.conditions);
+		invalidStoredConditions = reward.conditions ? null : storedValue(reward.rawConditions);
+		if (!reward.conditions) {
+			// No silent default: the admin sets a threshold before the reward can be saved.
+			conditions.rows = conditions.rows.map((row) => ({ ...row, threshold: '' }));
 		}
 
 		image = null;
 		existingImage = api.rewards.imageUrl(reward);
 		ribbon = reward.ribbon || null;
 		setPreview(null);
+	}
+
+	function storedValue(raw: unknown): string {
+		try {
+			return JSON.stringify(raw) ?? String(raw);
+		} catch {
+			return String(raw);
+		}
 	}
 
 	async function imageSize(file: File): Promise<{ width: number; height: number } | null> {
@@ -373,19 +211,6 @@
 
 		image = file;
 		setPreview(URL.createObjectURL(file));
-	}
-
-	function addCondition() {
-		const used = new Set(parsedConditions.map(Reward.rewardConditionKey));
-		const metric =
-			Reward.REWARD_METRICS.find(
-				(candidate) => !used.has(Reward.rewardConditionKey({ metric: candidate }))
-			) ?? 'matches_played';
-		conditions = [...conditions, newRow(metric)];
-	}
-
-	function removeCondition(key: number) {
-		conditions = conditions.filter((row) => row.key !== key);
 	}
 
 	async function save() {
@@ -493,209 +318,19 @@
 		'All conditions must be met. Match conditions count finished, non-Skirmish matches.'
 	)}
 >
-	<ol class="flex flex-col">
-		{#each conditions as row, index (row.key)}
-			{@const id = `reward-condition-${row.key}`}
-			{@const unit = unitLabel(row)}
-			{@const error = conditionErrors[index]}
-			<li class="flex flex-col">
-				{#if index > 0}
-					<div
-						class="text-secondary-500 flex items-center gap-3 py-2 text-xs font-semibold tracking-wide uppercase"
-					>
-						<span class="bg-secondary-800 h-px flex-1"></span>
-						{t('and')}
-						<span class="bg-secondary-800 h-px flex-1"></span>
-					</div>
-				{/if}
-				<div class={cn(surfacePanel, error && 'border-destructive/60')}>
-					<div class="flex flex-wrap items-end gap-3 p-3">
-						<span
-							class="bg-secondary-800 text-secondary-300 flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold"
-						>
-							{index + 1}
-						</span>
-						<div class="flex min-w-48 flex-1 flex-col gap-1.5">
-							<Form.Label class="text-xs">{t('Metric')}</Form.Label>
-							<Select
-								type="single"
-								bind:value={row.metric}
-								items={metricItems}
-								size="sm"
-								aria-label={t('Metric')}
-							/>
-						</div>
-						{#if !isBoolean(row)}
-							<div class="flex w-44 flex-col gap-1.5">
-								<Form.Label for="{id}-threshold" class="text-xs">{t('At least')}</Form.Label>
-								<Input
-									id="{id}-threshold"
-									type="number"
-									min={1}
-									max={Reward.REWARD_METRIC_CATALOG[row.metric].max}
-									size="sm"
-									bind:value={row.threshold}
-									trailing={unit ? unitSuffix : undefined}
-								/>
-								{#snippet unitSuffix()}
-									<span class="text-xs">{unit}</span>
-								{/snippet}
-							</div>
-						{/if}
-						<Button
-							type="button"
-							size="icon-sm"
-							variant="ghost"
-							class="text-secondary-400 ms-auto mb-0.5"
-							disabled={conditions.length <= 1}
-							onclick={() => removeCondition(row.key)}
-							aria-label={t('Remove condition')}
-							{@attach tooltip(t('Remove condition'))}
-						>
-							<TrashIcon size={16} />
-						</Button>
-					</div>
-					{#if hasFilters(row)}
-						<div class="border-secondary-800 border-t p-3">
-							<p class="text-secondary-500 mb-2 text-xs font-semibold tracking-wide uppercase">
-								{t('Filters')}
-							</p>
-							<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-								{#if supports(row, 'raceId')}
-									<div class="flex flex-col gap-1.5">
-										<Form.Label class="text-xs">{t('Faction')}</Form.Label>
-										<Select
-											type="single"
-											bind:value={row.raceId}
-											items={raceItems}
-											size="sm"
-											aria-label={t('Faction')}
-										/>
-									</div>
-								{/if}
-								{#if supports(row, 'matchtypeId')}
-									<div class="flex flex-col gap-1.5">
-										<Form.Label class="text-xs">{t('Mode')}</Form.Label>
-										<Select
-											type="single"
-											bind:value={row.matchtypeId}
-											items={modeItemsFor(row)}
-											size="sm"
-											aria-label={t('Mode')}
-										/>
-									</div>
-								{/if}
-								{#if supports(row, 'ranked')}
-									<div class="flex flex-col gap-1.5">
-										<Form.Label class="text-xs">{t('Ranked')}</Form.Label>
-										<Select
-											type="single"
-											bind:value={row.ranked}
-											items={rankedItems}
-											size="sm"
-											aria-label={t('Ranked')}
-										/>
-									</div>
-								{/if}
-								{#if supports(row, 'map')}
-									<div class="flex flex-col gap-1.5">
-										<Form.Label class="text-xs">{t('Map')}</Form.Label>
-										<Select
-											type="single"
-											bind:value={row.map}
-											items={mapItems}
-											size="sm"
-											aria-label={t('Map')}
-										/>
-									</div>
-								{/if}
-								{#if supports(row, 'minMinutes') || supports(row, 'maxMinutes')}
-									<div class="flex flex-col gap-1.5">
-										<Form.Label for="{id}-min-minutes" class="text-xs">
-											{t('Duration (minutes)')}
-										</Form.Label>
-										<div class="flex items-center gap-2">
-											{#if supports(row, 'minMinutes')}
-												<Input
-													id="{id}-min-minutes"
-													type="number"
-													min={1}
-													size="sm"
-													bind:value={row.minMinutes}
-													placeholder={t('Min.')}
-													aria-label={t('Min. minutes')}
-												/>
-											{/if}
-											{#if supports(row, 'maxMinutes')}
-												<span class="text-secondary-500">–</span>
-												<Input
-													type="number"
-													min={1}
-													size="sm"
-													bind:value={row.maxMinutes}
-													placeholder={t('Max.')}
-													aria-label={t('Max. minutes')}
-												/>
-											{/if}
-										</div>
-									</div>
-								{/if}
-								{#if supports(row, 'minAvgElo')}
-									<div class="flex flex-col gap-1.5">
-										<Form.Label for="{id}-min-elo" class="text-xs">
-											{t('Min. average ELO')}
-										</Form.Label>
-										<Input
-											id="{id}-min-elo"
-											type="number"
-											min={0}
-											size="sm"
-											bind:value={row.minAvgElo}
-											placeholder={t('Any')}
-										/>
-									</div>
-								{/if}
-								{#if supports(row, 'pro')}
-									<div class="flex items-end pb-1.5">
-										<Checkbox bind:checked={row.pro} label={t('Pro lobbies only')} size="sm" />
-									</div>
-								{/if}
-							</div>
-						</div>
-					{/if}
-					{#if error}
-						<p class="border-secondary-800 text-destructive border-t px-3 py-2 text-sm">{error}</p>
-					{/if}
-				</div>
-			</li>
-		{/each}
-	</ol>
-	<div class="flex flex-wrap items-center gap-3">
-		<Button
-			type="button"
-			size="sm"
-			variant="secondary"
-			class="w-fit"
-			disabled={conditions.length >= Reward.REWARD_CONDITIONS_MAX}
-			onclick={addCondition}
-		>
-			<PlusIcon size={16} />
-			{t('Add condition')}
-		</Button>
-		<span class="text-secondary-500 text-sm">
-			{t('{count} of {max} conditions', {
-				count: conditions.length,
-				max: Reward.REWARD_CONDITIONS_MAX
-			})}
-		</span>
-		{#if !conditionsValid && !hasConditionErrors}
-			<span class="text-destructive text-sm">
+	{#if invalidStoredConditions !== null}
+		<Alert variant="warning" size="sm" class="flex flex-col gap-1">
+			<span>
 				{t(
-					'Each condition needs a threshold of at least 1, a different metric or filter, and a minimum duration below the maximum.'
+					'The stored conditions of this reward are not valid. Set its conditions again before saving.'
 				)}
 			</span>
-		{/if}
-	</div>
+			<code class="text-secondary-300 text-xs break-all select-text">
+				{t('Stored value: {value}', { value: invalidStoredConditions })}
+			</code>
+		</Alert>
+	{/if}
+	<Reward.ConditionsField editor={conditions} maps={mapItems} invalid={!conditionsValid} />
 </Form.Group>
 
 <Form.Group layout="stacked" label={t('Preview')}>

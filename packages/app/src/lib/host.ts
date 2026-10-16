@@ -56,7 +56,7 @@ export function provideAppHost(): HostContext {
 			match: (lobbyId) => `/history/${lobbyId}`,
 			accountProfile: (steamId) => `/account/profile?steamId=${steamId}`,
 			login: () => '/account',
-			memberReplays: () => '/history?tab=member',
+			memberReplays: () => '/history',
 			memberReplay: (id) => `/replays/${id}`,
 			publishReplay: (lobbyId) => `/replays/upload?fromMatch=${lobbyId}`,
 			replayList: () => '/history',
@@ -120,13 +120,14 @@ export function provideAppHost(): HostContext {
 					steamIds: account.user.steamIds,
 					isStaff: account.isStaff,
 					canHost: account.canHostTournaments,
-					canEdit: account.canEditGuides
+					canPublish: account.canPublishGuides
 				};
 			},
 			isSelfAlias: isMeReplayAlias,
 			isSelf: (steamId, profileId) =>
 				account.user.steamIds.includes(steamId) ||
-				(profileId !== undefined && app.game.profile?.relic.profile_id === profileId)
+				(profileId !== undefined && app.game.profile?.relic.profile_id === profileId),
+			claimSteam: () => account.claimSteam()
 		},
 		openNotification: (notification) => void app.notifications.open(notification),
 		notify: {
@@ -377,6 +378,8 @@ export function provideAppHost(): HostContext {
 				listMaps: () => unwrapApi(api.tournaments.listMaps()),
 				usedMedals: () => unwrapApi(api.tournaments.usedMedals()),
 				createMap: (name, icon) => unwrapApi(api.tournaments.createMap(name, icon)),
+				listMedals: () => unwrapApi(api.tournaments.listMedals()),
+				createMedal: (name, image) => unwrapApi(api.tournaments.createMedal(name, image)),
 				register: (id, steamId, acceptRules) =>
 					unwrapApi(api.tournaments.register(id, steamId, acceptRules)),
 				acceptRules: (id) => unwrapApi(api.tournaments.acceptRules(id)),
@@ -453,6 +456,8 @@ export function provideAppHost(): HostContext {
 				create: (language) => unwrapApi(api.guides.create(language)),
 				update: (id, input, images) => unwrapApi(api.guides.update(id, input, images)),
 				uploadImage: (id, file) => unwrapApi(api.guides.uploadImage(id, file)),
+				requestReview: (id) => unwrapApi(api.guides.requestReview(id)),
+				discardRevision: (id) => unwrapApi(api.guides.discardRevision(id)),
 				remove: (id) => unwrapApi(api.guides.remove(id)),
 				categories: () => unwrapApi(api.guides.categories()),
 				createCategory: (input) => unwrapApi(api.guides.createCategory(input)),

@@ -75,6 +75,11 @@
 		entries.flatMap(rewardsOf).filter((reward) => reward.unlockedAt).length
 	);
 
+	/** Roman numeral of a level's position in its series. */
+	function numeral(level: number): string {
+		return NUMERALS[level - 1] ?? String(level);
+	}
+
 	function rewardsOf(entry: CatalogEntry): RewardView[] {
 		return entry.kind === 'single' ? [entry.reward] : entry.levels;
 	}
@@ -100,13 +105,28 @@
 			: `${Math.min(condition.value, condition.threshold)} / ${condition.threshold}`;
 	}
 
-	/** Unlock date, or the owner's progress on a locked reward. */
+	/** Unlock date (UTC, so server and browser agree), or the owner's progress on a locked reward. */
 	function status(reward: RewardView): string {
 		if (reward.unlockedAt) {
-			return formatDate(reward.unlockedAt, host.locale());
+			return formatDate(reward.unlockedAt, host.locale(), 'date', { timeZone: 'UTC' });
 		}
 
 		return reward.progress ? `${Math.floor(reward.progress.overall * 100)}%` : '';
+	}
+
+	/** Unlock date of a level; for a player's locked one "Locked", with the percent when it is the owner's. */
+	function levelState(level: RewardView): string {
+		if (level.unlockedAt) {
+			return status(level);
+		}
+
+		if (!player) {
+			return '';
+		}
+
+		return level.progress
+			? t('Locked · {percent}%', { percent: Math.floor(level.progress.overall * 100) })
+			: t('Locked');
 	}
 
 	/** Hover text of a level badge: its title, what it takes, and the unlock date or progress. */
@@ -115,13 +135,7 @@
 			(condition) =>
 				`${escapeHtml(formatRewardCondition(condition, t))} ${amount(condition, Boolean(level.unlockedAt))}`
 		);
-		const state = level.unlockedAt
-			? status(level)
-			: player
-				? t('Locked · {percent}%', {
-						percent: Math.floor((level.progress?.overall ?? 0) * 100)
-					})
-				: '';
+		const state = levelState(level);
 		const ribbon = ribbons.find((item) => item.key === level.ribbon);
 		return `<span class="block max-w-64">${[
 			ribbonTipHtml(ribbon),
@@ -169,7 +183,7 @@
 	</div>
 {/snippet}
 
-{#snippet series(name: string, levels: RewardView[])}
+{#snippet series(name: string, levels: RewardView[], numbers: number[], total: number)}
 	{@const reached = levels.filter((level) => level.unlockedAt)}
 	{@const shown = reached.at(-1) ?? levels[0]}
 	{@const next = levels.find((level) => !level.unlockedAt)}
@@ -178,7 +192,10 @@
 		<RewardIcon reward={shown} locked={faded} />
 		{#if reached.length > 0}
 			<Badge variant="success" class="shrink-0">
-				{t('Level {level} of {levels}', { level: reached.length, levels: levels.length })}
+				{t('Level {level} of {levels}', {
+					level: numbers[levels.indexOf(shown)],
+					levels: total
+				})}
 			</Badge>
 		{/if}
 		<span class="text-secondary-500 ml-auto shrink-0 text-xs tabular-nums">
@@ -190,14 +207,17 @@
 		{@render conditions(levels[0], false)}
 		<ol class="mt-2 flex flex-wrap gap-1" aria-label={t('Levels')}>
 			{#each levels as level, index (level.id)}
+				{@const state = levelState(level)}
 				<li>
 					<Badge
 						variant={level.unlockedAt ? 'success' : 'default'}
 						class="tabular-nums"
+						tabindex={0}
 						{@attach tooltip(levelTip(level), { delay: [100, null] })}
 					>
-						{NUMERALS[index] ?? index + 1}
+						{numeral(numbers[index])}
 						<span class="text-secondary-400">{level.conditions[0]?.threshold ?? ''}</span>
+						<span class="sr-only">{state ? `${level.title} (${state})` : level.title}</span>
 					</Badge>
 				</li>
 			{/each}
@@ -277,7 +297,7 @@
 								{#if entry.kind === 'single'}
 									{@render single(entry.reward)}
 								{:else}
-									{@render series(entry.name, entry.levels)}
+									{@render series(entry.name, entry.levels, entry.numbers, entry.total)}
 								{/if}
 							</li>
 						{/each}

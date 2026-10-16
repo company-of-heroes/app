@@ -8,4 +8,4 @@
 '@company-of-heroes/pocketbase': patch
 ---
 
-feat; guides written by editors and staff, filed under categories, with cover and inline images, wiki links, search-engine metadata and translations; a new editor role admins hand out from the users page; upgrade pages in the wiki
+feat; guides any signed-in user can draft and send for review and staff or editors publish (later edits wait for review too), filed under categories, with cover and inline images, wiki links, search-engine metadata and translations; a new editor role admins hand out from the users page; upgrade pages in the wiki

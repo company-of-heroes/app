@@ -1,4 +1,4 @@
-import { err, errAsync, ok, okAsync, type Result } from 'neverthrow';
+import { err, errAsync, ok, okAsync, Result } from 'neverthrow';
 import {
 	GUIDE_COVER_MAX_BYTES,
 	GUIDE_IMAGE_MAX_BYTES,
@@ -21,15 +21,17 @@ import {
 	type GuideListQuery,
 	type GuideNav,
 	type GuideResolution,
+	type GuideRevision,
 	type GuideStatus,
 	type GuideSummary,
 	type GuideTranslation,
 	type GuideView
 } from '@company-of-heroes/api';
-import { canEditGuide, isStaffUser, type AuthUserPublic } from '$lib/auth/user';
+import { canEditGuide, canPublishGuides, isStaffUser, type AuthUserPublic } from '$lib/auth/user';
 import { cached, uncache } from '../cache';
 import { badRequest, conflict, forbidden, notFound, type AppError } from '../errors';
-import { ensure, fromPb, pbMaybe, type Task } from '../result';
+import { ensure, fromAsync, fromPb, pbMaybe, type Task } from '../result';
+import { SITE_URL } from '$lib/site/urls';
 import { Service } from './service';
 
 const CATEGORIES_KEY = 'guides:categories';
@@ -69,6 +71,9 @@ type GuideRecord = {
 	seoDescription: string;
 	noindex: boolean;
 	translationOf: string;
+	revision: StoredRevision | null;
+	revisionCover: string;
+	reviewRequestedAt: string;
 	author: string;
 	updatedBy: string;
 	created: string;
@@ -76,6 +81,22 @@ type GuideRecord = {
 	collectionId: string;
 	collectionName: string;
 	expand?: { author?: AuthorRecord };
+};
+
+/** Held changes to a published guide, stored as JSON next to the live fields. */
+type StoredRevision = {
+	title: string;
+	slug: string;
+	excerpt: string;
+	body: string;
+	category: string;
+	language: GuideLanguage;
+	seoTitle: string;
+	seoDescription: string;
+	noindex: boolean;
+	translationOf: string;
+	/** The changes remove the cover. */
+	clearCover: boolean;
 };
 
 export type GuideSitemapEntry = {
@@ -120,8 +141,8 @@ const byId = (categories: GuideCategory[]) =>
 type Patch = Record<string, unknown>;
 
 /**
- * Guides: strategy posts by editors and staff, filed under a two-level category tree and
- * published per language. Everything is read and written here with the superuser client;
+ * Guides: strategy posts any signed-in user drafts and staff or editors publish, filed under a
+ * two-level category tree and published per language. Everything is read and written here with the superuser client;
  * drafts are shown only to their author and staff.
  */
 export class GuidesService extends Service {
@@ -179,7 +200,9 @@ export class GuidesService extends Service {
 			updated: record.updated,
 			author: this.author(record),
 			path: category ? `/guides/${category.path}/${record.slug}` : null,
-			readingMinutes: readingMinutes(record.body ?? '')
+			readingMinutes: readingMinutes(record.body ?? ''),
+			reviewRequestedAt: record.reviewRequestedAt || null,
+			hasRevision: Boolean(record.revision)
 		};
 	}
 
@@ -206,6 +229,29 @@ export class GuidesService extends Service {
 		);
 	}
 
+	/** The held changes as the editor shows them; never sent to readers. */
+	private revisionView(record: GuideRecord): GuideRevision | null {
+		const revision = record.revision;
+		if (!revision) {
+			return null;
+		}
+
+		const file = record.revisionCover || (revision.clearCover ? '' : record.cover);
+		return {
+			title: revision.title,
+			slug: revision.slug,
+			excerpt: revision.excerpt,
+			body: revision.body,
+			categoryId: revision.category || null,
+			language: revision.language,
+			seoTitle: revision.seoTitle,
+			seoDescription: revision.seoDescription,
+			noindex: revision.noindex,
+			translationOf: revision.translationOf || null,
+			coverUrl: file ? this.pb.files.getURL(record, file, { thumb: '1200x630' }) : null
+		};
+	}
+
 	private detail(record: GuideRecord, viewer: AuthUserPublic | null): Task<Guide> {
 		return this.categories().andThen((categories) => {
 			const map = byId(categories);
@@ -222,7 +268,8 @@ export class GuidesService extends Service {
 					noindex: Boolean(record.noindex),
 					translationOf: record.translationOf || null,
 					translations,
-					canEdit: canEditGuide(viewer, record)
+					canEdit: canEditGuide(viewer, record),
+					revision: canEditGuide(viewer, record) ? this.revisionView(record) : null
 				})
 			);
 		});
@@ -463,7 +510,7 @@ export class GuidesService extends Service {
 		);
 	}
 
-	/** Staff: every guide; editors: their own. Newest change first. */
+	/** Staff: every guide; everyone else: their own. Newest change first. */
 	mine(viewer: AuthUserPublic): Task<GuideSummary[]> {
 		return this.categories().andThen((categories) =>
 			this.page(
@@ -511,6 +558,30 @@ export class GuidesService extends Service {
 		return ok(images.clearCover ? { cover: null } : {});
 	}
 
+	private slugFor(input: string, title: string): Result<string, AppError> {
+		const slug = slugify(input || title, '');
+		if (!slug) {
+			return err(badRequest('Add a title or an address for the guide.'));
+		}
+
+		if (GUIDE_RESERVED_SLUGS.includes(slug)) {
+			return err(badRequest('That address is reserved.'));
+		}
+
+		return ok(slug);
+	}
+
+	private categoryFor(
+		id: string | null,
+		categories: GuideCategory[]
+	): Result<string | null, AppError> {
+		if (id && !categories.some((category) => category.id === id)) {
+			return err(badRequest('That category does not exist.'));
+		}
+
+		return ok(id);
+	}
+
 	/** The record fields of an update, before the checks that need the database. */
 	private patch(
 		record: GuideRecord,
@@ -536,25 +607,23 @@ export class GuidesService extends Service {
 
 		let slug = record.slug;
 		if (input.slug !== undefined) {
-			slug = slugify(input.slug || title, '');
-			if (!slug) {
-				return err(badRequest('Add a title or an address for the guide.'));
+			const next = this.slugFor(input.slug, title);
+			if (next.isErr()) {
+				return err(next.error);
 			}
 
-			if (GUIDE_RESERVED_SLUGS.includes(slug)) {
-				return err(badRequest('That address is reserved.'));
-			}
-
+			slug = next.value;
 			patch.slug = slug;
 		}
 
 		let categoryId = record.category || null;
 		if (input.categoryId !== undefined) {
-			categoryId = input.categoryId;
-			if (categoryId && !categories.some((category) => category.id === categoryId)) {
-				return err(badRequest('That category does not exist.'));
+			const next = this.categoryFor(input.categoryId, categories);
+			if (next.isErr()) {
+				return err(next.error);
 			}
 
+			categoryId = next.value;
 			patch.category = categoryId ?? '';
 		}
 
@@ -565,6 +634,10 @@ export class GuidesService extends Service {
 			}
 
 			patch.status = input.status;
+			// Published or taken back: the review, and any held changes, are done.
+			patch.reviewRequestedAt = '';
+			patch.revision = null;
+			patch.revisionCover = null;
 			if (input.status === 'published' && !record.publishedAt) {
 				patch.publishedAt = new Date().toISOString();
 			}
@@ -580,6 +653,91 @@ export class GuidesService extends Service {
 
 		patch.slugLanguage = { slug, language };
 		return ok(patch);
+	}
+
+	/** The live fields as held changes: where the first change to a published guide starts. */
+	private liveRevision(record: GuideRecord): StoredRevision {
+		return {
+			title: record.title ?? '',
+			slug: record.slug,
+			excerpt: record.excerpt ?? '',
+			body: record.body ?? '',
+			category: record.category ?? '',
+			language: record.language,
+			seoTitle: record.seoTitle ?? '',
+			seoDescription: record.seoDescription ?? '',
+			noindex: Boolean(record.noindex),
+			translationOf: record.translationOf ?? '',
+			clearCover: false
+		};
+	}
+
+	/** Held changes as an update input, so publishing them runs the normal checks. */
+	private revisionInput(revision: StoredRevision): GuideInput {
+		return {
+			title: revision.title,
+			slug: revision.slug,
+			excerpt: revision.excerpt,
+			body: revision.body,
+			categoryId: revision.category || null,
+			language: revision.language,
+			seoTitle: revision.seoTitle,
+			seoDescription: revision.seoDescription,
+			noindex: revision.noindex,
+			translationOf: revision.translationOf || null
+		};
+	}
+
+	/** The held changes after this update; nothing of the live guide changes. */
+	private revisionPatch(
+		record: GuideRecord,
+		input: GuideInput,
+		images: GuideImages,
+		categories: GuideCategory[]
+	): Result<Patch, AppError> {
+		const next: StoredRevision = { ...(record.revision ?? this.liveRevision(record)) };
+		for (const key of [
+			'title',
+			'excerpt',
+			'body',
+			'seoTitle',
+			'seoDescription',
+			'noindex',
+			'language'
+		] as const) {
+			if (input[key] !== undefined) {
+				(next as Record<string, unknown>)[key] = input[key];
+			}
+		}
+
+		const slug = input.slug === undefined ? ok(next.slug) : this.slugFor(input.slug, next.title);
+		const category =
+			input.categoryId === undefined
+				? ok(next.category || null)
+				: this.categoryFor(input.categoryId, categories);
+		return Result.combine([slug, category, this.coverFields(images)]).map(
+			([slugValue, categoryId, cover]) => {
+				next.slug = slugValue;
+				next.category = categoryId ?? '';
+				const patch: Patch = {};
+				if ('cover' in cover) {
+					next.clearCover = cover.cover === null;
+					patch.revisionCover = cover.cover;
+				}
+
+				if (input.body !== undefined) {
+					// Images that neither the live text nor the changes show are dropped.
+					const removed = (record.images ?? []).filter(
+						(name) => !next.body.includes(name) && !(record.body ?? '').includes(name)
+					);
+					if (removed.length) {
+						patch['images-'] = removed;
+					}
+				}
+
+				return { ...patch, revision: next };
+			}
+		);
 	}
 
 	private uniqueSlug(record: GuideRecord, slug: string, language: GuideLanguage): Task<void> {
@@ -621,30 +779,267 @@ export class GuidesService extends Service {
 		});
 	}
 
+	/**
+	 * A published guide keeps its live text while changes wait for staff: changes by an author
+	 * who may not publish, and every change once some are already held. Publishing (or taking
+	 * the guide back to draft) puts the held changes live.
+	 */
+	private holds(record: GuideRecord, input: GuideInput, viewer: AuthUserPublic): boolean {
+		return (
+			record.status === 'published' &&
+			input.status === undefined &&
+			(Boolean(record.revision) || !canPublishGuides(viewer))
+		);
+	}
+
 	update(id: string, input: GuideInput, images: GuideImages, viewer: AuthUserPublic): Task<Guide> {
 		return this.editable(id, viewer).andThen((record) =>
-			this.categories().andThen((categories) =>
-				this.patch(record, input, categories)
-					.andThen((patch) => this.coverFields(images).map((cover) => ({ ...patch, ...cover })))
-					.asyncAndThen((patch) => {
-						const { slug, language } = patch.slugLanguage as {
-							slug: string;
-							language: GuideLanguage;
-						};
-						delete patch.slugLanguage;
-						return this.uniqueSlug(record, slug, language)
-							.andThen(() => this.translationRoot(record, input.translationOf))
-							.map((translation) => ({ ...patch, ...translation, updatedBy: viewer.id }));
-					})
-					.andThen((patch) =>
-						fromPb(
-							this.guides.update<GuideRecord>(record.id, patch, { expand: 'author' }),
-							'Could not save the guide'
-						)
-					)
-					.andThen((updated) => this.detail(updated, viewer))
+			ensure(
+				input.status === undefined || canPublishGuides(viewer),
+				forbidden('Only staff can publish guides.')
 			)
+				.asyncAndThen(() => this.categories())
+				.andThen((categories) =>
+					this.holds(record, input, viewer)
+						? this.saveRevision(record, input, images, categories, viewer)
+						: this.saveLive(record, input, images, categories, viewer)
+				)
 		);
+	}
+
+	private saveRevision(
+		record: GuideRecord,
+		input: GuideInput,
+		images: GuideImages,
+		categories: GuideCategory[],
+		viewer: AuthUserPublic
+	): Task<Guide> {
+		return this.revisionPatch(record, input, images, categories)
+			.asyncAndThen((patch) => {
+				const revision = patch.revision as StoredRevision;
+				return this.uniqueSlug(record, revision.slug, revision.language)
+					.andThen(() => this.translationRoot(record, input.translationOf))
+					.map((translation) => {
+						if ('translationOf' in translation) {
+							revision.translationOf = translation.translationOf as string;
+						}
+
+						return { ...patch, updatedBy: viewer.id };
+					});
+			})
+			.andThen((patch) =>
+				fromPb(
+					this.guides.update<GuideRecord>(record.id, patch, { expand: 'author' }),
+					'Could not save the guide'
+				)
+			)
+			.andThen((updated) => this.detail(updated, viewer));
+	}
+
+	/** A held new cover, downloaded so it can be uploaded as the live cover. */
+	private heldCover(record: GuideRecord): Task<File | null> {
+		if (!record.revisionCover) {
+			return okAsync(null);
+		}
+
+		const name = record.revisionCover;
+		return fromAsync(
+			this.fileFetch(this.pb.files.getURL(record, name)).then(async (response) => {
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
+				}
+
+				const type = response.headers.get('content-type') ?? 'image/jpeg';
+				return new File([await response.blob()], name, { type });
+			}),
+			'Could not publish the new cover'
+		);
+	}
+
+	/** The images a status change puts live: a held cover change goes live with the text. */
+	private liveImages(record: GuideRecord, images: GuideImages, held: boolean): Task<GuideImages> {
+		if (!held || images.cover || images.clearCover) {
+			return okAsync(images);
+		}
+
+		if (record.revision?.clearCover) {
+			return okAsync({ clearCover: true });
+		}
+
+		return this.heldCover(record).map((cover) => ({ cover }));
+	}
+
+	/** Writes the live guide; with a status, any held changes go live with it. */
+	private saveLive(
+		record: GuideRecord,
+		input: GuideInput,
+		images: GuideImages,
+		categories: GuideCategory[],
+		viewer: AuthUserPublic
+	): Task<Guide> {
+		const held = input.status !== undefined && record.revision ? record.revision : null;
+		const merged = held ? { ...this.revisionInput(held), ...input } : input;
+		return this.liveImages(record, images, Boolean(held)).andThen((liveImages) =>
+			this.patch(record, merged, categories)
+				.andThen((patch) => this.coverFields(liveImages).map((cover) => ({ ...patch, ...cover })))
+				.asyncAndThen((patch) => {
+					const { slug, language } = patch.slugLanguage as {
+						slug: string;
+						language: GuideLanguage;
+					};
+					delete patch.slugLanguage;
+					return this.uniqueSlug(record, slug, language)
+						.andThen(() => this.translationRoot(record, merged.translationOf))
+						.map((translation) => ({ ...patch, ...translation, updatedBy: viewer.id }));
+				})
+				.andThen((patch) =>
+					fromPb(
+						this.guides.update<GuideRecord>(record.id, patch, { expand: 'author' }),
+						'Could not save the guide'
+					)
+				)
+				.andThen((updated) =>
+					this.notifyPublished(record, updated, categories, viewer).andThen(() =>
+						this.detail(updated, viewer)
+					)
+				)
+		);
+	}
+
+	/** Puts the guide (a draft, or a published guide's held changes) in the staff review queue. */
+	requestReview(id: string, viewer: AuthUserPublic): Task<Guide> {
+		return this.editable(id, viewer).andThen((record) => {
+			const current = record.revision ?? this.liveRevision(record);
+			return ensure(
+				record.status === 'draft' || Boolean(record.revision),
+				badRequest('There are no changes to review.')
+			)
+				.andThen(() =>
+					ensure(!record.reviewRequestedAt, badRequest('This guide is already waiting for review.'))
+				)
+				.andThen(() =>
+					ensure(
+						Boolean(current.title.trim() && current.body.trim() && current.category),
+						badRequest('Add a title, some text and a category before sending it for review.')
+					)
+				)
+				.asyncAndThen(() =>
+					fromPb(
+						this.guides.update<GuideRecord>(
+							record.id,
+							{ reviewRequestedAt: new Date().toISOString() },
+							{ expand: 'author' }
+						),
+						'Could not send the guide for review'
+					)
+				)
+				.andThen((updated) =>
+					this.notifyStaff(updated, current.title.trim()).andThen(() =>
+						this.detail(updated, viewer)
+					)
+				);
+		});
+	}
+
+	/** Drops the held changes of a published guide; the live guide stays as it is. */
+	discardRevision(id: string, viewer: AuthUserPublic): Task<Guide> {
+		return this.editable(id, viewer).andThen((record) => {
+			if (!record.revision) {
+				return this.detail(record, viewer);
+			}
+
+			const removed = (record.images ?? []).filter((name) => !(record.body ?? '').includes(name));
+			return fromPb(
+				this.guides.update<GuideRecord>(
+					record.id,
+					{
+						revision: null,
+						revisionCover: null,
+						reviewRequestedAt: '',
+						updatedBy: viewer.id,
+						...(removed.length ? { 'images-': removed } : {})
+					},
+					{ expand: 'author' }
+				),
+				'Could not discard the changes'
+			).andThen((updated) => this.detail(updated, viewer));
+		});
+	}
+
+	/** A notice never fails the action that sent it. */
+	private notify(
+		recipients: string[],
+		notice: { title: string; body: string; url: string; from: string }
+	): Task<void> {
+		if (recipients.length === 0) {
+			return okAsync(undefined);
+		}
+
+		return fromPb(
+			this.pb.collection('notifications').create({
+				title: notice.title.slice(0, 200),
+				body: notice.body,
+				targetAll: false,
+				recipients,
+				url: notice.url,
+				createdBy: notice.from
+			}),
+			'Could not send the notification'
+		)
+			.map(() => undefined)
+			.orElse(() => okAsync(undefined));
+	}
+
+	/** Every admin and moderator, except the author when staff send their own guide. */
+	private notifyStaff(record: GuideRecord, title: string): Task<void> {
+		return fromPb(
+			this.pb.collection('users').getFullList<{ id: string }>({
+				filter: 'role = "admin" || role = "moderator"',
+				fields: 'id'
+			}),
+			'Could not load staff'
+		)
+			.orElse(() => okAsync<{ id: string }[], AppError>([]))
+			.andThen((staff) => {
+				const url = `${SITE_URL}/guides/manage/${record.id}`;
+				const what = record.status === 'published' ? 'changes to' : 'the new guide';
+				return this.notify(
+					staff.map((user) => user.id).filter((id) => id !== record.author),
+					{
+						title: `Guide review: ${title}`,
+						body: `**${this.author(record).name}** asks staff to review ${what} [${title}](${url}).`,
+						url,
+						from: record.author
+					}
+				);
+			});
+	}
+
+	/** Tells the author when someone else put their guide, or their changes, live. */
+	private notifyPublished(
+		before: GuideRecord,
+		after: GuideRecord,
+		categories: GuideCategory[],
+		viewer: AuthUserPublic
+	): Task<void> {
+		const wentLive =
+			after.status === 'published' && (before.status !== 'published' || Boolean(before.revision));
+		if (!wentLive || before.author === viewer.id) {
+			return okAsync(undefined);
+		}
+
+		const title = after.title.trim();
+		const path = this.summary(after, byId(categories)).path ?? `/guides/manage/${after.id}`;
+		const url = `${SITE_URL}${path}`;
+		const changes = before.status === 'published';
+		return this.notify([before.author], {
+			title: changes ? `Changes published: ${title}` : `Guide published: ${title}`,
+			body: changes
+				? `Staff published your changes to [${title}](${url}).`
+				: `Staff published your guide [${title}](${url}).`,
+			url,
+			from: viewer.id
+		});
 	}
 
 	/** An inline image for the editor; the returned url goes into the body. */
@@ -675,8 +1070,14 @@ export class GuidesService extends Service {
 		);
 	}
 
+	/** Only staff and editors take a published guide down; an author deletes their drafts. */
 	remove(id: string, viewer: AuthUserPublic): Task<void> {
 		return this.editable(id, viewer)
+			.andThen((record) =>
+				record.status === 'published' && !canPublishGuides(viewer)
+					? errAsync(forbidden('Ask staff to remove a published guide.'))
+					: okAsync(record)
+			)
 			.andThen((record) => fromPb(this.guides.delete(record.id), 'Could not delete the guide'))
 			.map(() => undefined);
 	}

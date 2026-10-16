@@ -7,7 +7,7 @@
 	} from '@company-of-heroes/ui/replay';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { meSteamIds } from '$lib/auth/user';
-	import { replaysHref, recentMemberQuery, TOP_REPLAYS } from '$lib/replays';
+	import { TOP_REPLAYS } from '$lib/replays';
 	import { href, useI18n } from '$lib/i18n';
 
 	type Props = {
@@ -22,9 +22,7 @@
 	const { t } = useI18n();
 	const user = $derived(page.data.user);
 	const mySteamIds = $derived(meSteamIds(user));
-	const viewAllHref = $derived(
-		href(replaysHref({ ...recentMemberQuery(), sort: 'downloadCount', sortDir: 'desc' }, 'member'))
-	);
+	const viewAllHref = $derived(href('/replays'));
 </script>
 
 {#if loading || matches.length > 0 || (variant === 'home' && error)}

@@ -20,6 +20,15 @@
 			: (getI18n().getLocale() as GuideLanguage);
 	});
 
+	/**
+	 * What the skeleton draws before the website answers: the index, a top-level category, or
+	 * (for deeper paths) a guide, the most common page under a category.
+	 */
+	const loadingKind = $derived.by(() => {
+		const depth = path.split('/').filter(Boolean).length;
+		return depth === 0 ? 'index' : depth === 1 ? 'category' : 'guide';
+	});
+
 	/** The website resolves the path; a moved guide answers with its new address. */
 	const view = resource(
 		() => [path, pageNumber, language] as const,
@@ -46,5 +55,5 @@
 		{t('Guide not found.')}
 	</p>
 {:else}
-	<GuideBrowserSkeleton />
+	<GuideBrowserSkeleton kind={loadingKind} />
 {/if}

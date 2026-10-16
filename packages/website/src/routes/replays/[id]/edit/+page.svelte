@@ -13,7 +13,7 @@
 
 	const match = $derived(data.match);
 	const detailHref = $derived(href(`/replays/${match.id}`));
-	const memberReplaysHref = $derived(href('/replays?tab=member'));
+	const memberReplaysHref = $derived(href('/replays'));
 </script>
 
 <Seo title={t('Edit replay')} noindex />

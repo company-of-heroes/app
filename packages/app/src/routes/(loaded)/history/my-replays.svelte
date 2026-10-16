@@ -86,13 +86,11 @@
 		message={t('Set your Company of Heroes warnings.log in Settings to find your local replays.')}
 	/>
 	<div
-		class="border-secondary-800 flex flex-wrap items-center justify-end gap-3 border-b px-4 py-2"
+		class="border-secondary-800 flex flex-wrap items-center justify-end gap-2 border-b px-4 py-2"
 	>
 		<Button href="/replays/upload" size="sm" variant="secondary">
 			{t('Upload to Shared Replays')}
 		</Button>
-	</div>
-	<div class="border-secondary-800 flex items-center justify-end border-b px-4 py-2">
 		<Button variant="secondary" size="sm" onclick={() => (filtersOpen = true)}>
 			<span class="relative inline-flex">
 				<FunnelSimpleIcon class="size-4" />

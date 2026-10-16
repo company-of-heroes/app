@@ -163,7 +163,7 @@ const REWARDS = [
 	one(GLOBAL, 'Pro Circuit', 'Win 50 matches in a Pro lobby.', [
 		{ metric: 'wins', threshold: 50, filter: { pro: true } }
 	]),
-	one(PANZER_ELITE, 'Three Abreast', 'Win 50 3v3 matches.', [
+	one(GLOBAL, 'Three Abreast', 'Win 50 3v3 matches.', [
 		{ metric: 'wins', threshold: 50, filter: { matchtypeId: 3 } }
 	]),
 	one(US, 'Quick Draw', 'Win 25 matches as the US Forces in 15 minutes or less.', [
@@ -199,16 +199,16 @@ const REWARDS = [
 	one(GLOBAL, 'Heavyweight', 'Win 25 matches in lobbies averaging 1600 ELO or more.', [
 		{ metric: 'wins', threshold: 25, filter: { minAvgElo: 1600 } }
 	]),
-	one(WEHRMACHT, 'Blitzkrieg', 'Win 10 matches in 10 minutes or less.', [
+	one(GLOBAL, 'Blitzkrieg', 'Win 10 matches in 10 minutes or less.', [
 		{ metric: 'wins', threshold: 10, filter: { maxMinutes: 10 } }
 	]),
-	one(BRITISH, 'War of Attrition', 'Win 10 matches that last an hour or longer.', [
+	one(GLOBAL, 'War of Attrition', 'Win 10 matches that last an hour or longer.', [
 		{ metric: 'wins', threshold: 10, filter: { minMinutes: 60 } }
 	]),
-	one(US, 'Rails and Metal', 'Win 25 matches on Rails and Metal.', [
+	one(GLOBAL, 'Rails and Metal', 'Win 25 matches on Rails and Metal.', [
 		{ metric: 'wins', threshold: 25, filter: { map: '4p_rails and metal' } }
 	]),
-	one(PANZER_ELITE, 'Langres Garrison', 'Win 25 matches on Langres.', [
+	one(GLOBAL, 'Langres Garrison', 'Win 25 matches on Langres.', [
 		{ metric: 'wins', threshold: 25, filter: { map: '2p_langres' } }
 	]),
 	one(PANZER_ELITE, 'Tank Commander', 'Win 100 2v2 matches as the Panzer Elite.', [
@@ -246,10 +246,10 @@ const REWARDS = [
 	one(GLOBAL, 'Student of the Game', 'Download 25 match replays.', [
 		{ metric: 'replays_downloaded', threshold: 25 }
 	]),
-	one(US, 'Dressed for Parade', 'Complete your profile: avatar, bio, background and a link.', [
+	one(GLOBAL, 'Dressed for Parade', 'Complete your profile: avatar, bio, background and a link.', [
 		{ metric: 'profile_complete', threshold: 1 }
 	]),
-	one(BRITISH, 'Old Guard', 'Have an account for a year.', [
+	one(GLOBAL, 'Old Guard', 'Have an account for a year.', [
 		{ metric: 'account_age_days', threshold: 365 }
 	]),
 	one(GLOBAL, 'Town Crier', 'Place 250 comments.', [
@@ -276,7 +276,7 @@ const REWARDS = [
 		{ secret: true }
 	),
 	one(
-		WEHRMACHT,
+		GLOBAL,
 		'Last Stand',
 		'Win 50 1v1 matches against higher-rated opponents.',
 		[{ metric: 'upset_wins', threshold: 50 }],
@@ -310,14 +310,32 @@ function parseConditions(raw) {
 	}
 }
 
-/** Hands out ribbons nobody uses yet: a whole series for a tier, single ribbons otherwise. */
-function ribbonPicker(used) {
-	const taken = new Set(used);
-	const seriesFor = new Map();
+/**
+ * Hands out ribbons nobody uses yet: a whole series for a tier, single ribbons otherwise.
+ * A tier that already has levels keeps their series, so a deleted level comes back in it.
+ */
+function ribbonPicker(existing) {
 	const key = (entry) => entry.file.replace(/\.svg$/, '');
+	const taken = new Set(existing.map((item) => item.ribbon).filter(Boolean));
+	const seriesFor = new Map();
+	for (const item of existing) {
+		const family = item.title.trim().replace(/ (I|II|III|IV|V)$/, '');
+		const entry = RIBBONS.find((ribbon) => key(ribbon) === item.ribbon);
+		if (family !== item.title.trim() && entry?.series && !seriesFor.has(family)) {
+			seriesFor.set(family, entry.series);
+		}
+	}
+
+	const slot = (series, level) =>
+		RIBBONS.find((item) => item.series === series && item.level === level);
 	return (want) => {
 		if (want.series) {
 			let series = seriesFor.get(want.series);
+			const sibling = series && slot(series, want.level);
+			if (!sibling || taken.has(key(sibling))) {
+				series = undefined;
+			}
+
 			if (!series) {
 				const candidates = [
 					...new Set(
@@ -336,7 +354,7 @@ function ribbonPicker(used) {
 				seriesFor.set(want.series, series);
 			}
 
-			const entry = RIBBONS.find((item) => item.series === series && item.level === want.level);
+			const entry = slot(series, want.level);
 			taken.add(key(entry));
 			return key(entry);
 		}
@@ -395,7 +413,7 @@ async function main() {
 	const conditionSets = new Set(
 		existing.items.map((item) => conditionsKey(parseConditions(item.conditions)))
 	);
-	const pickRibbon = ribbonPicker(existing.items.map((item) => item.ribbon).filter(Boolean));
+	const pickRibbon = ribbonPicker(existing.items);
 	let sort = existing.items.reduce((max, item) => Math.max(max, item.sort ?? 0), -1) + 1;
 	let created = 0;
 	let skipped = 0;

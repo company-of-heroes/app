@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from './country-flag.svelte';
 	import type { Snippet } from 'svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
@@ -19,6 +20,7 @@
 	import LikeButton from '../comment/like-button.svelte';
 	import { Button } from '../ui/button';
 	import { CopyButton } from '../ui/copy-button';
+	import PlayerClaimButton from './player-claim-button.svelte';
 	import { Skeleton } from '../ui/skeleton';
 	import type { PlayerPageData } from './types';
 	import PlayerFact from './player-fact.svelte';
@@ -30,7 +32,7 @@
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerLinks from './player-links.svelte';
 	import RewardIcons from '../reward/reward-icons.svelte';
-	import MatchResultBadge from './match-result-badge.svelte';
+	import MatchResultStrip from './match-result-strip.svelte';
 	import PlayerStreamerIcon from './player-streamer-icon.svelte';
 	import { isStreamingLink } from './profile';
 	import SmurfAlert from './smurf-alert.svelte';
@@ -69,6 +71,8 @@
 	const host = useHost();
 
 	const isSelf = $derived(host.auth.isSelf(player.steamId, player.profileId));
+	/** No account linked this Steam id yet (rewards are loaded per linked account). */
+	const unclaimed = $derived(player.rewards?.linked === false);
 	const joinedSince = $derived(
 		player.timecreated ? formatDate(player.timecreated, host.locale()) : null
 	);
@@ -77,10 +81,9 @@
 			? t('Play with the companion running to build stats.')
 			: t('No tracked community matches for this player.')
 	);
-	const flag = $derived(host.resolve.flagImageUrl(player.country));
 
 	const stats = $derived(player.performance);
-	const recentMatches = $derived((stats?.recentMatches ?? []).slice(0, 5));
+	const recentMatches = $derived((stats?.recentMatches ?? []).slice(0, 10));
 	const bestMap = $derived.by(() => {
 		if (!stats) {
 			return null;
@@ -139,9 +142,7 @@
 			/>
 		{/snippet}
 		{#snippet kicker()}
-			{#if flag}
-				<img class="h-4 w-auto shrink-0 rounded-xs" src={flag} alt={player.country ?? ''} />
-			{/if}
+			<CountryFlag country={player.country} class="h-4" />
 			<PlayerStreamerIcon labels={player.labels} steamId={player.steamId} size={20} />
 			<PlayerLabels labels={player.labels} class="shrink-0" />
 			<span class="text-secondary-300 text-xs">
@@ -171,6 +172,9 @@
 				</Button>
 			{/if}
 			{@render actionsSnippet?.()}
+			{#if unclaimed && !isSelf}
+				<PlayerClaimButton steamId={player.steamId} />
+			{/if}
 			{#if isSelf}
 				<Button
 					href={host.routes.accountProfile(player.steamId)}
@@ -209,11 +213,7 @@
 			</PlayerFact>
 			{#if recentMatches.length > 0}
 				<PlayerFact label={t('Recent')} icon={ClockCounterClockwiseIcon}>
-					<span class="inline-flex min-w-0 items-center gap-1 overflow-x-auto">
-						{#each recentMatches as match (match.id || match.sessionId)}
-							<MatchResultBadge {match} />
-						{/each}
-					</span>
+					<MatchResultStrip matches={recentMatches} />
 				</PlayerFact>
 			{/if}
 			{#if bestMap}

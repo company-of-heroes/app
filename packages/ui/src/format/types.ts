@@ -15,6 +15,9 @@ export type PlayerEloSlot = {
 
 export type PlayerEloMap = Record<string, Record<string, PlayerEloSlot>>;
 
+/** Movement since a stored ladder snapshot: `rank` > 0 climbed, < 0 dropped, null is new to the top 200. */
+export type LeaderboardRankChange = { rank: number | null; games: number };
+
 export type LeaderboardStatRow = {
 	leaderboard_id: number;
 	rank: number;
@@ -30,5 +33,9 @@ export type LeaderboardStatRow = {
 		avatarUrl?: string;
 		labels?: PlayerLabel[];
 		likeCount?: number;
+		/** An account linked this Steam id; `false` shows the claim button, unknown shows none. */
+		claimed?: boolean;
 	};
+	/** Since yesterday's / last week's snapshot; null (or left out) when there is none yet. */
+	change?: { day: LeaderboardRankChange | null; week: LeaderboardRankChange | null };
 };

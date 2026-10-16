@@ -1,11 +1,15 @@
 import { z } from 'zod';
 import {
 	REWARD_CONDITIONS_MAX,
+	REWARD_MATCHTYPE_IDS,
 	REWARD_METRIC_CATALOG,
 	REWARD_METRICS,
 	rewardConditionKey,
 	type RewardCondition
 } from '@company-of-heroes/ui/reward/metrics';
+
+/** Highest rating an `elo_reached` condition may ask for (same cap as the lobby ELO filter). */
+export const REWARD_ELO_MAX = 3000;
 
 export const rewardConditionSchema = z
 	.object({
@@ -14,13 +18,19 @@ export const rewardConditionSchema = z
 		filter: z
 			.object({
 				raceId: z.number().int().min(0).max(3).optional(),
-				matchtypeId: z.number().int().min(0).max(17).optional(),
+				matchtypeId: z
+					.number()
+					.int()
+					.refine((id) => (REWARD_MATCHTYPE_IDS as readonly number[]).includes(id), {
+						message: 'Skirmish does not count toward rewards.'
+					})
+					.optional(),
 				ranked: z.boolean().optional(),
 				map: z.string().trim().min(1).max(100).optional(),
 				minMinutes: z.number().int().min(1).max(600).optional(),
 				maxMinutes: z.number().int().min(1).max(600).optional(),
 				pro: z.literal(true).optional(),
-				minAvgElo: z.number().int().min(0).max(3000).optional()
+				minAvgElo: z.number().int().min(0).max(REWARD_ELO_MAX).optional()
 			})
 			.optional()
 	})
@@ -40,6 +50,10 @@ export const rewardConditionSchema = z
 			const max = REWARD_METRIC_CATALOG[condition.metric].max;
 			return max === undefined || condition.threshold <= max;
 		},
+		{ message: 'The threshold is above the highest reachable value.' }
+	)
+	.refine(
+		(condition) => condition.metric !== 'elo_reached' || condition.threshold <= REWARD_ELO_MAX,
 		{ message: 'The threshold is above the highest reachable value.' }
 	)
 	.refine(

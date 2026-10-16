@@ -1,7 +1,7 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { error } from '@sveltejs/kit';
 import { z } from 'zod';
-import { isEditorUser, isStaffUser } from '$lib/auth/user';
+import { canPublishGuides, isStaffUser } from '$lib/auth/user';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import {
 	guideCategoryInput,
@@ -21,10 +21,20 @@ const images = z.object({
 	clearCover: z.boolean().optional()
 });
 
-/** Staff and editors (an editor manages only their own guides; the service checks). */
+/** Any signed-in user writes guides (their own; the service checks). */
+function author() {
+	const { locals } = getRequestEvent();
+	if (!locals.user) {
+		error(401, locals.t('Log in to do that.'));
+	}
+
+	return { services: locals.services, user: locals.user };
+}
+
+/** Staff and editors: add guide categories. */
 function editor() {
 	const { locals } = getRequestEvent();
-	if (!locals.user || !isEditorUser(locals.user)) {
+	if (!locals.user || !canPublishGuides(locals.user)) {
 		error(403, locals.t('Only editors and staff can do that.'));
 	}
 
@@ -71,19 +81,19 @@ export const fetchGuide = command(id, (guideId) => {
 });
 
 export const myGuides = command(() => {
-	const { services, user } = editor();
+	const { services, user } = author();
 	return unwrapAsync(services.guides.mine(user));
 });
 
 export const createGuide = command(guideCreateBody, ({ language }) => {
-	const { services, user } = editor();
+	const { services, user } = author();
 	return unwrapAsync(services.guides.create(user, language));
 });
 
 export const updateGuide = command(
 	z.object({ id, input: guideInput, images }),
 	({ id, input, images }) => {
-		const { services, user } = editor();
+		const { services, user } = author();
 		return unwrapAsync(services.guides.update(id, input, images, user));
 	}
 );
@@ -91,13 +101,23 @@ export const updateGuide = command(
 export const uploadGuideImage = command(
 	z.object({ id, file: z.instanceof(File) }),
 	({ id, file }) => {
-		const { services, user } = editor();
+		const { services, user } = author();
 		return unwrapAsync(services.guides.uploadImage(id, file, user));
 	}
 );
 
+export const requestGuideReview = command(id, (guideId) => {
+	const { services, user } = author();
+	return unwrapAsync(services.guides.requestReview(guideId, user));
+});
+
+export const discardGuideRevision = command(id, (guideId) => {
+	const { services, user } = author();
+	return unwrapAsync(services.guides.discardRevision(guideId, user));
+});
+
 export const deleteGuide = command(id, (guideId) => {
-	const { services, user } = editor();
+	const { services, user } = author();
 	return unwrapAsync(services.guides.remove(guideId, user));
 });
 
@@ -124,6 +144,6 @@ export const deleteGuideCategory = command(id, (categoryId) => {
 });
 
 export const searchGuideTranslations = command(guideTranslationsQuery, ({ language, q }) => {
-	const { services } = editor();
+	const { services } = author();
 	return unwrapAsync(services.guides.searchTranslations(language, q));
 });

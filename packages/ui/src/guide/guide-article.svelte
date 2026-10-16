@@ -13,8 +13,7 @@
 	import { useHost } from '../host/host.context';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
-	import PlayerLabels from '../player/player-labels.svelte';
-	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
+	import PlayerByline from '../player/player-byline.svelte';
 	import StatisticsInfoPopover from '../statistics/statistics-info-popover.svelte';
 	import { InfoPopover } from '../statistics/info-popover.svelte';
 	import { renderGuideMarkdown } from './markdown';
@@ -39,19 +38,6 @@
 		})
 	);
 	const sections = $derived(rendered.headings.filter((heading) => heading.level === 2));
-	const avatar = $derived(
-		host.resolve.userAvatar(
-			{ id: guide.author.id, avatarUrl: guide.author.avatarUrl ?? undefined },
-			{ thumb: '100x100' }
-		)
-	);
-	/** The author's player profile and labels, when their account has a Steam ID. */
-	const profileHref = $derived(
-		guide.author.steamId ? host.routes.player(guide.author.steamId) : null
-	);
-	const labels = $derived(
-		guide.author.steamId ? host.api.labels.forSteamId(guide.author.steamId) : []
-	);
 	/** Edits more than a day after publishing are worth a mention. */
 	const updatedLater = $derived(
 		guide.publishedAt &&
@@ -71,24 +57,7 @@
 			<p class="text-secondary-300 mt-3 max-w-3xl text-lg leading-snug">{guide.excerpt}</p>
 		{/if}
 		<div class="text-secondary-400 mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-			<span class="flex min-w-0 flex-wrap items-center gap-2">
-				{#if avatar}
-					<img src={avatar} alt="" class="size-6 rounded-full object-cover" loading="lazy" />
-				{/if}
-				{#if profileHref}
-					<a
-						href={profileHref}
-						rel="author"
-						class={cn(interactive, 'hover:text-primary font-medium text-white transition-colors')}
-					>
-						{guide.author.name}
-					</a>
-				{:else}
-					<span class="font-medium text-white">{guide.author.name}</span>
-				{/if}
-				<PlayerStreamerIcon steamId={guide.author.steamId} />
-				<PlayerLabels {labels} />
-			</span>
+			<PlayerByline user={guide.author} rel="author" />
 			{#if guide.publishedAt}
 				<time datetime={guide.publishedAt}>{formatDate(guide.publishedAt, host.locale())}</time>
 			{/if}

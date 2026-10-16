@@ -4,13 +4,19 @@ import {
 	TOURNAMENT_IMAGE_TYPES,
 	TOURNAMENT_LOGO_MAX_BYTES,
 	TOURNAMENT_MAP_ICON_MAX_BYTES,
+	TOURNAMENT_MEDAL_MAX_BYTES,
+	TOURNAMENT_MEDAL_TYPES,
 	CUSTOM_MAP_PREFIX,
+	CUSTOM_MEDAL_PREFIX,
 	customMapId,
+	customMedalId,
 	isBuiltInMap,
 	roundKey,
 	winsNeeded,
 	type Tournament,
+	type TournamentCustomMedal,
 	type TournamentDetail,
+	type TournamentHostUser,
 	type TournamentFormat,
 	type TournamentGame,
 	type TournamentImages,
@@ -200,9 +206,30 @@ const pbDate = (date: Date) => date.toISOString().replace('T', ' ');
 
 const parseDate = (value: string) => Date.parse(value.replace(' ', 'T'));
 
-type Resolved = Pick<Tournament, 'bannerUrl' | 'logoUrl' | 'mapPool'>;
+type Resolved = Pick<Tournament, 'bannerUrl' | 'logoUrl' | 'mapPool' | 'customMedal' | 'host'>;
 
 type MapRecord = { id: string; name: string; icon: string; collectionName: string };
+
+type MedalRecord = { id: string; name: string; image: string; collectionName: string };
+
+type HostRecord = {
+	id: string;
+	name: string;
+	avatar: string;
+	steamIds: unknown;
+	collectionId: string;
+	collectionName: string;
+};
+
+/**
+ * Custom maps and uploaded medals behind `custom:<id>` references, by reference, and the
+ * accounts that created the tournaments, by id.
+ */
+type Customs = {
+	maps: Map<string, TournamentMap>;
+	medals: Map<string, TournamentCustomMedal>;
+	hosts: Map<string, TournamentHostUser>;
+};
 
 const poolRefs = (record: Pick<TournamentRecord, 'mapPool'>) =>
 	Array.isArray(record.mapPool) ? record.mapPool.map(String) : [];
@@ -364,6 +391,35 @@ function matchFields(match: TournamentMatch) {
 	};
 }
 
+/** Markup an uploaded SVG medal must not contain: scripts, event handlers, outside resources. */
+const UNSAFE_SVG = [
+	/<script/i,
+	/<foreignObject/i,
+	/\son[a-z]+\s*=/i,
+	/javascript:/i,
+	/<!ENTITY/i,
+	/(?:href|src)\s*=\s*["']?\s*(?:https?:|\/\/|data:text)/i,
+	/url\(\s*["']?\s*(?:https?:|\/\/)/i,
+	/@import/i
+];
+
+/**
+ * Rejects SVG medals with scripts or outside resources. Pages only show medals in `<img>` (no
+ * scripts there) and PocketBase serves files sandboxed; this also covers opening the file itself.
+ */
+function safeSvg(file: File): Task<void> {
+	if (file.type !== 'image/svg+xml') {
+		return okAsync(undefined);
+	}
+
+	return ResultAsync.fromPromise(file.text(), () => badRequest('Could not read the SVG.')).andThen(
+		(text) =>
+			/<svg[\s>]/i.test(text) && !UNSAFE_SVG.some((pattern) => pattern.test(text))
+				? okAsync(undefined)
+				: errAsync(badRequest('This SVG contains scripts or external links.'))
+	);
+}
+
 /** Record fields for new or removed images; checks type and size. */
 function imageFields(images: TournamentImages): Result<Record<string, unknown>, AppError> {
 	const fields: Record<string, unknown> = {};
@@ -451,12 +507,15 @@ export class TournamentsService extends Service {
 		return this.pb.collection('tournament_maps');
 	}
 
-	/** `custom` resolves the `custom:<id>` references; a deleted custom map drops out of the pool. */
-	private view(
-		record: TournamentRecord,
-		participantCount: number,
-		custom: Map<string, TournamentMap>
-	): Tournament {
+	private get medals() {
+		return this.pb.collection('tournament_medals');
+	}
+
+	/**
+	 * `custom` resolves the `custom:<id>` references; a deleted custom map drops out of the pool,
+	 * a deleted medal falls back to the default.
+	 */
+	private view(record: TournamentRecord, participantCount: number, custom: Customs): Tournament {
 		const url = (file: string, thumb: string) =>
 			file ? this.pb.files.getURL(record, file, { thumb }) : null;
 		const mapPool = poolRefs(record).flatMap((ref): TournamentMap[] => {
@@ -469,13 +528,15 @@ export class TournamentsService extends Service {
 				return [{ ref, name: workshop.name, imageUrl: null, source: 'workshop' }];
 			}
 
-			const map = custom.get(ref);
+			const map = custom.maps.get(ref);
 			return map ? [map] : [];
 		});
 		return toTournament(record, participantCount, {
 			bannerUrl: url(record.banner, '1200x300'),
 			logoUrl: url(record.logo, '128x128'),
-			mapPool
+			mapPool,
+			customMedal: custom.medals.get(record.medal) ?? null,
+			host: custom.hosts.get(record.createdBy) ?? null
 		});
 	}
 
@@ -506,6 +567,113 @@ export class TournamentsService extends Service {
 			(records) =>
 				new Map(records.map((record) => [`${CUSTOM_MAP_PREFIX}${record.id}`, this.toMap(record)]))
 		);
+	}
+
+	/** No thumb: PocketBase does not make thumbs of SVG. */
+	private toMedal(record: MedalRecord): TournamentCustomMedal {
+		return {
+			ref: `${CUSTOM_MEDAL_PREFIX}${record.id}`,
+			name: record.name,
+			imageUrl: this.pb.files.getURL(record, record.image)
+		};
+	}
+
+	/** Uploaded medals behind these `custom:<id>` medal references, by reference. */
+	private customMedals(refs: string[]): Task<Map<string, TournamentCustomMedal>> {
+		const ids = [...new Set(refs.map(customMedalId).filter((id): id is string => Boolean(id)))];
+		if (ids.length === 0) {
+			return okAsync(new Map());
+		}
+
+		return sequence(chunk(ids, 50), (part) =>
+			fromPb(
+				this.medals.getFullList<MedalRecord>({
+					filter: part.map((id) => this.pb.filter('id = {:id}', { id })).join(' || ')
+				}),
+				'Could not load the medals'
+			)
+		).map(
+			(lists) =>
+				new Map(
+					lists.flat().map((record) => [`${CUSTOM_MEDAL_PREFIX}${record.id}`, this.toMedal(record)])
+				)
+		);
+	}
+
+	/** Custom maps and medals the tournaments refer to, and who created them. */
+	private customs(records: TournamentRecord[]): Task<Customs> {
+		return ResultAsync.combine([
+			this.customMaps(records.flatMap(poolRefs)),
+			this.customMedals(records.map((record) => record.medal)),
+			this.hosts(records.map((record) => record.createdBy))
+		]).map(([maps, medals, hosts]) => ({ maps, medals, hosts }));
+	}
+
+	/** The staff members and community hosts who created tournaments, by account id. */
+	private hosts(userIds: string[]): Task<Map<string, TournamentHostUser>> {
+		const ids = [...new Set(userIds.filter(Boolean))];
+		if (ids.length === 0) {
+			return okAsync(new Map());
+		}
+
+		return sequence(chunk(ids, 50), (part) =>
+			fromPb(
+				this.pb.collection('users').getFullList<HostRecord>({
+					filter: part.map((id) => this.pb.filter('id = {:id}', { id })).join(' || '),
+					fields: 'id,name,avatar,steamIds,collectionId,collectionName'
+				}),
+				'Could not load the hosts'
+			)
+		).map(
+			(lists) =>
+				new Map(
+					lists.flat().map((user): [string, TournamentHostUser] => [
+						user.id,
+						{
+							id: user.id,
+							name: user.name?.trim() || 'Host',
+							avatarUrl: user.avatar ? this.pb.files.getURL(user, user.avatar) : null,
+							steamId:
+								Array.isArray(user.steamIds) && user.steamIds.length
+									? String(user.steamIds[0])
+									: null
+						}
+					])
+				)
+		);
+	}
+
+	/** Every uploaded medal, newest first, for the medal picker. */
+	listMedals(): Task<TournamentCustomMedal[]> {
+		return fromPb(
+			this.medals.getFullList<MedalRecord>({ sort: '-created' }),
+			'Could not load the medals'
+		).map((records) => records.map((record) => this.toMedal(record)));
+	}
+
+	/** Staff and hosts upload a champion medal (PNG or SVG) every tournament can use. */
+	createMedal(name: string, image: File | null, userId: string): Task<TournamentCustomMedal> {
+		const trimmed = name.trim();
+		return ensure(trimmed.length > 0 && trimmed.length <= 80, badRequest('Give the medal a name.'))
+			.andThen(() => (image ? ok(image) : err(badRequest('Choose an image for the medal.'))))
+			.andThen((file) =>
+				ensure(TOURNAMENT_MEDAL_TYPES.includes(file.type), badRequest('Use a PNG or SVG image.'))
+					.andThen(() =>
+						ensure(
+							file.size <= TOURNAMENT_MEDAL_MAX_BYTES,
+							badRequest('The medal must be 1 MB or smaller.')
+						)
+					)
+					.map(() => file)
+			)
+			.asyncAndThen((file) => safeSvg(file).map(() => file))
+			.andThen((file) =>
+				fromPb(
+					this.medals.create<MedalRecord>({ name: trimmed, image: file, createdBy: userId }),
+					'Could not upload the medal'
+				)
+			)
+			.map((record) => this.toMedal(record));
 	}
 
 	/** The medal every tournament uses (deleted ones included), for the medal picker. */
@@ -661,7 +829,7 @@ export class TournamentsService extends Service {
 					'Could not load tournaments'
 				)
 			).map((lists) => lists.flat()),
-			this.customMaps(records.flatMap(poolRefs))
+			this.customs(records)
 		]).map(([rows, custom]) => {
 			const counts = new Map<string, number>();
 			for (const row of rows) {
@@ -760,22 +928,6 @@ export class TournamentsService extends Service {
 		return this.record(idOrSlug, viewer).andThen((record) => this.detail(record));
 	}
 
-	/** The community host who created it (null when staff did, or the role was taken away). */
-	private hostOf(record: TournamentRecord): Task<TournamentDetail['host']> {
-		if (!record.createdBy) {
-			return okAsync(null);
-		}
-
-		return pbMaybe(
-			this.pb
-				.collection('users')
-				.getOne<{ id: string; name: string; role: string }>(record.createdBy, {
-					fields: 'id,name,role'
-				}),
-			'Could not load the host'
-		).map((user) => (user?.role === 'host' ? { id: user.id, name: user.name || 'Host' } : null));
-	}
-
 	/** `canManage` (and the open reports) follow the signed-in user of this request. */
 	private detail(record: TournamentRecord): Task<TournamentDetail> {
 		const canManage = canManageTournament(this.locals.user, record);
@@ -795,11 +947,10 @@ export class TournamentsService extends Service {
 					})
 				)
 			),
-			this.customMaps(poolRefs(record)),
+			this.customs([record]),
 			this.services.tournamentNotices.list(record.id),
-			canManage ? this.services.tournamentReports.openCount(record.id) : okAsync(0),
-			this.hostOf(record)
-		]).map(([participantRecords, { matches, replays, live }, custom, posts, openReports, host]) => {
+			canManage ? this.services.tournamentReports.openCount(record.id) : okAsync(0)
+		]).map(([participantRecords, { matches, replays, live }, custom, posts, openReports]) => {
 			const participants = participantRecords
 				.map((participant) => toParticipant(participant, record))
 				.sort((a, b) => (a.seed ?? 9999) - (b.seed ?? 9999));
@@ -816,7 +967,6 @@ export class TournamentsService extends Service {
 				posts,
 				openReports,
 				canManage,
-				host,
 				standings:
 					record.format === 'round_robin'
 						? standings(
@@ -993,7 +1143,7 @@ export class TournamentsService extends Service {
 	}
 
 	/**
-	 * Adds each player's highest current ELO. Until the bracket starts it also shows the current
+	 * Adds each player's highest current ELO and a missing country. Until the bracket starts it also shows the current
 	 * 1v1 ELO (seeding stores it, but signed-up players have none yet). A failed lookup keeps the
 	 * stored ratings.
 	 */
@@ -1009,11 +1159,13 @@ export class TournamentsService extends Service {
 		return this.services.ratings
 			.many(participants.map((p) => p.steamId))
 			.map((ratings) => {
-				const bySteam = new Map(ratings.map((rating) => [rating.steamId, rating.elo]));
+				const bySteam = new Map(ratings.map((rating) => [rating.steamId, rating]));
 				return participants.map((p) => {
-					const elo = bySteam.get(p.steamId);
+					const stored = bySteam.get(p.steamId);
+					const elo = stored?.elo;
 					return {
 						...p,
+						country: p.country || stored?.country || '',
 						rating: (open && elo && oneVsOneElo(elo)) || p.rating,
 						highestRating: elo ? highestElo(elo) : null
 					};
@@ -1033,7 +1185,19 @@ export class TournamentsService extends Service {
 					badRequest('A tournament needs at least 2 players.')
 				)
 			)
-			.asyncAndThen(() => (input.mapPool ? this.validateMaps(input.mapPool) : okAsync(undefined)));
+			.asyncAndThen(() => (input.mapPool ? this.validateMaps(input.mapPool) : okAsync(undefined)))
+			.andThen(() => this.validateMedal(input.medal));
+	}
+
+	/** An uploaded medal must still exist; built-in keys are checked by the input schema. */
+	private validateMedal(medal: string | null | undefined): Task<void> {
+		if (!medal || !customMedalId(medal)) {
+			return okAsync(undefined);
+		}
+
+		return this.customMedals([medal]).andThen((medals) =>
+			medals.has(medal) ? okAsync(undefined) : errAsync(badRequest('That medal no longer exists.'))
+		);
 	}
 
 	/** Every reference is a stock, workshop or existing custom map. */
@@ -1359,13 +1523,17 @@ export class TournamentsService extends Service {
 						return errAsync(conflict('This tournament is full.'));
 					}
 
-					return this.player(steamId).andThen((player) => {
+					return ResultAsync.combine([
+						this.player(steamId),
+						this.countryOf(steamId)
+					]).andThen(([player, country]) => {
 						const data = {
 							tournament: record.id,
 							user: user.id,
 							steamId,
 							profileId: player.profile_id,
 							alias: player.alias,
+							country,
 							status: 'registered',
 							seed: 0,
 							rating: 0,
@@ -1485,7 +1653,7 @@ export class TournamentsService extends Service {
 			'Could not load the player'
 		).andThen((player) =>
 			player?.profile_id
-				? okAsync({ ...player, country: null })
+				? this.countryOf(steamId).map((country) => ({ ...player, country }))
 				: this.relic
 						.get<RelicPersonalStat>(
 							`/community/leaderboard/getpersonalstat?title=coh1&profile_names=${encodeURIComponent(JSON.stringify([name]))}`
@@ -1497,6 +1665,14 @@ export class TournamentsService extends Service {
 								: errAsync(badRequest('This Steam account has no Company of Heroes profile.'))
 						)
 		);
+	}
+
+	/** Country we stored with the player's ratings; '' when unknown. */
+	private countryOf(steamId: string): Task<string> {
+		return this.services.ratings
+			.get(steamId)
+			.map((rating) => rating.country ?? '')
+			.orElse(() => okAsync(''));
 	}
 
 	/** A participant accepts the current rules (again, after they changed). */

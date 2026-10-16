@@ -8,11 +8,7 @@ export const prerender = false;
 export const load: LayoutServerLoad = ({ locals, url }) => {
 	const tab = parseReplaysTab(url.searchParams);
 
-	if (tab === 'member') {
-		return { maps: unwrapAsync(locals.services.memberReplays.maps()) };
-	}
-
-	if (tab === 'mine' && !locals.user) {
+	if (tab === 'discover' || (tab === 'mine' && !locals.user)) {
 		return { maps: Promise.resolve([]) };
 	}
 

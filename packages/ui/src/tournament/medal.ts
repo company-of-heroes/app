@@ -20,6 +20,25 @@ export type MedalManifestEntry = {
 
 export const MEDAL_METALS: MedalMetal[] = ['gold', 'silver', 'bronze'];
 
+/** What a medal shows: its image and name. */
+export type MedalImage = { url: string; title: string };
+
+/**
+ * The tournament's picked medal: an uploaded one (`customMedal`) or a built-in one by key; null
+ * for the default (or a medal that no longer exists).
+ */
+export function resolveMedal(
+	tournament: { medal: string | null; customMedal?: { name: string; imageUrl: string } | null },
+	builtIns: Medal[]
+): MedalImage | null {
+	if (tournament.customMedal) {
+		return { url: tournament.customMedal.imageUrl, title: tournament.customMedal.name };
+	}
+
+	const medal = builtIns.find((entry) => entry.key === tournament.medal);
+	return medal ? { url: medal.url, title: medal.title } : null;
+}
+
 const fileName = (path: string) =>
 	path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1);
 

@@ -4,31 +4,18 @@ import { type ApiDeps, normalizeBaseUrl, v1Base } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
 import type { PlayerEloMap } from '@company-of-heroes/ui/player/types';
-import type { PlayerLabel } from '@company-of-heroes/ui/format/types';
+import type { LeaderboardStatRow } from '@company-of-heroes/ui/format/types';
 
-export type RelicLeaderboardProfile = {
-	profile_id: number;
-	alias: string;
-	country: string | null;
-	name: string;
-	avatarUrl?: string;
-	labels?: PlayerLabel[];
-};
+export type RelicLeaderboardProfile = LeaderboardStatRow['profile'];
 
-export type LeaderboardStatWithProfile = {
-	leaderboard_id: number;
-	rank: number;
-	ranklevel: number;
-	wins: number;
-	losses: number;
-	streak: number;
-	profile: RelicLeaderboardProfile;
-};
+export type LeaderboardStatWithProfile = LeaderboardStatRow;
 
 export type LeaderboardPageData = {
 	leaderboardId: number;
 	stats: LeaderboardStatWithProfile[];
 	eloBySteamId: Record<string, PlayerEloMap>;
+	/** Days (UTC) of the snapshots `change` compares against; null until one is stored. */
+	baselines?: { day: string | null; week: string | null };
 };
 
 const leaderboardSchema: z.ZodType<LeaderboardPageData> = z

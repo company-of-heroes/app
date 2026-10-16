@@ -42,6 +42,9 @@
 	import { useI18n } from '$lib/i18n';
 	import { watch } from 'runed';
 	import { tooltip as hoverTip } from '$lib/attachments';
+	import { api, unwrapApi } from '$core/api';
+	import { parseRewardConditions, rewardConditionsSchema } from '@company-of-heroes/api';
+	import * as Reward from '@company-of-heroes/ui/reward';
 
 	const { t } = useI18n();
 
@@ -49,6 +52,8 @@
 	let hex = $state<string | null>(DEFAULT_LABEL_HEX);
 	let tooltip = $state('');
 	let autoRank20 = $state(false);
+	const conditions = new Reward.RewardConditionsEditor(0);
+	let mapItems = $state.raw<{ value: string; label: string }[]>([]);
 	let editingSort = $state(0);
 	let labels = $state.raw<UserLabel[]>([]);
 	let isSaving = $state(false);
@@ -56,7 +61,10 @@
 	let editingId = $state<string | null>(null);
 	let nameField: HTMLInputElement | undefined;
 	const previewName = $derived(name.trim());
-	const canSave = $derived(previewName.length > 0 && !isSaving);
+	const conditionsValid = $derived(
+		conditions.rows.length === 0 || rewardConditionsSchema.safeParse(conditions.conditions).success
+	);
+	const canSave = $derived(previewName.length > 0 && conditionsValid && !isSaving);
 
 	let playerSearch = $state(new PlayersSearch());
 
@@ -87,6 +95,7 @@
 		(isAdmin) => {
 			if (isAdmin) {
 				void loadLabels();
+				void loadMaps();
 			}
 		}
 	);
@@ -96,12 +105,33 @@
 		hex = DEFAULT_LABEL_HEX;
 		tooltip = '';
 		autoRank20 = false;
+		conditions.reset();
 		editingSort = 0;
 		editingId = null;
 	}
 
 	function nextSort() {
 		return labels.reduce((max, label) => Math.max(max, label.sort ?? 0), -1) + 1;
+	}
+
+	/** The unlock conditions, for the tooltip in the label list. */
+	function conditionsSummary(unlock: Reward.RewardCondition[]) {
+		return unlock
+			.map((condition) =>
+				Reward.REWARD_METRIC_CATALOG[condition.metric].boolean
+					? Reward.formatRewardCondition(condition, t)
+					: `${Reward.formatRewardCondition(condition, t)} ≥ ${condition.threshold}`
+			)
+			.join(', ');
+	}
+
+	async function loadMaps() {
+		try {
+			const maps = await unwrapApi(api.replays.getMaps());
+			mapItems = maps.map((map) => ({ value: map.map, label: map.name || map.map }));
+		} catch (error) {
+			console.error('[ADMIN]: label maps load failed:', error);
+		}
 	}
 
 	async function loadLabels() {
@@ -122,15 +152,18 @@
 		hex = labelHex(label.color);
 		tooltip = label.tooltip ?? '';
 		autoRank20 = label.autoRank20 ?? false;
+		conditions.load(parseRewardConditions(label.conditions));
 		editingSort = label.sort ?? 0;
 		nameField?.focus();
 	};
 
 	const saveLabel = async () => {
 		const trimmed = name.trim();
-		if (!trimmed) {
+		if (!trimmed || !conditionsValid) {
 			return;
 		}
+
+		const unlock = conditions.rows.length > 0 ? conditions.conditions : null;
 
 		isSaving = true;
 		try {
@@ -140,6 +173,7 @@
 					color: labelHex(hex),
 					tooltip: tooltip.trim(),
 					autoRank20,
+					conditions: unlock,
 					sort: editingSort
 				};
 				await pocketbase.collection('user_labels').update(editingId, data, { fetch });
@@ -150,6 +184,7 @@
 					color: labelHex(hex),
 					tooltip: tooltip.trim(),
 					autoRank20,
+					conditions: unlock,
 					sort: nextSort()
 				};
 				await pocketbase.collection('user_labels').create(data, { fetch });
@@ -353,13 +388,40 @@
 	/>
 </Form.Group>
 
+<Form.Group
+	layout="stacked"
+	wide
+	label={t('Unlock conditions')}
+	description={t(
+		'Like rewards: every linked Steam ID that meets all conditions gets this label. Checked with the rewards, never taken back. Leave empty to only hand it out yourself.'
+	)}
+>
+	<Reward.ConditionsField
+		editor={conditions}
+		maps={mapItems}
+		idPrefix="label-condition"
+		invalid={!conditionsValid}
+	/>
+</Form.Group>
+
 <section>
 	<div class="border-secondary-800 border-b px-4 py-3">
 		<p class="text-secondary-300 text-xs font-semibold tracking-wide uppercase">{t('Labels')}</p>
 	</div>
 	{#snippet cell_label({ row }: { row: UserLabel })}
+		{@const unlock = parseRewardConditions(row.conditions)}
 		<span class="flex min-w-0 items-center gap-2">
 			<LabelBadges labels={[row]} class="shrink-0" />
+			{#if unlock}
+				{@const summary = conditionsSummary(unlock)}
+				<span
+					class="text-primary inline-flex shrink-0"
+					aria-label={summary}
+					{@attach hoverTip(summary)}
+				>
+					<LightningIcon size={14} weight="fill" />
+				</span>
+			{/if}
 			{#if row.autoRank20}
 				<span
 					class="text-primary inline-flex shrink-0"

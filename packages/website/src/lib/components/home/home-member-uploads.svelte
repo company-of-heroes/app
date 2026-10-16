@@ -9,8 +9,6 @@
 	import { meSteamIds } from '$lib/auth/user';
 	import {
 		HOME_RECENT_MEMBER_UPLOADS,
-		recentMemberQuery,
-		replaysHref,
 		type CommunityMatch,
 		type HistorySortField
 	} from '$lib/replays';
@@ -26,10 +24,9 @@
 	const { t } = useI18n();
 	const mySteamIds = $derived(meSteamIds(page.data.user));
 
-	function onSort(field: HistorySortField) {
-		void goto(
-			href(replaysHref({ ...recentMemberQuery(), sort: field, sortDir: 'desc' }, 'member'))
-		);
+	/** Shared replays live on Discover, which has no sort; the list goes there. */
+	function onSort(_field: HistorySortField) {
+		void goto(href('/replays'));
 	}
 </script>
 
@@ -43,9 +40,7 @@
 				{t('Fresh replays shared by the community.')}
 			</p>
 		</div>
-		<Button href={href('/replays?tab=member')} variant="link" size="sm" class="px-0"
-			>{t('View all')}</Button
-		>
+		<Button href={href('/replays')} variant="link" size="sm" class="px-0">{t('View all')}</Button>
 	</div>
 	{#if error}
 		<p class="border-secondary-800 border-b px-4 py-2 text-sm text-red-400">

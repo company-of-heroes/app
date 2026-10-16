@@ -1,4 +1,6 @@
 <script lang="ts">
+	import CountryFlag from './country-flag.svelte';
+	import RankIcon from './rank-icon.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
@@ -105,13 +107,11 @@
 {#snippet rankBadge(matchPlayer: MatchHistoryPlayer)}
 	{#if (matchPlayer.ranklevel ?? 0) > 0}
 		<span class="flex items-center justify-center gap-2">
-			<img
-				loading="lazy"
-				decoding="async"
-				src={host.resolve.rankImageByRace(matchPlayer.race_id, matchPlayer.ranklevel ?? 0)}
-				alt={t('Rank {level}', { level: matchPlayer.ranklevel ?? 0 })}
-				class="size-6 shrink-0 object-contain"
-				{@attach tooltip(t('Rank {level}', { level: matchPlayer.ranklevel ?? 0 }))}
+			<RankIcon
+				level={matchPlayer.ranklevel ?? 0}
+				race={matchPlayer.race_id}
+				position={matchPlayer.rank}
+				class="size-6"
 			/>
 			<span class="font-semibold tabular-nums">
 				{(matchPlayer.rank ?? 0) > 0 ? `#${matchPlayer.rank}` : matchPlayer.ranklevel}
@@ -122,7 +122,7 @@
 	{/if}
 {/snippet}
 
-{#snippet playerIdentity(matchPlayer: MatchHistoryPlayer, isSelf: boolean, flagUrl: string | null)}
+{#snippet playerIdentity(matchPlayer: MatchHistoryPlayer, isSelf: boolean)}
 	<div class="flex min-w-0 items-center gap-2">
 		{#if showAvatars}
 			<span class="border-secondary-800 size-8 shrink-0 overflow-hidden rounded-lg border">
@@ -141,12 +141,10 @@
 				{/if}
 			</span>
 		{/if}
-		{#if flagUrl}
-			<span
-				class="ring-secondary-800 h-5 w-5 shrink-0 rounded-full bg-size-[48px] bg-center bg-no-repeat ring-4"
-				style="background-image: url('{flagUrl}')"
-			></span>
-		{/if}
+		<CountryFlag
+			country={matchPlayer.country}
+			class="ring-secondary-800 h-5 w-5 rounded-full object-cover ring-4"
+		/>
 		<PlayerLikeCount likeCount={matchPlayer.likeCount} class="shrink-0" />
 		<PlayerStreamerIcon labels={matchPlayer.labels} steamId={matchPlayer.steamId} />
 		{#if matchPlayer.steamId}
@@ -289,7 +287,7 @@
 										</div>
 									</td>
 									<td class="px-3 py-1.5 text-left">
-										{@render playerIdentity(matchPlayer, isSelf, flagUrl)}
+										{@render playerIdentity(matchPlayer, isSelf)}
 									</td>
 									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
@@ -333,7 +331,7 @@
 								matchPlayer.outcome === 1 ? 'bg-success/5' : 'bg-destructive/5'
 							)}
 						>
-							{@render playerIdentity(matchPlayer, isSelf, flagUrl)}
+							{@render playerIdentity(matchPlayer, isSelf)}
 							<div class="text-secondary-300 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
 								{@render ratingDeltaBadge(delta)}
 								{@render eloValue(elo)}

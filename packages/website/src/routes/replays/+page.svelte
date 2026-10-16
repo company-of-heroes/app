@@ -1,57 +1,80 @@
 <script lang="ts">
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { navigating, page } from '$app/state';
+	import { watch } from 'runed';
 	import { Pagination } from '@company-of-heroes/ui/pagination';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
-	import { Button } from '@company-of-heroes/ui/button';
 	import { Sheet } from '@company-of-heroes/ui/sheet';
 	import {
 		List as ReplayList,
 		ListSkeleton as ReplayListSkeleton,
-		SectionTabs as ReplaySectionTabs,
-		Sort
+		type CommunityMatch
 	} from '@company-of-heroes/ui/replay';
-	import ReplayFilters from '$lib/components/replay/replay-filters.svelte';
-	import TopReplays from '$lib/components/replay/top-replays.svelte';
 	import {
+		ArchiveFilterBar,
+		DiscoverView,
+		MatchupSections,
+		ReplayCardGrid,
+		ReplaysPage,
+		themeArchiveQuery,
+		type ArchiveQuickFilters,
+		type ReplaysView
+	} from '@company-of-heroes/ui/replay-browse';
+	import ReplayFilters from '$lib/components/replay/replay-filters.svelte';
+	import {
+		recentCommunityQuery,
 		REPLAYS_PER_PAGE,
 		rememberReplaysListHref,
 		replaysHref,
 		uploadReplayPath,
 		type HistorySortField,
-		type ReplaysListTab,
 		type ReplaysQuery
 	} from '$lib/replays';
+	import type { HistoryMatchup } from '@company-of-heroes/ui/replay';
+	import { getSharedReplaysPage } from '$lib/remote/replays.remote';
 	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, unlocalizedPath, useI18n } from '$lib/i18n';
 	import { meSteamIds } from '$lib/auth/user';
 	import { SITE_URL } from '$lib/site/urls';
-	import FunnelSimpleIcon from 'phosphor-svelte/lib/FunnelSimpleIcon';
-	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
 
 	let filtersOpen = $state(false);
+	let shareCandidates = $state.raw<CommunityMatch[] | null>(null);
 
 	const query = $derived(data.query);
-	const tab = $derived(data.tab as ReplaysListTab);
+	const tab = $derived(data.tab as ReplaysView);
 	const switching = $derived(unlocalizedPath(navigating.to?.url.pathname ?? '') === '/replays');
-	const canonical = $derived(`${SITE_URL}${href(replaysHref(query, tab))}`);
+	const canonical = $derived(`${SITE_URL}${href(replaysHref(query, data.tab))}`);
 	const user = $derived(page.data.user);
 	const mySteamIds = $derived(meSteamIds(user));
 	const uploadHref = $derived(href(uploadReplayPath(!!user)));
-	const filtersActive = $derived(query.filter != null);
+	const quick = $derived<ArchiveQuickFilters>({
+		matchups: query.matchups,
+		ranked: query.ranked,
+		pro: query.pro
+	});
+	/** Filters the chip bar does not show. */
+	const advancedActive = $derived(
+		query.filter != null ||
+			query.maps.length > 0 ||
+			query.playerIds.length > 0 ||
+			query.races.length > 0 ||
+			query.positions.length > 0 ||
+			query.elo != null ||
+			query.duration != null
+	);
 
-	const tabs = $derived.by(() => {
-		const items = [
+	const views = $derived.by(() => {
+		const items: { id: ReplaysView; label: string; href: string }[] = [
+			{ id: 'discover', label: t('Discover'), href: href('/replays') },
 			{
 				id: 'community',
 				label: t('Community matches'),
-				href: href(replaysHref(query, 'community'))
-			},
-			{ id: 'member', label: t('Shared Replays'), href: href(replaysHref(query, 'member')) }
+				href: href(replaysHref({ ...query, page: 1 }, 'community'))
+			}
 		];
 		if (user) {
 			items.push({
@@ -64,30 +87,29 @@
 		return items;
 	});
 
-	const emptyMessage = $derived.by(() => {
-		if (tab === 'member') {
-			return t('No shared replays found.');
+	watch(
+		() => data.shareCandidates,
+		(promise) => {
+			shareCandidates = null;
+			void promise.then((value) => {
+				if (data.shareCandidates === promise) {
+					shareCandidates = value;
+				}
+			});
 		}
-
-		if (tab === 'mine') {
-			return t('No matches found.');
-		}
-
-		return t('No community replays found.');
-	});
+	);
 
 	beforeNavigate(() => {
-		rememberReplaysListHref(replaysHref(query, tab));
+		if (data.tab !== 'discover') {
+			rememberReplaysListHref(replaysHref(query, data.tab));
+		}
+
 		filtersOpen = false;
 	});
 
 	function apply(patch: Partial<ReplaysQuery>) {
-		const next: ReplaysQuery = {
-			...query,
-			...patch,
-			page: patch.page ?? 1
-		};
-		void goto(href(replaysHref(next, tab)), {
+		const next: ReplaysQuery = { ...query, ...patch, page: patch.page ?? 1 };
+		void goto(href(replaysHref(next, data.tab === 'mine' ? 'mine' : 'community')), {
 			keepFocus: true,
 			noScroll: true,
 			replaceState: true
@@ -103,130 +125,157 @@
 		apply({ sort: field, sortDir: 'desc' });
 	}
 
-	const nameColumnLabel = $derived(tab === 'member' ? t('Title') : t('Map'));
+	/** Community matches of one game type (a section's "View all" or its chip). */
+	function matchupHref(matchup: HistoryMatchup) {
+		return href(replaysHref({ ...query, matchups: [matchup], filter: null, page: 1 }, 'community'));
+	}
+
+	async function loadMoreShared(nextPage: number) {
+		return getSharedReplaysPage({ page: nextPage });
+	}
+
+	const seoTitle = $derived(
+		tab === 'discover' ? t('Replays') : tab === 'mine' ? t('My matches') : t('Community matches')
+	);
 </script>
 
-{#snippet listSkeleton()}
-	<ReplayListSkeleton />
-{/snippet}
-
-{#snippet filtersButton()}
-	<Button variant="secondary" size="sm" onclick={() => (filtersOpen = true)}>
-		<span class="relative inline-flex">
-			<FunnelSimpleIcon class="size-4" />
-			{#if filtersActive}
-				<span class="bg-primary absolute -end-0.5 -top-0.5 size-1.5 rounded-full" aria-hidden="true"
-				></span>
-			{/if}
-		</span>
-		{t('Filters')}
-	</Button>
-{/snippet}
-
 <Seo
-	title={t('Replays')}
+	title={seoTitle}
 	ogTitle={t('CoH community replays')}
 	description={t(
-		'Browse community Company of Heroes replays and member uploads. Filter by ranked, mode, map, and player, then open overview, chat, and timeline.'
+		'Watch the best Company of Heroes replays of the community: featured games, pro 1v1s, big battles and replays shared by players. Download and watch them in the game.'
 	)}
 	url={canonical}
 />
 
-<div class="flex min-h-0 flex-1 flex-col">
-	<div>
-		<div class="border-secondary-800 flex flex-wrap items-center gap-3 border-b px-4 py-2.5">
-			<h1 class="font-heading text-xl font-bold text-white">{t('Replays')}</h1>
-		</div>
-		<ReplaySectionTabs {tabs} active={tab}>
-			{#snippet trailing()}
+<ReplaysPage {views} active={tab} {uploadHref}>
+	{#snippet aside()}
+		{#if tab !== 'discover' && data.result}
+			{#await data.result}
+				<Skeleton class="h-9 w-56" />
+			{:then result}
+				<Pagination
+					page={query.page}
+					count={result.totalItems}
+					perPage={REPLAYS_PER_PAGE}
+					pageNumberLabel={t('Page number')}
+					onPage={(nextPage) => apply({ page: nextPage })}
+				/>
+			{:catch}
+				<!-- keep the layout stable when the list fails -->
+			{/await}
+		{/if}
+	{/snippet}
+
+	{#if tab === 'discover'}
+		{#await data.discover}
+			<DiscoverView
+				data={null}
+				{shareCandidates}
+				shareHref={(match) => href(`/replays/upload?fromMatch=${match.id}`)}
+				themeHref={(theme) =>
+					href(
+						replaysHref({ ...recentCommunityQuery(), ...themeArchiveQuery(theme) }, 'community')
+					)}
+				{loadMoreShared}
+				{uploadHref}
+				meSteamIds={mySteamIds}
+			/>
+		{:then discover}
+			<DiscoverView
+				data={discover}
+				{shareCandidates}
+				shareHref={(match) => href(`/replays/upload?fromMatch=${match.id}`)}
+				themeHref={(theme) =>
+					href(
+						replaysHref({ ...recentCommunityQuery(), ...themeArchiveQuery(theme) }, 'community')
+					)}
+				{loadMoreShared}
+				{uploadHref}
+				meSteamIds={mySteamIds}
+			/>
+		{:catch}
+			<div class="flex min-h-48 items-center justify-center px-4 py-8">
+				<p class="text-secondary-400 text-center text-sm">
+					{t('Failed to load community replays. Please try again later.')}
+				</p>
+			</div>
+		{/await}
+	{:else}
+		<ArchiveFilterBar
+			value={quick}
+			onChange={(next) => apply({ ...next, filter: null })}
+			sort={query.sort}
+			sortDir={query.sortDir}
+			onSortChange={({ sort, sortDir }) => apply({ sort, sortDir })}
+			onOpenFilters={() => (filtersOpen = true)}
+			{advancedActive}
+		/>
+		<div class="min-w-0 flex-1 overflow-x-hidden">
+			{#if data.groups && !switching}
+				{#await data.groups}
+					<MatchupSections groups={null} viewAllHref={matchupHref} />
+				{:then groups}
+					<MatchupSections {groups} viewAllHref={matchupHref} meSteamIds={mySteamIds} />
+				{:catch}
+					<p class="text-secondary-400 px-4 py-10 text-center text-sm">
+						{t('Failed to load community replays. Please try again later.')}
+					</p>
+				{/await}
+			{:else if switching || !data.result}
+				{#if tab === 'community'}
+					<ReplayCardGrid matches={[]} skeletons={8} />
+				{:else}
+					<ReplayListSkeleton />
+				{/if}
+			{:else}
 				{#await data.result}
-					<Skeleton class="ms-auto h-9 w-56 shrink-0" />
+					{#if tab === 'community'}
+						<ReplayCardGrid matches={[]} skeletons={8} />
+					{:else}
+						<ReplayListSkeleton />
+					{/if}
 				{:then result}
-					{#if result}
+					{#if tab === 'community'}
+						{#if result.items.length === 0}
+							<p class="text-secondary-400 px-4 py-10 text-center text-sm">
+								{t('No community replays found.')}
+							</p>
+						{:else}
+							<ReplayCardGrid matches={result.items} meSteamIds={mySteamIds} closing />
+						{/if}
+					{:else}
+						<ReplayList
+							matches={result.items}
+							highlightedPlayers={query.playerIds}
+							meSteamIds={mySteamIds}
+							sort={query.sort}
+							sortDir={query.sortDir}
+							onSort={toggleSort}
+							emptyMessage={t('No matches found.')}
+						/>
+					{/if}
+					<div class="border-secondary-800 flex border-t px-5 py-3">
 						<Pagination
-							class="ms-auto shrink-0"
+							class="ms-auto"
 							page={query.page}
 							count={result.totalItems}
 							perPage={REPLAYS_PER_PAGE}
 							pageNumberLabel={t('Page number')}
 							onPage={(nextPage) => apply({ page: nextPage })}
 						/>
-					{/if}
-				{:catch _}
-					<!-- keep layout stable when pagination promise rejects -->
+					</div>
+				{:catch error}
+					<div class="flex min-h-48 items-center justify-center px-4 py-8">
+						<p class="text-secondary-400 text-center text-sm">
+							{error?.message ?? t('Failed to load community replays. Please try again later.')}
+						</p>
+					</div>
 				{/await}
-			{/snippet}
-		</ReplaySectionTabs>
-		<div class="border-secondary-800 flex items-center justify-end gap-2 border-b px-4 py-2">
-			<Sort
-				sort={query.sort}
-				sortDir={query.sortDir}
-				onChange={({ sort, sortDir }) => apply({ sort, sortDir })}
-			/>
-			{@render filtersButton()}
+			{/if}
 		</div>
-		{#if tab === 'member'}
-			<div
-				class="border-secondary-800 from-secondary-950 to-secondary-900/80 flex flex-wrap items-center justify-between gap-3 border-b bg-linear-to-r px-4 py-3"
-			>
-				<div class="min-w-0">
-					<p class="font-medium text-white">{t('Share your replay')}</p>
-					<p class="text-secondary-400 mt-0.5 text-sm">
-						{t('Upload a .rec file to Shared Replays so others can watch your games.')}
-					</p>
-				</div>
-				<Button href={uploadHref} variant="primary">
-					<UploadSimpleIcon class="size-4" />
-					{t('Upload replay')}
-				</Button>
-			</div>
-		{/if}
-	</div>
-
-	<div class="min-w-0 flex-1 overflow-x-hidden">
-		{#if data.topReplays && !switching}
-			{#await data.topReplays}
-				<TopReplays matches={[]} loading variant="strip" />
-			{:then topReplays}
-				<TopReplays matches={topReplays} variant="strip" />
-			{/await}
-		{/if}
-		{#if switching}
-			{@render listSkeleton()}
-		{:else if data.result}
-			{#await data.result}
-				{@render listSkeleton()}
-			{:then result}
-				<ReplayList
-					matches={result.items}
-					highlightedPlayers={query.playerIds}
-					meSteamIds={mySteamIds}
-					sort={query.sort}
-					sortDir={query.sortDir}
-					onSort={toggleSort}
-					{emptyMessage}
-					mapLabel={nameColumnLabel}
-				/>
-				<div class="border-secondary-800 flex border-t px-5 py-3">
-					<Pagination
-						class="ms-auto"
-						page={query.page}
-						count={result.totalItems}
-						perPage={REPLAYS_PER_PAGE}
-						pageNumberLabel={t('Page number')}
-						onPage={(nextPage) => apply({ page: nextPage })}
-					/>
-				</div>
-			{:catch error}
-				<div class="flex min-h-48 items-center justify-center px-4 py-8">
-					<p class="text-secondary-400 text-center text-sm">
-						{error?.message ?? t('Failed to load community replays. Please try again later.')}
-					</p>
-				</div>
-			{/await}
-		{/if}
-	</div>
-</div>
+	{/if}
+</ReplaysPage>
 
 <Sheet bind:open={filtersOpen} side="left" title={t('Filters')} closeLabel={t('Close')}>
 	{#await data.maps}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import type { Snippet } from 'svelte';
@@ -58,7 +59,6 @@
 	leading: boolean,
 	align: 'start' | 'end'
 )}
-	{@const flagUrl = country ? host.resolve.flagImageUrl(country) : null}
 	<div
 		class={cn('flex w-24 min-w-0 flex-col gap-1.5', align === 'end' ? 'items-end' : 'items-start')}
 	>
@@ -68,9 +68,7 @@
 				align === 'end' && 'flex-row-reverse'
 			)}
 		>
-			{#if flagUrl}
-				<img src={flagUrl} alt="" class="h-3 w-auto shrink-0 rounded-xs" />
-			{/if}
+			<CountryFlag {country} class="h-3" />
 			<span class="text-secondary-400 truncate">{alias}</span>
 		</span>
 		<span

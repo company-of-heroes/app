@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { RankIcon } from '@company-of-heroes/ui/player';
 	import type { LeaderboardStat } from '@fknoobs/app';
-	import { cn, getRankImageByLeaderboardId } from '$lib/utils';
+	import { cn } from '$lib/utils';
 	import { factionIcon } from '$lib/components/ui/variants';
 	import { getFactionFlagFromLeaderboardId } from '$lib/utils/game';
 	import type { PlayerEloMap } from '$lib/utils/player-elo';
@@ -58,10 +59,11 @@
 				</span>
 				{#if row.stat.ranklevel > 0}
 					<span class="inline-flex items-center gap-1">
-						<img
-							src={getRankImageByLeaderboardId(row.stat.leaderboard_id, row.stat.ranklevel)}
-							alt={t('Rank {level}', { level: row.stat.ranklevel })}
-							class="h-6 w-auto shrink-0"
+						<RankIcon
+							level={row.stat.ranklevel}
+							leaderboardId={row.stat.leaderboard_id}
+							position={row.stat.rank}
+							class="size-auto h-6"
 						/>
 						<span class="text-secondary-300 text-sm font-medium tabular-nums">
 							{row.stat.ranklevel}

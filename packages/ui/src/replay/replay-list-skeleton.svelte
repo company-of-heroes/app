@@ -1,110 +1,52 @@
 <script lang="ts">
-	import { useI18n } from '@company-of-heroes/i18n';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
-	import { tableHeadRow } from '@company-of-heroes/ui/variants';
-	import TeamPlayerSkillsSkeleton from '../match/team-player-skills-skeleton.svelte';
 
 	type Props = {
 		rowCount?: number;
 		dateLabel?: string;
 	};
 
-	const { t } = useI18n();
-
 	let { rowCount = 30 }: Props = $props();
 
 	const rows = $derived(Array.from({ length: rowCount }, (_, i) => i + 1));
 </script>
 
-{#snippet teamCell()}
-	<td class="px-2 py-0 whitespace-nowrap">
-		<div class="flex h-11 items-center">
-			<TeamPlayerSkillsSkeleton />
-		</div>
-	</td>
-{/snippet}
-
-<div aria-busy="true">
-	<div class="hidden overflow-x-auto md:block">
-		<table class="w-full table-auto border-collapse text-sm">
-			<thead class="border-secondary-800 border-b">
-				<tr class="{tableHeadRow} text-left">
-					<th class="w-full px-4 py-2">{t('Map')}</th>
-					<th class="px-4 py-2 whitespace-nowrap">{t('Type')}</th>
-					<th class="px-2 py-2 whitespace-nowrap">{t('Allies')}</th>
-					<th class="px-2 py-2 whitespace-nowrap">{t('Axis')}</th>
-					<th class="px-4 py-2 whitespace-nowrap">{t('Duration')}</th>
-					<th class="px-4 py-2 whitespace-nowrap"></th>
-					<th class="px-4 py-2 text-end whitespace-nowrap">{t('Date')}</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each rows as row (row)}
-					<tr class="border-secondary-800/70 h-11 border-t">
-						<td class="w-full overflow-clip py-0 pr-0 pl-4">
-							<div class="flex h-11 min-w-0 items-center gap-0">
-								<Skeleton class="size-11 shrink-0 rounded-none" />
-								<div class="flex min-w-0 items-center gap-2 px-4">
-									<Skeleton class="h-3.5 w-32" />
-								</div>
-							</div>
-						</td>
-						<td class="px-4 py-0 whitespace-nowrap">
-							<div class="flex h-11 items-center">
-								<Skeleton class="h-3.5 w-14" />
-							</div>
-						</td>
-						{@render teamCell()}
-						{@render teamCell()}
-						<td class="px-4 py-0 whitespace-nowrap">
-							<div class="flex h-11 items-center">
-								<Skeleton class="h-3.5 w-12" />
-							</div>
-						</td>
-						<td class="px-4 py-0 whitespace-nowrap">
-							<div class="flex h-11 items-center justify-end gap-2">
-								<Skeleton class="h-3 w-6" />
-								<Skeleton class="h-3 w-6" />
-								<Skeleton class="h-3 w-6" />
-							</div>
-						</td>
-						<td class="px-4 py-0 text-end whitespace-nowrap">
-							<div class="flex h-11 items-center justify-end">
-								<Skeleton class="h-3.5 w-24" />
-							</div>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
-	<div class="divide-secondary-800 divide-y md:hidden">
-		{#each rows as row (row)}
-			<div class="px-4 py-3">
-				<div class="flex h-11 min-w-0 items-center gap-0">
-					<Skeleton class="size-11 shrink-0 rounded-none" />
-					<div class="flex min-w-0 items-center gap-2 px-3">
-						<Skeleton class="h-3.5 w-32" />
-					</div>
-				</div>
-				<div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-					<TeamPlayerSkillsSkeleton />
-					<TeamPlayerSkillsSkeleton />
-				</div>
-				<div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-					<Skeleton class="h-3.5 w-12" />
-					<Skeleton class="h-3.5 w-12" />
-					<Skeleton class="h-3.5 w-20" />
-				</div>
-				<div class="mt-1.5 flex items-center gap-2">
-					<Skeleton class="h-3 w-6" />
-					<Skeleton class="h-3 w-6" />
-					<Skeleton class="h-3 w-6" />
-				</div>
+<!-- Mirrors MatchRow: summary, face-off of two rosters, meta column. -->
+{#snippet team(mirrored: boolean)}
+	<div class="flex min-w-0 flex-col gap-1.5 px-2.5 py-2 {mirrored ? 'items-end' : 'items-start'}">
+		<Skeleton class="h-2.5 w-10" />
+		{#each { length: 2 }, index (index)}
+			<div class="flex h-6 items-center gap-2 {mirrored ? 'flex-row-reverse' : ''}">
+				<Skeleton class="size-5 shrink-0 rounded-full" />
+				<Skeleton class="h-3 w-24" />
 			</div>
 		{/each}
 	</div>
-	<div class="border-secondary-800 flex border-t px-5 py-3">
-		<Skeleton class="ms-auto h-9 w-40 sm:w-56" />
-	</div>
+{/snippet}
+
+<div aria-busy="true" class="-mb-px">
+	{#each rows as row (row)}
+		<div
+			class="border-secondary-800 grid border-b lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)_minmax(10rem,12rem)]"
+		>
+			<div class="flex items-center gap-3 px-4 pt-4 lg:py-4">
+				<Skeleton class="size-16 shrink-0 rounded-md" />
+				<div class="flex flex-col gap-2">
+					<Skeleton class="h-4 w-36" />
+					<Skeleton class="h-4 w-20" />
+				</div>
+			</div>
+			<div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 px-2 py-3">
+				{@render team(true)}
+				<Skeleton class="h-3 w-5" />
+				{@render team(false)}
+			</div>
+			<div
+				class="flex items-center justify-between gap-3 px-4 py-2.5 lg:flex-col lg:items-end lg:justify-center lg:py-4"
+			>
+				<Skeleton class="h-3.5 w-16" />
+				<Skeleton class="h-3.5 w-28" />
+			</div>
+		</div>
+	{/each}
 </div>

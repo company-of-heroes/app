@@ -2,6 +2,7 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { useHost } from '../host/host.context';
+	import { parseDate } from '../format/date';
 	import { getRaceLabel } from '../format/player-format';
 	import { interactive } from '../variants';
 	import RewardIcon from './reward-icon.svelte';
@@ -72,7 +73,8 @@
 			)
 		);
 		const unlocked = collapseSeries(unlockedList, 'highest').sort(
-			(a, b) => Date.parse(b.unlockedAt ?? '') - Date.parse(a.unlockedAt ?? '')
+			(a, b) =>
+				(parseDate(b.unlockedAt)?.getTime() ?? 0) - (parseDate(a.unlockedAt)?.getTime() ?? 0)
 		);
 		const locked = data.owned
 			? collapseSeries(

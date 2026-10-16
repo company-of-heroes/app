@@ -50,15 +50,37 @@ export const TOP_REPLAYS = 4;
 /** Window of the "top replays" spotlight. */
 export const TOP_REPLAYS_DAYS = 7;
 
-export type ReplaysListTab = 'community' | 'member' | 'mine';
+/** `discover` is the default view; `community` and `mine` are the archive. */
+export type ReplaysListTab = 'discover' | 'community' | 'mine';
+
+/** Archive query parameters; an old link with any of them (and no tab) meant the community list. */
+const ARCHIVE_PARAMS = [
+	'page',
+	'ranked',
+	'pro',
+	'modes',
+	'players',
+	'maps',
+	'races',
+	'positions',
+	'elo',
+	'duration',
+	'filter',
+	'sort'
+];
 
 export function parseReplaysTab(search: URLSearchParams): ReplaysListTab {
 	const value = search.get('tab');
-	if (value === 'member' || value === 'mine') {
+	if (value === 'community' || value === 'mine') {
 		return value;
 	}
 
-	return 'community';
+	// `member` (the old Shared Replays tab) now lives on Discover.
+	if (!value && ARCHIVE_PARAMS.some((key) => search.has(key))) {
+		return 'community';
+	}
+
+	return 'discover';
 }
 
 export const HISTORY_MATCHUP_TYPES: Record<HistoryMatchup, readonly number[]> = {
@@ -345,13 +367,13 @@ export function replaysSearchParams(query: ReplaysQuery): URLSearchParams {
 }
 
 export function replaysHref(query: ReplaysQuery, tab: ReplaysListTab = 'community'): string {
-	const params = replaysSearchParams(query);
-	if (tab !== 'community') {
-		params.set('tab', tab);
+	if (tab === 'discover') {
+		return '/replays';
 	}
 
-	const search = params.toString();
-	return search ? `/replays?${search}` : '/replays';
+	const params = replaysSearchParams(query);
+	params.set('tab', tab);
+	return `/replays?${params.toString()}`;
 }
 
 /** Upload page, or login first (it returns to the upload page) when signed out. */

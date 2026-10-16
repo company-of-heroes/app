@@ -1,11 +1,10 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { flushHeaderTitle, interactive } from '@company-of-heroes/ui/variants';
 	import BroadcastIcon from 'phosphor-svelte/lib/BroadcastIcon';
 	import StarIcon from 'phosphor-svelte/lib/StarIcon';
-	import { escapeHtml, tooltip } from '../attachments';
-	import { countryDisplayName } from '../format/country';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
@@ -61,7 +60,6 @@
 
 {#snippet player(id: string | null, side: TournamentSlot)}
 	{@const entry = id ? participants.get(id) : undefined}
-	{@const flagUrl = entry ? host.resolve.flagImageUrl(entry.country) : null}
 	{@const won = !!match?.winner && match.winner === id}
 	<div
 		class={cn(
@@ -70,14 +68,7 @@
 		)}
 	>
 		{#if entry}
-			{#if flagUrl}
-				<img
-					class="h-4 w-auto shrink-0 rounded-xs"
-					src={flagUrl}
-					alt={countryDisplayName(entry.country, host.locale()) ?? entry.country}
-					{@attach tooltip(escapeHtml(countryDisplayName(entry.country, host.locale()) ?? ''))}
-				/>
-			{/if}
+			<CountryFlag country={entry.country} class="h-4" />
 			<PlayerProfileLink
 				href={host.routes.player(entry.profileId)}
 				class={cn(

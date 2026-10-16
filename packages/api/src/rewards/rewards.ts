@@ -27,7 +27,9 @@ export type RewardRecord = RecordModel & {
 	image: string;
 	/** Ribbon key (e.g. `ribbon-042`), or empty to show the image. */
 	ribbon: string;
+	/** Null when the stored conditions are not valid; `rawConditions` then holds what is stored. */
 	conditions: RewardCondition[] | null;
+	rawConditions?: unknown;
 	enabled: boolean;
 	secret: boolean;
 	sort: number;
@@ -112,7 +114,11 @@ export class RewardsApi {
 				.getFullList<RewardRecord>(pbOptions(this.deps, { sort: 'sort,title' })),
 			'Failed to load rewards.'
 		).map((records) =>
-			records.map((record) => ({ ...record, conditions: parseRewardConditions(record.conditions) }))
+			records.map((record) => ({
+				...record,
+				rawConditions: record.conditions,
+				conditions: parseRewardConditions(record.conditions)
+			}))
 		);
 	}
 
@@ -134,16 +140,18 @@ export class RewardsApi {
 		);
 	}
 
-	/** Admin: leave `image` null to keep the current one. */
+	/** Admin: leave `image` null to keep the current one; it still needs an image or a ribbon. */
 	update(id: string, input: RewardInput, image: File | null): ResultAsync<RewardRecord, ApiError> {
-		return this.#body(input, image).andThen((body) =>
-			fromPbPromise(
-				this.deps.pocketbase
-					.collection('rewards')
-					.update<RewardRecord>(id, body, pbOptions(this.deps)),
-				'Failed to save the reward.'
-			)
-		);
+		return this.#body(input, image)
+			.andThen((body) => this.#hasImageOrRibbon(id, input, image).map(() => body))
+			.andThen((body) =>
+				fromPbPromise(
+					this.deps.pocketbase
+						.collection('rewards')
+						.update<RewardRecord>(id, body, pbOptions(this.deps)),
+					'Failed to save the reward.'
+				)
+			);
 	}
 
 	/** Admin: also removes every unlock of the reward. */
@@ -152,6 +160,26 @@ export class RewardsApi {
 			this.deps.pocketbase.collection('rewards').delete(id, pbOptions(this.deps)),
 			'Failed to delete the reward.'
 		).map(() => undefined);
+	}
+
+	/** Without a new image or a ribbon, the stored image must stay. */
+	#hasImageOrRibbon(
+		id: string,
+		input: RewardInput,
+		image: File | null
+	): ResultAsync<void, ApiError> {
+		if (image || input.ribbon) {
+			return okAsync(undefined);
+		}
+
+		return fromPbPromise(
+			this.deps.pocketbase
+				.collection('rewards')
+				.getOne<RewardRecord>(id, pbOptions(this.deps, { fields: 'image' })),
+			'Failed to save the reward.'
+		).andThen((record) =>
+			record.image ? okAsync(undefined) : errAsync(apiError(400, 'Choose an image or a ribbon.'))
+		);
 	}
 
 	#body(input: RewardInput, image: File | null): ResultAsync<Record<string, unknown>, ApiError> {

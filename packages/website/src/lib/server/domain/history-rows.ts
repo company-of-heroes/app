@@ -22,6 +22,8 @@ export type ListPlayer = {
 	profile: { profile_id: number; alias: string };
 	stats?: ListPlayerStats | null;
 	likeCount?: number;
+	/** Relic country code, for the flag. */
+	country?: string | null;
 };
 
 export type HistoryRow = {
@@ -90,6 +92,7 @@ type LobbyPlayerSummary = {
 	steamId?: string | null;
 	race?: unknown;
 	alias?: string;
+	country?: string;
 	stats?: unknown;
 };
 
@@ -98,7 +101,11 @@ export type RawLobbyPlayer = {
 	playerId?: unknown;
 	steamId?: string;
 	race?: unknown;
-	profile?: { profile_id?: unknown; leaderboardStats?: Record<string, unknown>[] };
+	profile?: {
+		profile_id?: unknown;
+		country?: string;
+		leaderboardStats?: Record<string, unknown>[];
+	};
 };
 
 export type RawLobby = {
@@ -161,6 +168,10 @@ function playersFromSummaries(summaries: LobbyPlayerSummary[]): ListPlayer[] {
 		const stats = normalizeStats(player.stats);
 		if (stats) {
 			entry.stats = stats;
+		}
+
+		if (player.country) {
+			entry.country = player.country;
 		}
 
 		players.push(entry);
@@ -337,6 +348,11 @@ export function rowsNeedingRawPlayers(rows: HistoryRow[]): string[] {
 	return rows
 		.filter((row) =>
 			row.players.some((player) => {
+				// Summaries from before countries were stored: the raw profiles have them.
+				if (!player.country && player.playerId !== -1) {
+					return true;
+				}
+
 				const stats = normalizeStats(player.stats);
 				return row.isRanked ? !stats || (stats.rank <= 0 && stats.rankLevel <= 0) : !stats;
 			})
@@ -376,6 +392,13 @@ export function attachPlayerStats(rows: HistoryRow[], rawById: Map<string, RawLo
 							String(candidate.steamId) === player.steamId)
 				);
 				player.stats = statsFromRaw(match, matchTypeId, elo) ?? existing ?? null;
+			}
+
+			if (!player.country) {
+				const raw = rawPlayers.find(
+					(candidate) => rawProfileId(candidate) === player.profile.profile_id
+				);
+				player.country = raw?.profile?.country?.trim() || null;
 			}
 
 			// Summaries written before the result arrived have no ELO; the result's rating does.

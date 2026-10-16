@@ -18,12 +18,12 @@
 	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
 	import TreeStructureIcon from 'phosphor-svelte/lib/TreeStructureIcon';
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
-	import UserCircleIcon from 'phosphor-svelte/lib/UserCircleIcon';
 	import UsersThreeIcon from 'phosphor-svelte/lib/UsersThreeIcon';
 	import { renderMarkdown } from '../comment/markdown';
 	import { formatDate, formatRelative } from '../format/date';
 	import { swapSlots, wikiMapSlug } from '@company-of-heroes/api/tournaments';
 	import { useHost, type PlayerSearchOption } from '../host/host.context';
+	import PlayerByline from '../player/player-byline.svelte';
 	import { getCachedPlayerPreview } from '../player/player-preview-cache';
 	import type { PlayerPreviewData } from '../player/types';
 	import { Button } from '../ui/button';
@@ -49,6 +49,7 @@
 	import TournamentStats from './tournament-stats.svelte';
 	import TournamentStatus from './tournament-status.svelte';
 	import { createTournament } from './context';
+	import { resolveMedal } from './medal';
 	import type {
 		MyTournamentMatch,
 		TournamentDetail,
@@ -180,7 +181,7 @@
 	);
 	const champion = $derived(tournament.winner ? participants.get(tournament.winner) : undefined);
 	/** The medal the winner gets on their profile, picked in the tournament form. */
-	const medal = $derived(host.resolve.medals().find((m) => m.key === tournament.medal));
+	const medal = $derived(resolveMedal(tournament, host.resolve.medals()));
 	const description = $derived(
 		tournament.description ? renderMarkdown(tournament.description) : ''
 	);
@@ -711,18 +712,18 @@
 						hidden={tournament.hidden}
 					/>
 					<span class={cn(tableHeadText, 'text-primary')}>{t('Tournament')}</span>
-					{#if current.host}
-						<span class="text-secondary-300 flex items-center gap-1 text-xs">
-							<UserCircleIcon size={14} weight="fill" class="text-secondary-500" />
-							{t('Hosted by {name}', { name: current.host.name })}
-						</span>
-					{/if}
 				</div>
 				<h1
 					class="font-heading text-3xl leading-tight font-bold break-words text-white drop-shadow-md sm:text-4xl"
 				>
 					{tournament.name}
 				</h1>
+				{#if tournament.host}
+					<div class="text-secondary-300 flex flex-wrap items-center gap-2 text-sm drop-shadow-md">
+						<span>{t('Hosted by')}</span>
+						<PlayerByline user={tournament.host} />
+					</div>
+				{/if}
 			</div>
 		</div>
 
@@ -733,7 +734,7 @@
 						<img
 							src={medal.url}
 							alt=""
-							class="h-20 w-auto shrink-0 drop-shadow-[0_2px_2px_rgb(0_0_0/0.6)]"
+							class="h-20 w-auto max-w-20 shrink-0 object-contain drop-shadow-[0_2px_2px_rgb(0_0_0/0.6)]"
 						/>
 						<div class="flex min-w-0 flex-col gap-0.5 sm:max-w-44">
 							<span class={cn(tableHeadText, 'text-warning')}>{t('Champion medal')}</span>

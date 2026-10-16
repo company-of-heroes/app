@@ -13,7 +13,7 @@ import { generatePassword, generateUniqueId } from '$lib/utils/password';
 import { steam } from '$core/steam';
 import { ensureAccountFlow, type AuthResult, type RecoveryOutcome } from './recovery';
 import { t } from '$lib/i18n';
-import { api } from '$core/api';
+import { api, siteApi } from '$core/api';
 import { canRequestEmailChange, isPlaceholderEmail } from '@company-of-heroes/api';
 
 export type User = UsersResponse<Record<string, any>, string[], Record<string, any>>;
@@ -410,10 +410,12 @@ export class AccountService {
 	}
 
 	/**
-	 * Signs in with Steam: the website runs the Steam login in the browser and sends a
-	 * short-lived code back to a loopback port, which the app trades for a session.
+	 * Runs the Steam login in the browser: the website sends a short-lived code back to a
+	 * loopback port. `link` (a handoff code) claims the Steam account for the signed-in user.
 	 */
-	async loginWithSteam(): Promise<{ error: string | null; cancelled?: boolean }> {
+	async #steamBrowserLogin(
+		link: string | null = null
+	): Promise<{ code?: string; error?: string } | null> {
 		this.isSteamLoginPending = true;
 		const unlisten: Array<() => void> = [];
 		let port: number | null = null;
@@ -421,7 +423,7 @@ export class AccountService {
 		try {
 			port = await start({ ports: LOGIN_PORTS });
 			const origin = `http://localhost:${port}`;
-			const result = await new Promise<{ code?: string; error?: string } | null>((resolve) => {
+			return await new Promise<{ code?: string; error?: string } | null>((resolve) => {
 				this.#cancelSteamLogin = () => resolve(null);
 				timer = setTimeout(
 					() => resolve({ error: t('Steam login timed out.') }),
@@ -437,9 +439,31 @@ export class AccountService {
 				);
 				const url = new URL('/auth/steam/start', SITE_URL);
 				url.searchParams.set('origin', origin);
+				if (link) {
+					url.searchParams.set('link', link);
+				}
+
 				void openUrl(url.toString());
 			});
+		} finally {
+			if (timer) {
+				clearTimeout(timer);
+			}
 
+			unlisten.forEach((off) => off());
+			if (port !== null) {
+				void cancel(port);
+			}
+
+			this.#cancelSteamLogin = null;
+			this.isSteamLoginPending = false;
+		}
+	}
+
+	/** Signs in with Steam and trades the code from the browser for a session. */
+	async loginWithSteam(): Promise<{ error: string | null; cancelled?: boolean }> {
+		try {
+			const result = await this.#steamBrowserLogin();
 			if (!result) {
 				return { error: null, cancelled: true };
 			}
@@ -467,18 +491,44 @@ export class AccountService {
 		} catch (error) {
 			console.error('[ACCOUNT]: Steam login failed:', error);
 			return { error: t('Steam login failed.') };
-		} finally {
-			if (timer) {
-				clearTimeout(timer);
+		}
+	}
+
+	/**
+	 * Claims an unclaimed Steam account: the Steam login in the browser adds the verified
+	 * Steam ID to this account (signed out, it is a regular Steam login). Returns an error
+	 * message, or null once claimed or cancelled.
+	 */
+	async claimSteam(): Promise<string | null> {
+		if (!this.isAuthenticated) {
+			return (await this.loginWithSteam()).error;
+		}
+
+		if (this.isImpersonating) {
+			return t('Stop impersonating to claim a Steam account.');
+		}
+
+		try {
+			const handoff = await siteApi<{ code?: string }>('/auth/handoff', { method: 'POST' });
+			if (!handoff.code) {
+				return t('Steam login failed.');
 			}
 
-			unlisten.forEach((off) => off());
-			if (port !== null) {
-				void cancel(port);
+			const result = await this.#steamBrowserLogin(handoff.code);
+			if (!result) {
+				return null;
 			}
 
-			this.#cancelSteamLogin = null;
-			this.isSteamLoginPending = false;
+			if (!result.code) {
+				return t(result.error ?? 'Steam login failed.');
+			}
+
+			await this.refreshUser();
+			void this.#enrichFromSteam();
+			return null;
+		} catch (error) {
+			console.error('[ACCOUNT]: Steam claim failed:', error);
+			return t('Steam login failed.');
 		}
 	}
 
@@ -907,8 +957,8 @@ export class AccountService {
 		return this.isStaff || this.#user?.role === UsersRoleOptions.host;
 	}
 
-	/** Staff or an editor: may write guides (editors manage only their own). */
-	get canEditGuides(): boolean {
+	/** Staff or an editor: may publish guides. Every signed-in user may write drafts. */
+	get canPublishGuides(): boolean {
 		return this.isStaff || this.#user?.role === UsersRoleOptions.editor;
 	}
 

@@ -125,17 +125,18 @@
 							)}
 						</p>
 					</div>
-					{#if host.auth.user?.canEdit}
-						<Button
-							variant="secondary"
-							size="sm"
-							href={host.routes.guidesManage()}
-							class={interactive}
-						>
-							<PencilSimpleIcon size={14} />
-							{t('My guides')}
-						</Button>
-					{/if}
+					<!-- Everyone sees it; signed out it goes to the login first. -->
+					<Button
+						variant="secondary"
+						size="sm"
+						href={host.auth.user
+							? host.routes.guidesManage()
+							: host.routes.login(host.routes.guidesManage())}
+						class={interactive}
+					>
+						<PencilSimpleIcon size={14} />
+						{host.auth.user ? t('My guides') : t('Write a guide')}
+					</Button>
 				</header>
 				<GuideList guides={view.latest} emptyMessage={t('No guides yet.')} showCategory />
 			{/if}

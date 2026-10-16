@@ -290,6 +290,8 @@ export type CommunityPlayer = {
 	doctrineName?: string;
 	profile: { profile_id: number; alias: string };
 	stats?: LiveStats | null;
+	/** Relic country code from the stats snapshot, for the flag. */
+	country?: string | null;
 };
 type LiveStats = {
 	elo: number | null;

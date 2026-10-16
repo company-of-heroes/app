@@ -1,16 +1,17 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-	import { DataTable, type ColumnDef } from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
 	import { tooltip } from '$lib/attachments';
 	import { interactive } from '$lib/components/ui/variants';
-	import * as Match from '$lib/components/match';
-	import { resolveTeamOutcome, toMatchView } from '$lib/components/match/match-view';
-	import { outcomeSurface } from '@company-of-heroes/ui/variants';
-	import SortAscendingIcon from 'phosphor-svelte/lib/ArrowDownIcon';
-	import SortDescendingIcon from 'phosphor-svelte/lib/ArrowUpIcon';
-	import SortableIcon from 'phosphor-svelte/lib/ArrowsDownUpIcon';
+	import { pageTab } from '@company-of-heroes/ui/variants';
+	import { MatchRow } from '@company-of-heroes/ui/replay-browse';
+	import {
+		ListSkeleton as ReplayListSkeleton,
+		type CommunityMatch
+	} from '@company-of-heroes/ui/replay';
+	import { raceFromReplayFaction } from '@company-of-heroes/ui/replay/stats';
+	import ArrowDownIcon from 'phosphor-svelte/lib/ArrowDownIcon';
+	import ArrowUpIcon from 'phosphor-svelte/lib/ArrowUpIcon';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
 	import DownloadIcon from 'phosphor-svelte/lib/DownloadIcon';
@@ -23,6 +24,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { listReplayFiles } from '$core/app/features/replay-analyzer/replay-files';
 	import { ReplayRenameForm } from '@company-of-heroes/ui/replay';
+	import { Badge } from '@company-of-heroes/ui/badge';
 	import ReplayDeleteModal from './replay-delete-modal.svelte';
 	import { useI18n } from '$lib/i18n';
 
@@ -92,68 +94,28 @@
 
 	const highlightedPlayers = $derived(list.filters.players);
 
-	const columns: ColumnDef<ReplaysExpanded>[] = [
-		{
-			id: 'title',
-			header: t('Title'),
-			width: 'w-full',
-			class: 'min-w-0 truncate',
-			accessor: (item) => item.title
-		},
-		{
-			id: 'allies',
-			header: t('Allies'),
-			class: 'flex items-center',
-			pad: false,
-			cellClass: (row) =>
-				cn(
-					'px-2 whitespace-nowrap',
-					outcomeSurface(resolveTeamOutcome(toMatchView(row), 'allies'))
-				),
-			headerCellClass: 'px-2 py-3 whitespace-nowrap'
-		},
-		{
-			id: 'axis',
-			header: t('Axis'),
-			class: 'flex items-center',
-			pad: false,
-			cellClass: (row) =>
-				cn('px-2 whitespace-nowrap', outcomeSurface(resolveTeamOutcome(toMatchView(row), 'axis'))),
-			headerCellClass: 'px-2 py-3 whitespace-nowrap'
-		},
-		{
-			id: 'duration',
-			header: t('Duration'),
-			sortable: true,
-			onSort: toggleDurationSort,
-			headerClass: 'flex items-center select-none',
-			cellClass: () => 'whitespace-nowrap',
-			headerCellClass: 'whitespace-nowrap'
-		},
-		{
-			id: 'map',
-			header: t('Map'),
-			class: 'flex items-center gap-4',
-			cellClass: () => 'whitespace-nowrap',
-			headerCellClass: 'whitespace-nowrap'
-		},
-		{
-			id: 'date',
-			header: t('Date'),
-			class: 'truncate',
-			sortable: true,
-			onSort: toggleDateSort,
-			headerClass: 'flex items-center select-none',
-			cellClass: () => 'whitespace-nowrap',
-			headerCellClass: 'whitespace-nowrap'
-		},
-		{
-			id: 'actions',
-			header: '',
-			class: 'justify-end gap-0.5',
-			cellClass: () => 'whitespace-nowrap'
-		}
-	];
+	/** A library replay as a list row: roster from the .rec, linked by Steam id. */
+	function toRow(replay: ReplaysExpanded): CommunityMatch {
+		return {
+			id: replay.id,
+			kind: 'member',
+			map: (replay.mapFilename || '').split(/[/\\]/).pop() || replay.mapName || '',
+			title: replay.title === '-' ? '' : replay.title,
+			result: null,
+			createdAt: replay.gameDate || replay.createdAt,
+			isRanked: replay.isRanked,
+			likeCount: replay.likeCount ?? 0,
+			downloadCount: replay.downloadCount ?? 0,
+			commentCount: replay.commentCount ?? 0,
+			durationSeconds: replay.durationInSeconds || null,
+			players: (replay.players ?? []).map((player) => ({
+				playerId: null,
+				steamId: player.steamId || null,
+				race: raceFromReplayFaction(player.faction || ''),
+				profile: { profile_id: 0, alias: player.name || '' }
+			}))
+		};
+	}
 
 	function markLocalPresent(id: string) {
 		confirmedLocalIds = { ...confirmedLocalIds, [id]: true };
@@ -325,47 +287,26 @@
 	}
 </script>
 
-{#snippet header_duration()}
-	<span class="flex w-full items-center">
-		{t('Duration')}
-		{#if list.filters.sort.duration === 'durationInSeconds'}
-			<SortAscendingIcon class="ml-auto inline-block" weight="duotone" size="18" />
-		{:else if list.filters.sort.duration === '-durationInSeconds'}
-			<SortDescendingIcon class="ml-auto inline-block" weight="duotone" size="18" />
-		{:else}
-			<SortableIcon class="ml-auto inline-block" weight="duotone" />
+{#snippet sortChip(label: string, active: boolean, ascending: boolean, onclick: () => void)}
+	<button
+		type="button"
+		class={cn(pageTab, 'h-8 px-3 text-sm')}
+		data-state={active ? 'on' : undefined}
+		aria-pressed={active}
+		{onclick}
+	>
+		{label}
+		{#if active}
+			{#if ascending}
+				<ArrowUpIcon class="size-3.5" weight="bold" />
+			{:else}
+				<ArrowDownIcon class="size-3.5" weight="bold" />
+			{/if}
 		{/if}
-	</span>
+	</button>
 {/snippet}
-{#snippet header_date()}
-	<span class="flex w-full items-center">
-		{t('Date')}
-		{#if list.filters.sort.gameDate === 'gameDate'}
-			<SortAscendingIcon class="ml-auto inline-block" weight="duotone" size="18" />
-		{:else if list.filters.sort.gameDate === '-gameDate'}
-			<SortDescendingIcon class="ml-auto inline-block" weight="duotone" size="18" />
-		{:else}
-			<SortableIcon class="ml-auto inline-block" weight="duotone" />
-		{/if}
-	</span>
-{/snippet}
-{#snippet cell_allies({ row }: { row: ReplaysExpanded })}
-	<Match.Players team="allies" {highlightedPlayers} />
-{/snippet}
-{#snippet cell_axis({ row }: { row: ReplaysExpanded })}
-	<Match.Players team="axis" {highlightedPlayers} />
-{/snippet}
-{#snippet cell_duration({ row }: { row: ReplaysExpanded })}
-	<Match.Duration />
-{/snippet}
-{#snippet cell_map({ row }: { row: ReplaysExpanded })}
-	<Match.MapImage small flush />
-	<Match.MapName />
-{/snippet}
-{#snippet cell_date({ row }: { row: ReplaysExpanded })}
-	<Match.Date />
-{/snippet}
-{#snippet cell_actions({ row }: { row: ReplaysExpanded })}
+
+{#snippet rowActions(row: ReplaysExpanded)}
 	{@const isDownloading = !!downloadingIds[row.id]}
 	{@const isLocal = !!localPresentIds[row.id]}
 	<Button
@@ -374,7 +315,7 @@
 		size="icon-sm"
 		class={cn(
 			interactive,
-			'text-secondary-500 hover:text-secondary-200',
+			'text-secondary-400 hover:text-secondary-100',
 			isLocal && 'pointer-events-none cursor-not-allowed opacity-50'
 		)}
 		loading={isDownloading}
@@ -397,7 +338,7 @@
 		size="icon-sm"
 		class={cn(
 			interactive,
-			'text-secondary-500 hover:text-secondary-200',
+			'text-secondary-400 hover:text-secondary-100',
 			row.visibility === 'member' && 'pointer-events-none cursor-not-allowed opacity-50'
 		)}
 		disabled={row.visibility === 'member'}
@@ -417,7 +358,7 @@
 		type="button"
 		variant="ghost"
 		size="icon-sm"
-		class={cn(interactive, 'text-secondary-500 hover:text-secondary-200')}
+		class={cn(interactive, 'text-secondary-400 hover:text-secondary-100')}
 		aria-label={t('Rename replay')}
 		{@attach tooltip(t('Rename'))}
 		onclick={() => openRename(row)}
@@ -428,7 +369,7 @@
 		type="button"
 		variant="ghost"
 		size="icon-sm"
-		class={cn(interactive, 'text-secondary-500 hover:text-destructive')}
+		class={cn(interactive, 'text-secondary-400 hover:text-destructive')}
 		aria-label={t('Delete replay')}
 		{@attach tooltip(t('Delete'))}
 		onclick={() => openDelete(row)}
@@ -436,46 +377,58 @@
 		<TrashIcon size={16} />
 	</Button>
 {/snippet}
-{#snippet replayRowWrapper({ row, children }: { row: ReplaysExpanded; children: Snippet })}
-	<Match.Root match={row}>
-		{@render children()}
-	</Match.Root>
-{/snippet}
-{#snippet tableFooter()}
-	{#if list.replays.length > 0 || !list.isLoading}
-		<div {@attach viewport} class="text-secondary-400 text-sm">
-			{#if list.replays.length > 0}
-				{t('Showing {count} replays', { count: list.replays.length })}
-				{#if list.isLoading}
-					{t('(loading...)')}
-				{/if}
-			{:else}
-				{t('No replays found in your Company of Heroes playback folder.')}
-			{/if}
-		</div>
-	{/if}
-{/snippet}
 
-<DataTable
-	data={list.replays}
-	{columns}
-	rowKey={(item) => item.id}
-	rowHref={(item) => `/replays/${item.id}`}
-	rowClass={() => 'text-secondary-300'}
-	rowWrapper={replayRowWrapper}
-	loading={list.isLoading && list.replays.length === 0}
-	skeletonRows={10}
-	empty=""
-	tableLayout="auto"
-	headers={{ duration: header_duration, date: header_date }}
-	cells={{
-		allies: cell_allies,
-		axis: cell_axis,
-		duration: cell_duration,
-		map: cell_map,
-		date: cell_date,
-		actions: cell_actions
-	}}
+<div
+	class="border-secondary-800 flex flex-wrap items-center gap-1.5 border-b px-4 py-2.5"
+	role="group"
+	aria-label={t('Sort')}
 >
-	{@render tableFooter()}
-</DataTable>
+	{@render sortChip(
+		t('Date'),
+		list.filters.sort.duration === '',
+		list.filters.sort.gameDate === 'gameDate',
+		toggleDateSort
+	)}
+	{@render sortChip(
+		t('Duration'),
+		list.filters.sort.duration !== '',
+		list.filters.sort.duration === 'durationInSeconds',
+		toggleDurationSort
+	)}
+</div>
+
+{#if list.isLoading && list.replays.length === 0}
+	<ReplayListSkeleton rowCount={10} />
+{:else}
+	<div class="-mb-px">
+		{#each list.replays as row (row.id)}
+			{@const isLocal = !!localPresentIds[row.id]}
+			<MatchRow match={toRow(row)} showEngagement={false} href={`/replays/${row.id}`}>
+				{#snippet badges()}
+					{#if row.visibility === 'member'}
+						<Badge variant="success">{t('Published')}</Badge>
+					{/if}
+					{#if isLocal}
+						<Badge>{t('In playback folder')}</Badge>
+					{/if}
+				{/snippet}
+				{#snippet actions()}
+					{@render rowActions(row)}
+				{/snippet}
+			</MatchRow>
+		{/each}
+	</div>
+	<div
+		{@attach viewport}
+		class="text-secondary-400 border-secondary-800 border-t px-4 py-3 text-sm"
+	>
+		{#if list.replays.length > 0}
+			{t('Showing {count} replays', { count: list.replays.length })}
+			{#if list.isLoading}
+				{t('(loading...)')}
+			{/if}
+		{:else}
+			{t('No replays found in your Company of Heroes playback folder.')}
+		{/if}
+	</div>
+{/if}

@@ -14,6 +14,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		user: locals.user,
 		steamAccounts: await unwrapAsync(locals.services.users.steamAccounts(locals.user.id)),
 		saved: url.searchParams.get('saved'),
-		sent: url.searchParams.get('sent')
+		sent: url.searchParams.get('sent'),
+		/** A failed Steam account claim (already owned by another account). */
+		error: url.searchParams.get('error')
 	};
 };

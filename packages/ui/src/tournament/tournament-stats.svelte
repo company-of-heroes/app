@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
@@ -12,8 +13,6 @@
 	import FilmReelIcon from 'phosphor-svelte/lib/FilmReelIcon';
 	import FlagIcon from 'phosphor-svelte/lib/FlagIcon';
 	import SwordIcon from 'phosphor-svelte/lib/SwordIcon';
-	import { escapeHtml, tooltip } from '../attachments';
-	import { countryDisplayName } from '../format/country';
 	import { getRaceLabel, normalizeMapName } from '../format/player-format';
 	import { useHost } from '../host/host.context';
 	import { formatDurationSeconds } from '../replay/utils';
@@ -81,17 +80,9 @@
 
 {#snippet name(id: string | null, className = '')}
 	{@const player = id ? byId.get(id) : undefined}
-	{@const flagUrl = player ? host.resolve.flagImageUrl(player.country) : null}
 	{#if player}
 		<span class={cn('inline-flex min-w-0 items-center gap-2', className)}>
-			{#if flagUrl}
-				<img
-					class="h-4 w-auto shrink-0 rounded-xs"
-					src={flagUrl}
-					alt={countryDisplayName(player.country, host.locale()) ?? player.country}
-					{@attach tooltip(escapeHtml(countryDisplayName(player.country, host.locale()) ?? ''))}
-				/>
-			{/if}
+			<CountryFlag country={player.country} class="h-4" />
 			<a
 				href={host.routes.player(player.profileId)}
 				class={cn(interactive, 'hover:text-primary truncate')}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { useHost, type PlayerSearchOption } from '../host/host.context';
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
@@ -61,7 +62,6 @@
 </script>
 
 {#snippet optionRow({ option }: { option: Option })}
-	{@const flagUrl = option.meta?.country ? host.resolve.flagImageUrl(option.meta.country) : null}
 	<span class="flex min-w-0 flex-1 items-center gap-3">
 		{#if option.meta?.avatarUrl}
 			<img
@@ -74,15 +74,7 @@
 		{:else}
 			<span class="bg-secondary-800 ring-secondary-700 size-8 shrink-0 rounded-md ring-1"></span>
 		{/if}
-		{#if flagUrl}
-			<img
-				loading="lazy"
-				decoding="async"
-				class="h-4 w-auto shrink-0 rounded-xs"
-				src={flagUrl}
-				alt={option.meta?.country ?? ''}
-			/>
-		{/if}
+		<CountryFlag country={option.meta?.country} class="h-4" />
 		<span class="min-w-0 flex-1 truncate">{option.label}</span>
 		{#if option.label !== option.value}
 			<span class="text-secondary-500 shrink-0 text-xs tabular-nums">{option.value}</span>

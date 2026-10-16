@@ -2,11 +2,11 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { LobbyPlayer } from '@fknoobs/app';
 	import { useMatch } from '.';
-	import { cn, getFactionFlagFromRace, getRankImage } from '$lib/utils';
+	import { cn } from '$lib/utils';
 	import { getLeaderboardStatsForPlayerByMatchType, Race } from '$lib/utils/game';
 	import { getMeSteamIds } from '$lib/utils/player-me';
 	import { useI18n } from '$lib/i18n';
-	import { TeamPlayerSkills } from '@company-of-heroes/ui/match';
+	import { TeamPlayerList } from '@company-of-heroes/ui/match';
 	import { isRankedMatch } from '@company-of-heroes/ui/format/match-type';
 
 	type Props = {
@@ -123,12 +123,12 @@
 	);
 </script>
 
-<div {...restProps} class={cn('flex items-center', restProps.class)}>
-	<TeamPlayerSkills
+<div {...restProps} class={cn('min-w-0', restProps.class)}>
+	<TeamPlayerList
 		players={skillPlayers}
 		{meSteamIds}
 		{highlightedPlayers}
-		levelFallback="-"
 		showRankBadges={match.isRanked}
+		class="w-44 xl:w-52"
 	/>
 </div>

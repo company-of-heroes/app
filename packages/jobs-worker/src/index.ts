@@ -13,7 +13,10 @@ const JOBS: { name: string; every: number; offset: number; budgetMs?: number }[]
 	{ name: 'lobby-merge', every: 5, offset: 1 },
 	// Self-limiting: only lobbies whose stored ranked flag or title is stale; idle afterwards.
 	{ name: 'lobby-reprocess', every: 5, offset: 4 },
-	{ name: 'rewards-evaluate', every: 1, offset: 0 },
+	// A run stops starting users after ~20 s; the budget keeps a tick inside its minute.
+	// Runs claim their page of users up front and drop the ones another run claimed since, so a
+	// slow run overlapping the next tick rarely evaluates (or notifies) a user twice.
+	{ name: 'rewards-evaluate', every: 1, offset: 0, budgetMs: 30_000 },
 	// Auto labels from the 1v1/2v2 ladders (cached by the leaderboard pages).
 	{ name: 'label-auto', every: 30, offset: 25 },
 	// Every minute, in parallel with the rest; picks up lobbies an earlier result-fill stored.
@@ -24,6 +27,9 @@ const JOBS: { name: string; every: number; offset: number; budgetMs?: number }[]
 	// minute, clear of replay-stats' 50 s odd-minute runs; minute % 10 = 0 shares only with
 	// result-fill and the every-minute jobs, no harvest, merge or reprocess.
 	{ name: 'statistics-snapshot', every: 10, offset: 0 },
+	// Once a day per ranked ladder; later runs that day find the snapshot and stop at once, and
+	// a failed run is retried half an hour later. Clear of the harvests (minute % 5 = 0).
+	{ name: 'leaderboard-snapshot', every: 30, offset: 15 },
 	// Self-limiting: stored replays without a statistics summary; idle once caught up.
 	{ name: 'replay-stats', every: 2, offset: 1, budgetMs: 50_000 }
 ];

@@ -8,6 +8,7 @@ import type {
 	MyTournaments,
 	Tournament,
 	TournamentArm,
+	TournamentCustomMedal,
 	TournamentDetail,
 	TournamentHost,
 	TournamentHostDecision,
@@ -485,6 +486,25 @@ export class TournamentsApi {
 		return fromPbPromise(
 			sendV1<TournamentMedalUse[]>(this.deps, '/tournaments/medals'),
 			'Could not load the medals.'
+		);
+	}
+
+	/** Uploaded medals (built-in medals come from the host's `resolve.medals`). */
+	listMedals(): ResultAsync<TournamentCustomMedal[], ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentCustomMedal[]>(this.deps, '/tournaments/medals/custom'),
+			'Could not load the medals.'
+		);
+	}
+
+	/** Staff and hosts upload a medal (PNG or SVG). */
+	createMedal(name: string, image: File): ResultAsync<TournamentCustomMedal, ApiError> {
+		return fromPbPromise(
+			sendV1<TournamentCustomMedal>(this.deps, '/tournaments/medals/custom', {
+				method: 'POST',
+				body: { name, image }
+			}),
+			'Could not upload the medal.'
 		);
 	}
 

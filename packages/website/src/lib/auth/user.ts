@@ -59,19 +59,20 @@ export function isAdminUser(user: AuthUserPublic | null | undefined): boolean {
 	return user?.role === 'admin';
 }
 
-/** Staff, or an editor: may write guides (editors manage only their own). */
-export function isEditorUser(user: AuthUserPublic | null | undefined): boolean {
+/** Staff, or an editor: may publish guides. Every signed-in user may write drafts. */
+export function canPublishGuides(user: AuthUserPublic | null | undefined): boolean {
 	return isStaffUser(user) || user?.role === 'editor';
 }
 
-/** Staff edit every guide; an editor only the ones they wrote. */
+/**
+ * Staff edit every guide, an author their own. Changes to a published guide by an author who
+ * may not publish wait for staff review (see the guides service).
+ */
 export function canEditGuide(
 	user: AuthUserPublic | null | undefined,
 	guide: { author?: string | null }
 ): boolean {
-	return (
-		isStaffUser(user) || (user?.role === 'editor' && !!guide.author && guide.author === user.id)
-	);
+	return isStaffUser(user) || (!!user && !!guide.author && guide.author === user.id);
 }
 
 /** Staff, or a community host: may create tournaments (hosts only run their own). */

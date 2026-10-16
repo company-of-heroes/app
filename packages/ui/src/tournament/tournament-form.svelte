@@ -375,7 +375,12 @@
 		label={t('Champion medal')}
 		description={t('The winner gets this medal on their profile.')}
 	>
-		<TournamentMedalField bind:value={medal} tournamentId={tournament?.id} disabled={saving} />
+		<TournamentMedalField
+			bind:value={medal}
+			initial={initial?.customMedal}
+			tournamentId={tournament?.id}
+			disabled={saving}
+		/>
 	</Form.Group>
 
 	<Form.Group label={t('Description')} wide>

@@ -9,6 +9,7 @@
 	import { tooltip } from '../attachments';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
+	import PlayerByline from '../player/player-byline.svelte';
 	import { Badge } from '../ui/badge';
 	import { FORMAT_LABELS, parseTournamentDate } from './format';
 	import TournamentStatus from './tournament-status.svelte';
@@ -114,6 +115,14 @@
 									>
 										{tournament.name}
 									</p>
+									{#if tournament.host}
+										<span
+											class="text-secondary-300 flex min-w-0 items-center gap-2 text-xs drop-shadow-md"
+										>
+											<span class="shrink-0">{t('Hosted by')}</span>
+											<PlayerByline user={tournament.host} plain class="flex-nowrap" />
+										</span>
+									{/if}
 								</div>
 							</div>
 						</div>

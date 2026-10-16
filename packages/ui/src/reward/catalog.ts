@@ -12,8 +12,12 @@ export type CatalogEntry =
 			raceId: number | null;
 			/** Title of the first level without its numeral ("US Command I" → "US Command"); empty when the levels are not numbered. */
 			name: string;
-			/** Level 1 first. */
+			/** Level 1 first; secret levels still locked are left out. */
 			levels: RewardView[];
+			/** Each level's position in the series (1 = I), so a hidden level does not shift the numerals. */
+			numbers: number[];
+			/** Levels in the series up to its highest shown one, so hidden levels in between still count. */
+			total: number;
 	  };
 
 /**
@@ -56,7 +60,9 @@ export function catalogEntries(
 			key: level.series,
 			raceId,
 			name: '',
-			levels: [reward]
+			levels: [reward],
+			numbers: [],
+			total: 0
 		};
 		series.set(level.series, entry);
 		entries.push(entry);
@@ -65,6 +71,10 @@ export function catalogEntries(
 	for (const entry of series.values()) {
 		const levelOf = (reward: RewardView) => seriesOf.get(reward.ribbon ?? '')?.level ?? 0;
 		entry.levels.sort((a, b) => levelOf(a) - levelOf(b));
+		// Levels without a ribbon level number on after the highest real one, so none collide.
+		let next = Math.max(0, ...entry.levels.map(levelOf));
+		entry.numbers = entry.levels.map((reward) => levelOf(reward) || ++next);
+		entry.total = Math.max(entry.levels.length, ...entry.numbers);
 		const numbered = /\s+[IVX]+$/;
 		entry.name = numbered.test(entry.levels[0].title)
 			? entry.levels[0].title.replace(numbered, '')

@@ -24,7 +24,7 @@
 		<ImageField
 			id="guide-cover"
 			shape="cover"
-			currentUrl={editor.guide.coverUrl}
+			currentUrl={editor.coverUrl}
 			maxBytes={GUIDE_COVER_MAX_BYTES}
 			tooBigMessage="The cover must be 5 MB or smaller."
 			bind:file={editor.cover}

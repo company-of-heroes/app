@@ -17,10 +17,15 @@
 		maxBytes: number;
 		/** i18n key shown when the file is too large. */
 		tooBigMessage: string;
-		/** Logo: square; banner: 4:1; cover: 1.91:1 (Open Graph), full width. */
-		shape: 'square' | 'wide' | 'cover';
+		/**
+		 * Logo: square; banner: 4:1; cover: 1.91:1 (Open Graph), full width; portrait: 3:5 with the
+		 * whole image shown (medals).
+		 */
+		shape: 'square' | 'wide' | 'cover' | 'portrait';
 		/** Accepted MIME types; JPEG, PNG and WebP by default. */
 		accept?: string[];
+		/** i18n key shown for a file of another type. */
+		typeMessage?: string;
 		file: File | null;
 		clear: boolean;
 		disabled?: boolean;
@@ -33,6 +38,7 @@
 		tooBigMessage,
 		shape,
 		accept: acceptTypes = IMAGE_TYPES,
+		typeMessage = 'Use a JPEG, PNG or WebP image.',
 		file = $bindable(),
 		clear = $bindable(),
 		disabled = false
@@ -54,7 +60,7 @@
 
 	function accept(next: File): boolean {
 		if (!acceptTypes.includes(next.type)) {
-			host.notify.error(t('Use a JPEG, PNG or WebP image.'));
+			host.notify.error(t(typeMessage));
 			return false;
 		}
 
@@ -70,7 +76,7 @@
 <div
 	class={cn(
 		'relative',
-		shape === 'square' && 'w-28',
+		(shape === 'square' || shape === 'portrait') && 'w-28',
 		shape === 'wide' && 'w-full max-w-md',
 		shape === 'cover' && 'w-full'
 	)}
@@ -86,7 +92,8 @@
 			shown && 'border-solid',
 			shape === 'square' && 'aspect-square',
 			shape === 'wide' && 'aspect-[4/1]',
-			shape === 'cover' && 'aspect-[1.91/1]'
+			shape === 'cover' && 'aspect-[1.91/1]',
+			shape === 'portrait' && 'aspect-[3/5]'
 		)}
 		onFileChange={(next) => {
 			file = next;
@@ -111,7 +118,14 @@
 			</div>
 		{/snippet}
 		{#snippet selected(fileName, dragging)}
-			<img src={shown} alt="" class="absolute inset-0 size-full object-cover" />
+			<img
+				src={shown}
+				alt=""
+				class={cn(
+					'absolute inset-0 size-full',
+					shape === 'portrait' ? 'object-contain p-2' : 'object-cover'
+				)}
+			/>
 			<div
 				class={cn(
 					'bg-secondary-950/70 absolute inset-0 flex flex-col items-center justify-center gap-1 px-3 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100',
@@ -120,7 +134,7 @@
 			>
 				<UploadSimpleIcon size={20} class="text-secondary-200" />
 				<span id="{id}-hint" class="text-sm">{t('Change image')}</span>
-				{#if shape !== 'square'}
+				{#if shape !== 'square' && shape !== 'portrait'}
 					<span class="text-secondary-400 max-w-full truncate text-xs font-normal">{fileName}</span>
 				{/if}
 			</div>

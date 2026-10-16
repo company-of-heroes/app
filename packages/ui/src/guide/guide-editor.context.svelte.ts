@@ -6,11 +6,31 @@ import type {
 	GuideCategoryTree,
 	GuideInput,
 	GuideLanguage,
+	GuideRevision,
 	GuideStatus,
 	GuideSummary
 } from './types';
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
+
+/** What the form edits: a published guide's held changes, or the guide itself. */
+function editable(guide: Guide): GuideRevision {
+	return (
+		guide.revision ?? {
+			title: guide.title,
+			slug: guide.slug,
+			excerpt: guide.excerpt,
+			body: guide.body,
+			categoryId: guide.category?.id ?? null,
+			language: guide.language,
+			seoTitle: guide.seoTitle,
+			seoDescription: guide.seoDescription,
+			noindex: guide.noindex,
+			translationOf: guide.translationOf,
+			coverUrl: guide.coverUrl
+		}
+	);
+}
 
 /**
  * The guide being edited: the saved guide plus the draft fields of the form. Created once by
@@ -37,6 +57,8 @@ export class GuideEditorState {
 	clearCover = $state(false);
 	saving = $state(false);
 	deleting = $state(false);
+	/** Sending for review, or discarding held changes. */
+	reviewing = $state(false);
 
 	readonly #host: HostContext;
 	readonly #t: Translate;
@@ -48,26 +70,42 @@ export class GuideEditorState {
 		this.load(guide);
 	}
 
-	/** Takes the saved guide's fields into the form. */
+	/** Takes the saved guide's fields (or its held changes) into the form. */
 	load(guide: Guide) {
+		const fields = editable(guide);
 		this.guide = guide;
-		this.title = guide.title;
-		this.slug = guide.slug;
-		this.slugTouched = !guide.slug.startsWith('untitled-');
-		this.excerpt = guide.excerpt;
-		this.body = guide.body;
-		this.categoryId = guide.category?.id ?? null;
-		this.language = guide.language;
-		this.seoTitle = guide.seoTitle;
-		this.seoDescription = guide.seoDescription;
-		this.noindex = guide.noindex;
-		this.translationOf = guide.translationOf;
+		this.title = fields.title;
+		this.slug = fields.slug;
+		this.slugTouched = !fields.slug.startsWith('untitled-');
+		this.excerpt = fields.excerpt;
+		this.body = fields.body;
+		this.categoryId = fields.categoryId;
+		this.language = fields.language;
+		this.seoTitle = fields.seoTitle;
+		this.seoDescription = fields.seoDescription;
+		this.noindex = fields.noindex;
+		this.translationOf = fields.translationOf;
 		this.cover = null;
 		this.clearCover = false;
 	}
 
 	get status(): GuideStatus {
 		return this.guide.status;
+	}
+
+	/** The cover the form starts from: the held one, or the live one. */
+	get coverUrl(): string | null {
+		return editable(this.guide).coverUrl;
+	}
+
+	/** The author asked staff to review it, and staff have not published it since. */
+	get inReview(): boolean {
+		return this.guide.reviewRequestedAt !== null;
+	}
+
+	/** Changes to the published guide wait for staff. */
+	get hasRevision(): boolean {
+		return this.guide.revision !== null;
 	}
 
 	/** The address the guide will have, for the slug field's preview. */
@@ -77,13 +115,13 @@ export class GuideEditorState {
 	}
 
 	get dirty(): boolean {
-		const saved = this.guide;
+		const saved = editable(this.guide);
 		return (
 			this.title !== saved.title ||
 			this.slug !== saved.slug ||
 			this.excerpt !== saved.excerpt ||
 			this.body !== saved.body ||
-			this.categoryId !== (saved.category?.id ?? null) ||
+			this.categoryId !== saved.categoryId ||
 			this.language !== saved.language ||
 			this.seoTitle !== saved.seoTitle ||
 			this.seoDescription !== saved.seoDescription ||
@@ -140,7 +178,9 @@ export class GuideEditorState {
 					? this.#t('Guide published.')
 					: status === 'draft'
 						? this.#t('Guide taken back to draft.')
-						: this.#t('Guide saved.')
+						: saved.revision
+							? this.#t('Changes saved. They go live once staff publish them.')
+							: this.#t('Guide saved.')
 			);
 			return saved;
 		} catch (error) {
@@ -150,6 +190,58 @@ export class GuideEditorState {
 			return null;
 		} finally {
 			this.saving = false;
+		}
+	}
+
+	/** Saves open changes, then asks staff to review the guide. */
+	async requestReview(): Promise<boolean> {
+		if (this.reviewing) {
+			return false;
+		}
+
+		if (this.dirty && !(await this.save())) {
+			return false;
+		}
+
+		this.reviewing = true;
+		try {
+			this.load(await this.#host.api.guides.requestReview(this.guide.id));
+			this.#host.notify.success(this.#t('Sent to staff for review.'));
+			return true;
+		} catch (error) {
+			this.#host.notify.error(
+				error instanceof Error
+					? this.#t(error.message)
+					: this.#t('Could not send the guide for review.')
+			);
+			return false;
+		} finally {
+			this.reviewing = false;
+		}
+	}
+
+	/** Drops the changes that wait for review after a confirmation; the live guide stays. */
+	async discardRevision(): Promise<boolean> {
+		const sure = await this.#host.notify.confirm(
+			this.#t('Discard the changes? The published guide stays as it is.'),
+			{ confirm: this.#t('Discard changes'), cancel: this.#t('Keep them'), danger: true }
+		);
+		if (!sure || this.reviewing) {
+			return false;
+		}
+
+		this.reviewing = true;
+		try {
+			this.load(await this.#host.api.guides.discardRevision(this.guide.id));
+			this.#host.notify.success(this.#t('Changes discarded.'));
+			return true;
+		} catch (error) {
+			this.#host.notify.error(
+				error instanceof Error ? this.#t(error.message) : this.#t('Could not discard the changes.')
+			);
+			return false;
+		} finally {
+			this.reviewing = false;
 		}
 	}
 

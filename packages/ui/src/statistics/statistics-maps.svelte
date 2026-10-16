@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SplitBar } from '@company-of-heroes/ui/split-bar';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive, tableHeadRow } from '@company-of-heroes/ui/variants';
@@ -89,17 +90,7 @@
 		>
 			{row.decided > 0 ? Math.round(allies) : '-'}
 		</span>
-		<div class="relative h-1 flex-1 rounded-full bg-red-400/30">
-			<div
-				class="absolute inset-y-0 left-0 rounded-l-full bg-sky-400/55"
-				style:width="{allies}%"
-			></div>
-			<div class="bg-secondary-600 absolute -inset-y-1 left-1/2 w-px"></div>
-			<div
-				class="absolute -inset-y-1.5 w-0.5 -translate-x-1/2 rounded-full bg-white"
-				style:left="{allies}%"
-			></div>
-		</div>
+		<SplitBar value={allies} />
 		<span class={cn('w-7', axisLead ? 'font-bold text-red-300' : 'text-secondary-500')}>
 			{row.decided > 0 ? 100 - Math.round(allies) : '-'}
 		</span>

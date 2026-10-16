@@ -4,6 +4,7 @@
 	import { interactive } from '@company-of-heroes/ui/variants';
 	import { useHost } from '../host/host.context';
 	import { FORMAT_LABELS, parseTournamentDate } from './format';
+	import { resolveMedal } from './medal';
 	import type { Tournament } from './types';
 
 	type Props = {
@@ -115,7 +116,7 @@
 				<ul class="-mr-px grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
 					{#each tournaments as tournament, index (tournament.id)}
 						{@const date = parseTournamentDate(tournament.startsAt)}
-						{@const picked = medals.find((m) => m.key === tournament.medal)}
+						{@const picked = resolveMedal(tournament, medals)}
 						<li class="border-warning/15 min-w-0 border-r border-b">
 							<a
 								href={host.routes.tournament(tournament.slug)}
@@ -129,7 +130,7 @@
 									<img
 										src={picked.url}
 										alt=""
-										class="h-24 w-auto shrink-0 drop-shadow-[0_2px_2px_rgb(0_0_0/0.6)]"
+										class="h-24 w-auto max-w-24 shrink-0 object-contain drop-shadow-[0_2px_2px_rgb(0_0_0/0.6)]"
 									/>
 								{:else}
 									{@render medal(tournament, index)}

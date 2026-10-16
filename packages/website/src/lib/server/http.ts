@@ -5,7 +5,7 @@ import type { z } from 'zod';
 import {
 	canHostTournaments,
 	isAdminUser,
-	isEditorUser,
+	canPublishGuides,
 	isStaffUser,
 	type AuthUserPublic
 } from '$lib/auth/user';
@@ -85,10 +85,10 @@ export function requireAdmin(event: RequestEvent): Result<AuthUserPublic, AppErr
 	);
 }
 
-/** Staff and editors: may write guides (an editor manages only their own). */
+/** Staff and editors: may publish guides and add guide categories. */
 export function requireEditor(event: RequestEvent): Result<AuthUserPublic, AppError> {
 	return requireUser(event).andThen((user) =>
-		isEditorUser(user) ? ok(user) : err(forbidden('Only editors and staff can do that.'))
+		canPublishGuides(user) ? ok(user) : err(forbidden('Only editors and staff can do that.'))
 	);
 }
 

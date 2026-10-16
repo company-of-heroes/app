@@ -65,7 +65,9 @@ type ReplayRecord = {
 	vpCount: number;
 	gameDate: string;
 	messages: unknown;
-	expand?: { createdBy?: { id: string; name?: string } };
+	expand?: {
+		createdBy?: { id: string; name?: string; avatar?: string; collectionId?: string };
+	};
 };
 
 export type MemberReplayViewer = { id: string; isStaff: boolean } | null;
@@ -104,7 +106,7 @@ export function memberQueryFromReplaysQuery(
 }
 
 const LIST_FIELDS =
-	'id,title,description,isRanked,createdAt,durationInSeconds,likeCount,downloadCount,commentCount,file,players,statsSnapshot,mapName,mapFilename,visibility,createdBy,expand.createdBy.id,expand.createdBy.name';
+	'id,title,description,isRanked,createdAt,durationInSeconds,likeCount,downloadCount,commentCount,file,players,statsSnapshot,mapName,mapFilename,visibility,createdBy,expand.createdBy.id,expand.createdBy.name,expand.createdBy.avatar,expand.createdBy.collectionId';
 
 const replayNotFound = () => notFound('Replay not found');
 
@@ -114,13 +116,16 @@ function steamIdsOfRoster(roster: ReplayRosterPlayer[]): string[] {
 		.filter((id): id is string => !!id);
 }
 
-function uploaderOf(record: ReplayRecord) {
+/** Turns an expanded user's avatar file into a URL (needs the PocketBase client). */
+type AvatarUrl = (user: { id: string; avatar?: string; collectionId?: string }) => string | null;
+
+function uploaderOf(record: ReplayRecord, avatarUrl: AvatarUrl) {
 	const user = record.expand?.createdBy;
 	if (!user) {
 		return null;
 	}
 
-	return { id: user.id, alias: user.name?.trim() || 'Anonymous' };
+	return { id: user.id, alias: user.name?.trim() || 'Anonymous', avatarUrl: avatarUrl(user) };
 }
 
 /** A replay as the site and apps show it; `profileIds` maps roster Steam ids to Relic profiles. */
@@ -128,7 +133,8 @@ function toView(
 	record: ReplayRecord,
 	snapshot: StatsSnapshot | null,
 	detail: boolean,
-	profileIds: Map<string, number>
+	profileIds: Map<string, number>,
+	avatarUrl: AvatarUrl
 ) {
 	const roster = parseJsonList<ReplayRosterPlayer>(record.players);
 	const players = toCommunityPlayers(roster, profileIds);
@@ -137,6 +143,10 @@ function toView(
 		// Keep stats for hover previews; list UI still hides rank badges when unranked.
 		if (livePlayers[i]?.stats) {
 			player.stats = livePlayers[i].stats;
+		}
+
+		if (livePlayers[i]?.country) {
+			player.country = livePlayers[i].country;
 		}
 	});
 
@@ -171,7 +181,7 @@ function toView(
 						players: results
 					}
 				: null,
-		uploadedBy: uploaderOf(record),
+		uploadedBy: uploaderOf(record, avatarUrl),
 		visibility: record.visibility || ('member' as const),
 		...(detail
 			? {
@@ -341,7 +351,11 @@ export class MemberReplaysService extends Service {
 		detail: boolean
 	): Task<MemberReplayView> {
 		return this.profileIdsOf(parseJsonList<ReplayRosterPlayer>(record.players)).map((profileIds) =>
-			toView(record, snapshot, detail, profileIds)
+			toView(record, snapshot, detail, profileIds, (user) =>
+				user.avatar && user.collectionId
+					? this.pb.files.getURL({ ...user, collectionId: user.collectionId }, user.avatar)
+					: null
+			)
 		);
 	}
 

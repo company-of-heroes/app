@@ -119,6 +119,18 @@ export const createTournamentMap = command(
 	}
 );
 
+export const listTournamentMedals = command(() =>
+	unwrapAsync(getRequestEvent().locals.services.tournaments.listMedals())
+);
+
+export const createTournamentMedal = command(
+	z.object({ name: z.string().max(80), image: z.instanceof(File) }),
+	({ name, image }) => {
+		const { services, user } = hostUser();
+		return unwrapAsync(services.tournaments.createMedal(name, image, user.id));
+	}
+);
+
 export const joinTournament = command(
 	registrationBody.extend({ id }),
 	({ id, steamId, acceptRules }) => {

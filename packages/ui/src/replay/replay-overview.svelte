@@ -1,4 +1,6 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
+	import RankIcon from '../player/rank-icon.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
@@ -32,12 +34,10 @@
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
 	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
 	import { playerPreviewId } from '../player/player-preview-cache';
-	import { countryDisplayName } from '../format/country';
 	import { liveLobbyPlayerHref, liveLobbyPlayerLabel } from '../live-lobby/links';
 	import { communityPlayerHref } from './links';
 	import { doctrineBannerFile, playerCpm, raceFromReplayFaction } from './replay-stats';
 	import { useHost } from '../host/host.context';
-	import { escapeHtml, tooltip } from '../attachments';
 
 	type NameExtraArgs = {
 		name: string;
@@ -70,8 +70,6 @@
 	const replayData = useOptionalReplayData();
 	const replay = $derived(replayData?.replay ?? null);
 	const getRankImage = $derived(showRanks ? host.resolve.rankImageByRace : undefined);
-	const getCountryDisplayName = (country: string | null | undefined) =>
-		countryDisplayName(country, host.locale());
 
 	const playerHref = (player: CommunityPlayer) => communityPlayerHref(player, host.routes);
 
@@ -300,7 +298,7 @@
 	{#if getRankImage}
 		<span class="text-secondary-600" aria-hidden="true">·</span>
 		<span class="text-secondary-200 inline-flex items-center gap-1">
-			<img src={getRankImage(race, rankLevel ?? 0)} alt="" class="h-5 w-5" />
+			<RankIcon level={rankLevel ?? 0} {race} />
 			<span class="text-secondary-400">{t('Lv')}</span>
 			<span class="text-secondary-100">{rankLevel && rankLevel > 0 ? rankLevel : '—'}</span>
 		</span>
@@ -344,8 +342,6 @@
 	{@const race = result?.race_id ?? lobby?.race ?? raceFromReplayFaction(player.faction)}
 	{@const banner = doctrineBannerUrl(player)}
 	{@const country = result?.country ?? live?.country ?? null}
-	{@const flagUrl = host.resolve.flagImageUrl(country)}
-	{@const countryName = getCountryDisplayName(country)}
 	{@const steamId = lobby?.steamId ?? live?.steamId ?? null}
 	{@const profileId = lobby?.profile.profile_id ?? live?.profileId ?? null}
 	<div
@@ -369,14 +365,7 @@
 		<div class="relative flex items-center gap-4 px-4 py-3.5">
 			<div class="min-w-0 flex-1">
 				<div class="flex min-w-0 items-center gap-2">
-					{#if flagUrl}
-						<img
-							src={flagUrl}
-							alt={countryName ?? country ?? ''}
-							{@attach tooltip(escapeHtml(countryName ?? ''))}
-							class="h-4 w-auto shrink-0 rounded-xs"
-						/>
-					{/if}
+					<CountryFlag {country} class="h-4" />
 					{#if !cpu}
 						<PlayerLikeCount likeCount={likeCountForSteamId(steamId)} class="shrink-0" />
 					{/if}
@@ -478,20 +467,11 @@
 	{@const stats = cpu ? null : player.stats}
 	{@const elo = stats?.elo ?? null}
 	{@const country = cpu ? null : (player.country ?? null)}
-	{@const flagUrl = host.resolve.flagImageUrl(country)}
-	{@const countryName = getCountryDisplayName(country)}
 	<div class="border-secondary-800 relative overflow-hidden border-b last:border-b-0">
 		<div class="relative flex items-center gap-4 px-4 py-3.5">
 			<div class="min-w-0 flex-1">
 				<div class="flex min-w-0 items-center gap-2">
-					{#if flagUrl}
-						<img
-							src={flagUrl}
-							alt={countryName ?? country ?? ''}
-							{@attach tooltip(escapeHtml(countryName ?? ''))}
-							class="h-4 w-auto shrink-0 rounded-xs"
-						/>
-					{/if}
+					<CountryFlag {country} class="h-4" />
 					{#if !cpu}
 						<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 					{/if}

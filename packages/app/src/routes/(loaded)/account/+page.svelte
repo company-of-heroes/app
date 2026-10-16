@@ -13,7 +13,6 @@
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import ImageIcon from 'phosphor-svelte/lib/ImageIcon';
 	import { accountUrl, privacyUrl, SITE_URL } from '$core/site/urls';
-	import { pickOwnedSteamId } from '@company-of-heroes/api';
 
 	const { t } = useI18n();
 
@@ -33,9 +32,8 @@
 	const isPlaceholder = $derived(app.account.isPlaceholderEmail);
 	const needsVerification = $derived(!verified && !isPlaceholder);
 	const isSessionLogin = $derived(app.account.isSessionLogin);
-	const rewardsSteamId = $derived(
-		pickOwnedSteamId(app.features.auth.user.steamIds, [app.game.profile?.steam.steamid])
-	);
+	/** The main Steam ID carries the account rewards, like the wiki and the website. */
+	const rewardsSteamId = $derived(app.features.auth.user.steamIds?.[0] ?? null);
 
 	const selectAvatar = async () => {
 		const path = await open({

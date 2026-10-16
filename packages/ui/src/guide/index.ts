@@ -3,8 +3,10 @@ import GuideBreadcrumb from './guide-breadcrumb.svelte';
 import GuideBrowser from './guide-browser.svelte';
 import GuideBrowserSkeleton from './guide-browser-skeleton.svelte';
 import GuideEditor from './guide-editor.svelte';
+import GuideEditorSkeleton from './guide-editor-skeleton.svelte';
 import GuideList from './guide-list.svelte';
 import GuideManageList from './guide-manage-list.svelte';
+import GuideManageListSkeleton from './guide-manage-list-skeleton.svelte';
 import GuideNav from './guide-nav.svelte';
 import GuideRoot from './guide-root.svelte';
 
@@ -17,7 +19,9 @@ export {
 	GuideBrowser,
 	GuideBrowserSkeleton,
 	GuideEditor,
-	GuideManageList
+	GuideEditorSkeleton,
+	GuideManageList,
+	GuideManageListSkeleton
 };
 export { createGuide, useGuide } from './context';
 export { useGuideEditor } from './guide-editor.context.svelte';

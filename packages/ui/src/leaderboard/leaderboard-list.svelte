@@ -1,264 +1,214 @@
-<script module lang="ts">
-	/** Default rows rendered at first, and added each time the end of the list scrolls into view. */
-	export const LEADERBOARD_PAGE_SIZE = 100;
-</script>
-
 <script lang="ts">
+	import RankIcon from '../player/rank-icon.svelte';
 	import type { Attachment } from 'svelte/attachments';
-	import { countryDisplayName } from '../format/country';
-	import { useHost } from '../host/host.context';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
+	import { Button } from '@company-of-heroes/ui/button';
 	import {
 		formatStreak,
-		interactive,
-		statLosses,
 		statStreakClass,
-		statWins,
-		tableHeadRow
+		tableHeadRow,
+		tableSortHeader
 	} from '@company-of-heroes/ui/variants';
-	import PlayerLabels from '../player/player-labels.svelte';
-	import PlayerStreamerIcon from '../player/player-streamer-icon.svelte';
-	import PlayerLikeCount from '../player/player-like-count.svelte';
-	import PlayerProfileLink from '../player/player-profile-link.svelte';
-	import type { LeaderboardStatRow, PlayerEloMap } from '../format/types';
-	import {
-		formatRatio,
-		getEloColor,
-		getEloTextShadow,
-		getRatioColor,
-		getStoredEloForLeaderboard,
-		isEliteElo
-	} from '../format/player-format';
-	import { escapeHtml, tooltip } from '../attachments';
-
-	type Props = {
-		stats: LeaderboardStatRow[];
-		eloBySteamId: Record<string, PlayerEloMap>;
-		emptyMessage?: string;
-		naLabel?: string;
-		/** Rows rendered at first and added per scroll step; `Infinity` renders every row (SSR). */
-		pageSize?: number;
-		/** Rows rendered; grows by `pageSize` while scrolling. Bind it to load data for the rendered rows only. */
-		limit?: number;
-	};
+	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
+	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
+	import CrosshairIcon from 'phosphor-svelte/lib/CrosshairIcon';
+	import { useHost } from '../host/host.context';
+	import { tooltip } from '../attachments';
+	import type { LeaderboardStatRow } from '../format/types';
+	import { useLeaderboard } from './context';
+	import { games, type LeaderboardSortKey } from './highlights';
+	import { leaderboardRowId } from './leaderboard-state.svelte';
+	import LeaderboardChange from './leaderboard-change.svelte';
+	import LeaderboardElo from './leaderboard-elo.svelte';
+	import LeaderboardPlayer from './leaderboard-player.svelte';
+	import LeaderboardRecord from './leaderboard-record.svelte';
 
 	const { t } = useI18n();
 	const host = useHost();
+	const leaderboard = useLeaderboard();
 
-	let {
-		stats,
-		eloBySteamId,
-		emptyMessage = 'No players found.',
-		pageSize = LEADERBOARD_PAGE_SIZE,
-		limit = $bindable(pageSize)
-	}: Props = $props();
+	/** Rank · change · level · player · games · record · streak; narrow screens keep three. */
+	const grid =
+		'grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-3 px-4 md:grid-cols-[2.75rem_2.75rem_3.5rem_minmax(0,1fr)_4rem_minmax(11rem,15rem)_4rem]';
 
-	const visibleStats = $derived(stats.slice(0, limit));
+	let ownVisible = $state(false);
 
-	const getSteamIdFromName = (name: string) => name.replace('/steam/', '');
-	const getCountryDisplayName = (country: string | null | undefined) =>
-		countryDisplayName(country, host.locale());
+	const ownRank = $derived(leaderboard.ownRow?.rank ?? leaderboard.ownStat?.rank ?? null);
+	/** On the podium the viewer is already in plain sight. */
+	const ownOnPodium = $derived(
+		leaderboard.showPodium && leaderboard.ownRow !== null && leaderboard.ownRow.rank <= 3
+	);
+	const showOwnBar = $derived(ownRank !== null && !ownVisible && !ownOnPodium);
 
-	function eloForRow(stat: LeaderboardStatRow): number | null {
-		return getStoredEloForLeaderboard(
-			eloBySteamId[getSteamIdFromName(stat.profile.name)],
-			stat.leaderboard_id
-		);
-	}
-
-	/** Renders the next page of rows when the end of the list scrolls into view. */
-	const nearEnd: Attachment<HTMLElement> = (node) => {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0]?.isIntersecting && limit < stats.length) {
-					limit += pageSize;
-				}
-			},
-			{ rootMargin: '400px' }
-		);
+	/** Tracks whether the viewer's row is on screen; the sticky bar shows while it is not. */
+	const trackOwn: Attachment<HTMLElement> = (node) => {
+		const observer = new IntersectionObserver((entries) => {
+			ownVisible = entries[0]?.isIntersecting ?? false;
+		});
 		observer.observe(node);
-		return () => observer.disconnect();
+		return () => {
+			observer.disconnect();
+			ownVisible = false;
+		};
 	};
+
+	function sortState(key: LeaderboardSortKey): 'ascending' | 'descending' | 'none' {
+		if (leaderboard.sort.key !== key) {
+			return 'none';
+		}
+
+		// Best first reads as ascending for rank, descending for every other value.
+		const bestFirst = !leaderboard.sort.reverse;
+		return (key === 'rank') === bestFirst ? 'ascending' : 'descending';
+	}
 </script>
 
-{#if stats.length === 0}
-	<p class="text-secondary-400 px-4 py-3 text-sm">{emptyMessage}</p>
-{:else}
-	<div class="hidden shrink-0 overflow-x-auto md:block">
-		<table class="w-full table-fixed border-collapse text-sm">
-			<thead>
-				<tr class="{tableHeadRow} text-center">
-					<th class="w-14 px-4 py-2">#</th>
-					<th class="w-26 px-4 py-2">{t('Rank')}</th>
-					<th class="px-4 py-2 text-left">{t('Alias')}</th>
-					<th class="w-22 px-4 py-2">{t('ELO')}</th>
-					<th class="w-20 px-4 py-2">{t('Wins')}</th>
-					<th class="w-22 px-4 py-2">{t('Losses')}</th>
-					<th class="w-22 px-4 py-2">{t('Streak')}</th>
-					<th class="w-22 px-4 py-2">{t('Ratio')}</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each visibleStats as stat (stat.profile.profile_id)}
-					{@const elo = eloForRow(stat)}
-					{@const countryName = getCountryDisplayName(stat.profile.country)}
-					{@const flagUrl = host.resolve.flagImageUrl(stat.profile.country)}
-					<tr class="border-secondary-800/70 hover:bg-secondary-950/50 h-11 border-t text-white">
-						<td class="text-secondary-400 px-4 py-1.5 text-center font-semibold tabular-nums">
-							{stat.rank}
-						</td>
-						<td class="px-4 py-1.5">
-							<div class="flex items-center justify-center gap-2">
-								<img
-									loading="lazy"
-									decoding="async"
-									src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
-									alt=""
-									class="size-6 shrink-0 object-contain"
-								/>
-								<span class="text-secondary-400 text-sm tabular-nums">{stat.ranklevel}</span>
-							</div>
-						</td>
-						<td class="px-4 py-1.5">
-							<PlayerProfileLink
-								href={host.routes.player(stat.profile.profile_id)}
-								class={cn(
-									interactive,
-									'hover:text-primary flex min-w-0 items-center gap-2 font-medium'
-								)}
-							>
-								{#if flagUrl}
-									<img
-										loading="lazy"
-										decoding="async"
-										class="h-4 w-auto shrink-0 rounded-xs"
-										src={flagUrl}
-										alt={countryName ?? stat.profile.country ?? ''}
-										{@attach tooltip(escapeHtml(countryName ?? ''))}
-									/>
-								{/if}
-								<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
-								<PlayerStreamerIcon
-									labels={stat.profile.labels}
-									steamId={getSteamIdFromName(stat.profile.name)}
-								/>
-								<span class="truncate">{stat.profile.alias}</span>
-								<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
-							</PlayerProfileLink>
-						</td>
-						<td
-							class={cn(
-								'px-4 py-1.5 text-center tabular-nums',
-								elo == null && 'text-secondary-500 text-xs font-normal',
-								isEliteElo(elo) && 'font-bold tracking-wide'
-							)}
-							style:color={elo != null ? getEloColor(elo) : undefined}
-							style:text-shadow={getEloTextShadow(elo)}
-						>
-							{elo ?? t('N/A')}
-						</td>
-						<td class={cn('px-4 py-1.5 text-center font-medium', statWins)}>{stat.wins}</td>
-						<td class={cn('px-4 py-1.5 text-center font-medium', statLosses)}>{stat.losses}</td>
-						<td class={cn('px-4 py-1.5 text-center font-medium', statStreakClass(stat.streak))}>
-							{formatStreak(stat.streak)}
-						</td>
-						<td
-							class="px-4 py-1.5 text-center font-medium tabular-nums"
-							style:color={getRatioColor(stat.wins, stat.losses)}
-						>
-							{formatRatio(stat.wins, stat.losses)}
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
+{#snippet sortHeader(
+	key: LeaderboardSortKey,
+	label: string,
+	align: 'left' | 'center' | 'right',
+	hint?: string
+)}
+	{@const state = sortState(key)}
+	<div role="columnheader" aria-sort={state}>
+		<button
+			type="button"
+			aria-label={hint}
+			{@attach hint ? tooltip(hint) : undefined}
+			class={cn(
+				tableSortHeader,
+				'gap-1 hover:text-white',
+				align === 'center' && 'justify-center',
+				align === 'right' && 'justify-end',
+				state !== 'none' && 'text-primary'
+			)}
+			onclick={() => leaderboard.toggleSort(key)}
+		>
+			{label}
+			{#if state === 'ascending'}
+				<CaretUpIcon class="size-3" weight="fill" />
+			{:else if state === 'descending'}
+				<CaretDownIcon class="size-3" weight="fill" />
+			{/if}
+		</button>
+	</div>
+{/snippet}
+
+{#snippet row(stat: LeaderboardStatRow)}
+	{@const own = leaderboard.isOwn(stat)}
+	<div
+		id={leaderboardRowId(stat.profile.profile_id)}
+		role="row"
+		class={cn(
+			grid,
+			'border-secondary-800/70 hover:bg-secondary-950/50 min-h-12 scroll-mt-40 border-b py-2 text-white transition-colors duration-700',
+			own && 'bg-primary/[0.06] shadow-[inset_3px_0_0_var(--color-primary)]',
+			leaderboard.flashed === stat.profile.profile_id && 'bg-primary/20 duration-150'
+		)}
+		{@attach own ? trackOwn : undefined}
+	>
+		<div role="cell" class="flex flex-col items-start leading-tight">
+			<span class={cn('font-semibold tabular-nums', own ? 'text-primary' : 'text-secondary-300')}>
+				{stat.rank}
+			</span>
+			<LeaderboardChange change={stat.change?.day} class="text-xs md:hidden" />
+		</div>
+		<div role="cell" class="hidden text-sm md:block">
+			<LeaderboardChange change={stat.change?.day} />
+		</div>
+		<div role="cell" class="hidden items-center justify-center gap-1.5 md:flex">
+			<RankIcon
+				level={stat.ranklevel}
+				leaderboardId={stat.leaderboard_id}
+				position={stat.rank}
+				class="size-6"
+			/>
+			<span class="text-secondary-400 text-sm tabular-nums">{stat.ranklevel}</span>
+		</div>
+		<div role="cell" class="flex min-w-0 items-center gap-2">
+			<RankIcon
+				level={stat.ranklevel}
+				leaderboardId={stat.leaderboard_id}
+				position={stat.rank}
+				class="size-6 md:hidden"
+			/>
+			<LeaderboardPlayer {stat} class="min-w-0" />
+			<LeaderboardElo elo={leaderboard.elo(stat)} />
+		</div>
+		<div role="cell" class="text-secondary-300 hidden text-center text-sm tabular-nums md:block">
+			{games(stat)}
+		</div>
+		<div role="cell" class="w-24 md:w-auto">
+			<LeaderboardRecord wins={stat.wins} losses={stat.losses} compact class="md:hidden" />
+			<LeaderboardRecord wins={stat.wins} losses={stat.losses} class="hidden md:flex" />
+		</div>
+		<div
+			role="cell"
+			class={cn('hidden text-center text-sm font-medium md:block', statStreakClass(stat.streak))}
+		>
+			{formatStreak(stat.streak)}
+		</div>
+	</div>
+{/snippet}
+
+<div role="table" aria-label={t('Leaderboard')} aria-rowcount={leaderboard.rows.length}>
+	<div
+		role="row"
+		class={cn(grid, tableHeadRow, 'sticky top-(--leaderboard-top) z-10 h-9 backdrop-blur')}
+	>
+		{@render sortHeader('rank', '#', 'left')}
+		<div class="hidden md:block">
+			{@render sortHeader('change', '+/−', 'left', t('Rank change since yesterday'))}
+		</div>
+		<div role="columnheader" class="hidden text-center md:block">{t('Rank')}</div>
+		<div role="columnheader">{t('Player')}</div>
+		<div class="hidden md:block">{@render sortHeader('games', t('Games'), 'center')}</div>
+		{@render sortHeader('winrate', t('Win rate'), 'right')}
+		<div class="hidden md:block">{@render sortHeader('streak', t('Streak'), 'center')}</div>
 	</div>
 
-	<div class="divide-secondary-800 divide-y md:hidden">
-		{#each visibleStats as stat (stat.profile.profile_id)}
-			{@const elo = eloForRow(stat)}
-			{@const countryName = getCountryDisplayName(stat.profile.country)}
-			{@const flagUrl = host.resolve.flagImageUrl(stat.profile.country)}
-			<div class="px-4 py-3 text-white">
-				<div class="flex items-center gap-2">
-					<span class="text-secondary-400 shrink-0 font-semibold tabular-nums">#{stat.rank}</span>
-					<div class="flex shrink-0 items-center gap-1.5">
-						<img
-							loading="lazy"
-							decoding="async"
-							src={host.resolve.rankImageByLeaderboard(stat.leaderboard_id, stat.ranklevel)}
-							alt=""
-							class="size-6 shrink-0 object-contain"
-						/>
-						<span class="text-secondary-400 text-sm tabular-nums">{stat.ranklevel}</span>
-					</div>
-					<PlayerProfileLink
-						href={host.routes.player(stat.profile.profile_id)}
-						class={cn(
-							interactive,
-							'hover:text-primary flex min-w-0 flex-1 items-center gap-2 font-medium'
-						)}
-					>
-						{#if flagUrl}
-							<img
-								loading="lazy"
-								decoding="async"
-								class="h-4 w-auto shrink-0 rounded-xs"
-								src={flagUrl}
-								alt={countryName ?? stat.profile.country ?? ''}
-								{@attach tooltip(escapeHtml(countryName ?? ''))}
-							/>
-						{/if}
-						<PlayerLikeCount likeCount={stat.profile.likeCount} class="shrink-0" />
-						<PlayerStreamerIcon
-							labels={stat.profile.labels}
-							steamId={getSteamIdFromName(stat.profile.name)}
-						/>
-						<span class="truncate">{stat.profile.alias}</span>
-						<PlayerLabels labels={stat.profile.labels} class="shrink-0" />
-					</PlayerProfileLink>
-					<span
-						class={cn(
-							'shrink-0 tabular-nums',
-							elo == null && 'text-secondary-500 text-xs font-normal',
-							isEliteElo(elo) && 'font-bold tracking-wide'
-						)}
-						style:color={elo != null ? getEloColor(elo) : undefined}
-						style:text-shadow={getEloTextShadow(elo)}
-					>
-						{elo ?? t('N/A')}
-					</span>
-				</div>
-				<div class="text-secondary-400 mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
-					<span>
-						{t('Wins')} <span class={cn('font-medium', statWins)}>{stat.wins}</span>
-					</span>
-					<span>
-						{t('Losses')} <span class={cn('font-medium', statLosses)}>{stat.losses}</span>
-					</span>
-					<span>
-						{t('Streak')}
-						<span class={cn('font-medium', statStreakClass(stat.streak))}>
-							{formatStreak(stat.streak)}
-						</span>
-					</span>
-					<span>
-						{t('Ratio')}
-						<span
-							class="font-medium tabular-nums"
-							style:color={getRatioColor(stat.wins, stat.losses)}
-						>
-							{formatRatio(stat.wins, stat.losses)}
-						</span>
-					</span>
-				</div>
-			</div>
-		{/each}
-	</div>
-	{#if limit < stats.length}
-		{#key limit}
-			<div {@attach nearEnd} aria-hidden="true"></div>
-		{/key}
+	{#if leaderboard.tableRows.length === 0 && !leaderboard.showPodium}
+		<div class="flex flex-col items-center gap-3 px-4 py-12 text-center">
+			<p class="text-secondary-400">{t('No players found.')}</p>
+			{#if leaderboard.filtered}
+				<Button variant="secondary" size="sm" onclick={() => leaderboard.resetFilters()}>
+					{t('Clear filters')}
+				</Button>
+			{/if}
+		</div>
+	{:else}
+		<div role="rowgroup" class="-mb-px">
+			{#each leaderboard.tableRows as stat (stat.profile.profile_id)}
+				{@render row(stat)}
+			{/each}
+		</div>
 	{/if}
-{/if}
+
+	{#if showOwnBar}
+		{@const ownRow = leaderboard.ownRow}
+		{@const ownStat = leaderboard.ownStat}
+		<div
+			class="border-primary/30 sticky bottom-0 z-10 flex items-center gap-3 border-t bg-gray-950/95 px-4 py-2.5 backdrop-blur"
+		>
+			<span class="text-primary font-heading text-lg font-bold tabular-nums">#{ownRank}</span>
+			{#if ownRow}
+				<LeaderboardChange change={ownRow.change?.day} class="text-sm" />
+				<LeaderboardPlayer stat={ownRow} compact class="min-w-0 flex-1" />
+				<Button
+					variant="secondary"
+					size="sm"
+					onclick={() => leaderboard.jumpTo(ownRow.profile.profile_id)}
+				>
+					<CrosshairIcon class="size-4" />
+					<span class="max-sm:sr-only">{t('Jump to me')}</span>
+				</Button>
+			{:else if ownStat}
+				<span class="text-secondary-300 min-w-0 flex-1 truncate text-sm">
+					{t('Outside the top 200')}
+				</span>
+				<LeaderboardRecord wins={ownStat.wins} losses={ownStat.losses} class="w-40 max-sm:hidden" />
+			{/if}
+		</div>
+	{/if}
+</div>

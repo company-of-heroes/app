@@ -49,6 +49,7 @@ import type {
 	TournamentMap,
 	TournamentMatch,
 	TournamentMatchResult,
+	TournamentCustomMedal,
 	TournamentMedalUse,
 	TournamentPost,
 	TournamentPostInput,
@@ -75,8 +76,8 @@ export type HostUser = {
 	isStaff: boolean;
 	/** Staff or a community host: may create tournaments (hosts run only their own). */
 	canHost: boolean;
-	/** Staff or an editor: may write guides (editors manage only their own). */
-	canEdit: boolean;
+	/** Staff or an editor: may publish guides. Every signed-in user may write drafts. */
+	canPublish: boolean;
 };
 
 /** A comment thread lives on a saved lobby or a member replay. */
@@ -118,13 +119,19 @@ export type HostRoutes = {
 	/** Compare page of the signed-in user vs this player; hosts without accounts omit it. */
 	compare?: (idOrSteamId: string | number, steamIds?: string[]) => string;
 	accountProfile: (steamId: string) => string;
-	/** Login page that returns to the current page afterwards. */
-	login: () => string;
+	/** Login page that returns to `next` (default: the current page) afterwards. */
+	login: (next?: string) => string;
 	/**
 	 * Steam sign-in that finds or creates the account for that Steam ID and returns to the
 	 * current page (a full page load). Left out where it does not exist (the desktop app).
 	 */
 	steamLogin?: () => string;
+	/**
+	 * Claim an unclaimed Steam account: Steam sign-in that adds the verified Steam ID to the
+	 * signed-in account, or signs in (and creates the account) when signed out. Returns to the
+	 * current page. Hosts that claim in place (the desktop app) use `auth.claimSteam` instead.
+	 */
+	steamClaim?: () => string;
 	memberReplays: () => string;
 	memberReplay: (replayId: string) => string;
 	/** Upload page that publishes a saved match (lobby id) as a member replay. */
@@ -381,6 +388,10 @@ export type HostApi = {
 		usedMedals: () => Promise<TournamentMedalUse[]>;
 		/** Staff only. */
 		createMap: (name: string, icon: File | null) => Promise<TournamentMap>;
+		/** Uploaded medals, newest first; built-in ones come from `resolve.medals`. */
+		listMedals: () => Promise<TournamentCustomMedal[]>;
+		/** Staff and hosts upload a medal (PNG or SVG). */
+		createMedal: (name: string, image: File) => Promise<TournamentCustomMedal>;
 		/** `acceptRules` is required when the tournament has rules. */
 		register: (id: string, steamId: string, acceptRules: boolean) => Promise<TournamentDetail>;
 		/** A participant accepts the current rules (again). */
@@ -493,13 +504,17 @@ export type HostApi = {
 		resolve: (path: string, language: GuideLanguage, page?: number) => Promise<GuideResolution>;
 		/** By id; drafts for whoever may edit them. */
 		get: (id: string) => Promise<Guide>;
-		/** Editors: their guides; staff: every guide. */
+		/** Their own guides; staff: every guide. */
 		mine: () => Promise<GuideSummary[]>;
 		/** Starts an empty draft. */
 		create: (language: GuideLanguage) => Promise<Guide>;
 		update: (id: string, input: GuideInput, images?: GuideImages) => Promise<Guide>;
 		/** An inline image; the url goes into the body. */
 		uploadImage: (id: string, file: File) => Promise<{ name: string; url: string }>;
+		/** Sends a draft, or a published guide's held changes, to staff for review. */
+		requestReview: (id: string) => Promise<Guide>;
+		/** Drops a published guide's held changes. */
+		discardRevision: (id: string) => Promise<Guide>;
 		remove: (id: string) => Promise<void>;
 		categories: () => Promise<GuideCategoryTree[]>;
 		/** Editors and staff add a category (top-level, or under a top-level one). */
@@ -555,6 +570,11 @@ export type HostContext = {
 		isSelf: (steamId: string, profileId?: number) => boolean;
 		/** Replay files only carry in-game aliases; true when the alias is the viewer. */
 		isSelfAlias: (alias: string) => boolean;
+		/**
+		 * Claims a Steam account without leaving the page (the desktop app runs the Steam login in
+		 * the browser). Resolves with an error message, or null once claimed or cancelled.
+		 */
+		claimSteam?: () => Promise<string | null>;
 	};
 	/**
 	 * Opens a notification from the bell: the host routes it (match, replay, tournament, page)

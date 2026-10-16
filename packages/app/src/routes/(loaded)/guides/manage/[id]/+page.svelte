@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resource } from 'runed';
-	import { GuideEditor } from '@company-of-heroes/ui/guide';
-	import { Skeleton } from '@company-of-heroes/ui/skeleton';
+	import { GuideEditor, GuideEditorSkeleton } from '@company-of-heroes/ui/guide';
+	import { Button } from '$lib/components/ui/button';
 	import { flushHeader, flushSectionTitle } from '@company-of-heroes/ui/variants';
 	import { api, unwrapApi } from '$core/api';
 	import { app } from '$core/app/context';
@@ -31,10 +31,13 @@
 	]}
 />
 
-{#if !app.account.canEditGuides}
-	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-		{t('Only editors and staff can do that.')}
-	</p>
+{#if !app.account.isAuthenticated}
+	<div
+		class="border-secondary-800 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3"
+	>
+		<p class="text-secondary-400 text-sm">{t('Log in to write a guide.')}</p>
+		<Button href="/account" variant="secondary" size="sm">{t('Log in')}</Button>
+	</div>
 {:else if data.current && !data.current.guide.canEdit}
 	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
 		{t('You can only edit your own guides.')}
@@ -51,8 +54,8 @@
 		{t('Guide not found.')}
 	</p>
 {:else}
-	<div class="flex flex-col gap-3 p-4">
-		<Skeleton class="h-9 w-2/3" />
-		<Skeleton class="h-96 w-full" />
+	<div class={flushHeader}>
+		<h1 class={flushSectionTitle}>{t('Edit guide')}</h1>
 	</div>
+	<GuideEditorSkeleton />
 {/if}

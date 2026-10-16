@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { Selection } from '../ui/input';
 	import { Button } from '../ui/button';
@@ -213,10 +214,6 @@
 		return host.resolve.avatarUrl(url);
 	}
 
-	function flagSrc(country: string | null | undefined) {
-		return country ? host.resolve.flagImageUrl(country) : null;
-	}
-
 	function stopSelect(event: Event) {
 		event.stopPropagation();
 	}
@@ -224,7 +221,6 @@
 
 {#snippet optionRow({ option }: { option: SelectionOption })}
 	{@const avatar = avatarSrc(option.meta?.avatarUrl)}
-	{@const flag = flagSrc(option.meta?.country)}
 	{@const href = playerHref(option.value, parseProfileId(option.meta?.profileId))}
 	<span class="flex min-w-0 flex-1 items-center gap-3">
 		{#if avatar}
@@ -236,9 +232,7 @@
 		{:else}
 			<span class="bg-secondary-800 ring-secondary-700 size-8 shrink-0 rounded-md ring-1"></span>
 		{/if}
-		{#if flag}
-			<img class="h-4 w-auto shrink-0 rounded-xs" src={flag} alt={option.meta?.country ?? ''} />
-		{/if}
+		<CountryFlag country={option.meta?.country} class="h-4" />
 		<span class="min-w-0 flex-1 truncate">{option.label}</span>
 		{#if href}
 			<Button
@@ -276,7 +270,6 @@
 			{#each players as player (player.key)}
 				{@const profile = profileFor(player)}
 				{@const rowAvatar = avatarSrc(profile?.avatarUrl)}
-				{@const rowFlag = flagSrc(profile?.country)}
 				{@const href = player.steamId
 					? playerHref(player.steamId, profile?.profileId ?? null)
 					: null}
@@ -294,13 +287,7 @@
 									{#if rowAvatar}
 										<img src={rowAvatar} alt="" class="size-4 shrink-0 rounded-sm object-cover" />
 									{/if}
-									{#if rowFlag}
-										<img
-											class="h-3 w-auto shrink-0 rounded-xs"
-											src={rowFlag}
-											alt={profile?.country ?? ''}
-										/>
-									{/if}
+									<CountryFlag country={profile?.country} />
 									<span class="truncate">{t('Linked')}: {displayLabel(player)}</span>
 								</p>
 							{/if}

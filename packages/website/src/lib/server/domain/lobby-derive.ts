@@ -37,7 +37,12 @@ type AppPlayer = {
 	race?: number;
 	slot?: number;
 	alias?: string;
-	profile?: { profile_id?: number; alias?: string; leaderboardStats?: LadderStat[] };
+	profile?: {
+		profile_id?: number;
+		alias?: string;
+		country?: string;
+		leaderboardStats?: LadderStat[];
+	};
 	[key: string]: unknown;
 };
 type LadderStat = {
@@ -77,6 +82,8 @@ export type PlayerSummary = {
 	playerId: number | null;
 	steamId: string | null;
 	race: number | null;
+	/** Relic country code (e.g. `nl`), for the flag in list rows. */
+	country?: string;
 	stats?: {
 		elo: number | null;
 		wins: number;
@@ -334,6 +341,11 @@ export function summarizePlayers(
 			steamId: player.steamId ?? null,
 			race: player.race ?? null
 		};
+		const country = player.profile?.country?.trim();
+		if (country) {
+			summary.country = country;
+		}
+
 		const stats = summaryStats(player, matchType, eloByProfile);
 		if (stats) {
 			summary.stats = stats;

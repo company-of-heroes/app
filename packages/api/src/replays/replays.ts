@@ -38,6 +38,8 @@ export type CommunityPlayer = {
 	doctrineName?: string;
 	/** Ladder stats when available on list/detail responses. */
 	stats?: LiveLobbyPlayerStats | null;
+	/** Relic country code, for the flag. */
+	country?: string | null;
 	profile: {
 		profile_id: number;
 		alias: string;
@@ -104,6 +106,16 @@ export type CommunityMatchSubmittedBy = {
 export type MemberReplayUploader = {
 	id: string;
 	alias: string;
+	avatarUrl?: string | null;
+};
+
+export type ReplayDiscoverThemeId = 'pro-1v1' | 'big-battles' | 'fast' | 'discussed';
+
+/** The Discover view of the replays page (`GET /api/v1/replays/discover`). */
+export type ReplayDiscover = {
+	featured: CommunityMatch[];
+	sections: { id: ReplayDiscoverThemeId; items: CommunityMatch[] }[];
+	latestShared: CommunityMatchList;
 };
 
 export type CommunityMatchDetail = {
@@ -403,6 +415,23 @@ const communityMatchListSchema: z.ZodType<CommunityMatchList> = z
 	})
 	.passthrough() as z.ZodType<CommunityMatchList>;
 
+const replayDiscoverSchema: z.ZodType<ReplayDiscover> = z
+	.object({
+		featured: z.array(z.any()).default([]),
+		sections: z
+			.array(
+				z.object({
+					id: z.enum(['pro-1v1', 'big-battles', 'fast', 'discussed']),
+					items: z.array(z.any())
+				})
+			)
+			.default([]),
+		latestShared: communityMatchListSchema
+	})
+	.passthrough() as z.ZodType<ReplayDiscover>;
+
+const shareCandidatesSchema = z.object({ items: z.array(z.any()).default([]) });
+
 const communityMatchDetailSchema: z.ZodType<CommunityMatchDetail> = z
 	.object({
 		id: z.string(),
@@ -498,6 +527,26 @@ export class ReplaysApi {
 				headers: resolveAuthHeaders(this.deps, options?.headers)
 			}
 		});
+	}
+
+	/** Featured replays, theme rows and the newest shared replays. */
+	discover(): ResultAsync<ReplayDiscover, ApiError> {
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/replays/discover`, {
+			fallback: 'Failed to load replays. Please try again later.',
+			schema: replayDiscoverSchema,
+			timeoutMs: 30_000
+		});
+	}
+
+	/** The signed-in player's recent games with a replay nobody has shared yet. */
+	shareCandidates(options?: ReplayAuthOptions): ResultAsync<CommunityMatch[], ApiError> {
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/replays/share-candidates`, {
+			fallback: 'Failed to load your matches.',
+			schema: shareCandidatesSchema,
+			init: {
+				headers: resolveAuthHeaders(this.deps, options?.headers)
+			}
+		}).map((data) => data.items as CommunityMatch[]);
 	}
 
 	getMaps(options?: MatchHistoryScopeOptions): ResultAsync<HistoryMapOption[], ApiError> {

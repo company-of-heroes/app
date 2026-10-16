@@ -2,7 +2,8 @@ import { errAsync, okAsync } from 'neverthrow';
 import { uncache } from '../cache';
 import { mergedProfile, steamIdsOf, type UserRow } from '../domain/users';
 import { badRequest, conflict, forbidden, notFound } from '../errors';
-import { fromPb, pbMaybe, sequence, type Task } from '../result';
+import { isValidSteamId } from '../domain/ratings';
+import { chunk, fromPb, pbMaybe, sequence, type Task } from '../result';
 import { Service } from './service';
 
 type MergeResult =
@@ -28,6 +29,8 @@ export type SteamConflict = {
 type ConflictRow = { id: string; user: string; steamId: string; owners: unknown; created: string };
 
 const USERS = '_pb_users_auth_';
+/** Steam ids per `steamIds ~ a || steamIds ~ b ...` filter (PocketBase caps expressions per filter). */
+const CLAIM_CHUNK = 50;
 const ACCOUNT_FIELDS = 'id,name,role,steamIds,meta,lastLogin,created';
 
 const ownerIds = (row: Pick<ConflictRow, 'owners'>) =>
@@ -110,6 +113,30 @@ export class UsersService extends Service {
 		});
 	}
 
+	/** Which of these Steam ids an account already linked (the rest can still be claimed). */
+	claimedSteamIds(steamIds: string[]): Task<Set<string>> {
+		const ids = [...new Set(steamIds.filter(isValidSteamId))];
+		const filters = chunk(ids, CLAIM_CHUNK).map((part) =>
+			part
+				.map((steamId) => this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }))
+				.join(' || ')
+		);
+		return sequence(filters, (filter) =>
+			fromPb(
+				this.pb.collection('users').getFullList<UserRow>({ filter, fields: 'steamIds' }),
+				'Could not load users'
+			)
+		).map((pages) => {
+			const wanted = new Set(ids);
+			return new Set(
+				pages
+					.flat()
+					.flatMap(steamIdsOf)
+					.filter((id) => wanted.has(id))
+			);
+		});
+	}
+
 	/** The Steam ids linked to the account. */
 	steamIdsOf(userId: string): Task<string[]> {
 		return fromPb(
@@ -175,6 +202,12 @@ export class UsersService extends Service {
 				'Could not link the Steam account'
 			)
 				.andThen(() => this.syncCheaterLabels(userId))
+				.andThen(() =>
+					this.services.rewards.markDirty([{ id: userId }]).orElse((error) => {
+						console.warn('[users] could not queue rewards', userId, error);
+						return okAsync(undefined);
+					})
+				)
 				.map(() => ({ steamIds: next }));
 		});
 	}
@@ -209,11 +242,18 @@ export class UsersService extends Service {
 				return okAsync({ steamIds });
 			}
 
+			// Queued, so the new main Steam ID gets the legacy unlocks on the next evaluation.
 			return fromPb(
 				this.pb.collection('users').update(userId, { steamIds: next }),
 				'Could not change the main Steam account'
 			)
 				.andThen(() => sequence(steamIds, (id) => uncache(`rewards:player:${id}`)))
+				.andThen(() =>
+					this.services.rewards.markDirty([{ id: userId }]).orElse((error) => {
+						console.warn('[users] could not queue rewards', userId, error);
+						return okAsync(undefined);
+					})
+				)
 				.map(() => ({ steamIds: next }));
 		});
 	}
@@ -371,12 +411,10 @@ export class UsersService extends Service {
 			)
 			.andThen((user) =>
 				fromPb(
-					this.pb
-						.collection('users')
-						.update<{
-							id: string;
-							role: string;
-						}>(user.id, { role: role ?? '' }, { fields: 'id,role' }),
+					this.pb.collection('users').update<{
+						id: string;
+						role: string;
+					}>(user.id, { role: role ?? '' }, { fields: 'id,role' }),
 					'Could not save the role'
 				)
 			)
@@ -408,6 +446,12 @@ export class UsersService extends Service {
 					.andThen(() => this.dedupeReplays(keeper.id))
 					.andThen(() => this.services.reputation.refreshUserTotal(keeper.id))
 					.andThen(() => this.syncCheaterLabels(keeper.id))
+					.andThen(() =>
+						this.services.rewards.markDirty([{ id: keeper.id }]).orElse((error) => {
+							console.warn('[users] could not queue rewards', keeper.id, error);
+							return okAsync(undefined);
+						})
+					)
 					.map(
 						(): MergeResult => ({
 							merged: deleted.length > 0,

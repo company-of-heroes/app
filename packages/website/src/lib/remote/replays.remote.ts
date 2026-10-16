@@ -9,6 +9,7 @@ import {
 import { countDownload } from '$lib/server/downloads';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import type { MemberReplayPreviewPlayer } from '$lib/replays/member-rating-preview';
+import { DISCOVER_LATEST } from '$lib/server/services/replays';
 
 const uploadMemberReplaySchema = z.object({
 	file: z
@@ -222,6 +223,29 @@ export const getPlayerReplays = query(
 		const { locals } = getRequestEvent();
 		return unwrapAsync(
 			locals.services.replays.forPlayer({ steamId, profileId, limit: PLAYER_REPLAYS })
+		);
+	}
+);
+
+/** A page of the newest shared replays, for Discover's "Load more". */
+export const getSharedReplaysPage = query(
+	z.object({ page: z.number().int().min(1).max(500) }),
+	async ({ page }) => {
+		const { locals } = getRequestEvent();
+		return unwrapAsync(
+			locals.services.memberReplays.list(
+				{
+					page,
+					perPage: DISCOVER_LATEST,
+					ranked: false,
+					title: '',
+					maps: [],
+					filter: null,
+					sort: 'createdAt',
+					sortDir: 'desc'
+				},
+				null
+			)
 		);
 	}
 );

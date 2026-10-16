@@ -204,34 +204,32 @@ export class LobbiesService extends Service {
 	}
 
 	/**
-	 * Every signed-up player in the match earns "match played" once per lobby. When the
-	 * index rows changed (e.g. a result came in), the players are queued for rewards.
+	 * Every signed-up player in the match earns "match played" once per lobby. Returns the
+	 * players' accounts.
 	 */
-	private awardMatchPlayed(lobbyId: string, steamIds: string[], indexChanged: boolean): Task<void> {
+	private awardMatchPlayed(lobbyId: string, steamIds: string[]): Task<{ id: string }[]> {
 		if (steamIds.length === 0) {
-			return okAsync(undefined);
+			return okAsync([]);
 		}
 
-		const { reputation, rewards } = this.services;
+		const { reputation } = this.services;
 		return ResultAsync.combine([
 			fromPb(
-				this.pb.collection('users').getFullList<{ id: string; rewardsCheckedAt: string }>({
+				this.pb.collection('users').getFullList<{ id: string }>({
 					filter: steamIds
 						.map((steamId) => this.pb.filter('steamIds ~ {:steamId}', { steamId: `"${steamId}"` }))
 						.join(' || '),
-					fields: 'id,rewardsCheckedAt'
+					fields: 'id'
 				}),
 				'Could not load users'
 			),
 			reputation.awardedFor('match_played', lobbyId)
-		])
-			.andThen(([users, awarded]) =>
-				sequence(
-					users.filter((user) => !awarded.has(user.id)),
-					(user) => reputation.award(user.id, 'match_played', lobbyId)
-				).andThen(() => rewards.markDirty(indexChanged ? users : []))
-			)
-			.map(() => undefined);
+		]).andThen(([users, awarded]) =>
+			sequence(
+				users.filter((user) => !awarded.has(user.id)),
+				(user) => reputation.award(user.id, 'match_played', lobbyId)
+			).map(() => users)
+		);
 	}
 
 	/**
@@ -239,7 +237,7 @@ export class LobbiesService extends Service {
 	 * `created`: first time this lobby is processed (queues its players for smurf screening).
 	 */
 	process(lobbyId: string, { created = false } = {}): Task<LobbyDerivation> {
-		const { hiddenMatches, ratings, smurf } = this.services;
+		const { hiddenMatches, ratings, rewards, smurf } = this.services;
 		return ResultAsync.combine([this.load(lobbyId), hiddenMatches.rules()]).andThen(
 			([lobby, rules]) => {
 				const derived = deriveLobby(lobby, rules);
@@ -250,8 +248,21 @@ export class LobbiesService extends Service {
 						: okAsync(undefined);
 				return saved
 					.andThen(() => this.syncIndex(lobbyId, derived.indexRows))
-					.andThen((indexChanged) => this.awardMatchPlayed(lobbyId, derived.steamIds, indexChanged))
-					.andThen(() => ratings.apply(derived.ratings))
+					.andThen((indexChanged) =>
+						this.awardMatchPlayed(lobbyId, derived.steamIds).andThen((users) => {
+							// After the ratings, so elo_reached reads the new ones. A changed index
+							// (e.g. a result came in) queues the players for rewards, even when the
+							// ratings failed; that failure still fails the processing afterwards.
+							const queue = () => rewards.markDirty(indexChanged ? users : []);
+							return ratings
+								.apply(derived.ratings)
+								.orElse((error) => {
+									console.warn('[lobbies] ratings failed', lobbyId, error);
+									return queue().andThen(() => errAsync(error));
+								})
+								.andThen(queue);
+						})
+					)
 					.andThen(() =>
 						sequence(created ? derived.smurfCandidates : [], (candidate) =>
 							smurf.enqueue({ ...candidate, source: 'lobby_match' })

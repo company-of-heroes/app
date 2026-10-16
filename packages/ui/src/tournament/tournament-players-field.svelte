@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from '../player/country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 	import { useHost, type PlayerSearchOption } from '../host/host.context';
@@ -56,7 +57,6 @@
 		<ul class="border-secondary-800 divide-secondary-800 divide-y rounded-md border">
 			{#each value as id (id)}
 				{@const preview = known[id]}
-				{@const flagUrl = host.resolve.flagImageUrl(preview?.country ?? null)}
 				<li class="flex items-center gap-2 px-3 py-1.5 text-sm">
 					{#if preview?.avatarUrl}
 						<img
@@ -67,15 +67,7 @@
 							class="size-6 shrink-0 rounded object-cover"
 						/>
 					{/if}
-					{#if flagUrl}
-						<img
-							loading="lazy"
-							decoding="async"
-							src={flagUrl}
-							alt=""
-							class="h-3.5 w-auto shrink-0 rounded-xs"
-						/>
-					{/if}
+					<CountryFlag country={preview?.country} class="h-3.5" />
 					<span class="min-w-0 flex-1 truncate text-white">
 						{preview?.alias || id}
 						{#if preview?.alias}

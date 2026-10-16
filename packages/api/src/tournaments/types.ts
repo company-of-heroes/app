@@ -1,3 +1,4 @@
+import type { GuideAuthor } from '../guides/types';
 import { IMAGE_TYPES } from '../upload-file';
 import type { TournamentMap } from './maps';
 
@@ -45,8 +46,15 @@ export type Tournament = {
 	bannerUrl: string | null;
 	/** Square logo, or null. */
 	logoUrl: string | null;
-	/** Champion medal from `shared-assets/medals` (e.g. `medal-042`), or null for the default. */
+	/**
+	 * Champion medal: a built-in one from `shared-assets/medals` (e.g. `medal-042`), an uploaded
+	 * one (`custom:<id>`, see `customMedal`), or null for the default.
+	 */
 	medal: string | null;
+	/** The uploaded medal behind a `custom:<id>` medal; null for built-in and default medals. */
+	customMedal: TournamentCustomMedal | null;
+	/** The staff member or community host who created it; null when that account is gone. */
+	host: TournamentHostUser | null;
 	/** Last moment to play each round, keyed by `roundKey` (ISO dates). */
 	roundDeadlines: Record<string, string>;
 	/** When the rules last changed; players accept the rules again after this. */
@@ -394,8 +402,6 @@ export type TournamentDetail = {
 	openReports: number;
 	/** The viewer may run this tournament: staff, or the host who created it. */
 	canManage: boolean;
-	/** The community host who runs it; null for tournaments run by staff. */
-	host: { id: string; name: string } | null;
 };
 
 /** Faction totals of a finished tournament. */
@@ -443,7 +449,15 @@ export type TournamentStats = {
 export type HallOfFameEntry = {
 	tournament: Pick<
 		Tournament,
-		'id' | 'name' | 'slug' | 'format' | 'logoUrl' | 'medal' | 'participantCount' | 'startsAt'
+		| 'id'
+		| 'name'
+		| 'slug'
+		| 'format'
+		| 'logoUrl'
+		| 'medal'
+		| 'customMedal'
+		| 'participantCount'
+		| 'startsAt'
 	>;
 	finishedAt: string;
 	/** First, second and third place (two thirds in elimination), by placement. */
@@ -467,9 +481,30 @@ export type HallOfFamePlayer = {
 /** A tournament that has a champion medal picked. */
 export type TournamentMedalUse = {
 	tournamentId: string;
-	/** e.g. `medal-042`. */
+	/** e.g. `medal-042` or `custom:<id>`. */
 	medal: string;
 };
+
+/** Who created a tournament, shown on its page (same byline as a guide author). */
+export type TournamentHostUser = GuideAuthor;
+
+/** Prefix of an uploaded medal (`tournament_medals`) in `Tournament.medal`. */
+export const CUSTOM_MEDAL_PREFIX = 'custom:';
+
+/** The record id of a `custom:<id>` medal, or null for a built-in one. */
+export const customMedalId = (medal: string | null | undefined): string | null =>
+	medal?.startsWith(CUSTOM_MEDAL_PREFIX) ? medal.slice(CUSTOM_MEDAL_PREFIX.length) || null : null;
+
+/** A medal staff or a host uploaded (PNG or SVG), usable by every tournament. */
+export type TournamentCustomMedal = {
+	/** `custom:<id>`, stored in `Tournament.medal`. */
+	ref: string;
+	name: string;
+	imageUrl: string;
+};
+
+export const TOURNAMENT_MEDAL_TYPES = ['image/png', 'image/svg+xml'];
+export const TOURNAMENT_MEDAL_MAX_BYTES = 1024 * 1024;
 
 export type HallOfFame = {
 	tournaments: HallOfFameEntry[];
@@ -500,7 +535,7 @@ export type TournamentInput = {
 	maxParticipants: number | null;
 	/** Map references (see `./maps`), in pool order. */
 	mapPool: string[];
-	/** Champion medal (e.g. `medal-042`), or null for the default. */
+	/** Champion medal (e.g. `medal-042` or `custom:<id>`), or null for the default. */
 	medal?: string | null;
 	/** Cast / stream link (https), or null. */
 	streamUrl?: string | null;

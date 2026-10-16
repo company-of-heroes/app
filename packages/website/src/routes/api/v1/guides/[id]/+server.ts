@@ -1,4 +1,4 @@
-import { handle, parse, readRecordBody, requireEditor } from '$lib/server/http';
+import { handle, parse, readRecordBody, requireUser } from '$lib/server/http';
 import { guideImagesFrom, guideInput } from '$lib/server/guide-params';
 
 /** A guide by id: published ones for everyone, drafts for whoever may edit them. */
@@ -8,7 +8,7 @@ export const GET = handle((event) =>
 
 /** JSON, or multipart with `cover`; the service checks the viewer may edit this guide. */
 export const PATCH = handle((event) =>
-	requireEditor(event).asyncAndThen((user) =>
+	requireUser(event).asyncAndThen((user) =>
 		readRecordBody(event.request).andThen(({ data, files }) =>
 			parse(guideInput, data).asyncAndThen((input) =>
 				event.locals.services.guides.update(
@@ -23,7 +23,7 @@ export const PATCH = handle((event) =>
 );
 
 export const DELETE = handle((event) =>
-	requireEditor(event).asyncAndThen((user) =>
+	requireUser(event).asyncAndThen((user) =>
 		event.locals.services.guides.remove(event.params.id!, user).map(() => ({ ok: true }))
 	)
 );

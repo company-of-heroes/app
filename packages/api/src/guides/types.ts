@@ -62,6 +62,10 @@ export type GuideSummary = {
 	/** Unlocalized page path (`/guides/wehrmacht/1v1/heavy-t1`); null while uncategorized. */
 	path: string | null;
 	readingMinutes: number;
+	/** ISO date the author asked staff to review it; null when nothing waits for review. */
+	reviewRequestedAt: string | null;
+	/** A published guide with changes that wait for staff (see `Guide.revision`). */
+	hasRevision: boolean;
 };
 
 export type GuideTranslation = { language: GuideLanguage; path: string };
@@ -78,8 +82,26 @@ export type Guide = GuideSummary & {
 	translationOf: string | null;
 	/** Published guides in other languages of the same group. */
 	translations: GuideTranslation[];
-	/** The viewer may edit it (staff, or the editor who wrote it). */
+	/** The viewer may edit it (staff, or its author). */
 	canEdit: boolean;
+	/** Changes to the published guide that go live once staff publish them; only for `canEdit`. */
+	revision: GuideRevision | null;
+};
+
+/** The editable fields of a published guide's held changes. */
+export type GuideRevision = {
+	title: string;
+	slug: string;
+	excerpt: string;
+	body: string;
+	categoryId: string | null;
+	language: GuideLanguage;
+	seoTitle: string;
+	seoDescription: string;
+	noindex: boolean;
+	translationOf: string | null;
+	/** The cover the changes show: a new one, the live one, or null when they remove it. */
+	coverUrl: string | null;
 };
 
 export type GuideInput = Partial<{

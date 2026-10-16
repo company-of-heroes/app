@@ -74,6 +74,8 @@ const playerSearchPageSchema = z.object({
 	more: z.boolean()
 });
 
+const claimedSchema = z.object({ steamIds: z.array(z.string()) });
+
 export type PlayerSearchOptions = {
 	requireMatches?: boolean;
 };
@@ -142,6 +144,20 @@ export class PlayersApi {
 				}
 			}
 		});
+	}
+
+	/** Which of these Steam ids an account already linked (the rest show a claim button). */
+	claimed(steamIds: string[]): ResultAsync<Set<string>, ApiError> {
+		const ids = [...new Set(steamIds)].filter((id) => STEAM_ID_REGEX.test(id)).slice(0, 200);
+		if (ids.length === 0) {
+			return okAsync(new Set());
+		}
+
+		const params = new URLSearchParams({ steamIds: ids.join(',') });
+		return fetchJson(this.deps.fetch, `${v1Base(this.deps)}/players/claimed?${params}`, {
+			fallback: 'Could not load claimed players',
+			schema: claimedSchema
+		}).map((data) => new Set(data.steamIds));
 	}
 
 	/** Cached for 60 s and shared between concurrent callers; `fresh` reloads and replaces the entry. */

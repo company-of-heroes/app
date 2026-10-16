@@ -88,17 +88,26 @@ export function safeRedirectPath(raw: unknown): string {
 }
 
 /**
- * `{origin}~{redirect}~{expiresAt}~{nonce}~{hmac}`, carried through Steam's login. The
+ * `{origin}~{redirect}~{expiresAt}~{nonce}[~{link}]~{hmac}`, carried through Steam's login. The
  * nonce is also in a cookie of the browser that started the login (see `steamCallback`).
+ * `link` is the signed-in user claiming a Steam account: the verified id is added to them.
  */
 export async function createSteamState(
 	origin: string,
 	redirect: string,
 	nonce: string,
 	secret: string,
+	link: string | null = null,
 	now = Date.now()
 ): Promise<string> {
-	const body = `${encodeURIComponent(origin)}~${encodeURIComponent(redirect)}~${now + STEAM_STATE_TTL_MS}~${nonce}`;
+	const fields = [
+		encodeURIComponent(origin),
+		encodeURIComponent(redirect),
+		now + STEAM_STATE_TTL_MS,
+		nonce,
+		...(link ? [encodeURIComponent(link)] : [])
+	];
+	const body = fields.join('~');
 	return `${body}~${await hmacSha256(body, secret)}`;
 }
 
@@ -107,14 +116,15 @@ export async function readSteamState(
 	secret: string,
 	allowedOrigins: string[],
 	now = Date.now()
-): Promise<{ origin: string; redirect: string; nonce: string } | null> {
+): Promise<{ origin: string; redirect: string; nonce: string; link: string | null } | null> {
 	const parts = raw.trim().split('~');
-	if (parts.length !== 5) {
+	if (parts.length !== 5 && parts.length !== 6) {
 		return null;
 	}
 
-	const [origin, redirect, expiresAt, nonce, signature] = parts;
-	const expected = await hmacSha256(`${origin}~${redirect}~${expiresAt}~${nonce}`, secret);
+	const signature = parts.pop()!;
+	const [origin, redirect, expiresAt, nonce, link] = parts;
+	const expected = await hmacSha256(parts.join('~'), secret);
 	if (!nonce || !sameText(signature, expected) || !(Number(expiresAt) > now)) {
 		return null;
 	}
@@ -122,7 +132,12 @@ export async function readSteamState(
 	try {
 		const decoded = decodeURIComponent(origin).replace(/\/$/, '');
 		return allowedOrigins.includes(decoded)
-			? { origin: decoded, redirect: safeRedirectPath(decodeURIComponent(redirect)), nonce }
+			? {
+					origin: decoded,
+					redirect: safeRedirectPath(decodeURIComponent(redirect)),
+					nonce,
+					link: link ? decodeURIComponent(link) : null
+				}
 			: null;
 	} catch {
 		return null;

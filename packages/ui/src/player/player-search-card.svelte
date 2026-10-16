@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from './country-flag.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { interactive } from '@company-of-heroes/ui/variants';
@@ -29,7 +30,6 @@
 
 	let statsExpanded = $state(false);
 	const href = $derived(host.routes.player(player.profileId || player.steamId));
-	const flagSrc = $derived(host.resolve.flagImageUrl(player.country));
 	const labels = $derived(
 		player.labels ?? (player.steamId ? host.api.labels.forSteamId(player.steamId) : [])
 	);
@@ -81,15 +81,7 @@
 					'hover:text-primary mb-2 flex min-w-0 items-center gap-2 transition-colors'
 				)}
 			>
-				{#if flagSrc}
-					<img
-						loading="lazy"
-						decoding="async"
-						class="h-5 w-auto shrink-0 rounded-xs"
-						src={flagSrc}
-						alt={player.country ?? ''}
-					/>
-				{/if}
+				<CountryFlag country={player.country} class="h-5" />
 				<PlayerLikeCount likeCount={player.likeCount} class="shrink-0" />
 				<PlayerStreamerIcon {labels} steamId={player.steamId} size={18} />
 				<span class="font-heading truncate text-xl font-bold text-white">{player.alias}</span>

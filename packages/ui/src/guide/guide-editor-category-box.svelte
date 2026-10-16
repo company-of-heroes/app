@@ -135,7 +135,7 @@
 					<Button type="submit" size="sm" loading={creating}>{t('Add category')}</Button>
 				</div>
 			</form>
-		{:else}
+		{:else if host.auth.user?.canPublish}
 			<div class="flex flex-wrap gap-2">
 				<Button
 					type="button"

@@ -66,6 +66,8 @@ const JOBS: Record<
 		]),
 	// Ready-made statistics for every preset period, so no visitor waits for a rebuild.
 	'statistics-snapshot': (services) => services.statistics.refreshSnapshots(),
+	// Daily copy of each ranked ladder, for rank movement on the leaderboard pages.
+	'leaderboard-snapshot': (services) => services.leaderboard.snapshotAll(),
 	// Self-limiting: stored replays without a summary for the statistics, lobbies first, then
 	// uploaded replays.
 	'replay-stats': (services) =>

@@ -115,6 +115,8 @@ export {
 	type MemberReplayRosterPlayer,
 	memberReplayRosterForEdit,
 	type PublishFromMatchInput,
+	type ReplayDiscover,
+	type ReplayDiscoverThemeId,
 	type ReplaysQuery,
 	type HistoryMapOption
 } from './replays';

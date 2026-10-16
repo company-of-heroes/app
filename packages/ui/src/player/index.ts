@@ -1,7 +1,10 @@
+import CountryFlag from './country-flag.svelte';
 import PlayerLabels from './player-labels.svelte';
 import PlayerLikeCount from './player-like-count.svelte';
 import PlayerLinks from './player-links.svelte';
+import PlayerClaimButton from './player-claim-button.svelte';
 import MatchResultBadge from './match-result-badge.svelte';
+import MatchResultStrip from './match-result-strip.svelte';
 import SmurfAlert from './smurf-alert.svelte';
 import SteamBanAlert from './steam-ban-alert.svelte';
 import PlayerFact from './player-fact.svelte';
@@ -20,11 +23,16 @@ import PlayerSearchResults from './player-search-results.svelte';
 import PlayerProfileLink from './player-profile-link.svelte';
 import PlayerStreamerIcon from './player-streamer-icon.svelte';
 import StreamerBadgeProgress from './streamer-badge-progress.svelte';
+import RankIcon from './rank-icon.svelte';
 import TwitchLogo from './twitch-logo.svelte';
 import YoutubeLogo from './youtube-logo.svelte';
 
 export {
+	CountryFlag,
+	RankIcon,
 	MatchResultBadge,
+	MatchResultStrip,
+	PlayerClaimButton,
 	PlayerLabels,
 	PlayerLikeCount,
 	PlayerLinks,

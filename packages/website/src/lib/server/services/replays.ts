@@ -4,8 +4,17 @@ import { cached } from '../cache';
 import { notFound, rateLimited, upstream, type AppError } from '../errors';
 import { fromAsync, fromPb, type Task } from '../result';
 import type { HistoryRow } from '../domain/history-rows';
+import {
+	DISCOVER_THEMES,
+	fillTheme,
+	fitsTheme,
+	pickFeatured,
+	themeFilter,
+	type DiscoverThemeId
+} from '../domain/replay-discover';
+import type { HistoryViewer } from './match-history';
 import type { MatchDetail, MatchViewer } from './matches';
-import type { MemberReplayView } from './member-replays';
+import type { MemberReplayPage, MemberReplayView } from './member-replays';
 import { Service } from './service';
 
 export type ReplayFile = {
@@ -22,6 +31,37 @@ export type ReplayRow = HistoryRow | MemberReplayView;
 /** Fewer top replays than this in the window widens it to `TOP_FALLBACK_DAYS`. */
 const TOP_MIN_ITEMS = 3;
 const TOP_FALLBACK_DAYS = 30;
+
+/** Discover: the featured window, its fallback, and how many rows each part reads. */
+const DISCOVER_DAYS = 7;
+const DISCOVER_FALLBACK_DAYS = 30;
+const DISCOVER_MEMBER_POOL = 100;
+const DISCOVER_MATCH_POOL = 60;
+const DISCOVER_THEME_POOL = 16;
+export const DISCOVER_LATEST = 12;
+/** A theme row with fewer items is left out. */
+const DISCOVER_MIN_THEME = 2;
+
+/** Share suggestions: the viewer's own games of the last two weeks, at most four. */
+const SHARE_CANDIDATE_DAYS = 14;
+const SHARE_CANDIDATE_POOL = 20;
+const SHARE_CANDIDATES = 4;
+
+export type DiscoverSection = { id: DiscoverThemeId; items: ReplayRow[] };
+
+export type ReplayDiscover = {
+	featured: ReplayRow[];
+	sections: DiscoverSection[];
+	latestShared: MemberReplayPage;
+};
+
+const emptyMemberPage = (perPage: number): MemberReplayPage => ({
+	page: 1,
+	perPage,
+	totalItems: 0,
+	totalPages: 0,
+	items: []
+});
 
 /** Replay URLs per kind in the sitemap (PocketBase's page cap). */
 const SITEMAP_PER_KIND = 1000;
@@ -130,6 +170,169 @@ export class ReplaysService extends Service {
 				)
 				.slice(0, limit)
 		);
+	}
+
+	/**
+	 * The Discover view: featured hero, theme rows and the newest shared replays.
+	 * Each part loads on its own; a failing part is logged and left empty.
+	 */
+	discover(): Task<ReplayDiscover> {
+		return cached('replays:discover', 300, () =>
+			ResultAsync.combine([
+				this.soft(this.recentMembers(), [], 'members'),
+				this.soft(this.communityPool(), [], 'community pool'),
+				ResultAsync.combine(
+					DISCOVER_THEMES.map((theme) => this.soft(this.themeMatches(theme), [], theme))
+				),
+				this.soft(this.latestShared(), emptyMemberPage(DISCOVER_LATEST), 'latest shared')
+			]).map(([members, matches, themeMatches, latestShared]) => {
+				const recent = daysAgo(DISCOVER_DAYS);
+				const pool = [...members, ...matches];
+				const thisWeek = pickFeatured(pool.filter((row) => row.createdAt >= recent));
+				const featured = thisWeek.length >= TOP_MIN_ITEMS ? thisWeek : pickFeatured(pool);
+				const taken = new Set(featured.map((row) => row.id));
+				const sections = DISCOVER_THEMES.map((theme, index) => ({
+					id: theme,
+					items: fillTheme<ReplayRow>(this.membersFor(members, theme), themeMatches[index], taken)
+				})).filter((section) => section.items.length >= DISCOVER_MIN_THEME);
+				return { featured, sections, latestShared };
+			})
+		);
+	}
+
+	private soft<T>(task: Task<T>, fallback: T, part: string): Task<T> {
+		return task.orElse((error) => {
+			console.error(`[replays] discover ${part} failed`, error);
+			return ok(fallback);
+		});
+	}
+
+	/** Shared replays of the fallback window, newest first. */
+	private recentMembers(): Task<MemberReplayView[]> {
+		return this.services.memberReplays
+			.list(
+				{
+					page: 1,
+					perPage: DISCOVER_MEMBER_POOL,
+					ranked: false,
+					title: '',
+					maps: [],
+					filter: null,
+					since: daysAgo(DISCOVER_FALLBACK_DAYS),
+					sort: 'createdAt',
+					sortDir: 'desc'
+				},
+				null
+			)
+			.map((page) => page.items);
+	}
+
+	/** Most downloaded community matches of the fallback window. */
+	private communityPool(): Task<HistoryRow[]> {
+		return this.services.matchHistory
+			.list(
+				{
+					scope: 'community',
+					page: 1,
+					perPage: DISCOVER_MATCH_POOL,
+					filter: null,
+					includeSkirmish: false,
+					since: daysAgo(DISCOVER_FALLBACK_DAYS),
+					sort: 'downloadCount',
+					sortDir: 'desc'
+				},
+				null
+			)
+			.map((page) => page.items);
+	}
+
+	/** Community matches for one theme row. */
+	private themeMatches(theme: DiscoverThemeId): Task<HistoryRow[]> {
+		const discussed = theme === 'discussed';
+		return this.services.matchHistory
+			.list(
+				{
+					scope: 'community',
+					page: 1,
+					perPage: DISCOVER_THEME_POOL,
+					filter: themeFilter(theme),
+					includeSkirmish: false,
+					since: daysAgo(DISCOVER_FALLBACK_DAYS),
+					sort: discussed ? 'commentCount' : 'createdAt',
+					sortDir: 'desc'
+				},
+				null
+			)
+			.map((page) =>
+				page.items.filter((row) => row.hasReplay && (!discussed || row.commentCount > 0))
+			);
+	}
+
+	/** Shared replays that fit a theme; the most discussed first for `discussed`. */
+	private membersFor(members: MemberReplayView[], theme: DiscoverThemeId): MemberReplayView[] {
+		const fitting = members.filter((row) => fitsTheme(row, theme));
+		return theme === 'discussed'
+			? fitting.sort((a, b) => b.commentCount - a.commentCount)
+			: fitting;
+	}
+
+	private latestShared(): Task<MemberReplayPage> {
+		return this.services.memberReplays.list(
+			{
+				page: 1,
+				perPage: DISCOVER_LATEST,
+				ranked: false,
+				title: '',
+				maps: [],
+				filter: null,
+				sort: 'createdAt',
+				sortDir: 'desc'
+			},
+			null
+		);
+	}
+
+	/**
+	 * The viewer's own recent games with a replay that nobody has shared yet, for the
+	 * "share your latest matches" strip.
+	 */
+	shareCandidates(viewer: NonNullable<HistoryViewer>): Task<HistoryRow[]> {
+		const since = daysAgo(SHARE_CANDIDATE_DAYS);
+		return this.services.matchHistory
+			.list(
+				{
+					scope: 'user',
+					page: 1,
+					perPage: SHARE_CANDIDATE_POOL,
+					filter: null,
+					includeSkirmish: false,
+					sort: 'createdAt',
+					sortDir: 'desc'
+				},
+				viewer
+			)
+			.map((page) => page.items.filter((row) => row.hasReplay && row.createdAt >= since))
+			.andThen((rows) => this.unshared(rows))
+			.map((rows) => rows.slice(0, SHARE_CANDIDATES));
+	}
+
+	/** Drops games that already have a published member replay. */
+	private unshared(rows: HistoryRow[]): Task<HistoryRow[]> {
+		if (rows.length === 0) {
+			return okAsync(rows);
+		}
+
+		const ids = rows.map((row) => this.pb.filter('id = {:id}', { id: row.id })).join(' || ');
+		return fromPb(
+			this.pb.collection('lobbies').getFullList<{ id: string }>({
+				filter: `memberReplay != '' && (${ids})`,
+				fields: 'id'
+			}),
+			'Could not load your matches'
+		).map((shared) => {
+			const published = new Set(shared.map((record) => record.id));
+			return rows.filter((row) => !published.has(row.id));
+		});
 	}
 
 	/** Newest public replays with this player: community matches and member uploads, merged. */
