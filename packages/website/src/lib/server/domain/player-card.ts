@@ -123,7 +123,8 @@ export function cardRibbons(
 ): PlayerCardRibbon[] {
 	const byKey = new Map<string, RibbonInfo>(
 		manifest.map((entry) => [
-			entry.file.replace(/\.svg$/, ''),
+			// `americans/ribbon-001.svg` → `ribbon-001`, the key rewards store.
+			entry.file.replace(/^.*\//, '').replace(/\.svg$/, ''),
 			{ title: entry.title, series: entry.series ?? null, level: entry.level ?? null }
 		])
 	);

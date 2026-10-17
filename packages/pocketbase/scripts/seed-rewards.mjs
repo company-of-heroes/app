@@ -339,7 +339,8 @@ function parseConditions(raw) {
  * A tier that already has levels keeps their series, so a deleted level comes back in it.
  */
 function ribbonPicker(existing) {
-	const key = (entry) => entry.file.replace(/\.svg$/, '');
+	// `americans/ribbon-001.svg` → `ribbon-001`, the key rewards store.
+	const key = (entry) => entry.file.replace(/^.*\//, '').replace(/\.svg$/, '');
 	const taken = new Set(existing.map((item) => item.ribbon).filter(Boolean));
 	const seriesFor = new Map();
 	for (const item of existing) {

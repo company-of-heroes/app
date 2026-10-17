@@ -48,10 +48,11 @@
 		</p>
 	{/if}
 	{#if loading}
-		<ReplayListSkeleton rowCount={HOME_RECENT_MEMBER_UPLOADS} />
+		<ReplayListSkeleton rowCount={HOME_RECENT_MEMBER_UPLOADS} rows={2} />
 	{:else}
 		<ReplayList
 			{matches}
+			rows={2}
 			meSteamIds={mySteamIds}
 			sort="createdAt"
 			sortDir="desc"

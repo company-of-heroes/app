@@ -2,7 +2,7 @@ import { ribbonsFrom, type RibbonManifestEntry } from '@company-of-heroes/ui/rew
 import manifest from '../../../../../shared-assets/ribbons/ribbons.json';
 
 /** Reward ribbons; relative glob (not kit alias) so Vite expands it, `no-inline` keeps the SVGs out of the JS. */
-const urls = import.meta.glob<string>('../../../../../shared-assets/ribbons/*.svg', {
+const urls = import.meta.glob<string>('../../../../../shared-assets/ribbons/**/*.svg', {
 	eager: true,
 	query: '?no-inline',
 	import: 'default'

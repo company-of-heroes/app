@@ -50,7 +50,7 @@ const LEADERBOARD_RACE_MAP: Record<number, Race> = {
  * Relative glob (not kit alias) so Rolldown/Vite always expands the files.
  */
 const factionModules = import.meta.glob<{ default: string }>(
-	'../../../../../shared-assets/factions/*.png',
+	'../../../../../shared-assets/factions/small/*.png',
 	{ eager: true }
 );
 

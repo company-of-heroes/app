@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { factionIcon, interactive } from '@company-of-heroes/ui/variants';
+	import { truncatedTooltip } from '../attachments';
 	import { useHost } from '../host/host.context';
 	import CountryFlag from '../player/country-flag.svelte';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
@@ -19,6 +20,8 @@
 		class?: string;
 		/** Height and padding of each player line. */
 		itemClass?: string;
+		/** Extra classes for the faction flag or rank badge (e.g. smaller, no ring in dense cards). */
+		iconClass?: string;
 		/** Right-aligned lines (icon on the right), for the left side of a face-off. */
 		mirrored?: boolean;
 	};
@@ -32,6 +35,7 @@
 		showRankBadges = true,
 		class: className,
 		itemClass = 'h-6',
+		iconClass,
 		mirrored = false
 	}: Props = $props();
 
@@ -66,6 +70,7 @@
 		>
 			{#if ranked}
 				<RankIcon
+					class={iconClass}
 					level={player.stats?.rankLevel ?? 0}
 					race={player.race}
 					position={player.stats?.rank}
@@ -76,7 +81,7 @@
 					decoding="async"
 					src={host.resolve.factionFlagByRace(player.race ?? 0)}
 					alt=""
-					class={factionIcon}
+					class={cn(factionIcon, iconClass)}
 				/>
 			{/if}
 			<CountryFlag country={player.country} />
@@ -92,11 +97,14 @@
 						filtered && 'text-info font-semibold',
 						!isMe && !filtered && 'text-secondary-200'
 					)}
+					{@attach truncatedTooltip(player.alias)}
 				>
 					{player.alias || '—'}
 				</PlayerProfileLink>
 			{:else}
-				<span class="text-secondary-400 min-w-0 truncate">{player.alias || '—'}</span>
+				<span class="text-secondary-400 min-w-0 truncate" {@attach truncatedTooltip(player.alias)}
+					>{player.alias || '—'}</span
+				>
 			{/if}
 			{#if player.note}
 				<span class="text-secondary-500 min-w-0 shrink truncate text-xs">{player.note}</span>

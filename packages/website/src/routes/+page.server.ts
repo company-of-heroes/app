@@ -1,12 +1,5 @@
 import { okAsync, ResultAsync } from 'neverthrow';
-import {
-	HOME_RECENT_MATCHES,
-	HOME_RECENT_MEMBER_UPLOADS,
-	recentCommunityQuery,
-	recentMemberQuery,
-	TOP_REPLAYS,
-	TOP_REPLAYS_DAYS
-} from '$lib/replays';
+import { HOME_RECENT_MATCHES, recentCommunityQuery, recentMemberQuery } from '$lib/replays';
 import type { Task } from '$lib/server/result';
 import { historyInputFromQuery } from '$lib/server/services/match-history';
 import { memberQueryFromReplaysQuery } from '$lib/server/services/member-replays';
@@ -34,20 +27,16 @@ function section<T>(items: Task<T[]>): Promise<SectionResult<T>> {
 export const load: PageServerLoad = async ({ locals }) => {
 	const liveLobbies = locals.services.liveLobbies.list();
 	const memberUploads = locals.services.memberReplays.list(
-		memberQueryFromReplaysQuery(recentMemberQuery(), HOME_RECENT_MEMBER_UPLOADS),
+		memberQueryFromReplaysQuery(recentMemberQuery(), 1),
 		null
 	);
 	return {
 		liveLobbies: section(liveLobbies),
-		topReplays: section(
-			locals.services.replays.top({ days: TOP_REPLAYS_DAYS, limit: TOP_REPLAYS })
-		),
 		recentMatches: section(
 			locals.services.matchHistory
 				.list(historyInputFromQuery(recentCommunityQuery(), 'community', HOME_RECENT_MATCHES), null)
 				.map((list) => list.items)
 		),
-		recentMemberUploads: section(memberUploads.map((list) => list.items)),
 		statistics: ResultAsync.combine([
 			locals.services.statistics.get({ period: '30' }),
 			locals.services.statistics.totals(),

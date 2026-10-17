@@ -74,6 +74,7 @@ export default defineConfig({
 	},
 	server: {
 		port: 5174,
+		allowedHosts: ['.trycloudflare.com'],
 		fs: {
 			allow: [
 				searchForWorkspaceRoot(websiteRoot),

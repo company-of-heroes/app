@@ -78,7 +78,7 @@
 	const WEBSITE_URL = 'https://coh1stats.com';
 	/** Same PayPal link as the website's donation section. */
 	const PAYPAL_URL = 'https://www.paypal.com/donate/?hosted_button_id=8BMSUSF6RY73N';
-	const TWITCH_URL = 'https://www.twitch.tv/fknoobscoh';
+	const TWITCH_URL = 'https://www.twitch.tv/commanderredttv';
 
 	/** Small quiet icon buttons; the window controls sit in the corner next to them. */
 	const headerAction = 'text-secondary-400 hover:bg-secondary-800/60 hover:text-white';

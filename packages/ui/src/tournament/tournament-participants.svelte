@@ -9,7 +9,7 @@
 	import DotsSixVerticalIcon from 'phosphor-svelte/lib/DotsSixVerticalIcon';
 	import UserMinusIcon from 'phosphor-svelte/lib/UserMinusIcon';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { getEloColor, getEloTextShadow, isEliteElo } from '../format/player-format';
+	import EloBadge from '../player/elo-badge.svelte';
 	import { useHost } from '../host/host.context';
 	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import { Badge } from '../ui/badge';
@@ -67,7 +67,7 @@
 
 	const expanded = new SvelteSet<string>();
 	const actions = $derived(!!onReorder);
-	const columns = $derived(actions ? 5 : 4);
+	const columns = $derived(actions ? 4 : 3);
 
 	function toggle(id: string) {
 		if (expanded.has(id)) {
@@ -119,7 +119,6 @@
 					<tr class="{tableHeadRow} text-center">
 						<th class="w-16 px-4 py-2">{numberLabel}</th>
 						<th class="px-4 py-2 text-left">{t('Player')}</th>
-						<th class="w-36 px-4 py-2 whitespace-nowrap">{t('Highest ELO')}</th>
 						{#if actions}
 							<th class="w-36 px-4 py-2"><span class="sr-only">{t('Actions')}</span></th>
 						{/if}
@@ -184,6 +183,7 @@
 												<PlayerNameIcons steamId={participant.steamId} />
 												<span class="truncate">{participant.alias}</span>
 											</span>
+											<EloBadge elo={participant.highestRating} label={t('Highest ELO')} />
 											{#if isYou}
 												<Badge class="shrink-0">
 													{t('You')}
@@ -200,19 +200,6 @@
 												</Badge>
 											{/if}
 										</div>
-									</td>
-									<td
-										class={cn(
-											'px-4 py-1.5 text-center tabular-nums',
-											participant.highestRating == null && 'text-secondary-500 text-xs font-normal',
-											isEliteElo(participant.highestRating) && 'font-bold tracking-wide'
-										)}
-										style:color={participant.highestRating != null
-											? getEloColor(participant.highestRating)
-											: undefined}
-										style:text-shadow={getEloTextShadow(participant.highestRating)}
-									>
-										{participant.highestRating ?? t('N/A')}
 									</td>
 									{#if actions}
 										<td class="px-4">

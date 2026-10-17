@@ -19,11 +19,11 @@
 	<div
 		class="flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-transparent"
 	>
-		<Avatar.Image src={avatar} alt="@fknoobscoh" />
+		<Avatar.Image src={avatar} alt="Red™ 🏅" />
 		<Avatar.Fallback
 			class="bg-secondary-950 flex h-full w-full items-center justify-center text-xs font-semibold"
 		>
-			FK
+			R
 		</Avatar.Fallback>
 	</div>
 </Avatar.Root>

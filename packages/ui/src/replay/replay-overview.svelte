@@ -12,7 +12,7 @@
 		statWins,
 		factionIcon
 	} from '@company-of-heroes/ui/variants';
-	import { getEloColor, getEloTextShadow, isEliteElo } from '../format/player-format';
+	import EloBadge from '../player/elo-badge.svelte';
 	import type {
 		CommunityMatchDetail,
 		CommunityPlayer,
@@ -242,6 +242,9 @@
 		return livePlayerForReplay(replayPlayer)?.stats ?? undefined;
 	}
 
+	/** Rating changes only exist once Relic reported the result. */
+	const showChange = $derived(Boolean(match?.result?.players?.length));
+
 	function ratingDelta(result: MatchResultPlayer): number | undefined {
 		const next = result.newrating;
 		const prev = result.oldrating;
@@ -391,6 +394,7 @@
 					{/if}
 					{#if !cpu}
 						{@render nameExtra?.({ name: player.name, steamId, profileId })}
+						<EloBadge {elo} />
 						{@render position(liveStats?.rank)}
 					{/if}
 				</div>
@@ -424,8 +428,8 @@
 					{/if}
 				</div>
 			</div>
-			{#if result || elo != null}
-				<div class="flex shrink-0 items-center gap-2.5 tabular-nums">
+			{#if showChange}
+				<div class="flex w-14 shrink-0 items-center justify-end tabular-nums">
 					{#if change !== undefined}
 						<span class="inline-flex items-center gap-0.5 text-sm">
 							{#if change < 0}
@@ -439,13 +443,6 @@
 							{/if}
 						</span>
 					{/if}
-					<span
-						class={cn('text-base font-semibold', isEliteElo(elo) && 'font-bold tracking-wide')}
-						style:color={elo != null ? getEloColor(elo) : undefined}
-						style:text-shadow={getEloTextShadow(elo)}
-					>
-						{elo ?? 'N/A'}
-					</span>
 				</div>
 			{/if}
 			<div class="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5">
@@ -504,6 +501,7 @@
 							steamId: player.steamId,
 							profileId: player.profileId
 						})}
+						<EloBadge {elo} />
 						{@render position(stats?.rank)}
 					{/if}
 				</div>
@@ -538,18 +536,6 @@
 					{/if}
 				</div>
 			</div>
-			<div class="flex shrink-0 items-center gap-2.5 tabular-nums">
-				<span class="inline-flex items-center gap-0.5 text-sm">
-					<MinusIcon class="text-secondary-500 size-3.5 shrink-0" />
-				</span>
-				<span
-					class={cn('text-base font-semibold', isEliteElo(elo) && 'font-bold tracking-wide')}
-					style:color={elo != null ? getEloColor(elo) : undefined}
-					style:text-shadow={getEloTextShadow(elo)}
-				>
-					{elo ?? '—'}
-				</span>
-			</div>
 			<div class="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5">
 				<span class="text-secondary-400 text-xs font-semibold tracking-wider uppercase">
 					{t('CPM')}
@@ -566,7 +552,9 @@
 			class="bg-secondary-950/90 text-secondary-300 border-secondary-800 flex items-center gap-4 border-b px-4 py-2.5 text-sm font-semibold tracking-wide uppercase"
 		>
 			<span class="min-w-0 flex-1">{label}</span>
-			<span class="text-right">{t('Rating')}</span>
+			{#if showChange}
+				<span class="w-14 text-right">{t('Change')}</span>
+			{/if}
 			<span class="text-primary w-12 text-center font-semibold">{t('CPM')}</span>
 		</div>
 		{#each players as player, index (`${index}-${player.id ?? player.name}`)}
@@ -581,7 +569,6 @@
 			class="bg-secondary-950/90 text-secondary-300 border-secondary-800 flex items-center gap-4 border-b px-4 py-2.5 text-sm font-semibold tracking-wide uppercase"
 		>
 			<span class="min-w-0 flex-1">{label}</span>
-			<span class="text-right">{t('Rating')}</span>
 			<span class="text-primary w-12 text-center font-semibold">{t('CPM')}</span>
 		</div>
 		{#each players as player (`${player.profileId ?? player.steamId ?? player.index}-${player.alias}`)}

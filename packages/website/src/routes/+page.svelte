@@ -4,11 +4,9 @@
 	import HomePlayerSearch from '$lib/components/home/home-player-search.svelte';
 	import HomeLiveLobbies from '$lib/components/home/home-live-lobbies.svelte';
 	import HomeRecentMatches from '$lib/components/home/home-recent-matches.svelte';
-	import HomeMemberUploads from '$lib/components/home/home-member-uploads.svelte';
 	import HomeTournaments from '$lib/components/home/home-tournaments.svelte';
 	import HomeLiveStreams from '$lib/components/home/home-live-streams.svelte';
 	import DonationSection from '$lib/components/home/donation-section.svelte';
-	import TopReplays from '$lib/components/replay/top-replays.svelte';
 	import { SITE_URL } from '$lib/site/urls';
 	import { organization } from '$lib/site/seo';
 	import Seo from '$lib/components/seo/seo.svelte';
@@ -61,26 +59,12 @@
 		<HomeStatistics statistics={null} />
 	{/await}
 	<HomePlayerSearch />
-	{#await data.topReplays}
-		<TopReplays matches={[]} loading />
-	{:then topReplays}
-		<TopReplays matches={topReplays.items} error={topReplays.error} />
-	{:catch}
-		<TopReplays matches={[]} error={t('Could not load top replays.')} />
-	{/await}
 	{#await data.recentMatches}
 		<HomeRecentMatches matches={[]} loading />
 	{:then recentMatches}
 		<HomeRecentMatches matches={recentMatches.items} error={recentMatches.error} />
 	{:catch}
 		<HomeRecentMatches matches={[]} error={t('Could not load recent matches.')} />
-	{/await}
-	{#await data.recentMemberUploads}
-		<HomeMemberUploads matches={[]} loading />
-	{:then recentMemberUploads}
-		<HomeMemberUploads matches={recentMemberUploads.items} error={recentMemberUploads.error} />
-	{:catch}
-		<HomeMemberUploads matches={[]} error={t('Could not load member uploads.')} />
 	{/await}
 	{#await data.liveLobbies}
 		<HomeLiveLobbies lobbies={[]} loading />

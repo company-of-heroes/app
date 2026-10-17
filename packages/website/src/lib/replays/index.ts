@@ -43,8 +43,8 @@ export type {
 } from '@company-of-heroes/ui/replay';
 
 export const REPLAYS_PER_PAGE = 30;
-export const HOME_RECENT_MATCHES = 10;
-export const HOME_RECENT_MEMBER_UPLOADS = 10;
+export const HOME_RECENT_MATCHES = 4;
+export const HOME_RECENT_MEMBER_UPLOADS = 12;
 /** Spotlight cards on the home and replays pages. */
 export const TOP_REPLAYS = 4;
 /** Window of the "top replays" spotlight. */

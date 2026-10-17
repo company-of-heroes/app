@@ -11,7 +11,7 @@
 	import { PlayerPerformance } from '$lib/components/player-performance';
 	import { relic, relicLeaderboardFingerprint } from '$lib/relic';
 	import { steam } from '$core/steam';
-	import { cn, getFactionFlagFromRace, normalizeMapName } from '$lib/utils';
+	import { cn, getFactionIconFromRace, normalizeMapName } from '$lib/utils';
 	import { getFactionFlagFromLeaderboardId } from '$lib/utils/game';
 	import { interactive, statLosses, statWins, factionIcon } from '$lib/components/ui/variants';
 	import * as Tabs from '$lib/components/ui/tabs';
@@ -657,7 +657,7 @@
 
 				{#if mainFaction}
 					<PlayerFact label={t('Main faction')} icon={FlagIcon}>
-						<img src={getFactionFlagFromRace(mainFaction.raceId)} alt="" class={factionIcon} />
+						<img src={getFactionIconFromRace(mainFaction.raceId)} alt="" class={factionIcon} />
 						<span class="truncate">{getRaceLabel(mainFaction.raceId)}</span>
 						{#snippet sub()}
 							<span class={statWins}>{t('{count}W', { count: mainFaction.wins })}</span>

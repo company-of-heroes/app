@@ -40,3 +40,6 @@ scripts/golden/snapshots/
 
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# Brainstorm companion mockups
+.superpowers/

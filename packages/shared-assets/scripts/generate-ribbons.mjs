@@ -1,7 +1,8 @@
 // Generates 50 distinct WWII-style service ribbons per faction (ribbon bars as worn on a uniform) into
 // ../ribbons. Each faction has its own colours, signature pattern and devices. Then ranked series:
 // the same ribbon with 1 to 5 devices for levels 1 to 5. Two batches of 25 singles and 3 series each.
-// Every ribbon of a faction shares the same edge stripes, so the faction reads at a glance.
+// Every ribbon of a faction shares the same wide national edge stripes, so the faction reads at a
+// glance; the files go into a folder per faction (`ribbons/americans/ribbon-001.svg`).
 // Seeded, so running it again gives the same files. Run: node scripts/generate-ribbons.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -242,10 +243,13 @@ const FACTIONS = [
 		patterns: ['flag', 'flag', 'flag', 'campaign', 'campaign', 'bands', 'edged', 'striped'],
 		/** Edge stripes on both sides, outside → in, in ribbon units. */
 		edge: [
-			['olive', 2.4],
-			['white', 0.6],
-			['blue', 1.4]
+			['navy', 4.8],
+			['white', 1.3],
+			['red', 2.6],
+			['white', 1.3]
 		],
+		/** Edge width (divider included) before the wide edges; only the duplicate check uses it. */
+		legacyEdge: 4.8,
 		devices: ['star', 'star', 'star', 'oak', 'v', 'arrowhead'],
 		metals: ['bronze', 'bronze', 'silver', 'gold']
 	},
@@ -259,10 +263,12 @@ const FACTIONS = [
 		patterns: ['fieldgrey', 'fieldgrey', 'fieldgrey', 'edged', 'bands', 'pinstripes', 'split'],
 		/** Edge stripes on both sides, outside → in, in ribbon units. */
 		edge: [
-			['black', 1.6],
-			['white', 1.2],
-			['red', 1.6]
+			['black', 3.5],
+			['white', 2.2],
+			['red', 4.2]
 		],
+		/** Edge width (divider included) before the wide edges; only the duplicate check uses it. */
+		legacyEdge: 4.8,
 		devices: ['oak', 'swords', 'swords'],
 		metals: ['silver', 'silver', 'gold']
 	},
@@ -287,9 +293,12 @@ const FACTIONS = [
 		patterns: ['theatre', 'theatre', 'theatre', 'rainbow', 'bands', 'edged', 'split', 'campaign'],
 		/** Edge stripes on both sides, outside → in, in ribbon units. */
 		edge: [
-			['khaki', 2.4],
-			['red', 1.6]
+			['khaki', 4.8],
+			['crimson', 2.6],
+			['navy', 1.9]
 		],
+		/** Edge width (divider included) before the wide edges; only the duplicate check uses it. */
+		legacyEdge: 4.4,
 		devices: ['oak', 'rosette', 'rosette'],
 		metals: ['bronze', 'silver', 'silver']
 	},
@@ -302,9 +311,13 @@ const FACTIONS = [
 		patterns: ['piped', 'piped', 'piped', 'pinstripes', 'pinstripes', 'striped', 'edged', 'split'],
 		/** Edge stripes on both sides, outside → in, in ribbon units. */
 		edge: [
-			['black', 2.4],
-			['rose', 1.2]
+			['black', 4.8],
+			['rose', 2.2],
+			['black', 1.3],
+			['rose', 1]
 		],
+		/** Edge width (divider included) before the wide edges; only the duplicate check uses it. */
+		legacyEdge: 4,
 		devices: ['swords', 'tank', 'tank', 'oak'],
 		metals: ['silver', 'silver', 'gold']
 	},
@@ -333,9 +346,11 @@ const FACTIONS = [
 		patterns: ['bands', 'bands', 'edged', 'pinstripes', 'split', 'campaign', 'striped'],
 		/** Edge stripes on both sides, outside → in, in ribbon units. */
 		edge: [
-			['gold', 3],
-			['white', 0.8]
+			['gold', 4.8],
+			['white', 1.3]
 		],
+		/** Edge width (divider included) before the wide edges; only the duplicate check uses it. */
+		legacyEdge: 4.2,
 		devices: ['star', 'oak', 'rosette'],
 		metals: ['bronze', 'silver', 'gold']
 	}
@@ -343,8 +358,8 @@ const FACTIONS = [
 /** Width of a faction's edge stripes on one side, divider included. */
 const edgeWidth = (faction) => faction.edge.reduce((sum, [, w]) => sum + w, 0) + EDGE_DIVIDER;
 
-/** Turns [colour, weight] into absolute stripes across the ribbon, between the faction's edges. */
-function layout(pattern, faction) {
+/** Turns [colour, weight] into absolute stripes across the ribbon, between edges `edge` wide. */
+function layout(pattern, faction, edge = edgeWidth(faction)) {
 	const merged = [];
 	for (const [color, w] of pattern) {
 		if (merged.at(-1)?.[0] === color) {
@@ -355,7 +370,6 @@ function layout(pattern, faction) {
 	}
 
 	const total = merged.reduce((sum, [, w]) => sum + w, 0);
-	const edge = edgeWidth(faction);
 	let x = edge;
 	return merged.map(([color, w]) => {
 		const width = (w / total) * (WIDTH - 2 * edge);
@@ -527,9 +541,10 @@ function title(spec) {
 	return `${name} with ${count > 1 ? `${count} ${metal} ${device}s` : `${metal} ${device}`}`;
 }
 
+// Old files: flat ones from before the faction folders, and every folder's ribbons.
 fs.mkdirSync(OUT, { recursive: true });
-for (const file of fs.readdirSync(OUT)) {
-	if (/^ribbon-\d+\.svg$/.test(file)) {
+for (const file of fs.readdirSync(OUT, { recursive: true })) {
+	if (/^ribbon-\d+\.svg$/.test(path.basename(file))) {
 		fs.unlinkSync(path.join(OUT, file));
 	}
 }
@@ -541,11 +556,15 @@ const manifest = [];
 function uniqueStripes(faction) {
 	while (true) {
 		const pattern = pick(faction.patterns);
-		const stripes = layout(PATTERNS[pattern](faction.colors), faction);
-		const key = stripes.map((s) => `${s.color}:${Math.round(s.width)}`).join('/');
+		const weights = PATTERNS[pattern](faction.colors);
+		// Measured between the old narrow edges, so the same ribbons count as duplicates and
+		// every ribbon keeps the centre it had before the wide edges.
+		const key = layout(weights, faction, faction.legacyEdge)
+			.map((s) => `${s.color}:${Math.round(s.width)}`)
+			.join('/');
 		if (!seen.has(key)) {
 			seen.add(key);
-			return { pattern, stripes };
+			return { pattern, stripes: layout(weights, faction) };
 		}
 	}
 }
@@ -553,7 +572,9 @@ function uniqueStripes(faction) {
 function write(faction, spec, extra = {}) {
 	const index = manifest.length + 1;
 	const { id, svg } = ribbon(index, faction, spec);
-	const file = `ribbon-${String(index).padStart(3, '0')}.svg`;
+	// The number stays unique across folders: rewards store `ribbon-NNN` without the folder.
+	const file = `${faction.key}/ribbon-${String(index).padStart(3, '0')}.svg`;
+	fs.mkdirSync(path.join(OUT, faction.key), { recursive: true });
 	fs.writeFileSync(path.join(OUT, file), svg);
 	manifest.push({
 		id,
@@ -605,8 +626,8 @@ const SUPPORTER = {
 	raceId: null,
 	key: 'supporter',
 	edge: [
-		['burgundy', 2.4],
-		['gold', 0.8]
+		['burgundy', 4.8],
+		['gold', 1.9]
 	]
 };
 const supporterSpecs = [

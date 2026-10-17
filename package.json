@@ -30,7 +30,7 @@
 		"prettier-plugin-curly": "0.4.1",
 		"prettier-plugin-svelte": "3.4.1",
 		"prettier-plugin-tailwindcss": "^0.7.4",
-		"turbo": "^2.10.12"
+		"turbo": "^2.11.8"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

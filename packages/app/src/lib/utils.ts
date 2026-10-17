@@ -36,6 +36,19 @@ const factionImagesByFilename = new Map(
 	})
 );
 
+/** 40px square crops of the flags, for the round faction icons (`factionIcon`). */
+const factionIconModules = import.meta.glob<{ default: string }>(
+	'../../../shared-assets/factions/small/*.png',
+	{ eager: true }
+);
+
+const factionIconsByFilename = new Map(
+	Object.entries(factionIconModules).map(([path, module]) => {
+		const filename = path.replace(/^.*[\/]/, '');
+		return [filename, module.default] as const;
+	})
+);
+
 const USFlag = factionImagesByFilename.get('us.png') ?? '';
 const WMFlag = factionImagesByFilename.get('wm.png') ?? '';
 const CWFlag = factionImagesByFilename.get('cw.png') ?? '';
@@ -83,6 +96,12 @@ export function getFactionFlagFromRace(
 		default:
 			return USFlag; // Default fallback
 	}
+}
+
+/** Small square flag for round faction icons; the full flag stays for wide images. */
+export function getFactionIconFromRace(race: Race | number): string {
+	const filename = ['us.png', 'wm.png', 'cw.png', 'pe.png'][race] ?? 'us.png';
+	return factionIconsByFilename.get(filename) ?? getFactionFlagFromRace(race);
 }
 
 /**

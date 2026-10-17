@@ -138,7 +138,7 @@
 				<img
 					src={logo64}
 					srcset="{logo64} 1x, {logo128} 2x"
-					alt={t('Fknoobscoh - CoH app')}
+					alt={t('Red™ 🏅 - CoH app')}
 					class="-my-3 size-14"
 				/>
 				<div class="min-w-0">
@@ -216,7 +216,7 @@
 								variant="ghost"
 								size="icon-sm"
 								class="bg-secondary-800 text-secondary-400 hover:text-primary hover:bg-secondary-700"
-								onclick={() => openUrl('https://www.twitch.tv/fknoobscoh')}
+								onclick={() => openUrl('https://www.twitch.tv/commanderredttv')}
 							>
 								<TwitchLogoIcon weight="duotone" />
 							</Button>

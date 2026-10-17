@@ -15,6 +15,8 @@
 		class?: string;
 		/** Height and padding of each player line. */
 		itemClass?: string;
+		/** Extra classes for the faction flag. */
+		iconClass?: string;
 		/** Doctrine after the name; off where columns are narrow. */
 		showNotes?: boolean;
 		mirrored?: boolean;
@@ -29,6 +31,7 @@
 		highlightedPlayers,
 		class: className,
 		itemClass,
+		iconClass,
 		showNotes = true,
 		mirrored = false
 	}: Props = $props();
@@ -64,5 +67,6 @@
 	showRankBadges={match.isRanked}
 	class={className}
 	{itemClass}
+	{iconClass}
 	{mirrored}
 />

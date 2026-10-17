@@ -6,12 +6,11 @@
 	import { cn } from '../cn';
 	import DocsBreadcrumb from '../docs/docs-breadcrumb.svelte';
 	import { formatDate } from '../format/date';
-	import { getRaceLabel } from '../format/player-format';
 	import { useHost } from '../host/host.context';
 	import { Badge } from '../ui/badge';
 	import { ToggleGroup } from '../ui/toggle-group';
 	import { controlBase, flushHeader, flushHeaderTitle, interactive } from '../variants';
-	import { catalogEntries, REWARD_FACTION_ORDER, type CatalogEntry } from './catalog';
+	import { catalogEntries, type CatalogEntry } from './catalog';
 	import {
 		formatRewardCondition,
 		REWARD_METRIC_CATALOG,
@@ -19,7 +18,7 @@
 		type RewardCondition
 	} from './metrics';
 	import RewardIcon from './reward-icon.svelte';
-	import { ribbonTipHtml } from './ribbon';
+	import { REWARD_CATEGORY_ORDER, rewardCategoryLabel, ribbonTipHtml } from './ribbon';
 	import type { PlayerRewards, RewardView } from './types';
 
 	/** Locked rewards of the owner carry the current value per condition. */
@@ -42,14 +41,11 @@
 	let faction = $state('all');
 	let search = $state('');
 
-	const factionKey = (raceId: number | null) => (raceId === null ? 'global' : String(raceId));
-	const factionLabel = (raceId: number | null) =>
-		raceId === null ? t('Global') : t(getRaceLabel(raceId));
 	const factions = $derived([
 		{ value: 'all', label: t('All') },
-		...REWARD_FACTION_ORDER.map((raceId) => ({
-			value: factionKey(raceId),
-			label: factionLabel(raceId)
+		...REWARD_CATEGORY_ORDER.map((category) => ({
+			value: String(category),
+			label: t(rewardCategoryLabel(category))
 		}))
 	]);
 	const entries = $derived(catalogEntries(rewards, player?.rewards ?? null, ribbons));
@@ -57,7 +53,7 @@
 	const filtered = $derived(
 		entries.filter(
 			(entry) =>
-				(faction === 'all' || factionKey(entry.raceId) === faction) &&
+				(faction === 'all' || String(entry.category) === faction) &&
 				(!query ||
 					rewardsOf(entry).some((reward) =>
 						`${reward.title} ${reward.description}`.toLowerCase().includes(query)
@@ -65,9 +61,9 @@
 		)
 	);
 	const sections = $derived(
-		REWARD_FACTION_ORDER.map((raceId) => ({
-			raceId,
-			entries: filtered.filter((entry) => entry.raceId === raceId)
+		REWARD_CATEGORY_ORDER.map((category) => ({
+			category,
+			entries: filtered.filter((entry) => entry.category === category)
 		})).filter((section) => section.entries.length > 0)
 	);
 	const total = $derived(entries.flatMap(rewardsOf).length);
@@ -280,10 +276,10 @@
 {#if sections.length > 0}
 	<!-- Each section after the first draws its own top line, so a short last row still closes. -->
 	<div>
-		{#each sections as section (factionKey(section.raceId))}
+		{#each sections as section (section.category)}
 			<section class="border-secondary-800 not-first:border-t">
 				<div class={cn(flushHeader, 'flex items-baseline justify-between gap-3')}>
-					<h2 class={flushHeaderTitle}>{factionLabel(section.raceId)}</h2>
+					<h2 class={flushHeaderTitle}>{t(rewardCategoryLabel(section.category))}</h2>
 					<p class="text-secondary-500 text-xs">
 						{t('{count} rewards', { count: section.entries.flatMap(rewardsOf).length })}
 					</p>

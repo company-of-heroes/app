@@ -32,3 +32,14 @@ export const tooltip = (
 		return instance.destroy;
 	};
 };
+
+/** Full text on hover, only while the element is cut off (e.g. a `truncate` player name). */
+export const truncatedTooltip = (text: string | null | undefined): Attachment =>
+	tooltip(text ? escapeHtml(text) : null, {
+		onShow: (instance) => {
+			const element = instance.reference as HTMLElement;
+			if (element.scrollWidth <= element.clientWidth) {
+				return false;
+			}
+		}
+	});

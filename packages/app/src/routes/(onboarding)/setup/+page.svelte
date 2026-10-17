@@ -151,7 +151,7 @@
 			<img
 				src={logo64}
 				srcset="{logo64} 1x, {logo128} 2x"
-				alt={t('Fknoobscoh - CoH app')}
+				alt={t('Red™ 🏅 - CoH app')}
 				class="size-10"
 			/>
 			<div>

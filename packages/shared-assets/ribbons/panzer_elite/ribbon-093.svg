@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 20" width="70" height="20">
+	<title>Rose, black and navy piped ribbon</title>
+	<defs>
+		<linearGradient id="r093-shade" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.28"/>
+			<stop offset="0.25" stop-color="#fff" stop-opacity="0"/>
+			<stop offset="0.7" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="r093-weave" width="1.2" height="1.2" patternUnits="userSpaceOnUse">
+			<rect width="0.5" height="1.2" fill="#000" opacity="0.1"/>
+		</pattern>
+	</defs>
+	<rect x="0" y="0" width="4.8" height="20" fill="#1c1c1c"/><rect x="65.2" y="0" width="4.8" height="20" fill="#1c1c1c"/><rect x="4.8" y="0" width="2.2" height="20" fill="#cf7792"/><rect x="63" y="0" width="2.2" height="20" fill="#cf7792"/><rect x="7" y="0" width="1.3" height="20" fill="#1c1c1c"/><rect x="61.7" y="0" width="1.3" height="20" fill="#1c1c1c"/><rect x="8.3" y="0" width="1" height="20" fill="#cf7792"/><rect x="60.7" y="0" width="1" height="20" fill="#cf7792"/><rect x="9.3" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="60.3" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="9.7" y="0" width="1.12" height="20" fill="#cf7792"/><rect x="10.82" y="0" width="2.23" height="20" fill="#1c1c1c"/><rect x="13.05" y="0" width="1.12" height="20" fill="#cf7792"/><rect x="14.16" y="0" width="18.6" height="20" fill="#1c1c1c"/><rect x="32.77" y="0" width="4.46" height="20" fill="#24406b"/><rect x="37.23" y="0" width="18.6" height="20" fill="#1c1c1c"/><rect x="55.84" y="0" width="1.12" height="20" fill="#cf7792"/><rect x="56.95" y="0" width="2.23" height="20" fill="#1c1c1c"/><rect x="59.18" y="0" width="1.12" height="20" fill="#cf7792"/>
+	<rect width="70" height="20" fill="url(#r093-weave)"/>
+	<rect width="70" height="20" fill="url(#r093-shade)"/>
+	<rect x="0.25" y="0.25" width="69.5" height="19.5" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="0.5"/>
+	
+</svg>

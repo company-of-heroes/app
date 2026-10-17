@@ -47,16 +47,28 @@
 		{#if error}
 			<p class="px-4 py-3 text-sm text-red-400">{t('Could not load top replays.')}</p>
 		{:else}
-			<div class="bg-secondary-800 grid gap-px sm:grid-cols-2 xl:grid-cols-4">
-				{#if loading}
-					{#each Array.from({ length: TOP_REPLAYS }, (_, i) => i) as i (i)}
-						<ReplayCardSkeleton />
-					{/each}
-				{:else}
-					{#each matches as match (match.id)}
-						<ReplayCard {match} meSteamIds={mySteamIds} />
-					{/each}
-				{/if}
+			<!-- Flush cells; with fewer than four replays the row closes at three columns, no empty slot. -->
+			<div class="-mb-px overflow-hidden">
+				<div
+					class={[
+						'-mr-px grid sm:grid-cols-2',
+						!loading && matches.length < TOP_REPLAYS ? 'xl:grid-cols-3' : 'xl:grid-cols-4'
+					]}
+				>
+					{#if loading}
+						{#each Array.from({ length: TOP_REPLAYS }, (_, i) => i) as i (i)}
+							<div class="border-secondary-800 min-w-0 border-r border-b">
+								<ReplayCardSkeleton />
+							</div>
+						{/each}
+					{:else}
+						{#each matches as match (match.id)}
+							<div class="border-secondary-800 min-w-0 border-r border-b">
+								<ReplayCard {match} meSteamIds={mySteamIds} />
+							</div>
+						{/each}
+					{/if}
+				</div>
 			</div>
 		{/if}
 	</section>

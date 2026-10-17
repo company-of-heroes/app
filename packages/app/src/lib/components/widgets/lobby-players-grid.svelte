@@ -45,7 +45,7 @@
 	const playerGrid = $derived(
 		hideStats
 			? 'grid grid-cols-[minmax(0,1fr)] items-center gap-2'
-			: 'grid grid-cols-[minmax(0,1fr)_5.5rem_4rem_3rem_3.25rem_3.25rem_3.25rem] items-center gap-2'
+			: 'grid grid-cols-[minmax(0,1fr)_3.5rem_4rem_3rem_3.25rem_3.25rem_3.25rem] items-center gap-2'
 	);
 
 	function playerStats(player: LobbyPlayer) {
@@ -107,7 +107,10 @@
 				{/if}
 				<Player.Faction class={cn('shrink-0', isMe && 'ring-primary')} />
 				<Player.Country class="shrink-0" />
-				<Player.Alias class="min-w-0 flex-1 truncate text-sm" />
+				<Player.Alias class="min-w-0 truncate text-sm" />
+				{#if !hideStats}
+					<Player.Rating matchType={result?.matchtype_id ?? matchType} />
+				{/if}
 				{#if smurf?.status === 'shared'}
 					{@const shared = toPlayerSmurf(smurf)}
 					{#if shared}
@@ -119,12 +122,8 @@
 				{/if}
 			</div>
 			{#if !hideStats}
-				<div class="flex items-center justify-center gap-2.5 tabular-nums">
+				<div class="flex items-center justify-center tabular-nums">
 					<Player.RatingChange />
-					<Player.Rating
-						class="text-sm font-semibold"
-						matchType={result?.matchtype_id ?? matchType}
-					/>
 				</div>
 				<div class="flex items-center justify-center gap-1">
 					<Player.Rank class="h-5 w-5" />
@@ -149,7 +148,7 @@
 		>
 			<span>{label}</span>
 			{#if !hideStats}
-				<span class="text-center">{t('ELO')}</span>
+				<span class="text-center">{t('Change')}</span>
 				<span class="text-center">{t('Level')}</span>
 				<span class="text-center">{t('Pos')}</span>
 				<span class="text-center">{t('W')}</span>

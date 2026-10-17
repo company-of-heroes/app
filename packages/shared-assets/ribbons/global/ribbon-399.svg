@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 20" width="70" height="20">
+	<title>Crimson, purple and olive bands ribbon, level 4</title>
+	<defs>
+		<linearGradient id="r399-shade" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.28"/>
+			<stop offset="0.25" stop-color="#fff" stop-opacity="0"/>
+			<stop offset="0.7" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="r399-weave" width="1.2" height="1.2" patternUnits="userSpaceOnUse">
+			<rect width="0.5" height="1.2" fill="#000" opacity="0.1"/>
+		</pattern>
+		<linearGradient id="r399-metal" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#ffffff"/>
+			<stop offset="1" stop-color="#bfc5cc"/>
+		</linearGradient>
+		<filter id="r399-shadow" x="-20%" y="-20%" width="140%" height="140%">
+			<feDropShadow dx="0" dy="0.6" stdDeviation="0.5" flood-color="#000" flood-opacity="0.6"/>
+		</filter>
+	</defs>
+	<rect x="0" y="0" width="4.8" height="20" fill="#e0b23a"/><rect x="65.2" y="0" width="4.8" height="20" fill="#e0b23a"/><rect x="4.8" y="0" width="1.3" height="20" fill="#f4f1e8"/><rect x="63.9" y="0" width="1.3" height="20" fill="#f4f1e8"/><rect x="6.1" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="63.5" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="6.5" y="0" width="11.4" height="20" fill="#8f2232"/><rect x="17.9" y="0" width="8.55" height="20" fill="#6b2d5c"/><rect x="26.45" y="0" width="17.1" height="20" fill="#56622e"/><rect x="43.55" y="0" width="8.55" height="20" fill="#6b2d5c"/><rect x="52.1" y="0" width="11.4" height="20" fill="#8f2232"/>
+	<rect width="70" height="20" fill="url(#r399-weave)"/>
+	<rect width="70" height="20" fill="url(#r399-shade)"/>
+	<rect x="0.25" y="0.25" width="69.5" height="19.5" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="0.5"/>
+	<g filter="url(#r399-shadow)"><path d="M20,5.6 L21.03,8.58 L24.18,8.64 L21.67,10.54 L22.59,13.56 L20,11.76 L17.41,13.56 L18.33,10.54 L15.82,8.64 L18.97,8.58 Z" fill="url(#r399-metal)" stroke="#3d434a" stroke-width="0.4" stroke-linejoin="round"/><path d="M30,5.6 L31.03,8.58 L34.18,8.64 L31.67,10.54 L32.59,13.56 L30,11.76 L27.41,13.56 L28.33,10.54 L25.82,8.64 L28.97,8.58 Z" fill="url(#r399-metal)" stroke="#3d434a" stroke-width="0.4" stroke-linejoin="round"/><path d="M40,5.6 L41.03,8.58 L44.18,8.64 L41.67,10.54 L42.59,13.56 L40,11.76 L37.41,13.56 L38.33,10.54 L35.82,8.64 L38.97,8.58 Z" fill="url(#r399-metal)" stroke="#3d434a" stroke-width="0.4" stroke-linejoin="round"/><path d="M50,5.6 L51.03,8.58 L54.18,8.64 L51.67,10.54 L52.59,13.56 L50,11.76 L47.41,13.56 L48.33,10.54 L45.82,8.64 L48.97,8.58 Z" fill="url(#r399-metal)" stroke="#3d434a" stroke-width="0.4" stroke-linejoin="round"/></g>
+</svg>

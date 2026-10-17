@@ -77,13 +77,6 @@
 			class: 'flex w-full justify-center px-2'
 		},
 		{
-			id: 'elo',
-			header: t('ELO'),
-			width: 'w-14',
-			headerClass: 'text-center',
-			class: 'flex w-full justify-center px-2'
-		},
-		{
 			id: 'rank',
 			header: t('Rank'),
 			width: 'w-[4.5rem]',
@@ -206,9 +199,6 @@
 		class="h-auto! w-6! shrink-0 rounded-none! object-contain! ring-1! ring-black/40"
 	/>
 {/snippet}
-{#snippet cell_elo({ row }: { row: MatchHistoryPlayer })}
-	<Player.Rating class="text-center font-medium tabular-nums" />
-{/snippet}
 {#snippet cell_rank({ row }: { row: MatchHistoryPlayer })}
 	{#if (row.ranklevel ?? 0) > 0}
 		<span class="flex items-center justify-center gap-2">
@@ -227,7 +217,8 @@
 		<Player.Avatar />
 	</span>
 	<Player.Country class="shrink-0" />
-	<Player.Alias class="min-w-0 flex-1 truncate" />
+	<Player.Alias class="min-w-0 truncate" />
+	<Player.Rating />
 {/snippet}
 {#snippet cell_wins({ row }: { row: MatchHistoryPlayer })}
 	<Player.Wins class="text-center font-medium tabular-nums" />
@@ -320,7 +311,6 @@
 					class="rounded-none border-0"
 					cells={{
 						change: cell_change,
-						elo: cell_elo,
 						rank: cell_rank,
 						team: cell_team,
 						player: cell_player,

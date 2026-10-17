@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 20" width="70" height="20">
+	<title>Slate, rose and white edged ribbon, level 5</title>
+	<defs>
+		<linearGradient id="r175-shade" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.28"/>
+			<stop offset="0.25" stop-color="#fff" stop-opacity="0"/>
+			<stop offset="0.7" stop-color="#000" stop-opacity="0"/>
+			<stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+		</linearGradient>
+		<pattern id="r175-weave" width="1.2" height="1.2" patternUnits="userSpaceOnUse">
+			<rect width="0.5" height="1.2" fill="#000" opacity="0.1"/>
+		</pattern>
+		<linearGradient id="r175-metal" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#fff1bf"/>
+			<stop offset="1" stop-color="#d6a640"/>
+		</linearGradient>
+		<filter id="r175-shadow" x="-20%" y="-20%" width="140%" height="140%">
+			<feDropShadow dx="0" dy="0.6" stdDeviation="0.5" flood-color="#000" flood-opacity="0.6"/>
+		</filter>
+	</defs>
+	<rect x="0" y="0" width="4.8" height="20" fill="#1c1c1c"/><rect x="65.2" y="0" width="4.8" height="20" fill="#1c1c1c"/><rect x="4.8" y="0" width="2.2" height="20" fill="#cf7792"/><rect x="63" y="0" width="2.2" height="20" fill="#cf7792"/><rect x="7" y="0" width="1.3" height="20" fill="#1c1c1c"/><rect x="61.7" y="0" width="1.3" height="20" fill="#1c1c1c"/><rect x="8.3" y="0" width="1" height="20" fill="#cf7792"/><rect x="60.7" y="0" width="1" height="20" fill="#cf7792"/><rect x="9.3" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="60.3" y="0" width="0.4" height="20" fill="#000" fill-opacity="0.55"/><rect x="9.7" y="0" width="4.12" height="20" fill="#4d545c"/><rect x="13.82" y="0" width="1.77" height="20" fill="#cf7792"/><rect x="15.58" y="0" width="1.77" height="20" fill="#f4f1e8"/><rect x="17.35" y="0" width="35.3" height="20" fill="#cf7792"/><rect x="52.65" y="0" width="1.77" height="20" fill="#f4f1e8"/><rect x="54.42" y="0" width="1.77" height="20" fill="#cf7792"/><rect x="56.18" y="0" width="4.12" height="20" fill="#4d545c"/>
+	<rect width="70" height="20" fill="url(#r175-weave)"/>
+	<rect width="70" height="20" fill="url(#r175-shade)"/>
+	<rect x="0.25" y="0.25" width="69.5" height="19.5" fill="none" stroke="#000" stroke-opacity="0.45" stroke-width="0.5"/>
+	<g filter="url(#r175-shadow)"><g transform="translate(15 10) rotate(45)" fill="url(#r175-metal)" stroke="#4f3a0c" stroke-width="0.35"><rect x="-2.6" y="-2.6" width="5.2" height="5.2" rx="0.4"/><rect x="-1.1" y="-1.1" width="2.2" height="2.2" fill="none"/></g><g transform="translate(25 10) rotate(45)" fill="url(#r175-metal)" stroke="#4f3a0c" stroke-width="0.35"><rect x="-2.6" y="-2.6" width="5.2" height="5.2" rx="0.4"/><rect x="-1.1" y="-1.1" width="2.2" height="2.2" fill="none"/></g><g transform="translate(35 10) rotate(45)" fill="url(#r175-metal)" stroke="#4f3a0c" stroke-width="0.35"><rect x="-2.6" y="-2.6" width="5.2" height="5.2" rx="0.4"/><rect x="-1.1" y="-1.1" width="2.2" height="2.2" fill="none"/></g><g transform="translate(45 10) rotate(45)" fill="url(#r175-metal)" stroke="#4f3a0c" stroke-width="0.35"><rect x="-2.6" y="-2.6" width="5.2" height="5.2" rx="0.4"/><rect x="-1.1" y="-1.1" width="2.2" height="2.2" fill="none"/></g><g transform="translate(55 10) rotate(45)" fill="url(#r175-metal)" stroke="#4f3a0c" stroke-width="0.35"><rect x="-2.6" y="-2.6" width="5.2" height="5.2" rx="0.4"/><rect x="-1.1" y="-1.1" width="2.2" height="2.2" fill="none"/></g></g>
+</svg>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
-	import MatchRow from '../replay-browse/match-row.svelte';
+	import ReplayCardGrid from '../replay-browse/replay-card-grid.svelte';
 	import type { CommunityMatch, HistorySortDir, HistorySortField } from './types';
 
 	type Props = {
@@ -11,10 +11,12 @@
 		sortDir: HistorySortDir;
 		onSort: (field: HistorySortField) => void;
 		emptyMessage?: string;
-		/** Kept for callers; the face-off rows have no column headers. */
+		/** Kept for callers; the card grid has no column headers. */
 		mapLabel?: string;
 		/** Likes, comments and downloads; off for hosts without community data (local replays). */
 		showEngagement?: boolean;
+		/** Show only this many full rows of cards (the rest is hidden). */
+		rows?: 1 | 2;
 	};
 
 	const { t } = useI18n();
@@ -24,17 +26,13 @@
 		highlightedPlayers = [],
 		meSteamIds = [],
 		emptyMessage = t('No community replays found.'),
-		showEngagement = true
+		showEngagement = true,
+		rows
 	}: Props = $props();
 </script>
 
 {#if matches.length === 0}
 	<p class="text-secondary-400 px-4 py-10 text-center text-sm">{emptyMessage}</p>
 {:else}
-	<!-- Each row closes with its own line; the list overlaps the parent's closing border. -->
-	<div class="-mb-px">
-		{#each matches as match (match.id)}
-			<MatchRow {match} {meSteamIds} {highlightedPlayers} {showEngagement} />
-		{/each}
-	</div>
+	<ReplayCardGrid {matches} {meSteamIds} {highlightedPlayers} {showEngagement} {rows} closing />
 {/if}

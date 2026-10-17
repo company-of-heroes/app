@@ -4,8 +4,9 @@
 	import { tooltip } from '$lib/attachments';
 	import { interactive } from '$lib/components/ui/variants';
 	import { pageTab } from '@company-of-heroes/ui/variants';
-	import { MatchRow } from '@company-of-heroes/ui/replay-browse';
+	import { ReplayCardGrid } from '@company-of-heroes/ui/replay-browse';
 	import {
+		Card as ReplayCard,
 		ListSkeleton as ReplayListSkeleton,
 		type CommunityMatch
 	} from '@company-of-heroes/ui/replay';
@@ -94,7 +95,10 @@
 
 	const highlightedPlayers = $derived(list.filters.players);
 
-	/** A library replay as a list row: roster from the .rec, linked by Steam id. */
+	const cards = $derived(list.replays.map(toRow));
+	const rowsById = $derived(new Map(list.replays.map((row) => [row.id, row])));
+
+	/** A library replay as a card: roster from the .rec, linked by Steam id. */
 	function toRow(replay: ReplaysExpanded): CommunityMatch {
 		return {
 			id: replay.id,
@@ -400,24 +404,27 @@
 {#if list.isLoading && list.replays.length === 0}
 	<ReplayListSkeleton rowCount={10} />
 {:else}
-	<div class="-mb-px">
-		{#each list.replays as row (row.id)}
-			{@const isLocal = !!localPresentIds[row.id]}
-			<MatchRow match={toRow(row)} showEngagement={false} href={`/replays/${row.id}`}>
-				{#snippet badges()}
-					{#if row.visibility === 'member'}
-						<Badge variant="success">{t('Published')}</Badge>
-					{/if}
-					{#if isLocal}
-						<Badge>{t('In playback folder')}</Badge>
-					{/if}
-				{/snippet}
-				{#snippet actions()}
-					{@render rowActions(row)}
-				{/snippet}
-			</MatchRow>
-		{/each}
-	</div>
+	<ReplayCardGrid matches={cards}>
+		{#snippet card(match: CommunityMatch)}
+			{@const row = rowsById.get(match.id)}
+			{#if row}
+				{@const isLocal = !!localPresentIds[row.id]}
+				<ReplayCard {match} {highlightedPlayers} showEngagement={false} href={`/replays/${row.id}`}>
+					{#snippet badges()}
+						{#if row.visibility === 'member'}
+							<Badge variant="success">{t('Published')}</Badge>
+						{/if}
+						{#if isLocal}
+							<Badge>{t('In playback folder')}</Badge>
+						{/if}
+					{/snippet}
+					{#snippet actions()}
+						{@render rowActions(row)}
+					{/snippet}
+				</ReplayCard>
+			{/if}
+		{/snippet}
+	</ReplayCardGrid>
 	<div
 		{@attach viewport}
 		class="text-secondary-400 border-secondary-800 border-t px-4 py-3 text-sm"

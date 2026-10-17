@@ -44,7 +44,7 @@
 	const downloads = $derived([
 		{
 			key: 'companion',
-			title: t('Companion app'),
+			title: t('Companion app (includes Replay Manager)'),
 			description: t(
 				'Runs next to the game: live lobby scouting, automatic match history, stream overlays and fair play. Needs an account.'
 			),

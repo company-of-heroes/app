@@ -3,10 +3,15 @@
 	import { cn } from '@company-of-heroes/ui/cn';
 	import { useHost } from '../host/host.context';
 	import { parseDate } from '../format/date';
-	import { getRaceLabel } from '../format/player-format';
 	import { interactive } from '../variants';
 	import RewardIcon from './reward-icon.svelte';
-	import { rewardRaceId, ribbonSeriesMap } from './ribbon';
+	import {
+		REWARD_CATEGORY_ORDER,
+		rewardCategory,
+		rewardCategoryLabel,
+		ribbonSeriesMap,
+		type RewardCategory
+	} from './ribbon';
 	import type { PlayerRewards, RewardView } from './types';
 
 	type Props = {
@@ -19,12 +24,10 @@
 
 	type Rack = { unlocked: RewardView[]; locked: RewardView[] };
 
-	type FactionGroup = { raceId: number | null; label: string; rewards: RewardView[] };
+	type CategoryGroup = { category: RewardCategory; label: string; rewards: RewardView[] };
 
 	/** Locked rewards the owner sees before expanding: the closest ones. */
 	const NEXT_UP = 3;
-	/** Rack order: US, Wehrmacht, British, Panzer Elite, then global ones. */
-	const FACTION_ORDER: (number | null)[] = [0, 1, 2, 3, null];
 
 	let { steamId, rewards: preloaded, class: className }: Props = $props();
 	const host = useHost();
@@ -99,15 +102,15 @@
 		return { unlocked, locked };
 	}
 
-	/** Unlocked ribbons per faction, each group keeping its newest-first order. */
-	function byFaction(list: RewardView[]): FactionGroup[] {
-		return FACTION_ORDER.map((raceId) => ({
-			raceId,
-			label: raceId === null ? t('Global') : getRaceLabel(raceId),
+	/** Unlocked ribbons per category (factions, global, supporter), each group keeping its newest-first order. */
+	function byCategory(list: RewardView[]): CategoryGroup[] {
+		return REWARD_CATEGORY_ORDER.map((category) => ({
+			category,
+			label: t(rewardCategoryLabel(category)),
 			rewards: list.filter(
 				(reward) =>
-					rewardRaceId(reward, reward.ribbon ? ribbonByKey.get(reward.ribbon) : undefined) ===
-					raceId
+					rewardCategory(reward, reward.ribbon ? ribbonByKey.get(reward.ribbon) : undefined) ===
+					category
 			)
 		})).filter((group) => group.rewards.length > 0);
 	}
@@ -127,7 +130,7 @@
 		<div class={cn('mb-4 flex max-w-[44rem] flex-col gap-3', className)}>
 			{#if unlocked.length > 0}
 				<ul class="flex flex-wrap gap-x-6 gap-y-3" aria-label={t('Rewards')}>
-					{#each byFaction(unlocked) as group (group.raceId ?? 'global')}
+					{#each byCategory(unlocked) as group (group.category)}
 						<li class="flex flex-col gap-1.5">
 							<span class="text-secondary-500 text-xs font-semibold tracking-wide uppercase">
 								{group.label}

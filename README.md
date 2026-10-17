@@ -24,7 +24,7 @@ Grab the **Windows installer** — the `.exe` named like `fknoobscoh_<version>_x
 5. Launch **Company of Heroes - Companion** from the Start Menu or desktop shortcut
 
 > [!IMPORTANT]
-> **Code signing:** Official Windows builds from GitHub Releases are **Authenticode-signed** via [Azure Artifact Signing](https://learn.microsoft.com/en-us/azure/trusted-signing/). Windows shows a known publisher when you install. Built by [Code IT](https://codeit.ninja) ([GitHub](https://github.com/codeit-ninja), [Twitch](https://www.twitch.tv/fknoobscoh)). Always download from the releases link above — not from third-party mirrors.
+> **Code signing:** Official Windows builds from GitHub Releases are **Authenticode-signed** via [Azure Artifact Signing](https://learn.microsoft.com/en-us/azure/trusted-signing/). Windows shows a known publisher when you install. Built by [Code IT](https://codeit.ninja) ([GitHub](https://github.com/codeit-ninja), [Twitch](https://www.twitch.tv/commanderredttv)). Always download from the releases link above — not from third-party mirrors.
 >
 > **Microsoft Store from v1.0:** From version 1.0 onwards, **Company of Heroes - Companion** will be published on the Microsoft Store. Until then, grab pre-1.0 builds from GitHub releases above.
 

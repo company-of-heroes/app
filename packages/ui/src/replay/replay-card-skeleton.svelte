@@ -22,14 +22,14 @@
 		<Skeleton class="size-6 shrink-0 rounded-full" />
 		<Skeleton class="h-3.5 w-32" />
 	</div>
-	<div class="border-secondary-800 divide-secondary-800 mt-3 flex flex-col divide-y border-t">
+	<div class="border-secondary-800 divide-secondary-800 mt-3 grid grid-cols-2 divide-x border-t">
 		{#each { length: 2 }, team (team)}
-			<div class="flex flex-col py-1.5">
-				<Skeleton class="mx-4 my-1 h-2.5 w-12" />
-				{#each { length: 1 }, index (index)}
-					<div class="flex h-6 items-center gap-2 px-4">
-						<Skeleton class="size-5 shrink-0 rounded-full" />
-						<Skeleton class="h-3 w-20" />
+			<div class="flex min-w-0 flex-col py-2">
+				<Skeleton class="mx-3 my-1 h-2.5 w-12" />
+				{#each { length: 2 }, index (index)}
+					<div class="flex h-7 items-center gap-2 px-3">
+						<Skeleton class="size-4 shrink-0 rounded-full" />
+						<Skeleton class="h-3 w-16" />
 					</div>
 				{/each}
 			</div>

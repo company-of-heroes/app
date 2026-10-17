@@ -11,8 +11,8 @@
 		statWins,
 		factionIcon
 	} from '@company-of-heroes/ui/variants';
-	import { getEloColor, getEloTextShadow } from '@company-of-heroes/ui/format/player-format';
 	import { hasLiveLobbyStats } from './stats';
+	import EloBadge from '../player/elo-badge.svelte';
 	import PlayerLikeCount from '../player/player-like-count.svelte';
 	import PlayerNameIcons from '../player/player-name-icons.svelte';
 	import PlayerProfileLink from '../player/player-profile-link.svelte';
@@ -40,7 +40,7 @@
 	const withStats = $derived(showStats ?? hasLiveLobbyStats(players));
 	const desktopGrid = $derived(
 		withStats
-			? 'grid grid-cols-[minmax(0,1fr)_5.5rem_4rem_3rem_3.25rem_3.25rem_3.25rem] items-center gap-2'
+			? 'grid grid-cols-[minmax(0,1fr)_4rem_3rem_3.25rem_3.25rem_3.25rem] items-center gap-2'
 			: 'grid grid-cols-[minmax(0,1fr)] items-center gap-2'
 	);
 </script>
@@ -124,21 +124,15 @@
 		{:else}
 			<span class="text-secondary-300 min-w-0 truncate text-sm">{label}</span>
 		{/if}
+		{#if !cpu}
+			<EloBadge elo={player.stats?.elo} />
+		{/if}
 	</div>
 {/snippet}
 
 {#snippet playerStats(player: LiveLobbyPlayer)}
 	{@const cpu = player.playerId === -1}
 	{@const stats = cpu ? null : player.stats}
-	<div class="flex items-center justify-center text-sm font-semibold tabular-nums">
-		{#if stats?.elo != null}
-			<span style:color={getEloColor(stats.elo)} style:text-shadow={getEloTextShadow(stats.elo)}>
-				{stats.elo}
-			</span>
-		{:else}
-			{@render missing()}
-		{/if}
-	</div>
 	<div class="text-center text-sm font-medium tabular-nums">
 		{#if stats && stats.rankLevel > 0}
 			{stats.rankLevel}
@@ -180,20 +174,6 @@
 	{@const cpu = player.playerId === -1}
 	{@const stats = cpu ? null : player.stats}
 	<div class="text-secondary-400 mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs tabular-nums">
-		<span class="inline-flex items-center gap-1">
-			<span class="text-secondary-500">{t('ELO')}</span>
-			{#if stats?.elo != null}
-				<span
-					class="font-semibold"
-					style:color={getEloColor(stats.elo)}
-					style:text-shadow={getEloTextShadow(stats.elo)}
-				>
-					{stats.elo}
-				</span>
-			{:else}
-				{@render missing()}
-			{/if}
-		</span>
 		<span class="inline-flex items-center gap-1">
 			<span class="text-secondary-500">{t('Level')}</span>
 			{#if stats && stats.rankLevel > 0}
@@ -265,7 +245,6 @@
 		>
 			<span>{label}</span>
 			{#if withStats}
-				<span class="text-center">{t('ELO')}</span>
 				<span class="text-center">{t('Level')}</span>
 				<span class="text-center">{t('Pos')}</span>
 				<span class="text-center">{t('W')}</span>

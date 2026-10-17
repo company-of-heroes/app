@@ -39,6 +39,9 @@
 				<div class="flex min-w-0 items-center gap-2">
 					<Player.Country />
 					<Player.Alias class="truncate text-lg font-bold" />
+					{#if !isCpu}
+						<Player.Rating {matchType} />
+					{/if}
 				</div>
 			</div>
 			{#if isCpu}
@@ -51,13 +54,7 @@
 				<Player.Faction class={factionClass} />
 			</div>
 			{#if !isCpu}
-				<dl class="grid min-w-0 flex-1 grid-cols-6 px-1 py-3 text-center text-sm">
-					<div class="px-2">
-						<dt class="text-secondary-500 text-xs font-medium uppercase">{t('ELO')}</dt>
-						<dd class="mt-1 font-medium tabular-nums">
-							<Player.Rating {matchType} />
-						</dd>
-					</div>
+				<dl class="grid min-w-0 flex-1 grid-cols-5 px-1 py-3 text-center text-sm">
 					<div class="px-2">
 						<dt class="text-secondary-500 text-xs font-medium uppercase">{t('Level')}</dt>
 						<dd class="mt-1 flex items-center justify-center gap-2 font-medium tabular-nums">

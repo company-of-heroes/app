@@ -1,7 +1,7 @@
-import us from '@company-of-heroes/shared-assets/factions/us.png';
-import wm from '@company-of-heroes/shared-assets/factions/wm.png';
-import cw from '@company-of-heroes/shared-assets/factions/cw.png';
-import pe from '@company-of-heroes/shared-assets/factions/pe.png';
+import us from '@company-of-heroes/shared-assets/factions/small/us.png';
+import wm from '@company-of-heroes/shared-assets/factions/small/wm.png';
+import cw from '@company-of-heroes/shared-assets/factions/small/cw.png';
+import pe from '@company-of-heroes/shared-assets/factions/small/pe.png';
 
 /**
  * Game images. Maps and doctrine banners live in the companion app; relative globs

@@ -30,6 +30,7 @@
 				<div class="flex min-w-0 items-center gap-2">
 					<Skeleton class="h-4 w-5 shrink-0 rounded-xs" />
 					<Skeleton class="h-4 w-36" />
+					<Skeleton class="h-5 w-10 shrink-0" />
 				</div>
 				<div class="mt-1.5 flex items-center gap-2.5">
 					<Skeleton class="size-4 shrink-0 rounded-full" />
@@ -37,7 +38,6 @@
 					<Skeleton class="h-4 w-14" />
 				</div>
 			</div>
-			<Skeleton class="h-4 w-10 shrink-0" />
 			<div class="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5">
 				<Skeleton class="h-3 w-8" />
 				<Skeleton class="h-5 w-8" />
@@ -52,7 +52,6 @@
 			class="bg-secondary-950/90 text-secondary-300 border-secondary-800 flex items-center gap-4 border-b px-4 py-2.5 text-sm font-semibold tracking-wide uppercase"
 		>
 			<span class="min-w-0 flex-1">{label}</span>
-			<span class="text-right">{t('Rating')}</span>
 			<span class="text-primary w-12 text-center font-semibold">{t('CPM')}</span>
 		</div>
 		{#each rows as row (row)}

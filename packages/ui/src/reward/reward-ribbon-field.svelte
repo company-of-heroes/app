@@ -12,12 +12,12 @@
 		surfaceModal
 	} from '@company-of-heroes/ui/variants';
 	import GlobeIcon from 'phosphor-svelte/lib/GlobeIcon';
+	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
 	import CloseIcon from 'phosphor-svelte/lib/XIcon';
-	import { getRaceLabel } from '../format/player-format';
 	import { useHost } from '../host/host.context';
 	import { Button } from '../ui/button';
 	import { ToggleGroup } from '../ui/toggle-group';
-	import type { Ribbon } from './ribbon';
+	import { rewardCategoryLabel, type RewardCategory, type Ribbon } from './ribbon';
 
 	type Props = {
 		/** Ribbon key (e.g. `ribbon-042`), or null to use the uploaded image. */
@@ -32,11 +32,8 @@
 	const host = useHost();
 
 	const ribbons = host.resolve.ribbons();
-	/** Global ribbons (no faction) first, then one group per faction. */
-	const GROUPS: (number | null)[] = [null, 0, 1, 2, 3];
-	const groupValue = (raceId: number | null) => (raceId === null ? 'global' : String(raceId));
-	const groupLabel = (raceId: number | null) =>
-		raceId === null ? t('Global') : t(getRaceLabel(raceId));
+	/** Global ribbons (no faction) first, then one group per faction, then the supporter set. */
+	const GROUPS: RewardCategory[] = ['global', 0, 1, 2, 3, 'supporter'];
 
 	let open = $state(false);
 	let filter = $state('all');
@@ -44,11 +41,11 @@
 	const taken = $derived(new Set(used));
 	const selected = $derived(ribbons.find((ribbon) => ribbon.key === value) ?? null);
 	/** Per faction: single ribbons, then each ranked series by level. */
-	const allGroups = GROUPS.map((raceId) => {
-		const own = ribbons.filter((ribbon) => ribbon.raceId === raceId);
+	const allGroups = GROUPS.map((category) => {
+		const own = ribbons.filter((ribbon) => ribbon.category === category);
 		const series = [...new Set(own.flatMap((ribbon) => (ribbon.series ? [ribbon.series] : [])))];
 		return {
-			raceId,
+			category,
 			single: own.filter((ribbon) => !ribbon.series),
 			ranked: series.map((key) => ({
 				key,
@@ -60,11 +57,14 @@
 	});
 	/** The toggle narrows the groups to one faction. */
 	const groups = $derived(
-		allGroups.filter((group) => filter === 'all' || groupValue(group.raceId) === filter)
+		allGroups.filter((group) => filter === 'all' || String(group.category) === filter)
 	);
 	const filterItems = $derived([
 		{ value: 'all', label: t('All') },
-		...GROUPS.map((raceId) => ({ value: groupValue(raceId), label: groupLabel(raceId) }))
+		...GROUPS.map((category) => ({
+			value: String(category),
+			label: t(rewardCategoryLabel(category))
+		}))
 	]);
 
 	function choose(key: string) {
@@ -135,28 +135,32 @@
 				<ToggleGroup bind:value={filter} items={filterItems} aria-label={t('Faction')} />
 			</div>
 			<div class="overflow-y-auto">
-				{#each groups as group (groupValue(group.raceId))}
+				{#each groups as group (group.category)}
 					<section class="border-secondary-800 border-b last:border-b-0">
 						<h3
 							class="border-secondary-800 bg-secondary-950 text-secondary-300 sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-2 text-xs font-semibold tracking-wide uppercase"
 						>
-							{#if group.raceId === null}
+							{#if typeof group.category === 'number'}
+								<img
+									src={host.resolve.factionFlagByRace(group.category)}
+									alt=""
+									class={factionIcon}
+								/>
+							{:else}
 								<span
 									class={cn(
 										factionIcon,
 										'bg-secondary-800 text-secondary-300 inline-flex items-center justify-center'
 									)}
 								>
-									<GlobeIcon size={14} />
+									{#if group.category === 'supporter'}
+										<HeartIcon size={14} weight="fill" />
+									{:else}
+										<GlobeIcon size={14} />
+									{/if}
 								</span>
-							{:else}
-								<img
-									src={host.resolve.factionFlagByRace(group.raceId)}
-									alt=""
-									class={factionIcon}
-								/>
 							{/if}
-							{groupLabel(group.raceId)}
+							{t(rewardCategoryLabel(group.category))}
 						</h3>
 						{@render grid(group.single)}
 						{#if group.ranked.length > 0}

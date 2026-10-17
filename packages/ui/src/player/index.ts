@@ -1,4 +1,5 @@
 import CountryFlag from './country-flag.svelte';
+import EloBadge from './elo-badge.svelte';
 import PlayerLabels from './player-labels.svelte';
 import PlayerLikeCount from './player-like-count.svelte';
 import PlayerLinks from './player-links.svelte';
@@ -31,6 +32,7 @@ import YoutubeLogo from './youtube-logo.svelte';
 
 export {
 	CountryFlag,
+	EloBadge,
 	RankIcon,
 	MatchResultBadge,
 	MatchResultStrip,

@@ -20,7 +20,7 @@ import { userAvatarSrc } from '$lib/components/user/user-avatar-src';
 import { getI18n, t } from '$lib/i18n';
 import { translateText } from '$lib/translate';
 import { isMeReplayAlias } from '$lib/utils/player-me';
-import { getFactionFlagFromRace, getRankImage, getRankImageByLeaderboardId } from '$lib/utils';
+import { getFactionIconFromRace, getRankImage, getRankImageByLeaderboardId } from '$lib/utils';
 import {
 	getDefaultMapImage,
 	getFactionFlagFromLeaderboardId,
@@ -96,7 +96,7 @@ export function provideAppHost(): HostContext {
 			avatarUrl: (url, options) => withFileThumb(url, options?.thumb),
 			mapSrc: getMapImageFromName,
 			mapFallbackSrc: getDefaultMapImage,
-			factionFlagByRace: getFactionFlagFromRace,
+			factionFlagByRace: getFactionIconFromRace,
 			factionFlagByLeaderboard: getFactionFlagFromLeaderboardId,
 			rankImageByRace: getRankImage,
 			rankImageByLeaderboard: getRankImageByLeaderboardId,

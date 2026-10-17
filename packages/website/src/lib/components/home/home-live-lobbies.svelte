@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
-	import {
-		ListTable as MatchListTable,
-		LIVE_MATCH_LIST_COLUMNS
-	} from '@company-of-heroes/ui/match';
 	import type { LiveLobbyRecord } from '@company-of-heroes/api';
+	import { Card as LiveLobbyCard, type LiveLobby } from '@company-of-heroes/ui/live-lobby';
+	import { CardGrid } from '@company-of-heroes/ui/replay-browse';
 	import { Button } from '@company-of-heroes/ui/button';
 	import { meSteamIds } from '$lib/auth/user';
 	import { useI18n } from '$lib/i18n';
-	import { toLiveLobby, toMatchListRow } from '$lib/utils/live-lobby';
+	import { toLiveLobby } from '$lib/utils/live-lobby';
 
 	type Props = {
 		lobbies: LiveLobbyRecord[];
@@ -24,7 +22,7 @@
 	let seeding = $state(false);
 	let seedError = $state<string | null>(null);
 
-	const rows = $derived(lobbies.map((lobby) => toMatchListRow(toLiveLobby(lobby, t))));
+	const items = $derived(lobbies.map((lobby) => toLiveLobby(lobby, t)));
 	const loadError = $derived(error || seedError);
 
 	async function seedTestLobbies() {
@@ -62,6 +60,11 @@
 	}
 </script>
 
+{#snippet card(lobby: LiveLobby)}
+	<LiveLobbyCard {lobby} meSteamIds={mySteamIds} />
+{/snippet}
+
+<!-- The grid's closing line lands on the section's bottom border. -->
 <section class="border-secondary-800 border-b">
 	<div
 		class="border-secondary-800 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-4 py-3"
@@ -84,7 +87,8 @@
 				</div>
 			{/if}
 			{#if !loading}
-				<span class="text-secondary-400 text-sm">{t('{count} active', { count: rows.length })}</span
+				<span class="text-secondary-400 text-sm"
+					>{t('{count} active', { count: items.length })}</span
 				>
 			{/if}
 		</div>
@@ -94,12 +98,13 @@
 			{seedError ?? t('Could not load live lobbies.')}
 		</p>
 	{/if}
-	<MatchListTable
-		{rows}
-		{loading}
-		columns={LIVE_MATCH_LIST_COLUMNS}
-		emptyMessage={loadError
-			? t('Could not load live lobbies.')
-			: t('No community members are in a match right now.')}
-	/>
+	{#if loading || items.length > 0}
+		<CardGrid {items} {card} skeletons={loading ? 4 : 0} closing />
+	{:else}
+		<p class="text-secondary-400 px-4 py-6 text-sm">
+			{loadError
+				? t('Could not load live lobbies.')
+				: t('No community members are in a match right now.')}
+		</p>
+	{/if}
 </section>

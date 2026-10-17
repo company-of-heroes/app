@@ -1,7 +1,8 @@
 import { escapeHtml } from '../attachments/tooltip.svelte';
+import { getRaceLabel } from '../format/player-format';
 import type { RewardView } from './types';
 
-/** Service ribbons from `shared-assets/ribbons` (see `scripts/generate-ribbons.mjs` there). */
+/** Service ribbons from `shared-assets/ribbons/<faction>/` (see `scripts/generate-ribbons.mjs` there). */
 export type RibbonPattern =
 	| 'bands'
 	| 'edged'
@@ -15,13 +16,43 @@ export type RibbonPattern =
 	| 'theatre'
 	| 'piped';
 
+/** Folder (and edge colours) a ribbon belongs to. */
+export type RibbonFaction =
+	| 'americans'
+	| 'wehrmacht'
+	| 'british'
+	| 'panzer_elite'
+	| 'global'
+	| 'supporter';
+
+/** How rewards and ribbons are grouped: a faction's `raceId`, the global set or the supporter set. */
+export type RewardCategory = 0 | 1 | 2 | 3 | 'global' | 'supporter';
+
+/** Wiki order: US, Wehrmacht, British, Panzer Elite, global rewards, then supporter rewards. */
+export const REWARD_CATEGORY_ORDER: readonly RewardCategory[] = [0, 1, 2, 3, 'global', 'supporter'];
+
+/** English label of a category; callers pass it through `t()`. */
+export function rewardCategoryLabel(category: RewardCategory): string {
+	if (category === 'global') {
+		return 'Global';
+	}
+
+	if (category === 'supporter') {
+		return 'Supporter';
+	}
+
+	return getRaceLabel(category);
+}
+
 export type Ribbon = {
 	/** File name without `.svg`, stored on the reward (e.g. `ribbon-042`). */
 	key: string;
 	url: string;
 	title: string;
-	/** Faction the ribbon is styled after (0 US, 1 Wehrmacht, 2 British, 3 Panzer Elite), null for global ones. */
+	/** Faction the ribbon is styled after (0 US, 1 Wehrmacht, 2 British, 3 Panzer Elite), null for global and supporter ones. */
 	raceId: number | null;
+	faction: RibbonFaction;
+	category: RewardCategory;
 	pattern: RibbonPattern;
 	/** Carries a pin: star, oak leaves, V, arrowhead, swords, rosette, pip or tank. */
 	device: boolean;
@@ -32,8 +63,10 @@ export type Ribbon = {
 
 /** One row of `ribbons.json`. */
 export type RibbonManifestEntry = {
+	/** Path inside `ribbons/`, e.g. `americans/ribbon-001.svg`. */
 	file: string;
 	title: string;
+	faction: RibbonFaction;
 	raceId: number | null;
 	pattern: RibbonPattern;
 	device: unknown;
@@ -48,24 +81,33 @@ export function ribbonTipHtml(ribbon: Ribbon | null | undefined): string {
 		: '';
 }
 
-const fileName = (path: string) =>
-	path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1);
+/** Key a reward stores for a manifest file: `americans/ribbon-001.svg` → `ribbon-001`. */
+export const ribbonKey = (file: string) =>
+	file.slice(file.lastIndexOf('/') + 1).replace(/\.svg$/, '');
+
+/** Path after `ribbons/` with forward slashes, so a glob path matches the manifest's `file`. */
+const ribbonPath = (path: string) => path.replace(/\\/g, '/').replace(/^.*\/ribbons\//, '');
+
+const ribbonCategory = (entry: RibbonManifestEntry): RewardCategory =>
+	entry.faction === 'supporter' ? 'supporter' : ((entry.raceId as RewardCategory) ?? 'global');
 
 /** Joins the manifest with the URLs a host's `import.meta.glob` gave for the SVG files. */
 export function ribbonsFrom(
 	manifest: RibbonManifestEntry[],
 	urls: Record<string, string>
 ): Ribbon[] {
-	const byFile = new Map(Object.entries(urls).map(([path, url]) => [fileName(path), url]));
+	const byFile = new Map(Object.entries(urls).map(([path, url]) => [ribbonPath(path), url]));
 	return manifest.flatMap((entry) => {
 		const url = byFile.get(entry.file);
 		return url
 			? [
 					{
-						key: entry.file.replace(/\.svg$/, ''),
+						key: ribbonKey(entry.file),
 						url,
 						title: entry.title,
 						raceId: entry.raceId,
+						faction: entry.faction,
+						category: ribbonCategory(entry),
 						pattern: entry.pattern,
 						device: Boolean(entry.device),
 						series: entry.series ?? null,
@@ -111,25 +153,37 @@ export function ribbonSeriesMap(ribbons: Ribbon[]): Map<string, RibbonSeries> {
 }
 
 /**
- * Faction a reward belongs to: the one its conditions count, else the faction its ribbon is
- * styled after. Null for global rewards (no faction, or conditions for several).
+ * Category a reward belongs to: supporter when it counts the subscription or wears a supporter
+ * ribbon; else the faction its conditions count, else the faction its ribbon is styled after.
+ * Global when there is no faction, or conditions for several.
  */
-export function rewardRaceId(
+export function rewardCategory(
 	reward: Pick<RewardView, 'conditions'>,
 	ribbon: Ribbon | undefined
-): number | null {
+): RewardCategory {
+	const conditions = reward.conditions ?? [];
+	if (
+		ribbon?.category === 'supporter' ||
+		conditions.some(
+			(condition) =>
+				condition.metric === 'supporter_active' || condition.metric === 'supporter_months'
+		)
+	) {
+		return 'supporter';
+	}
+
 	const raceIds = new Set(
-		(reward.conditions ?? []).flatMap((condition) =>
+		conditions.flatMap((condition) =>
 			condition.filter?.raceId !== undefined ? [condition.filter.raceId] : []
 		)
 	);
 	if (raceIds.size > 1) {
-		return null;
+		return 'global';
 	}
 
 	if (raceIds.size === 1) {
-		return [...raceIds][0];
+		return [...raceIds][0] as RewardCategory;
 	}
 
-	return ribbon?.raceId ?? null;
+	return ribbon?.category ?? 'global';
 }

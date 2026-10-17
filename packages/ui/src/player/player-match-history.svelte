@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CountryFlag from './country-flag.svelte';
+	import EloBadge from './elo-badge.svelte';
 	import RankIcon from './rank-icon.svelte';
 	import { useI18n } from '@company-of-heroes/i18n';
 	import type { Snippet } from 'svelte';
@@ -19,14 +20,7 @@
 	import MinusIcon from 'phosphor-svelte/lib/MinusIcon';
 	import { Button } from '../ui/button';
 	import MapImage from '../ui/map-image.svelte';
-	import {
-		formatDuration,
-		formatMatchStamp,
-		getEloColor,
-		getEloTextShadow,
-		isEliteElo,
-		normalizeMapName
-	} from '../format/player-format';
+	import { formatDuration, formatMatchStamp, normalizeMapName } from '../format/player-format';
 	import { formatStreak, streakClass } from '../format/ranks';
 	import type { MatchHistoryPlayer, PlayerPageData, TransformedMatch } from './types';
 	import PlayerLabels from './player-labels.svelte';
@@ -90,20 +84,6 @@
 	</span>
 {/snippet}
 
-{#snippet eloValue(elo: number | null)}
-	{#if elo == null}
-		<span class="text-secondary-500 text-xs font-normal">N/A</span>
-	{:else}
-		<span
-			class={cn('tabular-nums', isEliteElo(elo) ? 'font-bold tracking-wide' : 'font-medium')}
-			style:color={getEloColor(elo)}
-			style:text-shadow={getEloTextShadow(elo)}
-		>
-			{elo}
-		</span>
-	{/if}
-{/snippet}
-
 {#snippet rankBadge(matchPlayer: MatchHistoryPlayer)}
 	{#if (matchPlayer.ranklevel ?? 0) > 0}
 		<span class="flex items-center justify-center gap-2">
@@ -163,6 +143,7 @@
 				{matchPlayer.alias}
 			</span>
 		{/if}
+		<EloBadge elo={displayElo(matchPlayer)} />
 		<PlayerLabels labels={matchPlayer.labels} class="shrink-0" />
 	</div>
 {/snippet}
@@ -228,7 +209,6 @@
 					<table class="w-full table-fixed text-sm">
 						<colgroup>
 							<col class="w-14" />
-							<col class="w-14" />
 							<col class="w-24" />
 							<col class="w-12" />
 							<col />
@@ -239,7 +219,6 @@
 						<thead>
 							<tr class={tableHeadRow}>
 								<th class="px-2 py-2 text-center">{t('Change')}</th>
-								<th class="px-2 py-2 text-center">{t('ELO')}</th>
 								<th class="px-2 py-2 text-center">{t('Rank')}</th>
 								<th class="px-2 py-2 text-center">{t('Team')}</th>
 								<th class="px-3 py-2 text-left">{t('Player')}</th>
@@ -251,9 +230,7 @@
 						<tbody>
 							{#each players as matchPlayer (matchPlayer.profile_id)}
 								{@const isSelf = matchPlayer.profile_id === player.profileId}
-								{@const elo = displayElo(matchPlayer)}
 								{@const delta = ratingDelta(matchPlayer)}
-								{@const flagUrl = host.resolve.flagImageUrl(matchPlayer.country ?? null)}
 								<tr
 									class={cn(
 										'border-secondary-800 h-9 border-b',
@@ -263,11 +240,6 @@
 									<td class="px-2 py-1.5 text-center">
 										<div class="flex w-full justify-center">
 											{@render ratingDeltaBadge(delta)}
-										</div>
-									</td>
-									<td class="px-2 py-1.5 text-center">
-										<div class="flex w-full justify-center">
-											{@render eloValue(elo)}
 										</div>
 									</td>
 									<td class="px-2 py-1.5 text-center">
@@ -322,9 +294,7 @@
 				<div class="divide-secondary-800 divide-y md:hidden">
 					{#each players as matchPlayer (matchPlayer.profile_id)}
 						{@const isSelf = matchPlayer.profile_id === player.profileId}
-						{@const elo = displayElo(matchPlayer)}
 						{@const delta = ratingDelta(matchPlayer)}
-						{@const flagUrl = host.resolve.flagImageUrl(matchPlayer.country ?? null)}
 						<div
 							class={cn(
 								'space-y-2 px-4 py-3',
@@ -334,7 +304,6 @@
 							{@render playerIdentity(matchPlayer, isSelf)}
 							<div class="text-secondary-300 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
 								{@render ratingDeltaBadge(delta)}
-								{@render eloValue(elo)}
 								{@render rankBadge(matchPlayer)}
 								<img
 									loading="lazy"
