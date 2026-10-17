@@ -599,7 +599,6 @@ export type ReputationTypesRecord = {
 export const SubscriptionsStatusOptions = {
 	active: 'active',
 	past_due: 'past_due',
-	paused: 'paused',
 	canceled: 'canceled'
 } as const;
 export type SubscriptionsStatusOptions =
@@ -679,7 +678,7 @@ export type SubscriptionPaymentsRecord = {
 	created: IsoAutoDateString;
 	currency?: string;
 	id: string;
-	paddleTransactionId: string;
+	molliePaymentId: string;
 	paidAt: IsoDateString;
 	updated: IsoAutoDateString;
 	user: RecordIdString;
@@ -691,9 +690,9 @@ export type SubscriptionsRecord = {
 	created: IsoAutoDateString;
 	currentPeriodEnd?: IsoDateString;
 	id: string;
-	paddleCustomerId?: string;
-	paddleSubscriptionId: string;
-	paddleUpdatedAt?: IsoDateString;
+	mollieCustomerId?: string;
+	mollieMandateId?: string;
+	mollieSubscriptionId?: string;
 	status: SubscriptionsStatusOptions;
 	updated: IsoAutoDateString;
 	user: RecordIdString;

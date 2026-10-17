@@ -16,15 +16,12 @@ invocation_logs = true
 # STEAM_API_KEY, AUTH_HANDOFF_SECRET, TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET,
 # YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, AUTH_TOKEN_SECRET (PocketBase's /api/_auth/token,
 # same value there), SMURF_SERVICE_TOKEN (the smurf worker's own token, same value there)
-# Paddle secrets: PADDLE_API_KEY (customer portal sessions), PADDLE_WEBHOOK_SECRET (the
-# notification destination's secret key; verifies POST /api/paddle/webhook).
+# Mollie secret: MOLLIE_API_KEY (supporter subscription; a `test_…` key is test mode, a
+# `live_…` key takes real payments).
 
-# Paddle Billing (supporter subscription). Sandbox defaults: set PADDLE_ENV = "production" and
-# the live client-side token and price id before taking real payments.
+# Mollie webhooks (POST /api/mollie/webhook) are sent to this origin; empty skips them.
 [vars]
-PADDLE_ENV = "sandbox"
-PUBLIC_PADDLE_CLIENT_TOKEN = ""
-PUBLIC_PADDLE_PRICE_ID = ""
+MOLLIE_WEBHOOK_ORIGIN = "https://coh1stats.com"
 
 # Replay download limits per IP (src/lib/server/downloads.ts); namespace ids are account-unique.
 [[ratelimits]]

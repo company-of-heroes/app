@@ -10,10 +10,12 @@
 	import PlayerSupporterMedal from '../player/player-supporter-medal.svelte';
 
 	type Props = {
+		/** Two columns with sentence-case titles, for narrow places like the supporter dialog. */
+		compact?: boolean;
 		class?: string;
 	};
 
-	let { class: className }: Props = $props();
+	let { compact = false, class: className }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 	const medalUrl = host.resolve.supporterMedal();
@@ -48,7 +50,7 @@
 
 <!-- Flush grid: every cell draws its right and bottom line, the grid overhangs by 1px on the right. -->
 <div class={cn('overflow-hidden', className)}>
-	<ul class="-mr-px grid sm:grid-cols-2 lg:grid-cols-4">
+	<ul class={cn('-mr-px grid sm:grid-cols-2', !compact && 'lg:grid-cols-4')}>
 		{#each perks as perk (perk.key)}
 			<li class="border-secondary-800 flex flex-col gap-2 border-r border-b px-4 py-4">
 				<span class="text-primary flex items-center gap-2">
@@ -57,7 +59,9 @@
 					{:else}
 						<perk.icon size={20} weight="duotone" class="shrink-0" />
 					{/if}
-					<span class={flushHeaderTitle}>{perk.title}</span>
+					<span class={compact ? 'font-heading font-semibold text-white' : flushHeaderTitle}>
+						{perk.title}
+					</span>
 				</span>
 				<p class="text-secondary-400 text-sm">{perk.text}</p>
 			</li>

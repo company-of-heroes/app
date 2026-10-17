@@ -1,6 +1,8 @@
 import { handle, requireUser } from '$lib/server/http';
 
-/** What the checkout overlay needs for the signed-in user. */
+/** The Mollie checkout link for the signed-in user's first payment. */
 export const POST = handle((event) =>
-	requireUser(event).asyncAndThen((user) => event.locals.services.subscriptions.checkout(user.id))
+	requireUser(event).asyncAndThen((user) =>
+		event.locals.services.subscriptions.checkout(user.id, event.url.origin)
+	)
 );

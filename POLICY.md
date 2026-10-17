@@ -1,10 +1,10 @@
 # Privacy Policy
 
-**Effective date:** October 16, 2026
+**Effective date:** October 17, 2026
 
 This Privacy Policy explains how **Code IT** (“we”, “us”) collects, uses, shares, and protects information when you use **Company of Heroes Companion** (also called the FKNOOBS App), the website at [https://coh1stats.com](https://coh1stats.com), and the API at [https://api.coh1stats.com](https://api.coh1stats.com) (together, the “Service”).
 
-We do **not** store or use sensitive personal data. We do not ask for your real name, phone number, home address, government ID, or anything similar. If you become a supporter, payment is handled entirely by Paddle (see section 2g); we never receive or store your card or other payment details. If you have set your own email address, we pass it to Paddle when you open the checkout (see section 2g).
+We do **not** store or use sensitive personal data. We do not ask for your real name, phone number, home address, government ID, or anything similar. If you become a supporter, payment is handled entirely by Mollie (see section 2g); we never receive or store your card, bank account or other payment details. If you have set your own email address, we pass it to Mollie when you open the checkout (see section 2g).
 
 The only personal contact detail we might store is an **email address**, and only if you replace the default generated address with a real one. New accounts get a random `@fknoobs.com` email that is not yours. We do not use email for marketing.
 
@@ -112,7 +112,7 @@ We keep basic operational data such as app version, authentication/session token
 
 ### g) Supporter subscription
 
-You can support the Service with a paid monthly **supporter subscription**. **Paddle** (paddle.com) is the payment processor and merchant of record for these subscriptions: Paddle collects and handles your payment details, issues invoices and takes care of VAT. We never receive or store card data. If you have set your own email address on your account, we pass it to Paddle when you open the checkout so it can send your receipts; the generated `@fknoobs.com` address is never sent. We store only what we need to run the subscription: your Paddle customer, subscription and transaction IDs, the subscription status, the end of the current billing period (and, after you cancel, the date it ends), payment dates, amounts and currency, and your setting to hide yourself from the supporters page.
+You can support the Service with a paid monthly **supporter subscription**. **Mollie** (mollie.com, Amsterdam) is the payment processor for these subscriptions: you pay on Mollie's checkout page (for example iDEAL, card or PayPal), Mollie collects and handles your payment details and keeps the mandate it uses to charge the following months. We are the seller of the subscription. We never receive or store card numbers, bank account numbers or PayPal details. If you have set your own email address on your account, we pass it to Mollie when you first open the checkout; the generated `@fknoobs.com` address is never sent. We store only what we need to run the subscription: your Mollie customer, subscription, mandate and payment IDs, the subscription status, the end of the current paid period (and, after you cancel, the date it ends), payment dates, amounts and currency, and your setting to hide yourself from the supporters page. You can cancel or resume the subscription yourself from your account or the supporters page.
 
 While your subscription is active, a **supporter medal** and a **Supporter** label are shown next to your name on the website and in the desktop app, and that is always public. The website also has a public **supporters page** and a public **player card** (a shareable page and PNG image) for active supporters, showing your name, the number of months you have supported and the date you became a supporter ("supporter since"). You can hide yourself from the supporters page in your account settings; your medal, Supporter label and player card stay visible while your subscription is active. The player card image is drawn in your own browser when you open your card page, and uploaded to our storage (Cloudflare R2) so it can be shared; it shows only what the card page shows, and it is redrawn when your card changes. A stored card image is no longer served once your subscription lapses, and staff can remove it (for example if it was misused).
 
@@ -153,7 +153,7 @@ We share information with:
 - **Twitch** — if you connect Twitch, and to list public Company of Heroes streams on the website;
 - **Google (YouTube)** — if you connect YouTube, to sign you in (via our website OAuth exchange) and so the app can read and post to your YouTube Live chat on your device;
 - **ElevenLabs** — if you use TTS with your own API key;
-- **Paddle** — payment processor and merchant of record if you subscribe as a supporter: it handles your payment details, invoices and VAT, receives your email address if you have set your own, and tells us the subscription and payment status;
+- **Mollie** — payment processor if you subscribe as a supporter: it handles your payment details and the mandate for the monthly payments, receives your email address if you have set your own, and tells us the payment status;
 - **Cloudflare** — to host and deliver the website, and to store shared images such as published overlays and supporter player cards;
 - staff moderators who review fair play reports, who can hide match results from public listings (including by lobby-name word list), who can hide fair-play screenshots from player views while still reviewing them, who can attach public badges to Relic/Steam player identities, and who can see comments marked as deleted together with the reason a moderator entered;
 

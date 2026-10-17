@@ -11,13 +11,15 @@
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
+	import PlayerSupporterMedal from '../player/player-supporter-medal.svelte';
 	import { Button } from '../ui/button';
 	import { Dialog } from 'bits-ui';
+	import SupporterManageButton from './supporter-manage-button.svelte';
 	import SupporterPerks from './supporter-perks.svelte';
 
 	type Props = {
 		open: boolean;
-		/** The user already supports: the dialog offers the portal instead of the checkout. */
+		/** The user already supports: the dialog offers cancel (or resume) instead of the checkout. */
 		active?: boolean;
 		/** Cancelled at period end: still a supporter until this ISO date. */
 		endsAt?: string | null;
@@ -27,8 +29,10 @@
 		onsupporters?: () => void;
 		/** Become a supporter: the host signs the user in first, or opens the checkout. */
 		onsubscribe: () => void | Promise<void>;
-		/** Open the customer portal. */
-		onmanage: () => void | Promise<void>;
+		/** Stop the monthly payments; the host updates `endsAt`. */
+		oncancel: () => Promise<unknown>;
+		/** Undo the cancel before the paid period ends; the host clears `endsAt`. */
+		onresume: () => Promise<unknown>;
 	};
 
 	let {
@@ -38,10 +42,12 @@
 		supportersHref,
 		onsupporters,
 		onsubscribe,
-		onmanage
+		oncancel,
+		onresume
 	}: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
+	const medalUrl = host.resolve.supporterMedal();
 
 	let busy = $state(false);
 	const endDate = $derived(
@@ -75,7 +81,7 @@
 		<Dialog.Overlay class={cn(overlayBackdrop, 'fixed inset-0 z-50')} />
 		<Dialog.Content
 			class={cn(
-				'absolute top-0 left-1/2 z-50 mx-auto mt-12 flex max-h-[calc(100vh-6rem)] w-[720px] max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col overflow-hidden outline-hidden',
+				'absolute top-0 left-1/2 z-50 mx-auto mt-12 flex max-h-[calc(100vh-6rem)] w-[600px] max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col overflow-hidden outline-hidden',
 				surfaceModal
 			)}
 		>
@@ -92,15 +98,32 @@
 				</Dialog.Close>
 			</div>
 			<div class="min-h-0 overflow-y-auto">
-				<SupporterPerks />
-				<div class="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+				<div
+					class="border-secondary-800 from-primary/10 flex items-center gap-5 border-b bg-linear-to-r to-transparent px-6 py-6"
+				>
+					{#if medalUrl}
+						<PlayerSupporterMedal force size={72} />
+					{:else}
+						<HeartIcon size={40} weight="fill" class="text-primary shrink-0" />
+					{/if}
 					<div class="flex flex-col gap-1">
-						<p class="font-heading text-2xl font-bold text-white">{t('€4.99 / month')}</p>
-						{#if active && endDate}
-							<p class="text-secondary-400 text-sm">{t('Ends on {date}', { date: endDate })}</p>
-						{/if}
+						<p class="font-heading text-xl font-bold text-white">
+							{active
+								? t('You are a supporter')
+								: t('Support coh1stats and get a few things in return.')}
+						</p>
+						<p class="text-secondary-300 text-sm">
+							<span class="text-primary font-semibold">{t('€4.99 / month')}</span>
+							{#if active && endDate}
+								<span class="text-secondary-600 mx-1">·</span>
+								{t('Ends on {date}', { date: endDate })}
+							{/if}
+						</p>
 					</div>
-					<div class="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+				</div>
+				<SupporterPerks compact />
+				<div class="flex px-4 py-3 sm:justify-end">
+					<div class="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row sm:items-center">
 						<Button
 							class="w-full justify-center sm:w-auto"
 							variant="ghost"
@@ -113,14 +136,7 @@
 							{t('See the supporters')}
 						</Button>
 						{#if active}
-							<Button
-								class="w-full sm:w-auto"
-								variant="secondary"
-								loading={busy}
-								onclick={() => run(onmanage)}
-							>
-								{t('Manage subscription')}
-							</Button>
+							<SupporterManageButton class="w-full sm:w-auto" {endsAt} {oncancel} {onresume} />
 						{:else}
 							<Button class="w-full sm:w-auto" loading={busy} onclick={() => run(onsubscribe)}>
 								<HeartIcon size={16} weight="fill" />

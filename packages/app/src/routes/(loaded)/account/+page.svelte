@@ -312,10 +312,8 @@
 {#if supporter}
 	<SupporterAccountSection
 		status={supporter}
-		onmanage={async () => {
-			const { url } = await unwrapApi(api.subscriptions.portal());
-			await openUrl(url);
-		}}
+		oncancel={async () => (supporter = await unwrapApi(api.subscriptions.cancel()))}
+		onresume={async () => (supporter = await unwrapApi(api.subscriptions.resume()))}
 		onhidden={async (hidden) => {
 			supporter = await unwrapApi(api.subscriptions.setHidden(hidden));
 		}}

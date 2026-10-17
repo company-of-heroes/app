@@ -1,10 +1,13 @@
 import type { PlayerLabel } from '../format/types';
 
-/** An account's Paddle supporter subscription, as the account and the website see it. */
+/** The first payment after a checkout, as the status page shows it; `unknown` when not found. */
+export type CheckoutState = 'paid' | 'pending' | 'failed' | 'canceled' | 'expired' | 'unknown';
+
+/** An account's supporter subscription, as the account and the website see it. */
 export type SupporterStatus = {
 	/** `active` or `past_due`, and the paid period has not ended. */
 	active: boolean;
-	/** Stored subscription status (`active` | `past_due` | `paused` | `canceled`), or null without one. */
+	/** Stored subscription status (`active` | `past_due` | `canceled`), or null without one. */
 	status: string | null;
 	/** Earliest payment (ISO), or null before the first one. */
 	since: string | null;

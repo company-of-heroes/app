@@ -5,10 +5,9 @@
 	import Seo from '$lib/components/seo/seo.svelte';
 	import { currentLocale, href, useI18n } from '$lib/i18n';
 	import { loginRedirectHref } from '$lib/auth/user';
-	import { openCheckout } from '$lib/paddle';
 	import {
-		getSupporterStatus,
-		openSupporterPortal,
+		cancelSupporter,
+		resumeSupporter,
 		startSupporterCheckout
 	} from '$lib/remote/subscriptions.remote';
 	import type { PageData } from './$types';
@@ -37,12 +36,7 @@
 			}
 		}
 
-		await openCheckout(checkout, `${page.url.origin}${href('/supporters')}?welcome=1`);
-	}
-
-	async function manage() {
-		const { url } = await openSupporterPortal();
-		window.location.assign(url);
+		window.location.assign(checkout.checkoutUrl);
 	}
 </script>
 
@@ -56,9 +50,8 @@
 <SupportersPage
 	list={data.list}
 	status={data.status}
-	welcome={data.welcome}
 	autoSubscribe={data.checkout}
 	onsubscribe={subscribe}
-	onmanage={manage}
-	loadStatus={() => getSupporterStatus()}
+	oncancel={() => cancelSupporter()}
+	onresume={() => resumeSupporter()}
 />

@@ -7,28 +7,32 @@
 	import { useHost } from '../host/host.context';
 	import { Button } from '../ui/button';
 	import { Checkbox } from '../ui/input';
+	import SupporterManageButton from './supporter-manage-button.svelte';
 	import type { SupporterStatus } from './types';
 
 	type Props = {
 		status: SupporterStatus;
-		/** Open the customer portal (cancel, change card). */
-		onmanage: () => void | Promise<void>;
+		/** Stop the monthly payments; resolves with the new status. */
+		oncancel: () => Promise<SupporterStatus>;
+		/** Undo the cancel before the paid period ends; resolves with the new status. */
+		onresume: () => Promise<SupporterStatus>;
 		/** Show or hide the account on the public supporters page. */
 		onhidden: (hidden: boolean) => void | Promise<void>;
 	};
 
-	let { status, onmanage, onhidden }: Props = $props();
+	let { status: initial, oncancel, onresume, onhidden }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
+	// The host's status, replaced by the one a cancel or resume answers with.
+	let status = $derived(initial);
 	// What the user just chose, until the host hands over a fresh status.
 	let chosen = $state<boolean | null>(null);
 	const hidden = $derived(chosen ?? status.hidden);
-	let managing = $state(false);
 	let saving = $state(false);
 
-	// Cancelled at period end, Paddle keeps the subscription `active` (medal included) until
-	// `endsAt`; then it turns `canceled` and the section offers to subscribe again.
+	// Cancelled at period end, the subscription stays `active` (medal included) until `endsAt`;
+	// after that the section offers to subscribe again.
 	const periodEnd = $derived(parseDate(status.currentPeriodEnd));
 	const date = (value: string | null) =>
 		formatDate(value, host.locale(), 'date', { timeZone: 'UTC' });
@@ -41,7 +45,7 @@
 			months,
 			status.endsAt
 				? t('Ends on {date}', { date: date(status.endsAt) })
-				: periodEnd
+				: periodEnd && status.status === 'active'
 					? t('Next payment on {date}', { date: date(status.currentPeriodEnd) })
 					: null
 		]
@@ -57,17 +61,6 @@
 
 		const message = (error as { body?: { message?: unknown } } | null)?.body?.message;
 		return typeof message === 'string' && message ? message : t('Something went wrong');
-	}
-
-	async function manage() {
-		managing = true;
-		try {
-			await onmanage();
-		} catch (error) {
-			host.notify.error(errorMessage(error));
-		} finally {
-			managing = false;
-		}
 	}
 
 	async function setHidden(next: boolean) {
@@ -95,9 +88,15 @@
 			class="border-secondary-800 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3"
 		>
 			<p class="text-secondary-200 text-sm">{summary}</p>
-			<Button variant="secondary" loading={managing} onclick={manage}>
-				{t('Manage subscription')}
-			</Button>
+			<SupporterManageButton
+				endsAt={status.endsAt}
+				oncancel={async () => {
+					status = await oncancel();
+				}}
+				onresume={async () => {
+					status = await onresume();
+				}}
+			/>
 		</div>
 		<div class="flex flex-col gap-1 px-4 py-3">
 			<Checkbox

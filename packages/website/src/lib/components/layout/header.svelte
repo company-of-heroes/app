@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import logo128 from '@assets/logo/logo-128.webp';
-	import logo256 from '@assets/logo/logo-256.webp';
 	import DiscordMenu from '$lib/components/layout/discord-menu.svelte';
 	import HeaderAuth from '$lib/components/layout/header-auth.svelte';
 	import LocaleSwitcher from '$lib/components/layout/locale-switcher.svelte';
@@ -83,15 +81,7 @@
 
 <header class="border-secondary-800 sticky top-0 z-50 flex h-16 items-stretch border-b bg-gray-950">
 	<a href={href('/')} class={cn(interactive, 'flex min-w-0 items-stretch')}>
-		<span class="border-secondary-800 flex w-16 shrink-0 items-center border-r p-1">
-			<img
-				src={logo128}
-				srcset="{logo128} 1x, {logo256} 2x"
-				alt={t('Company of Heroes - Companion app')}
-				class="size-full"
-			/>
-		</span>
-		<div class="flex min-w-0 flex-col justify-center px-4">
+		<div class="border-secondary-800 flex min-w-0 flex-col justify-center border-r px-4">
 			<p class="truncate font-medium text-white">{t('Global Community')}</p>
 			<p class="text-primary truncate text-xs font-medium">{t('Website')}</p>
 		</div>

@@ -15,7 +15,11 @@
 		updatePassword,
 		updateProfile
 	} from '$lib/remote/account.remote';
-	import { openSupporterPortal, setSupporterHidden } from '$lib/remote/subscriptions.remote';
+	import {
+		cancelSupporter,
+		resumeSupporter,
+		setSupporterHidden
+	} from '$lib/remote/subscriptions.remote';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -57,11 +61,6 @@
 
 		return null;
 	});
-
-	async function manageSupporter() {
-		const { url } = await openSupporterPortal();
-		window.location.assign(url);
-	}
 
 	const profileIssue = $derived(updateProfile.fields.allIssues()?.[0]?.message);
 	const verificationIssue = $derived(requestVerification.fields.allIssues()?.[0]?.message);
@@ -288,7 +287,8 @@
 {#if data.supporter}
 	<SupporterAccountSection
 		status={data.supporter}
-		onmanage={manageSupporter}
+		oncancel={() => cancelSupporter()}
+		onresume={() => resumeSupporter()}
 		onhidden={async (hidden) => {
 			await setSupporterHidden(hidden);
 		}}

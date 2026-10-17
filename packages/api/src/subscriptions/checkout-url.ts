@@ -1,10 +1,10 @@
-/** True for an https link on paddle.com or one of its subdomains (the customer portal). */
-export function isPaddlePortalUrl(value: string): boolean {
+/** True for an https link on mollie.com or one of its subdomains (the hosted checkout). */
+export function isMollieCheckoutUrl(value: string): boolean {
 	try {
 		const url = new URL(value);
 		return (
 			url.protocol === 'https:' &&
-			(url.hostname === 'paddle.com' || url.hostname.endsWith('.paddle.com'))
+			(url.hostname === 'mollie.com' || url.hostname.endsWith('.mollie.com'))
 		);
 	} catch {
 		return false;

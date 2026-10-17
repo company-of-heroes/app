@@ -112,9 +112,9 @@ PocketBase must have `STEAM_API_KEY` configured for the player card endpoint.
 
 ## Supporter subscription
 
-The €4.99/month supporter subscription runs on [Paddle Billing](https://www.paddle.com/billing). Before its first release:
+The €4.99/month supporter subscription runs on [Mollie](https://www.mollie.com) (iDEAL, card, PayPal). Mollie is a payment processor, not a merchant of record: VAT and invoices are ours. Before its first release:
 
-1. **PocketBase first**: apply migrations `1791000066_subscriptions.js`, `1791000067_supporter_label.js` and `1791000068_rename_supporter_reward.js` on production **before** the website release that uses them. Without them `/supporters` shows empty lists and every webhook answers 500 (Paddle retries).
+1. **PocketBase first**: apply migrations `1791000066_subscriptions.js`, `1791000067_supporter_label.js`, `1791000068_rename_supporter_reward.js` and `1791000069_mollie_subscriptions.js` on production **before** the website release that uses them. Without them `/supporters` shows empty lists and every webhook answers 500 (Mollie retries).
 2. **Rewards**: seed the supporter rewards once:
 
    ```bash
@@ -124,16 +124,16 @@ The €4.99/month supporter subscription runs on [Paddle Billing](https://www.pa
 3. **Player card PNG**: the supporter's own browser draws `/card/{steamId}` to a 1200×630 PNG (html-to-image) and uploads it (`POST /api/v1/players/{steamId}/card.png`, at most 10 a minute per account via `CARD_LIMITER`). It is stored in the `OVERLAYS` R2 bucket (`coh1stats-overlays`) under `cards/{steamId}.png`; `GET` serves it, or a static fallback image until the first upload. No extra Worker or secret is needed. An upload or removal purges only the edge cache of that data centre; others may show the old card for up to an hour. Staff remove a card with `DELETE /api/v1/players/{steamId}/card.png` (signed in as staff; 204); each object's metadata records the uploading `userId`.
 4. **Environment** on `coh1stats-website`:
 
-   | Variable                     | Where                     | Purpose                                                       |
-   | ---------------------------- | ------------------------- | ------------------------------------------------------------- |
-   | `PADDLE_ENV`                 | `wrangler.toml` `[vars]`  | `sandbox` or `production`                                     |
-   | `PUBLIC_PADDLE_CLIENT_TOKEN` | `wrangler.toml` `[vars]`  | Paddle.js client-side token                                   |
-   | `PUBLIC_PADDLE_PRICE_ID`     | `wrangler.toml` `[vars]`  | The €4.99/month price (`pri_…`)                               |
-   | `PADDLE_API_KEY`             | Cloudflare Worker secrets | Server API key (customer portal sessions)                     |
-   | `PADDLE_WEBHOOK_SECRET`      | Cloudflare Worker secrets | Secret key of the notification destination; verifies webhooks |
+   | Variable                | Where                     | Purpose                                                                 |
+   | ----------------------- | ------------------------- | ----------------------------------------------------------------------- |
+   | `MOLLIE_API_KEY`        | Cloudflare Worker secrets | `test_…` (test mode) or `live_…` (real payments)                        |
+   | `MOLLIE_WEBHOOK_ORIGIN` | `wrangler.toml` `[vars]`  | Origin Mollie posts payment updates to (`/api/mollie/webhook`); empty skips them |
 
-   `[vars]` in `wrangler.toml` overwrite the dashboard vars on **every** deploy. To go live, commit `PADDLE_ENV = "production"` and the live client token and price id in `wrangler.toml`; editing them in the dashboard is undone by the next deploy. Secrets are not touched by a deploy.
+   `[vars]` in `wrangler.toml` overwrite the dashboard vars on **every** deploy. Secrets are not touched by a deploy. Going live is only a matter of replacing the test key with the live key.
 
-5. **Paddle dashboard** (sandbox and live each have their own):
-   - **Notifications** → new destination `https://coh1stats.com/api/paddle/webhook` with the events `subscription.*` (created, updated, activated, canceled, past_due, paused, resumed, trialing) and `transaction.completed`; its secret key is `PADDLE_WEBHOOK_SECRET`.
-   - **Checkout** → **Website approval**: approve `coh1stats.com`, or the checkout does not open.
+5. **Mollie dashboard**:
+   - **Payment methods**: enable iDEAL, cards and PayPal (and any others you want); the checkout shows what is enabled. Every method used must support recurring payments: iDEAL and cards become a SEPA direct debit / card mandate; PayPal needs reference transactions enabled on the linked PayPal account, or a PayPal first payment pays one month only.
+   - **Recurring / SEPA direct debit** must be enabled on the profile, or no mandate is created.
+   - No webhook to configure: every payment and subscription carries its own `webhookUrl`.
+   - The webhook is a form POST without an `Origin` header. SvelteKit's own CSRF check is off (`csrf.trustedOrigins: ['*']`); `src/lib/hooks/csrf.ts` does the same check with `/api/mollie/webhook` exempt. A new webhook route must be added to its `WEBHOOK_PATHS`.
+6. **Local testing**: Mollie cannot reach `localhost`. Run a tunnel (e.g. `cloudflared tunnel --url http://localhost:5173`) and set `MOLLIE_WEBHOOK_ORIGIN` in `.env` to its URL. Without a tunnel the first payment still lands, because the return page `/supporters/checkout` reads the payment (remembered in the `supporter_payment` cookie) from Mollie and applies it when it is paid; monthly payments and failures after that need the webhook. Test-mode checkouts let you pick paid / failed / canceled / expired per payment.

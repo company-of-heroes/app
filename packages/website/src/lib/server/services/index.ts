@@ -1,6 +1,6 @@
 import type PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
-import { PaddleClient, paddleEnv } from '../clients/paddle';
+import { MollieClient } from '../clients/mollie';
 import { RelicClient } from '../clients/relic';
 import { SteamClient } from '../clients/steam';
 import { createAdminPocketBase } from '../pb';
@@ -60,7 +60,7 @@ export class Clients {
 	#pb?: PocketBase;
 	#relic?: RelicClient;
 	#steam?: SteamClient;
-	#paddle?: PaddleClient;
+	#mollie?: MollieClient;
 
 	constructor(
 		readonly fetch: Fetch,
@@ -80,12 +80,8 @@ export class Clients {
 		return (this.#steam ??= new SteamClient(this.fetch, env.STEAM_API_KEY ?? ''));
 	}
 
-	get paddle(): PaddleClient {
-		return (this.#paddle ??= new PaddleClient(
-			this.fetch,
-			env.PADDLE_API_KEY ?? '',
-			paddleEnv(env.PADDLE_ENV)
-		));
+	get mollie(): MollieClient {
+		return (this.#mollie ??= new MollieClient(this.fetch, env.MOLLIE_API_KEY ?? ''));
 	}
 
 	/** For PocketBase files: the api-gateway lets the website's own fetches past its per-IP download limit. */

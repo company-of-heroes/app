@@ -101,9 +101,6 @@
 					"url": "https://*.coh1stats.com"
 				},
 				{
-					"url": "https://*.paddle.com/*"
-				},
-				{
 					"url": "http://127.0.0.1:5174/*"
 				},
 				{

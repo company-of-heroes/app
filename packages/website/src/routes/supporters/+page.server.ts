@@ -22,7 +22,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		list,
 		status,
 		signedIn: !!user,
-		welcome: url.searchParams.get('welcome') === '1',
 		checkout: url.searchParams.get('checkout') === '1'
 	};
 };

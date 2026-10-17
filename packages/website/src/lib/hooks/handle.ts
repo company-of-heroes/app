@@ -1,6 +1,8 @@
 import type { Handle } from '@sveltejs/kit';
-import { redirect } from '@sveltejs/kit';
+import { json, redirect, text } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import { boot, syncLocalsUser } from './boot';
+import { isCrossSiteForm } from './csrf';
 import {
 	DEFAULT_LOCALE,
 	parseLocaleFromPath,
@@ -46,6 +48,14 @@ function apiCors(request: Request): Record<string, string> {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// SvelteKit skips its own check in dev too.
+	if (!dev && isCrossSiteForm(event.request, event.url)) {
+		const message = `Cross-site ${event.request.method} form submissions are forbidden`;
+		return event.request.headers.get('accept') === 'application/json'
+			? json({ message }, { status: 403 })
+			: text(message, { status: 403 });
+	}
+
 	const isApi = isCacheableApiPath(event.url.pathname);
 	if (isApi && event.request.method === 'OPTIONS') {
 		return new Response(null, { status: 204, headers: apiCors(event.request) });

@@ -121,10 +121,7 @@
 				{/if}
 			</span>
 		{/if}
-		<CountryFlag
-			country={matchPlayer.country}
-			class="ring-secondary-800 h-5 w-5 rounded-full object-cover ring-4"
-		/>
+		<CountryFlag country={matchPlayer.country} class="h-4" />
 		<PlayerLikeCount likeCount={matchPlayer.likeCount} class="shrink-0" />
 		<PlayerNameIcons labels={matchPlayer.labels} steamId={matchPlayer.steamId} />
 		{#if matchPlayer.steamId}

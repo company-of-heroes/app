@@ -27,8 +27,6 @@
 	import TrophyIcon from 'phosphor-svelte/lib/TrophyIcon';
 	import BookOpenIcon from 'phosphor-svelte/lib/BookOpenIcon';
 	import ArticleIcon from 'phosphor-svelte/lib/ArticleIcon';
-	import logo64 from '@assets/logo/logo-64.webp';
-	import logo128 from '@assets/logo/logo-128.webp';
 	import pageBackgroundImage from '@assets/assets/art_ui_textures_textures_fe_bkg_cxp1.png';
 	import SettingsIcon from 'phosphor-svelte/lib/GearSixIcon';
 	import DiscordLogoIcon from 'phosphor-svelte/lib/DiscordLogoIcon';
@@ -134,17 +132,9 @@
 		<div
 			class="border-secondary-800 bg-secondary-950 -mb-px flex min-w-[300px] flex-col gap-8 border-r text-white"
 		>
-			<div class="mt-6 flex items-center gap-4 px-4">
-				<img
-					src={logo64}
-					srcset="{logo64} 1x, {logo128} 2x"
-					alt={t('Red™ 🏅 - CoH app')}
-					class="-my-3 size-14"
-				/>
-				<div class="min-w-0">
-					<p class="truncate font-medium">{t('Global Community')}</p>
-					<p class="text-primary truncate text-xs font-medium">{t('App')}</p>
-				</div>
+			<div class="mt-6 min-w-0 px-4">
+				<p class="truncate font-medium">{t('Global Community')}</p>
+				<p class="text-primary truncate text-xs font-medium">{t('App')}</p>
 			</div>
 			<Nav.Root class="grow">
 				<Label class="text-secondary-300 px-4 font-semibold">{t('Menu')}</Label>

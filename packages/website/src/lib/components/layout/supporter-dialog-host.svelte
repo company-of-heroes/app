@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { SupporterDialog } from '@company-of-heroes/ui/supporter';
+	import { SupporterDialog, type SupporterStatus } from '@company-of-heroes/ui/supporter';
 	import { watch } from 'runed';
 	import { loginRedirectHref } from '$lib/auth/user';
 	import { currentLocale, href } from '$lib/i18n';
-	import { openCheckout } from '$lib/paddle';
 	import {
+		cancelSupporter,
 		getSupporterStatus,
-		openSupporterPortal,
+		resumeSupporter,
 		startSupporterCheckout
 	} from '$lib/remote/subscriptions.remote';
 	import { supporterDialog } from '$lib/supporter-dialog.svelte';
@@ -45,13 +45,12 @@
 		}
 
 		const checkout = await startSupporterCheckout();
-		supporterDialog.open = false;
-		await openCheckout(checkout, `${page.url.origin}${href('/supporters')}?welcome=1`);
+		window.location.assign(checkout.checkoutUrl);
 	}
 
-	async function manage() {
-		const { url } = await openSupporterPortal();
-		window.location.assign(url);
+	function apply(status: SupporterStatus) {
+		supporterDialog.active = status.active;
+		supporterDialog.endsAt = status.endsAt ?? null;
 	}
 </script>
 
@@ -61,5 +60,6 @@
 	endsAt={supporterDialog.endsAt}
 	supportersHref={href('/supporters')}
 	onsubscribe={subscribe}
-	onmanage={manage}
+	oncancel={async () => apply(await cancelSupporter())}
+	onresume={async () => apply(await resumeSupporter())}
 />

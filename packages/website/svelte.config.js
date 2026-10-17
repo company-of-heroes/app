@@ -15,9 +15,10 @@ const config = {
 			remoteFunctions: true
 		},
 		csrf: {
-			// The desktop app's webview uploads replays and overlays (multipart) to the API,
-			// directly or through the api gateway. It authenticates with a token header.
-			trustedOrigins: ['http://tauri.localhost', 'https://tauri.localhost', 'tauri://localhost']
+			// Checked in src/lib/hooks/csrf.ts instead, so the Mollie webhook (a form post
+			// without an Origin header) gets through. Trusted origins (Tauri) live there too.
+			// `*` turns SvelteKit's own check off (the successor of `checkOrigin: false`).
+			trustedOrigins: ['*']
 		},
 		prerender: {
 			entries: ['/privacy', '/es/privacy', '/ko/privacy']

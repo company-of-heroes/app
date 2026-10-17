@@ -1,8 +1,9 @@
 import { command, getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
-import { isPaddlePortalUrl } from '@company-of-heroes/api';
+import { isMollieCheckoutUrl } from '@company-of-heroes/api';
 import { z } from 'zod';
 import { unwrapAsync } from '$lib/errors/unwrap';
+import { checkoutPaymentId, rememberCheckout } from '$lib/server/supporter-checkout';
 
 function signedIn() {
 	const { locals } = getRequestEvent();
@@ -19,21 +20,36 @@ export const getSupporterStatus = command(() => {
 	return unwrapAsync(services.subscriptions.status(user.id));
 });
 
-/** What Paddle.js needs to open the checkout. */
-export const startSupporterCheckout = command(() => {
+/** The Mollie checkout link for the first payment; the payment is remembered for the status page. */
+export const startSupporterCheckout = command(async () => {
 	const { services, user } = signedIn();
-	return unwrapAsync(services.subscriptions.checkout(user.id));
-});
-
-/** Paddle customer portal link (cancel, change card). */
-export const openSupporterPortal = command(async () => {
-	const { services, user } = signedIn();
-	const portal = await unwrapAsync(services.subscriptions.portal(user.id));
-	if (!isPaddlePortalUrl(portal.url)) {
-		error(502, getRequestEvent().locals.t('Something went wrong'));
+	const event = getRequestEvent();
+	const checkout = await unwrapAsync(services.subscriptions.checkout(user.id, event.url.origin));
+	if (!isMollieCheckoutUrl(checkout.checkoutUrl)) {
+		error(502, event.locals.t('Something went wrong'));
 	}
 
-	return portal;
+	rememberCheckout(event.cookies, checkout.paymentId);
+	return { checkoutUrl: checkout.checkoutUrl };
+});
+
+/** The state of the last checkout's payment (polled by the status page while it is pending). */
+export const getCheckoutState = command(() => {
+	const { services, user } = signedIn();
+	const { cookies } = getRequestEvent();
+	return unwrapAsync(services.subscriptions.checkoutStatus(user.id, checkoutPaymentId(cookies)));
+});
+
+/** Stops the monthly payments; the medal stays until the paid period ends. */
+export const cancelSupporter = command(() => {
+	const { services, user } = signedIn();
+	return unwrapAsync(services.subscriptions.cancel(user.id));
+});
+
+/** Undoes a cancel before the paid period ends. */
+export const resumeSupporter = command(() => {
+	const { services, user } = signedIn();
+	return unwrapAsync(services.subscriptions.resume(user.id));
 });
 
 /** Shows or hides the signed-in user on the supporters page (the medal stays). */

@@ -6,7 +6,7 @@
 	import HomeRecentMatches from '$lib/components/home/home-recent-matches.svelte';
 	import HomeTournaments from '$lib/components/home/home-tournaments.svelte';
 	import HomeLiveStreams from '$lib/components/home/home-live-streams.svelte';
-	import DonationSection from '$lib/components/home/donation-section.svelte';
+	import SupporterSection from '$lib/components/home/supporter-section.svelte';
 	import { SITE_URL } from '$lib/site/urls';
 	import { organization } from '$lib/site/seo';
 	import Seo from '$lib/components/seo/seo.svelte';
@@ -80,5 +80,5 @@
 	{:catch}
 		<HomeLiveStreams streams={[]} />
 	{/await}
-	<DonationSection />
+	<SupporterSection />
 </main>

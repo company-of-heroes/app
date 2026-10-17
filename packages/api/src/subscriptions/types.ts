@@ -4,11 +4,5 @@ export type {
 	SupportersList
 } from '@company-of-heroes/ui/supporter/types';
 
-/** What Paddle.js needs to open the checkout. */
-export type SupporterCheckout = {
-	priceId: string;
-	clientToken: string;
-	environment: 'sandbox' | 'production';
-	customData: { userId: string };
-	email: string | null;
-};
+/** Where the browser goes to pay the first month (Mollie's hosted checkout). */
+export type SupporterCheckout = { checkoutUrl: string };

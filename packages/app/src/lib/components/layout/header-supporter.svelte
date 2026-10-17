@@ -4,7 +4,6 @@
 	import { isSupporter } from '@company-of-heroes/ui/format/labels';
 	import { useHost } from '@company-of-heroes/ui/host';
 	import { tooltip } from '$lib/attachments';
-	import { openUrl } from '@tauri-apps/plugin-opener';
 	import { watch } from 'runed';
 	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
 	import { app } from '$core/app/context';
@@ -50,9 +49,12 @@
 		}
 	);
 
-	async function manage() {
-		const { url } = await unwrapApi(api.subscriptions.portal());
-		await openUrl(url);
+	async function cancel() {
+		status = await unwrapApi(api.subscriptions.cancel());
+	}
+
+	async function resume() {
+		status = await unwrapApi(api.subscriptions.resume());
 	}
 </script>
 
@@ -73,5 +75,6 @@
 	endsAt={status?.endsAt ?? null}
 	onsupporters={() => host.openSupporters?.()}
 	onsubscribe={() => host.openSupporters?.({ checkout: true })}
-	onmanage={manage}
+	oncancel={cancel}
+	onresume={resume}
 />

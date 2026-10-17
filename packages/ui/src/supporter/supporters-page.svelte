@@ -9,6 +9,7 @@
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import SupporterList from './supporter-list.svelte';
+	import SupporterManageButton from './supporter-manage-button.svelte';
 	import SupporterPerks from './supporter-perks.svelte';
 	import type { SupporterStatus, SupportersList } from './types';
 
@@ -16,76 +17,35 @@
 		list: SupportersList;
 		/** The signed-in user's status; null when signed out. */
 		status: SupporterStatus | null;
-		/** Back from the checkout: thank the user and wait for the payment to land. */
-		welcome?: boolean;
 		/** Open the checkout on arrival (back from the login). */
 		autoSubscribe?: boolean;
 		/** Become a supporter: the host signs the user in first, or opens the checkout. */
 		onsubscribe: () => void | Promise<void>;
-		/** Open the customer portal. */
-		onmanage: () => void | Promise<void>;
-		/** Reloads the signed-in user's status (polled after the checkout). */
-		loadStatus: () => Promise<SupporterStatus>;
+		/** Stop the monthly payments; resolves with the new status. */
+		oncancel: () => Promise<SupporterStatus>;
+		/** Undo the cancel before the paid period ends; resolves with the new status. */
+		onresume: () => Promise<SupporterStatus>;
 	};
 
-	let {
-		list,
-		status,
-		welcome = false,
-		autoSubscribe = false,
-		onsubscribe,
-		onmanage,
-		loadStatus
-	}: Props = $props();
+	let { list, status, autoSubscribe = false, onsubscribe, oncancel, onresume }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 
-	let polled = $state.raw<SupporterStatus | null>(null);
-	let waiting = $state(false);
+	// The status a cancel or resume answered with; wins over the one the page loaded.
+	let updated = $state.raw<SupporterStatus | null>(null);
 	let busy = $state(false);
-	const current = $derived(polled ?? status);
+	const current = $derived(updated ?? status);
 	const active = $derived(current?.active ?? false);
 	// Cancelled at period end: still a supporter until then.
 	const endsAt = $derived(
 		current?.endsAt ? formatDate(current.endsAt, host.locale(), 'date', { timeZone: 'UTC' }) : null
 	);
 
-	// The webhook may land a few seconds after the redirect: ask up to 5 times, 2 s apart.
+	// Back from the login with `?checkout=1`: open the checkout straight away.
 	onMount(() => {
 		if (autoSubscribe && status && !status.active) {
 			void run(onsubscribe);
 		}
-
-		if (!welcome || !status || status.active) {
-			return;
-		}
-
-		let stopped = false;
-		waiting = true;
-		(async () => {
-			for (let attempt = 0; attempt < 5 && !stopped; attempt += 1) {
-				await new Promise((resolve) => setTimeout(resolve, 2000));
-				try {
-					const next = await loadStatus();
-					if (stopped) {
-						return;
-					}
-
-					polled = next;
-					if (next.active) {
-						break;
-					}
-				} catch {
-					// Try again on the next round.
-				}
-			}
-
-			waiting = false;
-		})();
-
-		return () => {
-			stopped = true;
-		};
 	});
 
 	/** Error (or a SvelteKit HttpError from a remote command, which has `body.message`) to text. */
@@ -138,9 +98,15 @@
 					{#if endsAt}
 						<span class="text-secondary-400 text-sm">{t('Ends on {date}', { date: endsAt })}</span>
 					{/if}
-					<Button variant="secondary" loading={busy} onclick={() => run(onmanage)}>
-						{t('Manage subscription')}
-					</Button>
+					<SupporterManageButton
+						endsAt={current?.endsAt ?? null}
+						oncancel={async () => {
+							updated = await oncancel();
+						}}
+						onresume={async () => {
+							updated = await onresume();
+						}}
+					/>
 				{:else}
 					<Button loading={busy} onclick={() => run(onsubscribe)}>
 						<HeartIcon size={16} weight="fill" />
@@ -151,23 +117,6 @@
 		</div>
 	</div>
 </header>
-
-{#if welcome}
-	<div class="border-secondary-800 flex items-center gap-2 border-b px-4 py-3 text-sm">
-		<HeartIcon size={16} weight="fill" class="text-primary shrink-0" />
-		<p class="text-secondary-200">
-			{#if active}
-				{t('Thank you for supporting coh1stats! Your medal is on.')}
-			{:else if waiting}
-				{t('Thank you for supporting coh1stats! We are confirming your payment…')}
-			{:else}
-				{t(
-					'Thank you for supporting coh1stats! Your payment is being processed; your medal shows up shortly.'
-				)}
-			{/if}
-		</p>
-	</div>
-{/if}
 
 <SupporterPerks />
 

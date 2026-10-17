@@ -1,26 +1,28 @@
 <script lang="ts">
 	import { Button } from '@company-of-heroes/ui/button';
-	import HandCoinsIcon from 'phosphor-svelte/lib/HandCoins';
-	import { useI18n } from '$lib/i18n';
-	import { PAYPAL_URL } from '$lib/site/urls';
+	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';
+	import { href, useI18n } from '$lib/i18n';
+	import { supporterDialog } from '$lib/supporter-dialog.svelte';
 
 	const { t } = useI18n();
 </script>
 
-<section id="donate" class="border-secondary-800 border-b">
+<!-- Last block before the footer, which draws the line above it. -->
+<section id="support">
 	<div class="px-4 py-6 sm:px-6">
-		<p class="text-primary mb-1 text-xs font-medium">{t('Donations')}</p>
-		<h2 class="font-heading text-xl font-bold text-white">{t('Do I need donations?')}</h2>
+		<p class="text-primary mb-1 text-xs font-medium">{t('Supporters')}</p>
+		<h2 class="font-heading text-xl font-bold text-white">{t('Support coh1stats')}</h2>
 		<p class="text-secondary-400 mt-1 max-w-2xl text-sm leading-relaxed">
 			{t(
-				'Running this site is not expensive, so there is no need for donations to keep this site running. However, if you want to support the project and the time we spent on it you can donate via PayPal.'
+				'Running this site is not expensive, but building it takes a lot of time. If you want to support the project, become a supporter for €4.99 a month: you get a medal next to your name, supporter ribbons and a player card.'
 			)}
 		</p>
-		<div class="mt-4">
-			<Button href={PAYPAL_URL} target="_blank" rel="noopener noreferrer" variant="secondary">
-				<HandCoinsIcon size={18} weight="duotone" />
-				{t('Donate via PayPal')}
+		<div class="mt-4 flex flex-wrap items-center gap-2">
+			<Button onclick={() => (supporterDialog.open = true)}>
+				<HeartIcon size={16} weight="fill" />
+				{t('Become a supporter')}
 			</Button>
+			<Button variant="ghost" href={href('/supporters')}>{t('See the supporters')}</Button>
 		</div>
 	</div>
 </section>

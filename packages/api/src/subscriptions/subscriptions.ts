@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { sendV1, type ApiDeps } from '../deps';
 import { apiError, type ApiError } from '../errors';
 import { fromPbPromise, requireAuth } from '../pb';
-import { isPaddlePortalUrl } from './portal-url';
+import { isMollieCheckoutUrl } from './checkout-url';
 import type { SupporterCheckout, SupporterStatus, SupportersList } from './types';
 
 const statusSchema = z.object({
@@ -17,15 +17,7 @@ const statusSchema = z.object({
 });
 
 const checkoutSchema = z.object({
-	priceId: z.string(),
-	clientToken: z.string(),
-	environment: z.enum(['sandbox', 'production']),
-	customData: z.object({ userId: z.string() }),
-	email: z.string().nullable()
-});
-
-const portalSchema = z.object({
-	url: z.string().refine(isPaddlePortalUrl, 'Not a Paddle portal link')
+	checkoutUrl: z.string().refine(isMollieCheckoutUrl, 'Not a Mollie checkout link')
 });
 
 const entrySchema = z.object({
@@ -67,7 +59,7 @@ export class SubscriptionsApi {
 		return this.#call(statusSchema, '/subscriptions/me', 'Failed to load your supporter status.');
 	}
 
-	/** What Paddle.js needs to open the checkout. */
+	/** The Mollie checkout link for the first payment. */
 	checkout(): ResultAsync<SupporterCheckout, ApiError> {
 		const auth = requireAuth(this.deps);
 		if (auth.isErr()) {
@@ -79,14 +71,26 @@ export class SubscriptionsApi {
 		});
 	}
 
-	/** Paddle customer portal link (cancel, change card). */
-	portal(): ResultAsync<{ url: string }, ApiError> {
+	/** Stops the monthly payments; the medal stays until the paid period ends. */
+	cancel(): ResultAsync<SupporterStatus, ApiError> {
 		const auth = requireAuth(this.deps);
 		if (auth.isErr()) {
 			return errAsync(auth.error);
 		}
 
-		return this.#call(portalSchema, '/subscriptions/portal', 'Failed to open the portal.', {
+		return this.#call(statusSchema, '/subscriptions/cancel', 'Failed to cancel.', {
+			method: 'POST'
+		});
+	}
+
+	/** Undoes a cancel before the paid period ends. */
+	resume(): ResultAsync<SupporterStatus, ApiError> {
+		const auth = requireAuth(this.deps);
+		if (auth.isErr()) {
+			return errAsync(auth.error);
+		}
+
+		return this.#call(statusSchema, '/subscriptions/resume', 'Failed to resume.', {
 			method: 'POST'
 		});
 	}
