@@ -1,5 +1,25 @@
 # @company-of-heroes/website
 
+## 1.19.0
+
+- enhance; ribbons show their faction with wide national edge stripes, and supporter rewards get their own category
+- feat; labels can get unlock conditions like rewards, and are given automatically to every linked Steam ID that meets all of them
+- feat; redesigned replays page with a discover view: featured replays, pro 1v1s, big battles, fast games and most discussed rows, the latest shared replays, one-click watch in game and suggestions to share your own recent matches
+- feat; claim unclaimed player accounts from the player page and leaderboards by signing in with Steam
+- feat; linux download buttons let you pick the AppImage or the .deb package
+- feat; redesigned leaderboards with rank movement since yesterday and last week, your own position (also outside the top 200), sorting and country / games filters, climbers, fallers and hot streaks
+- feat; supporter subscription with medal, supporter ribbons, player card and supporters page
+- fix; match history shows player country flags as plain flags, without the round crop and ring
+- enhance; drop the logo from the app sidebar and website header, only the title remains
+- feat; tournament pages show the host with avatar and profile link, and staff and hosts can upload their own champion medals (PNG or SVG)
+- enhance; calmer home page: one row of recent matches, no top replays or member uploads lists, and live lobbies shown as cards in the same grid as replays
+- enhance; rename the creator to Red™ 🏅 and point Twitch links to twitch.tv/commanderredttv
+- improvement; lighter faction icons: small 40px images instead of the full flags, and smaller icons in replay and live lobby cards
+- fix; tournament player lists show the country flag of every player, not just a few
+- fix; reward unlock notifications are no longer lost, matches recorded twice count once, unfinished matches break win streaks, secret rewards stay hidden, all-faction rewards get their own ribbon, and visitors no longer see a fake "Locked · 0%"
+- fix; the Veteran label now reaches every ranked 1v1/2v2 player who has ever been rank 20 on two ladders, one failing ladder no longer stops the others, and a label staff remove from a player stays removed
+- feat; guides any signed-in user can draft and send for review and staff or editors publish (later edits wait for review too), filed under categories, with cover and inline images, wiki links, search-engine metadata and translations; a new editor role admins hand out from the users page; upgrade pages in the wiki
+
 ## 1.18.0
 
 - enhance; complete SEO: shared meta tags with Open Graph and Twitter cards on every page, structured data for players, tournaments and the wiki, server-rendered player page tags, noindex on account and editor pages, and a sitemap with players and tournaments

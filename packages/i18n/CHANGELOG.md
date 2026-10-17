@@ -1,5 +1,17 @@
 # @company-of-heroes/i18n
 
+## 0.3.0
+
+- feat; labels can get unlock conditions like rewards, and are given automatically to every linked Steam ID that meets all of them
+- feat; redesigned replays page with a discover view: featured replays, pro 1v1s, big battles, fast games and most discussed rows, the latest shared replays, one-click watch in game and suggestions to share your own recent matches
+- feat; claim unclaimed player accounts from the player page and leaderboards by signing in with Steam
+- feat; redesigned leaderboards with rank movement since yesterday and last week, your own position (also outside the top 200), sorting and country / games filters, climbers, fallers and hot streaks
+- feat; supporter subscription with medal, supporter ribbons, player card and supporters page
+- feat; tournament pages show the host with avatar and profile link, and staff and hosts can upload their own champion medals (PNG or SVG)
+- enhance; rename the creator to Red™ 🏅 and point Twitch links to twitch.tv/commanderredttv
+- fix; reward unlock notifications are no longer lost, matches recorded twice count once, unfinished matches break win streaks, secret rewards stay hidden, all-faction rewards get their own ribbon, and visitors no longer see a fake "Locked · 0%"
+- feat; guides any signed-in user can draft and send for review and staff or editors publish (later edits wait for review too), filed under categories, with cover and inline images, wiki links, search-engine metadata and translations; a new editor role admins hand out from the users page; upgrade pages in the wiki
+
 ## 0.2.3
 
 - feat; staff and hosts can hide a tournament from the public; its players can still open it
