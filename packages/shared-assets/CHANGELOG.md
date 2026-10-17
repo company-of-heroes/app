@@ -1,5 +1,11 @@
 # @company-of-heroes/shared-assets
 
+## 1.4.0
+
+- enhance; ribbons show their faction with wide national edge stripes, and supporter rewards get their own category
+- feat; supporter subscription with medal, supporter ribbons, player card and supporters page
+- improvement; lighter faction icons: small 40px images instead of the full flags, and smaller icons in replay and live lobby cards
+
 ## 1.3.0
 
 - feat; wiki maps: every built-in map (classic and Operations) with victory, fuel, munition and strategic points, territory sectors and starting positions on the loading-screen map

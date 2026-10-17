@@ -1,3 +1,24 @@
+### v0.74.0
+
+- enhance; ribbons show their faction with wide national edge stripes, and supporter rewards get their own category
+- feat; labels can get unlock conditions like rewards, and are given automatically to every linked Steam ID that meets all of them
+- feat; redesigned replays page with a discover view: featured replays, pro 1v1s, big battles, fast games and most discussed rows, the latest shared replays, one-click watch in game and suggestions to share your own recent matches
+- feat; claim unclaimed player accounts from the player page and leaderboards by signing in with Steam
+- enhance; the background of a selected tab or toggle option grows in from the centre
+- feat; redesigned leaderboards with rank movement since yesterday and last week, your own position (also outside the top 200), sorting and country / games filters, climbers, fallers and hot streaks
+- feat; supporter subscription with medal, supporter ribbons, player card and supporters page
+- fix; match history shows player country flags as plain flags, without the round crop and ring
+- enhance; drop the logo from the app sidebar and website header, only the title remains
+- feat; tournament pages show the host with avatar and profile link, and staff and hosts can upload their own champion medals (PNG or SVG)
+- fix; elo history on the performance tab loads again when you open it
+- enhance; rename the creator to Red™ 🏅 and point Twitch links to twitch.tv/commanderredttv
+- improvement; lighter faction icons: small 40px images instead of the full flags, and smaller icons in replay and live lobby cards
+- fix; wiki pages no longer clip the header and keep the side column readable in narrow windows
+- enhance; recent form on the dashboard and player profiles shows the last 10 results as compact blocks across the full width instead of a scrolling row of badges
+- fix; reward unlock notifications are no longer lost, matches recorded twice count once, unfinished matches break win streaks, secret rewards stay hidden, all-faction rewards get their own ribbon, and visitors no longer see a fake "Locked · 0%"
+- fix; the Veteran label now reaches every ranked 1v1/2v2 player who has ever been rank 20 on two ladders, one failing ladder no longer stops the others, and a label staff remove from a player stays removed
+- feat; guides any signed-in user can draft and send for review and staff or editors publish (later edits wait for review too), filed under categories, with cover and inline images, wiki links, search-engine metadata and translations; a new editor role admins hand out from the users page; upgrade pages in the wiki
+
 ### v0.73.2
 
 - fix; keybinding sequences fired too fast in a row and missed commands in game
