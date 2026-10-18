@@ -134,11 +134,7 @@ fn capture_via_game_screenshot(
             .into_iter()
             .find(|path| !before.contains(path))
         {
-            // The game may still be writing the file.
-            std::thread::sleep(Duration::from_millis(150));
-            let image = image::open(&path)
-                .map_err(|error| error.to_string())?
-                .to_rgba8();
+            let image = read_finished_screenshot(&path, deadline + PRINT_SCREEN_WAIT)?;
             if !keep_screenshot {
                 let _ = std::fs::remove_file(&path);
             }
@@ -474,7 +470,7 @@ fn capture_via_print_screen(
             .into_iter()
             .find(|path| !before.contains(path))
         {
-            let image = image::open(&path).map_err(|error| error.to_string())?.to_rgba8();
+            let image = read_finished_screenshot(&path, deadline + PRINT_SCREEN_WAIT)?;
             if !keep_screenshot {
                 let _ = std::fs::remove_file(&path);
             }
@@ -484,6 +480,37 @@ fn capture_via_print_screen(
     }
 
     Err("Company of Heroes did not write a screenshot".into())
+}
+
+/// The game creates the file before it has finished writing it, and the JPEG
+/// decoder fills a truncated file with grey. Wait until the size is stable and
+/// the JPEG end-of-image marker is there before decoding.
+#[cfg(any(windows, target_os = "linux"))]
+fn read_finished_screenshot(path: &Path, deadline: Instant) -> Result<image::RgbaImage, String> {
+    let is_jpeg = path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| matches!(ext.to_ascii_lowercase().as_str(), "jpg" | "jpeg"));
+    let mut previous_len = None;
+    while Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(100));
+        let Ok(bytes) = std::fs::read(path) else {
+            continue;
+        };
+        let stable = previous_len == Some(bytes.len());
+        previous_len = Some(bytes.len());
+        if bytes.is_empty() || !stable {
+            continue;
+        }
+        if is_jpeg && !bytes.ends_with(&[0xFF, 0xD9]) {
+            continue;
+        }
+        return image::load_from_memory(&bytes)
+            .map(|image| image.to_rgba8())
+            .map_err(|error| error.to_string());
+    }
+
+    Err("Company of Heroes screenshot was not finished in time".into())
 }
 
 #[cfg(windows)]
