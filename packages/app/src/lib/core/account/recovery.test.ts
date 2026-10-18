@@ -5,19 +5,35 @@ import type { AccountSettings } from '$core/config/schema';
 const LOCAL: AccountSettings = {
 	userId: 'localuser123456',
 	email: 'local@fknoobs.com',
-	password: 'localpass'
+	password: 'localpass',
+	pendingEmail: '',
+	authMode: 'password',
+	token: ''
 };
 const BACKUP: AccountSettings = {
 	userId: 'backupuser12345',
 	email: 'backup@fknoobs.com',
-	password: 'backuppass'
+	password: 'backuppass',
+	pendingEmail: '',
+	authMode: 'password',
+	token: ''
 };
 const FRESH: AccountSettings = {
 	userId: 'freshuser123456',
 	email: 'fresh@fknoobs.com',
-	password: 'freshpass'
+	password: 'freshpass',
+	pendingEmail: '',
+	authMode: 'password',
+	token: ''
 };
-const EMPTY: AccountSettings = { userId: '', email: '', password: '' };
+const EMPTY: AccountSettings = {
+	userId: '',
+	email: '',
+	password: '',
+	pendingEmail: '',
+	authMode: 'password',
+	token: ''
+};
 
 function makePorts(overrides: Partial<RecoveryPorts> = {}): RecoveryPorts {
 	return {

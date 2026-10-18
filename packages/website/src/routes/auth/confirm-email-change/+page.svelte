@@ -37,7 +37,6 @@
 		<Form.Group label={t('Password')} inputId="confirm-email-password">
 			<Input
 				id="confirm-email-password"
-				type="password"
 				autocomplete="current-password"
 				required
 				{...confirmEmailChange.fields.password.as('password')}

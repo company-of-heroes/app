@@ -31,6 +31,7 @@ function base64Plugin() {
 	};
 }
 
+/** @returns {import('vite').Plugin} */
 function whatsNewPlugin() {
 	const dir = path.resolve(__dirname, 'static/whats-new');
 	const virtualId = 'virtual:whats-new';
@@ -82,6 +83,8 @@ function whatsNewPlugin() {
  * Watch `packages/shared-assets` in dev. It sits outside the app root, so Vite would not see new
  * files there and `import.meta.glob` results (action icons, timeline art) stayed stale until a
  * restart. Once watched, Vite's own glob handling picks up added and removed files.
+ *
+ * @returns {import('vite').Plugin}
  */
 function sharedAssetsWatchPlugin() {
 	return {

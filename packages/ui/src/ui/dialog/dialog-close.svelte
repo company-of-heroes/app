@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { cn } from '@company-of-heroes/ui/cn';
-	import { Dialog, type DialogClosePropsWithoutHTML } from 'bits-ui';
+	import { Dialog, type DialogCloseProps } from 'bits-ui';
 
-	let { ...props }: DialogClosePropsWithoutHTML & { class?: string } = $props();
+	let { ...props }: DialogCloseProps = $props();
 </script>
 
 <Dialog.Close {...props} class={cn('cursor-pointer', props.class)}>

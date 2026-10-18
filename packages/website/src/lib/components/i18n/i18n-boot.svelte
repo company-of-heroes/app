@@ -32,7 +32,7 @@
 		get loading() {
 			return { current: false };
 		}
-	} as AppI18n;
+	} as unknown as AppI18n;
 
 	provideI18n(() => i18n);
 </script>

@@ -31,7 +31,9 @@
 			}
 		}
 
-		return players.find((entry) => steamIds.includes(entry.steamId)) ?? null;
+		return (
+			players.find((entry) => entry.steamId != null && steamIds.includes(entry.steamId)) ?? null
+		);
 	});
 
 	const change = $derived.by(() => {
@@ -39,11 +41,16 @@
 			return undefined;
 		}
 
-		if (!Number.isFinite(player.newrating) || !Number.isFinite(player.oldrating)) {
+		const { newrating, oldrating } = player;
+		if (newrating == null || oldrating == null) {
 			return undefined;
 		}
 
-		return player.newrating - player.oldrating;
+		if (!Number.isFinite(newrating) || !Number.isFinite(oldrating)) {
+			return undefined;
+		}
+
+		return newrating - oldrating;
 	});
 </script>
 

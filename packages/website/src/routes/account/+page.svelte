@@ -169,7 +169,6 @@
 		{/if}
 		{#snippet footer()}
 			<input
-				type="file"
 				accept="image/png,image/jpeg,image/gif,image/webp,image/bmp"
 				class={fileInput}
 				{...updateProfile.fields.avatar.as('file')}
@@ -231,7 +230,6 @@
 		>
 			<Input
 				id="account-new-email"
-				type="email"
 				autocomplete="email"
 				{...requestEmailChange.fields.newEmail.as('email')}
 			/>
@@ -253,7 +251,6 @@
 	<Form.Group label={t('Current password')} inputId="account-old-password">
 		<Input
 			id="account-old-password"
-			type="password"
 			autocomplete="current-password"
 			{...updatePassword.fields.oldPassword.as('password')}
 		/>
@@ -261,7 +258,6 @@
 	<Form.Group label={t('New password')} inputId="account-password">
 		<Input
 			id="account-password"
-			type="password"
 			autocomplete="new-password"
 			{...updatePassword.fields.password.as('password')}
 		/>
@@ -269,7 +265,6 @@
 	<Form.Group label={t('Confirm new password')} inputId="account-password-confirm">
 		<Input
 			id="account-password-confirm"
-			type="password"
 			autocomplete="new-password"
 			{...updatePassword.fields.passwordConfirm.as('password')}
 		/>
