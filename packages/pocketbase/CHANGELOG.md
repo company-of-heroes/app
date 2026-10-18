@@ -1,5 +1,16 @@
 # @company-of-heroes/pocketbase
 
+## 0.17.0
+
+- feat; labels can get unlock conditions like rewards, and are given automatically to every linked Steam ID that meets all of them
+- feat; redesigned leaderboards with rank movement since yesterday and last week, your own position (also outside the top 200), sorting and country / games filters, climbers, fallers and hot streaks
+- feat; supporter subscription with medal, supporter ribbons, player card and supporters page
+- feat; tournament pages show the host with avatar and profile link, and staff and hosts can upload their own champion medals (PNG or SVG)
+- fix; stop sending emails to generated @fknoobs.com placeholder addresses
+- fix; reward unlock notifications are no longer lost, matches recorded twice count once, unfinished matches break win streaks, secret rewards stay hidden, all-faction rewards get their own ribbon, and visitors no longer see a fake "Locked · 0%"
+- fix; the Veteran label now reaches every ranked 1v1/2v2 player who has ever been rank 20 on two ladders, one failing ladder no longer stops the others, and a label staff remove from a player stays removed
+- feat; guides any signed-in user can draft and send for review and staff or editors publish (later edits wait for review too), filed under categories, with cover and inline images, wiki links, search-engine metadata and translations; a new editor role admins hand out from the users page; upgrade pages in the wiki
+
 ## 0.16.1
 
 - feat; staff and hosts can hide a tournament from the public; its players can still open it
