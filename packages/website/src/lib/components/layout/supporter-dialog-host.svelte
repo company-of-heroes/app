@@ -4,16 +4,18 @@
 	import { SupporterDialog, type SupporterStatus } from '@company-of-heroes/ui/supporter';
 	import { watch } from 'runed';
 	import { loginRedirectHref } from '$lib/auth/user';
-	import { currentLocale, href } from '$lib/i18n';
+	import { currentLocale, href, useI18n } from '$lib/i18n';
 	import {
 		cancelSupporter,
 		getSupporterStatus,
 		resumeSupporter,
 		startSupporterCheckout
 	} from '$lib/remote/subscriptions.remote';
+	import { supporterCheckoutClosed } from '$lib/site/supporter';
 	import { supporterDialog } from '$lib/supporter-dialog.svelte';
 	import { useIsSupporter } from '$lib/supporter-status.svelte';
 
+	const { t } = useI18n();
 	const signedIn = $derived(!!page.data.user);
 	const known = useIsSupporter();
 
@@ -37,6 +39,10 @@
 	);
 
 	async function subscribe() {
+		if (supporterCheckoutClosed(t)) {
+			return;
+		}
+
 		if (!signedIn) {
 			const next = href('/supporters?checkout=1');
 			supporterDialog.open = false;

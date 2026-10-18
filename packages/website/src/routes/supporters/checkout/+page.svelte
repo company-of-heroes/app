@@ -3,12 +3,17 @@
 	import Seo from '$lib/components/seo/seo.svelte';
 	import { href, useI18n } from '$lib/i18n';
 	import { getCheckoutState, startSupporterCheckout } from '$lib/remote/subscriptions.remote';
+	import { supporterCheckoutClosed } from '$lib/site/supporter';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
 
 	async function retry() {
+		if (supporterCheckoutClosed(t)) {
+			return;
+		}
+
 		const { checkoutUrl } = await startSupporterCheckout();
 		window.location.assign(checkoutUrl);
 	}

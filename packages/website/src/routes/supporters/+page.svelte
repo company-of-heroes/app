@@ -10,6 +10,7 @@
 		resumeSupporter,
 		startSupporterCheckout
 	} from '$lib/remote/subscriptions.remote';
+	import { supporterCheckoutClosed } from '$lib/site/supporter';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -18,6 +19,10 @@
 	const signedIn = $derived(data.signedIn);
 
 	async function subscribe() {
+		if (supporterCheckoutClosed(t)) {
+			return;
+		}
+
 		if (!signedIn) {
 			await goto(loginRedirectHref(href('/supporters?checkout=1'), currentLocale()));
 			return;

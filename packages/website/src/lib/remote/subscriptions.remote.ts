@@ -4,6 +4,7 @@ import { isMollieCheckoutUrl } from '@company-of-heroes/api';
 import { z } from 'zod';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import { checkoutPaymentId, rememberCheckout } from '$lib/server/supporter-checkout';
+import { SUPPORTER_CHECKOUT_OPEN } from '$lib/site/supporter';
 
 function signedIn() {
 	const { locals } = getRequestEvent();
@@ -24,6 +25,10 @@ export const getSupporterStatus = command(() => {
 export const startSupporterCheckout = command(async () => {
 	const { services, user } = signedIn();
 	const event = getRequestEvent();
+	if (!SUPPORTER_CHECKOUT_OPEN) {
+		error(503, event.locals.t('Becoming a supporter is coming soon. Check back in a few days.'));
+	}
+
 	const checkout = await unwrapAsync(services.subscriptions.checkout(user.id, event.url.origin));
 	if (!isMollieCheckoutUrl(checkout.checkoutUrl)) {
 		error(502, event.locals.t('Something went wrong'));
