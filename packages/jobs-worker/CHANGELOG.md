@@ -1,5 +1,11 @@
 # @company-of-heroes/jobs-worker
 
+## 0.4.0
+
+- feat; redesigned leaderboards with rank movement since yesterday and last week, your own position (also outside the top 200), sorting and country / games filters, climbers, fallers and hot streaks
+- feat; supporter subscription with medal, supporter ribbons, player card and supporters page
+- fix; reward unlock notifications are no longer lost, matches recorded twice count once, unfinished matches break win streaks, secret rewards stay hidden, all-faction rewards get their own ribbon, and visitors no longer see a fake "Locked · 0%"
+
 ## 0.3.1
 
 - enhance; faster data loading across the app

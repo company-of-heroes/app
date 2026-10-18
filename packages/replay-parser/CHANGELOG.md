@@ -1,5 +1,11 @@
 # @company-of-heroes/replay-parser
 
+## 1.2.1
+
+- feat; supporter subscription with medal, supporter ribbons, player card and supporters page
+- enhance; rename the creator to Red™ 🏅 and point Twitch links to twitch.tv/commanderredttv
+- improvement; lighter faction icons: small 40px images instead of the full flags, and smaller icons in replay and live lobby cards
+
 ## 1.2.0
 
 - feat; linux support (appimage + deb) for the companion app and replay manager, with steam proton game detection and fair play
