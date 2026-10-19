@@ -1,5 +1,9 @@
 # @company-of-heroes/game-data
 
+## 0.3.1
+
+- fix; medium fuel and munition points on the map pages show +10 instead of +11, matching the game
+
 ## 0.3.0
 
 - feat; guides any signed-in user can draft and send for review and staff or editors publish (later edits wait for review too), filed under categories, with cover and inline images, wiki links, search-engine metadata and translations; a new editor role admins hand out from the users page; upgrade pages in the wiki
