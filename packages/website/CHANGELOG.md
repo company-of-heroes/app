@@ -1,5 +1,9 @@
 # @company-of-heroes/website
 
+## 1.19.2
+
+- feat; becoming a supporter is open, payments run through Mollie
+
 ## 1.19.1
 
 - enhance; homepage title, description and site schema mention "CoH Stats" so searches for coh stats / cohstats find the site
