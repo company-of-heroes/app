@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.16.1
+
+- fix; saving a tournament match score no longer fails with "Invalid input", and an out-of-range score says why it can't be saved
+
 ## 0.16.0
 
 - enhance; ribbons show their faction with wide national edge stripes, and supporter rewards get their own category

@@ -1,3 +1,7 @@
+### v0.74.1
+
+- fix; fair play screenshots no longer upload half grey when the game was still writing the file
+
 ### v0.74.0
 
 - enhance; ribbons show their faction with wide national edge stripes, and supporter rewards get their own category
