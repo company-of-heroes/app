@@ -73,7 +73,9 @@
 
 <section class="border-secondary-800 border-b">
 	<div class="flex min-w-0 flex-col justify-center px-6 py-8">
-		<p class="text-primary mb-2 text-xs font-medium">{t('Company of Heroes - Companion app')}</p>
+		<p class="text-primary mb-2 text-xs font-medium">
+			CoH Stats · {t('Company of Heroes - Companion app')}
+		</p>
 		<h1 class="font-heading text-3xl font-bold text-white sm:text-4xl">
 			{t('Player stats, live lobbies, and community replays')}
 		</h1>

@@ -40,8 +40,9 @@
 	const participants = $derived(context.participantsById);
 	const { t } = useI18n();
 
-	let winsA = $state(0);
-	let winsB = $state(0);
+	/** The number `Input` hands back strings; `scoreA` / `scoreB` are the parsed wins. */
+	let winsA = $state<number | string>(0);
+	let winsB = $state<number | string>(0);
 	let deadline = $state('');
 	let scheduledAt = $state('');
 	let saving = $state(false);
@@ -50,13 +51,29 @@
 	const needed = $derived(match ? winsNeeded(match.bestOf) : 1);
 	const aliasA = $derived(match?.playerA ? (participants.get(match.playerA)?.alias ?? '') : '');
 	const aliasB = $derived(match?.playerB ? (participants.get(match.playerB)?.alias ?? '') : '');
+	const scoreA = $derived(Number(winsA));
+	const scoreB = $derived(Number(winsB));
 	const valid = $derived(
-		winsA >= 0 &&
-			winsB >= 0 &&
-			winsA <= needed &&
-			winsB <= needed &&
-			!(winsA === needed && winsB === needed)
+		Number.isInteger(scoreA) &&
+			Number.isInteger(scoreB) &&
+			scoreA >= 0 &&
+			scoreB >= 0 &&
+			scoreA <= needed &&
+			scoreB <= needed &&
+			!(scoreA === needed && scoreB === needed)
 	);
+	/** Why Save result is disabled; typing can go past the stepper's max. */
+	const scoreError = $derived.by(() => {
+		if (valid) {
+			return null;
+		}
+
+		if (scoreA === needed && scoreB === needed) {
+			return t('Only one player can reach {wins} wins.', { wins: needed });
+		}
+
+		return t('Enter a score from 0 to {wins} for each player.', { wins: needed });
+	});
 
 	watch(
 		() => match,
@@ -162,7 +179,7 @@
 				class="flex flex-col gap-4 p-4"
 				onsubmit={(event) => {
 					event.preventDefault();
-					void save({ winsA, winsB });
+					void save({ winsA: scoreA, winsB: scoreB });
 				}}
 			>
 				<div class="grid grid-cols-2 gap-3">
@@ -193,6 +210,9 @@
 						</Button>
 					</div>
 				</div>
+				{#if scoreError}
+					<p class="text-xs text-red-400" role="alert">{scoreError}</p>
+				{/if}
 				<p class="text-secondary-400 text-xs">
 					{t(
 						'A result set here stops automatic tracking for this match. Reset it to count started tournament games again.'

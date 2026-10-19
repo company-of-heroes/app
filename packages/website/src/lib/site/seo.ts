@@ -27,6 +27,7 @@ export function breadcrumbList(crumbs: Crumb[]): Record<string, unknown> {
 export const organization = {
 	'@type': 'Organization',
 	name: 'COH1 Stats',
+	alternateName: ['CoH Stats', 'coh1stats'],
 	url: SITE_URL,
 	logo: `${SITE_URL}/apple-touch-icon.png`
 };

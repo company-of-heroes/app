@@ -1787,6 +1787,8 @@
 	"Deadlines": "Plazos",
 	"The last moment to play each round, in your local time. Players get a warning 3 days, 1 day and 3 hours before; staff get a notice when a match passes it.": "El último momento para jugar cada ronda, en tu hora local. Los jugadores reciben un aviso 3 días, 1 día y 3 horas antes; el staff recibe un aviso cuando un enfrentamiento lo supera.",
 	"Save deadlines": "Guardar plazos",
+	"Only one player can reach {wins} wins.": "Solo un jugador puede llegar a {wins} victorias.",
+	"Enter a score from 0 to {wins} for each player.": "Introduce un resultado de 0 a {wins} para cada jugador.",
 	"A result set here stops automatic tracking for this match. Reset it to count started tournament games again.": "Un resultado puesto aquí detiene el seguimiento automático de este enfrentamiento. Restablécelo para volver a contar las partidas del torneo iniciadas.",
 	"Deadline for this match": "Plazo para este enfrentamiento",
 	"Save deadline": "Guardar plazo",

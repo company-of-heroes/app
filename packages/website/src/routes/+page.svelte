@@ -16,11 +16,12 @@
 	let { data }: { data: PageData } = $props();
 	const { t } = useI18n();
 
-	const title = $derived(`COH1 Stats - ${t('Company of Heroes 1 Statistics')}`);
+	// Leads with "CoH Stats": Google reads "COH1" as its own word, so the brand alone does not match "coh stats".
+	const title = $derived(`CoH Stats - ${t('Company of Heroes 1 Statistics')} | COH1 Stats`);
 	const description = $derived(
-		t(
+		`CoH Stats: ${t(
 			'Company of Heroes 1 player stats, Relic leaderboards, community replays, live companion lobbies, and Twitch streams. Free desktop companion for scouting and fair play.'
-		)
+		)}`
 	);
 	const canonical = $derived(`${SITE_URL}${href('/')}`);
 	const searchUrl = $derived(`${SITE_URL}${href('/players')}?q={search_term_string}`);
@@ -29,7 +30,7 @@
 			'@context': 'https://schema.org',
 			'@type': 'WebSite',
 			name: 'COH1 Stats',
-			alternateName: t('Company of Heroes 1 Statistics'),
+			alternateName: ['CoH Stats', 'coh1stats', 'cohstats', t('Company of Heroes 1 Statistics')],
 			url: canonical,
 			description,
 			publisher: organization,

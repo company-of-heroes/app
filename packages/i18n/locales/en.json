@@ -1787,6 +1787,8 @@
 	"Deadlines": "Deadlines",
 	"The last moment to play each round, in your local time. Players get a warning 3 days, 1 day and 3 hours before; staff get a notice when a match passes it.": "The last moment to play each round, in your local time. Players get a warning 3 days, 1 day and 3 hours before; staff get a notice when a match passes it.",
 	"Save deadlines": "Save deadlines",
+	"Only one player can reach {wins} wins.": "Only one player can reach {wins} wins.",
+	"Enter a score from 0 to {wins} for each player.": "Enter a score from 0 to {wins} for each player.",
 	"A result set here stops automatic tracking for this match. Reset it to count started tournament games again.": "A result set here stops automatic tracking for this match. Reset it to count started tournament games again.",
 	"Deadline for this match": "Deadline for this match",
 	"Save deadline": "Save deadline",
