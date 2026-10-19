@@ -1,5 +1,10 @@
 # @company-of-heroes/i18n
 
+## 0.3.1
+
+- enhance; show "coming soon" on become a supporter until payments are live
+- fix; saving a tournament match score no longer fails with "Invalid input", and an out-of-range score says why it can't be saved
+
 ## 0.3.0
 
 - feat; labels can get unlock conditions like rewards, and are given automatically to every linked Steam ID that meets all of them
