@@ -1,5 +1,10 @@
 # @company-of-heroes/website
 
+## 1.19.1
+
+- enhance; homepage title, description and site schema mention "CoH Stats" so searches for coh stats / cohstats find the site
+- enhance; show "coming soon" on become a supporter until payments are live
+
 ## 1.19.0
 
 - enhance; ribbons show their faction with wide national edge stripes, and supporter rewards get their own category
