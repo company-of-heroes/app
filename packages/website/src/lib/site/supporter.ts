@@ -1,7 +1,7 @@
 import { toast } from '@company-of-heroes/ui/toasts';
 
-/** Off until the live Mollie profile has a recurring-capable payment method (iDEAL + SEPA, card). */
-export const SUPPORTER_CHECKOUT_OPEN = false;
+/** Set to false to close the checkout (e.g. when the live Mollie profile loses its recurring-capable payment methods). */
+export const SUPPORTER_CHECKOUT_OPEN = true;
 
 /** True (after a "coming soon" toast) while the checkout is closed. */
 export function supporterCheckoutClosed(t: (key: string) => string): boolean {
