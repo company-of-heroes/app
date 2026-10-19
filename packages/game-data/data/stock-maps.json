@@ -42,7 +42,7 @@
 			"territory": true,
 			"income": {
 				"manpower": 3.0,
-				"fuel": 11.0
+				"fuel": 10.0
 			},
 			"captureTime": 30.0,
 			"revertTime": 25.0
@@ -111,7 +111,7 @@
 			"territory": true,
 			"income": {
 				"manpower": 3.0,
-				"munition": 11.0
+				"munition": 10.0
 			},
 			"captureTime": 30.0,
 			"revertTime": 25.0
