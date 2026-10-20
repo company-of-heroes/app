@@ -2797,5 +2797,12 @@
 	"Becoming a supporter is coming soon. Check back in a few days.": "Pronto podrás hacerte mecenas. Vuelve en unos días.",
 	"Grid view": "Vista de cuadrícula",
 	"List view": "Vista de lista",
-	"Layout": "Diseño"
+	"Layout": "Diseño",
+	"Results hidden": "Resultados ocultos",
+	"Spoilers": "Spoilers",
+	"Hide the results": "Ocultar los resultados",
+	"Scores, winners and the champion stay hidden from the public, also in the hall of fame and on trophies, until you turn this off. Staff, the host and the players still see them.": "Los marcadores, los ganadores y el campeón quedan ocultos para el público, también en el salón de la fama y en los trofeos, hasta que lo desactives. El staff, el anfitrión y los jugadores los siguen viendo.",
+	"The host hides the results of this tournament to avoid spoilers. Scores, winners and the champion show up once they are released.": "El anfitrión oculta los resultados de este torneo para evitar spoilers. Los marcadores, los ganadores y el campeón aparecerán cuando se publiquen.",
+	"Results are hidden from the public to avoid spoilers. Only staff, the host and the players see them.": "Los resultados están ocultos para el público para evitar spoilers. Solo el staff, el anfitrión y los jugadores los ven.",
+	"The host hides the results of this tournament.": "El anfitrión oculta los resultados de este torneo."
 }

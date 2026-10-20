@@ -260,11 +260,13 @@
 		return detail.tournament.status === 'completed' && detail.replays.length > 0;
 	}
 
-	/** Stats only once every game is public. */
+	/** Stats only once every game is public, and not while the results are hidden from this viewer. */
 	function hasStats(detail: TournamentDetail) {
 		return (
-			detail.tournament.status === 'completed' ||
-			(detail.tournament.status === 'cancelled' && detail.matches.some((m) => m.games.length > 0))
+			!detail.resultsHidden &&
+			(detail.tournament.status === 'completed' ||
+				(detail.tournament.status === 'cancelled' &&
+					detail.matches.some((m) => m.games.length > 0)))
 		);
 	}
 
@@ -710,6 +712,7 @@
 						status={tournament.status}
 						deleted={!!tournament.deletedAt}
 						hidden={tournament.hidden}
+						resultsHidden={tournament.hideResults}
 					/>
 					<span class={cn(tableHeadText, 'text-primary')}>{t('Tournament')}</span>
 				</div>
@@ -1068,6 +1071,19 @@
 				<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
 					{t(
 						'Generated bracket: only staff and the host see it. Drag players to swap them; players see the bracket once the tournament starts.'
+					)}
+				</p>
+			{/if}
+			{#if current.resultsHidden}
+				<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
+					{t(
+						'The host hides the results of this tournament to avoid spoilers. Scores, winners and the champion show up once they are released.'
+					)}
+				</p>
+			{:else if tournament.hideResults}
+				<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
+					{t(
+						'Results are hidden from the public to avoid spoilers. Only staff, the host and the players see them.'
 					)}
 				</p>
 			{/if}

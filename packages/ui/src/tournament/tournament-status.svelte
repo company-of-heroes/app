@@ -11,10 +11,18 @@
 		deleted?: boolean;
 		/** Hidden from the public: an extra badge. */
 		hidden?: boolean;
+		/** The host hides the results (spoilers): an extra badge. */
+		resultsHidden?: boolean;
 		class?: string;
 	};
 
-	let { status, deleted = false, hidden = false, class: className }: Props = $props();
+	let {
+		status,
+		deleted = false,
+		hidden = false,
+		resultsHidden = false,
+		class: className
+	}: Props = $props();
 	const { t } = useI18n();
 
 	const VARIANTS: Record<TournamentStatus, SemanticVariant | 'primary'> = {
@@ -34,4 +42,7 @@
 	<Badge variant="destructive" class={className}>{t('Deleted')}</Badge>
 {:else if hidden}
 	<Badge variant="warning" class={className}>{t('Hidden')}</Badge>
+{/if}
+{#if resultsHidden && !deleted}
+	<Badge variant="info" class={className}>{t('Results hidden')}</Badge>
 {/if}

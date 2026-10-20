@@ -50,6 +50,7 @@ import {
 	swapPlayers,
 	type SlotRef
 } from '../domain/tournament-bracket';
+import { withoutResults } from '../domain/tournament-spoilers';
 import { workshopMap } from '@company-of-heroes/game-data/maps';
 import { mapDisplayName } from '../domain/map-name';
 import { profileFromPersonalStat, type RelicPersonalStat } from '../domain/relic-matches';
@@ -121,6 +122,8 @@ type TournamentRecord = {
 	deletedBy: string;
 	/** Kept out of public lists and pages; staff, the host and the players still open it. */
 	hidden: boolean;
+	/** Scores, winners and the champion kept from the public (spoilers). */
+	hideResults: boolean;
 	/** The staff member or community host who created it. */
 	createdBy: string;
 	collectionName: string;
@@ -298,6 +301,7 @@ function toTournament(
 		participantCount,
 		deletedAt: orNull(record.deletedAt),
 		hidden: Boolean(record.hidden),
+		hideResults: Boolean(record.hideResults),
 		created: record.created
 	};
 }
@@ -750,7 +754,15 @@ export class TournamentsService extends Service {
 			}),
 			'Could not load tournaments'
 		)
-			.andThen(({ items }) => this.withCounts(items))
+			.andThen(({ items }) =>
+				this.withCounts(items).map((tournaments) =>
+					tournaments.map((tournament, index) =>
+						items[index].hideResults && !canManageTournament(viewer, items[index])
+							? { ...tournament, winner: null, champion: null }
+							: tournament
+					)
+				)
+			)
 			.andThen((tournaments) =>
 				scope === 'active' ? this.withLiveCounts(tournaments) : okAsync(tournaments)
 			);
@@ -801,7 +813,7 @@ export class TournamentsService extends Service {
 		return fromPb(
 			this.tournaments.getList<TournamentRecord>(1, 50, {
 				filter: this.pb.filter(
-					'status = "completed" && deletedAt = "" && hidden = false && winner.steamId = {:steamId}',
+					'status = "completed" && deletedAt = "" && hidden = false && hideResults = false && winner.steamId = {:steamId}',
 					{ steamId }
 				),
 				sort: '-startsAt,-created',
@@ -924,12 +936,16 @@ export class TournamentsService extends Service {
 		).map((records) => records.map(toMatch));
 	}
 
+	/** Hidden results (`hideResults`) are left out unless `viewer` is `true`, staff, the host or a player. */
 	get(idOrSlug: string, viewer: Access): Task<TournamentDetail> {
-		return this.record(idOrSlug, viewer).andThen((record) => this.detail(record));
+		return this.record(idOrSlug, viewer).andThen((record) => this.detail(record, viewer === true));
 	}
 
-	/** `canManage` (and the open reports) follow the signed-in user of this request. */
-	private detail(record: TournamentRecord): Task<TournamentDetail> {
+	/**
+	 * `canManage` (and the open reports) follow the signed-in user of this request. Without
+	 * `full`, hidden results are left out for anyone who does not run or play the tournament.
+	 */
+	private detail(record: TournamentRecord, full = true): Task<TournamentDetail> {
 		const canManage = canManageTournament(this.locals.user, record);
 		return ResultAsync.combine([
 			this.participantRecords(record.id).andThen((records) =>
@@ -955,7 +971,13 @@ export class TournamentsService extends Service {
 				.map((participant) => toParticipant(participant, record))
 				.sort((a, b) => (a.seed ?? 9999) - (b.seed ?? 9999));
 			const registered = participants.filter((p) => p.status !== 'withdrawn');
-			return {
+			const me = this.locals.user?.id;
+			const spoilerFree =
+				!full &&
+				Boolean(record.hideResults) &&
+				!canManage &&
+				!participantRecords.some((participant) => !!me && participant.user === me);
+			const detail: TournamentDetail = {
 				tournament: {
 					...this.view(record, registered.filter((p) => p.status === 'registered').length, custom),
 					liveCount: live
@@ -967,6 +989,7 @@ export class TournamentsService extends Service {
 				posts,
 				openReports,
 				canManage,
+				resultsHidden: false,
 				standings:
 					record.format === 'round_robin'
 						? standings(
@@ -975,6 +998,7 @@ export class TournamentsService extends Service {
 							)
 						: []
 			};
+			return spoilerFree ? withoutResults(detail) : detail;
 		});
 	}
 
@@ -1010,7 +1034,7 @@ export class TournamentsService extends Service {
 	finished(): Task<{ tournament: Tournament; finishedAt: string }[]> {
 		return fromPb(
 			this.tournaments.getFullList<TournamentRecord & { updated: string; completedAt: string }>({
-				filter: 'status = "completed" && deletedAt = "" && hidden = false',
+				filter: 'status = "completed" && deletedAt = "" && hidden = false && hideResults = false',
 				sort: '-updated'
 			}),
 			'Could not load tournaments'
@@ -1319,7 +1343,7 @@ export class TournamentsService extends Service {
 					.andThen(() =>
 						ensure(
 							record.status !== 'completed' ||
-								Object.keys(input).every((key) => key === 'medal' || key === 'hidden'),
+								Object.keys(input).every((key) => ['medal', 'hidden', 'hideResults'].includes(key)),
 							badRequest('The tournament is already finished.')
 						)
 					)
@@ -1403,7 +1427,8 @@ export class TournamentsService extends Service {
 					.andThen((updated) => this.announceChanges(record, updated).map(() => updated));
 			})
 			.andThen((record) =>
-				record.status === 'cancelled'
+				// Over (or the host released the results): its games show up in the public lists.
+				(record.status === 'cancelled' || record.status === 'completed') && !record.hideResults
 					? this.services.hiddenMatches.unhideTournament(record.id).map(() => record)
 					: okAsync(record)
 			)
@@ -1523,27 +1548,26 @@ export class TournamentsService extends Service {
 						return errAsync(conflict('This tournament is full.'));
 					}
 
-					return ResultAsync.combine([
-						this.player(steamId),
-						this.countryOf(steamId)
-					]).andThen(([player, country]) => {
-						const data = {
-							tournament: record.id,
-							user: user.id,
-							steamId,
-							profileId: player.profile_id,
-							alias: player.alias,
-							country,
-							status: 'registered',
-							seed: 0,
-							rating: 0,
-							...((record.rules ?? '').trim() ? { rulesAcceptedAt: pbDate(new Date()) } : {})
-						};
-						const previous = existing.find((p) => p.user === user.id);
-						return previous
-							? fromPb(this.participants.update(previous.id, data), 'Could not sign up')
-							: fromPb(this.participants.create(data), 'Could not sign up');
-					});
+					return ResultAsync.combine([this.player(steamId), this.countryOf(steamId)]).andThen(
+						([player, country]) => {
+							const data = {
+								tournament: record.id,
+								user: user.id,
+								steamId,
+								profileId: player.profile_id,
+								alias: player.alias,
+								country,
+								status: 'registered',
+								seed: 0,
+								rating: 0,
+								...((record.rules ?? '').trim() ? { rulesAcceptedAt: pbDate(new Date()) } : {})
+							};
+							const previous = existing.find((p) => p.user === user.id);
+							return previous
+								? fromPb(this.participants.update(previous.id, data), 'Could not sign up')
+								: fromPb(this.participants.create(data), 'Could not sign up');
+						}
+					);
 				})
 				.andThen(() =>
 					this.services.tournamentNotices.registered(
@@ -2257,8 +2281,13 @@ export class TournamentsService extends Service {
 							'Could not finish the tournament'
 						)
 					)
-					// No more spoilers: its games show up in the public lists and the replays tab.
-					.andThen(() => this.services.hiddenMatches.unhideTournament(record.id))
+					// No more spoilers: its games show up in the public lists and the replays tab,
+					// unless the host hides the results (then when they release them).
+					.andThen(() =>
+						record.hideResults
+							? okAsync(undefined)
+							: this.services.hiddenMatches.unhideTournament(record.id)
+					)
 					.andThen(() =>
 						this.services.tournamentNotices.finished(
 							record,

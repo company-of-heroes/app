@@ -2797,5 +2797,12 @@
 	"Becoming a supporter is coming soon. Check back in a few days.": "Becoming a supporter is coming soon. Check back in a few days.",
 	"Grid view": "Grid view",
 	"List view": "List view",
-	"Layout": "Layout"
+	"Layout": "Layout",
+	"Results hidden": "Results hidden",
+	"Spoilers": "Spoilers",
+	"Hide the results": "Hide the results",
+	"Scores, winners and the champion stay hidden from the public, also in the hall of fame and on trophies, until you turn this off. Staff, the host and the players still see them.": "Scores, winners and the champion stay hidden from the public, also in the hall of fame and on trophies, until you turn this off. Staff, the host and the players still see them.",
+	"The host hides the results of this tournament to avoid spoilers. Scores, winners and the champion show up once they are released.": "The host hides the results of this tournament to avoid spoilers. Scores, winners and the champion show up once they are released.",
+	"Results are hidden from the public to avoid spoilers. Only staff, the host and the players see them.": "Results are hidden from the public to avoid spoilers. Only staff, the host and the players see them.",
+	"The host hides the results of this tournament.": "The host hides the results of this tournament."
 }

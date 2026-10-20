@@ -70,6 +70,11 @@ export type Tournament = {
 	deletedAt: string | null;
 	/** Kept out of public lists and pages; staff, the host and the players still see it. */
 	hidden: boolean;
+	/**
+	 * The host hides the results (spoilers): the public gets the bracket without scores, winners
+	 * and the champion until it is turned off. Staff, the host and the players still see them.
+	 */
+	hideResults: boolean;
 	created: string;
 };
 
@@ -402,6 +407,8 @@ export type TournamentDetail = {
 	openReports: number;
 	/** The viewer may run this tournament: staff, or the host who created it. */
 	canManage: boolean;
+	/** `hideResults` applies to this viewer: no scores, winners, placements or champion. */
+	resultsHidden: boolean;
 };
 
 /** Faction totals of a finished tournament. */
@@ -541,6 +548,8 @@ export type TournamentInput = {
 	streamUrl?: string | null;
 	/** Hidden from the public (see `Tournament.hidden`). */
 	hidden?: boolean;
+	/** Results hidden from the public (see `Tournament.hideResults`). */
+	hideResults?: boolean;
 };
 
 export const TOURNAMENT_BANNER_MAX_BYTES = 5 * 1024 * 1024;

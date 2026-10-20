@@ -97,6 +97,7 @@
 											status={tournament.status}
 											deleted={!!tournament.deletedAt}
 											hidden={tournament.hidden}
+											resultsHidden={tournament.hideResults}
 											class="shrink-0"
 										/>
 										{#if tournament.status === 'in_progress' && tournament.liveCount > 0}

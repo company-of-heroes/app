@@ -38,7 +38,8 @@ export const tournamentInput = z.object({
 		.max(500)
 		.nullable()
 		.optional(),
-	hidden: z.boolean().optional()
+	hidden: z.boolean().optional(),
+	hideResults: z.boolean().optional()
 });
 
 export const tournamentUpdate = tournamentInput.partial().extend({

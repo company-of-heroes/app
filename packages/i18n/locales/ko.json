@@ -2797,5 +2797,12 @@
 	"Becoming a supporter is coming soon. Check back in a few days.": "후원자 가입은 곧 가능해집니다. 며칠 후에 다시 확인해 주세요.",
 	"Grid view": "그리드 보기",
 	"List view": "목록 보기",
-	"Layout": "레이아웃"
+	"Layout": "레이아웃",
+	"Results hidden": "결과 숨김",
+	"Spoilers": "스포일러",
+	"Hide the results": "결과 숨기기",
+	"Scores, winners and the champion stay hidden from the public, also in the hall of fame and on trophies, until you turn this off. Staff, the host and the players still see them.": "이 설정을 끌 때까지 점수, 승자, 챔피언이 명예의 전당과 트로피를 포함해 일반 공개에서 숨겨집니다. 스태프, 호스트, 참가자는 계속 볼 수 있습니다.",
+	"The host hides the results of this tournament to avoid spoilers. Scores, winners and the champion show up once they are released.": "호스트가 스포일러를 막기 위해 이 토너먼트의 결과를 숨겼습니다. 결과가 공개되면 점수, 승자, 챔피언이 표시됩니다.",
+	"Results are hidden from the public to avoid spoilers. Only staff, the host and the players see them.": "스포일러를 막기 위해 결과가 일반 공개에서 숨겨져 있습니다. 스태프, 호스트, 참가자만 볼 수 있습니다.",
+	"The host hides the results of this tournament.": "호스트가 이 토너먼트의 결과를 숨겼습니다."
 }

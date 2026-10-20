@@ -52,6 +52,7 @@
 	let medal = $state<string | null>(initial?.medal ?? null);
 	let streamUrl = $state(initial?.streamUrl ?? '');
 	let hidden = $state(initial?.hidden ?? false);
+	let hideResults = $state(initial?.hideResults ?? false);
 	let banner = $state<File | null>(null);
 	let clearBanner = $state(false);
 	let logo = $state<File | null>(null);
@@ -87,7 +88,8 @@
 			mapPool,
 			medal,
 			streamUrl: streamUrl.trim() || null,
-			hidden
+			hidden,
+			hideResults
 		};
 	}
 
@@ -127,7 +129,7 @@
 				? await host.api.tournaments.update(
 						tournament.id,
 						tournament.status === 'completed'
-							? { medal: data.medal, hidden: data.hidden }
+							? { medal: data.medal, hidden: data.hidden, hideResults: data.hideResults }
 							: started
 								? {
 										name: data.name,
@@ -136,7 +138,8 @@
 										mapPool: data.mapPool,
 										medal: data.medal,
 										streamUrl: data.streamUrl,
-										hidden: data.hidden
+										hidden: data.hidden,
+										hideResults: data.hideResults
 									}
 								: { ...data, ...(status ? { status } : {}) },
 						images
@@ -334,6 +337,15 @@
 		)}
 	>
 		<Checkbox bind:checked={hidden} disabled={saving} label={t('Hide from the public')} />
+	</Form.Group>
+
+	<Form.Group
+		label={t('Spoilers')}
+		description={t(
+			'Scores, winners and the champion stay hidden from the public, also in the hall of fame and on trophies, until you turn this off. Staff, the host and the players still see them.'
+		)}
+	>
+		<Checkbox bind:checked={hideResults} disabled={saving} label={t('Hide the results')} />
 	</Form.Group>
 
 	<Form.Group

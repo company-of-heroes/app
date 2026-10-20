@@ -10,7 +10,7 @@ import type {
 	TournamentStats
 } from '@company-of-heroes/api/tournaments';
 import type { HistoryMatch } from '../domain/relic-matches';
-import { badRequest } from '../errors';
+import { badRequest, forbidden } from '../errors';
 import { chunk, ensure, fromPb, inParallel, type Task } from '../result';
 import { Service } from './service';
 
@@ -59,6 +59,9 @@ export class TournamentStatsService extends Service {
 				detail.tournament.status === 'completed' || detail.tournament.status === 'cancelled',
 				badRequest('Stats are shown once the tournament is over.')
 			)
+				.andThen(() =>
+					ensure(!detail.resultsHidden, forbidden('The host hides the results of this tournament.'))
+				)
 				.asyncAndThen(() =>
 					this.lobbies(detail.matches.flatMap((match) => match.games.map((g) => g.lobbyId)))
 				)
