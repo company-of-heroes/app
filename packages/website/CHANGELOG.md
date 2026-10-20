@@ -1,5 +1,9 @@
 # @company-of-heroes/website
 
+## 1.19.3
+
+- fix; replays and other pages load much faster outside Europe by always running the website next to the database
+
 ## 1.19.2
 
 - feat; becoming a supporter is open, payments run through Mollie
