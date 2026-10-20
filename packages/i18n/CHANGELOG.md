@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.3.3
+
+- feat; tournaments: hosts can hide the results to avoid spoilers; the public sees the bracket without scores, winners or champion until they turn it off
+
 ## 0.3.2
 
 - enhance; replays: switch Discover, Community matches and My matches between the classic list view (now the default again) and the card grid; your choice is remembered
