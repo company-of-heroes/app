@@ -1,5 +1,9 @@
 # @company-of-heroes/ui
 
+## 0.16.3
+
+- enhance; replays: the 1v1 / 2v2 / 3v3 / 4v4 quick filters pick one matchup at a time, and 1v1 rows in the list view show both player names
+
 ## 0.16.2
 
 - enhance; leaderboards and match history: calmer tables with ELO, wins and losses in their own columns and the win rate as a plain percentage instead of a progress bar
