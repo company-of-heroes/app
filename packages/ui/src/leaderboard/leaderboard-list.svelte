@@ -121,7 +121,7 @@
 			</span>
 			<LeaderboardChange change={stat.change?.day} class="text-xs md:hidden" />
 		</div>
-		<div role="cell" class="hidden text-sm md:block">
+		<div role="cell" class="hidden text-center text-sm md:block">
 			<LeaderboardChange change={stat.change?.day} />
 		</div>
 		<div role="cell" class="hidden items-center justify-center gap-1.5 md:flex">
@@ -161,7 +161,7 @@
 				losses={stat.losses}
 				compact
 				bar={false}
-				class="justify-end"
+				class="justify-end md:justify-center"
 			/>
 		</div>
 		<div
@@ -180,7 +180,7 @@
 	>
 		{@render sortHeader('rank', t('Pos'), 'left')}
 		<div class="hidden md:block">
-			{@render sortHeader('change', t('Change'), 'left', t('Rank change since yesterday'))}
+			{@render sortHeader('change', t('Change'), 'center', t('Rank change since yesterday'))}
 		</div>
 		<div role="columnheader" class="hidden text-center md:block">{t('Rank')}</div>
 		<div class="hidden md:block">{@render sortHeader('elo', t('ELO'), 'center')}</div>
@@ -188,7 +188,7 @@
 		<div class="hidden md:block">{@render sortHeader('games', t('Games'), 'center')}</div>
 		<div role="columnheader" class="hidden text-center md:block">{t('Wins')}</div>
 		<div role="columnheader" class="hidden text-center md:block">{t('Losses')}</div>
-		{@render sortHeader('winrate', t('Win rate'), 'right')}
+		{@render sortHeader('winrate', t('Win rate'), 'center')}
 		<div class="hidden md:block">{@render sortHeader('streak', t('Streak'), 'center')}</div>
 	</div>
 

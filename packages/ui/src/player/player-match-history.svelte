@@ -222,7 +222,7 @@
 						<div role="columnheader">{t('Pos')}</div>
 						<div
 							role="columnheader"
-							class="hidden md:block"
+							class="hidden text-center md:block"
 							{@attach tooltip(t('Rating Change (elo)'))}
 						>
 							{t('Change')}
@@ -234,7 +234,7 @@
 						<div role="columnheader" class="hidden text-center md:block">{t('Games')}</div>
 						<div role="columnheader" class="hidden text-center md:block">{t('Wins')}</div>
 						<div role="columnheader" class="hidden text-center md:block">{t('Losses')}</div>
-						<div role="columnheader" class="text-right">{t('Win rate')}</div>
+						<div role="columnheader" class="text-right md:text-center">{t('Win rate')}</div>
 						<div role="columnheader" class="hidden text-center md:block">{t('Streak')}</div>
 					</div>
 					<div role="rowgroup" class="-mb-px">
@@ -261,7 +261,7 @@
 									</span>
 									{@render ratingDeltaBadge(delta, 'text-xs md:hidden')}
 								</div>
-								<div role="cell" class="hidden text-sm md:block">
+								<div role="cell" class="hidden text-center text-sm md:block">
 									{@render ratingDeltaBadge(delta)}
 								</div>
 								<div role="cell" class="hidden items-center justify-center gap-1.5 md:flex">
@@ -303,7 +303,7 @@
 										losses={matchPlayer.losses}
 										compact
 										bar={false}
-										class="justify-end"
+										class="justify-end md:justify-center"
 									/>
 								</div>
 								<div

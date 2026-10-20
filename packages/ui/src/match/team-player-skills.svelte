@@ -29,12 +29,15 @@
 		outcome?: 'win' | 'loss' | null;
 		/** When false, show faction flags instead of rank badges (stats still show in the tooltip). */
 		showRankBadges?: boolean;
+		/** Name next to each entry (1v1 rows have room for it); long names truncate. */
+		showNames?: boolean;
 	};
 
 	type Chip = {
 		key: string;
 		href: string | null;
 		label: string;
+		alias: string;
 		ranked: boolean;
 		src: string;
 		levelText: string | null;
@@ -51,7 +54,8 @@
 		highlightedPlayers = [],
 		levelFallback = '-',
 		outcome = null,
-		showRankBadges = true
+		showRankBadges = true,
+		showNames = false
 	}: Props = $props();
 
 	function playerKey(player: TeamSkillPlayer, index: number) {
@@ -139,6 +143,7 @@
 			key: playerKey(player, index),
 			href,
 			label: tipLabel(player),
+			alias: player.alias.trim(),
 			ranked,
 			src,
 			levelText: ranked ? (ranking > 0 ? `#${ranking}` : levelFallback) : null,
@@ -161,6 +166,9 @@
 	/>
 	{#if chip.levelText}
 		<span>{chip.levelText}</span>
+	{/if}
+	{#if showNames && chip.alias}
+		<span class="max-w-32 truncate">{chip.alias}</span>
 	{/if}
 {/snippet}
 

@@ -47,11 +47,9 @@
 		onLayoutChange
 	}: Props = $props();
 
-	function toggleMatchup(matchup: HistoryMatchup) {
-		const matchups = value.matchups.includes(matchup)
-			? value.matchups.filter((entry) => entry !== matchup)
-			: [...value.matchups, matchup];
-		onChange({ ...value, matchups });
+	/** One matchup at a time, like a switch; All clears it. */
+	function selectMatchup(matchup: HistoryMatchup) {
+		onChange({ ...value, matchups: [matchup] });
 	}
 
 	const chip = cn(pageTab, 'h-8 px-3 text-sm');
@@ -75,13 +73,13 @@
 			{t('All')}
 		</button>
 		{#each MATCHUPS as matchup (matchup)}
-			{@const on = value.matchups.includes(matchup)}
+			{@const on = value.matchups.length === 1 && value.matchups[0] === matchup}
 			<button
 				type="button"
 				class={chip}
 				data-state={on ? 'on' : undefined}
 				aria-pressed={on}
-				onclick={() => toggleMatchup(matchup)}
+				onclick={() => selectMatchup(matchup)}
 			>
 				{matchup}
 			</button>

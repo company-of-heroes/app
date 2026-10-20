@@ -23,7 +23,7 @@
 {#snippet playerRow()}
 	<div class={cn(grid, 'border-secondary-800/70 min-h-12 border-b py-2')}>
 		<Skeleton class="h-4 w-8" />
-		<Skeleton class="h-4 w-6 max-md:hidden" />
+		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-6" /></div>
 		<div class="flex justify-center gap-1.5 max-md:hidden">
 			<Skeleton class="size-6 shrink-0" />
 			<Skeleton class="h-4 w-4" />
@@ -38,7 +38,7 @@
 		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-8" /></div>
 		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-8" /></div>
 		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-8" /></div>
-		<div class="flex justify-end"><Skeleton class="h-4 w-10" /></div>
+		<div class="flex justify-end md:justify-center"><Skeleton class="h-4 w-10" /></div>
 		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-6" /></div>
 	</div>
 {/snippet}
@@ -61,7 +61,7 @@
 			</div>
 			<div class={cn(grid, tableHeadRow, 'h-9')}>
 				<div>{t('Pos')}</div>
-				<div class="hidden md:block">{t('Change')}</div>
+				<div class="hidden text-center md:block">{t('Change')}</div>
 				<div class="hidden text-center md:block">{t('Rank')}</div>
 				<div class="hidden text-center md:block">{t('ELO')}</div>
 				<div class="hidden text-center md:block">{t('Team')}</div>
@@ -69,7 +69,7 @@
 				<div class="hidden text-center md:block">{t('Games')}</div>
 				<div class="hidden text-center md:block">{t('Wins')}</div>
 				<div class="hidden text-center md:block">{t('Losses')}</div>
-				<div class="text-right">{t('Win rate')}</div>
+				<div class="text-right md:text-center">{t('Win rate')}</div>
 				<div class="hidden text-center md:block">{t('Streak')}</div>
 			</div>
 			<div class="-mb-px">

@@ -63,6 +63,9 @@
 
 		return formatMapName(match.map);
 	}
+
+	const isOneVsOne = (match: CommunityMatch) =>
+		teamPlayers(match, 'allies').length === 1 && teamPlayers(match, 'axis').length === 1;
 </script>
 
 {#snippet teamFlags(match: CommunityMatch, team: 'allies' | 'axis', tinted = true)}
@@ -80,6 +83,7 @@
 		{highlightedPlayers}
 		outcome={tinted ? teamOutcome(match, team) : null}
 		showRankBadges={match.isRanked}
+		showNames={isOneVsOne(match)}
 	/>
 {/snippet}
 

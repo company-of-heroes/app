@@ -38,7 +38,7 @@
 		<SplitBar value={percent} leftClass="bg-green-400/55" class="min-w-10" />
 	{/if}
 	<span
-		class="w-9 shrink-0 text-right text-sm font-semibold tabular-nums"
+		class={cn('shrink-0 text-sm font-semibold tabular-nums', bar && 'w-9 text-right')}
 		style:color={getRatioColor(wins, losses)}
 	>
 		{percent}%
