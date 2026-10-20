@@ -7,7 +7,13 @@
 	import RankingIcon from 'phosphor-svelte/lib/RankingIcon';
 	import { Button } from '../ui/button';
 	import ReplaySort from '../replay/replay-sort.svelte';
-	import type { HistoryMatchup, HistorySortDir, HistorySortField } from '../replay/types';
+	import type {
+		HistoryMatchup,
+		HistorySortDir,
+		HistorySortField,
+		ReplayLayout
+	} from '../replay/types';
+	import LayoutToggle from './layout-toggle.svelte';
 	import type { ArchiveQuickFilters } from './types';
 
 	type Props = {
@@ -20,6 +26,9 @@
 		onOpenFilters: () => void;
 		/** Filters beyond the chips are set (dot on the Filters button). */
 		advancedActive?: boolean;
+		/** Grid or list; the toggle shows only with `onLayoutChange`. */
+		layout?: ReplayLayout;
+		onLayoutChange?: (next: ReplayLayout) => void;
 	};
 
 	const MATCHUPS: HistoryMatchup[] = ['1v1', '2v2', '3v3', '4v4'];
@@ -33,7 +42,9 @@
 		sortDir,
 		onSortChange,
 		onOpenFilters,
-		advancedActive = false
+		advancedActive = false,
+		layout = 'grid',
+		onLayoutChange
 	}: Props = $props();
 
 	function toggleMatchup(matchup: HistoryMatchup) {
@@ -98,6 +109,9 @@
 		</button>
 	</div>
 	<div class="flex shrink-0 items-center gap-2">
+		{#if onLayoutChange}
+			<LayoutToggle value={layout} onChange={onLayoutChange} />
+		{/if}
 		<ReplaySort {sort} {sortDir} onChange={onSortChange} />
 		<Button variant="secondary" size="sm" onclick={onOpenFilters}>
 			<span class="relative inline-flex">

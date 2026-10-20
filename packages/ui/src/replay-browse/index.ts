@@ -1,6 +1,7 @@
 import ArchiveFilterBar from './archive-filter-bar.svelte';
 import CardGrid from './card-grid.svelte';
 import DiscoverView from './discover-view.svelte';
+import LayoutToggle from './layout-toggle.svelte';
 import ReplayCardGrid from './replay-card-grid.svelte';
 import ReplaysPage from './replays-page.svelte';
 import MatchupSections from './matchup-sections.svelte';
@@ -10,6 +11,7 @@ export {
 	ArchiveFilterBar,
 	CardGrid,
 	DiscoverView,
+	LayoutToggle,
 	MatchupSections,
 	ReplayCardGrid,
 	ReplaysPage,

@@ -63,6 +63,8 @@ export type ReplayData = {
 
 export type HistorySortField = 'createdAt' | 'likeCount' | 'downloadCount' | 'commentCount';
 export type HistorySortDir = 'asc' | 'desc';
+/** How a replay list shows its matches: cards or table rows. */
+export type ReplayLayout = 'grid' | 'list';
 
 export type HistoryMatchup = '1v1' | '2v2' | '3v3' | '4v4';
 export type FilterOperator = 'gt' | 'gte' | 'lt' | 'lte';

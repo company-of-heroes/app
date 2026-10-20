@@ -8,6 +8,7 @@ import {
 	type HistoryMatchup,
 	type HistorySortDir,
 	type HistorySortField,
+	type ReplayLayout,
 	type ReplaysQuery
 } from '@company-of-heroes/ui/replay';
 import {
@@ -39,6 +40,7 @@ export type {
 	HistoryPlayerOption,
 	HistorySortDir,
 	HistorySortField,
+	ReplayLayout,
 	ReplaysQuery
 } from '@company-of-heroes/ui/replay';
 
@@ -49,6 +51,40 @@ export const HOME_RECENT_MEMBER_UPLOADS = 12;
 export const TOP_REPLAYS = 4;
 /** Window of the "top replays" spotlight. */
 export const TOP_REPLAYS_DAYS = 7;
+
+/**
+ * The archive's grid/list choice, kept per browser: the cookie lets the server render the right
+ * one, localStorage brings the choice back when the cookie is gone.
+ */
+export const REPLAYS_LAYOUT_COOKIE = 'replays_layout';
+const REPLAYS_LAYOUT_KEY = 'coh1stats.replaysLayout';
+
+export function parseReplaysLayout(value: string | null | undefined): ReplayLayout {
+	return value === 'grid' ? 'grid' : 'list';
+}
+
+export function saveReplaysLayout(layout: ReplayLayout) {
+	if (typeof document === 'undefined') {
+		return;
+	}
+
+	document.cookie = `${REPLAYS_LAYOUT_COOKIE}=${layout}; path=/; max-age=31536000; samesite=lax`;
+	try {
+		localStorage.setItem(REPLAYS_LAYOUT_KEY, layout);
+	} catch {
+		// Private mode or blocked storage.
+	}
+}
+
+/** The choice saved in this browser, or `null` when there is none. */
+export function storedReplaysLayout(): ReplayLayout | null {
+	try {
+		const value = localStorage.getItem(REPLAYS_LAYOUT_KEY);
+		return value === 'grid' || value === 'list' ? value : null;
+	} catch {
+		return null;
+	}
+}
 
 /** `discover` is the default view; `community` and `mine` are the archive. */
 export type ReplaysListTab = 'discover' | 'community' | 'mine';

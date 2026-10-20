@@ -35,7 +35,7 @@
 			<Skeleton class="h-4 w-6 max-md:hidden" />
 			<Skeleton class="h-4 w-40 grow-0" />
 			<div class="grow"></div>
-			<Skeleton class="h-2 w-24 md:w-56" />
+			<Skeleton class="h-4 w-10" />
 		</div>
 	{/each}
 </div>

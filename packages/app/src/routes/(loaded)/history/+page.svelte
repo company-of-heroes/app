@@ -6,11 +6,12 @@
 		List as ReplayList,
 		ListSkeleton as ReplayListSkeleton,
 		type CommunityMatch,
-		type HistoryMatchup
+		type HistoryMatchup,
+		type ReplayLayout
 	} from '@company-of-heroes/ui/replay';
 	import {
 		ArchiveFilterBar,
-		ReplayCardGrid,
+		LayoutToggle,
 		ReplaysPage,
 		type ArchiveQuickFilters,
 		type ReplaysView
@@ -51,9 +52,11 @@
 	let filtersOpen = $state(false);
 	const mySteamIds = $derived(getMeSteamIds());
 	const archive = $derived(tab === 'user' || tab === 'community');
-	/** Unfiltered first page of Community matches: one grid per game type. */
+	const layout = $derived<ReplayLayout>(app.features.history?.settings.replaysLayout ?? 'list');
+	/** Unfiltered first page of Community matches: one grid per game type (cards only). */
 	const grouped = $derived(
-		tab === 'community' &&
+		layout === 'grid' &&
+			tab === 'community' &&
 			!!matches &&
 			matches.page === 1 &&
 			matches.filters.matchups.length === 0 &&
@@ -103,6 +106,12 @@
 
 		matches.filters = { ...matches.filters, ...next, filter: undefined };
 		matches.page = 1;
+	}
+
+	function setLayout(next: ReplayLayout) {
+		if (app.features.history) {
+			app.features.history.settings.replaysLayout = next;
+		}
 	}
 
 	function catalogHref() {
@@ -215,7 +224,9 @@
 	showTitle={false}
 >
 	{#snippet aside()}
-		{#if archive && !grouped && matches?.displayedResult}
+		{#if tab === 'discover'}
+			<LayoutToggle value={layout} onChange={setLayout} />
+		{:else if archive && !grouped && matches?.displayedResult}
 			<Pagination
 				bind:page={matches.page}
 				perPage={matches.perPage}
@@ -226,7 +237,7 @@
 
 	{#if tab === 'discover'}
 		<div class="min-w-0 flex-1 overflow-auto">
-			<ReplaysDiscover />
+			<ReplaysDiscover {layout} />
 		</div>
 	{:else if !matches}
 		<!-- Without the game's log folder there are no local matches or replays. -->
@@ -245,43 +256,30 @@
 			}}
 			onOpenFilters={() => (filtersOpen = true)}
 			{advancedActive}
+			{layout}
+			onLayoutChange={setLayout}
 		/>
 		<div class="min-w-0 flex-1 overflow-auto">
 			{#if grouped}
 				<CommunityGroups {matches} />
 			{:else if matches.tableLoading}
-				{#if tab === 'community'}
-					<ReplayCardGrid matches={[]} skeletons={8} />
-				{:else}
-					<ReplayListSkeleton rowCount={matches.perPage} />
-				{/if}
+				<ReplayListSkeleton {layout} rowCount={layout === 'list' ? matches.perPage : 8} />
 			{:else if matches.displayedResult}
 				<div
 					class={cn(matches.result.loading && 'pointer-events-none opacity-60 transition-opacity')}
 				>
-					{#if tab === 'community'}
-						{#if matches.displayedResult.items.length === 0}
-							<p class="text-secondary-400 px-4 py-10 text-center text-sm">
-								{t('No community replays found.')}
-							</p>
-						{:else}
-							<ReplayCardGrid
-								matches={matches.displayedResult.items as unknown as CommunityMatch[]}
-								meSteamIds={mySteamIds}
-								closing
-							/>
-						{/if}
-					{:else}
-						<ReplayList
-							matches={matches.displayedResult.items as unknown as CommunityMatch[]}
-							highlightedPlayers={matches.filters.playerIds}
-							meSteamIds={mySteamIds}
-							sort={matches.sort}
-							sortDir={matches.sortDir}
-							onSort={() => {}}
-							emptyMessage={t('No matches found.')}
-						/>
-					{/if}
+					<ReplayList
+						matches={matches.displayedResult.items as unknown as CommunityMatch[]}
+						highlightedPlayers={matches.filters.playerIds}
+						meSteamIds={mySteamIds}
+						sort={matches.sort}
+						sortDir={matches.sortDir}
+						onSort={() => {}}
+						emptyMessage={tab === 'community'
+							? t('No community replays found.')
+							: t('No matches found.')}
+						{layout}
+					/>
 				</div>
 				<div class="border-secondary-800 flex border-t px-5 py-3">
 					<Pagination

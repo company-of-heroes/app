@@ -6,22 +6,22 @@
 	import type { Snippet } from 'svelte';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
+		factionIcon,
+		formatStreak,
 		interactive,
 		statLosses,
+		statStreakClass,
 		statWins,
-		tableHeadRow,
-		factionIcon
+		tableHeadRow
 	} from '@company-of-heroes/ui/variants';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
 	import CaretUpIcon from 'phosphor-svelte/lib/CaretUpIcon';
 	import ClockIcon from 'phosphor-svelte/lib/ClockIcon';
 	import DownloadSimpleIcon from 'phosphor-svelte/lib/DownloadSimpleIcon';
 	import FilmReelIcon from 'phosphor-svelte/lib/FilmReelIcon';
-	import MinusIcon from 'phosphor-svelte/lib/MinusIcon';
 	import { Button } from '../ui/button';
 	import MapImage from '../ui/map-image.svelte';
 	import { formatDuration, formatMatchStamp, normalizeMapName } from '../format/player-format';
-	import { formatStreak, streakClass } from '../format/ranks';
 	import type { MatchHistoryPlayer, PlayerPageData, TransformedMatch } from './types';
 	import PlayerLabels from './player-labels.svelte';
 	import PlayerNameIcons from './player-name-icons.svelte';
@@ -30,6 +30,7 @@
 	import { useHost } from '../host/host.context';
 	import { tooltip } from '../attachments/tooltip.svelte';
 	import type { CommunityMatchDetail } from '../replay/types';
+	import LeaderboardRecord from '../leaderboard/leaderboard-record.svelte';
 
 	type Props = {
 		player: PlayerPageData;
@@ -41,6 +42,10 @@
 	let { player, showAvatars = false, showSessionId = true, matchActions }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
+
+	/** Same columns as the leaderboard table, plus the team: pos · change · level · ELO · team · player · games · wins · losses · win rate · streak. */
+	const grid =
+		'grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-x-3 px-4 md:grid-cols-[3.5rem_3.5rem_3.5rem_3.5rem_2.5rem_minmax(0,1fr)_4rem_3.5rem_3.5rem_4.5rem_4rem]';
 
 	const stamp = (unix: number) => formatMatchStamp(unix, host.locale());
 	const detailsHref = (match: TransformedMatch) =>
@@ -70,36 +75,46 @@
 	}
 </script>
 
-{#snippet ratingDeltaBadge(delta: number)}
-	<span class="inline-flex items-center gap-0.5 text-sm tabular-nums">
-		{#if delta < 0}
-			<CaretDownIcon class="text-destructive size-3.5 shrink-0" weight="duotone" />
-			<span class="text-red-200">{Math.abs(delta)}</span>
-		{:else if delta > 0}
-			<CaretUpIcon class="text-success size-3.5 shrink-0" weight="duotone" />
-			<span class="text-green-200">{delta}</span>
-		{:else}
-			<MinusIcon class="text-secondary-500 size-3.5 shrink-0" />
-		{/if}
-	</span>
+{#snippet ratingDeltaBadge(delta: number, className?: string)}
+	{#if delta === 0}
+		<span class={cn('text-secondary-600 tabular-nums', className)} aria-hidden="true">–</span>
+	{:else}
+		<span
+			class={cn(
+				'inline-flex items-center gap-0.5 font-semibold tabular-nums',
+				delta > 0 ? 'text-green-300' : 'text-red-300',
+				className
+			)}
+		>
+			{#if delta > 0}
+				<CaretUpIcon class="size-3" weight="fill" />
+			{:else}
+				<CaretDownIcon class="size-3" weight="fill" />
+			{/if}
+			{Math.abs(delta)}
+		</span>
+	{/if}
 {/snippet}
 
-{#snippet rankBadge(matchPlayer: MatchHistoryPlayer)}
+{#snippet rankIcon(matchPlayer: MatchHistoryPlayer, className: string)}
 	{#if (matchPlayer.ranklevel ?? 0) > 0}
-		<span class="flex items-center justify-center gap-2">
-			<RankIcon
-				level={matchPlayer.ranklevel ?? 0}
-				race={matchPlayer.race_id}
-				position={matchPlayer.rank}
-				class="size-6"
-			/>
-			<span class="font-semibold tabular-nums">
-				{(matchPlayer.rank ?? 0) > 0 ? `#${matchPlayer.rank}` : matchPlayer.ranklevel}
-			</span>
-		</span>
-	{:else}
-		<span class="text-secondary-400 tabular-nums">-</span>
+		<RankIcon
+			level={matchPlayer.ranklevel ?? 0}
+			race={matchPlayer.race_id}
+			position={matchPlayer.rank}
+			class={className}
+		/>
 	{/if}
+{/snippet}
+
+{#snippet factionFlag(matchPlayer: MatchHistoryPlayer, className?: string)}
+	<img
+		loading="lazy"
+		decoding="async"
+		src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
+		alt=""
+		class={cn(factionIcon, className)}
+	/>
 {/snippet}
 
 {#snippet playerIdentity(matchPlayer: MatchHistoryPlayer, isSelf: boolean)}
@@ -140,7 +155,7 @@
 				{matchPlayer.alias}
 			</span>
 		{/if}
-		<EloBadge elo={displayElo(matchPlayer)} />
+		<EloBadge elo={displayElo(matchPlayer)} class="md:hidden" />
 		<PlayerLabels labels={matchPlayer.labels} class="shrink-0" />
 	</div>
 {/snippet}
@@ -202,121 +217,107 @@
 						</span>
 					</div>
 				</div>
-				<div class="hidden overflow-x-auto md:block">
-					<table class="w-full table-fixed text-sm">
-						<colgroup>
-							<col class="w-14" />
-							<col class="w-24" />
-							<col class="w-12" />
-							<col />
-							<col class="w-14" />
-							<col class="w-14" />
-							<col class="w-20" />
-						</colgroup>
-						<thead>
-							<tr class={tableHeadRow}>
-								<th class="px-2 py-2 text-center">{t('Change')}</th>
-								<th class="px-2 py-2 text-center">{t('Rank')}</th>
-								<th class="px-2 py-2 text-center">{t('Team')}</th>
-								<th class="px-3 py-2 text-left">{t('Player')}</th>
-								<th class="px-2 py-2 text-center">{t('Wins')}</th>
-								<th class="px-2 py-2 text-center">{t('Losses')}</th>
-								<th class="py-2 pr-4 pl-2 text-center">{t('Streak')}</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each players as matchPlayer (matchPlayer.profile_id)}
-								{@const isSelf = matchPlayer.profile_id === player.profileId}
-								{@const delta = ratingDelta(matchPlayer)}
-								<tr
+				<div role="table" aria-label={normalizeMapName(match.mapname)}>
+					<div role="row" class={cn(grid, tableHeadRow, 'h-9')}>
+						<div role="columnheader">{t('Pos')}</div>
+						<div
+							role="columnheader"
+							class="hidden md:block"
+							{@attach tooltip(t('Rating Change (elo)'))}
+						>
+							{t('Change')}
+						</div>
+						<div role="columnheader" class="hidden text-center md:block">{t('Rank')}</div>
+						<div role="columnheader" class="hidden text-center md:block">{t('ELO')}</div>
+						<div role="columnheader" class="hidden text-center md:block">{t('Team')}</div>
+						<div role="columnheader">{t('Player')}</div>
+						<div role="columnheader" class="hidden text-center md:block">{t('Games')}</div>
+						<div role="columnheader" class="hidden text-center md:block">{t('Wins')}</div>
+						<div role="columnheader" class="hidden text-center md:block">{t('Losses')}</div>
+						<div role="columnheader" class="text-right">{t('Win rate')}</div>
+						<div role="columnheader" class="hidden text-center md:block">{t('Streak')}</div>
+					</div>
+					<div role="rowgroup" class="-mb-px">
+						{#each players as matchPlayer (matchPlayer.profile_id)}
+							{@const isSelf = matchPlayer.profile_id === player.profileId}
+							{@const delta = ratingDelta(matchPlayer)}
+							<div
+								role="row"
+								class={cn(
+									grid,
+									'border-secondary-800/70 min-h-12 border-b py-2 text-white',
+									matchPlayer.outcome === 1 ? 'bg-success/5' : 'bg-destructive/5',
+									isSelf && 'shadow-[inset_3px_0_0_var(--color-primary)]'
+								)}
+							>
+								<div role="cell" class="flex flex-col items-start leading-tight">
+									<span
+										class={cn(
+											'text-sm font-semibold tabular-nums',
+											isSelf ? 'text-primary' : 'text-secondary-300'
+										)}
+									>
+										{(matchPlayer.rank ?? 0) > 0 ? `#${matchPlayer.rank}` : '–'}
+									</span>
+									{@render ratingDeltaBadge(delta, 'text-xs md:hidden')}
+								</div>
+								<div role="cell" class="hidden text-sm md:block">
+									{@render ratingDeltaBadge(delta)}
+								</div>
+								<div role="cell" class="hidden items-center justify-center gap-1.5 md:flex">
+									{#if (matchPlayer.ranklevel ?? 0) > 0}
+										{@render rankIcon(matchPlayer, 'size-6')}
+										<span class="text-secondary-400 text-sm tabular-nums">
+											{matchPlayer.ranklevel}
+										</span>
+									{:else}
+										<span class="text-secondary-600 tabular-nums">–</span>
+									{/if}
+								</div>
+								<div role="cell" class="hidden justify-center md:flex">
+									<EloBadge elo={displayElo(matchPlayer)} />
+								</div>
+								<div role="cell" class="hidden justify-center md:flex">
+									{@render factionFlag(matchPlayer)}
+								</div>
+								<div role="cell" class="flex min-w-0 items-center gap-2 text-sm">
+									{@render rankIcon(matchPlayer, 'size-6 shrink-0 md:hidden')}
+									{@render factionFlag(matchPlayer, 'shrink-0 md:hidden')}
+									{@render playerIdentity(matchPlayer, isSelf)}
+								</div>
+								<div
+									role="cell"
+									class="text-secondary-300 hidden text-center text-sm tabular-nums md:block"
+								>
+									{matchPlayer.wins + matchPlayer.losses}
+								</div>
+								<div role="cell" class={cn(statWins, 'hidden text-center text-sm md:block')}>
+									{matchPlayer.wins}
+								</div>
+								<div role="cell" class={cn(statLosses, 'hidden text-center text-sm md:block')}>
+									{matchPlayer.losses}
+								</div>
+								<div role="cell">
+									<LeaderboardRecord
+										wins={matchPlayer.wins}
+										losses={matchPlayer.losses}
+										compact
+										bar={false}
+										class="justify-end"
+									/>
+								</div>
+								<div
+									role="cell"
 									class={cn(
-										'border-secondary-800 h-9 border-b',
-										matchPlayer.outcome === 1 ? 'bg-success/5' : 'bg-destructive/5'
+										'hidden text-center text-sm font-medium md:block',
+										statStreakClass(matchPlayer.streak)
 									)}
 								>
-									<td class="px-2 py-1.5 text-center">
-										<div class="flex w-full justify-center">
-											{@render ratingDeltaBadge(delta)}
-										</div>
-									</td>
-									<td class="px-2 py-1.5 text-center">
-										<div class="flex w-full justify-center">
-											{@render rankBadge(matchPlayer)}
-										</div>
-									</td>
-									<td class="px-2 py-1.5 text-center">
-										<div class="flex w-full justify-center">
-											<img
-												loading="lazy"
-												decoding="async"
-												src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
-												alt=""
-												class={factionIcon}
-											/>
-										</div>
-									</td>
-									<td class="px-3 py-1.5 text-left">
-										{@render playerIdentity(matchPlayer, isSelf)}
-									</td>
-									<td class="px-2 py-1.5 text-center">
-										<div class="flex w-full justify-center">
-											<span class="{statWins} text-center font-medium tabular-nums">
-												{matchPlayer.wins}
-											</span>
-										</div>
-									</td>
-									<td class="px-2 py-1.5 text-center">
-										<div class="flex w-full justify-center">
-											<span class="{statLosses} text-center font-medium tabular-nums">
-												{matchPlayer.losses}
-											</span>
-										</div>
-									</td>
-									<td class="py-1.5 pr-4 pl-2 text-center">
-										<div class="flex w-full justify-center">
-											<span
-												class="text-center font-medium tabular-nums {streakClass(
-													matchPlayer.streak
-												)}"
-											>
-												{formatStreak(matchPlayer.streak)}
-											</span>
-										</div>
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-				<div class="divide-secondary-800 divide-y md:hidden">
-					{#each players as matchPlayer (matchPlayer.profile_id)}
-						{@const isSelf = matchPlayer.profile_id === player.profileId}
-						{@const delta = ratingDelta(matchPlayer)}
-						<div
-							class={cn(
-								'space-y-2 px-4 py-3',
-								matchPlayer.outcome === 1 ? 'bg-success/5' : 'bg-destructive/5'
-							)}
-						>
-							{@render playerIdentity(matchPlayer, isSelf)}
-							<div class="text-secondary-300 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
-								{@render ratingDeltaBadge(delta)}
-								{@render rankBadge(matchPlayer)}
-								<img
-									loading="lazy"
-									decoding="async"
-									src={host.resolve.factionFlagByRace(matchPlayer.race_id)}
-									alt=""
-									class={factionIcon}
-								/>
-								<span class="{statWins} font-medium tabular-nums">{matchPlayer.wins}</span>
-								<span class="{statLosses} font-medium tabular-nums">{matchPlayer.losses}</span>
-								<span class="font-medium tabular-nums {streakClass(matchPlayer.streak)}">
 									{formatStreak(matchPlayer.streak)}
-								</span>
+								</div>
 							</div>
-						</div>
-					{/each}
+						{/each}
+					</div>
 				</div>
 			</section>
 		{/each}

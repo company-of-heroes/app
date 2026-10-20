@@ -25,6 +25,7 @@ import { toPersistablePlayers } from '$core/game/lobby-utils';
 import { embedSteamIdsInReplay } from '$lib/utils/replay-steam-ids';
 import { rewriteReplayMapPathsForLocalPlayback } from '$lib/utils/rewrite-replay-map-paths';
 import { flattenReplay, type FlatReplay } from '@company-of-heroes/ui/replay/parse';
+import type { ReplayLayout } from '@company-of-heroes/ui/replay';
 import { getFile } from '$core/pocketbase';
 import { t } from '$lib/i18n';
 
@@ -41,6 +42,8 @@ const LIVE_REPLAY_DURATION_THRESHOLD_S = 30;
 type HistorySettings = {
 	enabled: boolean;
 	pendingReplaySessionId: number | null;
+	/** Cards or table rows in the Community matches / My matches archive. */
+	replaysLayout: ReplayLayout;
 };
 
 /**
@@ -860,7 +863,8 @@ export class History extends Feature<HistorySettings> {
 	defaultSettings(): HistorySettings {
 		return {
 			enabled: true,
-			pendingReplaySessionId: null
+			pendingReplaySessionId: null,
+			replaysLayout: 'list'
 		};
 	}
 }

@@ -397,19 +397,23 @@ export type HistoryPlan = {
 
 /** Scope conditions on lobbies, relative to `prefix` ('' on lobbies, 'lobby.' from the index). */
 function scopeConditions(scope: HistoryScope, prefix: string): string[] {
-	const conditions = scope.includeSkirmish
-		? [`(${prefix}needsResult = false || ${prefix}title = 'Skirmish')`]
-		: [`${prefix}needsResult = false`, `${prefix}title != 'Skirmish'`];
+	// `isCommunity` already implies a result and no skirmish. Repeating those columns
+	// keeps SQLite off the (isCommunity, isHidden, createdAt) index: ~0.5s per count.
+	const community = scope.kind === 'community' && !scope.includeSkirmish;
+	const conditions = community
+		? [`${prefix}isCommunity = true`]
+		: scope.includeSkirmish
+			? [`(${prefix}needsResult = false || ${prefix}title = 'Skirmish')`]
+			: [`${prefix}needsResult = false`, `${prefix}title != 'Skirmish'`];
 	if (!scope.includeHidden) {
 		conditions.push(`${prefix}isHidden = false`);
 	}
 
 	if (scope.kind === 'community') {
-		conditions.push(
-			scope.includeSkirmish
-				? `${prefix}hasReplay = true && ${prefix}memberReplay = ''`
-				: `${prefix}isCommunity = true`
-		);
+		if (scope.includeSkirmish) {
+			conditions.push(`${prefix}hasReplay = true && ${prefix}memberReplay = ''`);
+		}
+
 		if (scope.since) {
 			conditions.push(`${prefix}createdAt >= ${quote(scope.since)}`);
 		}

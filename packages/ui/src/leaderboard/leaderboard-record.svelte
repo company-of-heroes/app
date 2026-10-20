@@ -8,14 +8,16 @@
 	type Props = {
 		wins: number;
 		losses: number;
-		/** Hides the W–L numbers, keeping the bar and the percentage. */
+		/** Hides the W–L numbers, keeping the percentage (and the bar). */
 		compact?: boolean;
+		/** Shows the win/loss split bar. */
+		bar?: boolean;
 		class?: string;
 	};
 
 	const { t } = useI18n();
 
-	let { wins, losses, compact = false, class: className }: Props = $props();
+	let { wins, losses, compact = false, bar = true, class: className }: Props = $props();
 
 	const total = $derived(wins + losses);
 	const percent = $derived(total > 0 ? Math.round((wins / total) * 100) : 0);
@@ -32,7 +34,9 @@
 			>
 		</span>
 	{/if}
-	<SplitBar value={percent} leftClass="bg-green-400/55" class="min-w-10" />
+	{#if bar}
+		<SplitBar value={percent} leftClass="bg-green-400/55" class="min-w-10" />
+	{/if}
 	<span
 		class="w-9 shrink-0 text-right text-sm font-semibold tabular-nums"
 		style:color={getRatioColor(wins, losses)}

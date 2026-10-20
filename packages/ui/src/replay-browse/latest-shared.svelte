@@ -3,7 +3,8 @@
 	import UploadSimpleIcon from 'phosphor-svelte/lib/UploadSimpleIcon';
 	import ShareNetworkIcon from 'phosphor-svelte/lib/ShareNetworkIcon';
 	import { Button } from '../ui/button';
-	import type { CommunityMatch } from '../replay/types';
+	import ReplayTable from '../replay/replay-table.svelte';
+	import type { CommunityMatch, ReplayLayout } from '../replay/types';
 	import DiscoverSectionHeader from './discover-section-header.svelte';
 	import ReplayCardGrid from './replay-card-grid.svelte';
 	import type { ReplayPage } from './types';
@@ -14,11 +15,12 @@
 		loadMore: (page: number) => Promise<ReplayPage>;
 		uploadHref: string;
 		meSteamIds?: string[];
+		layout?: ReplayLayout;
 	};
 
 	const { t } = useI18n();
 
-	let { initial, loadMore, uploadHref, meSteamIds = [] }: Props = $props();
+	let { initial, loadMore, uploadHref, meSteamIds = [], layout = 'grid' }: Props = $props();
 
 	let extra = $state.raw<CommunityMatch[]>([]);
 	let page = $state(1);
@@ -72,7 +74,11 @@
 			</Button>
 		</div>
 	{:else}
-		<ReplayCardGrid matches={items} {meSteamIds} closing={!hasMore} />
+		{#if layout === 'list'}
+			<ReplayTable matches={items} {meSteamIds} closing={!hasMore} />
+		{:else}
+			<ReplayCardGrid matches={items} {meSteamIds} closing={!hasMore} />
+		{/if}
 		{#if hasMore}
 			<div class="flex flex-col items-center gap-2 px-4 py-5">
 				<Button variant="secondary" onclick={() => void more()} {loading}>

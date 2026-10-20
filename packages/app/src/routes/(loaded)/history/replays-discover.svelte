@@ -7,7 +7,7 @@
 
 <script lang="ts">
 	import { resource } from 'runed';
-	import type { CommunityMatch, ReplaysQuery } from '@company-of-heroes/ui/replay';
+	import type { CommunityMatch, ReplayLayout, ReplaysQuery } from '@company-of-heroes/ui/replay';
 	import {
 		DiscoverView,
 		themeArchiveQuery,
@@ -18,9 +18,15 @@
 	import { useI18n } from '$lib/i18n';
 	import { historyListHref } from '$core/app/features/history/history-url';
 
+	type Props = {
+		layout?: ReplayLayout;
+	};
+
 	const SHARED_PER_PAGE = 12;
 
 	const { t } = useI18n();
+
+	let { layout = 'grid' }: Props = $props();
 	const mySteamIds = $derived(getMeSteamIds());
 
 	const discover = resource(
@@ -104,5 +110,6 @@
 		{loadMoreShared}
 		uploadHref="/replays/upload"
 		meSteamIds={mySteamIds}
+		{layout}
 	/>
 {/if}

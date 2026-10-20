@@ -6,7 +6,9 @@
 	import { Button } from '@company-of-heroes/ui/button';
 	import {
 		formatStreak,
+		statLosses,
 		statStreakClass,
+		statWins,
 		tableHeadRow,
 		tableSortHeader
 	} from '@company-of-heroes/ui/variants';
@@ -28,9 +30,9 @@
 	const host = useHost();
 	const leaderboard = useLeaderboard();
 
-	/** Rank · change · level · player · games · record · streak; narrow screens keep three. */
+	/** Pos · change · level · ELO · player · games · wins · losses · win rate · streak; narrow screens keep three. */
 	const grid =
-		'grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-3 px-4 md:grid-cols-[2.75rem_2.75rem_3.5rem_minmax(0,1fr)_4rem_minmax(11rem,15rem)_4rem]';
+		'grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-3 px-4 md:grid-cols-[2.75rem_3.5rem_3.5rem_3.5rem_minmax(0,1fr)_4rem_3.5rem_3.5rem_4.5rem_4rem]';
 
 	let ownVisible = $state(false);
 
@@ -109,8 +111,13 @@
 		{@attach own ? trackOwn : undefined}
 	>
 		<div role="cell" class="flex flex-col items-start leading-tight">
-			<span class={cn('font-semibold tabular-nums', own ? 'text-primary' : 'text-secondary-300')}>
-				{stat.rank}
+			<span
+				class={cn(
+					'text-sm font-semibold tabular-nums',
+					own ? 'text-primary' : 'text-secondary-300'
+				)}
+			>
+				#{stat.rank}
 			</span>
 			<LeaderboardChange change={stat.change?.day} class="text-xs md:hidden" />
 		</div>
@@ -126,6 +133,9 @@
 			/>
 			<span class="text-secondary-400 text-sm tabular-nums">{stat.ranklevel}</span>
 		</div>
+		<div role="cell" class="hidden justify-center md:flex">
+			<LeaderboardElo elo={leaderboard.elo(stat)} />
+		</div>
 		<div role="cell" class="flex min-w-0 items-center gap-2">
 			<RankIcon
 				level={stat.ranklevel}
@@ -134,14 +144,25 @@
 				class="size-6 md:hidden"
 			/>
 			<LeaderboardPlayer {stat} class="min-w-0" />
-			<LeaderboardElo elo={leaderboard.elo(stat)} />
+			<LeaderboardElo elo={leaderboard.elo(stat)} class="md:hidden" />
 		</div>
 		<div role="cell" class="text-secondary-300 hidden text-center text-sm tabular-nums md:block">
 			{games(stat)}
 		</div>
-		<div role="cell" class="w-24 md:w-auto">
-			<LeaderboardRecord wins={stat.wins} losses={stat.losses} compact class="md:hidden" />
-			<LeaderboardRecord wins={stat.wins} losses={stat.losses} class="hidden md:flex" />
+		<div role="cell" class={cn(statWins, 'hidden text-center text-sm md:block')}>
+			{stat.wins}
+		</div>
+		<div role="cell" class={cn(statLosses, 'hidden text-center text-sm md:block')}>
+			{stat.losses}
+		</div>
+		<div role="cell">
+			<LeaderboardRecord
+				wins={stat.wins}
+				losses={stat.losses}
+				compact
+				bar={false}
+				class="justify-end"
+			/>
 		</div>
 		<div
 			role="cell"
@@ -157,13 +178,16 @@
 		role="row"
 		class={cn(grid, tableHeadRow, 'sticky top-(--leaderboard-top) z-10 h-9 backdrop-blur')}
 	>
-		{@render sortHeader('rank', '#', 'left')}
+		{@render sortHeader('rank', t('Pos'), 'left')}
 		<div class="hidden md:block">
-			{@render sortHeader('change', '+/−', 'left', t('Rank change since yesterday'))}
+			{@render sortHeader('change', t('Change'), 'left', t('Rank change since yesterday'))}
 		</div>
 		<div role="columnheader" class="hidden text-center md:block">{t('Rank')}</div>
+		<div class="hidden md:block">{@render sortHeader('elo', t('ELO'), 'center')}</div>
 		<div role="columnheader">{t('Player')}</div>
 		<div class="hidden md:block">{@render sortHeader('games', t('Games'), 'center')}</div>
+		<div role="columnheader" class="hidden text-center md:block">{t('Wins')}</div>
+		<div role="columnheader" class="hidden text-center md:block">{t('Losses')}</div>
 		{@render sortHeader('winrate', t('Win rate'), 'right')}
 		<div class="hidden md:block">{@render sortHeader('streak', t('Streak'), 'center')}</div>
 	</div>
@@ -207,7 +231,12 @@
 				<span class="text-secondary-300 min-w-0 flex-1 truncate text-sm">
 					{t('Outside the top 200')}
 				</span>
-				<LeaderboardRecord wins={ownStat.wins} losses={ownStat.losses} class="w-40 max-sm:hidden" />
+				<LeaderboardRecord
+					wins={ownStat.wins}
+					losses={ownStat.losses}
+					bar={false}
+					class="max-sm:hidden"
+				/>
 			{/if}
 		</div>
 	{/if}

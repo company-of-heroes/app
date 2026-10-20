@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
+	import { cn } from '@company-of-heroes/ui/cn';
 	import { tableHeadRow } from '@company-of-heroes/ui/variants';
 
 	type Props = {
@@ -11,52 +12,35 @@
 	let { matchCount = 4, playersPerMatch = 2 }: Props = $props();
 	const { t } = useI18n();
 
+	/** Mirrors the grid in `player-match-history.svelte`. */
+	const grid =
+		'grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-x-3 px-4 md:grid-cols-[3.5rem_3.5rem_3.5rem_3.5rem_2.5rem_minmax(0,1fr)_4rem_3.5rem_3.5rem_4.5rem_4rem]';
+
 	const matches = $derived(Array.from({ length: matchCount }, (_, i) => i + 1));
 	const players = $derived(Array.from({ length: playersPerMatch }, (_, i) => i + 1));
 </script>
 
 {#snippet playerRow()}
-	<tr class="border-secondary-800 h-9 border-b">
-		<td class="px-2 py-1.5">
-			<div class="flex w-full justify-center">
-				<Skeleton class="h-3.5 w-8" />
-			</div>
-		</td>
-		<td class="px-2 py-1.5">
-			<div class="flex w-full items-center justify-center gap-2">
-				<Skeleton class="size-6 shrink-0" />
-				<Skeleton class="h-3.5 w-4" />
-			</div>
-		</td>
-		<td class="px-2 py-1.5">
-			<div class="flex w-full justify-center">
-				<Skeleton class="h-6 w-6 shrink-0" />
-			</div>
-		</td>
-		<td class="px-3 py-1.5">
-			<div class="flex min-w-0 items-center gap-2">
-				<Skeleton class="size-8 shrink-0 rounded-lg" />
-				<Skeleton class="size-5 shrink-0 rounded-full" />
-				<Skeleton class="h-3.5 w-28 max-w-full" />
-				<Skeleton class="h-5 w-10 shrink-0" />
-			</div>
-		</td>
-		<td class="px-2 py-1.5">
-			<div class="flex w-full justify-center">
-				<Skeleton class="h-3.5 w-8" />
-			</div>
-		</td>
-		<td class="px-2 py-1.5">
-			<div class="flex w-full justify-center">
-				<Skeleton class="h-3.5 w-8" />
-			</div>
-		</td>
-		<td class="py-1.5 pr-4 pl-2">
-			<div class="flex w-full justify-center">
-				<Skeleton class="h-3.5 w-8" />
-			</div>
-		</td>
-	</tr>
+	<div class={cn(grid, 'border-secondary-800/70 min-h-12 border-b py-2')}>
+		<Skeleton class="h-4 w-8" />
+		<Skeleton class="h-4 w-6 max-md:hidden" />
+		<div class="flex justify-center gap-1.5 max-md:hidden">
+			<Skeleton class="size-6 shrink-0" />
+			<Skeleton class="h-4 w-4" />
+		</div>
+		<div class="flex justify-center max-md:hidden"><Skeleton class="h-5 w-10" /></div>
+		<div class="flex justify-center max-md:hidden"><Skeleton class="size-6" /></div>
+		<div class="flex min-w-0 items-center gap-2">
+			<Skeleton class="size-8 shrink-0 rounded-lg" />
+			<Skeleton class="size-5 shrink-0 rounded-full" />
+			<Skeleton class="h-3.5 w-28 max-w-full" />
+		</div>
+		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-8" /></div>
+		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-8" /></div>
+		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-8" /></div>
+		<div class="flex justify-end"><Skeleton class="h-4 w-10" /></div>
+		<div class="flex justify-center max-md:hidden"><Skeleton class="h-4 w-6" /></div>
+	</div>
 {/snippet}
 
 <div aria-busy="true">
@@ -75,53 +59,22 @@
 					<Skeleton class="h-4 w-14" />
 				</div>
 			</div>
-			<div class="hidden overflow-x-auto md:block">
-				<table class="w-full table-fixed text-sm">
-					<colgroup>
-						<col class="w-14" />
-						<col class="w-[4.5rem]" />
-						<col class="w-12" />
-						<col />
-						<col class="w-14" />
-						<col class="w-14" />
-						<col class="w-20" />
-					</colgroup>
-					<thead>
-						<tr class={tableHeadRow}>
-							<th class="px-2 py-2 text-center">{t('Change')}</th>
-							<th class="px-2 py-2 text-center">{t('Rank')}</th>
-							<th class="px-2 py-2 text-center">{t('Team')}</th>
-							<th class="px-3 py-2 text-left">{t('Player')}</th>
-							<th class="px-2 py-2 text-center">{t('Wins')}</th>
-							<th class="px-2 py-2 text-center">{t('Losses')}</th>
-							<th class="py-2 pr-4 pl-2 text-center">{t('Streak')}</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each players as player (player)}
-							{@render playerRow()}
-						{/each}
-					</tbody>
-				</table>
+			<div class={cn(grid, tableHeadRow, 'h-9')}>
+				<div>{t('Pos')}</div>
+				<div class="hidden md:block">{t('Change')}</div>
+				<div class="hidden text-center md:block">{t('Rank')}</div>
+				<div class="hidden text-center md:block">{t('ELO')}</div>
+				<div class="hidden text-center md:block">{t('Team')}</div>
+				<div>{t('Player')}</div>
+				<div class="hidden text-center md:block">{t('Games')}</div>
+				<div class="hidden text-center md:block">{t('Wins')}</div>
+				<div class="hidden text-center md:block">{t('Losses')}</div>
+				<div class="text-right">{t('Win rate')}</div>
+				<div class="hidden text-center md:block">{t('Streak')}</div>
 			</div>
-			<div class="divide-secondary-800 divide-y md:hidden">
+			<div class="-mb-px">
 				{#each players as player (player)}
-					<div class="space-y-2 px-4 py-3">
-						<div class="flex min-w-0 items-center gap-2">
-							<Skeleton class="size-8 shrink-0 rounded-lg" />
-							<Skeleton class="size-5 shrink-0 rounded-full" />
-							<Skeleton class="h-3.5 w-28 max-w-full" />
-							<Skeleton class="h-5 w-10 shrink-0" />
-						</div>
-						<div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-							<Skeleton class="h-3.5 w-8" />
-							<Skeleton class="size-6 shrink-0" />
-							<Skeleton class="h-6 w-6 shrink-0" />
-							<Skeleton class="h-3.5 w-8" />
-							<Skeleton class="h-3.5 w-8" />
-							<Skeleton class="h-3.5 w-8" />
-						</div>
-					</div>
+					{@render playerRow()}
 				{/each}
 			</div>
 		</section>

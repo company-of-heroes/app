@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { beforeNavigate, goto } from '$app/navigation';
+	import { beforeNavigate, goto, invalidateAll } from '$app/navigation';
 	import { navigating, page } from '$app/state';
+	import { onMount } from 'svelte';
 	import { watch } from 'runed';
 	import { Pagination } from '@company-of-heroes/ui/pagination';
 	import { Skeleton } from '@company-of-heroes/ui/skeleton';
@@ -8,13 +9,14 @@
 	import {
 		List as ReplayList,
 		ListSkeleton as ReplayListSkeleton,
-		type CommunityMatch
+		type CommunityMatch,
+		type ReplayLayout
 	} from '@company-of-heroes/ui/replay';
 	import {
 		ArchiveFilterBar,
 		DiscoverView,
+		LayoutToggle,
 		MatchupSections,
-		ReplayCardGrid,
 		ReplaysPage,
 		themeArchiveQuery,
 		type ArchiveQuickFilters,
@@ -26,6 +28,8 @@
 		REPLAYS_PER_PAGE,
 		rememberReplaysListHref,
 		replaysHref,
+		saveReplaysLayout,
+		storedReplaysLayout,
 		uploadReplayPath,
 		type HistorySortField,
 		type ReplaysQuery
@@ -46,6 +50,8 @@
 
 	const query = $derived(data.query);
 	const tab = $derived(data.tab as ReplaysView);
+	/** Follows the server (cookie) and flips at once when toggled. */
+	let layout = $derived<ReplayLayout>(data.layout);
 	const switching = $derived(unlocalizedPath(navigating.to?.url.pathname ?? '') === '/replays');
 	const canonical = $derived(`${SITE_URL}${href(replaysHref(query, data.tab))}`);
 	const user = $derived(page.data.user);
@@ -125,6 +131,23 @@
 		apply({ sort: field, sortDir: 'desc' });
 	}
 
+	function setLayout(next: ReplayLayout) {
+		layout = next;
+		saveReplaysLayout(next);
+		// The unfiltered first community page is grouped per game type in the grid only.
+		if (tab === 'community' && query.page === 1 && query.matchups.length === 0 && !query.filter) {
+			void invalidateAll();
+		}
+	}
+
+	// The cookie can be gone (cleared, expired); the choice in localStorage then wins.
+	onMount(() => {
+		const stored = storedReplaysLayout();
+		if (stored && stored !== data.layout) {
+			setLayout(stored);
+		}
+	});
+
 	/** Community matches of one game type (a section's "View all" or its chip). */
 	function matchupHref(matchup: HistoryMatchup) {
 		return href(replaysHref({ ...query, matchups: [matchup], filter: null, page: 1 }, 'community'));
@@ -150,7 +173,9 @@
 
 <ReplaysPage {views} active={tab} {uploadHref}>
 	{#snippet aside()}
-		{#if tab !== 'discover' && data.result}
+		{#if tab === 'discover'}
+			<LayoutToggle value={layout} onChange={setLayout} />
+		{:else if data.result}
 			{#await data.result}
 				<Skeleton class="h-9 w-56" />
 			{:then result}
@@ -180,6 +205,7 @@
 				{loadMoreShared}
 				{uploadHref}
 				meSteamIds={mySteamIds}
+				{layout}
 			/>
 		{:then discover}
 			<DiscoverView
@@ -193,6 +219,7 @@
 				{loadMoreShared}
 				{uploadHref}
 				meSteamIds={mySteamIds}
+				{layout}
 			/>
 		{:catch}
 			<div class="flex min-h-48 items-center justify-center px-4 py-8">
@@ -210,9 +237,11 @@
 			onSortChange={({ sort, sortDir }) => apply({ sort, sortDir })}
 			onOpenFilters={() => (filtersOpen = true)}
 			{advancedActive}
+			{layout}
+			onLayoutChange={setLayout}
 		/>
 		<div class="min-w-0 flex-1 overflow-x-hidden">
-			{#if data.groups && !switching}
+			{#if data.groups && layout === 'grid' && !switching}
 				{#await data.groups}
 					<MatchupSections groups={null} viewAllHref={matchupHref} />
 				{:then groups}
@@ -223,38 +252,23 @@
 					</p>
 				{/await}
 			{:else if switching || !data.result}
-				{#if tab === 'community'}
-					<ReplayCardGrid matches={[]} skeletons={8} />
-				{:else}
-					<ReplayListSkeleton />
-				{/if}
+				<ReplayListSkeleton {layout} rowCount={layout === 'list' ? 12 : 8} />
 			{:else}
 				{#await data.result}
-					{#if tab === 'community'}
-						<ReplayCardGrid matches={[]} skeletons={8} />
-					{:else}
-						<ReplayListSkeleton />
-					{/if}
+					<ReplayListSkeleton {layout} rowCount={layout === 'list' ? 12 : 8} />
 				{:then result}
-					{#if tab === 'community'}
-						{#if result.items.length === 0}
-							<p class="text-secondary-400 px-4 py-10 text-center text-sm">
-								{t('No community replays found.')}
-							</p>
-						{:else}
-							<ReplayCardGrid matches={result.items} meSteamIds={mySteamIds} closing />
-						{/if}
-					{:else}
-						<ReplayList
-							matches={result.items}
-							highlightedPlayers={query.playerIds}
-							meSteamIds={mySteamIds}
-							sort={query.sort}
-							sortDir={query.sortDir}
-							onSort={toggleSort}
-							emptyMessage={t('No matches found.')}
-						/>
-					{/if}
+					<ReplayList
+						matches={result.items}
+						highlightedPlayers={query.playerIds}
+						meSteamIds={mySteamIds}
+						sort={query.sort}
+						sortDir={query.sortDir}
+						onSort={toggleSort}
+						emptyMessage={tab === 'community'
+							? t('No community replays found.')
+							: t('No matches found.')}
+						{layout}
+					/>
 					<div class="border-secondary-800 flex border-t px-5 py-3">
 						<Pagination
 							class="ms-auto"

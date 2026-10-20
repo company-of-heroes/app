@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
-	import type { CommunityMatch } from '../replay/types';
+	import ReplayTable from '../replay/replay-table.svelte';
+	import ReplayTableSkeleton from '../replay/replay-table-skeleton.svelte';
+	import type { CommunityMatch, ReplayLayout } from '../replay/types';
 	import DiscoverSectionHeader from './discover-section-header.svelte';
 	import FeaturedHero from './featured-hero.svelte';
 	import LatestShared from './latest-shared.svelte';
@@ -19,6 +21,8 @@
 		loadMoreShared: (page: number) => Promise<ReplayPage>;
 		uploadHref: string;
 		meSteamIds?: string[];
+		/** Cards (default) or table rows for the featured picks and every section. */
+		layout?: ReplayLayout;
 	};
 
 	const { t } = useI18n();
@@ -30,7 +34,8 @@
 		themeHref,
 		loadMoreShared,
 		uploadHref,
-		meSteamIds = []
+		meSteamIds = [],
+		layout = 'grid'
 	}: Props = $props();
 
 	type Theme = {
@@ -62,12 +67,24 @@
 	<ShareStrip matches={shareCandidates} {meSteamIds} {shareHref} />
 {/if}
 
-{#if !data}
+{#if !data && layout === 'list'}
+	<DiscoverSectionHeader title={t('Featured')} />
+	<ReplayTableSkeleton rowCount={6} />
+{:else if !data}
 	<FeaturedHero matches={[]} loading />
 	<DiscoverSectionHeader title={t('Latest shared')} />
 	<ReplayCardGrid matches={[]} skeletons={6} rows={1} closing />
 {:else}
-	<FeaturedHero matches={data.featured} {meSteamIds} />
+	{#if layout === 'list'}
+		{#if data.featured.length > 0}
+			<section>
+				<DiscoverSectionHeader title={t('Featured')} />
+				<ReplayTable matches={data.featured.slice(0, 3)} {meSteamIds} closing={false} />
+			</section>
+		{/if}
+	{:else}
+		<FeaturedHero matches={data.featured} {meSteamIds} />
+	{/if}
 	{#each data.sections as section (section.id)}
 		{@const theme = themes[section.id]}
 		<section>
@@ -76,10 +93,20 @@
 				description={theme.description}
 				href={themeHref(section.id)}
 			/>
-			<ReplayCardGrid matches={section.items} {meSteamIds} rows={1} />
+			{#if layout === 'list'}
+				<ReplayTable matches={section.items} {meSteamIds} closing={false} />
+			{:else}
+				<ReplayCardGrid matches={section.items} {meSteamIds} rows={1} />
+			{/if}
 		</section>
 	{/each}
 	{#key data.latestShared}
-		<LatestShared initial={data.latestShared} loadMore={loadMoreShared} {uploadHref} {meSteamIds} />
+		<LatestShared
+			initial={data.latestShared}
+			loadMore={loadMoreShared}
+			{uploadHref}
+			{meSteamIds}
+			{layout}
+		/>
 	{/key}
 {/if}

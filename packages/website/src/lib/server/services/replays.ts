@@ -397,10 +397,7 @@ export class ReplaysService extends Service {
 		return cached('sitemap:replays', 3600, () =>
 			ResultAsync.combine([
 				list('replays', "visibility = 'member' && file != ''"),
-				list(
-					'lobbies',
-					"isCommunity = true && needsResult = false && isHidden = false && title != 'Skirmish'"
-				)
+				list('lobbies', 'isCommunity = true && isHidden = false')
 			]).map(([members, matches]) => [...members, ...matches])
 		);
 	}

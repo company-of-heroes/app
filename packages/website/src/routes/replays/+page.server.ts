@@ -1,4 +1,10 @@
-import { parseReplaysQuery, parseReplaysTab, REPLAYS_PER_PAGE } from '$lib/replays';
+import {
+	parseReplaysLayout,
+	parseReplaysQuery,
+	parseReplaysTab,
+	REPLAYS_LAYOUT_COOKIE,
+	REPLAYS_PER_PAGE
+} from '$lib/replays';
 import { isStaffUser, loginRedirectHref } from '$lib/auth/user';
 import { unwrapAsync } from '$lib/errors/unwrap';
 import { ResultAsync } from 'neverthrow';
@@ -13,19 +19,21 @@ const MATCHUPS: HistoryMatchup[] = ['1v1', '2v2', '3v3', '4v4'];
 /** Cards per game type in the grouped community view. */
 const GROUP_SIZE = 12;
 
-export const load: PageServerLoad = ({ locals, url }) => {
+export const load: PageServerLoad = ({ locals, url, cookies }) => {
 	const tab = parseReplaysTab(url.searchParams);
 	if (tab === 'mine' && !locals.user) {
 		redirect(303, loginRedirectHref(url.pathname + url.search, locals.locale));
 	}
 
 	const query = parseReplaysQuery(url.searchParams);
+	const layout = parseReplaysLayout(cookies.get(REPLAYS_LAYOUT_COOKIE));
 	const viewer = locals.user ? { id: locals.user.id, isStaff: isStaffUser(locals.user) } : null;
 
 	if (tab === 'discover') {
 		return {
 			tab,
 			query,
+			layout,
 			discover: unwrapAsync(locals.services.replays.discover()),
 			// Suggestions are a nicety: a failure just hides the strip.
 			shareCandidates: viewer
@@ -36,11 +44,18 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		};
 	}
 
-	// The unfiltered first page of Community matches: one grid per game type.
-	if (tab === 'community' && query.page === 1 && query.matchups.length === 0 && !query.filter) {
+	// The unfiltered first page of Community matches: one grid per game type (cards only).
+	if (
+		layout === 'grid' &&
+		tab === 'community' &&
+		query.page === 1 &&
+		query.matchups.length === 0 &&
+		!query.filter
+	) {
 		return {
 			tab,
 			query,
+			layout,
 			discover: null,
 			shareCandidates: Promise.resolve(null),
 			groups: unwrapAsync(
@@ -67,6 +82,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 	return {
 		tab,
 		query,
+		layout,
 		discover: null,
 		shareCandidates: Promise.resolve(null),
 		groups: null,
