@@ -1,5 +1,9 @@
 # @company-of-heroes/website
 
+## 1.20.0
+
+- feat; tournaments: hosts can hide the results to avoid spoilers; the public sees the bracket without scores, winners or champion until they turn it off
+
 ## 1.19.5
 
 - enhance; replays: the 1v1 / 2v2 / 3v3 / 4v4 quick filters pick one matchup at a time, and 1v1 rows in the list view show both player names

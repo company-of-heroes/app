@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.18.0
+
+- feat; tournaments: hosts can hide the results to avoid spoilers; the public sees the bracket without scores, winners or champion until they turn it off
+
 ## 0.17.0
 
 - feat; labels can get unlock conditions like rewards, and are given automatically to every linked Steam ID that meets all of them
