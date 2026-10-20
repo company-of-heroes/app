@@ -3,9 +3,10 @@ main = ".svelte-kit/cloudflare/_worker.js"
 compatibility_date = "2025-07-10"
 compatibility_flags = ["nodejs_als"]
 
-# Run close to PocketBase: most requests make several round-trips to it.
+# Run close to PocketBase (the VPS in Sofia): most requests make several round-trips
+# to it. Smart placement left far regions (ICN, SJC, GRU) running locally.
 [placement]
-mode = "smart"
+host = "185.197.193.119:443"
 
 [observability.logs]
 enabled = true
