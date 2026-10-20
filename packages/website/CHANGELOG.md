@@ -1,5 +1,10 @@
 # @company-of-heroes/website
 
+## 1.19.4
+
+- enhance; leaderboards and match history: calmer tables with ELO, wins and losses in their own columns and the win rate as a plain percentage instead of a progress bar
+- enhance; replays: switch Discover, Community matches and My matches between the classic list view (now the default again) and the card grid; your choice is remembered
+
 ## 1.19.3
 
 - fix; replays and other pages load much faster outside Europe by always running the website next to the database

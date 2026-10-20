@@ -1,5 +1,10 @@
 # @company-of-heroes/app
 
+## 0.74.2
+
+- enhance; leaderboards and match history: calmer tables with ELO, wins and losses in their own columns and the win rate as a plain percentage instead of a progress bar
+- enhance; replays: switch Discover, Community matches and My matches between the classic list view (now the default again) and the card grid; your choice is remembered
+
 ## 0.74.1
 
 - fix; fair play screenshots no longer upload half grey when the game was still writing the file

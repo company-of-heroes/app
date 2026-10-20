@@ -1,5 +1,10 @@
 # @company-of-heroes/ui
 
+## 0.16.2
+
+- enhance; leaderboards and match history: calmer tables with ELO, wins and losses in their own columns and the win rate as a plain percentage instead of a progress bar
+- enhance; replays: switch Discover, Community matches and My matches between the classic list view (now the default again) and the card grid; your choice is remembered
+
 ## 0.16.1
 
 - fix; saving a tournament match score no longer fails with "Invalid input", and an out-of-range score says why it can't be saved
