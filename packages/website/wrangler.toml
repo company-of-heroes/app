@@ -23,6 +23,8 @@ invocation_logs = true
 # Mollie webhooks (POST /api/mollie/webhook) are sent to this origin; empty skips them.
 [vars]
 MOLLIE_WEBHOOK_ORIGIN = "https://coh1stats.com"
+# Server-side PocketBase calls skip the api-gateway Worker (no routes on this host).
+PB_URL = "https://pb.coh1stats.com"
 
 # Replay download limits per IP (src/lib/server/downloads.ts); namespace ids are account-unique.
 [[ratelimits]]

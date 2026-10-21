@@ -78,6 +78,10 @@ name = "FILE_AUTH_MINUTE"
 namespace_id = "1014"
 simple = { limit = 90, period = 60 }
 
+# Overlays read PocketBase from a host without these routes, so their reads skip this Worker.
+[vars]
+OVERLAY_PB_URL = "https://pb.coh1stats.com"
+
 [observability.logs]
 enabled = true
 invocation_logs = true
