@@ -19,6 +19,9 @@
 
 	const { t } = useI18n();
 	const STATUS_POLL_MS = 10_000;
+	const STATUS_POLL_MAX_MS = 60_000;
+	/** A result that has not arrived by then comes in through `match.result` or a revisit. */
+	const STATUS_POLL_STOP_MS = 15 * 60_000;
 
 	const match = resource(
 		() => page.params.id,
@@ -95,8 +98,20 @@
 				return;
 			}
 
-			const interval = setInterval(() => void match.refetch(), STATUS_POLL_MS);
-			return () => clearInterval(interval);
+			const startedAt = Date.now();
+			let delay = STATUS_POLL_MS;
+			let timer: ReturnType<typeof setTimeout>;
+			const poll = () => {
+				timer = setTimeout(() => {
+					void match.refetch();
+					delay = Math.min(delay * 2, STATUS_POLL_MAX_MS);
+					if (Date.now() - startedAt < STATUS_POLL_STOP_MS) {
+						poll();
+					}
+				}, delay);
+			};
+			poll();
+			return () => clearTimeout(timer);
 		}
 	);
 

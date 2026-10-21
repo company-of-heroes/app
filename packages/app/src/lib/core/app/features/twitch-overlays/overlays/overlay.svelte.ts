@@ -276,8 +276,7 @@ export abstract class Overlay {
 	/** Overlays live on their own host in production; a local PocketBase serves them itself. */
 	getHostedUrl(userId: string) {
 		const baseUrl = (pocketbase.baseUrl || 'https://api.coh1stats.com').replace(/\/$/, '');
-		const host =
-			baseUrl === 'https://api.coh1stats.com' ? 'https://overlay.coh1stats.com' : baseUrl;
+		const host = baseUrl.endsWith('.coh1stats.com') ? 'https://overlay.coh1stats.com' : baseUrl;
 		return `${host}/overlay/${userId}/`;
 	}
 

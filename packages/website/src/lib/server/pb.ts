@@ -4,6 +4,15 @@ import { API_URL } from '$lib/site/urls';
 
 type Fetch = typeof fetch;
 
+/**
+ * Server-side PocketBase origin. `PB_URL` is a host without api-gateway Worker routes
+ * (e.g. pb.coh1stats.com), so the website's own calls are not billed as gateway requests;
+ * the public API_URL stays the default and the origin of every URL sent to browsers.
+ */
+function pocketBaseUrl(): string {
+	return (env.PB_URL || API_URL).replace(/\/$/, '');
+}
+
 function withFetch(pb: PocketBase, fetchFn: Fetch): PocketBase {
 	pb.autoCancellation(false);
 	pb.beforeSend = (url, options) => ({
@@ -18,7 +27,7 @@ function withFetch(pb: PocketBase, fetchFn: Fetch): PocketBase {
  * the desktop app's raw `Authorization: <token>` header.
  */
 export function createUserPocketBase(request: Request, fetchFn: Fetch): PocketBase {
-	const pb = withFetch(new PocketBase(API_URL), fetchFn);
+	const pb = withFetch(new PocketBase(pocketBaseUrl()), fetchFn);
 	const cookie = request.headers.get('cookie') ?? '';
 	if (cookie.includes('pb_auth')) {
 		pb.authStore.loadFromCookie(cookie);
@@ -50,7 +59,7 @@ function tokenExpiry(token: string): number {
 }
 
 async function logIn(fetchFn: Fetch): Promise<string> {
-	const response = await fetchFn(`${API_URL}/api/collections/_superusers/auth-with-password`, {
+	const response = await fetchFn(`${pocketBaseUrl()}/api/collections/_superusers/auth-with-password`, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({ identity: env.PB_SUPERUSER_EMAIL, password: env.PB_SUPERUSER_PASSWORD })
@@ -91,7 +100,7 @@ export function createAdminPocketBase(fetchFn: Fetch): PocketBase {
 		throw new Error('Set PB_SUPERUSER_EMAIL and PB_SUPERUSER_PASSWORD (or PB_SUPERUSER_TOKEN)');
 	}
 
-	const pb = withFetch(new PocketBase(API_URL), fetchFn);
+	const pb = withFetch(new PocketBase(pocketBaseUrl()), fetchFn);
 	pb.beforeSend = async (url, options) => {
 		const headers = { ...(options.headers as Record<string, string> | undefined) };
 		// Calls that bring their own credentials (e.g. the service token) keep them.

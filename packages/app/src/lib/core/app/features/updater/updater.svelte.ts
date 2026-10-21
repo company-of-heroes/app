@@ -11,6 +11,10 @@ import { settings } from '$core/config/settings.svelte';
 import { t } from '$lib/i18n';
 import { dev } from '$app/environment';
 
+/** Companion apps often stay open for days; checking only at launch keeps old versions alive. */
+const UPDATE_CHECK_MS = 60 * 60_000;
+const INSTALL_RETRY_MS = 60_000;
+
 export type UpdaterSettings = {
 	enabled: boolean;
 	didReadChangelog: boolean;
@@ -29,6 +33,8 @@ export class Updater extends Feature<UpdaterSettings> {
 	latestVersion = $state<string>('');
 	pendingUpdate = $state.raw<TauriUpdate | null>(null);
 	#stopWaitingForModal: (() => void) | null = null;
+	#checkTimer: ReturnType<typeof setInterval> | null = null;
+	#installRetry: ReturnType<typeof setTimeout> | null = null;
 
 	get currentVersionFormatted() {
 		return padEnd(this.currentVersion.toString(), 6, '.0');
@@ -47,10 +53,25 @@ export class Updater extends Feature<UpdaterSettings> {
 		}
 
 		void this.#checkForUpdate();
+		this.#checkTimer = setInterval(() => {
+			if (!this.hasUpdate) {
+				void this.#checkForUpdate();
+			}
+		}, UPDATE_CHECK_MS);
 	}
 
 	disable() {
 		this.#stopWaitingForModal?.();
+		if (this.#checkTimer) {
+			clearInterval(this.#checkTimer);
+			this.#checkTimer = null;
+		}
+
+		if (this.#installRetry) {
+			clearTimeout(this.#installRetry);
+			this.#installRetry = null;
+		}
+
 		this.hasUpdate = false;
 		this.latestVersion = '';
 		void this.pendingUpdate?.close();
@@ -86,6 +107,17 @@ export class Updater extends Feature<UpdaterSettings> {
 
 	async #installDownloadedUpdate(): Promise<void> {
 		if (!this.pendingUpdate) {
+			return;
+		}
+
+		// Relaunching mid-match would drop live lobby and result tracking.
+		if (app.game.isRunning) {
+			this.#installRetry = setTimeout(() => {
+				this.#installRetry = null;
+				this.#whenModalIdle(() => {
+					void this.#installDownloadedUpdate();
+				});
+			}, INSTALL_RETRY_MS);
 			return;
 		}
 

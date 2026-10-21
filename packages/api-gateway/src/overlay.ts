@@ -6,7 +6,12 @@
  * Overlays are user code, so they live on their own host: on the API host they could
  * read the PocketBase admin UI's token (same origin). The API host redirects there.
  */
-export type OverlayEnv = { OVERLAYS: R2Bucket; DEFAULT_OVERLAY: Fetcher };
+export type OverlayEnv = {
+	OVERLAYS: R2Bucket;
+	DEFAULT_OVERLAY: Fetcher;
+	/** PocketBase origin overlays read from; a host without gateway routes keeps their reads off this Worker. */
+	OVERLAY_PB_URL?: string;
+};
 
 export const OVERLAY_HOST = 'overlay.coh1stats.com';
 const API_HOST = 'api.coh1stats.com';
@@ -85,7 +90,8 @@ export async function serveOverlay(request: Request, env: OverlayEnv): Promise<R
 				: 'public, max-age=31536000, immutable'
 	};
 	if (path === 'index.html') {
-		const apiOrigin = url.hostname === OVERLAY_HOST ? `https://${API_HOST}` : url.origin;
+		const apiOrigin =
+			url.hostname === OVERLAY_HOST ? (env.OVERLAY_PB_URL ?? `https://${API_HOST}`) : url.origin;
 		return new Response(withBase(await new Response(body).text(), userId, apiOrigin), {
 			headers
 		});

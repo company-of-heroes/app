@@ -1,9 +1,12 @@
-import PocketBase, { ClientResponseError } from 'pocketbase';
+import PocketBase, { ClientResponseError, type UnsubscribeFunc } from 'pocketbase';
 import { liveLobbyToLobbyData } from './lobby-transform';
 import type { LiveLobbyRecord, LobbyData, Player } from './types';
 
 const USER_ID_PATTERN = /^[a-z0-9]{15}$/;
-const POLL_MS = 2500;
+/** Realtime connected: a rare safety net. */
+const SAFETY_POLL_MS = 60_000;
+/** Realtime unavailable: poll, but far slower than every OBS frame needs. */
+const FALLBACK_POLL_MS = 10_000;
 
 export function getUserIdFromPath(): string | null {
 	const fromPath = window.location.pathname.match(/^\/overlay\/([a-z0-9]{15})/);
@@ -71,6 +74,9 @@ export function connectLobby(
 	let steamIds: string[] | undefined;
 	let currentRecord: LiveLobbyRecord | null = null;
 	let pollTimer: number | null = null;
+	let realtimeLive = false;
+	let unsubscribeLobby: UnsubscribeFunc | undefined;
+	let unsubscribeConnect: UnsubscribeFunc | undefined;
 	const debugPoll =
 		new URLSearchParams(window.location.search).has('debugPoll') ||
 		new URLSearchParams(window.location.search).has('preview');
@@ -138,6 +144,19 @@ export function connectLobby(
 		}
 	});
 
+	const schedulePoll = () => {
+		if (pollTimer != null) {
+			window.clearTimeout(pollTimer);
+		}
+
+		if (active) {
+			pollTimer = window.setTimeout(
+				() => void poll(),
+				realtimeLive ? SAFETY_POLL_MS : FALLBACK_POLL_MS
+			);
+		}
+	};
+
 	const poll = async () => {
 		if (!active) {
 			return;
@@ -161,15 +180,48 @@ export function connectLobby(
 			}
 		}
 
-		if (active) {
-			pollTimer = window.setTimeout(() => void poll(), POLL_MS);
-		}
+		schedulePoll();
 	};
+
+	// Realtime pushes this user's row; the slow poll only covers a dropped connection.
+	// A reconnect polls at once, since events during the gap are lost.
+	void (async () => {
+		try {
+			unsubscribeConnect = await pb.realtime.subscribe('PB_CONNECT', () => {
+				if (realtimeLive) {
+					void poll();
+				}
+			});
+			unsubscribeLobby = await pb.collection('lobbies_live').subscribe<LiveLobbyRecord>(
+				'*',
+				(event) => {
+					if (event.action === 'delete') {
+						applyRecord(null);
+						return;
+					}
+
+					void withStoredElo(event.record).then(applyRecord);
+				},
+				{ filter: `user="${userId}"` }
+			);
+			realtimeLive = true;
+			schedulePoll();
+		} catch (error) {
+			console.warn('[overlay] realtime unavailable, polling instead:', error);
+		}
+
+		if (!active) {
+			void unsubscribeLobby?.();
+			void unsubscribeConnect?.();
+		}
+	})();
 
 	void poll();
 
 	return () => {
 		active = false;
+		void unsubscribeLobby?.();
+		void unsubscribeConnect?.();
 		if (pollTimer != null) {
 			window.clearTimeout(pollTimer);
 		}

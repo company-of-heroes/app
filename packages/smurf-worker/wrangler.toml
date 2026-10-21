@@ -5,6 +5,12 @@ compatibility_date = "2025-07-10"
 [triggers]
 crons = ["*/5 * * * *"]
 
+# Smurf-watch routes live on the website (/api/v1/smurf-watch/worker/*); the binding
+# skips the api-gateway. PB_URL only serves local runs without the binding.
+[[services]]
+binding = "WEBSITE"
+service = "coh1stats-website"
+
 [[kv_namespaces]]
 binding = "STEAM_RATE_LIMIT"
 id = "93a4a7fc511d46d6b8133e34597c7535"

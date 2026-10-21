@@ -89,6 +89,7 @@ pnpm --filter @company-of-heroes/website preview
 | Variable                | Where                                                   | Purpose                                                                                             |
 | ----------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `PUBLIC_API_URL`        | `.env` / Cloudflare Worker vars                         | PocketBase API base URL (default: `https://api.coh1stats.com`)                                      |
+| `PB_URL`                | Cloudflare Worker vars (optional)                       | Server-side PocketBase origin without api-gateway routes (`https://pb.coh1stats.com`); default `PUBLIC_API_URL` |
 | `REPLAY_PROXY_SECRET`   | PocketBase `.env` and Cloudflare Worker vars (optional) | Shared secret so the website can fetch replay files without sharing one IP quota with every visitor |
 | `YOUTUBE_CLIENT_ID`     | Cloudflare Worker secrets                               | Google OAuth web client for desktop YouTube connect (Streaming)                                     |
 | `YOUTUBE_CLIENT_SECRET` | Cloudflare Worker secrets                               | Google OAuth client secret (never ship in the desktop app)                                          |

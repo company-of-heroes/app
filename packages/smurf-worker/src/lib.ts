@@ -49,6 +49,8 @@ export type Env = {
 	PB_URL: string;
 	SMURF_SERVICE_TOKEN: string;
 	STEAM_RATE_LIMIT?: KVNamespace;
+	/** The website's /api/v1, bound directly so calls skip the api-gateway (PB_URL is the local fallback). */
+	WEBSITE?: Fetcher;
 };
 
 export const WORKER_SCREENING_LIMIT = 30;
@@ -87,14 +89,18 @@ export async function pbRequest<T>(env: Env, path: string, init: RequestInit = {
 
 	log('debug', 'pocketbase request', { method, path });
 
-	const response = await fetch(`${env.PB_URL.replace(/\/$/, '')}${path}`, {
+	const requestInit: RequestInit = {
 		...init,
 		headers: {
 			Authorization: `Bearer ${env.SMURF_SERVICE_TOKEN}`,
 			'Content-Type': 'application/json',
 			...(init.headers ?? {})
 		}
-	});
+	};
+	// `/api/smurf-watch/…` on the API host is the gateway's alias of the website's `/api/v1/smurf-watch/…`.
+	const response = env.WEBSITE
+		? await env.WEBSITE.fetch(`https://coh1stats.com/api/v1${path.replace(/^\/api/, '')}`, requestInit)
+		: await fetch(`${env.PB_URL.replace(/\/$/, '')}${path}`, requestInit);
 
 	const durationMs = Date.now() - startedAt;
 

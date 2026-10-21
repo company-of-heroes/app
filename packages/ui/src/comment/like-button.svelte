@@ -18,8 +18,10 @@
 	const host = useHost();
 
 	const signedIn = $derived(host.auth.user !== null);
+	// A string $derived: a new `target` object with the same id must not refetch.
+	const voteKey = $derived(signedIn && target.id ? `${target.kind}:${target.id}` : null);
 	const myVote = resource(
-		() => (signedIn && target.id ? `${target.kind}:${target.id}` : null),
+		() => voteKey,
 		(key) => (key ? host.api.social.getMyVote(target) : Promise.resolve<CommentVoteValue>(0))
 	);
 

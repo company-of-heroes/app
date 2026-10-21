@@ -53,8 +53,10 @@
 	const searchMentions = (query: string) => host.api.comments.searchMentions(query);
 	/** `?comment=<id>` deep links scroll to and flash that comment. */
 	const highlightCommentId = $derived(host.url.param('comment'));
+	// A string $derived: a new `target` object with the same id must not refetch.
+	const commentsKey = $derived(`${target.kind}:${target.id}`);
 	const comments = resource(
-		() => `${target.kind}:${target.id}`,
+		() => commentsKey,
 		() => host.api.comments.list(target)
 	);
 

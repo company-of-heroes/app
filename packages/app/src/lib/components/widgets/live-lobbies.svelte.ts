@@ -1,14 +1,17 @@
 import { isPublicLiveLobby, type LiveLobby } from '$core/app/database/lobbies-live';
 import type { UnsubscribeFunc } from 'pocketbase';
 import { app } from '$core/app/context';
+import { pocketbase } from '$core/pocketbase';
 import { orderBy, uniqBy } from 'lodash-es';
 
-const POLL_MS = 15_000;
+const PRUNE_MS = 15_000;
 
 /**
  * Reactive live lobby feed with PocketBase realtime subscription.
  * Multiple players may each have a lobbies_live row for the same session;
  * the dashboard shows unique lobbies by sessionId.
+ * Realtime keeps it current: stale rows are pruned locally and the list only
+ * reloads after a reconnect, so an open dashboard does not poll the API.
  */
 export class LiveLobbiesFeed {
 	items = $state<LiveLobby[]>([]);
@@ -16,7 +19,8 @@ export class LiveLobbiesFeed {
 	error = $state<string | null>(null);
 
 	#unsubscribe: UnsubscribeFunc | null = null;
-	#pollInterval: ReturnType<typeof setInterval> | null = null;
+	#unsubscribeConnect: UnsubscribeFunc | null = null;
+	#pruneInterval: ReturnType<typeof setInterval> | null = null;
 	#started = false;
 
 	get totalItems() {
@@ -37,8 +41,9 @@ export class LiveLobbiesFeed {
 			this.error = error instanceof Error ? error.message : String(error);
 		}
 
-		this.#startPolling();
+		this.#startPruning();
 		await this.#subscribe();
+		await this.#reloadOnReconnect();
 	}
 
 	async stop(): Promise<void> {
@@ -47,9 +52,11 @@ export class LiveLobbiesFeed {
 		}
 
 		this.#started = false;
-		this.#clearPolling();
+		this.#clearPruning();
 		await this.#unsubscribe?.();
 		this.#unsubscribe = null;
+		await this.#unsubscribeConnect?.();
+		this.#unsubscribeConnect = null;
 		this.items = [];
 		this.error = null;
 	}
@@ -118,24 +125,45 @@ export class LiveLobbiesFeed {
 		}
 	}
 
-	#startPolling() {
-		this.#clearPolling();
-		this.#pollInterval = setInterval(() => {
-			void this.#loadItems()
-				.then(() => {
-					this.error = null;
-				})
-				.catch((error) => {
-					console.warn('[LIVE_LOBBIES]: poll refresh failed:', error);
-					this.error = error instanceof Error ? error.message : String(error);
-				});
-		}, POLL_MS);
+	/** Events missed while the realtime connection was down are caught up with one reload. */
+	async #reloadOnReconnect(): Promise<void> {
+		let connected = pocketbase.realtime.isConnected;
+		try {
+			this.#unsubscribeConnect = await pocketbase.realtime.subscribe('PB_CONNECT', () => {
+				if (!connected) {
+					connected = true;
+					return;
+				}
+
+				void this.#loadItems()
+					.then(() => {
+						this.error = null;
+					})
+					.catch((error) => {
+						console.warn('[LIVE_LOBBIES]: reload after reconnect failed:', error);
+					});
+			});
+		} catch (error) {
+			console.warn('[LIVE_LOBBIES]: reconnect listener failed:', error);
+		}
 	}
 
-	#clearPolling() {
-		if (this.#pollInterval) {
-			clearInterval(this.#pollInterval);
-			this.#pollInterval = null;
+	/** Rows of crashed games stop sending heartbeats; drop them once they go stale. */
+	#startPruning() {
+		this.#clearPruning();
+		this.#pruneInterval = setInterval(() => {
+			const now = Date.now();
+			const fresh = this.items.filter((lobby) => isPublicLiveLobby(lobby, now));
+			if (fresh.length !== this.items.length) {
+				this.items = fresh;
+			}
+		}, PRUNE_MS);
+	}
+
+	#clearPruning() {
+		if (this.#pruneInterval) {
+			clearInterval(this.#pruneInterval);
+			this.#pruneInterval = null;
 		}
 	}
 
