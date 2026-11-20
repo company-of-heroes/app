@@ -1,5 +1,10 @@
 # @company-of-heroes/app
 
+## 0.76.0
+
+- enhance; guide editor: send for review without a category, a checklist of what is missing, a live preview tab, wiki images (framed, with stats popover and link) next to each other, and unit icons in front of wiki links
+- enhance; replay library and replay manager show replays as a list again instead of a card grid
+
 ## 0.75.1
 
 - improvement; far fewer API requests: live lobbies and the OBS overlay follow realtime instead of polling, comments and likes no longer reload while a match waits for its result, the app checks for updates every hour (installing only outside a match), and the website and smurf worker can reach PocketBase without passing the api-gateway

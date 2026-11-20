@@ -1,5 +1,9 @@
 # @company-of-heroes/replay-parser
 
+## 1.2.2
+
+- enhance; replay library and replay manager show replays as a list again instead of a card grid
+
 ## 1.2.1
 
 - feat; supporter subscription with medal, supporter ribbons, player card and supporters page

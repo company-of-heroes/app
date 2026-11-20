@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.3.4
+
+- enhance; guide editor: send for review without a category, a checklist of what is missing, a live preview tab, wiki images (framed, with stats popover and link) next to each other, and unit icons in front of wiki links
+
 ## 0.3.3
 
 - feat; tournaments: hosts can hide the results to avoid spoilers; the public sees the bracket without scores, winners or champion until they turn it off
