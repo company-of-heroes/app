@@ -114,6 +114,16 @@ export class GuideEditorState {
 		return all.find((category) => category.id === this.categoryId)?.path ?? '';
 	}
 
+	/** What blocks publishing (or sending for review), per field; each field shows it in red. */
+	get errors(): { title: string | null; body: string | null; category: string | null } {
+		const publisher = this.#host.auth.user?.canPublish ?? false;
+		return {
+			title: this.title.trim() ? null : this.#t('Add a title.'),
+			body: this.body.trim() ? null : this.#t('Add some text.'),
+			category: publisher && !this.categoryId ? this.#t('Pick a category before publishing.') : null
+		};
+	}
+
 	get dirty(): boolean {
 		const saved = editable(this.guide);
 		return (

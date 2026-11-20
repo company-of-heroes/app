@@ -308,5 +308,22 @@ export const guideProse = cn(
 	'prose-pre:bg-secondary-900 prose-pre:border-secondary-800 prose-pre:border',
 	'prose-blockquote:border-secondary-700 prose-blockquote:text-secondary-300',
 	'prose-img:border-secondary-800 prose-img:rounded-md prose-img:border prose-figcaption:text-secondary-400',
-	'prose-hr:border-secondary-800 prose-th:text-white'
+	'prose-hr:border-secondary-800 prose-th:text-white',
+	// Images on one line (and wiki tiles) sit next to each other; photos share the width.
+	'[&_.guide-image-row]:my-6 [&_.guide-image-row]:flex [&_.guide-image-row]:flex-wrap',
+	'[&_.guide-image-row]:items-start [&_.guide-image-row]:gap-3',
+	'[&_.guide-image-row>figure]:my-0 [&_.guide-image-row>figure]:min-w-40 [&_.guide-image-row>figure]:flex-1',
+	'[&_.guide-image-row_img]:my-0',
+	// A wiki icon as a framed tile: links to its page, hover shows the stats popover.
+	'[&_.guide-wiki-image]:inline-flex [&_.guide-wiki-image]:size-16 [&_.guide-wiki-image]:shrink-0',
+	'[&_.guide-wiki-image]:items-center [&_.guide-wiki-image]:justify-center [&_.guide-wiki-image]:align-middle',
+	'[&_.guide-wiki-image]:rounded-md [&_.guide-wiki-image]:border [&_.guide-wiki-image]:p-1',
+	'[&_.guide-wiki-image]:bg-secondary-900 [&_.guide-wiki-image]:border-secondary-700',
+	'[&_.guide-wiki-image:hover]:border-primary [&_.guide-wiki-image]:cursor-pointer [&_.guide-wiki-image]:transition-colors',
+	'[&_.guide-wiki-image_img]:m-0 [&_.guide-wiki-image_img]:size-full [&_.guide-wiki-image_img]:object-contain',
+	'[&_.guide-wiki-image_img]:rounded-sm [&_.guide-wiki-image_img]:border-0',
+	// A small icon in front of a wiki link's text.
+	'[&_.guide-wiki-icon]:my-0 [&_.guide-wiki-icon]:mr-1 [&_.guide-wiki-icon]:inline-block',
+	'[&_.guide-wiki-icon]:size-[1.35em] [&_.guide-wiki-icon]:align-[-0.3em]',
+	'[&_.guide-wiki-icon]:rounded-sm [&_.guide-wiki-icon]:border-0'
 );

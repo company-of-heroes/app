@@ -11,6 +11,7 @@
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
+	import { Alert } from '../ui/alert';
 	import { Badge } from '../ui/badge';
 	import { Button } from '../ui/button';
 	import PlayerByline from '../player/player-byline.svelte';
@@ -23,9 +24,11 @@
 
 	type Props = {
 		guide: Guide;
+		/** An info alert at the top of the header (the editor's preview explains itself). */
+		notice?: string;
 	};
 
-	let { guide }: Props = $props();
+	let { guide, notice }: Props = $props();
 	const { t } = useI18n();
 	const host = useHost();
 	/** Unit, upgrade and commander links in the text show the wiki's stats popover on hover. */
@@ -34,7 +37,8 @@
 	const rendered = $derived(
 		renderGuideMarkdown(guide.body, {
 			imageOrigins: [host.resolve.filesOrigin()],
-			href: host.href
+			href: host.href,
+			wikiIcon: host.resolve.actionIcon
 		})
 	);
 	const sections = $derived(rendered.headings.filter((heading) => heading.level === 2));
@@ -47,6 +51,9 @@
 
 <article class="min-w-0">
 	<header class="border-secondary-800 border-b px-4 py-6 sm:px-6">
+		{#if notice}
+			<Alert variant="info" size="sm" class="mb-4">{notice}</Alert>
+		{/if}
 		{#if guide.status === 'draft'}
 			<Badge variant="warning" class="mb-3">{t('Draft')}</Badge>
 		{/if}

@@ -2,7 +2,11 @@
 	import { useI18n } from '@company-of-heroes/i18n';
 	import { GUIDE_LANGUAGES } from '@company-of-heroes/api/guides';
 	import ArrowSquareOutIcon from 'phosphor-svelte/lib/ArrowSquareOutIcon';
+	import CheckCircleIcon from 'phosphor-svelte/lib/CheckCircleIcon';
+	import CircleIcon from 'phosphor-svelte/lib/CircleIcon';
 	import PaperPlaneTiltIcon from 'phosphor-svelte/lib/PaperPlaneTilt';
+	import XCircleIcon from 'phosphor-svelte/lib/XCircleIcon';
+	import { cn } from '@company-of-heroes/ui/cn';
 	import { formatDate } from '../format/date';
 	import { useHost } from '../host/host.context';
 	import { Badge } from '../ui/badge';
@@ -23,9 +27,19 @@
 		label: GUIDE_LANGUAGE_NAMES[value]
 	}));
 	const published = $derived(editor.status === 'published');
-	const ready = $derived(Boolean(editor.title.trim() && editor.body.trim() && editor.categoryId));
 	/** Everyone else writes drafts; staff or an editor publishes them. */
 	const publisher = $derived(host.auth.user?.canPublish ?? false);
+	/** What the guide still needs; authors may leave the category to staff. */
+	const checks = $derived([
+		{ label: t('A title'), done: Boolean(editor.title.trim()), required: true },
+		{ label: t('Some text'), done: Boolean(editor.body.trim()), required: true },
+		{
+			label: publisher ? t('A category') : t('A category (optional, staff can pick one)'),
+			done: Boolean(editor.categoryId),
+			required: publisher
+		}
+	]);
+	const ready = $derived(checks.every((check) => check.done || !check.required));
 	const viewHref = $derived(editor.guide.path ? host.routes.guide(editor.guide.path) : null);
 	const busy = $derived(editor.saving || editor.deleting || editor.reviewing);
 	/** A draft, or changes to a published guide, that staff have not been asked about yet. */
@@ -101,10 +115,29 @@
 			<p class="text-secondary-500 text-xs">
 				{t('These changes are not live yet. Publish them, or discard them to keep the live guide.')}
 			</p>
-		{:else if !published && !ready}
-			<p class="text-secondary-500 text-xs">
-				{t('A title, some text and a category are needed before publishing.')}
-			</p>
+		{/if}
+		{#if !published || editor.hasRevision}
+			<ul class="flex flex-col gap-1 text-xs" aria-label={t('Checklist')}>
+				{#each checks as check (check.label)}
+					<li
+						class={cn(
+							'flex items-center gap-1.5',
+							check.done && 'text-secondary-300',
+							!check.done && check.required && 'text-destructive font-medium',
+							!check.done && !check.required && 'text-secondary-500'
+						)}
+					>
+						{#if check.done}
+							<CheckCircleIcon size={14} weight="fill" class="text-success shrink-0" />
+						{:else if check.required}
+							<XCircleIcon size={14} weight="fill" class="shrink-0" />
+						{:else}
+							<CircleIcon size={14} class="shrink-0" />
+						{/if}
+						{check.label}
+					</li>
+				{/each}
+			</ul>
 		{/if}
 		<div class="flex flex-wrap gap-2">
 			<Button

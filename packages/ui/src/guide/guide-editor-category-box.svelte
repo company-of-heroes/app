@@ -33,8 +33,9 @@
 	let renameValue = $state('');
 	let managing = $state(false);
 
+	const publisher = $derived(host.auth.user?.canPublish ?? false);
 	const items = $derived([
-		{ value: NONE, label: t('No category (draft only)') },
+		{ value: NONE, label: publisher ? t('No category (draft only)') : t('Let staff choose') },
 		...editor.categories.flatMap((top) => [
 			{ value: top.id, label: top.name },
 			...top.children.map((child) => ({ value: child.id, label: `${top.name} › ${child.name}` }))
@@ -86,15 +87,27 @@
 		</p>
 	</div>
 	<div class="flex flex-col gap-3 px-4 py-3">
-		<RadioGroup
-			{items}
-			value={editor.categoryId ?? NONE}
-			onValueChange={(value) => {
-				editor.categoryId = value || null;
-			}}
-			disabled={editor.saving}
-			aria-label={t('Category')}
-		/>
+		{#if editor.errors.category}
+			<p class="text-destructive text-xs font-medium" role="alert">{editor.errors.category}</p>
+		{/if}
+		{#if !publisher}
+			<p class="text-secondary-500 text-xs">
+				{flat.length
+					? t('Optional. Pick where it fits best; staff can still move it when they publish.')
+					: t('There are no categories yet. Staff choose one when they publish your guide.')}
+			</p>
+		{/if}
+		{#if flat.length || publisher}
+			<RadioGroup
+				{items}
+				value={editor.categoryId ?? NONE}
+				onValueChange={(value) => {
+					editor.categoryId = value || null;
+				}}
+				disabled={editor.saving}
+				aria-label={t('Category')}
+			/>
+		{/if}
 		{#if adding}
 			<form
 				class="border-secondary-800 flex flex-col gap-2 border-t pt-3"
@@ -135,7 +148,7 @@
 					<Button type="submit" size="sm" loading={creating}>{t('Add category')}</Button>
 				</div>
 			</form>
-		{:else if host.auth.user?.canPublish}
+		{:else if publisher}
 			<div class="flex flex-wrap gap-2">
 				<Button
 					type="button"

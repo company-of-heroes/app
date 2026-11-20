@@ -21,11 +21,13 @@
 
 	type Props = {
 		open: boolean;
-		/** A wiki page was picked: its site path and display name. */
-		onPick: (link: { href: string; name: string }) => void;
+		/** `image` lists only pages with an icon, to insert the icon as a picture. */
+		mode?: 'link' | 'image';
+		/** A wiki page was picked: its site path, display name and icon key. */
+		onPick: (link: { href: string; name: string; icon: string | null }) => void;
 	};
 
-	let { open = $bindable(false), onPick }: Props = $props();
+	let { open = $bindable(false), mode = 'link', onPick }: Props = $props();
 	const { t } = useI18n();
 
 	let entries = $state.raw<DocSearchEntry[]>([]);
@@ -51,11 +53,13 @@
 	);
 
 	const options = $derived(
-		entries.map((entry) => ({
-			value: `${entry.kind}:${entry.slug}`,
-			label: entry.name,
-			meta: { kind: entry.kind, icon: entry.icon ?? '' }
-		}))
+		entries
+			.filter((entry) => mode === 'link' || entry.icon)
+			.map((entry) => ({
+				value: `${entry.kind}:${entry.slug}`,
+				label: entry.name,
+				meta: { kind: entry.kind, icon: entry.icon ?? '' }
+			}))
 	);
 
 	function pick(value: string | string[]) {
@@ -64,7 +68,7 @@
 		const entry = entries.find((item) => item.kind === kind && item.slug === slug);
 		const href = entry && docsPath(entry);
 		if (entry && href) {
-			onPick({ href, name: entry.name });
+			onPick({ href, name: entry.name, icon: entry.icon ?? null });
 		}
 	}
 </script>
@@ -77,7 +81,7 @@
 	onValueChange={pick}
 	searchPlaceholder={t('Search units, buildings, upgrades…')}
 	noResultsLabel={entries.length ? t('No results found.') : t('Loading…')}
-	selectOptionLabel={t('Insert link')}
+	selectOptionLabel={mode === 'image' ? t('Insert image') : t('Insert link')}
 >
 	{#snippet renderOption({ option })}
 		<span class="flex min-w-0 flex-1 items-center gap-2">

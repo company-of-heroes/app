@@ -9,6 +9,7 @@
 	import ArrowCounterClockwiseIcon from 'phosphor-svelte/lib/ArrowCounterClockwiseIcon';
 	import BookOpenIcon from 'phosphor-svelte/lib/BookOpenIcon';
 	import ImageSquareIcon from 'phosphor-svelte/lib/ImageSquareIcon';
+	import ImagesSquareIcon from 'phosphor-svelte/lib/ImagesSquareIcon';
 	import LinkSimpleIcon from 'phosphor-svelte/lib/LinkSimpleIcon';
 	import ListBulletsIcon from 'phosphor-svelte/lib/ListBulletsIcon';
 	import ListNumbersIcon from 'phosphor-svelte/lib/ListNumbersIcon';
@@ -22,6 +23,8 @@
 	import { Button } from '../button';
 	import { Input } from '../input';
 	import { tooltip } from '../../attachments';
+	import { parseWikiRef, wikiRefHref } from '../../docs/wiki-ref';
+	import { useHost } from '../../host/host.context';
 	import WikiLinkPicker from './wiki-link-picker.svelte';
 
 	type Props = {
@@ -42,7 +45,10 @@
 		 * inserted as an image. Rejects with a user-facing message.
 		 */
 		uploadImage?: (file: File) => Promise<{ url: string }>;
-		/** Adds the wiki-link tool: search a unit, building, upgrade, … and link to its page. */
+		/**
+		 * Adds the wiki tools: link a unit, building, upgrade, … (with its icon in front), or insert
+		 * its icon as a framed picture that links to the page.
+		 */
 		wikiLinks?: boolean;
 		/** The link bar also accepts site paths (`/wiki/...`), not only https urls. */
 		internalLinks?: boolean;
@@ -68,6 +74,7 @@
 		minHeightClass = 'min-h-32'
 	}: Props = $props();
 	const { t } = useI18n();
+	const host = useHost();
 
 	let element = $state<HTMLDivElement>();
 	let editor = $state.raw<Editor | null>(null);
@@ -76,6 +83,7 @@
 	let linkOpen = $state(false);
 	let linkUrl = $state('');
 	let wikiOpen = $state(false);
+	let wikiImageOpen = $state(false);
 	let fileInput = $state<HTMLInputElement>();
 	let uploading = $state(false);
 	/** An uploaded image waiting for its alt text. */
@@ -86,29 +94,65 @@
 	onMount(() => {
 		let instance: Editor | undefined;
 		let destroyed = false;
-		const withImages = Boolean(untrack(() => uploadImage));
+		const withImages = Boolean(untrack(() => uploadImage) || untrack(() => wikiLinks));
 		// Loaded here so server rendering and pages without an editor never pull in Tiptap.
 		void Promise.all([
 			import('@tiptap/core'),
 			import('@tiptap/starter-kit'),
 			import('@tiptap/markdown'),
 			import('@tiptap/extensions'),
-			withImages ? import('@tiptap/extension-image') : Promise.resolve(null)
-		]).then(([{ Editor }, { StarterKit }, { Markdown }, { Placeholder }, image]) => {
+			withImages
+				? Promise.all([import('@tiptap/extension-image'), import('@tiptap/extension-paragraph')])
+				: Promise.resolve(null)
+		]).then(([{ Editor }, { StarterKit }, { Markdown }, { Placeholder }, images]) => {
 			if (destroyed || !element) {
 				return;
 			}
 
 			const extensions: AnyExtension[] = [
 				StarterKit.configure({
+					// With images, a paragraph that keeps a lone image inline (see below).
+					paragraph: images ? false : undefined,
 					heading: { levels: untrack(() => headingLevels) },
 					link: { openOnClick: false, autolink: true, protocols: ['http', 'https'] }
 				}),
 				Markdown,
 				Placeholder.configure({ placeholder })
 			];
-			if (image) {
-				extensions.push(image.Image.configure({ inline: false, allowBase64: false }));
+			if (images) {
+				const [image, { Paragraph }] = images;
+				// Tiptap lifts an image that is alone in a paragraph out of it (a block image); with
+				// inline images that leaves an invalid document, so it stays in its paragraph.
+				const parseParagraph = Paragraph.config.parseMarkdown;
+				const InlineImageParagraph = Paragraph.extend({
+					parseMarkdown(token, helpers) {
+						const tokens = token.tokens ?? [];
+						if (tokens.length === 1 && tokens[0].type === 'image') {
+							return helpers.createNode('paragraph', undefined, helpers.parseInline(tokens));
+						}
+
+						return parseParagraph?.call(this, token, helpers) ?? [];
+					}
+				});
+				extensions.push(InlineImageParagraph);
+
+				// Inline, so images on one line sit next to each other. Wiki images keep their
+				// `/wiki/...?icon=` reference in the markdown and show the icon here.
+				const WikiAwareImage = image.Image.extend({
+					renderHTML({ HTMLAttributes }) {
+						const wiki = parseWikiRef(HTMLAttributes.src);
+						if (!wiki) {
+							return ['img', HTMLAttributes];
+						}
+
+						const src = wiki.icon ? host.resolve.actionIcon(wiki.icon) : undefined;
+						return [
+							'img',
+							{ ...HTMLAttributes, src: src ?? '', 'data-wiki': '', class: 'wiki-image' }
+						];
+					}
+				});
+				extensions.push(WikiAwareImage.configure({ inline: true, allowBase64: false }));
 			}
 
 			instance = new Editor({
@@ -257,10 +301,12 @@
 	}
 
 	/** A picked wiki page: links the selection, or inserts the page's name as a link. */
-	function insertWikiLink(link: { href: string; name: string }) {
+	function insertWikiLink(link: { href: string; name: string; icon: string | null }) {
 		if (!editor) {
 			return;
 		}
+
+		const href = wikiRefHref(link.href, link.icon);
 
 		if (editor.state.selection.empty) {
 			editor
@@ -269,13 +315,26 @@
 				.insertContent({
 					type: 'text',
 					text: link.name,
-					marks: [{ type: 'link', attrs: { href: link.href } }]
+					marks: [{ type: 'link', attrs: { href } }]
 				})
 				.run();
 			return;
 		}
 
-		editor.chain().focus().extendMarkRange('link').setLink({ href: link.href }).run();
+		editor.chain().focus().extendMarkRange('link').setLink({ href }).run();
+	}
+
+	/** A picked wiki page: its icon goes in as a picture; pictures on one line form a row. */
+	function insertWikiImage(link: { href: string; name: string; icon: string | null }) {
+		if (!editor || !link.icon) {
+			return;
+		}
+
+		editor
+			.chain()
+			.focus()
+			.setImage({ src: wikiRefHref(link.href, link.icon), alt: link.name })
+			.run();
 	}
 
 	async function upload(file: File) {
@@ -379,6 +438,20 @@
 				}}
 			>
 				<BookOpenIcon size={16} />
+			</Button>
+			<Button
+				type="button"
+				variant="ghost"
+				size="icon-sm"
+				class={cn('size-7', wikiImageOpen && 'bg-secondary-800 text-primary')}
+				aria-label={t('Insert image from the wiki')}
+				{@attach tooltip(t('Insert image from the wiki'))}
+				disabled={disabled || !editor}
+				onclick={() => {
+					wikiImageOpen = true;
+				}}
+			>
+				<ImagesSquareIcon size={16} />
 			</Button>
 		{/if}
 		{#if uploadImage}
@@ -504,11 +577,15 @@
 			'[&_.is-editor-empty:first-child]:before:text-secondary-500 [&_.is-editor-empty:first-child]:before:pointer-events-none',
 			'[&_.is-editor-empty:first-child]:before:float-left [&_.is-editor-empty:first-child]:before:h-0',
 			'[&_.is-editor-empty:first-child]:before:content-[attr(data-placeholder)]',
-			'[&_img.ProseMirror-selectednode]:ring-primary [&_img]:max-w-full [&_img]:rounded-md [&_img.ProseMirror-selectednode]:ring-2'
+			'[&_img.ProseMirror-selectednode]:ring-primary [&_img.ProseMirror-selectednode]:ring-2',
+			'[&_img]:my-1 [&_img]:mr-2 [&_img]:inline-block [&_img]:max-h-64 [&_img]:max-w-full [&_img]:rounded-md [&_img]:align-top',
+			'[&_img.wiki-image]:bg-secondary-900 [&_img.wiki-image]:border-secondary-700 [&_img.wiki-image]:size-16',
+			'[&_img.wiki-image]:border [&_img.wiki-image]:object-contain [&_img.wiki-image]:p-1'
 		)}
 	></div>
 </div>
 
 {#if wikiLinks}
 	<WikiLinkPicker bind:open={wikiOpen} onPick={insertWikiLink} />
+	<WikiLinkPicker bind:open={wikiImageOpen} mode="image" onPick={insertWikiImage} />
 {/if}

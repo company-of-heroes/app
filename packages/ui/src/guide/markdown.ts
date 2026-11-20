@@ -1,5 +1,6 @@
 import { Marked, type Tokens } from 'marked';
 import { slugify } from '@company-of-heroes/api/guides';
+import { parseWikiRef } from '../docs/wiki-ref';
 
 export type GuideHeading = { id: string; text: string; level: 2 | 3 };
 
@@ -8,6 +9,8 @@ export type RenderGuideOptions = {
 	imageOrigins: string[];
 	/** Localizes site paths (`/wiki/...`, `/guides/...`); the host's `href`. */
 	href: (path: string) => string;
+	/** Url of a wiki icon key (`units_unit_allied_rifleman`); the host's `resolve.actionIcon`. */
+	wikiIcon?: (key: string) => string | undefined;
 };
 
 function escapeHtml(value: string) {
@@ -54,6 +57,39 @@ export function renderGuideMarkdown(
 ): { html: string; headings: GuideHeading[] } {
 	const headings: GuideHeading[] = [];
 	const ids = new Map<string, number>();
+
+	/** A wiki icon as a framed tile linking to its page (hover shows the stats popover). */
+	const wikiImage = ({ href, text }: Tokens.Image): string | null => {
+		const wiki = parseWikiRef(href);
+		if (!wiki) {
+			return null;
+		}
+
+		const src = wiki.icon ? options.wikiIcon?.(wiki.icon) : undefined;
+		if (!src) {
+			return '';
+		}
+
+		const name = escapeHtml(text ?? '');
+		return `<a href="${escapeHtml(options.href(wiki.path))}" class="guide-wiki-image" aria-label="${name}"><img src="${escapeHtml(src)}" alt="${name}" loading="lazy" decoding="async"></a>`;
+	};
+
+	/** An uploaded image: a figure on its own line, a plain image inside text. */
+	const uploadedImage = ({ href, title, text }: Tokens.Image, asFigure: boolean): string => {
+		if (!href || !imageAllowed(href, options.imageOrigins)) {
+			return '';
+		}
+
+		const img = `<img src="${escapeHtml(href)}" alt="${escapeHtml(text ?? '')}" loading="lazy" decoding="async">`;
+		if (!asFigure) {
+			return img;
+		}
+
+		const caption = title ? `<figcaption>${escapeHtml(title)}</figcaption>` : '';
+		return `<figure>${img}${caption}</figure>`;
+	};
+
+	const block = (token: Tokens.Image) => wikiImage(token) ?? uploadedImage(token, true);
 	const marked = new Marked({
 		async: false,
 		breaks: false,
@@ -72,13 +108,35 @@ export function renderGuideMarkdown(
 				headings.push({ id, text, level });
 				return `<h${level} id="${escapeHtml(id)}">${this.parser.parseInline(tokens)}</h${level}>`;
 			},
-			image({ href, title, text }: Tokens.Image) {
-				if (!href || !imageAllowed(href, options.imageOrigins)) {
+			paragraph({ tokens }: Tokens.Paragraph) {
+				// A paragraph of only images: one uploaded image is a figure; several images, or wiki
+				// tiles, sit next to each other in a row.
+				const images = tokens.filter((token): token is Tokens.Image => token.type === 'image');
+				const onlyImages =
+					images.length > 0 &&
+					tokens.every(
+						(token) =>
+							token.type === 'image' ||
+							token.type === 'br' ||
+							(token.type === 'text' && !token.raw.trim())
+					);
+				if (!onlyImages) {
+					return `<p>${this.parser.parseInline(tokens)}</p>\n`;
+				}
+
+				const blocks = images.map(block).filter(Boolean);
+				if (!blocks.length) {
 					return '';
 				}
 
-				const caption = title ? `<figcaption>${escapeHtml(title)}</figcaption>` : '';
-				return `<figure><img src="${escapeHtml(href)}" alt="${escapeHtml(text ?? '')}" loading="lazy" decoding="async">${caption}</figure>`;
+				if (blocks.length === 1 && !parseWikiRef(images[0].href)) {
+					return blocks[0];
+				}
+
+				return `<div class="guide-image-row">${blocks.join('')}</div>\n`;
+			},
+			image(token: Tokens.Image) {
+				return wikiImage(token) ?? uploadedImage(token, false);
 			},
 			link({ href, title, tokens }: Tokens.Link) {
 				const text = this.parser.parseInline(tokens);
@@ -89,6 +147,15 @@ export function renderGuideMarkdown(
 
 				if (EXTERNAL.test(href)) {
 					return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"${titleAttr}>${text}</a>`;
+				}
+
+				const wiki = parseWikiRef(href);
+				if (wiki) {
+					const src = wiki.icon ? options.wikiIcon?.(wiki.icon) : undefined;
+					const icon = src
+						? `<img class="guide-wiki-icon" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async">`
+						: '';
+					return `<a href="${escapeHtml(options.href(wiki.path))}" class="guide-wiki-link"${titleAttr}>${icon}${text}</a>`;
 				}
 
 				if (INTERNAL.test(href)) {

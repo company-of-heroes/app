@@ -25,6 +25,8 @@
 		/** Show a required marker next to the label. */
 		required?: boolean;
 		requiredLabel?: string;
+		/** What is wrong with the field, in red under it. */
+		error?: string | null;
 	} & HTMLAttributes<HTMLDivElement>;
 
 	let {
@@ -38,6 +40,7 @@
 		wide = false,
 		required = false,
 		requiredLabel = 'required',
+		error = null,
 		class: className,
 		...restProps
 	}: Props = $props();
@@ -129,6 +132,9 @@
 					>
 						{@render children()}
 					</div>
+				{/if}
+				{#if error}
+					<p class="text-destructive mt-2 text-xs font-medium" role="alert">{error}</p>
 				{/if}
 				{#if footer}
 					<div class={cn('flex flex-wrap items-center gap-2', (children || hasHeader) && 'mt-3')}>

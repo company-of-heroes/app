@@ -919,8 +919,9 @@ export class GuidesService extends Service {
 				)
 				.andThen(() =>
 					ensure(
-						Boolean(current.title.trim() && current.body.trim() && current.category),
-						badRequest('Add a title, some text and a category before sending it for review.')
+						// The category is optional here: authors cannot add one, staff pick it when publishing.
+						Boolean(current.title.trim() && current.body.trim()),
+						badRequest('Add a title and some text before sending it for review.')
 					)
 				)
 				.asyncAndThen(() =>
