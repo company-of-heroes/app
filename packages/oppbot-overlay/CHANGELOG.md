@@ -1,5 +1,9 @@
 # @company-of-heroes/oppbot-overlay
 
+## 3.2.6
+
+- improvement; far fewer API requests: live lobbies and the OBS overlay follow realtime instead of polling, comments and likes no longer reload while a match waits for its result, the app checks for updates every hour (installing only outside a match), and the website and smurf worker can reach PocketBase without passing the api-gateway
+
 ## 3.2.5
 
 - fix; oppbot overlay no longer disappears for a few seconds (or longer) when the server responds slowly mid-match
