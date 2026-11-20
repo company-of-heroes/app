@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { communityPlayerHref, displayMapName, replayDetailHref } from './links';
 	import { useHost } from '../host/host.context';
 	import { useI18n } from '@company-of-heroes/i18n';
@@ -33,6 +34,12 @@
 		showEngagement?: boolean;
 		/** Pull the last row's line onto the parent's closing border (off when a block follows). */
 		closing?: boolean;
+		/** Extra chips after the title, e.g. "Published". */
+		badges?: Snippet<[CommunityMatch]>;
+		/** Trailing action buttons per row (e.g. library actions). */
+		actions?: Snippet<[CommunityMatch]>;
+		/** Detail link; defaults to the match or member replay page. */
+		href?: (match: CommunityMatch) => string;
 	};
 
 	const { t } = useI18n();
@@ -45,10 +52,14 @@
 		emptyMessage = t('No community replays found.'),
 		mapLabel = t('Map'),
 		showEngagement = true,
-		closing = true
+		closing = true,
+		badges,
+		actions,
+		href
 	}: Props = $props();
 
-	const replayHref = (match: CommunityMatch) => replayDetailHref(match, host.routes);
+	const replayHref = (match: CommunityMatch) =>
+		href?.(match) ?? replayDetailHref(match, host.routes);
 	const playerHref = (player: CommunityPlayer) => communityPlayerHref(player, host.routes);
 	const formatMapName = (map: string) => displayMapName(map, host);
 	const proTooltipLabel = (elo: number) => t('Pro gameplay · avg {elo} ELO', { elo });
@@ -129,6 +140,9 @@
 							<th class="px-4 py-2 whitespace-nowrap"></th>
 						{/if}
 						<th class="px-4 py-2 text-end whitespace-nowrap">{t('Date')}</th>
+						{#if actions}
+							<th class="px-4 py-2"></th>
+						{/if}
 					</tr>
 				</thead>
 				<tbody>
@@ -161,6 +175,7 @@
 										{#if match.visibility === 'deleted'}
 											<Badge variant="warning" class="shrink-0">{t('Deleted')}</Badge>
 										{/if}
+										{@render badges?.(match)}
 									</div>
 								</a>
 							</td>
@@ -196,6 +211,11 @@
 							>
 								{formatMatchDate(match.createdAt, host.locale())}
 							</td>
+							{#if actions}
+								<td class="py-0 pr-2 pl-0 whitespace-nowrap">
+									<div class="flex items-center justify-end gap-0.5">{@render actions(match)}</div>
+								</td>
+							{/if}
 						</tr>
 					{/each}
 				</tbody>
@@ -228,6 +248,7 @@
 							{#if match.visibility === 'deleted'}
 								<Badge variant="warning" class="shrink-0">{t('Deleted')}</Badge>
 							{/if}
+							{@render badges?.(match)}
 						</div>
 					</a>
 					<div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -243,6 +264,9 @@
 						</a>
 						<span>{formatMatchDate(match.createdAt, host.locale())}</span>
 					</div>
+					{#if actions}
+						<div class="mt-2 flex items-center gap-0.5">{@render actions(match)}</div>
+					{/if}
 					{#if showEngagement}
 						<div class="text-secondary-400 mt-1.5 flex items-center gap-3 text-sm tabular-nums">
 							<span

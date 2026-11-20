@@ -3,6 +3,7 @@ import ReplayActions from './replay-actions.svelte';
 import ReplayTimeline from './replay-timeline.svelte';
 import ReplayList from './replay-list.svelte';
 import ReplayCard from './replay-card.svelte';
+import ReplayTable from './replay-table.svelte';
 import ReplayCardSkeleton from './replay-card-skeleton.svelte';
 import ReplayOverview from './replay-overview.svelte';
 import ReplayTabs from './replay-tabs.svelte';
@@ -30,6 +31,7 @@ export {
 	ReplayTimeline as Timeline,
 	ReplayList as List,
 	ReplayCard as Card,
+	ReplayTable as Table,
 	ReplayCardSkeleton as CardSkeleton,
 	ReplayOverview as Overview,
 	ReplayTabs as Tabs,

@@ -4,9 +4,8 @@
 	import { tooltip } from '$lib/attachments';
 	import { interactive } from '$lib/components/ui/variants';
 	import { pageTab } from '@company-of-heroes/ui/variants';
-	import { ReplayCardGrid } from '@company-of-heroes/ui/replay-browse';
 	import {
-		Card as ReplayCard,
+		Table as ReplayTable,
 		ListSkeleton as ReplayListSkeleton,
 		type CommunityMatch
 	} from '@company-of-heroes/ui/replay';
@@ -98,7 +97,7 @@
 	const cards = $derived(list.replays.map(toRow));
 	const rowsById = $derived(new Map(list.replays.map((row) => [row.id, row])));
 
-	/** A library replay as a card: roster from the .rec, linked by Steam id. */
+	/** A library replay as a table row: roster from the .rec, linked by Steam id. */
 	function toRow(replay: ReplaysExpanded): CommunityMatch {
 		return {
 			id: replay.id,
@@ -402,33 +401,36 @@
 </div>
 
 {#if list.isLoading && list.replays.length === 0}
-	<ReplayListSkeleton rowCount={10} />
+	<ReplayListSkeleton layout="list" rowCount={10} />
 {:else}
-	<ReplayCardGrid matches={cards}>
-		{#snippet card(match: CommunityMatch)}
-			{@const row = rowsById.get(match.id)}
-			{#if row}
-				{@const isLocal = !!localPresentIds[row.id]}
-				<ReplayCard {match} {highlightedPlayers} showEngagement={false} href={`/replays/${row.id}`}>
-					{#snippet badges()}
-						{#if row.visibility === 'member'}
-							<Badge variant="success">{t('Published')}</Badge>
-						{/if}
-						{#if isLocal}
-							<Badge>{t('In playback folder')}</Badge>
-						{/if}
-					{/snippet}
-					{#snippet actions()}
-						{@render rowActions(row)}
-					{/snippet}
-				</ReplayCard>
-			{/if}
-		{/snippet}
-	</ReplayCardGrid>
-	<div
-		{@attach viewport}
-		class="text-secondary-400 border-secondary-800 border-t px-4 py-3 text-sm"
-	>
+	{#if cards.length > 0}
+		<!-- Each row closes with its own line, so the footer below needs none. -->
+		<ReplayTable
+			matches={cards}
+			{highlightedPlayers}
+			showEngagement={false}
+			mapLabel={t('Replay')}
+			closing={false}
+			href={(match) => `/replays/${match.id}`}
+		>
+			{#snippet badges(match: CommunityMatch)}
+				{@const row = rowsById.get(match.id)}
+				{#if row?.visibility === 'member'}
+					<Badge variant="success" class="shrink-0">{t('Published')}</Badge>
+				{/if}
+				{#if row && localPresentIds[row.id]}
+					<Badge class="shrink-0">{t('In playback folder')}</Badge>
+				{/if}
+			{/snippet}
+			{#snippet actions(match: CommunityMatch)}
+				{@const row = rowsById.get(match.id)}
+				{#if row}
+					{@render rowActions(row)}
+				{/if}
+			{/snippet}
+		</ReplayTable>
+	{/if}
+	<div {@attach viewport} class="text-secondary-400 px-4 py-3 text-sm">
 		{#if list.replays.length > 0}
 			{t('Showing {count} replays', { count: list.replays.length })}
 			{#if list.isLoading}

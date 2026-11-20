@@ -138,7 +138,7 @@
 	</div>
 	<div class="min-w-0 flex-1 overflow-x-hidden">
 		{#if loading}
-			<ReplayListSkeleton />
+			<ReplayListSkeleton layout="list" />
 		{:else}
 			<div class={cn(matches.length > 0 && 'border-secondary-800/70 border-b')}>
 				<ReplayList
@@ -149,6 +149,7 @@
 					{emptyMessage}
 					mapLabel={t('Replay')}
 					showEngagement={false}
+					layout="list"
 				/>
 			</div>
 		{/if}
