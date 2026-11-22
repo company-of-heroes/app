@@ -1,5 +1,10 @@
 # @company-of-heroes/ui
 
+## 0.18.1
+
+- fix; images uploaded into a guide show up again on the guide page and in the preview
+- security; registration is protected by Turnstile and you log in only after verifying your email, the desktop app registers through the website
+
 ## 0.18.0
 
 - enhance; guide editor: send for review without a category, a checklist of what is missing, a live preview tab, wiki images (framed, with stats popover and link) next to each other, and unit icons in front of wiki links

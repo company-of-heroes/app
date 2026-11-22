@@ -1,5 +1,9 @@
 # @company-of-heroes/pocketbase
 
+## 0.19.0
+
+- security; registration is protected by Turnstile and you log in only after verifying your email, the desktop app registers through the website
+
 ## 0.18.0
 
 - feat; tournaments: hosts can hide the results to avoid spoilers; the public sees the bracket without scores, winners or champion until they turn it off

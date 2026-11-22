@@ -1,5 +1,9 @@
 # @company-of-heroes/app
 
+## 0.77.0
+
+- security; registration is protected by Turnstile and you log in only after verifying your email, the desktop app registers through the website
+
 ## 0.76.0
 
 - enhance; guide editor: send for review without a category, a checklist of what is missing, a live preview tab, wiki images (framed, with stats popover and link) next to each other, and unit icons in front of wiki links
