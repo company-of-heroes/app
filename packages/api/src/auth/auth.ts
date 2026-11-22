@@ -5,7 +5,6 @@ import type { ApiDeps } from '../deps';
 import { normalizeBaseUrl, sendV1, siteUrl, v1Base } from '../deps';
 import { apiError, fromUnknown, type ApiError } from '../errors';
 import { fetchJson } from '../fetch-json';
-import { generateUniqueId } from '../id';
 import { escapePocketBaseString, fromPbPromise, pbOptions, requireAuth } from '../pb';
 import { isStaff, requireStaff } from '../staff';
 import { readMetaVersion } from '../companion/meta';
@@ -101,33 +100,6 @@ export class AuthApi {
 			this.deps.pocketbase.collection('users').authWithPassword(email.trim(), password),
 			toLoginError
 		).map((auth) => auth.record as AuthUser);
-	}
-
-	register(email: string, password: string): ResultAsync<AuthUser, ApiError> {
-		const trimmedEmail = email.trim();
-		return (
-			ResultAsync.fromPromise(
-				this.deps.pocketbase.collection('users').create(
-					{
-						id: generateUniqueId(),
-						email: trimmedEmail,
-						password,
-						passwordConfirm: password
-					},
-					pbOptions(this.deps)
-				),
-				toRegisterError
-			)
-				// The account exists either way: a failed send can be retried from the account page.
-				.andThen(() => this.requestVerification(trimmedEmail).orElse(() => okAsync(false)))
-				.andThen(() =>
-					ResultAsync.fromPromise(
-						this.deps.pocketbase.collection('users').authWithPassword(trimmedEmail, password),
-						toRegisterError
-					)
-				)
-				.map((auth) => auth.record as AuthUser)
-		);
 	}
 
 	logout(): Result<void, ApiError> {
@@ -509,25 +481,6 @@ function toLoginError(error: unknown): ApiError {
 		const data = error.data as { message?: string } | undefined;
 		if (data?.message) {
 			return apiError(400, data.message);
-		}
-	}
-
-	return fromUnknown(error, 'Something went wrong. Please try again.');
-}
-
-function toRegisterError(error: unknown): ApiError {
-	if (error instanceof ClientResponseError) {
-		if (error.status === 429) {
-			return apiError(429, 'Too many attempts. Please wait a moment and try again.');
-		}
-
-		const data = error.data as { message?: string } | undefined;
-		if (data?.message) {
-			return apiError(400, data.message);
-		}
-
-		if (error.status === 400) {
-			return apiError(400, 'Could not create that account. Check your email and password.');
 		}
 	}
 

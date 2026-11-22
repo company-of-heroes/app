@@ -14,6 +14,8 @@
 		submitting?: boolean;
 		/** Inside the form, e.g. hidden inputs. */
 		children?: Snippet;
+		/** Above the submit button, e.g. a captcha. */
+		beforeSubmit?: Snippet;
 		/** Next to the submit button, e.g. a log in link. */
 		footer?: Snippet;
 	} & Omit<HTMLFormAttributes, 'children'>;
@@ -25,6 +27,7 @@
 		error = null,
 		submitting = false,
 		children,
+		beforeSubmit,
 		footer: footerContent,
 		...restProps
 	}: Props = $props();
@@ -70,6 +73,7 @@
 			bind:value={passwordConfirm}
 		/>
 	</Form.Group>
+	{@render beforeSubmit?.()}
 	{#if error}
 		<p class="text-destructive border-secondary-800 border-b px-4 py-3 text-sm">{error}</p>
 	{/if}

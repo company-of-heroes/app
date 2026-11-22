@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { useI18n } from '@company-of-heroes/i18n';
+	import { GUIDE_FILE_ORIGINS } from '@company-of-heroes/api/guides';
 	import { cn } from '@company-of-heroes/ui/cn';
 	import {
 		flushBand,
@@ -36,7 +37,7 @@
 
 	const rendered = $derived(
 		renderGuideMarkdown(guide.body, {
-			imageOrigins: [host.resolve.filesOrigin()],
+			imageOrigins: [host.resolve.filesOrigin(), ...GUIDE_FILE_ORIGINS],
 			href: host.href,
 			wikiIcon: host.resolve.actionIcon
 		})

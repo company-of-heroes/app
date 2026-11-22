@@ -382,6 +382,12 @@ export class AccountService {
 			);
 			return null;
 		} catch (error) {
+			if (error instanceof ClientResponseError && error.status === 403) {
+				return t(
+					'Verify your email address before logging in. We sent you a new verification link.'
+				);
+			}
+
 			if (isAuthRejection(error)) {
 				return t('Invalid email or password.');
 			}
@@ -391,22 +397,9 @@ export class AccountService {
 		}
 	}
 
-	/** Creates a personal account with the user's own email and password. Returns an error message. */
-	async register(email: string, password: string): Promise<string | null> {
-		const result = await api.auth.register(email, password);
-		if (result.isErr()) {
-			return t(result.error.message);
-		}
-
-		await this.#useAccount(
-			accountSettingsSchema.parse({
-				userId: result.value.id,
-				email: result.value.email || email.trim(),
-				password,
-				authMode: 'password'
-			})
-		);
-		return null;
+	/** Accounts with a real email are created on the website (Turnstile, email verification). */
+	openRegistration(): void {
+		void openUrl(`${SITE_URL}/register`);
 	}
 
 	/**

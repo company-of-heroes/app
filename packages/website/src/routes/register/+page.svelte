@@ -4,12 +4,14 @@
 	import { cn } from '$lib/utils/cn';
 	import { interactive } from '$lib/utils/variants';
 	import Seo from '$lib/components/seo/seo.svelte';
-	import { href, useI18n } from '$lib/i18n';
+	import { currentLocale, href, useI18n } from '$lib/i18n';
+	import { createTurnstile } from '$lib/auth/turnstile';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
 	const { t } = useI18n();
+	const turnstile = createTurnstile(currentLocale());
 	let email = $state('');
 	let password = $state('');
 	let passwordConfirm = $state('');
@@ -26,8 +28,9 @@
 				return;
 			}
 
-			await update();
+			await update({ reset: false });
 			submitting = false;
+			turnstile.reset();
 		};
 	};
 </script>
@@ -51,22 +54,40 @@
 	</div>
 </div>
 
-<RegisterForm
-	method="POST"
-	bind:email
-	bind:password
-	bind:passwordConfirm
-	{error}
-	{submitting}
-	{@attach (node: HTMLFormElement) => enhance(node, onSubmit).destroy}
->
-	{#snippet footer()}
-		<p class="text-secondary-400 text-sm">
-			{t('Already have an account?')}
-			<a href={href('/login')} class={linkClass}>{t('Log in')}</a>
+{#if form?.sent}
+	<div class="border-secondary-800 border-b px-4 py-3">
+		<p class="text-sm text-white">
+			{t('We sent a verification link to {email}.', { email: form.email })}
 		</p>
-	{/snippet}
-</RegisterForm>
+		<p class="text-secondary-400 mt-1 text-sm">
+			{t('Open the link in that email to verify your address, then log in.')}
+		</p>
+		<a href={href('/login')} class={cn(linkClass, 'mt-2 inline-block text-sm')}>{t('Log in')}</a>
+	</div>
+{:else}
+	<RegisterForm
+		method="POST"
+		bind:email
+		bind:password
+		bind:passwordConfirm
+		{error}
+		{submitting}
+		{@attach (node: HTMLFormElement) => enhance(node, onSubmit).destroy}
+	>
+		{#snippet beforeSubmit()}
+			<div
+				class="border-secondary-800 min-h-[65px] border-b px-4 py-3"
+				{@attach turnstile.attach}
+			></div>
+		{/snippet}
+		{#snippet footer()}
+			<p class="text-secondary-400 text-sm">
+				{t('Already have an account?')}
+				<a href={href('/login')} class={linkClass}>{t('Log in')}</a>
+			</p>
+		{/snippet}
+	</RegisterForm>
+{/if}
 
 <p class="text-secondary-500 border-secondary-800 border-b px-4 py-3 text-sm">
 	{t('By creating an account you agree to our')}

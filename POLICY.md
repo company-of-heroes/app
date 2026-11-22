@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date:** October 17, 2026
+**Effective date:** November 22, 2026
 
 This Privacy Policy explains how **Code IT** (“we”, “us”) collects, uses, shares, and protects information when you use **Company of Heroes Companion** (also called the FKNOOBS App), the website at [https://coh1stats.com](https://coh1stats.com), and the API at [https://api.coh1stats.com](https://api.coh1stats.com) (together, the “Service”).
 
@@ -23,16 +23,18 @@ It applies to:
 
 ### a) App and website accounts
 
-When you use the desktop app you can log in with an existing account (email and password, or Steam), register a personal account with your own email and password, or create an anonymous account with a generated login; if the app finds a settings backup with your account, it restores that account so your match history keeps syncing. You can also **create an account or log in on the website** with the same email and password, or **log in with Steam** (OpenID). That account may include:
+When you use the desktop app you can log in with an existing account (email and password, or Steam), open the website to register a personal account with your own email and password, or create an anonymous account with a generated login; if the app finds a settings backup with your account, it restores that account so your match history keeps syncing. You can also **create an account or log in on the website** with the same email and password, or **log in with Steam** (OpenID). That account may include:
 
 - a display name and avatar (optional);
 - one or more Steam IDs (including the Steam ID used when you sign in with Steam);
 - an email address — by default a random `@fknoobs.com` placeholder, or your real email **only if you change it**;
 - a password hash (for email/password accounts);
-- last login time and the app version;
+- last login time (updated when you use the desktop app, and at most once an hour while you are signed in on the website) and the app version;
 - staff role, if we grant you one;
 - a reputation score derived from comments, votes, replay downloads, player profile votes, and matches you play. We store that score per action type so we can moderate accounts and grant rewards. These scores are not shown on public player pages;
 - the rewards you unlocked and when you unlocked them, stored per Steam ID linked to your account. Rewards are images with a title and description that staff create; we unlock them automatically for a Steam ID when it meets their conditions, using data we already hold for other features: the matches played on that Steam ID (result, faction, mode, map, duration, lobby rating, and its community ELO), its public Relic ladder rank per faction and mode, and for every Steam ID on your account the same account data: matches your app recorded, comments and replies, votes you cast and receive, replays you upload or download and the votes and downloads they receive, your reputation, whether your profile has an avatar, bio, background and link, how long your account exists, your total Company of Heroes streaming time (across your Steam IDs), the number of matches with fair play checks, and whether you published a stream overlay. We do not collect anything new for rewards. This includes matches recorded before a reward existed. Unlocked rewards and their unlock dates are shown on the public player page of the Steam ID that unlocked them, on the website and in the desktop app; they stay with that Steam ID. Account rewards are not given to, or shown on, a Steam ID that is also linked to another account. Your progress toward rewards you have not unlocked yet is only shown to you.
+
+When you register with your own email and password, the registration form runs a Cloudflare Turnstile check to keep bots out: Cloudflare looks at signals from your browser and your IP address to decide whether you are human, and we only receive whether the check passed. We then email you a verification link; you can log in with your email and password only after you open it. Logging in to an account that is not verified yet sends a new link instead.
 
 Website login keeps you signed in with a PocketBase session cookie in your browser. Steam login sends you to Steam to prove your identity; we store the resulting Steam ID on your account and do not receive your Steam password. While a Steam login is in progress we set a short-lived cookie (10 minutes) so the login can only finish in the browser that started it.
 
@@ -154,7 +156,7 @@ We share information with:
 - **Google (YouTube)** — if you connect YouTube, to sign you in (via our website OAuth exchange) and so the app can read and post to your YouTube Live chat on your device;
 - **ElevenLabs** — if you use TTS with your own API key;
 - **Mollie** — payment processor if you subscribe as a supporter: it handles your payment details and the mandate for the monthly payments, receives your email address if you have set your own, and tells us the payment status;
-- **Cloudflare** — to host and deliver the website, and to store shared images such as published overlays and supporter player cards;
+- **Cloudflare** — to host and deliver the website, to store shared images such as published overlays and supporter player cards, and to run the Turnstile bot check on the registration form;
 - staff moderators who review fair play reports, who can hide match results from public listings (including by lobby-name word list), who can hide fair-play screenshots from player views while still reviewing them, who can attach public badges to Relic/Steam player identities, and who can see comments marked as deleted together with the reason a moderator entered;
 
 Match results, player identities, and stats may be **public** on the website and API, except where staff have hidden a match from those listings. Replay files, comments, and similar content you post may be visible to other users of the Service. Comments you or staff remove stay stored for moderation and are hidden from the public view.

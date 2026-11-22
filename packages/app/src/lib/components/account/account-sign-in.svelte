@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LoginForm, RegisterForm } from '@company-of-heroes/ui/auth';
+	import { LoginForm } from '@company-of-heroes/ui/auth';
 	import { confirmation } from '$lib/components/ui/modal';
 	import { Button } from '$lib/components/ui/button';
 	import { account } from '$core/account';
@@ -15,16 +15,17 @@
 	let { onSignedIn, onAnonymous }: Props = $props();
 
 	const { t } = useI18n();
-	let mode = $state<'login' | 'register'>('login');
+	let registering = $state(false);
 	let email = $state('');
 	let password = $state('');
-	let passwordConfirm = $state('');
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
 
-	function showMode(next: 'login' | 'register') {
-		mode = next;
+	/** Registration runs on the website (Turnstile, email verification); log in here afterwards. */
+	function register() {
 		error = null;
+		registering = true;
+		account.openRegistration();
 	}
 
 	async function run(action: () => Promise<string | null>) {
@@ -47,21 +48,6 @@
 	function login(event: SubmitEvent) {
 		event.preventDefault();
 		void run(() => account.loginWithPassword(email, password));
-	}
-
-	function register(event: SubmitEvent) {
-		event.preventDefault();
-		if (password !== passwordConfirm) {
-			error = t('Passwords do not match.');
-			return;
-		}
-
-		if (password.length < 8) {
-			error = t('Password must be at least 8 characters.');
-			return;
-		}
-
-		void run(() => account.register(email, password));
 	}
 
 	/** An anonymous account only lives on this device: say so before creating one. */
@@ -91,67 +77,54 @@
 	}
 </script>
 
-{#if mode === 'login'}
-	<LoginForm
-		autofill={false}
-		bind:email
-		bind:password
-		{error}
-		{submitting}
-		steamPending={account.isSteamLoginPending}
-		onSteam={signInWithSteam}
-		onsubmit={login}
+<LoginForm
+	autofill={false}
+	bind:email
+	bind:password
+	{error}
+	{submitting}
+	steamPending={account.isSteamLoginPending}
+	onSteam={signInWithSteam}
+	onsubmit={login}
+>
+	{#snippet alternatives()}
+		{#if account.isSteamLoginPending}
+			<Button type="button" variant="ghost" onclick={() => account.cancelSteamLogin()}>
+				{t('Cancel')}
+			</Button>
+		{/if}
+	{/snippet}
+</LoginForm>
+{#if account.isSteamLoginPending}
+	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
+		{t('Finish signing in with Steam in your browser.')}
+	</p>
+{:else if registering}
+	<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
+		{t('Create your account in the browser, verify your email, then log in here.')}
+	</p>
+{/if}
+<p class="text-secondary-400 flex flex-wrap items-center gap-x-2 px-4 py-3 text-sm">
+	{t('No account?')}
+	<Button
+		type="button"
+		variant="link"
+		class="h-auto px-0"
+		disabled={submitting || account.isSteamLoginPending}
+		onclick={register}
 	>
-		{#snippet alternatives()}
-			{#if account.isSteamLoginPending}
-				<Button type="button" variant="ghost" onclick={() => account.cancelSteamLogin()}>
-					{t('Cancel')}
-				</Button>
-			{/if}
-		{/snippet}
-	</LoginForm>
-	{#if account.isSteamLoginPending}
-		<p class="text-secondary-400 border-secondary-800 border-b px-4 py-3 text-sm">
-			{t('Finish signing in with Steam in your browser.')}
-		</p>
-	{/if}
-	<p class="text-secondary-400 flex flex-wrap items-center gap-x-2 px-4 py-3 text-sm">
-		{t('No account?')}
+		{t('Register an account')}
+	</Button>
+	{#if onAnonymous}
+		<span aria-hidden="true">·</span>
 		<Button
 			type="button"
 			variant="link"
 			class="h-auto px-0"
 			disabled={submitting || account.isSteamLoginPending}
-			onclick={() => showMode('register')}
+			onclick={continueAnonymously}
 		>
-			{t('Register an account')}
+			{t('Continue anonymously')}
 		</Button>
-		{#if onAnonymous}
-			<span aria-hidden="true">·</span>
-			<Button
-				type="button"
-				variant="link"
-				class="h-auto px-0"
-				disabled={submitting || account.isSteamLoginPending}
-				onclick={continueAnonymously}
-			>
-				{t('Continue anonymously')}
-			</Button>
-		{/if}
-	</p>
-{:else}
-	<RegisterForm
-		bind:email
-		bind:password
-		bind:passwordConfirm
-		{error}
-		{submitting}
-		onsubmit={register}
-	>
-		{#snippet footer()}
-			<Button type="button" variant="ghost" onclick={() => showMode('login')}>
-				{t('Back to log in')}
-			</Button>
-		{/snippet}
-	</RegisterForm>
-{/if}
+	{/if}
+</p>

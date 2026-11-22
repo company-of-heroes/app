@@ -1,9 +1,10 @@
 import type { RecordModel } from 'pocketbase';
+import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 import { err, errAsync, ok, okAsync, type Result } from 'neverthrow';
 import { API_URL } from '$lib/site/urls';
 import { badRequest, forbidden, internal, notFound, type AppError } from '../errors';
-import { ensure, fromAsync, fromPb, type Task } from '../result';
+import { ensure, fromAsync, fromPb, isUniqueCollision, type Task } from '../result';
 import { Service } from './service';
 import {
 	STEAM_OPENID_LOGIN,
@@ -39,6 +40,9 @@ const LOGIN_ORIGINS = [...SITE_ORIGINS, ...APP_LOOPBACK_ORIGINS];
 const CALLBACK_PATH = '/api/v1/auth/steam/callback';
 const LEGACY_CALLBACK_PATH = '/api/auth/steam/callback';
 export type AuthSession = { token: string; record: RecordModel };
+const TURNSTILE_SITEVERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+/** Cloudflare's always-pass test secret: local development needs no widget of its own. */
+const TURNSTILE_TEST_SECRET = '1x0000000000000000000000000000000AA';
 
 function randomString(length: number): string {
 	const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -65,6 +69,53 @@ export class AuthService extends Service {
 			serviceToken: env.AUTH_TOKEN_SECRET || env.SERVICE_TOKEN,
 			handoffSecret: env.AUTH_HANDOFF_SECRET
 		});
+	}
+
+	/** Checks the Turnstile token from a form; without a configured secret every check fails. */
+	verifyTurnstile(token: string, ip: string): Task<void> {
+		const secret = env.TURNSTILE_SECRET_KEY || (dev ? TURNSTILE_TEST_SECRET : '');
+		if (!secret) {
+			console.error('[auth] TURNSTILE_SECRET_KEY must be configured');
+			return errAsync(internal());
+		}
+
+		const failed = badRequest('Could not verify that you are human. Please try again.');
+		if (!token) {
+			return errAsync(failed);
+		}
+
+		return fromAsync(
+			this.fetch(TURNSTILE_SITEVERIFY, {
+				method: 'POST',
+				body: new URLSearchParams({ secret, response: token, remoteip: ip })
+			}).then((response) => response.json() as Promise<{ success?: boolean }>),
+			'Could not verify that you are human. Please try again.',
+			502
+		).andThen((outcome) => (outcome.success ? ok(undefined) : err(failed)));
+	}
+
+	/**
+	 * A password account with the user's own email, signed in only after the emailed link
+	 * verifies it. An address that already has an account gets a new link instead (none when
+	 * it is verified), so the form does not tell which emails are registered.
+	 */
+	register(email: string, password: string): Task<void> {
+		const trimmed = email.trim();
+		const users = this.pb.collection('users');
+		const created = users
+			.create({ email: trimmed, emailVisibility: false, password, passwordConfirm: password })
+			.catch((error) => {
+				if (isUniqueCollision(error)) {
+					return null;
+				}
+
+				throw error;
+			});
+		return fromPb(created, 'Could not create that account. Check your email and password.')
+			.andThen(() =>
+				fromPb(users.requestVerification(trimmed), 'Could not send the verification email.')
+			)
+			.map(() => undefined);
 	}
 
 	/** A regular PocketBase session for the user (what password login would return). */

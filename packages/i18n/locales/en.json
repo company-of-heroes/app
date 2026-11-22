@@ -2818,5 +2818,10 @@
 	"Add a title and some text before sending it for review.": "Add a title and some text before sending it for review.",
 	"Add a title.": "Add a title.",
 	"Add some text.": "Add some text.",
-	"Pick a category before publishing.": "Pick a category before publishing."
+	"Pick a category before publishing.": "Pick a category before publishing.",
+	"Verify your email address before logging in. We sent you a new verification link.": "Verify your email address before logging in. We sent you a new verification link.",
+	"Could not verify that you are human. Please try again.": "Could not verify that you are human. Please try again.",
+	"We sent a verification link to {email}.": "We sent a verification link to {email}.",
+	"Open the link in that email to verify your address, then log in.": "Open the link in that email to verify your address, then log in.",
+	"Create your account in the browser, verify your email, then log in here.": "Create your account in the browser, verify your email, then log in here."
 }

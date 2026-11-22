@@ -13,6 +13,16 @@ function pocketBaseUrl(): string {
 	return (env.PB_URL || API_URL).replace(/\/$/, '');
 }
 
+/**
+ * A PocketBase file url on the public API host. Urls the server builds start with `PB_URL`;
+ * ones stored for browsers (images in guide text) must use API_URL, the files origin hosts
+ * allow.
+ */
+export function publicFileUrl(url: string): string {
+	const base = pocketBaseUrl();
+	return url.startsWith(base) ? `${API_URL.replace(/\/$/, '')}${url.slice(base.length)}` : url;
+}
+
 function withFetch(pb: PocketBase, fetchFn: Fetch): PocketBase {
 	pb.autoCancellation(false);
 	pb.beforeSend = (url, options) => ({
@@ -59,11 +69,17 @@ function tokenExpiry(token: string): number {
 }
 
 async function logIn(fetchFn: Fetch): Promise<string> {
-	const response = await fetchFn(`${pocketBaseUrl()}/api/collections/_superusers/auth-with-password`, {
-		method: 'POST',
-		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ identity: env.PB_SUPERUSER_EMAIL, password: env.PB_SUPERUSER_PASSWORD })
-	});
+	const response = await fetchFn(
+		`${pocketBaseUrl()}/api/collections/_superusers/auth-with-password`,
+		{
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				identity: env.PB_SUPERUSER_EMAIL,
+				password: env.PB_SUPERUSER_PASSWORD
+			})
+		}
+	);
 	if (!response.ok) {
 		throw new Error(`PocketBase superuser login failed (${response.status})`);
 	}

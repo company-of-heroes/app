@@ -32,6 +32,8 @@ const USERS = '_pb_users_auth_';
 /** Steam ids per `steamIds ~ a || steamIds ~ b ...` filter (PocketBase caps expressions per filter). */
 const CLAIM_CHUNK = 50;
 const ACCOUNT_FIELDS = 'id,name,role,steamIds,meta,lastLogin,created';
+/** Website visits update `lastLogin` at most this often. */
+const LAST_LOGIN_INTERVAL_MS = 60 * 60 * 1000;
 
 const ownerIds = (row: Pick<ConflictRow, 'owners'>) =>
 	(Array.isArray(row.owners) ? row.owners : []).map(String);
@@ -41,6 +43,21 @@ const ownerIds = (row: Pick<ConflictRow, 'owners'>) =>
  * anti-cheat labels that follow a user's Steam ids.
  */
 export class UsersService extends Service {
+	/** A signed-in website visit counts as a login (at most hourly), so unused accounts stand out. */
+	touchLastLogin(userId: string, lastLogin: unknown): Task<void> {
+		const last = typeof lastLogin === 'string' ? Date.parse(lastLogin) || 0 : 0;
+		if (Date.now() - last < LAST_LOGIN_INTERVAL_MS) {
+			return okAsync(undefined);
+		}
+
+		return fromPb(
+			this.pb
+				.collection('users')
+				.update(userId, { lastLogin: new Date().toISOString() }, { fields: 'id' }),
+			'Could not update the last login'
+		).map(() => undefined);
+	}
+
 	/**
 	 * Uploads of the same replay (title, file name and game date) keep the newest. Replays
 	 * without a game date or title cannot be told apart, so they are never removed.

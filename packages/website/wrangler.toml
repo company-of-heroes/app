@@ -17,6 +17,7 @@ invocation_logs = true
 # STEAM_API_KEY, AUTH_HANDOFF_SECRET, TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET,
 # YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, AUTH_TOKEN_SECRET (PocketBase's /api/_auth/token,
 # same value there), SMURF_SERVICE_TOKEN (the smurf worker's own token, same value there)
+# Turnstile secret: TURNSTILE_SECRET_KEY (account registration; without it every sign-up fails).
 # Mollie secret: MOLLIE_API_KEY (supporter subscription; a `test_…` key is test mode, a
 # `live_…` key takes real payments).
 
@@ -25,6 +26,8 @@ invocation_logs = true
 MOLLIE_WEBHOOK_ORIGIN = "https://coh1stats.com"
 # Server-side PocketBase calls skip the api-gateway Worker (no routes on this host).
 PB_URL = "https://pb.coh1stats.com"
+# Turnstile widget for coh1stats.com (registration); its secret is TURNSTILE_SECRET_KEY.
+PUBLIC_TURNSTILE_SITE_KEY = "0x4AAAAAAGMoD0kkG-Sw-OKY"
 
 # Replay download limits per IP (src/lib/server/downloads.ts); namespace ids are account-unique.
 [[ratelimits]]

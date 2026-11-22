@@ -17,6 +17,11 @@ export const GUIDE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 /** Inline images one guide can hold. */
 export const GUIDE_IMAGES_MAX = 30;
 export const GUIDE_IMAGE_TYPES = IMAGE_TYPES;
+/**
+ * Our PocketBase file hosts. Guide text may hold image urls from either: the public API host,
+ * or the website's server-side host (`PB_URL`) that uploads used to return.
+ */
+export const GUIDE_FILE_ORIGINS = ['https://api.coh1stats.com', 'https://pb.coh1stats.com'];
 /** Paths next to `/guides/[...path]`: a category or guide with this slug could not be opened. */
 export const GUIDE_RESERVED_SLUGS = ['manage'];
 /** Guides per page on category pages. */

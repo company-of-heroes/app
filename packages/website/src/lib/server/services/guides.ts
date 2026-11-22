@@ -32,6 +32,7 @@ import { cached, uncache } from '../cache';
 import { badRequest, conflict, forbidden, notFound, type AppError } from '../errors';
 import { ensure, fromAsync, fromPb, pbMaybe, type Task } from '../result';
 import { SITE_URL } from '$lib/site/urls';
+import { publicFileUrl } from '../pb';
 import { Service } from './service';
 
 const CATEGORIES_KEY = 'guides:categories';
@@ -261,7 +262,7 @@ export class GuidesService extends Service {
 					body: record.body ?? '',
 					images: (record.images ?? []).map((name) => ({
 						name,
-						url: this.pb.files.getURL(record, name)
+						url: publicFileUrl(this.pb.files.getURL(record, name))
 					})),
 					seoTitle: record.seoTitle ?? '',
 					seoDescription: record.seoDescription ?? '',
@@ -1065,7 +1066,7 @@ export class GuidesService extends Service {
 				.andThen((updated) => {
 					const name = (updated.images ?? []).find((item) => !(record.images ?? []).includes(item));
 					return name
-						? okAsync({ name, url: this.pb.files.getURL(updated, name) })
+						? okAsync({ name, url: publicFileUrl(this.pb.files.getURL(updated, name)) })
 						: errAsync(badRequest('Could not upload the image.'));
 				})
 		);

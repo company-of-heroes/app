@@ -86,6 +86,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	syncLocalsUser(event);
+	const record = pocketbase.authStore.isValid ? pocketbase.authStore.record : null;
+	if (hadAuthCookie && record) {
+		const touched = Promise.resolve(
+			event.locals.services.users.touchLastLogin(record.id, record.lastLogin)
+		);
+		event.platform?.context?.waitUntil(touched);
+	}
 
 	const response = await resolve(event, {
 		transformPageChunk: ({ html }) => html.replaceAll('%lang%', locale)

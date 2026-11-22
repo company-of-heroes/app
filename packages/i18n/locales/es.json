@@ -2818,5 +2818,10 @@
 	"Add a title and some text before sending it for review.": "Añade un título y algo de texto antes de enviarla a revisión.",
 	"Add a title.": "Añade un título.",
 	"Add some text.": "Añade algo de texto.",
-	"Pick a category before publishing.": "Elige una categoría antes de publicar."
+	"Pick a category before publishing.": "Elige una categoría antes de publicar.",
+	"Verify your email address before logging in. We sent you a new verification link.": "Verifica tu dirección de correo antes de iniciar sesión. Te hemos enviado un nuevo enlace de verificación.",
+	"Could not verify that you are human. Please try again.": "No pudimos verificar que eres humano. Inténtalo de nuevo.",
+	"We sent a verification link to {email}.": "Hemos enviado un enlace de verificación a {email}.",
+	"Open the link in that email to verify your address, then log in.": "Abre el enlace de ese correo para verificar tu dirección y luego inicia sesión.",
+	"Create your account in the browser, verify your email, then log in here.": "Crea tu cuenta en el navegador, verifica tu correo y luego inicia sesión aquí."
 }
