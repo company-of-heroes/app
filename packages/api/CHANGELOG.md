@@ -1,5 +1,10 @@
 # @company-of-heroes/api
 
+## 0.12.0
+
+- fix; images uploaded into a guide show up again on the guide page and in the preview
+- security; registration is protected by Turnstile and you log in only after verifying your email, the desktop app registers through the website
+
 ## 0.11.0
 
 - feat; tournaments: hosts can hide the results to avoid spoilers; the public sees the bracket without scores, winners or champion until they turn it off

@@ -1,5 +1,9 @@
 # @company-of-heroes/i18n
 
+## 0.3.5
+
+- security; registration is protected by Turnstile and you log in only after verifying your email, the desktop app registers through the website
+
 ## 0.3.4
 
 - enhance; guide editor: send for review without a category, a checklist of what is missing, a live preview tab, wiki images (framed, with stats popover and link) next to each other, and unit icons in front of wiki links
